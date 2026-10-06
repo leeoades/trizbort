@@ -9,6 +9,10 @@
     <ApplicationIcon>Map.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <StartupObject>Trizbort.Program</StartupObject>
+    <!-- Replaces the old app.config System.Windows.Forms.ApplicationConfigurationSection
+         (DpiAwareness=PerMonitorV2), which modern .NET's ConfigurationManager does not
+         recognize and which broke all app.config reads, including user settings. -->
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <!-- This is a Windows-only WinForms app targeting the Windows-specific TFM;
          CA1416 (Windows-only API usage) is expected noise here, not a real risk. -->
