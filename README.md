@@ -7,6 +7,7 @@ Trizbort is a simple tool used to create maps for interactive fiction. First dev
 ## Links
 - [Documentation](http://www.trizbort.com/Docs/index.shtml)
 - [Release Notes](https://github.com/JasonLautzenheiser/trizbort/blob/master/changelog.md)
+- [Developer/architecture reference](agent-docs/README.md) — technical docs for contributors and AI coding agents working on the codebase
 
 ## Maintainers
 We thank all our contributors for all the hard work whether pull requests or simply bug reports.  Special thanks to the following for taking the time to contribute features and bug fixes.
