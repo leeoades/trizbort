@@ -17,6 +17,8 @@ namespace Trizbort.UI {
 
     public bool ApplyStyleToNewRooms { get => chkApplyStyleToNewRooms.Checked; set => chkApplyStyleToNewRooms.Checked = value; }
 
+    public bool DoubleClickToAddRoom { get => chkDoubleClickToAddRoom.Checked; set => chkDoubleClickToAddRoom.Checked = value; }
+
     public bool HandDrawnGlobal { get => chkDefaultHandDrawn.Checked; set => chkDefaultHandDrawn.Checked = value; }
 
     public bool InvertMouseWheel { get => m_invertWheelCheckBox.Checked; set => m_invertWheelCheckBox.Checked = value; }

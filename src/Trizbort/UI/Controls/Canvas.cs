@@ -1249,10 +1249,18 @@ namespace Trizbort.UI.Controls {
     }
 
     protected override void OnMouseDoubleClick(MouseEventArgs e) {
-      if (e.Button == MouseButtons.Left)
+      if (e.Button == MouseButtons.Left) {
         if (CanSelectElements && HasSingleSelectedElement)
           commandController.ShowElementProperties(SelectedElement);
+        else if (ApplicationSettingsController.AppSettings.DoubleClickToAddRoom && CanSelectElements && isEmptySpace(e.Location))
+          AddRoom(true);
+      }
       base.OnMouseDoubleClick(e);
+    }
+
+    private bool isEmptySpace(Point clientPos) {
+      if (hoverHandle != null || hoverPort != null) return false;
+      return hitTestElement(ClientToCanvas(new PointF(clientPos.X, clientPos.Y)), false) == null;
     }
 
     protected override void OnMouseDown(MouseEventArgs e) {

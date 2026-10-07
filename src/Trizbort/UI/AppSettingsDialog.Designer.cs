@@ -64,6 +64,7 @@
             this.tabMap = new System.Windows.Forms.TabPage();
             this.grpMapPreferences = new System.Windows.Forms.GroupBox();
             this.chkApplyStyleToNewRooms = new System.Windows.Forms.CheckBox();
+            this.chkDoubleClickToAddRoom = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -521,9 +522,10 @@
             // grpMapPreferences
             // 
             this.grpMapPreferences.Controls.Add(this.chkApplyStyleToNewRooms);
+            this.grpMapPreferences.Controls.Add(this.chkDoubleClickToAddRoom);
             this.grpMapPreferences.Location = new System.Drawing.Point(7, 6);
             this.grpMapPreferences.Name = "grpMapPreferences";
-            this.grpMapPreferences.Size = new System.Drawing.Size(411, 55);
+            this.grpMapPreferences.Size = new System.Drawing.Size(411, 80);
             this.grpMapPreferences.TabIndex = 0;
             this.grpMapPreferences.TabStop = false;
             this.grpMapPreferences.Text = "Preferences";
@@ -538,6 +540,17 @@
             this.chkApplyStyleToNewRooms.Text = "Apply style to new rooms";
             this.toolTip2.SetToolTip(this.chkApplyStyleToNewRooms, "If this is checked, new rooms adopt the style of the last selected room");
             this.chkApplyStyleToNewRooms.UseVisualStyleBackColor = true;
+            // 
+            // chkDoubleClickToAddRoom
+            // 
+            this.chkDoubleClickToAddRoom.AutoSize = true;
+            this.chkDoubleClickToAddRoom.Location = new System.Drawing.Point(10, 47);
+            this.chkDoubleClickToAddRoom.Name = "chkDoubleClickToAddRoom";
+            this.chkDoubleClickToAddRoom.Size = new System.Drawing.Size(170, 19);
+            this.chkDoubleClickToAddRoom.TabIndex = 1;
+            this.chkDoubleClickToAddRoom.Text = "Double click to add room";
+            this.toolTip2.SetToolTip(this.chkDoubleClickToAddRoom, "If this is checked, double clicking on an empty space on the map creates a new room");
+            this.chkDoubleClickToAddRoom.UseVisualStyleBackColor = true;
             // 
             // AppSettingsDialog
             // 
@@ -624,5 +637,6 @@
 		private System.Windows.Forms.TabPage tabMap;
 		private System.Windows.Forms.GroupBox grpMapPreferences;
 		private System.Windows.Forms.CheckBox chkApplyStyleToNewRooms;
+		private System.Windows.Forms.CheckBox chkDoubleClickToAddRoom;
 	}
 }

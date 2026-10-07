@@ -52,6 +52,7 @@ namespace Trizbort.Domain.AppSettings {
       settings.ShowObjectsInTooltips = true;
       settings.ShowDescriptionsInTooltips = true;
       settings.ApplyStyleToNewRooms = false;
+      settings.DoubleClickToAddRoom = false;
     }
 
     public static void SaveSettings() {
@@ -76,6 +77,7 @@ namespace Trizbort.Domain.AppSettings {
         dialog.LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
         dialog.HandDrawnGlobal = settings.HandDrawnGlobal;
         dialog.ApplyStyleToNewRooms = settings.ApplyStyleToNewRooms;
+        dialog.DoubleClickToAddRoom = settings.DoubleClickToAddRoom;
         dialog.ShowDescriptionsInTooltip = settings.ShowDescriptionsInTooltips;
         dialog.ShowObjectsInTooltip = settings.ShowObjectsInTooltips;
         dialog.LimitConnectionDescriptionCharactersInTooltip = settings.LimitConnectionDescriptionCharactersInTooltip;
@@ -99,6 +101,7 @@ namespace Trizbort.Domain.AppSettings {
           settings.LoadLastProjectOnStart = dialog.LoadLastProjectOnStart;
           settings.HandDrawnGlobal = dialog.HandDrawnGlobal;
           settings.ApplyStyleToNewRooms = dialog.ApplyStyleToNewRooms;
+          settings.DoubleClickToAddRoom = dialog.DoubleClickToAddRoom;
           settings.ShowDescriptionsInTooltips = dialog.ShowDescriptionsInTooltip;
           settings.ShowObjectsInTooltips = dialog.ShowObjectsInTooltip;
           settings.ToolTipConnectionDescriptionCharactersToShow = dialog.ToolTipConnectionDescriptionCharactersToShow;
