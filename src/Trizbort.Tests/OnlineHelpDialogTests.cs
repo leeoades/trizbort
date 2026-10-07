@@ -12,17 +12,17 @@ namespace Trizbort.Tests {
   [Apartment(ApartmentState.STA)]
   public class OnlineHelpDialogTests {
     [Test]
-    public void Dialog_ExplainsVersionsAndProvidesBothLinks() {
+    public void Dialog_ListsUserGuideFirstThenOriginalHelp() {
       using (var dialog = new OnlineHelpDialog()) {
         var layout = dialog.Controls.OfType<TableLayoutPanel>().Single();
         var labels = layout.Controls.OfType<Label>().Where(label => !(label is LinkLabel)).ToList();
-        labels[0].Text.ShouldContain("Online help is available for v1 of Trizbort");
-        labels[1].Text.ShouldContain("Trizbort v2");
+        labels[0].Text.ShouldContain("Trizbort v2 user guide");
+        labels[1].Text.ShouldContain("original Trizbort v1 help");
 
         var links = layout.Controls.OfType<LinkLabel>().ToList();
         links.Select(link => link.Text).ShouldBe(new[] {
-          "https://trizbort.genstein.net/help/",
-          "https://github.com/leeoades/trizbort"
+          "https://github.com/leeoades/trizbort/blob/master/Docs/index.md",
+          "https://trizbort.genstein.net/help/"
         });
         links.All(link => link.Links.Count == 1 && link.TabStop).ShouldBeTrue();
         dialog.StartPosition.ShouldBe(FormStartPosition.CenterParent);

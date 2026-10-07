@@ -166,9 +166,10 @@ and is **not** produced any more. Releases are built by `.github/workflows/relea
    and creates a GitHub Release with the zip asset and generated notes.
 
 There is no in-app update checker or update manifest. Help → Online Help (F1) links to the
-v2 repository, where users can download releases manually. User `appsettings.json` is not in
+v2 user guide (`Docs/index.md` on GitHub) and the original v1 help; users download releases
+manually from GitHub Releases. User `appsettings.json` is not in
 the zip, so it survives extracting a new release over the install folder. If the repo moves,
-update the link in `OnlineHelpDialog` and the message in `Project.CheckDocVersion()`.
+update `OnlineHelpDialog.UserGuideUrl` and the message in `Project.CheckDocVersion()`.
 
 Extract releases into a user-writable folder, not Program Files. Releases are
 unsigned; SmartScreen warnings are possible. No ClickOnce migration is provided: users of the

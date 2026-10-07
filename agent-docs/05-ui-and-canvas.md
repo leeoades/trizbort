@@ -123,7 +123,7 @@ but not IF-language source export.
 | Dialog | Purpose |
 |---|---|
 | `AboutDialog` | Application/version/about info and links. |
-| `OnlineHelpDialog` | Opened by Help → Online Help or F1; explains that online help is for v1 and links to the legacy help and the v2 repository. |
+| `OnlineHelpDialog` | Opened by Help → Online Help or F1; links first to the v2 Markdown user guide (`Docs/index.md` on GitHub), then to the original v1 help it is based on. |
 | `AppSettingsDialog` | Edits app-wide preferences backed by `ApplicationSettingsController` (see [`03-storage-and-persistence.md`](03-storage-and-persistence.md)): save behavior, margins, zoom, tooltips, automap defaults. Tabs: General, ToolTips, Map (Preferences: apply style to new rooms, double click to add room). |
 | `AutomapDialog` | Configures and starts a transcript automap run — see [`06-automap.md`](06-automap.md). |
 | `AutomapRoomSameDirectionDialog` | Resolves "a room already exists in this direction" ambiguity during automap. |

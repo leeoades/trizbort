@@ -5,6 +5,9 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI {
   public class OnlineHelpDialog : Form {
+    public const string UserGuideUrl = "https://github.com/leeoades/trizbort/blob/master/Docs/index.md";
+    public const string OriginalHelpUrl = "https://trizbort.genstein.net/help/";
+
     public OnlineHelpDialog() {
       Text = "Online Help";
       FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -26,16 +29,17 @@ namespace Trizbort.UI {
       layout.Controls.Add(new Label {
         AutoSize = true,
         MaximumSize = new Size(440, 0),
-        Text = "Online help is available for v1 of Trizbort. Some information may differ from v2.",
+        Text = "The Trizbort v2 user guide is available online:",
         Margin = new Padding(3, 3, 3, 8)
       });
-      layout.Controls.Add(createLink("https://trizbort.genstein.net/help/"));
+      layout.Controls.Add(createLink(UserGuideUrl));
       layout.Controls.Add(new Label {
         AutoSize = true,
-        Text = "For Trizbort v2, visit the project repository:",
+        MaximumSize = new Size(440, 0),
+        Text = "The original Trizbort v1 help, on which the guide is based, can be found here:",
         Margin = new Padding(3, 16, 3, 8)
       });
-      layout.Controls.Add(createLink("https://github.com/leeoades/trizbort"));
+      layout.Controls.Add(createLink(OriginalHelpUrl));
 
       var closeButton = new Button {
         AutoSize = true,
