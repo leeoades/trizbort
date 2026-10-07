@@ -523,7 +523,7 @@ namespace Trizbort.UI {
 
     private void HelpAndSupportMenuItem_Click(object sender, EventArgs e) {
       try {
-        Process.Start("http://www.trizbort.com/Docs/index.shtml");
+        Process.Start(new ProcessStartInfo("http://www.trizbort.com/Docs/index.shtml"){ UseShellExecute = true });
       }
       catch (Exception) {
         // ignored

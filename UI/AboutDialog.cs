@@ -43,7 +43,7 @@ namespace Trizbort.UI {
       var label = (LinkLabel) sender;
       var url = label.Text.Substring(label.LinkArea.Start, label.LinkArea.Length);
       if (!url.StartsWith("http")) url = "http://" + url;
-      Process.Start(url);
+      Process.Start(new ProcessStartInfo(url){ UseShellExecute = true });
     }
   }
 }
