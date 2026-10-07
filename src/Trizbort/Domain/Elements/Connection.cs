@@ -210,6 +210,8 @@ namespace Trizbort.Domain.Elements {
     /// </summary>
     public bool SupportsCurveWaypoints => VertexList.Count == 2;
 
+    public bool IsDangling => VertexList.Count < 2 || VertexList[0].Port == null || VertexList[VertexList.Count - 1].Port == null;
+
     public bool HasCurveWaypoints => SupportsCurveWaypoints && mCurveWaypoints.Any(w => w.HasValue);
 
     public Vector? GetCurveWaypoint(CurveWaypoint waypoint) {
@@ -327,12 +329,12 @@ namespace Trizbort.Domain.Elements {
 
     public int ConnectedRoomToRotate(bool whichRoom) {
       //first, let's take care of cases where the right room is forced, if there is one
-      if (VertexList[0].Port == null && VertexList[0].Port == null) return -1;
-      if (VertexList[1].Port == null) return 0;
-      if (VertexList[0].Port == null) return 1;
-
-      var firstRoom = (Room) VertexList[0].Port.Owner;
-      var secondRoom = (Room) VertexList[1].Port.Owner;
+      if (VertexList.Count < 2) return -1;
+      var firstRoom = VertexList[0].Port?.Owner as Room;
+      var secondRoom = VertexList[1].Port?.Owner as Room;
+      if (firstRoom == null && secondRoom == null) return -1;
+      if (secondRoom == null) return 0;
+      if (firstRoom == null) return 1;
 
       var firstCenterY = firstRoom.Y + firstRoom.Height / 2;
       var secondCenterY = secondRoom.Y + secondRoom.Height / 2;

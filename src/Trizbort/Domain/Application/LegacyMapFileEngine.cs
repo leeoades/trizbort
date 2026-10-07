@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using System.Xml;
 using Trizbort.Domain.Elements;
@@ -63,7 +64,14 @@ namespace Trizbort.Domain.Application {
             room.Load(element);
             project.Elements.Add(room);
           }
-          else if (element.HasName("line"))
+          else if (element.HasName("label"))
+          {
+            var label = new MapLabel(project, project.Elements.Count + 1);
+            label.ID = element.Attribute("id").ToInt(label.ID);
+            label.Load(element);
+            project.Elements.Add(label);
+          }
+          else if (element.HasName("line") || element.HasName("labelLine"))
           {
             // Changed the constructor used for elements when loading a file for a significant speed increase
             var connection = new Connection(project, project.Elements.Count + 1);
@@ -139,9 +147,18 @@ namespace Trizbort.Domain.Application {
         ((Room)element).Save(scribe);
         scribe.EndElement();
       }
+      else if (element is MapLabel label)
+      {
+        scribe.StartElement("label");
+        scribe.Attribute("id", label.ID);
+        label.Save(scribe);
+        scribe.EndElement();
+      }
       else if (element.GetType() == typeof(Connection))
       {
-        scribe.StartElement("line");
+        var connection = (Connection) element;
+        // Older readers must ignore label connectors as well as the labels themselves.
+        scribe.StartElement(connection.VertexList.Any(vertex => vertex.Port?.Owner is MapLabel) ? "labelLine" : "line");
         scribe.Attribute("id", element.ID);
         ((Connection)element).Save(scribe);
         scribe.EndElement();

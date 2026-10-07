@@ -124,11 +124,11 @@ namespace Trizbort.UI.Controls {
 
             var canvasBounds = (Rect) Canvas?.ComputeCanvasBounds(false);
 
-            foreach (var room in Project.Current.Elements.OfType<Room>()) {
-              var roomBounds = canvasToClient(room.InnerBounds.ToRectangleF(), canvasBounds, clientArea);
+            foreach (var element in Project.Current.Elements.Where(element => element is ISizeable)) {
+              var roomBounds = canvasToClient(((ISizeable) element).InnerBounds.ToRectangleF(), canvasBounds, clientArea);
 
-              var borderPen = room.Flagged ? palette.Pen(Settings.Color[Colors.SelectedLine], 0) : palette.Pen(Settings.Color[Colors.Border], 0);
-              var paletteBorderBrush = room.Flagged ? new SolidBrush(Settings.Color[Colors.SelectedLine]) : palette.FillBrush;
+              var borderPen = element.Flagged ? palette.Pen(Settings.Color[Colors.SelectedLine], 0) : palette.Pen(Settings.Color[Colors.Border], 0);
+              var paletteBorderBrush = element.Flagged ? new SolidBrush(Settings.Color[Colors.SelectedLine]) : palette.FillBrush;
               graphics.DrawRectangle(borderPen, paletteBorderBrush, roomBounds);
             }
 

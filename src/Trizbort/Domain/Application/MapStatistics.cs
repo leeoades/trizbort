@@ -47,7 +47,7 @@ namespace Trizbort.Domain.Application {
 
     public static int NumberOfConnections => Project.Current.Elements.OfType<Connection>().Count();
 
-    public static int NumberOfDanglingConnections { get { return Project.Current.Elements.OfType<Connection>().Count(p => p.GetSourceRoom() == null || p.GetTargetRoom() == null); } }
+    public static int NumberOfDanglingConnections { get { return Project.Current.Elements.OfType<Connection>().Count(p => p.IsDangling); } }
 
     public static int NumberOfDarkRooms => Project.Current.Elements.OfType<Room>().Count(p => p.IsDark);
 

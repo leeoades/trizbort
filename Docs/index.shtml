@@ -76,6 +76,7 @@
 			<li><a href="#help_rooms_stylenew">Styling New Rooms</a>
 			<li><a href="#help_rooms_tooltips">Room Tooltips</a>
 		</ul>
+		<li><a href="#help_labels">Map Labels (Trizbort 2)</a>
 		<li><a href="#help_connections">Working with Connections</a>
 		<ul>
 			<li><a href="#help_conn_ports">A Room's Ports</a>
@@ -239,6 +240,15 @@
 
 <a name="basics"></a>
 <h1>BASICS</h1>
+
+<a name="help_labels"></a>
+<h2>Map Labels (Trizbort 2)</h2>
+
+<p>Labels are annotations rather than rooms. Press <span class="accel">L</span> to add a label at the mouse cursor, choose <span class="menufind">Edit-&gt;Add Label</span> to add one in the centre of the canvas, or use <span class="menufind">Add Label</span> in the right-click menu. Enter the text and choose a rectangular, rounded, elliptical or octagonal shape. You can set text, outline and background colours independently. The <span class="term">Outline</span> group contains its Enabled checkbox, shape, line style and colour. Uncheck Enabled to hide the outline. The <span class="term">Background</span> group contains its own Enabled checkbox and colour; uncheck it for a transparent label. The shape applies to both outline and background, and remains editable when either is enabled.</p>
+
+<p>Select, move, resize, copy and delete labels just as you would rooms. Even a label with no outline or background has resize handles when selected. Double-click it or press <span class="accel">Enter</span> to edit its properties. Deselect a label and drag from one of its ports to connect it to a room. Labels appear in image and PDF exports, but are not exported as rooms or exits in generated game source.</p>
+
+<p>Older Trizbort versions ignore labels and lines connected to them. Opening the map is safe, but saving it from an older version loses those labels and their lines; keep the original file if you need to use an older editor.</p>
 
 <a name="help_rooms"></a>
 <h2>Working with Rooms</h2>

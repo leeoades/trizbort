@@ -98,6 +98,7 @@ namespace Trizbort.UI.Controls {
       m_cornerPanel.BackColor = SystemColors.Control;
 
       PreviewKeyDown += onPreviewKeyDown;
+      ctxCanvasMenu.Items.Insert(0, new ToolStripMenuItem("Add &Label", null, (_, __) => AddLabel(true)));
 
       mRecomputeTimer = new Timer(onRecomputeTimerTick);
 
@@ -333,6 +334,17 @@ namespace Trizbort.UI.Controls {
       Project.Current.Elements.Remove(mOtherRoom);
     }
 
+    public MapLabel AddLabel(bool atCursor, bool showDialog = true) {
+      var label = new MapLabel(Project.Current);
+      var center = atCursor && ClientRectangle.Contains(PointToClient(MousePosition))
+        ? ClientToCanvas(PointToClient(MousePosition)) : Origin;
+      label.Position = Settings.Snap(center - label.Size / 2);
+      Project.Current.Elements.Add(label);
+      SelectedElement = label;
+      if (showDialog) label.ShowDialog();
+      return label;
+    }
+
     public Room AddRoom(bool atCursor, bool insertRoom = false, bool doRefresh = true) {
       var room = new Room(Project.Current) {Size = mNewRoomSize};
       if (ApplicationSettingsController.AppSettings.ApplyStyleToNewRooms)
@@ -370,8 +382,12 @@ namespace Trizbort.UI.Controls {
         if (SelectedElement is Connection) {
           var conn = (Connection) SelectedElement;
 
-          var target = conn.GetTargetRoom(out var targetCompass);
-          var source = conn.GetSourceRoom(out var sourceCompass);
+          var targetPort = conn.VertexList[conn.VertexList.Count - 1].Port as Room.CompassPort;
+          var sourcePort = conn.VertexList[0].Port as Room.CompassPort;
+          var target = targetPort?.Owner;
+          var source = sourcePort?.Owner;
+          var targetCompass = targetPort?.CompassPoint ?? CompassPoint.North;
+          var sourceCompass = sourcePort?.CompassPoint ?? CompassPoint.North;
 
           if (target == null && source == null) {
             conn.VertexList.Add(new Vertex(room.PortAt(CompassPointHelper.GetOpposite(sourceCompass))));
@@ -382,8 +398,8 @@ namespace Trizbort.UI.Controls {
             conn.VertexList.RemoveAt(conn.VertexList.Count - 1);
             conn.VertexList.Add(new Vertex(room.PortAt(CompassPointHelper.GetOpposite(sourceCompass))));
           } else {
-            if (target.Region == source.Region)
-              room.Region = target.Region;
+            if (target is Room targetRoom && source is Room sourceRoom && targetRoom.Region == sourceRoom.Region)
+              room.Region = targetRoom.Region;
 
             addConnection(source, sourceCompass, room, targetCompass);
             addConnection(room, sourceCompass, target, targetCompass);
@@ -751,7 +767,7 @@ namespace Trizbort.UI.Controls {
 
     public void SelectDanglingConnections() {
       mSelectedElements.Clear();
-      mSelectedElements.AddRange(Project.Current.Elements.OfType<Connection>().Where(p => p.GetSourceRoom() == null || p.GetTargetRoom() == null));
+      mSelectedElements.AddRange(Project.Current.Elements.OfType<Connection>().Where(p => p.IsDangling));
       updateSelection();
     }
 
@@ -1031,6 +1047,10 @@ namespace Trizbort.UI.Controls {
 
         case Keys.E:
           if (ModifierKeys == Keys.Control) commandController.SetRoomShape(RoomShape.SquareCorners);
+          break;
+
+        case Keys.L:
+          if (ModifierKeys == Keys.None) AddLabel(true);
           break;
 
         case Keys.R:
@@ -1392,15 +1412,15 @@ namespace Trizbort.UI.Controls {
     }
 
     /// <summary>
-    ///   Add a new connection between the given rooms.
+    ///   Add a new connection between the given map nodes.
     /// </summary>
     /// <param name="roomOne">The first room.</param>
     /// <param name="compassPointOne">The direction of the connection in the first room.</param>
     /// <param name="roomTwo">The second room.</param>
     /// <param name="compassPointTwo">The direction of the connection in the second room.</param>
-    private Connection addConnection(Room roomOne, CompassPoint compassPointOne, Room roomTwo, CompassPoint compassPointTwo) {
-      var vertexOne = new Vertex(roomOne.PortAt(compassPointOne));
-      var vertexTwo = new Vertex(roomTwo.PortAt(compassPointTwo));
+    private Connection addConnection(Element roomOne, CompassPoint compassPointOne, Element roomTwo, CompassPoint compassPointTwo) {
+      var vertexOne = new Vertex(roomOne.PortList.OfType<Room.CompassPort>().First(port => port.CompassPoint == compassPointOne));
+      var vertexTwo = new Vertex(roomTwo.PortList.OfType<Room.CompassPort>().First(port => port.CompassPoint == compassPointTwo));
       var connection = new Connection(Project.Current, vertexOne, vertexTwo) {
         Style = NewConnectionStyle,
         Flow = NewConnectionFlow
@@ -1648,7 +1668,7 @@ namespace Trizbort.UI.Controls {
           darkToolStripMenuItem.Checked = lastSelectedRoom.IsDark;
         }
 
-        if (hitElement is Connection) {
+        if (hitElement is Connection || hitElement is MapLabel) {
           addRoomToolStripMenuItem.Visible = true;
 
           renameToolStripMenuItem.Visible = false;
@@ -1676,6 +1696,11 @@ namespace Trizbort.UI.Controls {
           toolStripSeparator2.Visible = true;
 
           roomPropertiesToolStripMenuItem.Enabled = true;
+          sendToBackToolStripMenuItem.Visible = hitElement is MapLabel;
+          bringToFrontToolStripMenuItem.Visible = hitElement is MapLabel;
+          toolStripSeparator7.Visible = hitElement is MapLabel;
+          m_lineStylesMenuItem.Visible = hitElement is Connection;
+          m_reverseLineMenuItem.Visible = hitElement is Connection;
         }
       } else {
         renameToolStripMenuItem.Visible = false;
@@ -1726,17 +1751,17 @@ namespace Trizbort.UI.Controls {
     }
 
     /// <summary>
-    ///   Keep the bend of unselected curved connections when both of the rooms they join are moved together.
+    ///   Keep the bend of unselected curved connections when both docked elements are moved together.
     /// </summary>
     private void moveCurveWaypointsWithRooms(Vector delta) {
       if (delta == Vector.Zero) return;
-      var movedRooms = new HashSet<Room>(mSelectedElements.OfType<Room>());
-      if (movedRooms.Count == 0) return;
+      var movedNodes = new HashSet<Element>(mSelectedElements.Where(element => element is ISizeable));
+      if (movedNodes.Count == 0) return;
 
       foreach (var connection in Project.Current.Elements.OfType<Connection>()) {
         if (!connection.HasCurveWaypoints || mSelectedElements.Contains(connection)) continue;
-        if (connection.VertexList[0].Port?.Owner is Room start && movedRooms.Contains(start) &&
-            connection.VertexList[connection.VertexList.Count - 1].Port?.Owner is Room end && movedRooms.Contains(end))
+        if (connection.VertexList[0].Port?.Owner is Element start && movedNodes.Contains(start) &&
+            connection.VertexList[connection.VertexList.Count - 1].Port?.Owner is Element end && movedNodes.Contains(end))
           connection.MoveCurveWaypointsBy(delta);
       }
     }
@@ -2448,6 +2473,8 @@ namespace Trizbort.UI.Controls {
 
     private void pasteRooms(bool atCursor, CopyController.CopyObject xx, CopyController controller) {
       var newRooms = new List<Room>();
+      var newLabels = new List<MapLabel>();
+      var copiedNodes = new Dictionary<int, Element>();
       var newConnections = new List<Connection>();
 
       if (xx != null) {
@@ -2475,6 +2502,20 @@ namespace Trizbort.UI.Controls {
 
           // set room properties
           controller.SetRoom(newRoom, room);
+          copiedNodes[room.OldID] = newRoom;
+        }
+
+        foreach (var label in xx.Labels) {
+          var newLabel = AddLabel(atCursor, false);
+          if (firstElement) {
+            offsetX = label.Position.X - newLabel.X;
+            offsetY = label.Position.Y - newLabel.Y;
+            firstElement = false;
+          }
+          controller.SetLabel(newLabel, label);
+          newLabel.Position = label.Position - new Vector(offsetX, offsetY);
+          copiedNodes[label.OldID] = newLabel;
+          newLabels.Add(newLabel);
         }
 
         Refresh();
@@ -2487,11 +2528,12 @@ namespace Trizbort.UI.Controls {
 
           foreach (var vertexObj in connection.VertextList)
             if (vertexObj.Type == CopyController.VertexType.Dock) {
-              var foundDock = newRooms.FirstOrDefault(p => p.OldID == vertexObj.OwnerId);
-              if (foundDock != null) {
-                CompassPointHelper.FromName(vertexObj.PortId, out var point);
-                var vertexOne = new Vertex(foundDock.PortAt(point));
+              if (copiedNodes.TryGetValue(vertexObj.OwnerId, out var foundDock)) {
+                var port = foundDock.PortList.First(p => p.ID == vertexObj.PortId);
+                var vertexOne = new Vertex(port);
                 currentConnection.VertexList.Add(vertexOne);
+              } else {
+                currentConnection.VertexList.Add(new Vertex(vertexObj.Position - new Vector(offsetX, offsetY)));
               }
             } else {
               var vectorOne = new Vector(Convert.ToSingle(vertexObj.Position.X) - offsetX, Convert.ToSingle(vertexObj.Position.Y) - offsetY);
@@ -2505,7 +2547,9 @@ namespace Trizbort.UI.Controls {
 
         mSelectedElements.Clear();
         mSelectedElements.AddRange(newRooms);
+        mSelectedElements.AddRange(newLabels);
         mSelectedElements.AddRange(newConnections);
+        updateSelection();
       }
     }
 
@@ -2548,7 +2592,7 @@ namespace Trizbort.UI.Controls {
       mPorts.Clear();
 
       // decide if we want ports on the element under the mouse cursor; if so, add them
-      if (HoverElement is Room && !mSelectedElements.Contains(HoverElement))
+      if ((HoverElement is Room || HoverElement is MapLabel) && !mSelectedElements.Contains(HoverElement))
         if (dragMode == DragModes.MovePort || CanDrawLine && SelectedElement == null)
           mPorts.AddRange(HoverElement.PortList);
 
@@ -2610,7 +2654,7 @@ namespace Trizbort.UI.Controls {
     }
 
     private void resizeRoom(Keys keyCode) {
-      foreach (var element in SelectedRooms) {
+      foreach (var element in SelectedElements.OfType<ISizeable>()) {
         var delta = 2.0f;
         if (Settings.SnapToGrid)
           delta = Settings.GridSize;
