@@ -104,6 +104,22 @@ name/objects/descriptions), and uses its size. When `DoubleClickToAddRoom` (*Map
 
 ## Dialog catalogue (`UI\*.cs`)
 
+### Map labels
+
+`Canvas.AddLabel` is exposed by **Edit → Add Label**, the canvas context menu and the **L**
+key. It places a new annotation at the cursor (keyboard/context menu) or viewport centre
+(Edit menu), selects it and opens `LabelPropertiesDialog`. The dialog edits multiline text,
+shape, outline style, background visibility and three colours. Outline and Background have
+separate groups with Enabled checkboxes and their related controls. Disabling Outline saves
+`BorderStyle.None`; its line style/colour controls are disabled. Background colour is enabled
+only with its checkbox. Shape is editable when either outline or background is enabled, since
+it determines both.
+Double-click/Enter/Properties reopens it. OK applies changes; Cancel leaves existing properties
+untouched. Labels use the normal selection, movement, resize handles, keyboard resizing,
+copy/paste, z-order and delete paths; connectors can be drawn from their compass ports exactly
+as for rooms. Their bounds appear in the minimap overview. They appear in image/PDF rendering
+but not IF-language source export.
+
 | Dialog | Purpose |
 |---|---|
 | `AboutDialog` | Application/version/about info and links. |

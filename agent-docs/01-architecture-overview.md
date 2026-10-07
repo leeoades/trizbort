@@ -8,7 +8,7 @@ avoids deep detail — follow the links to the topic docs for specifics.
 | Folder | Role |
 |---|---|
 | `src/Trizbort/` | Application project root: `Trizbort.csproj`, entry point/configuration, and the source folders below. |
-| `src/Trizbort/Domain/` | Core application/document model: elements (rooms/connections), project state, persistence engines, app-wide settings, controllers/commands, geometry/drawing primitives, enums. Some domain drawing code uses `System.Drawing`/`PdfSharp.Drawing` directly. |
+| `src/Trizbort/Domain/` | Core application/document model: elements (rooms/labels/connections), project state, persistence engines, app-wide settings, controllers/commands, geometry/drawing primitives, enums. Some domain drawing code uses `System.Drawing`/`PdfSharp.Drawing` directly. |
 | `src/Trizbort/UI/` | WinForms forms/dialogs and the `Canvas` control (map drawing surface + input handling). Talks to `Domain` via controllers and direct `Project.Current` access. |
 | `src/Trizbort/Automap/` | Transcript parser that creates `Room`/`Connection` objects. Uses `IAutomapCanvas` for map mutations, but also directly depends on WinForms (`AutomapRoomSameDirectionDialog`, `MessageBox`). |
 | `src/Trizbort/Export/` | IF-language exporters via a shared `CodeExporter` base class. Image/PDF export live in `UI/MainForm.cs`. |
@@ -29,7 +29,7 @@ UI (MainForm, dialogs, Canvas)
 Domain.Controllers (CommandController, CanvasController, RoomController, CopyController, ElementController)
    │  thin façade, some direct Project/Canvas mutation too
    ▼
-Domain (Project, Element/Room/Connection, AppSettings, MapLoader/MapSaver)
+Domain (Project, Element/Room/MapLabel/Connection, AppSettings, MapLoader/MapSaver)
    │
    ▼
 Util (XmlScribe/XmlElementReader for persistence; misc helpers)
@@ -52,6 +52,7 @@ Everything revolves around one object graph:
 Project.Current               (Domain\Application\Project.cs)
 └── Elements : BoundList<Element>   (one flat heterogeneous list)
     ├── Room      (Domain\Elements\Room.cs)
+    ├── MapLabel  (Domain\Elements\MapLabel.cs)
     └── Connection (Domain\Elements\Connection.cs, owns 0/1 Door)
 ```
 

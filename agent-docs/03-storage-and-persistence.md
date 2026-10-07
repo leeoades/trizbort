@@ -38,6 +38,13 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
   older Trizbort versions ignore unknown attributes (they simply draw the line straight).
 - `<settings>` holds per-map drawing/document settings (fonts, colors, grid, validation rules)
   — separate again from the two settings systems below.
+- Labels use `<label id="..." text="..." x="..." y="..." w="..." h="..." shape="..."
+  borderstyle="..." background="..." textColor="..." borderColor="..." backgroundColor="..."
+  ZOrder="..." />`. Connections with any endpoint docked to a label use `<labelLine>` with the
+  same contents as `<line>` and the same two-pass docking resolution. Older readers only
+  recognize `<room>` and `<line>`, so they ignore both labels and their lines without leaving
+  dangling connectors. Saving through an older version **discards** these unrecognized elements.
+  Clipboard DTOs also preserve labels and docking to copied labels.
 
 ### Save/load call chain
 

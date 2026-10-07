@@ -48,7 +48,7 @@ prefixed with `tests/`, `samples/`, `Docs/`, or `agent-docs/` are relative to th
 ## Quick orientation (if you only read one paragraph)
 
 The whole in-memory document is `Project.Current`, a single flat `BoundList<Element>` called
-`Project.Elements` holding every `Room` and `Connection` (no separate rooms/connections/regions
+`Project.Elements` holding every `Room`, `MapLabel` and `Connection` (no separate rooms/connections/regions
 collections). The UI (`MainForm` + `Canvas`) edits that project through a thin
 controller/command façade (`Domain\Controllers`, `Domain\Commands`) that has **no undo/redo**.
 Maps are persisted as custom XML (`.trizbort` files) via `Domain\Application\MapLoader`/

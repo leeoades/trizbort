@@ -41,19 +41,42 @@ namespace Trizbort.Domain.Controllers {
     }
 
     public void CopyElements(List<Element> mSelectedElements) {
-      var xx = new CopyObject {Rooms = new List<CopyRoomObj>(), Connections = new List<CopyConnectionObj>()};
+      var xx = CreateCopyObject(mSelectedElements);
+      var clipboardText = JsonConvert.SerializeObject(xx, Formatting.Indented, new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Ignore});
+      Clipboard.SetText(clipboardText);
+    }
 
-      foreach (var element in mSelectedElements)
+    public CopyObject CreateCopyObject(IEnumerable<Element> elements) {
+      var xx = new CopyObject {Rooms = new List<CopyRoomObj>(), Connections = new List<CopyConnectionObj>()};
+      foreach (var element in elements)
         if (element is Room) {
           var copy = createCopyObj(element as Room);
           xx.Rooms.Add(copy);
+        } else if (element is MapLabel label) {
+          xx.Labels.Add(new CopyLabelObj {
+            OldID = label.ID, Text = label.Text, Position = label.Position, Size = label.Size,
+            Shape = label.Shape, BorderStyle = label.BorderStyle, HasBackground = label.HasBackground,
+            TextColor = label.TextColor, BorderColor = label.BorderColor, BackgroundColor = label.BackgroundColor,
+            ZOrder = label.ZOrder
+          });
         } else if (element is Connection) {
           var copy = createCopyObj(element as Connection);
           xx.Connections.Add(copy);
         }
 
-      var clipboardText = JsonConvert.SerializeObject(xx, Formatting.Indented, new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Ignore});
-      Clipboard.SetText(clipboardText);
+      return xx;
+    }
+
+    public void SetLabel(MapLabel label, CopyLabelObj copy) {
+      label.Text = copy.Text;
+      label.Size = copy.Size;
+      label.Shape = copy.Shape;
+      label.BorderStyle = copy.BorderStyle;
+      label.HasBackground = copy.HasBackground;
+      label.TextColor = copy.TextColor;
+      label.BorderColor = copy.BorderColor;
+      label.BackgroundColor = copy.BackgroundColor;
+      label.ZOrder = copy.ZOrder;
     }
 
     public ICopyObj PasteElements() {
@@ -182,7 +205,7 @@ namespace Trizbort.Domain.Controllers {
 
       var ii = 0;
       foreach (var vertex in conn.VertexList) {
-        var yy = new CopyVertexObj {Index = ii};
+        var yy = new CopyVertexObj {Index = ii, Position = vertex.Position};
         if (vertex.Port != null) {
           yy.Type = VertexType.Dock;
           yy.OwnerId = vertex.Port.Owner.ID;
@@ -203,6 +226,21 @@ namespace Trizbort.Domain.Controllers {
     public class CopyObject : ICopyObj {
       public List<CopyConnectionObj> Connections;
       public List<CopyRoomObj> Rooms;
+      public List<CopyLabelObj> Labels { get; set; } = new List<CopyLabelObj>();
+    }
+
+    public class CopyLabelObj {
+      public int OldID { get; set; }
+      public string Text { get; set; }
+      public Vector Position { get; set; }
+      public Vector Size { get; set; }
+      public RoomShape Shape { get; set; }
+      public BorderDashStyle BorderStyle { get; set; }
+      public bool HasBackground { get; set; }
+      public Color TextColor { get; set; }
+      public Color BorderColor { get; set; }
+      public Color BackgroundColor { get; set; }
+      public int ZOrder { get; set; }
     }
 
     public class CopyConnectionObj {

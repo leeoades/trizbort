@@ -71,6 +71,20 @@ for the overall layering.
   `AdjustAllRoomConnections()` (re-anchors connector attachment points after the room moves —
   call this, or go through code paths that already call it, after any bulk room repositioning).
 
+## `MapLabel : Element, ISizeable`
+
+`Domain\Elements\MapLabel.cs` is an annotation, not a `Room`. It has multiline `Text`
+(`Name` aliases it), rectangular geometry, the existing four room shapes, text/border/background
+colours, `BorderStyle` (including `None`) and an independent `HasBackground` flag. New labels
+default to text only. Selection/hover outlines and resize handles remain available regardless
+of those visibility settings. Labels use the same compass-port IDs as rooms, so normal
+`Connection` vertices can dock to them and follow movement/resizing.
+
+Room-only selection, validation, statistics and language exporters do not include labels.
+`Connection.GetSourceRoom`/`GetTargetRoom` deliberately return null for label endpoints;
+`Connection.IsDangling` tests actual endpoint docking, not whether the endpoints are rooms.
+Deleting a label invokes the same project-level connection cleanup as deleting a room.
+
 ## `Connection : Element`
 
 `Domain\Elements\Connection.cs`
@@ -116,7 +130,7 @@ an `Element`. It has no ID and no behavior; it's just metadata hung off an optio
 
 `Domain\Elements\IMoveable.cs`, `ISizeable.cs` — internal interfaces. `IMoveable` requires
 `Position`/`X`/`Y`; `ISizeable : IMoveable` adds `Size`/`Width`/`Height`/`InnerBounds`. In
-practice only `Room` implements `ISizeable` — connections use vertex/line geometry instead of a
+practice `Room` and `MapLabel` implement `ISizeable` — connections use vertex/line geometry instead of a
 rectangular size.
 
 ## Supporting types (`Domain\Misc`, `Domain\Enums`)

@@ -67,6 +67,9 @@ namespace Trizbort.UI {
 
     public MainForm() {
       InitializeComponent();
+      m_editMenu.DropDownItems.Add(new ToolStripMenuItem("Add &Label", null, (_, __) => Canvas.AddLabel(false)) {
+        ShortcutKeyDisplayString = "L"
+      });
       synchronizationContext = SynchronizationContext.Current;
       TrizbortApplication.MainForm = this;
 

@@ -185,6 +185,7 @@ namespace Trizbort.Domain.Elements {
 
     public RoomShape GetRoomType() {
       if (this is Room xx) return xx.Shape;
+      if (this is MapLabel label) return label.Shape;
       return RoomShape.NotARoom;
     }
 

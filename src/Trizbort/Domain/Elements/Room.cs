@@ -575,7 +575,7 @@ namespace Trizbort.Domain.Elements {
         }
 
       if (Project.Current.MustHaveNoDanglingConnectors)
-        if (Project.Current.Elements.OfType<Connection>().Count(p => p.GetSourceRoom() == this && p.GetTargetRoom() == null) > 0) {
+        if (Project.Current.Elements.OfType<Connection>().Count(p => p.GetSourceRoom() == this && p.IsDangling) > 0) {
           state = new RoomValidationState {
             Message = "Room has dangling connectors.",
             Status = RoomValidationStatus.Invalid,
@@ -1541,9 +1541,9 @@ namespace Trizbort.Domain.Elements {
     }
 
     internal class CompassPort : Port {
-      public CompassPort(CompassPoint compassPoint, Room room) : base(room) {
+      public CompassPort(CompassPoint compassPoint, Element owner) : base(owner) {
         CompassPoint = compassPoint;
-        Room = room;
+        Room = owner as Room;
       }
 
       public CompassPoint CompassPoint { get; set; }

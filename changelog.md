@@ -7,6 +7,9 @@ Add new changes here as features and fixes are implemented. Replace `vNext` with
 number and date when publishing a release.
 
 ### Add
+- **Map labels:** press **L**, choose **Edit > Add Label**, or use the canvas right-click menu to add multiline annotations with rectangular, rounded, elliptical or octagonal shapes. Labels support independent text, outline and background colours, optional outlines/backgrounds, resizing, copy/paste and connections to rooms. They appear in the minimap and image/PDF exports, but are excluded from generated game rooms and exits. (#10)
+- Label properties groups outline and background settings with separate **Enabled** checkboxes and their related controls. The shared shape remains editable whenever either is enabled.
+- Labels and their connecting lines are saved separately from rooms and ordinary lines, so older Trizbort versions ignore them safely. Saving from an older version discards labels and their lines; retain the original map when using an older editor.
 - **Curved connections:** select a connection to show a handle at its midpoint; drag it to bend the line into a smooth curve. Once bent, extra handles appear at the 25% and 75% points, allowing up to three waypoints. Click a waypoint and press Delete to remove it. Curves are saved with the map and survive copy/paste; older versions draw these lines straight. (#3)
 - Curve handles are drawn larger than the standard resize handles, with a generous grab area, and stay a usable size on screen when zoomed out.
 
