@@ -3,7 +3,7 @@
 Trizbort is a tool for creating maps for interactive fiction. It was first developed by [genstein](https://github.com/genstein) and later continued by [Jason Lautzenheiser](https://github.com/JasonLautzenheiser). This repository is my continuation of the project, forked from [Jason's Trizbort repository](https://github.com/JasonLautzenheiser/trizbort), with thanks to Jason and all of his collaborators for their work.
 
 ## Links
-- [Documentation](Docs/index.shtml)
+- [Documentation](Docs/index.md)
 - [Issues](https://github.com/leeoades/trizbort/issues)
 - [Releases](https://github.com/leeoades/trizbort/releases)
 - [Release Notes](changelog.md)
