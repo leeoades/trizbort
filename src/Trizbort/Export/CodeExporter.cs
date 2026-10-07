@@ -1,27 +1,3 @@
-/*
-    Copyright (c) 2010-2018 by Genstein and Jason Lautzenheiser.
-
-    This file is (or was originally) part of Trizbort, the Interactive Fiction Mapper.
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-    THE SOFTWARE.
-*/
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -61,21 +37,21 @@ namespace Trizbort.Export {
     protected static string Deaccent(string mystr) {
       var x = "";
       foreach (var c in mystr)
-        if (c >= 'à' && c <= 'å')
+        if (c >= 'ï¿½' && c <= 'ï¿½')
           x = x + 'a';
-        else if (c >= 'À' && c <= 'Å') x = x + 'A';
-        else if (c == 'Ç') x = x + 'C';
-        else if (c == 'ç') x = x + 'c';
-        else if (c >= 'è' && c <= 'ë') x = x + 'e';
-        else if (c >= 'È' && c <= 'Ë') x = x + 'E';
-        else if (c >= 'ì' && c <= 'ï') x = x + 'i';
-        else if (c >= 'Ì' && c <= 'Ï') x = x + 'I';
-        else if (c == 'ñ') x = x + 'n';
-        else if (c == 'Ñ') x = x + 'N';
-        else if (c >= 'Ò' && c <= 'Ö') x = x + 'o';
-        else if (c >= 'ò' && c <= 'ö') x = x + 'O';
-        else if (c >= 'ù' && c <= 'ü') x = x + 'u';
-        else if (c >= 'Ù' && c <= 'Ü') x = x + 'U';
+        else if (c >= 'ï¿½' && c <= 'ï¿½') x = x + 'A';
+        else if (c == 'ï¿½') x = x + 'C';
+        else if (c == 'ï¿½') x = x + 'c';
+        else if (c >= 'ï¿½' && c <= 'ï¿½') x = x + 'e';
+        else if (c >= 'ï¿½' && c <= 'ï¿½') x = x + 'E';
+        else if (c >= 'ï¿½' && c <= 'ï¿½') x = x + 'i';
+        else if (c >= 'ï¿½' && c <= 'ï¿½') x = x + 'I';
+        else if (c == 'ï¿½') x = x + 'n';
+        else if (c == 'ï¿½') x = x + 'N';
+        else if (c >= 'ï¿½' && c <= 'ï¿½') x = x + 'o';
+        else if (c >= 'ï¿½' && c <= 'ï¿½') x = x + 'O';
+        else if (c >= 'ï¿½' && c <= 'ï¿½') x = x + 'u';
+        else if (c >= 'ï¿½' && c <= 'ï¿½') x = x + 'U';
         else x = x + c;
       return x;
     }
