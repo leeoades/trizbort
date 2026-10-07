@@ -95,7 +95,6 @@ namespace Trizbort.UI.Controls {
 
       SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.ResizeRedraw, true);
       DoubleBuffered = true;
-      m_cornerPanel.BackColor = SystemColors.Control;
 
       PreviewKeyDown += onPreviewKeyDown;
       ctxCanvasMenu.Items.Insert(0, new ToolStripMenuItem("Add &Label", null, (_, __) => AddLabel(true)));
@@ -153,10 +152,10 @@ namespace Trizbort.UI.Controls {
         m_minimap.Visible = value;
         if (!m_minimap.Visible) {
           m_vScrollBar.Top = 0;
-          m_vScrollBar.Height = Height - m_cornerPanel.Height;
+          m_vScrollBar.Height = Height - m_hScrollBar.Height;
         } else {
           m_vScrollBar.Top = m_minimap.Bottom;
-          m_vScrollBar.Height = Height - m_cornerPanel.Height - m_minimap.Height;
+          m_vScrollBar.Height = Height - m_hScrollBar.Height - m_minimap.Height;
         }
       }
     }
