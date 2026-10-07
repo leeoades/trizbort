@@ -314,7 +314,8 @@ namespace Trizbort.UI.Controls {
 
     public Room AddRoom(bool atCursor, bool insertRoom = false, bool doRefresh = true) {
       var room = new Room(Project.Current) {Size = mNewRoomSize};
-      room.CopyStyleFrom(mNewRoomStyleSource);
+      if (ApplicationSettingsController.AppSettings.ApplyStyleToNewRooms)
+        room.CopyStyleFrom(mNewRoomStyleSource);
 
       // Changed this to ignore ID gaps. ID gaps are resolved on load
 

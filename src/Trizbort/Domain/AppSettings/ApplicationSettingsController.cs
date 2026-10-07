@@ -51,6 +51,7 @@ namespace Trizbort.Domain.AppSettings {
       settings.RecentProjects.Clear();
       settings.ShowObjectsInTooltips = true;
       settings.ShowDescriptionsInTooltips = true;
+      settings.ApplyStyleToNewRooms = false;
     }
 
     public static void SaveSettings() {
@@ -74,6 +75,7 @@ namespace Trizbort.Domain.AppSettings {
         dialog.GenVerticalMargin = settings.GenVerticalMargin;
         dialog.LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
         dialog.HandDrawnGlobal = settings.HandDrawnGlobal;
+        dialog.ApplyStyleToNewRooms = settings.ApplyStyleToNewRooms;
         dialog.ShowDescriptionsInTooltip = settings.ShowDescriptionsInTooltips;
         dialog.ShowObjectsInTooltip = settings.ShowObjectsInTooltips;
         dialog.LimitConnectionDescriptionCharactersInTooltip = settings.LimitConnectionDescriptionCharactersInTooltip;
@@ -96,6 +98,7 @@ namespace Trizbort.Domain.AppSettings {
           settings.GenVerticalMargin = (int) dialog.GenVerticalMargin;
           settings.LoadLastProjectOnStart = dialog.LoadLastProjectOnStart;
           settings.HandDrawnGlobal = dialog.HandDrawnGlobal;
+          settings.ApplyStyleToNewRooms = dialog.ApplyStyleToNewRooms;
           settings.ShowDescriptionsInTooltips = dialog.ShowDescriptionsInTooltip;
           settings.ShowObjectsInTooltips = dialog.ShowObjectsInTooltip;
           settings.ToolTipConnectionDescriptionCharactersToShow = dialog.ToolTipConnectionDescriptionCharactersToShow;

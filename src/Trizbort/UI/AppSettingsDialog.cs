@@ -15,6 +15,8 @@ namespace Trizbort.UI {
 
     public float GenVerticalMargin { get => (float) m_preferredVerticalMargin.Value; set => m_preferredVerticalMargin.Value = (decimal) value; }
 
+    public bool ApplyStyleToNewRooms { get => chkApplyStyleToNewRooms.Checked; set => chkApplyStyleToNewRooms.Checked = value; }
+
     public bool HandDrawnGlobal { get => chkDefaultHandDrawn.Checked; set => chkDefaultHandDrawn.Checked = value; }
 
     public bool InvertMouseWheel { get => m_invertWheelCheckBox.Checked; set => m_invertWheelCheckBox.Checked = value; }

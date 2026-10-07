@@ -85,7 +85,7 @@ two are independent concerns.
 ### New-room defaults
 
 `Canvas` remembers the last selected/changed room (`setRoomDefaultsFrom`, `mNewRoomStyleSource`).
-`AddRoom()` (the `R` hotkey / *Add Room* menu) copies that room's styling onto the new room via
+When the app setting `ApplyStyleToNewRooms` (*Application Settings → Map → Preferences → Apply style to new rooms*, default off) is enabled, `AddRoom()` (the `R` hotkey / *Add Room* menu) copies that room's styling onto the new room via
 `Room.CopyStyleFrom()` (shape, corners, border, colours, region, dark, objects position — not
 name/objects/descriptions), and uses its size. `Canvas.reset()` (new/open project) clears the source.
 
@@ -94,7 +94,7 @@ name/objects/descriptions), and uses its size. `Canvas.reset()` (new/open projec
 | Dialog | Purpose |
 |---|---|
 | `AboutDialog` | Application/version/about info and links. |
-| `AppSettingsDialog` | Edits app-wide preferences backed by `ApplicationSettingsController` (see [`03-storage-and-persistence.md`](03-storage-and-persistence.md)): save behavior, margins, zoom, tooltips, automap defaults. |
+| `AppSettingsDialog` | Edits app-wide preferences backed by `ApplicationSettingsController` (see [`03-storage-and-persistence.md`](03-storage-and-persistence.md)): save behavior, margins, zoom, tooltips, automap defaults. Tabs: General, ToolTips, Map (Preferences: apply style to new rooms). |
 | `AutomapDialog` | Configures and starts a transcript automap run — see [`06-automap.md`](06-automap.md). |
 | `AutomapRoomSameDirectionDialog` | Resolves "a room already exists in this direction" ambiguity during automap. |
 | `ConnectionPropertiesDialog` | Edits a connection's label, direction/flow, door state, color. |

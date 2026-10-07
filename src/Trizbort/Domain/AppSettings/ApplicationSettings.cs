@@ -9,6 +9,7 @@ namespace Trizbort.Domain.AppSettings
   {
     private const string AppSettingsFileName = @".\appsettings.json";
 
+    public bool ApplyStyleToNewRooms { get; set; }
     public AutomapSettings Automap { get; set; } = AutomapSettings.Default;
     public int CanvasHeight { get; set; }
     public int CanvasWidth { get; set; }

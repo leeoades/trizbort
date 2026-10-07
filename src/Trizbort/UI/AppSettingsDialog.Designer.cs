@@ -61,6 +61,9 @@
             this.txtNumOfConnectionDescriptionChars = new System.Windows.Forms.NumericUpDown();
             this.chkLimitConnectionDescriptionTooltipChars = new System.Windows.Forms.CheckBox();
             this.chkShowObjectsInTooltip = new System.Windows.Forms.CheckBox();
+            this.tabMap = new System.Windows.Forms.TabPage();
+            this.grpMapPreferences = new System.Windows.Forms.GroupBox();
+            this.chkApplyStyleToNewRooms = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -70,6 +73,8 @@
             this.tabGeneral.SuspendLayout();
             this.tabToolTips.SuspendLayout();
             this.groupBox4.SuspendLayout();
+            this.tabMap.SuspendLayout();
+            this.grpMapPreferences.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.txtNumOfRoomDescriptionChars)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.txtNumOfConnectionDescriptionChars)).BeginInit();
             this.SuspendLayout();
@@ -372,6 +377,7 @@
             // 
             this.tabControl1.Controls.Add(this.tabGeneral);
             this.tabControl1.Controls.Add(this.tabToolTips);
+            this.tabControl1.Controls.Add(this.tabMap);
             this.tabControl1.Location = new System.Drawing.Point(4, 1);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -501,6 +507,38 @@
             this.chkShowObjectsInTooltip.TabIndex = 0;
             this.chkShowObjectsInTooltip.Text = "Show Objects in Tooltip";
             // 
+            // tabMap
+            // 
+            this.tabMap.Controls.Add(this.grpMapPreferences);
+            this.tabMap.Location = new System.Drawing.Point(4, 24);
+            this.tabMap.Name = "tabMap";
+            this.tabMap.Padding = new System.Windows.Forms.Padding(3);
+            this.tabMap.Size = new System.Drawing.Size(424, 288);
+            this.tabMap.TabIndex = 2;
+            this.tabMap.Text = "Map";
+            this.tabMap.UseVisualStyleBackColor = true;
+            // 
+            // grpMapPreferences
+            // 
+            this.grpMapPreferences.Controls.Add(this.chkApplyStyleToNewRooms);
+            this.grpMapPreferences.Location = new System.Drawing.Point(7, 6);
+            this.grpMapPreferences.Name = "grpMapPreferences";
+            this.grpMapPreferences.Size = new System.Drawing.Size(411, 55);
+            this.grpMapPreferences.TabIndex = 0;
+            this.grpMapPreferences.TabStop = false;
+            this.grpMapPreferences.Text = "Preferences";
+            // 
+            // chkApplyStyleToNewRooms
+            // 
+            this.chkApplyStyleToNewRooms.AutoSize = true;
+            this.chkApplyStyleToNewRooms.Location = new System.Drawing.Point(10, 22);
+            this.chkApplyStyleToNewRooms.Name = "chkApplyStyleToNewRooms";
+            this.chkApplyStyleToNewRooms.Size = new System.Drawing.Size(170, 19);
+            this.chkApplyStyleToNewRooms.TabIndex = 0;
+            this.chkApplyStyleToNewRooms.Text = "Apply style to new rooms";
+            this.toolTip2.SetToolTip(this.chkApplyStyleToNewRooms, "If this is checked, new rooms adopt the style of the last selected room");
+            this.chkApplyStyleToNewRooms.UseVisualStyleBackColor = true;
+            // 
             // AppSettingsDialog
             // 
             this.AcceptButton = this.m_okButton;
@@ -535,6 +573,9 @@
             this.tabGeneral.ResumeLayout(false);
             this.tabToolTips.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
+            this.tabMap.ResumeLayout(false);
+            this.grpMapPreferences.ResumeLayout(false);
+            this.grpMapPreferences.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.txtNumOfRoomDescriptionChars)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.txtNumOfConnectionDescriptionChars)).EndInit();
             this.ResumeLayout(false);
@@ -580,5 +621,8 @@
 		private System.Windows.Forms.GroupBox groupBox4;
 		private System.Windows.Forms.CheckBox chkShowDescriptionsInTooltip;
 		private System.Windows.Forms.CheckBox chkShowObjectsInTooltip;
+		private System.Windows.Forms.TabPage tabMap;
+		private System.Windows.Forms.GroupBox grpMapPreferences;
+		private System.Windows.Forms.CheckBox chkApplyStyleToNewRooms;
 	}
 }

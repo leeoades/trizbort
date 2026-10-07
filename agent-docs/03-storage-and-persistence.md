@@ -77,7 +77,7 @@ Key facts:
 |---|---|---|---|
 | **Map `<settings>`** | Inside the `.trizbort` file itself | Per-document | Per-map drawing settings (fonts/colors/grid/validation rules), via `Settings.Load`/`Settings.Save(scribe)` |
 | **`Properties.Settings`** (`Properties\Settings.settings` / `.Designer.cs`) | `.NET` user-scoped `user.config` (standard `ApplicationSettingsBase` mechanism), registered in `app.config` under `<userSettings>` | Per-Windows-user | Currently **only one setting**: `SettingsLastTabIndex` (long) — just remembers the last-selected tab in `SettingsDialog`. Read/written via `Properties.Settings.Default.SettingsLastTabIndex` in `UI\SettingsDialog.cs`. |
-| **`ApplicationSettings`** (`Domain\AppSettings\ApplicationSettings.cs` + `ApplicationSettingsController.cs`) | JSON file `.\appsettings.json` (relative to working directory!), via Newtonsoft.Json | App-wide, not per-document | Automap defaults, canvas size, debug flags, default fonts/images, export filenames, last-project filename, load-last-project flag, recent-projects list, save-to-image/PDF options, tooltip options, margins/wrapping. |
+| **`ApplicationSettings`** (`Domain\AppSettings\ApplicationSettings.cs` + `ApplicationSettingsController.cs`) | JSON file `.\appsettings.json` (relative to working directory!), via Newtonsoft.Json | App-wide, not per-document | Automap defaults, canvas size, debug flags, default fonts/images, export filenames, last-project filename, load-last-project flag, recent-projects list, save-to-image/PDF options, tooltip options, margins/wrapping, apply-style-to-new-rooms. |
 
 Things worth remembering:
 
