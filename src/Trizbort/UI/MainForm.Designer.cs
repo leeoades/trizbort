@@ -188,7 +188,6 @@ namespace Trizbort.UI
             this.mapStatisticsExportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.m_helpMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.m_onlineHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.m_checkForUpdatesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.m_helpAboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.m_toolStrip = new System.Windows.Forms.ToolStrip();
@@ -1288,7 +1287,6 @@ namespace Trizbort.UI
             // 
             this.m_helpMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.m_onlineHelpMenuItem,
-            this.m_checkForUpdatesMenuItem,
             this.toolStripMenuItem4,
             this.m_helpAboutMenuItem});
             this.m_helpMenu.Name = "m_helpMenu";
@@ -1302,13 +1300,6 @@ namespace Trizbort.UI
             this.m_onlineHelpMenuItem.Size = new System.Drawing.Size(171, 22);
             this.m_onlineHelpMenuItem.Text = "Online Help";
             this.m_onlineHelpMenuItem.Click += new System.EventHandler(this.HelpAndSupportMenuItem_Click);
-            // 
-            // m_checkForUpdatesMenuItem
-            // 
-            this.m_checkForUpdatesMenuItem.Name = "m_checkForUpdatesMenuItem";
-            this.m_checkForUpdatesMenuItem.Size = new System.Drawing.Size(171, 22);
-            this.m_checkForUpdatesMenuItem.Text = "Check for &Updates";
-            this.m_checkForUpdatesMenuItem.Click += new System.EventHandler(this.CheckForUpdatesMenuItem_Click);
             // 
             // toolStripMenuItem4
             // 
@@ -1491,7 +1482,6 @@ namespace Trizbort.UI
         private System.Windows.Forms.ToolStripMenuItem m_reverseLineMenuItem;
         private System.Windows.Forms.ToolStripMenuItem m_onlineHelpMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
-        private System.Windows.Forms.ToolStripMenuItem m_checkForUpdatesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem automappingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem m_automapStartMenuItem;
         private System.Windows.Forms.ToolStripMenuItem m_automapStopMenuItem;
@@ -1577,4 +1567,3 @@ namespace Trizbort.UI
     private System.Windows.Forms.ToolStripMenuItem m_viewShowGridMenuItem;
   }
 }
-

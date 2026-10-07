@@ -25,7 +25,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -49,7 +48,6 @@ using Trizbort.Properties;
 using Trizbort.UI.Controls;
 using Trizbort.Util;
 using Settings = Trizbort.Setup.Settings;
-using AutoUpdaterDotNET;
 using Trizbort.Domain.StatusBar;
 using Trizbort.Export.Languages;
 using Trizbort.Extensions;
@@ -63,8 +61,6 @@ namespace Trizbort.UI {
 
     // TODO: private ToolStripStatusLabel statusLabel;
     private Status trizStatusBar;
-
-    private const string UPDATE_PATH = "https://github.com/leeoades/trizbort/releases/latest/download/trizbortupdate.xml";
 
     private DateTime mLastUpdateUITime;
     private SynchronizationContext synchronizationContext;
@@ -141,18 +137,6 @@ namespace Trizbort.UI {
 
     private void AutomapStopMenuItem_Click(object sender, EventArgs e) {
       Canvas.StopAutomapping();
-    }
-
-    private void CheckForUpdatesMenuItem_Click(object sender, EventArgs e) {
-      AutoUpdater.ShowRemindLaterButton = false;
-      AutoUpdater.ShowSkipButton = false;
-      AutoUpdater.ReportErrors = true;
-      AutoUpdater.Mandatory = false;
-      AutoUpdater.RunUpdateAsAdmin = false;
-      AutoUpdater.ClearAppDirectory = false;
-      AutoUpdater.HttpUserAgent = "Trizbort";
-      AutoUpdater.SetOwner(this);
-      AutoUpdater.Start(UPDATE_PATH);
     }
 
     private bool checkLoseProject() {
@@ -526,11 +510,8 @@ namespace Trizbort.UI {
     }
 
     private void HelpAndSupportMenuItem_Click(object sender, EventArgs e) {
-      try {
-        Process.Start(new ProcessStartInfo("http://www.trizbort.com/Docs/index.shtml"){ UseShellExecute = true });
-      }
-      catch (Exception) {
-        // ignored
+      using (var dialog = new OnlineHelpDialog()) {
+        dialog.ShowDialog(this);
       }
     }
 
@@ -574,12 +555,6 @@ namespace Trizbort.UI {
     }
 
     private void MainForm_Load(object sender, EventArgs e) {
-//      AutoUpdater.ShowRemindLaterButton = true;
-//      AutoUpdater.ShowSkipButton = true;
-//      AutoUpdater.ReportErrors = true;
-//      AutoUpdater.RunUpdateAsAdmin = false;
-//      AutoUpdater.Start("http://www.trizbort.com/trizbortupdate.xml");
-
       setupStatusBar();
       Canvas.MinimapVisible = ApplicationSettingsController.AppSettings.ShowMiniMap;
       var projectLoaded = false;

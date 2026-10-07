@@ -94,6 +94,7 @@ name/objects/descriptions), and uses its size. When `DoubleClickToAddRoom` (*Map
 | Dialog | Purpose |
 |---|---|
 | `AboutDialog` | Application/version/about info and links. |
+| `OnlineHelpDialog` | Opened by Help → Online Help or F1; explains that online help is for v1 and links to the legacy help and the v2 repository. |
 | `AppSettingsDialog` | Edits app-wide preferences backed by `ApplicationSettingsController` (see [`03-storage-and-persistence.md`](03-storage-and-persistence.md)): save behavior, margins, zoom, tooltips, automap defaults. Tabs: General, ToolTips, Map (Preferences: apply style to new rooms, double click to add room). |
 | `AutomapDialog` | Configures and starts a transcript automap run — see [`06-automap.md`](06-automap.md). |
 | `AutomapRoomSameDirectionDialog` | Resolves "a room already exists in this direction" ambiguity during automap. |

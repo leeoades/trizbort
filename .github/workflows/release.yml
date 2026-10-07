@@ -88,32 +88,17 @@ jobs:
         id: package
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_REPO: ${{ github.repository }}
         run: |
           $exe = 'publish\Trizbort.exe'
           if ((Get-Item $exe).VersionInfo.FileVersion -ne $env:RELEASE_VERSION) {
             throw "Published executable version does not match the release tag."
           }
           if (Test-Path 'publish\appsettings.json') {
-            throw "User settings must not be included in the update package."
+            throw "User settings must not be included in the release package."
           }
           Copy-Item LICENSE.txt, PdfSharp.License.txt -Destination publish
           $zipName = "Trizbort-$env:RELEASE_VERSION-win-x64.zip"
           Compress-Archive -Path publish\* -DestinationPath $zipName
-          $hash = (Get-FileHash $zipName -Algorithm SHA256).Hash
-          $releaseUrl = "https://github.com/$env:RELEASE_REPO/releases"
-          @"
-          <?xml version="1.0" encoding="UTF-8"?>
-          <item>
-            <version>$env:RELEASE_VERSION</version>
-            <url>$releaseUrl/download/$env:RELEASE_TAG/$zipName</url>
-            <changelog>$releaseUrl/tag/$env:RELEASE_TAG</changelog>
-            <mandatory>false</mandatory>
-            <executable>Trizbort.exe</executable>
-            <checksum algorithm="SHA256">$hash</checksum>
-          </item>
-          "@ | Set-Content trizbortupdate.xml -Encoding utf8
           "zip=$zipName" >> $env:GITHUB_OUTPUT
 
       - name: Create GitHub Release
@@ -123,6 +108,6 @@ jobs:
           RELEASE_REPO: ${{ github.repository }}
           RELEASE_ZIP: ${{ steps.package.outputs.zip }}
         run: >-
-          gh release create "$env:RELEASE_TAG" "$env:RELEASE_ZIP" trizbortupdate.xml
+          gh release create "$env:RELEASE_TAG" "$env:RELEASE_ZIP"
           --repo "$env:RELEASE_REPO"
           --verify-tag --title "Trizbort $env:RELEASE_TAG" --generate-notes
