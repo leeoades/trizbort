@@ -3,6 +3,26 @@ All notable changes to this project will be documented in this file.  Version nu
 
 ## [Unreleased]
 
+Add new changes here as features and fixes are implemented. Move them into a dated version
+section when publishing a release.
+
+## [2.0.0] - 2026-10-07
+
+### Add
+- **Clone room styling:** enable **Apply style to new rooms** in **Application Settings > Map > Preferences** to have new rooms inherit the last selected room's style, including shape, corners, borders, colours, region and lighting. Room names, objects and descriptions are not copied.
+- **Double click to create a room:** enable **Double click to add room** in the same preferences group to create a room by double clicking empty space on the map. Double clicking existing rooms and connections still opens their properties.
+- Both Map preferences default to disabled to preserve existing behaviour, and are saved in `appsettings.json` for the next launch. Double-click-created rooms also respect the clone-style preference.
+
+### Change
+- Ported the Windows Forms application to .NET 8. The application remains Windows-only.
+- Releases now provide a self-contained Windows x64 zip; no separate .NET installation is required. Extract into a writable folder and run `Trizbort.exe`.
+- **Check for Updates** now uses GitHub Releases instead of the old server. Updates preserve `appsettings.json`.
+- Added automated release builds and layered technical documentation for contributors.
+
+### Distribution notes
+- Old ClickOnce installations cannot migrate automatically; download this release manually.
+- Executables are unsigned, so Windows may display a SmartScreen warning.
+
 ## [1.7.4.1] - 2022-03-28
 There were a few UI issues when scaling mode was changed in windows.  If you see any further issues, please create an issue
 
