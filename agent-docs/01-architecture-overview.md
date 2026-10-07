@@ -9,7 +9,7 @@ avoids deep detail — follow the links to the topic docs for specifics.
 |---|---|
 | `Domain\` | Core application/document model: elements (rooms/connections), project state, persistence engines, app-wide settings, controllers/commands, geometry/drawing primitives, enums. No WinForms dependency *in principle*, though in practice some domain code (e.g. `Room`/`Connection` drawing) uses `System.Drawing`/`PdfSharp.Drawing` types directly rather than being UI-framework-agnostic. |
 | `UI\` | WinForms forms/dialogs and the `Canvas` control (map drawing surface + input handling). Talks to `Domain` via `Domain\Controllers` and direct `Project.Current` access. |
-| `Automap\` | Transcript-parsing engine that turns IF game session text into `Room`/`Connection` objects. Talks to the UI only through the `IAutomapCanvas` abstraction (implemented by `Canvas`). |
+| `Automap\` | Transcript-parsing engine that turns IF game session text into `Room`/`Connection` objects. Uses `IAutomapCanvas` for map mutations, but `Automap.cs` also directly depends on WinForms: it shows `AutomapRoomSameDirectionDialog` for ambiguity resolution and raises `MessageBox` errors — it is not UI-framework-agnostic. |
 | `Export\` | Converts `Project.Current.Elements` into IF-language source (Inform6/7, TADS, Alan, Hugo, ZIL, Quest, Adventuron) via a shared `CodeExporter` base class. Image/PDF export live in `UI\MainForm.cs` instead, not here. |
 | `Util\` | Small standalone helpers: XML serialization (`XmlScribe`, `XmlElementReader`, `XmlAttributeReader`), string formatting, path handling, clipboard, keyboard. |
 | `Extensions\` | Extension methods (`ColorExtensions`, `FileExtensions`, `RoomExtensions`, `StringExtensions`). |
@@ -38,7 +38,8 @@ Two things cut across this layering rather than flowing through it:
 
 - **Automap** (`Automap\Automap.cs`) mutates `Project.Current.Elements` directly through the
   `IAutomapCanvas` abstraction implemented by `Canvas.Automap.cs` — it does not go through
-  `Domain.Controllers`.
+  `Domain.Controllers`. It also depends on WinForms directly (`AutomapRoomSameDirectionDialog`,
+  `MessageBox`) rather than going through `IAutomapCanvas` for everything.
 - **Export** (`Export\CodeExporter` + `Export\Languages\*`) only *reads* `Project.Current.Elements`
   — it never mutates the project.
 

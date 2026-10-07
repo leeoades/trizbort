@@ -14,8 +14,10 @@ commands) and infers rooms, descriptions, and connections between them, populati
 - `Automap\Automap.cs` — the parser/state machine. All the actual heuristics live here.
 - `Automap\AutomapSettings.cs` — configuration (see table below).
 - `Automap\IAutomapCanvas.cs` — abstraction the parser uses to find/create/connect/select/
-  remove rooms, implemented by `UI\Controls\Canvas.Automap.cs`. This is the seam that keeps the
-  parser independent of WinForms.
+  remove rooms, implemented by `UI\Controls\Canvas.Automap.cs`. It keeps most map-mutation calls
+  independent of WinForms, but `Automap.cs` still depends on WinForms directly elsewhere — it
+  shows `AutomapRoomSameDirectionDialog` for ambiguity resolution and raises `MessageBox` errors
+  on transcript I/O failures (see below), so it is not a complete UI-independence boundary.
 - `Automap\Utility\PeekingStreamReader.cs` — stream reader with lookahead, used so the parser
   can process a transcript that's still growing (live/continuing transcript mode).
 
