@@ -1936,8 +1936,11 @@ namespace Trizbort.UI.Controls {
           yield return waypoint;
     }
 
+    // Handle size in canvas units; never shrinks below Settings.HandleSize on screen when zoomed out.
+    private float waypointHandleScale => Settings.HandleSize * Math.Max(1f, 1f / ZoomFactor);
+
     private Rect waypointHandleBounds(Connection connection, CurveWaypoint waypoint) {
-      var size = connection.GetCurveWaypoint(waypoint).HasValue ? Settings.HandleSize : Settings.HandleSize * 0.75f;
+      var size = waypointHandleScale * (connection.GetCurveWaypoint(waypoint).HasValue ? 2f : 1.5f);
       var position = connection.GetCurveWaypointHandlePosition(waypoint);
       return new Rect(position.X - size / 2, position.Y - size / 2, size, size);
     }
@@ -1961,8 +1964,8 @@ namespace Trizbort.UI.Controls {
       CurveWaypoint? hit = null;
       foreach (var waypoint in visibleWaypoints(connection)) {
         var bounds = waypointHandleBounds(connection, waypoint);
-        // be a little generous so the small handles are easy to grab
-        bounds.Inflate(Settings.HandleSize / 4);
+        // be generous so the handles are easy to grab
+        bounds.Inflate(waypointHandleScale / 2);
         if (bounds.Contains(canvasPos)) hit = waypoint;
       }
 

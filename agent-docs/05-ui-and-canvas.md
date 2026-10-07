@@ -85,9 +85,10 @@ two are independent concerns.
 ### Connection curve waypoint handles
 
 When exactly one two-vertex `Connection` is selected, `Canvas` draws round waypoint handles
-(`drawWaypointHandles`, hit-tested by `hitTestWaypoint` before resize handles/ports): full-size
-for set waypoints, smaller translucent "insert" handles for addable empty slots (the midpoint of
-a straight line; then the 25%/75% points on the curve). Dragging uses `DragModes.MoveWaypoint`;
+(`drawWaypointHandles`, hit-tested by `hitTestWaypoint` before resize handles/ports): 2×
+`Settings.HandleSize` for set waypoints, 1.5× translucent "insert" handles for addable empty
+slots (the midpoint of a straight line; then the 25%/75% points on the curve), scaled so they
+never shrink on screen when zoomed out (`waypointHandleScale`). Dragging uses `DragModes.MoveWaypoint`;
 an insert handle only creates a waypoint once dragged past `Settings.DragDistanceToInitiateNewConnection`.
 The clicked/dragged waypoint becomes `mSelectedWaypoint`, and `DeleteSelection()` (Delete key)
 removes that waypoint instead of the connection. Any selection change clears it. Dragging a
