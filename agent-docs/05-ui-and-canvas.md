@@ -87,7 +87,7 @@ two are independent concerns.
 `Canvas` remembers the last selected/changed room (`setRoomDefaultsFrom`, `mNewRoomStyleSource`).
 `AddRoom()` (the `R` hotkey / *Add Room* menu) copies that room's styling onto the new room via
 `Room.CopyStyleFrom()` (shape, corners, border, colours, region, dark, objects position — not
-name/objects/descriptions), and uses its size. `Canvas.Reset()` clears the source.
+name/objects/descriptions), and uses its size. `Canvas.reset()` (new/open project) clears the source.
 
 ## Dialog catalogue (`UI\*.cs`)
 
