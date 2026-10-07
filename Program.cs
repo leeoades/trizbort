@@ -40,8 +40,7 @@ namespace Trizbort
     [STAThread]
     private static void Main(string[] args)
     {
-      System.Windows.Forms.Application.EnableVisualStyles();
-      System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+      ApplicationConfiguration.Initialize();
 
       Console.WriteLine(AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName);
 
