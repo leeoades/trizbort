@@ -38,8 +38,10 @@ Public entry points: `string Export()` (returns generated source as a string) an
 
 ### `prepareContent()` — shared input preparation (same for every language)
 
-1. `findRegions()` — maps each distinct `Room.Region` string to an `ExportRegion` with a unique
-   generated name.
+1. `findRegions()` — iterates the map-level `Settings.Regions` list (not `Room.Region` directly),
+   excludes the default region, and maps each to an `ExportRegion` with a unique generated name.
+   Note this list can contain regions no room actually uses — exporters rely on it for
+   name/lookup purposes, not as a "distinct regions actually in use" computation.
 2. `findRooms()` — iterates `Project.Current.Elements.OfType<Room>()`, builds a `Location` per
    room with a unique generated name.
 3. `findExits()` — iterates `Project.Current.Elements.OfType<Connection>()`, resolves each
@@ -48,10 +50,15 @@ Public entry points: `string Export()` (returns generated source as a string) an
 4. `pickBestExits()` — when multiple connections could serve as "the" exit in a given direction,
    picks the preferred one.
 5. `findThings()` — parses each room's free-text `Objects` field into structured `Thing`
-   objects. **Indentation indicates containment** (a more-indented line is "inside" the
-   preceding less-indented one), and bracketed text (`[...]`) is parsed as key/value properties
-   on the object. This free-text-to-structured-object parser is shared by all exporters — if
-   you need to support a new object property/syntax, change it here rather than per-language.
+   objects (`Export\Domain\Thing.cs`). **Indentation indicates containment** (a more-indented
+   line is "inside" the preceding less-indented one). Bracketed text (`[...]`) is **not**
+   key/value properties — `Thing`'s constructor treats the bracket contents as a compact string
+   of single-character flags, matched with `.Contains(...)`: `f`/`m`/`p` (gender/force-person),
+   `1`/`2` (force singular/plural), `c` (container), `s` (scenery), `u` (supporter), `w` (worn),
+   `h` (part-of), `!` (proper-named). Any other character inside the brackets produces a
+   `WarningText` validation message. This free-text-to-structured-object parser is shared by all
+   exporters — if you need to support a new object property/syntax, change it here rather than
+   per-language.
 
 Because this preparation is shared, **a bug in room/exit/object resolution usually affects every
 exporter at once** — check `CodeExporter` before assuming a bug is language-specific.

@@ -122,10 +122,15 @@ always treated as the same room.
 | `AddRegionCommand` | Custom in-transcript command (default `tb region`) that assigns/creates a region for the current room. |
 
 These (transcript filename, verbosity, same-name matching, exit guessing, the two custom
-commands) are persisted via `Domain\AppSettings\ApplicationSettingsController` — see
-[`03-storage-and-persistence.md`](03-storage-and-persistence.md). The dialog
-(`UI\AutomapDialog.cs`) maps its controls onto these settings when starting a run; other runtime
-options not in that persisted list come from dialog defaults.
+commands, **and** `SingleStep`/`ContinueTranscript`/`AssumeTwoWayConnections`) are all persisted:
+`ApplicationSettings.Automap` is a plain `AutomapSettings` struct field, and
+`ApplicationSettingsController.SaveSettings()` serializes the whole `ApplicationSettings` object
+to `appsettings.json` with `JsonConvert.SerializeObject` — every public field of the struct goes
+in, not just the subset the legacy-XML migration path (`loadLegacyAppSettings()`) happens to map.
+`UI\AutomapDialog.cs`'s `Data` property round-trips all nine fields to/from its controls
+(`SingleStep` ↔ `m_singleStepCheckBox`, `ContinueTranscript` ↔ `m_startFromEndCheckBox`,
+`AssumeTwoWayConnections` ↔ `chkAssumeTwoWayConnections`, etc.) — see
+[`03-storage-and-persistence.md`](03-storage-and-persistence.md) for the broader settings picture.
 
 ## Debugging a bad automap result
 

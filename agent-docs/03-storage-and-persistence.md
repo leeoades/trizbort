@@ -94,16 +94,19 @@ Things worth remembering:
   verbosity, same-name-room matching, exit guessing, custom object/region commands) are
   described in more detail in [`06-automap.md`](06-automap.md).
 
-## JSON serialization — clipboard only, not the map format
+## JSON serialization — `Domain\SerializeHelpers` converters are currently unused
 
 `Domain\SerializeHelpers\ElementConverter.cs` / `PortConverter.cs` are Newtonsoft.Json
 `JsonConverter`s for polymorphic `Element`/`Connection.VertexPort` deserialization. Both are
-**read-only** (`CanWrite => false`, `WriteJson` throws `NotImplementedException`). They exist to
-support **copy/paste**: `Domain\Controllers\CopyController.cs` serializes selected
-rooms/connections to JSON DTOs (`CopyRoomObj`, `CopyConnectionObj`, `CopyVertexObj`,
-`CopyColorsObj`) for the clipboard, then deserializes them back on paste — this is also why
-`Element`/`Connection`/`Room` carry `[JsonIgnore]` on their non-DTO-friendly properties (the
-`Project` back-reference, the ports list, etc.) even though JSON isn't the save format.
+**read-only** (`CanWrite => false`, `WriteJson` throws `NotImplementedException`). **They are not
+currently referenced anywhere** — clipboard copy/paste does *not* use them:
+`Domain\Controllers\CopyController.cs` calls `JsonConvert.SerializeObject`/`DeserializeObject`
+directly against its own DTOs (`CopyRoomObj`, `CopyConnectionObj`, `CopyVertexObj`,
+`CopyColorsObj`, `CopyObject`) with no custom converters registered. Treat these two converters as
+dead/unused code unless you find a new call site; don't assume they're load-bearing for
+copy/paste. `Element`/`Connection`/`Room` still carry `[JsonIgnore]` on their non-DTO-friendly
+properties (the `Project` back-reference, the ports list, etc.) — that's unrelated to these
+converters and is just hygiene in case anything *does* serialize the domain types directly.
 
 ## Quick checklist: "I need to persist a new piece of state"
 

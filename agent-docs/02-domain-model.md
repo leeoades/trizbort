@@ -31,9 +31,10 @@ for the overall layering.
 
 `Domain\Elements\Element.cs`
 
-- Identity is a plain **positive `int` ID**, not a GUID. Setting `ID` is guarded by
-  `Project.IsElementIDInUse` so you can't collide with another element. New elements normally
-  get `GetNextID()` (first unused positive int); a separate fast-path constructor accepts a
+- Identity is a plain `int` ID, not a GUID. The setter only guards against **duplicates** (via
+  `Project.IsElementIDInUse`) — it does not enforce positivity, so a zero/negative ID can still be
+  assigned or loaded from a file. Only `GetNextID()` (first unused *positive* int) guarantees a
+  positive value for newly created elements; a separate fast-path constructor accepts a
   precomputed ID during file load.
 - Holds `Position`-adjacent concerns common to drawables: ports list (`[JsonIgnore]` — runtime
   only, not serialized as JSON; the real persisted form goes through XML, see the storage doc),
