@@ -1,9 +1,14 @@
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using NUnit.Framework;
+using PdfSharp.Drawing;
+using PdfSharp.Pdf;
 using Shouldly;
+using Trizbort.Domain.Application;
+using Trizbort.Domain.Elements;
 using Trizbort.UI.Controls;
 
 namespace Trizbort.Tests {
@@ -33,5 +38,25 @@ namespace Trizbort.Tests {
       }
     }
 
+    [Test]
+    public void Canvas_FinalRenderToPdfPage_DoesNotThrow() {
+      var previous = Project.Current;
+      var project = new Project();
+      Project.Current = project;
+      try {
+        project.Elements.Add(new Room(project) {Name = "Kitchen"});
+        using (var canvas = new Canvas())
+        using (var document = new PdfDocument())
+        using (var stream = new MemoryStream()) {
+          var page = document.AddPage();
+          using (var graphics = XGraphics.FromPdfPage(page))
+            Should.NotThrow(() => canvas.Draw(graphics, true, (float) page.Width.Point, (float) page.Height.Point));
+          document.Save(stream, false);
+          stream.Length.ShouldBeGreaterThan(500);
+        }
+      } finally {
+        Project.Current = previous;
+      }
+    }
   }
 }

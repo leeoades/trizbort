@@ -541,7 +541,8 @@ namespace Trizbort.UI.Controls {
       }
 
       using (var palette = new Palette()) {
-        if (finalRender) graphics.Graphics.Clear(Settings.Color[Colors.Canvas]);
+        // XGraphics.Graphics is null for PDF targets, so fill via XGraphics rather than Graphics.Clear.
+        if (finalRender) graphics.DrawRectangle(palette.CanvasBrush, 0, 0, width, height);
 
         if (!finalRender) drawGrid(graphics, palette);
 
