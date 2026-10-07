@@ -110,7 +110,7 @@ calls `Canvas.Draw(...)` (the **same** draw method used for on-screen rendering 
 `XGraphics.FromPdfPage(...)` + `Canvas.Draw(...)`, and adds room descriptions as
 `PdfTextAnnotation` notes.
 
-Uses the **`PDFsharp-GDI` 6.2.4** NuGet package (`PackageReference` in `Trizbort.csproj`) — this
+Uses the **`PDFsharp-GDI` 6.2.4** NuGet package (`PackageReference` in `src/Trizbort/Trizbort.csproj`) — this
 replaced the unmaintained `PDFsharp-gdi` 1.50.5147 package during the .NET 8 port (see
 [`09-build-test-and-dotnet8-port.md`](09-build-test-and-dotnet8-port.md)). `PdfSharp.Drawing`
 types (`XGraphics` etc.) are also used directly inside domain drawing code

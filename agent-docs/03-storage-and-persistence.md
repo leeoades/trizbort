@@ -5,8 +5,9 @@ save/load pipeline, and the three *separate* settings systems in this codebase.
 
 ## The `.trizbort` map file format (custom XML, not JSON)
 
-Despite JSON converters existing in `Domain\SerializeHelpers\` (used for clipboard copy/paste,
-see below), **the saved map format is hand-written XML**, produced/consumed via
+Although JSON converters exist in `Domain\SerializeHelpers\` (currently unused; clipboard
+copy/paste serializes its own DTOs directly), **the saved map format is hand-written XML**,
+produced/consumed via
 `Util\XmlScribe.cs` (writer) and `Util\XmlElementReader.cs`/`XmlAttributeReader.cs` (reader).
 
 Shape (see `samples\Zork_770614.trizbort` for a real example):

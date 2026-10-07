@@ -27,6 +27,13 @@ Feel free to dive in!  [Open an issue](https://github.com/JasonLautzenheiser/tri
 
 Trizbort follows the [Contributor Covenant Code of Conduct](https://github.com/JasonLautzenheiser/trizbort/blob/master/CODE_OF_CONDUCT.md)
 
+## Repository layout
+- `Trizbort.sln` — solution at the repository root, including the app and automated test projects.
+- `src/Trizbort/` — WinForms application source and project.
+- `src/Trizbort.Tests/` — automated NUnit tests.
+- `tests/manual/` — manual map fixtures and test scripts (not run by `dotnet test`).
+- `samples/` — sample maps and transcripts.
+
 ## License
 [MIT](https://github.com/JasonLautzenheiser/trizbort/blob/master/LICENSE.txt)
 
@@ -37,4 +44,3 @@ This software uses PdfSharp, copyright (c) 2005-2007 empira Software GmbH, Colog
 [![Resharper](http://www.trizbort.com/img/logo_resharper.png)](https://www.jetbrains.com/resharper/)
 
 [<img src="https://oz-code.com/wp-content/uploads/2020/01/oz-code-logo.svg" width="100">](https://www.oz-code.com/)
-

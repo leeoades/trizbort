@@ -13,7 +13,8 @@ the same change.
 
 ## Quick facts
 - WinForms, `net8.0-windows`, Windows-only (not cross-platform).
-- Build: `dotnet build Trizbort.csproj -c Debug`
-- Test: `dotnet test Trizbort.Tests\Trizbort.Tests.csproj -c Debug` (the test project is not in
-  `Trizbort.sln`; run it directly)
+- Build: `dotnet build Trizbort.sln -c Debug`
+- Test: `dotnet test Trizbort.sln -c Debug`
+- Layout: application and automated-test projects under `src/` (`src/Trizbort/` and
+  `src/Trizbort.Tests/`), manual map fixtures and runners in `tests/manual/`.
 - No undo/redo exists anywhere in the codebase — don't assume one.

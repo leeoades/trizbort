@@ -1,24 +1,28 @@
 # Build, Test, and .NET Framework 4.8 → .NET 8 Port Notes
 
-See [`README.md`](README.md) for the doc map. Read this before touching `Trizbort.csproj`,
-`Trizbort.Tests.csproj`, `app.config`, or `app.manifest`.
+See [`README.md`](README.md) for the doc map. Read this before touching
+`src/Trizbort/Trizbort.csproj`, `src/Trizbort.Tests/Trizbort.Tests.csproj`,
+`src/Trizbort/app.config`, or `src/Trizbort/app.manifest`.
 
 ## Current state
 
-- `Trizbort.csproj` — SDK-style, `net8.0-windows`, `UseWindowsForms=true`, `PackageReference`s
+- `src/Trizbort/Trizbort.csproj` — SDK-style, `net8.0-windows`, `UseWindowsForms=true`, `PackageReference`s
   (no more `packages.config`). **No `PlatformTarget=x86`** (removed — see below); builds
   AnyCPU/x64 by default.
-- `Trizbort.Tests\Trizbort.Tests.csproj` — SDK-style, `net8.0-windows`, `Microsoft.NET.Test.Sdk`
+- `src/Trizbort.Tests/Trizbort.Tests.csproj` — SDK-style, `net8.0-windows`, `Microsoft.NET.Test.Sdk`
   + NUnit 3.14.0 + NUnit3TestAdapter 4.6.0 + NUnit.Analyzers + Shouldly + FluentAssertions.
-- **Important**: `Trizbort.Tests` is **not** referenced by `Trizbort.sln` (true before and after
-  the port — not a regression). Run it directly:
+- Automated tests are included in the root solution. Build and run the full solution with:
   ```
-  dotnet test Trizbort.Tests\Trizbort.Tests.csproj -c Debug
+  dotnet build Trizbort.sln -c Debug
+  dotnet test Trizbort.sln -c Debug
   ```
-- Build the app directly with:
+- To build or test one project directly:
   ```
-  dotnet build Trizbort.csproj -c Debug
+  dotnet build src\Trizbort\Trizbort.csproj -c Debug
+  dotnet test src\Trizbort.Tests\Trizbort.Tests.csproj -c Debug
   ```
+- Manual map fixtures and runners are in `tests\manual`; they are not part of the automated
+  test suite. Sample maps/transcripts remain in the root `samples` directory.
 - This is still a **Windows Forms, Windows-only application**. Porting the runtime from .NET
   Framework 4.8 to .NET 8 did **not** make it cross-platform — WinForms-on-.NET-Core remains
   Windows-only by design. True cross-platform would require a separate UI rewrite (e.g. Avalonia
@@ -51,18 +55,13 @@ Migrated from a vendored `lib\AutoUpdater.NET.dll` to the `AutoUpdater.NET.Offic
 package (1.9.3), which works on .NET 5+/8 despite not explicitly targeting it in its own TFM
 list.
 
-### 4. SDK-style implicit globbing pulls in sibling directories
+### 4. Keep project boundaries explicit
 
-SDK-style `<Compile Include="**/*.cs">` globbing is relative to the `.csproj`'s own directory
-and **recurses into sibling subdirectories**, not just descendants of where you'd expect. Since
-`Trizbort.Tests\` sits as a sibling under the repo root (not nested under a `src\`-style
-separation), `Trizbort.csproj` had to explicitly exclude it:
-```xml
-<Compile Remove="Trizbort.Tests\**" />
-<EmbeddedResource Remove="Trizbort.Tests\**" />
-<None Remove="Trizbort.Tests\**" />
-```
-Watch for this if you add another sibling project folder.
+The application and automated tests now live in separate project roots:
+`src/Trizbort/` and `src/Trizbort.Tests/`. SDK-style implicit globs are relative to each
+project directory, so manual fixtures/scripts in `tests/manual/` and root-level assets are not
+compiled into the app project. Keep future project-specific source/resources under that
+project's directory and add intentional cross-project dependencies with `ProjectReference`.
 
 ### 5. `GenerateAssemblyInfo` vs. a committed `AssemblyInfo.cs`
 
@@ -120,7 +119,7 @@ Two sections were removed from `app.config` for this reason:
    ```xml
    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
    ```
-   in `Trizbort.csproj`. The redundant `dpiAware` entry was also removed from `app.manifest` (it
+   in `src/Trizbort/Trizbort.csproj`. The redundant `dpiAware` entry was also removed from `src/Trizbort/app.manifest` (it
    predates `ApplicationHighDpiMode` and generates the `WFAC010` build warning otherwise).
 
 Harmless things that were **confirmed not to be the problem** (and can stay):

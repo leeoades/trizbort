@@ -28,6 +28,9 @@ Adventuron). It can also auto-generate a map by parsing a game transcript ("Auto
    new exporter, new settings system, restructured controllers, etc.), **update the relevant
    sub-document in the same change**. Stale docs are worse than no docs.
 
+Source paths shown without a repository prefix are relative to `src/Trizbort/`. Paths explicitly
+prefixed with `tests/`, `samples/`, `Docs/`, or `agent-docs/` are relative to the repository root.
+
 ## Map of sub-documents
 
 | Doc | Read this when you're working on... |
@@ -57,11 +60,11 @@ convert `Project.Elements` into IF-language source code via a shared `CodeExport
 
 - **UI framework**: Windows Forms (not WPF/UWP). Confirmed Windows-only; porting the runtime
   to .NET 8 did **not** make it cross-platform (see `09-build-test-and-dotnet8-port.md`).
-- **Target framework**: `net8.0-windows`, SDK-style `Trizbort.csproj`, as of the .NET 8 port
+- **Target framework**: `net8.0-windows`, SDK-style `src/Trizbort/Trizbort.csproj`, as of the .NET 8 port
   spike. Previously `.NET Framework 4.8`, legacy `packages.config`-based project.
-- **Tests**: `Trizbort.Tests` (NUnit3 + Shouldly + FluentAssertions). Run with
-  `dotnet test Trizbort.Tests\Trizbort.Tests.csproj`, not via the `.sln` (the test project was
-  never added to `Trizbort.sln`, even pre-port).
+- **Tests**: `src/Trizbort.Tests` (NUnit3 + Shouldly + FluentAssertions), included in
+  `Trizbort.sln`. Run with `dotnet test Trizbort.sln`; manual map fixtures and scripts are in
+  `tests/manual/`.
 - **PDF export**: `PDFsharp-GDI` 6.2.4 NuGet package (not the older vendored/legacy
   `PDFsharp-gdi` 1.x).
 - **No undo/redo exists anywhere in the codebase.** Don't assume one when reasoning about

@@ -7,17 +7,18 @@ avoids deep detail — follow the links to the topic docs for specifics.
 
 | Folder | Role |
 |---|---|
-| `Domain\` | Core application/document model: elements (rooms/connections), project state, persistence engines, app-wide settings, controllers/commands, geometry/drawing primitives, enums. No WinForms dependency *in principle*, though in practice some domain code (e.g. `Room`/`Connection` drawing) uses `System.Drawing`/`PdfSharp.Drawing` types directly rather than being UI-framework-agnostic. |
-| `UI\` | WinForms forms/dialogs and the `Canvas` control (map drawing surface + input handling). Talks to `Domain` via `Domain\Controllers` and direct `Project.Current` access. |
-| `Automap\` | Transcript-parsing engine that turns IF game session text into `Room`/`Connection` objects. Uses `IAutomapCanvas` for map mutations, but `Automap.cs` also directly depends on WinForms: it shows `AutomapRoomSameDirectionDialog` for ambiguity resolution and raises `MessageBox` errors — it is not UI-framework-agnostic. |
-| `Export\` | Converts `Project.Current.Elements` into IF-language source (Inform6/7, TADS, Alan, Hugo, ZIL, Quest, Adventuron) via a shared `CodeExporter` base class. Image/PDF export live in `UI\MainForm.cs` instead, not here. |
-| `Util\` | Small standalone helpers: XML serialization (`XmlScribe`, `XmlElementReader`, `XmlAttributeReader`), string formatting, path handling, clipboard, keyboard. |
-| `Extensions\` | Extension methods (`ColorExtensions`, `FileExtensions`, `RoomExtensions`, `StringExtensions`). |
-| `Properties\` | Standard .NET `Settings.settings`/`Settings.Designer.cs` + `Resources.resx` — a *tiny*, almost-unused settings surface (one setting currently: `SettingsLastTabIndex`). Don't confuse with `Domain\AppSettings` (see below). |
-| `Setup\` | Installer/setup wizard support (not map-related). |
-| `Trizbort.Tests\` | NUnit test project. Not referenced by `Trizbort.sln` — run directly via `dotnet test`. |
-| `samples\`, `testing\` | Sample `.trizbort` map files and transcripts, useful for manual verification and as file-format examples. |
-| `Docs\` | **User-facing** help/website content (unrelated to this `agent-docs/` folder). |
+| `src/Trizbort/` | Application project root: `Trizbort.csproj`, entry point/configuration, and the source folders below. |
+| `src/Trizbort/Domain/` | Core application/document model: elements (rooms/connections), project state, persistence engines, app-wide settings, controllers/commands, geometry/drawing primitives, enums. Some domain drawing code uses `System.Drawing`/`PdfSharp.Drawing` directly. |
+| `src/Trizbort/UI/` | WinForms forms/dialogs and the `Canvas` control (map drawing surface + input handling). Talks to `Domain` via controllers and direct `Project.Current` access. |
+| `src/Trizbort/Automap/` | Transcript parser that creates `Room`/`Connection` objects. Uses `IAutomapCanvas` for map mutations, but also directly depends on WinForms (`AutomapRoomSameDirectionDialog`, `MessageBox`). |
+| `src/Trizbort/Export/` | IF-language exporters via a shared `CodeExporter` base class. Image/PDF export live in `UI/MainForm.cs`. |
+| `src/Trizbort/Util/`, `Extensions/`, `Properties/`, `Setup/`, `Images/` | Shared helpers, extension methods, generated settings/resources, setup wizard, and UI assets. |
+| `src/Trizbort.Tests/` | NUnit automated-test project, included in the root `Trizbort.sln`. |
+| `tests/manual/` | Manual `.trizbort` fixtures and batch/script runners; these are not automated tests. |
+| `samples/` | Sample maps/transcripts. |
+| `legacy/vendor/` | Preserved legacy DLLs not referenced by the current SDK-style project. |
+| `Docs/` | **User-facing** help/website content (unrelated to this `agent-docs/` folder). |
+| `agent-docs/` | Layered technical reference for contributors and agents. |
 
 ## Layering / call direction
 
@@ -54,9 +55,9 @@ Project.Current               (Domain\Application\Project.cs)
     └── Connection (Domain\Elements\Connection.cs, owns 0/1 Door)
 ```
 
-There are **no separate collections** for rooms, connections, or regions — regions are just a
-string property on `Room`, grouped at read-time by consumers (e.g. the exporter's
-`findRegions()`). See [`02-domain-model.md`](02-domain-model.md) for full detail.
+There are **no separate collections** for rooms or connections. Each room stores its region name
+as a string; the map-level `Settings.Regions` list separately stores region definitions and can
+include regions unused by any room. See [`02-domain-model.md`](02-domain-model.md) for full detail.
 
 ## Where to start for common tasks
 

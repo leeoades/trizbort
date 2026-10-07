@@ -30,7 +30,7 @@ calling into `CommandController`/`Canvas`/an exporter).
 | File | Role |
 |---|---|
 | `Canvas.cs` | Core: selection state, zoom/pan/origin, world↔screen coordinate conversion, `OnPaint`/drawing, scrolling, keyboard input, mouse input, dragging, connection drawing. |
-| `Canvas.Automap.cs` | Partial class: automap-specific room/connection creation, placement and tidy-layout logic. Implements `IAutomapCanvas` so `Automap\Automap.cs` can create/find/connect/select/remove rooms without depending on WinForms directly. |
+| `Canvas.Automap.cs` | Partial class: automap-specific room/connection creation, placement and tidy-layout logic. Implements `IAutomapCanvas` for map operations; `Automap\Automap.cs` still directly depends on WinForms for dialogs and message boxes. |
 | `Canvas.Designer.cs` | Generated layout: scrollbars, minimap, corner panel, zoom label. |
 | `AutomapBar.cs`/`.Designer.cs` | Automapping progress/status bar + stop button. |
 | `Minimap.cs`/`.Designer.cs` | Small overview/navigation map. |
