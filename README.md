@@ -34,6 +34,20 @@ Trizbort follows the [Contributor Covenant Code of Conduct](https://github.com/J
 - `tests/manual/` — manual map fixtures and test scripts (not run by `dotnet test`).
 - `samples/` — sample maps and transcripts.
 
+## Download & releases
+Download `Trizbort-<version>-win-x64.zip` from [Releases](https://github.com/leeoades/trizbort/releases/latest), extract it into a writable folder (not Program Files) and run `Trizbort.exe`. These are Windows x64, self-contained builds: no separate .NET install is required. Keep the accompanying configuration and licence files. The downloads are unsigned, so Windows may display a SmartScreen warning.
+
+**Help → Check for Updates** checks the latest GitHub Release, verifies the download's SHA256 checksum and updates the extracted files in place. Existing `appsettings.json` is not replaced. This requires at least one release published by the new workflow; older ClickOnce downloads still point to the old server and cannot automatically migrate.
+
+To publish a release, first push the [Release workflow](.github/workflows/release.yml) and app changes, then push an increasing version tag, e.g.:
+
+```powershell
+git tag v1.8.0
+git push leeoades v1.8.0
+```
+
+Use your remote's name if it is not `leeoades`. The workflow runs on Windows, tests the solution, builds the self-contained app, and publishes the zip plus `trizbortupdate.xml` with generated release notes. Tags must be `vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH.REVISION`; prerelease suffixes are not supported. The tag sets the release binary's version without changing the committed `AssemblyInfo.cs`. No separate web server, GitHub Pages site or additional secret is needed; the workflow uses GitHub's built-in token. Check the workflow run completes successfully before announcing the release.
+
 ## License
 [MIT](https://github.com/JasonLautzenheiser/trizbort/blob/master/LICENSE.txt)
 

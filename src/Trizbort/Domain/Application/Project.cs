@@ -128,7 +128,7 @@ namespace Trizbort.Domain.Application {
     public void CheckDocVersion() {
       var appVers = Version.Parse(System.Windows.Forms.Application.ProductVersion);
       var infoList = $"Executable Version = {System.Windows.Forms.Application.ProductVersion}{Environment.NewLine}Document Version = {Version}{Environment.NewLine}{Environment.NewLine}";
-      var newVersionText = "Visit www.trizbort.com to learn about and download the latest version.";
+      var newVersionText = "Visit https://github.com/leeoades/trizbort/releases to download the latest version.";
 
       if (Version.Major < appVers.Major) return;
       if (Version.Major > appVers.Major) {

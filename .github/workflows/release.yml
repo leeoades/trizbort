@@ -1,0 +1,128 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Determine version from tag
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ($env:RELEASE_TAG -notmatch '^v(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$') {
+            throw "Release tag must be vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH.REVISION."
+          }
+          $parts = @($Matches[1], $Matches[2], $Matches[3], $(if ($Matches[4]) { $Matches[4] } else { '0' }))
+          foreach ($part in $parts) {
+            if ([long]$part -gt 65534) { throw "Version components must be between 0 and 65534." }
+          }
+          $version = ($parts | ForEach-Object { [int]$_ }) -join '.'
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Stamp assembly version
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $file = 'src\Trizbort\Properties\AssemblyInfo.cs'
+          $content = Get-Content $file -Raw
+          foreach ($attribute in 'AssemblyVersion', 'AssemblyFileVersion') {
+            $pattern = "(?m)^\[assembly:\s*$attribute\(`"[^`"]*`"\)\]"
+            if ([regex]::Matches($content, $pattern).Count -ne 1) {
+              throw "Expected exactly one $attribute in $file."
+            }
+            $content = $content -replace $pattern, "[assembly: $attribute(`"$env:RELEASE_VERSION`")]"
+          }
+          Set-Content $file $content -NoNewline -Encoding utf8
+
+      - name: Test
+        run: dotnet test Trizbort.sln -c Release
+
+      - name: Publish
+        run: >-
+          dotnet publish src\Trizbort\Trizbort.csproj -c Release -r win-x64 -o publish
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none
+
+      - name: Smoke test published app
+        run: |
+          $workDir = Join-Path $env:RUNNER_TEMP 'trizbort-smoke'
+          New-Item -ItemType Directory -Path $workDir -Force | Out-Null
+          $exe = (Resolve-Path 'publish\Trizbort.exe').Path
+          $process = Start-Process $exe -ArgumentList '--exit' -WorkingDirectory $workDir -PassThru
+          if (-not $process.WaitForExit(30000)) {
+            Stop-Process -Id $process.Id
+            throw "Published app did not exit after --exit."
+          }
+          if ($process.ExitCode -ne 0) {
+            throw "Published app exited with code $($process.ExitCode)."
+          }
+
+      - name: Package
+        id: package
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_REPO: ${{ github.repository }}
+        run: |
+          $exe = 'publish\Trizbort.exe'
+          if ((Get-Item $exe).VersionInfo.FileVersion -ne $env:RELEASE_VERSION) {
+            throw "Published executable version does not match the release tag."
+          }
+          if (Test-Path 'publish\appsettings.json') {
+            throw "User settings must not be included in the update package."
+          }
+          Copy-Item LICENSE.txt, PdfSharp.License.txt -Destination publish
+          $zipName = "Trizbort-$env:RELEASE_VERSION-win-x64.zip"
+          Compress-Archive -Path publish\* -DestinationPath $zipName
+          $hash = (Get-FileHash $zipName -Algorithm SHA256).Hash
+          $releaseUrl = "https://github.com/$env:RELEASE_REPO/releases"
+          @"
+          <?xml version="1.0" encoding="UTF-8"?>
+          <item>
+            <version>$env:RELEASE_VERSION</version>
+            <url>$releaseUrl/download/$env:RELEASE_TAG/$zipName</url>
+            <changelog>$releaseUrl/tag/$env:RELEASE_TAG</changelog>
+            <mandatory>false</mandatory>
+            <executable>Trizbort.exe</executable>
+            <checksum algorithm="SHA256">$hash</checksum>
+          </item>
+          "@ | Set-Content trizbortupdate.xml -Encoding utf8
+          "zip=$zipName" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_REPO: ${{ github.repository }}
+          RELEASE_ZIP: ${{ steps.package.outputs.zip }}
+        run: >-
+          gh release create "$env:RELEASE_TAG" "$env:RELEASE_ZIP" trizbortupdate.xml
+          --repo "$env:RELEASE_REPO"
+          --verify-tag --title "Trizbort $env:RELEASE_TAG" --generate-notes

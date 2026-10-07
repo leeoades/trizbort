@@ -150,6 +150,37 @@ there is no guarantee the capture is scoped to an isolated sandbox; it can captu
 user's live desktop. Prefer process status checks (`HasExited`, `MainWindowTitle`), log output,
 and scoped/headless repro harnesses (as described above) instead.
 
+## Release process & auto-update
+
+The legacy ClickOnce distribution (`Trizbort.application` pointing at `trizbort.com`) is dead
+and is **not** produced any more. Releases are built by `.github/workflows/release.yml`:
+
+1. Push the workflow/app changes, then an increasing tag `vMAJOR.MINOR.PATCH[.REVISION]`
+   (e.g. `git tag v1.8.0`, then `git push leeoades v1.8.0`). Prerelease suffixes are rejected.
+2. The workflow (windows-latest) stamps `AssemblyVersion`/`AssemblyFileVersion` in
+   `src/Trizbort/Properties/AssemblyInfo.cs` from the tag (padded to 4 parts) — the committed
+   version remains the version used for local builds; release stamping is not committed.
+3. Runs `dotnet test`, then `dotnet publish` as a self-contained, compressed single-file
+   `win-x64` `Trizbort.exe` (no .NET install required).
+4. Zips it (plus `Trizbort.dll.config` and licence files) as `Trizbort-<version>-win-x64.zip`,
+   writes an AutoUpdater.NET manifest `trizbortupdate.xml` (version, zip URL, changelog URL,
+   SHA256 checksum) and creates a GitHub Release with both assets and generated notes.
+
+**Check for Updates** (`MainForm.CheckForUpdatesMenuItem_Click`) calls
+`AutoUpdater.Start(UPDATE_PATH)` where `UPDATE_PATH` is
+`https://github.com/leeoades/trizbort/releases/latest/download/trizbortupdate.xml` — GitHub's
+stable "latest release asset" URL, so no separate hosting is needed. AutoUpdater compares the
+manifest version with the running assembly's `AssemblyVersion`, downloads the zip, and extracts it
+over the install folder (user `appsettings.json` is not in the zip, so it survives). If the repo
+moves, update `UPDATE_PATH` and the message in `Project.CheckDocVersion()`.
+
+The updater is non-mandatory, runs without elevation and does not clear the application
+directory. Extract releases into a user-writable folder, not Program Files. Releases are
+unsigned; SmartScreen warnings are possible. No ClickOnce migration is provided: users of the
+old builds need to download this fork's release manually first. The endpoint will return 404
+until the first release is published. The workflow uses its built-in token with `contents: write`,
+not a personal access token.
+
 ## Areas not yet exercised by automated verification (as of the initial port spike)
 
 Flagged so future bug reports in these areas aren't surprising: the Automap dialog flow beyond a

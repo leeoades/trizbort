@@ -64,7 +64,7 @@ namespace Trizbort.UI {
     // TODO: private ToolStripStatusLabel statusLabel;
     private Status trizStatusBar;
 
-    private const string UPDATE_PATH = "http://www.trizbort.com/trizbortupdate.xml";
+    private const string UPDATE_PATH = "https://github.com/leeoades/trizbort/releases/latest/download/trizbortupdate.xml";
 
     private DateTime mLastUpdateUITime;
     private SynchronizationContext synchronizationContext;
@@ -147,7 +147,11 @@ namespace Trizbort.UI {
       AutoUpdater.ShowRemindLaterButton = false;
       AutoUpdater.ShowSkipButton = false;
       AutoUpdater.ReportErrors = true;
-      AutoUpdater.Mandatory = true;
+      AutoUpdater.Mandatory = false;
+      AutoUpdater.RunUpdateAsAdmin = false;
+      AutoUpdater.ClearAppDirectory = false;
+      AutoUpdater.HttpUserAgent = "Trizbort";
+      AutoUpdater.SetOwner(this);
       AutoUpdater.Start(UPDATE_PATH);
     }
 
