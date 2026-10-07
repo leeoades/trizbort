@@ -85,6 +85,13 @@ namespace Trizbort.Domain.Controllers {
       newConnection.Style = connection.Style;
     }
 
+    public void SetCurveWaypoints(Connection newConnection, CopyConnectionObj connection, Vector offset) {
+      if (connection.CurveWaypoints == null) return;
+      for (var i = 0; i < connection.CurveWaypoints.Length && i <= (int) CurveWaypoint.ThreeQuarter; ++i)
+        if (connection.CurveWaypoints[i].HasValue)
+          newConnection.SetCurveWaypoint((CurveWaypoint) i, connection.CurveWaypoints[i].Value - offset);
+    }
+
     public void SetRoom(Room newRoom, CopyRoomObj room) {
       newRoom.OldID = room.ID;
       newRoom.AddDescription(room.PrimaryDescription);
@@ -169,6 +176,7 @@ namespace Trizbort.Domain.Controllers {
         Name = conn.Name,
         StartText = conn.StartText,
         Style = conn.Style,
+        CurveWaypoints = new[] {conn.GetCurveWaypoint(CurveWaypoint.Quarter), conn.GetCurveWaypoint(CurveWaypoint.Middle), conn.GetCurveWaypoint(CurveWaypoint.ThreeQuarter)},
         VertextList = new List<CopyVertexObj>()
       };
 
@@ -207,6 +215,7 @@ namespace Trizbort.Domain.Controllers {
       public string Name { get; set; }
       public string StartText { get; set; }
       public ConnectionStyle Style { get; set; }
+      public Vector?[] CurveWaypoints { get; set; }
       public List<CopyVertexObj> VertextList { get; set; }
     }
 

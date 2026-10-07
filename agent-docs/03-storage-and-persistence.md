@@ -32,6 +32,10 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
 - A connection is a `<line>` with two (or more) `<dock>` children identifying the room ID and
   compass port it attaches to — this is the on-disk form of the in-memory `Vertex.Port.Owner`
   relationship described in [`02-domain-model.md`](02-domain-model.md).
+- Optional curve waypoints on a `<line>` are stored as attributes `curveQuarter`, `curveMiddle`,
+  `curveThreeQuarter` with invariant-culture `"x,y"` values. They are deliberately attributes,
+  not child elements, because `EndLoad` matches child elements to `VertexList` by position and
+  older Trizbort versions ignore unknown attributes (they simply draw the line straight).
 - `<settings>` holds per-map drawing/document settings (fonts, colors, grid, validation rules)
   — separate again from the two settings systems below.
 

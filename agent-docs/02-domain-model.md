@@ -92,6 +92,16 @@ for the overall layering.
   **vertex's index in `VertexList`**, not an `Element` ID — don't confuse the two ID spaces.
 - Mutating helpers: `Reverse()`, `RotateConnector(...)`, `SetText(...)`,
   `RecomputeSmartLineSegments(...)`.
+- **Curve waypoints** (two-vertex connections only, `SupportsCurveWaypoints`): up to three
+  optional slots `CurveWaypoint.Quarter`/`Middle`/`ThreeQuarter`, stored separately from
+  `VertexList` (lots of code assumes `VertexList[0]`/`[1]` are the two ends, so waypoints are
+  *not* vertices). When any are set, `getSegments()` returns a flattened centripetal
+  Catmull-Rom spline (`Domain\Misc\CurveGeometry.cs`) through the stalk ends and waypoints, so
+  hit-testing, bounds, smart-segment splitting, labels and drawing all follow the curve.
+  One-way arrows are drawn once per curve span. `Middle` can always be added; the quarter slots
+  only once the line is bent (`CanAddCurveWaypoint`). `GetCurveWaypointHandlePosition` gives
+  the set position or, for an empty slot, the insertion point on the current line/curve.
+  `Reverse()` swaps the quarter slots.
 - Persistence is two-phase on load (`BeginLoad`/`EndLoad`) because a connection's endpoints may
   reference rooms that haven't been loaded yet — see
   [`03-storage-and-persistence.md`](03-storage-and-persistence.md).

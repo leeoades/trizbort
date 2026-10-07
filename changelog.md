@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.  Version nu
 Add new changes here as features and fixes are implemented. Move them into a dated version
 section when publishing a release.
 
+### Add
+- **Curved connections:** select a connection to show a handle at its midpoint; drag it to bend the line into a smooth curve. Once bent, extra handles appear at the 25% and 75% points, allowing up to three waypoints. Click a waypoint and press Delete to remove it. Curves are saved with the map and survive copy/paste; older versions draw these lines straight. (#3)
+
 ## [2.0.1] - 2026-10-07
 
 ### Fix

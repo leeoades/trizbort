@@ -56,6 +56,9 @@ namespace Trizbort.Domain.Elements {
     public const string Out = "out";
     private const ConnectionStyle DEFAULT_STYLE = ConnectionStyle.Solid;
     private const ConnectionFlow DEFAULT_FLOW = ConnectionFlow.TwoWay;
+    private const int CURVE_SUBDIVISIONS = 16;
+    private static readonly string[] CurveWaypointAttributeNames = {"curveQuarter", "curveMiddle", "curveThreeQuarter"};
+    private readonly Vector?[] mCurveWaypoints = new Vector?[3];
     private readonly TextBlock mEndText = new TextBlock();
     private readonly TextBlock mMidText = new TextBlock();
     private readonly List<LineSegment> mSmartSegments = new List<LineSegment>();
@@ -202,6 +205,71 @@ namespace Trizbort.Domain.Elements {
     [JsonIgnore]
     public BoundList<Vertex> VertexList { get; set; } = new BoundList<Vertex>();
 
+    /// <summary>
+    ///   Curve waypoints are only supported on simple two-vertex connections.
+    /// </summary>
+    public bool SupportsCurveWaypoints => VertexList.Count == 2;
+
+    public bool HasCurveWaypoints => SupportsCurveWaypoints && mCurveWaypoints.Any(w => w.HasValue);
+
+    public Vector? GetCurveWaypoint(CurveWaypoint waypoint) {
+      return mCurveWaypoints[(int) waypoint];
+    }
+
+    public void SetCurveWaypoint(CurveWaypoint waypoint, Vector? position) {
+      if (mCurveWaypoints[(int) waypoint] == position) return;
+      mCurveWaypoints[(int) waypoint] = position;
+      RaiseChanged();
+    }
+
+    public bool RemoveCurveWaypoint(CurveWaypoint waypoint) {
+      if (!mCurveWaypoints[(int) waypoint].HasValue) return false;
+      SetCurveWaypoint(waypoint, null);
+      return true;
+    }
+
+    public void ClearCurveWaypoints() {
+      if (!mCurveWaypoints.Any(w => w.HasValue)) return;
+      for (var i = 0; i < mCurveWaypoints.Length; ++i) mCurveWaypoints[i] = null;
+      RaiseChanged();
+    }
+
+    public void MoveCurveWaypointsBy(Vector delta) {
+      if (delta == Vector.Zero || !mCurveWaypoints.Any(w => w.HasValue)) return;
+      for (var i = 0; i < mCurveWaypoints.Length; ++i)
+        if (mCurveWaypoints[i].HasValue)
+          mCurveWaypoints[i] = mCurveWaypoints[i].Value + delta;
+      RaiseChanged();
+    }
+
+    /// <summary>
+    ///   The middle waypoint can always be added; the quarter waypoints become available
+    ///   once the connection has been bent.
+    /// </summary>
+    public bool CanAddCurveWaypoint(CurveWaypoint waypoint) {
+      if (!SupportsCurveWaypoints || mCurveWaypoints[(int) waypoint].HasValue) return false;
+      return waypoint == CurveWaypoint.Middle || HasCurveWaypoints;
+    }
+
+    /// <summary>
+    ///   Where to draw the handle for a waypoint: its position if set, otherwise the point on the
+    ///   current line/curve at which a new waypoint would be inserted.
+    /// </summary>
+    public Vector GetCurveWaypointHandlePosition(CurveWaypoint waypoint) {
+      var existing = mCurveWaypoints[(int) waypoint];
+      if (existing.HasValue) return existing.Value;
+
+      getCurveControlPoints(out var points, out var slots, out var before, out var after);
+      if (points.Count == 2) return points[0] + (points[1] - points[0]) * 0.5f;
+
+      // find the span this empty slot falls within
+      var span = 0;
+      while (span < slots.Count && slots[span] < (int) waypoint) ++span;
+      var p0 = span == 0 ? before : points[span - 1];
+      var p3 = span + 2 < points.Count ? points[span + 2] : after;
+      return CurveGeometry.Evaluate(p0, points[span], points[span + 1], p3, 0.5f);
+    }
+
     public object BeginLoad(XmlElementReader element) {
       if (element.Attribute("door").Text == "yes")
         Door = new Door {
@@ -235,6 +303,9 @@ namespace Trizbort.Domain.Elements {
       MidText = element.Attribute("midText").Text;
       EndText = element.Attribute("endText").Text;
       if (element.Attribute("color").Text != "") ConnectionColor = ColorTranslator.FromHtml(element.Attribute("color").Text);
+
+      for (var i = 0; i < CurveWaypointAttributeNames.Length; ++i)
+        mCurveWaypoints[i] = parseCurveWaypoint(element.Attribute(CurveWaypointAttributeNames[i]).Text);
 
       var vertexElementList = new List<XmlElementReader>();
       vertexElementList.AddRange(element.Children);
@@ -288,6 +359,7 @@ namespace Trizbort.Domain.Elements {
 
     public override void Draw(XGraphics graphics, Palette palette, DrawingContext context) {
       var lineSegments = context.UseSmartLineSegments ? mSmartSegments : getSegments();
+      var curved = HasCurveWaypoints;
 
       foreach (var lineSegment in lineSegments) {
         var pen = palette.GetLinePen(context.Selected, context.Hover, Style == ConnectionStyle.Dashed);
@@ -302,26 +374,38 @@ namespace Trizbort.Domain.Elements {
         if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering)
           graphics.DrawLine(specialPen ?? pen, lineSegment.Start.ToPointF(), lineSegment.End.ToPointF());
         var delta = lineSegment.Delta;
-        if (Flow == ConnectionFlow.OneWay && delta.Length > Settings.ConnectionArrowSize) {
-          var brush = (SolidBrush) palette.GetLineBrush(context.Selected, context.Hover);
-          SolidBrush specialBrush = null;
-
-          if (!context.Hover)
-            if (ConnectionColor != Color.Transparent && !context.Selected) {
-              specialBrush = (SolidBrush) brush.Clone();
-              specialBrush.Color = ConnectionColor;
-            }
-
-          Drawing.DrawChevron(graphics, lineSegment.Mid.ToPointF(), (float) (Math.Atan2(delta.Y, delta.X) / Math.PI * 180), Settings.ConnectionArrowSize, specialBrush ?? brush);
-        }
+        if (!curved && Flow == ConnectionFlow.OneWay && delta.Length > Settings.ConnectionArrowSize)
+          drawChevron(graphics, palette, context, lineSegment.Mid, delta);
 
         context.LinesDrawn.Add(lineSegment);
       }
 
-      if (door != null)
+      if (curved && Flow == ConnectionFlow.OneWay) {
+        // one arrow per curve span, rather than one per flattened line segment
+        getCurvedSegments(out var spans);
+        foreach (var span in spans) {
+          var mid = CurveGeometry.PolylineMidpoint(span, out var direction);
+          if (direction != Vector.Zero) drawChevron(graphics, palette, context, mid, direction);
+        }
+      }
+
+      if (door != null && lineSegments.Count > 0)
         showDoorIcons(graphics, lineSegments[0]);
 
       annotate(graphics, palette, lineSegments);
+    }
+
+    private void drawChevron(XGraphics graphics, Palette palette, DrawingContext context, Vector position, Vector direction) {
+      var brush = (SolidBrush) palette.GetLineBrush(context.Selected, context.Hover);
+      SolidBrush specialBrush = null;
+
+      if (!context.Hover)
+        if (ConnectionColor != Color.Transparent && !context.Selected) {
+          specialBrush = (SolidBrush) brush.Clone();
+          specialBrush.Color = ConnectionColor;
+        }
+
+      Drawing.DrawChevron(graphics, position.ToPointF(), (float) (Math.Atan2(direction.Y, direction.X) / Math.PI * 180), Settings.ConnectionArrowSize, specialBrush ?? brush);
     }
 
     public void EndLoad(object state) {
@@ -469,6 +553,9 @@ namespace Trizbort.Domain.Elements {
 
     public void Reverse() {
       VertexList.Reverse();
+      var quarter = mCurveWaypoints[(int) CurveWaypoint.Quarter];
+      mCurveWaypoints[(int) CurveWaypoint.Quarter] = mCurveWaypoints[(int) CurveWaypoint.ThreeQuarter];
+      mCurveWaypoints[(int) CurveWaypoint.ThreeQuarter] = quarter;
       RaiseChanged();
     }
 
@@ -541,6 +628,11 @@ namespace Trizbort.Domain.Elements {
       if (!string.IsNullOrEmpty(EndText))
         scribe.Attribute("endText", EndText);
 
+      if (HasCurveWaypoints)
+        for (var i = 0; i < CurveWaypointAttributeNames.Length; ++i)
+          if (mCurveWaypoints[i].HasValue)
+            scribe.Attribute(CurveWaypointAttributeNames[i], formatCurveWaypoint(mCurveWaypoints[i].Value));
+
       var index = 0;
       foreach (var vertex in VertexList) {
         if (vertex.Port != null) {
@@ -601,6 +693,12 @@ namespace Trizbort.Domain.Elements {
     public override Rect UnionBoundsWith(Rect rect, bool includeMargins) {
       foreach (var vertex in VertexList)
         rect = rect.Union(vertex.Position);
+
+      if (HasCurveWaypoints)
+        foreach (var segment in getCurvedSegments(out _)) {
+          rect = rect.Union(segment.Start);
+          rect = rect.Union(segment.End);
+        }
 
       return rect;
     }
@@ -695,6 +793,8 @@ namespace Trizbort.Domain.Elements {
     }
 
     private List<LineSegment> getSegments() {
+      if (HasCurveWaypoints) return getCurvedSegments(out _);
+
       var list = new List<LineSegment>();
       if (VertexList.Count > 0) {
         var first = VertexList[0];
@@ -724,6 +824,69 @@ namespace Trizbort.Domain.Elements {
       }
 
       return list;
+    }
+
+    /// <summary>
+    ///   Build the control points the curve passes through: the start anchor, any waypoints in
+    ///   order, then the end anchor. Anchors are the port stalk ends where stalks exist, and the
+    ///   phantom points make the curve leave/enter along the stalk direction.
+    /// </summary>
+    private void getCurveControlPoints(out List<Vector> points, out List<int> slots, out Vector before, out Vector after) {
+      var startVertex = VertexList[0];
+      var endVertex = VertexList[VertexList.Count - 1];
+      var start = startVertex.Position;
+      var end = endVertex.Position;
+      var startHasStalk = startVertex.Port != null && startVertex.Port.HasStalk;
+      var endHasStalk = endVertex.Port != null && endVertex.Port.HasStalk;
+      if (startHasStalk) start = startVertex.Port.StalkPosition;
+      if (endHasStalk) end = endVertex.Port.StalkPosition;
+
+      points = new List<Vector> {start};
+      slots = new List<int>();
+      for (var i = 0; i < mCurveWaypoints.Length; ++i)
+        if (mCurveWaypoints[i].HasValue) {
+          points.Add(mCurveWaypoints[i].Value);
+          slots.Add(i);
+        }
+
+      points.Add(end);
+
+      before = startHasStalk ? startVertex.Position : start * 2 - points[1];
+      after = endHasStalk ? endVertex.Position : end * 2 - points[points.Count - 2];
+    }
+
+    private List<LineSegment> getCurvedSegments(out List<List<Vector>> spans) {
+      var list = new List<LineSegment>();
+      getCurveControlPoints(out var points, out _, out var before, out var after);
+      var startVertex = VertexList[0];
+      var endVertex = VertexList[VertexList.Count - 1];
+
+      if (startVertex.Port != null && startVertex.Port.HasStalk)
+        list.Add(new LineSegment(startVertex.Position, points[0]));
+
+      spans = CurveGeometry.Flatten(points, before, after, CURVE_SUBDIVISIONS);
+      foreach (var span in spans)
+        for (var i = 1; i < span.Count; ++i)
+          if (span[i] != span[i - 1])
+            list.Add(new LineSegment(span[i - 1], span[i]));
+
+      if (endVertex.Port != null && endVertex.Port.HasStalk)
+        list.Add(new LineSegment(points[points.Count - 1], endVertex.Position));
+
+      return list;
+    }
+
+    private static Vector? parseCurveWaypoint(string text) {
+      if (string.IsNullOrEmpty(text)) return null;
+      var parts = text.Split(',');
+      if (parts.Length != 2) return null;
+      if (!float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var x)) return null;
+      if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var y)) return null;
+      return new Vector(x, y);
+    }
+
+    private static string formatCurveWaypoint(Vector position) {
+      return string.Format(CultureInfo.InvariantCulture, "{0},{1}", position.X, position.Y);
     }
 
     private void initEvents() {
@@ -884,6 +1047,15 @@ namespace Trizbort.Domain.Elements {
         Connection.RaiseChanged();
       }
     }
+  }
+
+  /// <summary>
+  ///   The waypoint slots through which a connection can be bent into a curve.
+  /// </summary>
+  public enum CurveWaypoint {
+    Quarter = 0,
+    Middle = 1,
+    ThreeQuarter = 2
   }
 
   /// <summary>

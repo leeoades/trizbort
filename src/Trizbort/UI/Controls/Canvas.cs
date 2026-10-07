@@ -66,6 +66,10 @@ namespace Trizbort.UI.Controls {
     private Element mHoverElement;
     private ResizeHandle mHoverHandle;
     private Port mHoverPort;
+    private CurveWaypoint? mHoverWaypoint;
+    private CurveWaypoint? mSelectedWaypoint;
+    private CurveWaypoint mDragWaypoint;
+    private Vector mDragWaypointOffset;
     private Point mLastKnownMousePosition;
     private Point mLastMouseDownPosition;
     private ConnectionFlow mNewConnectionFlow;
@@ -113,6 +117,8 @@ namespace Trizbort.UI.Controls {
 
     public override Cursor Cursor {
       get {
+        if (dragMode == DragModes.MoveWaypoint || dragMode == DragModes.None && hoverWaypoint.HasValue) return Cursors.SizeAll;
+
         if (CanDrawLine && (hoverPort != null && !(hoverPort is MoveablePort) || dragMode == DragModes.MovePort)) return Drawing.DrawLineCursor;
 
         if (hoverPort is MoveablePort) return Drawing.MoveLineCursor;
@@ -264,6 +270,21 @@ namespace Trizbort.UI.Controls {
         Invalidate();
       }
     }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    private CurveWaypoint? hoverWaypoint {
+      get => mHoverWaypoint;
+      set {
+        if (mHoverWaypoint == value) return;
+        mHoverWaypoint = value;
+        Invalidate();
+      }
+    }
+
+    /// <summary>
+    ///   The connection whose curve waypoint handles are currently shown, if any.
+    /// </summary>
+    private Connection waypointConnection => CanSelectElements && HasSingleSelectedElement && SelectedElement is Connection connection && connection.SupportsCurveWaypoints ? connection : null;
 
     private static float snapToElementSizeAtCurrentZoomFactor => Settings.SnapToElementSize;
 
@@ -470,6 +491,14 @@ namespace Trizbort.UI.Controls {
     }
 
     public void DeleteSelection() {
+      var connection = waypointConnection;
+      if (connection != null && mSelectedWaypoint.HasValue && connection.RemoveCurveWaypoint(mSelectedWaypoint.Value)) {
+        mSelectedWaypoint = null;
+        hoverWaypoint = null;
+        Invalidate();
+        return;
+      }
+
       var doomedElements = new List<Element>(mSelectedElements);
       foreach (var element in doomedElements) Project.Current.Elements.Remove(element);
       mSelectedElements.Clear();
@@ -1259,7 +1288,7 @@ namespace Trizbort.UI.Controls {
     }
 
     private bool isEmptySpace(Point clientPos) {
-      if (hoverHandle != null || hoverPort != null) return false;
+      if (hoverHandle != null || hoverPort != null || hoverWaypoint.HasValue) return false;
       return hitTestElement(ClientToCanvas(new PointF(clientPos.X, clientPos.Y)), false) == null;
     }
 
@@ -1459,7 +1488,14 @@ namespace Trizbort.UI.Controls {
     }
 
     private void beginDragMove(Vector canvasPos) {
-      if (hoverHandle != null) {
+      if (hoverWaypoint.HasValue && waypointConnection != null) {
+        mDragWaypoint = hoverWaypoint.Value;
+        mDragWaypointOffset = waypointConnection.GetCurveWaypointHandlePosition(mDragWaypoint) - canvasPos;
+        // a "ghost" handle only becomes a real waypoint once it is actually dragged
+        mSelectedWaypoint = waypointConnection.GetCurveWaypoint(mDragWaypoint).HasValue ? mDragWaypoint : (CurveWaypoint?) null;
+        dragMode = DragModes.MoveWaypoint;
+        Capture = true;
+      } else if (hoverHandle != null) {
         dragMode = DragModes.MoveResizeHandle;
         mDragResizeHandleLastPosition = canvasPos; // unsnapped
         Capture = true;
@@ -1683,8 +1719,39 @@ namespace Trizbort.UI.Controls {
 
     private void doDragMoveElement(Vector canvasPos) {
       canvasPos = Settings.Snap(canvasPos);
-      foreach (var element in mSelectedElements) moveElementBy(element, canvasPos - mDragOffsetCanvas);
+      var delta = canvasPos - mDragOffsetCanvas;
+      foreach (var element in mSelectedElements) moveElementBy(element, delta);
+      moveCurveWaypointsWithRooms(delta);
       mDragOffsetCanvas = canvasPos;
+    }
+
+    /// <summary>
+    ///   Keep the bend of unselected curved connections when both of the rooms they join are moved together.
+    /// </summary>
+    private void moveCurveWaypointsWithRooms(Vector delta) {
+      if (delta == Vector.Zero) return;
+      var movedRooms = new HashSet<Room>(mSelectedElements.OfType<Room>());
+      if (movedRooms.Count == 0) return;
+
+      foreach (var connection in Project.Current.Elements.OfType<Connection>()) {
+        if (!connection.HasCurveWaypoints || mSelectedElements.Contains(connection)) continue;
+        if (connection.VertexList[0].Port?.Owner is Room start && movedRooms.Contains(start) &&
+            connection.VertexList[connection.VertexList.Count - 1].Port?.Owner is Room end && movedRooms.Contains(end))
+          connection.MoveCurveWaypointsBy(delta);
+      }
+    }
+
+    private void doDragMoveWaypoint(Point mousePosition, Vector canvasPos) {
+      var connection = waypointConnection;
+      if (connection == null) return;
+
+      if (!connection.GetCurveWaypoint(mDragWaypoint).HasValue) {
+        if (new Vector(mLastMouseDownPosition).Distance(new Vector(mousePosition)) <= Settings.DragDistanceToInitiateNewConnection) return;
+        if (!connection.CanAddCurveWaypoint(mDragWaypoint)) return;
+      }
+
+      connection.SetCurveWaypoint(mDragWaypoint, Settings.Snap(canvasPos + mDragWaypointOffset));
+      mSelectedWaypoint = mDragWaypoint;
     }
 
     private void doDragMovePort(Vector canvasPos) {
@@ -1842,6 +1909,7 @@ namespace Trizbort.UI.Controls {
     }
 
     private void drawHandles(XGraphics graphics, Palette palette) {
+      drawWaypointHandles(graphics, palette);
       if (mHandles.Count == 0) return;
 
       var context = new DrawingContext(ZoomFactor);
@@ -1858,6 +1926,47 @@ namespace Trizbort.UI.Controls {
         context.Selected = handle == hoverHandle;
         handle.Draw(this, graphics, palette, context);
       }
+    }
+
+    private IEnumerable<CurveWaypoint> visibleWaypoints(Connection connection) {
+      if (connection == null) yield break;
+      // the middle handle is listed last so it is drawn on top and wins hit tests
+      foreach (var waypoint in new[] {CurveWaypoint.Quarter, CurveWaypoint.ThreeQuarter, CurveWaypoint.Middle})
+        if (connection.GetCurveWaypoint(waypoint).HasValue || connection.CanAddCurveWaypoint(waypoint))
+          yield return waypoint;
+    }
+
+    private Rect waypointHandleBounds(Connection connection, CurveWaypoint waypoint) {
+      var size = connection.GetCurveWaypoint(waypoint).HasValue ? Settings.HandleSize : Settings.HandleSize * 0.75f;
+      var position = connection.GetCurveWaypointHandlePosition(waypoint);
+      return new Rect(position.X - size / 2, position.Y - size / 2, size, size);
+    }
+
+    private void drawWaypointHandles(XGraphics graphics, Palette palette) {
+      var connection = waypointConnection;
+      if (connection == null) return;
+
+      var context = new DrawingContext(ZoomFactor);
+      foreach (var waypoint in visibleWaypoints(connection)) {
+        var isSet = connection.GetCurveWaypoint(waypoint).HasValue;
+        context.Selected = waypoint == hoverWaypoint || waypoint == mSelectedWaypoint && isSet;
+        Drawing.DrawHandle(this, graphics, palette, waypointHandleBounds(connection, waypoint), context, !isSet, true);
+      }
+    }
+
+    private CurveWaypoint? hitTestWaypoint(Vector canvasPos) {
+      var connection = waypointConnection;
+      if (connection == null) return null;
+
+      CurveWaypoint? hit = null;
+      foreach (var waypoint in visibleWaypoints(connection)) {
+        var bounds = waypointHandleBounds(connection, waypoint);
+        // be a little generous so the small handles are easy to grab
+        bounds.Inflate(Settings.HandleSize / 4);
+        if (bounds.Contains(canvasPos)) hit = waypoint;
+      }
+
+      return hit;
     }
 
     private void drawMarquee(XGraphics graphics, Palette palette) {
@@ -2197,11 +2306,10 @@ namespace Trizbort.UI.Controls {
           Origin += new Vector(0, (bNegative ? -1 : 1) * Viewport.Width / (shift ? 5 : 10));
       } else {
         var delta = Settings.SnapToGrid ? Settings.GridSize : 2.0f;
+        var offset = bHorizontal ? new Vector(bNegative ? delta : -delta, 0) : new Vector(0, bNegative ? delta : -delta);
         foreach (var element in SelectedElements)
-          if (bHorizontal)
-            element.Position += new Vector(bNegative ? delta : -delta, 0);
-          else
-            element.Position += new Vector(0, bNegative ? delta : -delta);
+          element.Position += offset;
+        moveCurveWaypointsWithRooms(offset);
       }
     }
 
@@ -2227,6 +2335,7 @@ namespace Trizbort.UI.Controls {
         foreach (var vertex in connection.VertexList)
           if (vertex.Port == null)
             vertex.Position += delta;
+        connection.MoveCurveWaypointsBy(delta);
       }
     }
 
@@ -2387,6 +2496,7 @@ namespace Trizbort.UI.Controls {
               currentConnection.VertexList.Add(vertexOne);
             }
 
+          controller.SetCurveWaypoints(currentConnection, connection, new Vector(offsetX, offsetY));
           newConnections.Add(currentConnection);
         }
 
@@ -2705,12 +2815,16 @@ namespace Trizbort.UI.Controls {
         case DragModes.MoveResizeHandle:
           doDragMoveResizeHandle(canvasPos);
           break;
+        case DragModes.MoveWaypoint:
+          doDragMoveWaypoint(mousePosition, canvasPos);
+          break;
         case DragModes.MovePort:
           HoverElement = hitTestElement(canvasPos, true);
           hoverPort = hitTestPort(canvasPos);
           doDragMovePort(canvasPos);
           break;
         case DragModes.None:
+          hoverWaypoint = hitTestWaypoint(canvasPos);
           hoverHandle = hitTestHandle(canvasPos); // set first; it will RecreatePorts() if the value changes
           hoverPort = hitTestPort(canvasPos);
           var hoverElement = hitTestElement(canvasPos, false);
@@ -2775,6 +2889,8 @@ namespace Trizbort.UI.Controls {
     } //
 
     private void updateSelection() {
+      mSelectedWaypoint = null;
+      hoverWaypoint = null;
       recreateHandles();
       recreatePorts();
       // only if we have a single element selected;
@@ -2791,6 +2907,7 @@ namespace Trizbort.UI.Controls {
       Pan,
       MoveElement,
       MoveResizeHandle,
+      MoveWaypoint,
       MovePort,
       Marquee,
       DrawLine
