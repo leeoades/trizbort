@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.  Version nu
 Add new changes here as features and fixes are implemented. Move them into a dated version
 section when publishing a release.
 
+## [2.0.1] - 2026-10-07
+
+### Fix
+- Room properties opens on the Objects tab. Newly created rooms with the default name focus Name on their first opening, then Objects on subsequent openings. Named or loaded rooms focus Objects immediately; this tracking is not persisted. The region-editing shortcut still focuses Region. (#5)
+- Corrected the Objects and Description tab keyboard shortcuts to focus the matching text box.
+
+### Change
+- Updated the About dialog and online help links for this fork, distinguishing legacy v1 help from the v2 repository.
+- Removed the automatic update checker. Download releases manually from GitHub Releases.
+
 ## [2.0.0] - 2026-10-07
 
 ### Add

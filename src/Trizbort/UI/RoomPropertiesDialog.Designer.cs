@@ -988,7 +988,6 @@ namespace Trizbort.UI
             this.m_tabControl.SelectedIndex = 0;
             this.m_tabControl.Size = new System.Drawing.Size(976, 432);
             this.m_tabControl.TabIndex = 101;
-            this.m_tabControl.SelectedIndexChanged += new System.EventHandler(this.m_tabControl_SelectedIndexChanged);
             // 
             // tabDescription
             // 

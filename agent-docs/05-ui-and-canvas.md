@@ -104,7 +104,7 @@ name/objects/descriptions), and uses its size. When `DoubleClickToAddRoom` (*Map
 | `MapStatisticsView` | Displays room counts, regions, bounds, etc. for the current project. |
 | `QuickFind` | Search UI over rooms, backed by `Domain\Cache\Indexer`. |
 | `RegionSettings` | Edits region data/colors; regions are just a string property on `Room`, grouped here for editing. |
-| `RoomPropertiesDialog` | Edits a room's name/description/objects/colors/shape/region/start-room/reference-room state. |
+| `RoomPropertiesDialog` | Edits a room's name/description/objects/colors/shape/region/start-room/reference-room state. Opens on Objects, focusing Name on the first normal opening of a newly created room that still has its default name, then Objects on later openings. Named or loaded rooms focus Objects immediately. This per-room state is runtime-only. The region-editing shortcut opens on Regions with the region selector focused without consuming the first normal opening. |
 | `SettingsDialog` | Edits per-map drawing settings (fonts/colors/grid/room/connection defaults/regions) — these are the same settings persisted in the map file's `<settings>` block. Also owns the one `Properties.Settings` usage (`SettingsLastTabIndex`) — this dialog's `FormClosing` handler is the exact code path that was involved in the .NET 8 port's `ConfigurationErrorsException` bug, see [`09-build-test-and-dotnet8-port.md`](09-build-test-and-dotnet8-port.md). |
 
 ## `Util\` quick reference

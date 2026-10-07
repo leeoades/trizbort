@@ -40,7 +40,6 @@ namespace Trizbort.UI {
     private const int VERTICAL_MARGIN = 2;
     private const int WIDTH = 24;
     private const string NO_COLOR_SET = "No Color Set";
-    private static int mLastViewedTab = (int)Tab.Objects;
     private readonly int roomID;
     private bool mAdjustingPosition;
 
@@ -66,28 +65,10 @@ namespace Trizbort.UI {
 
       if (start == PropertiesStartType.Region) {
         m_tabControl.SelectedTab = tabRegions;
-        cboRegion.Select();
+        ActiveControl = cboRegion;
       } else {
-        switch (mLastViewedTab) {
-          case (int)Tab.Objects:
-            m_tabControl.SelectedTab = tabObjects;
-            break;
-          case (int)Tab.Description:
-            m_tabControl.SelectedTab = tabDescription;
-            break;
-          case (int)Tab.Colors:
-            m_tabControl.SelectedTab = tabColors;
-            break;
-          case(int) Tab.Regions:
-            m_tabControl.SelectedTab = tabRegions;
-            break;
-          case (int)Tab.RoomShapes:
-            m_tabControl.SelectedTab = tabRoomShapes;
-            break;
-        }
-
-        if (start == PropertiesStartType.RoomName)
-          txtName.Focus();
+        m_tabControl.SelectedTab = tabObjects;
+        ActiveControl = start == PropertiesStartType.RoomName ? txtName : txtObjects;
       }
     }
 
@@ -789,32 +770,9 @@ namespace Trizbort.UI {
       SelectAllHandler(sender, e);
     }
 
-    private void m_tabControl_SelectedIndexChanged(object sender, EventArgs e) {
-
-      mLastViewedTab = m_tabControl.SelectedIndex;
-      
-      // switch (m_tabControl.SelectedIndex) {
-      //   case (int)Tab.Description:
-      //     mLastViewedTab = Tab.Description;
-      //     break;
-      //   case (int)Tab.Colors:
-      //     mLastViewedTab = Tab.Colors;
-      //     break;
-      //   case (int)Tab.Regions:
-      //     mLastViewedTab = Tab.Regions;
-      //     break;
-      //   case (int)Tab.RoomShapes:
-      //     mLastViewedTab = Tab.RoomShapes;
-      //     break;
-      //   default:
-      //     mLastViewedTab = Tab.Objects;
-      //     break;
-      // }
-    }
-
     private enum Tab {
-      Objects,
       Description,
+      Objects,
       Colors,
       Regions,
       RoomShapes
