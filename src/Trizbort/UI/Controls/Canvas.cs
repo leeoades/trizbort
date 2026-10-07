@@ -946,6 +946,12 @@ namespace Trizbort.UI.Controls {
     protected override void Dispose(bool disposing) {
       if (disposing) {
         StopAutomapping();
+        Project.ProjectChanged -= onProjectChanged;
+        Settings.Changed -= onSettingsChanged;
+        Project.Current.Elements.Added -= onElementAdded;
+        Project.Current.Elements.Removed -= onElementRemoved;
+        foreach (var element in Project.Current.Elements) element.Changed -= onElementChanged;
+        mRecomputeTimer?.Dispose();
         components?.Dispose();
       }
 
