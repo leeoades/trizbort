@@ -34,6 +34,8 @@ The version of this guide for 1.5+ may be found at [Jason Lautzenheiser's Trizbo
 
 ## Table of Contents
 
+- [What's New in Trizbort 2](#whats_new_2)
+  - [Downloading and Installing](#install_2)
 - [Getting to Know Trizbort](#help_ui)
   - [The Screen](#help_ui_screen)
   - [Parts of the Screen](#help_ui_parts)
@@ -65,6 +67,7 @@ The version of this guide for 1.5+ may be found at [Jason Lautzenheiser's Trizbo
       - [Connection Properties and Custom Labels](#help_conn_edit_props)
       - [Changing a Connection's Color](#help_conn_color)
     - [Connection Style Inheritance](#help_conn_inheritance)
+    - [Curved Connections (Trizbort 2)](#help_conn_curves)
   - [Navigating the Map](#help_nav)
     - [Panning](#help_nav_pan)
     - [Zooming](#help_nav_zoom)
@@ -86,6 +89,7 @@ The version of this guide for 1.5+ may be found at [Jason Lautzenheiser's Trizbo
     - [Saving Images at 100%](#save_100)
     - [Invert Mouse Wheel Zoom](#mouse_wheel_zoom)
     - [Smart Save Options](#smart_save_options)
+    - [Map Preferences (Trizbort 2)](#map_preferences)
   - [Using Automapping](#help_automap)
     - [Transcripts](#help_transcripts)
     - [Starting Automapping](#help_automap_start)
@@ -138,6 +142,29 @@ The version of this guide for 1.5+ may be found at [Jason Lautzenheiser's Trizbo
   - [Settings File](#general_settings_file)
   - [Third Party Software Recommendations](#general_thirdparty)
   - [Contacting](#general_contacting)
+
+<a name="whats_new_2"></a>
+
+## What's New in Trizbort 2
+
+Trizbort 2 is a modernised fork of Trizbort 1.7. Your existing maps open as before. The main additions so far are:
+
+- **Map labels** - free-standing text annotations with a choice of shapes, outlines, backgrounds and colours, which can be connected to rooms. See [Map Labels](#help_labels).
+- **Curved connections** - drag a selected connection's midpoint handle to bend it into a smooth curve. See [Curved Connections](#help_conn_curves).
+- **Double click to add room** - an optional preference which creates a room when you double-click empty canvas. See [Map Preferences](#map_preferences).
+- **Apply style to new rooms** - an optional preference which makes new rooms copy the shape, borders, colours, region and lighting of the last selected room. See [Styling New Rooms](#help_rooms_stylenew).
+- **Smarter Room Properties focus** - the dialog opens where you are most likely to type next. See [Editing Rooms](#help_rooms_edit).
+- **.NET 8** - Trizbort now runs on .NET 8 and is distributed as a self-contained download.
+
+The full list of changes is in the [changelog](../changelog.md).
+
+<a name="install_2"></a>
+
+### Downloading and Installing
+
+Download the latest `Trizbort-<version>-win-x64.zip` from the [GitHub Releases page](https://github.com/leeoades/trizbort/releases), unzip it into a writable folder (not Program Files) and run `Trizbort.exe`. Keep the configuration and licence files that come with it. The download includes everything it needs, so you do not have to install .NET separately. Trizbort is still Windows-only.
+
+Releases are not code-signed, so Windows SmartScreen may warn you the first time you run Trizbort; choose `More info` and then `Run anyway`. Trizbort 2 no longer checks for updates automatically, so check the Releases page for new versions. Older ClickOnce installations cannot upgrade automatically; install Trizbort 2 separately.
 
 <a name="help_ui"></a>
 
@@ -199,6 +226,10 @@ Select, move, resize, copy and delete labels just as you would rooms. Even a lab
 
 Older Trizbort versions ignore labels and lines connected to them. Opening the map is safe, but saving it from an older version loses those labels and their lines; keep the original file if you need to use an older editor.
 
+![Labels in several shapes and styles, two of them connected to a room.](map_labels.png)
+
+*Labels with rounded, elliptical, octagonal and borderless styles. Two are connected to a room.*
+
 <a name="help_rooms"></a>
 
 ### Working with Rooms
@@ -212,6 +243,8 @@ Older Trizbort versions ignore labels and lines connected to them. Opening the m
 > Click usually means to click the left mouse button on something; click and drag or just drag means to press and hold the left mouse button down, move the mouse somewhere else, and then release the left mouse button.
 
 You can create a room by moving the mouse over where you'd like the room to appear on the canvas and pressing `R`. You can also choose `Edit->Add Room` to add a room in the center of the canvas. You can also create a room between two connected rooms by highlighting the line and pressing `R`. The room will be centered on where your mouse is hovering, but if it isn't quite right, you can move it with the arrows or resize it with `control-alt-arrows`.
+
+If you turn on **Double click to add room** in [Map Preferences](#map_preferences), you can also create a room by double-clicking an empty part of the canvas. Double-clicking a room, label or connection still opens its properties.
 
 **WARNING:** your graphics card may cause the screen to rotate if you use control-alt-arrows. There are options to reset this, and you can do so manually, but it is a shock if it happens. You can Google how to disable hotkeys for your graphics card.
 
@@ -262,13 +295,19 @@ Since objects in a room are unique, you can only bring up the Properties dialog 
 
 However, one property that can be mass-changed is what region a group of rooms is in. This is done most easily via right-clicking or by selecting a rectangular area. You can even highlight the rooms, create the region and add them to the region.
 
+In Trizbort 2 the Properties dialog places the cursor where you are most likely to type next:
+
+- The first time you open a newly created room that still has its default name, the cursor is in the **Name** box. After that, the dialog opens on the **Objects** tab.
+- For rooms you have already named, and rooms in maps you have loaded, the dialog opens on the **Objects** tab.
+- Changing a room's region with its shortcut still takes you straight to the **Region** box.
+
 <a name="help_rooms_edit_name"></a>
 
 ##### Naming Rooms
 
 There is no restriction on naming rooms. If you're planning on exporting your map to an IF development system such as Inform 7 or TADS, Trizbort should handle basic tricky cases like names beginning with A or The, or rooms with a direction in them, or even rooms with double-byte characters, though we can't guarantee we've found all the cases.
 
-The Room Properties tab should default to the room name, but if not, you can hit `Alt-N` to go there. The subtitle is text that appears below the room but is not exported to code. `Alt-S` can take you there.
+When you first open a new room's Properties dialog, the cursor starts in the name box. You can press `Alt-N` to return to it at any time. The subtitle is text that appears below the room but is not exported to code. `Alt-S` can take you there.
 
 <a name="help_rooms_edit_dark"></a>
 
@@ -358,7 +397,9 @@ Later on in the documentation, you will see how to define regions. Each region h
 
 #### Styling New Rooms
 
-The style and size of a new room created with R is taken from the last selected room. So if you last selected a large, dark room, the next new room you create will be large and dark.
+The size of a new room created with `R` is taken from the last selected room. So if you last selected a large room, the next new room you create will be large too.
+
+If you turn on **Apply style to new rooms** in [Map Preferences](#map_preferences), new rooms also copy the last selected room's style: shape, corners, border, fill and text colours, region, whether it is dark, and where its objects are listed. Its name, subtitle, objects and description are not copied. This option is off by default, so new rooms otherwise use the default style.
 
 <a name="help_rooms_tooltips"></a>
 
@@ -467,6 +508,18 @@ Once you've highlighted a connection, hit enter to bring up the Connection Prope
 #### Connection Style Inheritance
 
 The style and size of a new connection is, by default, taken from the last selected connection. So if you last selected a one way, conditional connection, the next one you create will be one way and conditional. However, you can use the `Edit->Line Styles` sub-menu, or the accelerators, to change basic styles. You should be able to see the current basic styles on the legend to the left of the map, below the File entry on the menu bar.
+
+<a name="help_conn_curves"></a>
+
+#### Curved Connections (Trizbort 2)
+
+Connections no longer have to be straight. Select a connection and a handle appears at its midpoint. Drag the handle to bend the line into a smooth curve. Once the line is bent, two more handles appear at the 25% and 75% points, so you can shape it with up to three waypoints. To remove a waypoint, click its handle and press `Del`.
+
+![Three curved connections between rooms.](curved_connections.png)
+
+*Curved connections: a single arch, a one-way passage using all three waypoints, and a dashed connection.*
+
+Curve handles are larger than room resize handles and stay easy to grab when you zoom out. Curves move with the connection when it is moved, are saved with the map and survive copy and paste. Curves are only available on connections with two end points. Older versions of Trizbort draw curved connections as straight lines.
 
 <a name="help_nav"></a>
 
@@ -723,6 +776,15 @@ By default, pulling the mouse wheel towards the user zooms out, and pushing it a
 #### Smart Save Options
 
 By default, the application will save to PDF and PNG on Smart Save. You can specify that you want to export to only PDF or only PNG. You can also change the default image type to one of BMP, EMF, JPEG, and PNG here.
+
+<a name="map_preferences"></a>
+
+#### Map Preferences (Trizbort 2)
+
+The **Preferences** group on the **Map** tab of the App Settings dialog contains two options. Both are off by default.
+
+- **Apply style to new rooms** - new rooms copy the style of the last selected room. See [Styling New Rooms](#help_rooms_stylenew).
+- **Double click to add room** - double-clicking an empty part of the canvas creates a room there. Double-clicking a room, label or connection still opens its properties.
 
 <a name="help_automap"></a>
 
@@ -1214,7 +1276,7 @@ Another use for manual replacement in a text editor is changing RGB or labeled c
 | I | In/out line |  |
 | J | join rooms |  |
 | K | toggle darkness |  |
-| L |  |  |
+| L | Add a label |  |
 | M |  |  |
 | N |  | `control-n` = new map |
 | O | Out/in line | `control-o` = open trizbort file |
@@ -1259,10 +1321,14 @@ Another use for manual replacement in a text editor is changing RGB or labeled c
 
 ### Building Trizbort
 
-You should be able to pull all the Trizbort source, open the .csproj or .sln file in Microsoft Visual Studio, and run it. The main things to watch for are:
+Trizbort 2 targets .NET 8 (`net8.0-windows`) and builds on Windows with the .NET 8 SDK. From the repository root, run:
 
-- For all versions, you may have to change the directory of pdfsharp.dll as a reference. Or you may need to add pdfsharp.dll to your included paths.
-- For versions 1.54 and up, you will need to make sure DevComponents.DotNetBar2.dll can be seen by the project.
+```
+dotnet build Trizbort.sln -c Debug
+dotnet test Trizbort.sln -c Debug
+```
+
+You can also open `Trizbort.sln` in Visual Studio 2022. The DotNetBar and pdfsharp references required by 1.5.x builds are no longer needed. See [the developer reference](../agent-docs/09-build-test-and-dotnet8-port.md) for more detail.
 
 <a name="about"></a>
 
@@ -1274,33 +1340,34 @@ You should be able to pull all the Trizbort source, open the .csproj or .sln fil
 
 Genstein created Trizbort and maintained it until version 1.5.0. His website is [here](http://trizbort.genstein.com). Jason Lautzenheiser picked up the project in December 2014 and added features and merged changes from various other contributors.
 
-Authors involved with other changes include Tymian and Matt Watkins. If you'd like to become an author to add a feature, that's very much welcomed! Fork something off [here](https://github.com/JasonLautzenheiser/trizbort) and create a pull request.
+Authors involved with other changes include Tymian and Matt Watkins. Trizbort 2 is maintained by Lee Oades at [leeoades/trizbort](https://github.com/leeoades/trizbort). If you'd like to add a feature, that's very much welcome! Fork the repository and create a pull request.
 
 <a name="about_versions"></a>
 
 #### Versions
 
-The REVISIONS.TXT file in the latest release build, or in the [Trizbort project](https://github.com/JasonLautzenheiser/trizbort), should have this information. However, the big changes are listed here.
+The [changelog](../changelog.md) has the full history. The big changes are listed here.
 
 - 1.5.5: added region and color support to Trizbort. Forked to https://github.com/jasonlautzenheiser/trizbort
 - 1.5.7: largely bug fixes
 - 1.5.8: added version metatag, room borders, subtitles, improved automap support. New documentation forked to https://github.com/andrewschultz/trizbort
+- 2.0.0: ported to .NET 8 and distributed as a self-contained download. Added the *Apply style to new rooms* and *Double click to add room* preferences. Forked to https://github.com/leeoades/trizbort
+- 2.0.1: improved Room Properties focus; removed the automatic update checker
+- 2.0.2: added map labels and curved connections
 
 <a name="about_bugs"></a>
 
 #### Error/bug handling
 
-As of version 1.5.5, Trizbort requires the DevComponents.DotNetBar2.dll file to run. If Trizbort fails to start, this may be the culprit. Windows can be very non-descriptive about why it can't run a program. You will also need to install DotNet framework 4 if you are running an earlier version of Windows. You should be able to use "Windows Update" to upgrade this if need be.
+Trizbort 2 is a self-contained download and does not need DotNetBar or a separate .NET installation. If it fails to start, make sure you extracted the whole zip into a writable folder. Windows SmartScreen may block the unsigned executable until you choose `More info` and `Run anyway`.
 
-Bugs or feature requests can be reported anonymously at https://trello.com/b/avZe0VPG/trizbort. A brief search to make sure the bug isn't already there is appreciated, but you shouldn't feel obliged to search too rigorously.
-
-Documentation bugs, big or small, technical or aesthetic, can also be reported at [the main branch](https://github.com/JasonLautzenheiser/trizbort) or [the document-focused sub-branch](https://github.com/andrewschultz/trizbort).
+Bugs, feature requests and documentation issues can be reported at [GitHub Issues](https://github.com/leeoades/trizbort/issues). A brief search to make sure the issue isn't already there is appreciated, but you shouldn't feel obliged to search too rigorously.
 
 <a name="about_known_issues"></a>
 
 #### Known issues and limitations
 
-While minor issues are generally listed at Trello, particularly complex ones are listed below, mostly to let the user know if anything may cause odd behavior. This was last updated with 1.5.8.7.
+While minor issues are generally listed on [GitHub Issues](https://github.com/leeoades/trizbort/issues), particularly complex ones are listed below, mostly to let the user know if anything may cause odd behavior.
 
 As of 1.5.5, if you copy room data and then text data, the room data is lost. Pasting room data to text fields gives odd results.
 
@@ -1325,7 +1392,9 @@ Sites with many box-and-line style text adventure maps include:
 
 ### Settings File
 
-You will find a settings file at C:\\Users\\%USERNAME%\\AppData\\Local\\Genstein\\Trizbort\\settings.xml. You can erase this to restore the defaults. The XML is human-readable enough that this document won't discuss it in detail.
+Trizbort 2 stores its settings in `appsettings.json`. Delete this file to restore the defaults. The JSON is human-readable enough that this document won't discuss it in detail.
+
+The file is read from and written to Trizbort's working directory, which is usually the folder containing `Trizbort.exe`. If `appsettings.json` does not exist, Trizbort imports your settings from the 1.x location, `C:\Users\%USERNAME%\AppData\Local\Genstein\Trizbort\Settings.xml`.
 
 <a name="general_thirdparty"></a>
 
