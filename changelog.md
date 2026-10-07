@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.  Version nu
 Add new changes here as features and fixes are implemented. Replace `vNext` with the version
 number and date when publishing a release.
 
+## [2.0.3] - 2026-10-07
+
+### Fix
+- **PDF export now works:** fixed a crash when drawing the canvas background onto a PDF page.
+
 ## [2.0.2] - 2026-10-07
 
 ### Add
