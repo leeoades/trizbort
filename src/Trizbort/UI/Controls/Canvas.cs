@@ -74,6 +74,7 @@ namespace Trizbort.UI.Controls {
     private bool mNewRoomIsDark;
     private CompassPoint mNewRoomObjectsPosition;
     private Vector mNewRoomSize;
+    private Room mNewRoomStyleSource;
     private Vector mOrigin;
     private PointF mPanPosition;
     private bool mUpdatingScrollBars;
@@ -313,6 +314,7 @@ namespace Trizbort.UI.Controls {
 
     public Room AddRoom(bool atCursor, bool insertRoom = false, bool doRefresh = true) {
       var room = new Room(Project.Current) {Size = mNewRoomSize};
+      room.CopyStyleFrom(mNewRoomStyleSource);
 
       // Changed this to ignore ID gaps. ID gaps are resolved on load
 
@@ -2479,6 +2481,7 @@ namespace Trizbort.UI.Controls {
       mNewRoomSize = new Vector(Settings.GridSize * 3, Settings.GridSize * 2);
       mNewRoomIsDark = false;
       mNewRoomObjectsPosition = CompassPoint.South;
+      mNewRoomStyleSource = null;
       requestRecomputeSmartSegments();
       StopAutomapping();
       // roomTooltip.SetSuperTooltip(this, null);
@@ -2629,6 +2632,7 @@ namespace Trizbort.UI.Controls {
       mNewRoomSize = room.Size;
       mNewRoomIsDark = room.IsDark;
       mNewRoomObjectsPosition = room.ObjectsPosition;
+      mNewRoomStyleSource = room;
     }
 
     private void shiftArrowHandler(Keys keyCode) {

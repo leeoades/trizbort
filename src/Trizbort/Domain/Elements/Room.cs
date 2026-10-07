@@ -1388,6 +1388,40 @@ namespace Trizbort.Domain.Elements {
       return Region == Misc.Region.DefaultRegion || string.IsNullOrEmpty(Region);
     }
 
+    /// <summary>
+    ///   Copy the visual styling (shape, corners, border, colours, region, darkness and
+    ///   objects position) of another room onto this one. Content such as name,
+    ///   descriptions and objects is not copied.
+    /// </summary>
+    public void CopyStyleFrom(Room source) {
+      if (source == null || ReferenceEquals(source, this)) return;
+
+      Region = source.Region;
+      Shape = source.Shape;
+      Ellipse = source.Ellipse;
+      RoundedCorners = source.RoundedCorners;
+      Octagonal = source.Octagonal;
+      StraightEdges = source.StraightEdges;
+      AllCornersEqual = source.AllCornersEqual;
+      Corners = new CornerRadii {
+        TopLeft = source.Corners.TopLeft,
+        TopRight = source.Corners.TopRight,
+        BottomLeft = source.Corners.BottomLeft,
+        BottomRight = source.Corners.BottomRight
+      };
+      HandDrawnEdges = source.HandDrawnEdges;
+      BorderStyle = source.BorderStyle;
+      RoomBorderColor = source.RoomBorderColor;
+      RoomFillColor = source.RoomFillColor;
+      SecondFillColor = source.SecondFillColor;
+      SecondFillLocation = source.SecondFillLocation;
+      RoomNameColor = source.RoomNameColor;
+      RoomSubtitleColor = source.RoomSubtitleColor;
+      RoomObjectTextColor = source.RoomObjectTextColor;
+      IsDark = source.IsDark;
+      ObjectsPosition = source.ObjectsPosition;
+    }
+
     private void setRoomShape(RoomShape pShape) {
       switch (pShape) {
         case RoomShape.SquareCorners:

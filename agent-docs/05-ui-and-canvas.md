@@ -82,6 +82,13 @@ two are independent concerns.
   `Room.Position` directly, driven by `Automap\Automap.cs` rather than user input — see
   [`06-automap.md`](06-automap.md).
 
+### New-room defaults
+
+`Canvas` remembers the last selected/changed room (`setRoomDefaultsFrom`, `mNewRoomStyleSource`).
+`AddRoom()` (the `R` hotkey / *Add Room* menu) copies that room's styling onto the new room via
+`Room.CopyStyleFrom()` (shape, corners, border, colours, region, dark, objects position — not
+name/objects/descriptions), and uses its size. `Canvas.Reset()` clears the source.
+
 ## Dialog catalogue (`UI\*.cs`)
 
 | Dialog | Purpose |
