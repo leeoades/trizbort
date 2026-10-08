@@ -1272,12 +1272,18 @@ At your service!</pre></td></tr>
 <a name="about_versions"></a>
 <h3>Versions</h3>
 
-<p>The REVISIONS.TXT file in the latest release build, or in the <a href="https://github.com/JasonLautzenheiser/trizbort">Trizbort project</a>, should have this information. However, the big changes are listed here.</p>
+<p>The <a href="https://github.com/leeoades/trizbort/blob/master/changelog.md">changelog</a> has the full history. The big changes are listed here.</p>
 
 <ul>
 <li>1.5.5: added region and color support to Trizbort. Forked to https://github.com/jasonlautzenheiser/trizbort
 <li>1.5.7: largely bug fixes
 <li>1.5.8: added version metatag, room borders, subtitles, improved automap support. New documentation forked to https://github.com/andrewschultz/trizbort
+<li>2.0.0: ported to .NET 8 and distributed as a self-contained download. Added the Apply style to new rooms and Double click to add room preferences. Forked to https://github.com/leeoades/trizbort
+<li>2.0.1: improved Room Properties focus; removed the automatic update checker
+<li>2.0.2: added map labels and curved connections
+<li>2.0.3: fixed PDF export
+<li>2.1.0: added map themes and hand-drawn style settings
+<li>2.2.0: added nested object lists for containers
 </ul>
 
 <a name="about_bugs"></a>

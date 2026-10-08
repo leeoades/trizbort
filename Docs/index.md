@@ -1399,6 +1399,9 @@ The [changelog](../changelog.md) has the full history. The big changes are liste
 - 2.0.0: ported to .NET 8 and distributed as a self-contained download. Added the *Apply style to new rooms* and *Double click to add room* preferences. Forked to https://github.com/leeoades/trizbort
 - 2.0.1: improved Room Properties focus; removed the automatic update checker
 - 2.0.2: added map labels and curved connections
+- 2.0.3: fixed PDF export
+- 2.1.0: added map themes and hand-drawn style settings
+- 2.2.0: added nested object lists for containers
 
 <a name="about_bugs"></a>
 

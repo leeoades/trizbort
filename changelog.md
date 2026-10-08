@@ -1,10 +1,7 @@
 ﻿# Change Log
 All notable changes to this project will be documented in this file.  Version numbers will conform to the semver style versioning (https://semver.org/)
 
-## [vNext] - Unreleased
-
-Add new changes here as features and fixes are implemented. Replace `vNext` with the version
-number and date when publishing a release.
+## [2.2.0] - 2026-10-08
 
 ### Add
 - **Containers and contents in object lists:** put objects inside the one above by starting the line with a `-` bullet (`- Pouch`, `-- Gem`), a tab, or spaces. In the Room Properties Objects box, Tab / Shift+Tab indent and outdent the selected lines, and Enter continues the current bullet (use Ctrl+Tab to move focus out of the box). Contained objects are drawn on the map indented under their container with a `•` marker, whichever side of the room the list is shown (lists to the left of a room no longer lose their indentation). Exporters treat the nesting as containment, as they already did for space-indented objects. (#6)
