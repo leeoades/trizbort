@@ -57,8 +57,12 @@ UI\AutomapDialog.cs
    clears the owned cancellation source when finished. Keeping the
    existing room in a same-direction conflict makes that room the current source for subsequent
    travel. Regression tests exercise all three conflict decisions with real Canvas graph mutations,
-   sequential runs, reader lookahead, cancellation and save/load/export workflows; overlapping
-   concurrent runs and dialog interaction are not covered.
+   sequential runs, reader lookahead, cancellation and save/load/export workflows. Replacement
+   runs cancel their predecessor in both entry points; canceled cleanup changes status and clears
+   the token only if it still owns the current run. Tokens are installed before opening files so
+   even a failed replacement cannot leave its predecessor owning the run. Regression tests cover
+   replacement waiting, completion and file-open failures, with and without an explicit Stop.
+   Arbitrary concurrent processing and native dialog interaction are not covered.
 
 ## Room/description detection heuristics (no regex — rule-based)
 

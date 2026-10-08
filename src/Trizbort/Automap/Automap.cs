@@ -896,6 +896,7 @@ namespace Trizbort.Automap
 
     internal async Task StartCL(IAutomapCanvas canvas, AutomapSettings settings)
     {
+      if (Running) Stop();
       initializeRun(canvas, settings);
       using var tokenSource = new CancellationTokenSource();
       m_tokenSource = tokenSource;
@@ -951,7 +952,7 @@ namespace Trizbort.Automap
       }
       catch (OperationCanceledException) when (tokenSource.IsCancellationRequested)
       {
-        Status = "Automap is not running.";
+        if (ReferenceEquals(m_tokenSource, tokenSource)) Status = "Automap is not running.";
         return;
       }
       catch (IOException ex)
@@ -1000,17 +1001,16 @@ namespace Trizbort.Automap
       }
 
       initializeRun(canvas, settings);
+      using var tokenSource = new CancellationTokenSource();
+      m_tokenSource = tokenSource;
       Debug.Assert(m_settings.AssumeRoomsWithSameNameAreSameRoom || m_settings.VerboseTranscript, "Must assume rooms with same name are same room unless transcript is verbose.");
       Status = "Automapping has started.";
 
-      CancellationTokenSource tokenSource = null;
       try
       {
         using (var stream = File.Open(m_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
           using (var reader = new PeekingStreamReader(stream))
-            using (tokenSource = new CancellationTokenSource())
             {
-              m_tokenSource = tokenSource;
               var lastline = "";
 
               if (m_settings.ContinueTranscript)
@@ -1085,9 +1085,9 @@ namespace Trizbort.Automap
               }
             }
       }
-      catch (OperationCanceledException) when (tokenSource?.IsCancellationRequested == true)
+      catch (OperationCanceledException) when (tokenSource.IsCancellationRequested)
       {
-        Status = "Automap is not running.";
+        if (ReferenceEquals(m_tokenSource, tokenSource)) Status = "Automap is not running.";
         return;
       }
       catch (IOException ex)

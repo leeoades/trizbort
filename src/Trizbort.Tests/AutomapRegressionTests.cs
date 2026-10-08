@@ -396,5 +396,57 @@ namespace Trizbort.Tests {
         reader.ReadLine().ShouldBeNull();
       }
     }
+
+    private static IEnumerable<TestCaseData> ReplacementCases() {
+      foreach (var oldOneShot in new[] {false, true})
+      foreach (var explicitStop in new[] {false, true})
+      for (var mode = 0; mode < 5; mode++)
+        yield return new TestCaseData(oldOneShot, explicitStop, mode);
+    }
+
+    [TestCaseSource(nameof(ReplacementCases))]
+    public async Task ReplacingCanceledRun_OldCleanupPreservesReplacementStatusAndToken(bool oldOneShot, bool explicitStop, int replacementMode) {
+      using (var canvas = new Canvas())
+      using (var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5))) {
+        var errors = new List<string>();
+        var parser = new Parser((message, _) => errors.Add(message),
+          (_, __) => throw new AssertionException("Unexpected ambiguity"));
+        var settings = SettingsFor("Old Game\n\nOld Room\nAn old description.\n\n>look\n");
+        settings.SingleStep = true;
+        var oldRun = oldOneShot ? parser.StartCL(canvas, settings) : parser.Start(canvas, settings);
+        Task replacement = Task.CompletedTask;
+        try {
+          await WaitForSingleStep(parser, oldRun, deadline.Token);
+          if (explicitStop) parser.Stop();
+          var next = SettingsFor(replacementMode == 4 ? "New Game\n\nNew Room\nA new description.\n" : "");
+          if (replacementMode == 2 || replacementMode == 3) next.FileName = Files.File("missing.txt");
+          next.SingleStep = replacementMode == 4;
+          replacement = replacementMode == 0 || replacementMode == 2
+            ? parser.Start(canvas, next) : parser.StartCL(canvas, next);
+          var status = parser.Status;
+          var running = parser.Running;
+          await oldRun.WaitAsync(TimeSpan.FromSeconds(5));
+          parser.Status.ShouldBe(status);
+          parser.Running.ShouldBe(running);
+          Project.Current.Elements.ShouldBeEmpty();
+          errors.Count.ShouldBe(replacementMode == 2 || replacementMode == 3 ? 1 : 0);
+          if (replacementMode == 0) {
+            parser.Stop();
+            await replacement.WaitAsync(TimeSpan.FromSeconds(5));
+            parser.Status.ShouldBe("Automap is not running.");
+          } else if (replacementMode == 4) {
+            parser.RunToCompletion();
+            await replacement.WaitAsync(TimeSpan.FromSeconds(5));
+            Project.Current.Elements.OfType<Room>().Single().Name.ShouldBe("New Room");
+            parser.Status.ShouldBe("Automapping has completed.");
+          }
+          parser.Running.ShouldBeFalse();
+        } finally {
+          parser.Stop();
+          parser.RunToCompletion();
+          await Task.WhenAll(oldRun, replacement).WaitAsync(TimeSpan.FromSeconds(5));
+        }
+      }
+    }
   }
 }
