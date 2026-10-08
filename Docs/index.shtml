@@ -319,16 +319,36 @@
 <a name="help_rooms_edit_objects"></a>
 <h4>Objects in Rooms</h4>
 
-<p>Trizbort allows for a text box to write up objects in a room. Trizbort tends to assume that you'll put a single object on each line, but you don't have to. You can indicate that one object is inside (or on top of, or carried by) another by putting spaces at the start of its line. You can use blank lines where you like to space things out. You can refer to things as "a mailbox" or "an egg," but Trizbort doesn't need the indefinite articles if you wish to export the map to an IF development system.</p>
+<p>Trizbort allows for a text box to write up objects in a room. Trizbort tends to assume that you'll put a single object on each line, but you don't have to. You can use blank lines where you like to space things out. You can refer to things as "a mailbox" or "an egg," but Trizbort doesn't need the indefinite articles if you wish to export the map to an IF development system.</p>
 
-<p>Currently Trizbort has no way to differentiate NPCs from supporters or containers once you export, so you will have to re-edit the created source to differentiate. Also, since you are only allowed one text orientation, there's also no good and natural way to allow many objects in a room without spacing rooms out or enlarging them.</p>
+<p>You can show that one object is inside (or on top of, or carried or worn by) another by putting it on the next line with a <code>-</code> bullet at the start. Use two bullets (<code>--</code>) for an object inside that one, and so on:</p>
+
+<pre>Mr Jones
+- hat
+-- hatband
+- goldfish bowl
+-- goldfish
+Mrs Jones</pre>
+
+<p>You don't have to type the bullets yourself. In the object list, <span class="accel">Tab</span> indents the current line (or every selected line) one level, and <span class="accel">Shift-Tab</span> outdents it. When you press <span class="accel">Enter</span> at the end of a bulleted line, the new line starts at the same level; press <span class="accel">Enter</span> again on an empty bulleted line to go back a level. Lines that start with a tab or spaces, or with <code>*</code> or <code>&bull;</code> bullets, also count as nested, so lists from older maps still work.</p>
+
+<p>You can also add properties in square brackets after an object's name, such as <code>[c]</code> for a container, <code>[u]</code> for a supporter or <code>[m]</code> for a male person. Click <b>Object Syntax</b> above the list to see them all. Trizbort uses these, and the nesting, when you export your map to an IF development system. They don't appear on the map.</p>
 
 <table>
 <tr><td><img src="object_list.png" alt="A typical list of objects in a room."></td></tr>
 <tr><td class="alt">A typical list of the objects in a room. A game might say "Mr Jones is here. He carries a hat (on which is a hatband) and a goldfish bowl (in which is a goldfish.) You can also see Mrs Jones and a rabbit."</td></tr>
 </table>
 
-<p>The arrow buttons to the right of the object list in a room's Properties dialog indicate on which side of the room the list will appear on the map; they don't do anything else. In the above picture the bottom left corner arrow is selected; this means the list of objects will appear to the bottom left of the room. On the map, Trizbort will automatically align the object list so that its nearest edges are flush with the room, to make it clearer which objects are in each room.</p>
+<p>On the map, nested objects are drawn indented under the object that holds them, with a small <code>&bull;</code> before each one. This works on whichever side of the room the list appears. Lists to the left of a room are still lined up against the room, but the nesting is kept.</p>
+
+<table>
+<tr><td><img src="object_list_map.png" alt="Nested objects drawn on the map."></td></tr>
+<tr><td class="alt">The same list drawn to the left of a room, and another list drawn to its right.</td></tr>
+</table>
+
+<p>Since you are only allowed one text orientation, there's no good and natural way to allow many objects in a room without spacing rooms out or enlarging them.</p>
+
+<p>The arrow buttons to the right of the object list in a room's Properties dialog indicate on which side of the room the list will appear on the map; they don't do anything else. On the map, Trizbort will automatically align the object list so that its nearest edges are flush with the room, to make it clearer which objects are in each room.</p>
 
 <p>If you click the button showing a box in the middle of the arrow buttons, the object list will appear inside the room, beneath the room's name and, if available, the  subtitle, rather than outside the room. At first when you do this it might look on the canvas like the object list has vanished; this happens if your room isn't big enough for the object list. You may need to make the room bigger in order to see the whole list.</p>
 
@@ -991,7 +1011,7 @@ At your service!</pre></td></tr>
 <tr><td class="alt">Room properties, again.</td></tr>
 </table>
 
-<p>Note first that you can <span class="accel">TAB</span> your way through from the name to the subtitle to the dark box (type space to toggle it) and all the way to the objects box, where you can type in what you want. Then if you tab some more, you get to the arrow pad. There, a space bar locks in text justification, then <span class="accel">ENTER</span> (or <span class="accel">Alt-O</span>) accepts the changes.</p>
+<p>Note first that you can <span class="accel">TAB</span> your way through from the name to the subtitle to the dark box (type space to toggle it) and all the way to the objects box, where you can type in what you want. In the objects box, <span class="accel">TAB</span> indents an object instead, so press <span class="accel">Ctrl-TAB</span> to move on to the arrow pad. There, a space bar locks in text justification, then <span class="accel">ENTER</span> (or <span class="accel">Alt-O</span>) accepts the changes.</p>
 
 <p>Back in the room properties, you can also hit <span class="accel">Alt-E</span> for description, <span class="accel">Alt-C</span> for colors, and <span class="accel">Alt-G</span> for regions. In the regions tab, you can tab and use the arrow keys to choose a region. Colors is a bit more complex.  You can tab through the Change boxes to change the color you want. You need to push <span class="accel">Alt-K</span> to okay changes if you don't want to use the mouse. You also currently need to push Clear manually.
 

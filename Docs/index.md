@@ -311,15 +311,36 @@ While there are no official conventions for when to use any of these, it may be 
 
 ##### Objects in Rooms
 
-Trizbort allows for a text box to write up objects in a room. Trizbort tends to assume that you'll put a single object on each line, but you don't have to. You can indicate that one object is inside (or on top of, or carried by) another by putting spaces at the start of its line. You can use blank lines where you like to space things out. You can refer to things as "a mailbox" or "an egg," but Trizbort doesn't need the indefinite articles if you wish to export the map to an IF development system.
+Trizbort allows for a text box to write up objects in a room. Trizbort tends to assume that you'll put a single object on each line, but you don't have to. You can use blank lines where you like to space things out. You can refer to things as "a mailbox" or "an egg," but Trizbort doesn't need the indefinite articles if you wish to export the map to an IF development system.
 
-Currently Trizbort has no way to differentiate NPCs from supporters or containers once you export, so you will have to re-edit the created source to differentiate. Also, since you are only allowed one text orientation, there's also no good and natural way to allow many objects in a room without spacing rooms out or enlarging them.
+You can show that one object is inside (or on top of, or carried or worn by) another by putting it on the next line with a `-` bullet at the start. Use two bullets (`--`) for an object inside that one, and so on:
+
+```
+Mr Jones
+- hat
+-- hatband
+- goldfish bowl
+-- goldfish
+Mrs Jones
+```
+
+You don't have to type the bullets yourself. In the object list, `Tab` indents the current line (or every selected line) one level, and `Shift-Tab` outdents it. When you press `Enter` at the end of a bulleted line, the new line starts at the same level; press `Enter` again on an empty bulleted line to go back a level. Lines that start with a tab or spaces, or with `*` or `•` bullets, also count as nested, so lists from older maps still work.
+
+You can also add properties in square brackets after an object's name, such as `[c]` for a container, `[u]` for a supporter or `[m]` for a male person. Click **Object Syntax** above the list to see them all. Trizbort uses these, and the nesting, when you export your map to an IF development system. They don't appear on the map.
 
 ![A typical list of objects in a room.](object_list.png)
 
 *A typical list of the objects in a room. A game might say "Mr Jones is here. He carries a hat (on which is a hatband) and a goldfish bowl (in which is a goldfish.) You can also see Mrs Jones and a rabbit."*
 
-The arrow buttons to the right of the object list in a room's Properties dialog indicate on which side of the room the list will appear on the map; they don't do anything else. In the above picture the bottom left corner arrow is selected; this means the list of objects will appear to the bottom left of the room. On the map, Trizbort will automatically align the object list so that its nearest edges are flush with the room, to make it clearer which objects are in each room.
+On the map, nested objects are drawn indented under the object that holds them, with a small `•` before each one. This works on whichever side of the room the list appears. Lists to the left of a room are still lined up against the room, but the nesting is kept.
+
+![Nested objects drawn on the map.](object_list_map.png)
+
+*The same list drawn to the left of a room, and another list drawn to its right.*
+
+Since you are only allowed one text orientation, there's no good and natural way to allow many objects in a room without spacing rooms out or enlarging them.
+
+The arrow buttons to the right of the object list in a room's Properties dialog indicate on which side of the room the list will appear on the map; they don't do anything else. On the map, Trizbort will automatically align the object list so that its nearest edges are flush with the room, to make it clearer which objects are in each room.
 
 If you click the button showing a box in the middle of the arrow buttons, the object list will appear inside the room, beneath the room's name and, if available, the subtitle, rather than outside the room. At first when you do this it might look on the canvas like the object list has vanished; this happens if your room isn't big enough for the object list. You may need to make the room bigger in order to see the whole list.
 
@@ -1091,7 +1112,7 @@ Trizbort offers accelerators so that the programmer can use `TAB` or logical sho
 
 *Room properties, again.*
 
-Note first that you can `TAB` your way through from the name to the subtitle to the dark box (type space to toggle it) and all the way to the objects box, where you can type in what you want. Then if you tab some more, you get to the arrow pad. There, a space bar locks in text justification, then `ENTER` (or `Alt-O`) accepts the changes.
+Note first that you can `TAB` your way through from the name to the subtitle to the dark box (type space to toggle it) and all the way to the objects box, where you can type in what you want. In the objects box, `TAB` indents an object instead, so press `Ctrl-TAB` to move on to the arrow pad. There, a space bar locks in text justification, then `ENTER` (or `Alt-O`) accepts the changes.
 
 Back in the room properties, you can also hit `Alt-E` for description, `Alt-C` for colors, and `Alt-G` for regions. In the regions tab, you can tab and use the arrow keys to choose a region. Colors is a bit more complex. You can tab through the Change boxes to change the color you want. You need to push `Alt-K` to okay changes if you don't want to use the mouse. You also currently need to push Clear manually.
 
