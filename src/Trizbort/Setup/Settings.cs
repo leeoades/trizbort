@@ -326,6 +326,10 @@ namespace Trizbort.Setup {
 
     public static event EventHandler Changed;
 
+    internal static void NotifyThemeApplied() {
+      raiseChanged();
+    }
+
     public static void Load(XmlElementReader element) {
       var colors = element["colors"];
       foreach (var color in colors.Children)

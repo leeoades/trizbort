@@ -25,6 +25,16 @@ Top-level menus (from `MainForm.Designer.cs`): **File**, **Edit**, **View**, **A
 Designer file and follow its wiring (`Click` handler name → method in `MainForm.cs`, usually
 calling into `CommandController`/`Canvas`/an exporter).
 
+`MainForm.Themes.cs` adds **Tools → Themes** immediately after Map Settings at runtime.
+It provides Classic, Parchment, Dark and High contrast presets plus theme import/export.
+Maps without individual style overrides apply themes immediately, including room shapes and
+label colours. Otherwise, application asks whether to replace individual styles (Yes),
+preserve them (No, the default), or cancel. Detection uses `MapTheme.HasIndividualStyles`;
+errors are displayed without silently falling back to another font.
+**Infer default room style from rooms...** uses `Setup\RoomStyleInference.cs` to preview and
+then promote majority room styling to map defaults (see the storage reference).
+See the theme format and preservation rules in the storage reference.
+
 ## `UI\Controls\` — the drawing surface and supporting controls
 
 | File | Role |

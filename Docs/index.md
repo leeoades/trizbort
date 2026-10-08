@@ -79,6 +79,7 @@ The version of this guide for 1.5+ may be found at [Jason Lautzenheiser's Trizbo
     - [Lines and Grid](#help_settings_linegrid)
     - [Regions](#help_settings_regions)
     - [Other Settings](#help_settings_other)
+    - [Themes (Trizbort 2)](#help_themes)
     - [Restore Default Map Settings](#restore_default)
   - [Multiple Selection](#help_select)
     - [Select All/None](#help_select_all)
@@ -681,6 +682,50 @@ The Other tab gives you control over miscellaneous settings which don't fit into
 | Object List Offset | The distance, in pixels, between a room and its object list, assuming the object list is drawn outside the room. If the object list is drawn inside the room, this is the distance of the bottom left of the object list from the bottom left corner of the room. |
 | Resize/Drag Handle Size | This controls the size, in pixels, of [handles](#help_rooms_select) and [ports](#help_conn_ports). If you're zoomed in or out, handles and ports will be scaled accordingly. |
 | Snap to Element Distance | To make it easier to select and drag rooms and connections, Trizbort allows you a small margin for error when selecting or dragging rooms and connections. You can increase this value if you have trouble selecting or dragging, or decrease it if you are very precise when selecting and dragging. Using very large or very small values may make Trizbort notably harder to use. |
+
+<a name="help_themes"></a>
+
+#### Themes (Trizbort 2)
+
+Use **Tools -> Themes** to switch between **Classic**, **Parchment**, **Dark** and
+**High contrast**, or to transfer a map's appearance to another map.
+**Export current theme...** saves the current map-wide appearance as a
+`.trizbort-theme` file. Open another map and choose **Import theme...** to apply it.
+Theme files contain no rooms, connections, map title, author or other map content.
+
+If the map has no individual style overrides, the theme is applied immediately,
+including its room shape and label colours. Otherwise, choose **Yes** to replace individual room shapes,
+corners, hand-drawn edges, border styles and colours (including connection and
+label colours), or **No** to preserve these overrides and change only map-wide
+settings. **Cancel** makes no changes. Applying a theme marks the map as modified;
+save the map to keep its new appearance. There is no undo, so save a copy first if
+you want to keep the old style.
+
+Themes include map colours, all four fonts, region fill/text colours, default room
+shape, line width, arrow size, text offsets, connection stalk length, darkness
+stripe size, grid appearance, document margins and dash wrapping. Region palettes
+are matched by name: matching regions get the theme's colours, new regions are
+added, and map-only regions retain their colours. Rooms keep their region
+membership. Room/label text, sizes, positions, connection routes, directions,
+doors, darkness and start/end flags are never changed. Snapping, keyboard
+preferences, application settings and style inheritance preferences are not part
+of a theme. Individual element overrides are not exported.
+
+A theme requiring a font that is not installed is rejected with an error,
+without changing the map. Install the font before importing it. Once applied,
+theme settings are stored inside the ordinary `.trizbort` map file; you do not need
+to keep the theme file alongside it.
+
+Because a theme only captures map-wide defaults, a map whose rooms were each styled
+individually (for example, every room given the same fill colour) exports a theme
+that doesn't include that look. Use **Tools -> Themes -> Infer default room style
+from rooms...** first. It finds styling shared by at least 75% of rooms (in groups of
+three or more) and makes it the map default: room shape, fill and name text colour
+per region, and room border, subtitle and object text colours. Room overrides that
+now match the default are removed; rooms that differ keep their own styling, so the
+map looks the same. A preview lists the changes before anything is applied. Room
+shapes are stored on each room, so the inferred shape becomes the default for new
+rooms and themes. Export the theme afterwards to carry the look to another map.
 
 <a name="restore_default"></a>
 

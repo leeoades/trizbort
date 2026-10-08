@@ -106,6 +106,36 @@ Things worth remembering:
   verbosity, same-name-room matching, exit guessing, custom object/region commands) are
   described in more detail in [`06-automap.md`](06-automap.md).
 
+## Reusable map themes
+
+`Setup\MapTheme.cs` captures/applies the visual subset of map settings and reads/writes
+version-1 JSON `.trizbort-theme` files (`Format: "trizbort-theme"`). Required properties,
+palette completeness, region names, enums, finite numeric ranges and fonts are validated.
+Fonts and colours are resolved before any map mutation; unavailable fonts fail explicitly.
+There is no theme dependency or theme name added to the map format: applying a theme writes
+the normal in-memory `Settings` values, which existing map save/load already persists.
+
+Themes exclude content, default room names, snapping, layout distance, editor handle sizes,
+keyboard modifiers and app-wide preferences. Region palettes merge by name without removing
+map-only regions or changing room membership. `Apply(bool replaceIndividualStyles)` can also
+reset room colour/shape/corner/border overrides and connection/label colours, while preserving
+geometry, routing, labels, directions, doors and game properties. Capture does not export
+individual element overrides. Applying marks `Project.Current.IsDirty` and emits
+`Settings.Changed` even when only region/default shape values differ.
+
+`MapTheme.HasIndividualStyles` ignores `Room.StraightEdges`: it is derived (reset from
+`HandDrawnEdges` on every draw) rather than a user style.
+
+`Setup\RoomStyleInference.cs` lifts per-room styling into map defaults so it can be
+exported. `Analyze` evaluates each property independently and requires ≥75% agreement
+among at least three rooms, using effective colours (override or current default): shape →
+`Settings.DefaultRoomShape`; fill/name text per resolved region (case-insensitive, falling back
+to `NoRegion`) → region `RColor`/`TextColor`; border/subtitle/object text → `Colors.Border`,
+`Colors.Subtitle`, `Colors.SmallText`. `Apply` updates those defaults, clears room colour
+overrides equal to the final defaults (so rendering is unchanged), marks dirty and raises
+`Settings.Changed`. Room shapes, corners, border styles, hand-drawn edges and second fills
+have no map-level default and are left on rooms.
+
 ## JSON serialization — `Domain\SerializeHelpers` converters are currently unused
 
 `Domain\SerializeHelpers\ElementConverter.cs` / `PortConverter.cs` are Newtonsoft.Json

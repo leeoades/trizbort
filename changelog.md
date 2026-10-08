@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.  Version nu
 Add new changes here as features and fixes are implemented. Replace `vNext` with the version
 number and date when publishing a release.
 
+### Add
+- **Themes:** **Tools > Themes** offers built-in Classic, Parchment, Dark and High contrast themes, plus **Export current theme...** and **Import theme...** to move a map's look between maps as a `.trizbort-theme` file. Themes cover map colours, fonts, region colours, default room shape, line/arrow sizes, grid and margins; map content is never changed. If any rooms, connections or labels are styled individually, you choose whether to replace or keep those styles; otherwise the theme applies immediately. (#2)
+- **Infer default room style from rooms:** **Tools > Themes** can promote styling shared by at least 75% of rooms (shape, per-region fill/name colours, border, subtitle and object text colours) into the map defaults, removing per-room overrides that become redundant. The map looks the same, but the style can now be exported as a theme. A preview is shown before anything changes.
+
 ## [2.0.3] - 2026-10-07
 
 ### Fix
