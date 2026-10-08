@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using NUnit.Framework;
@@ -11,6 +12,8 @@ using Trizbort.Domain.Controllers;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
+using Trizbort.Domain.Watchers;
+using Trizbort.Setup;
 using Trizbort.UI;
 
 namespace Trizbort.Tests {
@@ -92,6 +95,127 @@ namespace Trizbort.Tests {
       Project.Current.Save().ShouldBeFalse();
       interaction.Messages.Count.ShouldBe(2);
       interaction.Messages[1].ShouldContain("problem saving");
+    }
+
+    private Room PrepareExistingMap() {
+      var room = ProjectRegressionTests.AddRoom("Existing Room");
+      Project.Current.Title = "Existing title";
+      Project.Current.Author = "Existing author";
+      Project.Current.Description = "Existing description";
+      Project.Current.History = "Existing history";
+      Project.Current.IsDirty = true;
+      Settings.GridSize = 90;
+      return room;
+    }
+
+    private static void AssertExistingMap(Project existing, Room room) {
+      Project.Current.ShouldBeSameAs(existing);
+      existing.Elements.ShouldHaveSingleItem().ShouldBeSameAs(room);
+      existing.Title.ShouldBe("Existing title");
+      existing.Author.ShouldBe("Existing author");
+      existing.Description.ShouldBe("Existing description");
+      existing.History.ShouldBe("Existing history");
+      existing.IsDirty.ShouldBeTrue();
+    }
+
+    private static void AssertWatching(string path) {
+      var watcher = (FileSystemWatcher) typeof(TrizbortFileWatcher)
+        .GetField("watcher", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Project.FileWatcher);
+      watcher.Path.ShouldBe(Path.GetDirectoryName(path));
+      watcher.Filter.ShouldBe(Path.GetFileName(path));
+      watcher.EnableRaisingEvents.ShouldBeTrue();
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void EmptyLocalMap_PublicLoadSucceedsWithoutClearingCurrentMetadata(bool throughProject) {
+      var room = PrepareExistingMap();
+      var existing = Project.Current;
+      var path = Files.File("empty.trizbort");
+      File.WriteAllText(path, "");
+      using (var loaded = new Project {FileName = path, Title = "Unused title", Author = "Unused author",
+        Description = "Unused description", History = "Unused history"}) {
+        var succeeded = throughProject ? loaded.Load() : new MapLoader(loaded).LoadMap(path);
+        succeeded.ShouldBeTrue();
+        loaded.Elements.ShouldBeEmpty();
+        loaded.Title.ShouldBeEmpty();
+        loaded.Author.ShouldBeEmpty();
+        loaded.Description.ShouldBeEmpty();
+        loaded.History.ShouldBeEmpty();
+        loaded.IsDirty.ShouldBeFalse();
+        Settings.GridSize.ShouldBe(32);
+        AssertExistingMap(existing, room);
+        AssertWatching(path);
+      }
+      interaction.Messages.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void OpenEmptyLocalMap_ReplacesCurrentProjectWithBlankMap() {
+      var room = PrepareExistingMap();
+      var existing = Project.Current;
+      var previousForm = TrizbortApplication.MainForm;
+      var path = Files.File("explorer-new.trizbort");
+      File.WriteAllText(path, "");
+      try {
+        using (var form = new MainForm()) {
+          form.OpenProject(path);
+          Project.Current.ShouldNotBeSameAs(existing);
+          Project.Current.FileName.ShouldBe(path);
+          Project.Current.Elements.ShouldBeEmpty();
+          Project.Current.Title.ShouldBeEmpty();
+          Project.Current.Author.ShouldBeEmpty();
+          Project.Current.Description.ShouldBeEmpty();
+          Project.Current.History.ShouldBeEmpty();
+          Project.Current.IsDirty.ShouldBeFalse();
+          existing.Elements.ShouldHaveSingleItem().ShouldBeSameAs(room);
+          existing.Title.ShouldBe("Existing title");
+          Settings.GridSize.ShouldBe(32);
+          AssertWatching(path);
+          interaction.Messages.ShouldBeEmpty();
+        }
+      } finally {
+        TrizbortApplication.MainForm = previousForm;
+        existing.Dispose();
+      }
+    }
+
+    [TestCase("empty.txt", "")]
+    [TestCase("missing.txt", null)]
+    [TestCase("missing.trizbort", null)]
+    [TestCase("malformed.trizbort", "<trizbort>")]
+    [TestCase("whitespace.trizbort", " \r\n\t")]
+    public void FailedPublicLoad_PreservesCurrentMapAndReportsError(string name, string contents) {
+      var room = PrepareExistingMap();
+      var existing = Project.Current;
+      var path = Files.File(name);
+      if (contents != null) File.WriteAllText(path, contents);
+      using (var loaded = new Project {FileName = path}) {
+        loaded.Load().ShouldBeFalse();
+        AssertExistingMap(existing, room);
+        Settings.GridSize.ShouldBe(90);
+        interaction.Messages.ShouldHaveSingleItem().ShouldContain(
+          Path.GetExtension(path) == ".trizbort" ? "problem loading" : "not a known Trizbort file");
+      }
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void RelativeLocalMap_PublicLoadHandlesBlankAndXmlAndWatchesResolvedPath(bool empty) {
+      var path = Files.File("relative.trizbort");
+      File.WriteAllText(path, empty ? "" : "<trizbort version=\"1.0\"><map><room id=\"1\" name=\"Loaded Room\"/></map></trizbort>");
+      var previousDirectory = Environment.CurrentDirectory;
+      try {
+        Environment.CurrentDirectory = Files.Path;
+        using (var loaded = new Project {FileName = Path.GetFileName(path)}) {
+          loaded.Load().ShouldBeTrue();
+          loaded.Elements.Count.ShouldBe(empty ? 0 : 1);
+          AssertWatching(path);
+          interaction.Messages.ShouldBeEmpty();
+        }
+      } finally {
+        Environment.CurrentDirectory = previousDirectory;
+      }
     }
 
     [Test]

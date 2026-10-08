@@ -72,6 +72,9 @@ Key facts:
 - `MapSaver`/`MapLoader` only accept the `.trizbort` extension; anything else is rejected.
 - An empty/new local file is treated as a blank map: reset drawing settings with
   `Settings.Reset(false)` and clear the supplied project's metadata rather than parsing XML.
+  `MapLoader` dispatches by extension before any file access and leaves empty-file handling
+  to the engine, so public loading succeeds without clearing the old current project's metadata.
+  Unsupported or missing files report failure without resetting the current map's settings.
   Normal loading also uses `Reset(false)` so resetting settings does not erase newly loaded
   title/author/description/history. Public `Settings.Reset()` retains new-document behavior.
 - The root element must literally be `<trizbort>`; the `version` attribute feeds
@@ -83,6 +86,9 @@ Key facts:
 - After opening a *local* file, `Project` installs a `TrizbortFileWatcher`
   (`Domain\Watchers\TrizbortFileWatcher.cs`) that prompts to reload if the file changes on disk
   outside the app (and warns if there are unsaved in-memory changes).
+  This includes zero-length maps and relative paths, resolved to an absolute watcher path.
+  The engine distinguishes existing local files from URL inputs using `File.Exists`, not
+  relative-URI syntax (a plain local filename is also a valid relative URI).
 
 Internal constructors on `LegacyMapFileEngine` accept load-error, version-decision and
 duplicate-start/end-warning callbacks; `Room.Load` has the corresponding internal warning
