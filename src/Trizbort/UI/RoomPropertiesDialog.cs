@@ -763,6 +763,21 @@ namespace Trizbort.UI {
 
     private void txtObjects_KeyDown(object sender, KeyEventArgs e) {
       SelectAllHandler(sender, e);
+      if (e.Handled) return;
+
+      ObjectListEditor.EditResult? result = null;
+      if (e.KeyCode == Keys.Tab && !e.Control && !e.Alt)
+        result = ObjectListEditor.ChangeIndent(txtObjects.Text, txtObjects.SelectionStart, txtObjects.SelectionLength, e.Shift);
+      else if (e.KeyCode == Keys.Enter && e.Modifiers == Keys.None)
+        result = ObjectListEditor.NewLine(txtObjects.Text, txtObjects.SelectionStart, txtObjects.SelectionLength);
+
+      if (result == null) return;
+
+      txtObjects.Text = result.Value.Text;
+      txtObjects.Select(result.Value.SelectionStart, result.Value.SelectionLength);
+      txtObjects.ScrollToCaret();
+      e.Handled = true;
+      e.SuppressKeyPress = true;
     }
 
     private enum Tab {

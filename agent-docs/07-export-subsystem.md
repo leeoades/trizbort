@@ -50,8 +50,13 @@ Public entry points: `string Export()` (returns generated source as a string) an
 4. `pickBestExits()` — when multiple connections could serve as "the" exit in a given direction,
    picks the preferred one.
 5. `findThings()` — parses each room's free-text `Objects` field into structured `Thing`
-   objects (`Export\Domain\Thing.cs`). **Indentation indicates containment** (a more-indented
-   line is "inside" the preceding less-indented one). Bracketed text (`[...]`) is **not**
+   objects (`Export\Domain\Thing.cs`) via the shared `Domain\Misc\ObjectList.Parse` (also used by
+   `Room.Draw` for map display). **Indentation indicates containment** (a more-indented
+   line is "inside" the preceding less-indented one); indentation may be spaces, tabs, or
+   leading `-`/`*`/`•` bullets (`- Pouch`, `-- Gem`; a bullet run only counts if followed by
+   whitespace). On the map, nested objects are drawn indented with a `•` marker
+   (`ObjectList.FormatForDisplay`), and the Room Properties Objects box supports Tab/Shift+Tab
+   and auto-continued bullets on Enter (`UI\ObjectListEditor`). Bracketed text (`[...]`) is **not**
    key/value properties — `Thing`'s constructor treats the bracket contents as a compact string
    of single-character flags, matched with `.Contains(...)`: `f`/`m`/`p` (gender/force-person),
    `1`/`2` (force singular/plural), `c` (container), `s` (scenery), `u` (supporter), `w` (worn),

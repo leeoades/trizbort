@@ -1009,13 +1009,14 @@ namespace Trizbort.UI
             // txtObjects
             // 
             this.txtObjects.AcceptsReturn = true;
+            this.txtObjects.AcceptsTab = true;
             this.txtObjects.Location = new System.Drawing.Point(14, 54);
             this.txtObjects.Margin = new System.Windows.Forms.Padding(6);
             this.txtObjects.Multiline = true;
             this.txtObjects.Name = "txtObjects";
             this.txtObjects.Size = new System.Drawing.Size(710, 312);
             this.txtObjects.TabIndex = 5;
-            this.txtObjects.Watermark = "Enter objects, each on a new line.";
+            this.txtObjects.Watermark = "Enter objects, each on a new line. Use Tab / Shift+Tab (or \"- \") to put objects inside the one above.";
             this.txtObjects.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtObjects_KeyDown);
             // 
             // tabColors

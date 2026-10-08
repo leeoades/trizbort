@@ -196,52 +196,20 @@ namespace Trizbort.Export {
         var objectsText = location.Room.Objects;
         if (string.IsNullOrEmpty(objectsText)) continue;
 
-        var objectNames = objectsText.Replace("\r", string.Empty)
-                                     .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (var objectName in objectNames) {
-          // the display name is simply the object name without indentation and without and trailing []
-          var displayName = objectName.Trim();
-
-          var propString = "";
-
-          var rgx = new Regex(@"\[[^\]\[]*\]");
-
-          var match = rgx.Match(displayName);
-
-          if (match.Success) {
-            propString = displayName;
-            displayName = rgx.Replace(displayName, "");
-            var rgx2 = new Regex(@".*\[");
-            propString = rgx2.Replace(propString, "");
-            rgx2 = new Regex(@"\].*");
-            propString = rgx2.Replace(propString, "");
-          }
-
-          if (string.IsNullOrEmpty(displayName)) continue;
-
+        // indentation (spaces, tabs or "-" bullets) denotes containment; see ObjectList
+        var items = ObjectList.Parse(objectsText);
+        var things = new List<Thing>();
+        foreach (var item in items) {
           // assign each thing a unique export name.
-          var exportName = GetExportName(displayName, null);
+          var exportName = GetExportName(item.Name, null);
           var index = 2;
-          while (mapExportNameToThing.ContainsKey(exportName)) exportName = GetExportName(displayName, index++);
+          while (mapExportNameToThing.ContainsKey(exportName)) exportName = GetExportName(item.Name, index++);
 
-          // on each line, indentation denotes containment;
-          // work out how much indentation there is
-          var indent = 0;
-          while (indent < objectName.Length && objectName[indent] == ' ') ++indent;
-
-          // compare indentations to deduce containment
-          Thing container = null;
-          for (var thingIndex = location.Things.Count - 1; thingIndex >= 0; --thingIndex) {
-            var priorThing = location.Things[thingIndex];
-            if (indent > priorThing.Indent) {
-              container = priorThing;
-              break;
-            }
-          }
-
-          var thing = new Thing(displayName, exportName, location, container, indent, propString);
+          var container = item.ParentIndex >= 0 ? things[item.ParentIndex] : null;
+          var thing = new Thing(item.Name, exportName, location, container, item.Indent, item.PropString);
           mapExportNameToThing.Add(exportName, thing);
           location.Things.Add(thing);
+          things.Add(thing);
         }
       }
     }

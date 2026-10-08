@@ -25,6 +25,7 @@ namespace Trizbort.Domain.Elements {
     private readonly List<string> mDescriptions = new List<string>();
     private readonly TextBlock mName = new TextBlock();
     private readonly TextBlock mObjects = new TextBlock();
+    private readonly TextBlock mObjectsDisplay = new TextBlock();
     private readonly TextBlock mSubTitle = new TextBlock();
     private bool mAllCornersEqual = true;
     private BorderDashStyle mBorderStyle = BorderDashStyle.Solid;
@@ -852,9 +853,8 @@ namespace Trizbort.Domain.Elements {
         var format = new XStringFormat();
         var pos = expandedBounds.GetCorner(mObjectsPosition);
 
-        var tempStr = mObjects.Text;
-        var rgx = new Regex(@"\[[^\]\[]*\]");
-        mObjects.Text = rgx.Replace(mObjects.Text, "");
+        var displayText = ObjectList.FormatForDisplay(mObjects.Text);
+        if (mObjectsDisplay.Text != displayText) mObjectsDisplay.Text = displayText;
 
         if (!Drawing.SetAlignmentFromCardinalOrOrdinalDirection(format, mObjectsPosition)) {
           // object list appears inside the room below its name
@@ -868,7 +868,7 @@ namespace Trizbort.Domain.Elements {
           pos.X += ObjectsCustomPosition ? ObjectsCustomPositionRight : 0;
           pos.Y += ObjectsCustomPosition ? ObjectsCustomPositionDown : 0;
           if (bounds.Width > 0 && bounds.Height > 0)
-            mObjects.Draw(graphics, font, brush, pos, bounds.Size, format);
+            mObjectsDisplay.Draw(graphics, font, brush, pos, bounds.Size, format);
           drawnObjectList = true;
         } else if (mObjectsPosition == CompassPoint.North || mObjectsPosition == CompassPoint.South) {
           pos.X += Settings.ObjectListOffsetFromRoom + (ObjectsCustomPosition ? ObjectsCustomPositionRight : 0);
@@ -880,13 +880,16 @@ namespace Trizbort.Domain.Elements {
 
         if (!drawnObjectList)
           if (!ApplicationSettingsController.AppSettings.DebugDisableTextRendering) {
-            var tString = mObjects.Text;
-            var displayObjects = new TextBlock {Text = tString};
+            if (format.Alignment != XStringAlignment.Near && displayText.Contains(ObjectList.DisplayBullet)) {
+              // right-aligning each line would lose the indentation of contained objects,
+              // so instead left-align the lines within a block whose right edge is at pos
+              var width = displayText.Replace("\r", string.Empty).Split('\n').Max(line => graphics.MeasureString(line, font).Width);
+              pos.X -= (float) (format.Alignment == XStringAlignment.Center ? width / 2 : width);
+              format.Alignment = XStringAlignment.Near;
+            }
 
-            var block = displayObjects.Draw(graphics, font, brush, pos, Vector.Zero, format);
+            mObjectsDisplay.Draw(graphics, font, brush, pos, Vector.Zero, format);
           }
-
-        mObjects.Text = tempStr;
       }
 
       if (!valid()) {
