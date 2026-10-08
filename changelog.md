@@ -9,9 +9,11 @@ number and date when publishing a release.
 ### Add
 - **Themes:** **Tools > Themes** offers built-in Classic, Parchment, Dark and High contrast themes, plus **Export current theme...** and **Import theme...** to move a map's look between maps as a `.trizbort-theme` file. Themes cover map colours, fonts, region colours, default room shape, line/arrow sizes, grid and margins; map content is never changed. If any rooms, connections or labels are styled individually, you choose whether to replace or keep those styles; otherwise the theme applies immediately. (#2)
 - **Infer default room style from rooms:** **Tools > Themes** can promote styling shared by at least 75% of rooms (shape, per-region fill/name colours, border, subtitle and object text colours) into the map defaults, removing per-room overrides that become redundant. The map looks the same, but the style can now be exported as a theme. A preview is shown before anything changes.
+- **Hand-drawn style is now a map setting:** **Map Settings > Lines and Grid > Hand-drawn style** sketches connections, room outlines, dividing fill lines and label outlines. Rounded rectangles and ellipses can now be hand-drawn too. The wobble scales with line length, so small rooms and short lines look neater, and connections flow as one stroke with a freehand wobble and hand-drawn arrowheads. Each room's Properties dialog has a **Lines** drop-down on the Room Shapes tab: map setting, hand-drawn or straight. This works for every shape. The App Settings **Hand Drawn** option has been removed in favour of the map setting and themes. Themes include the hand-drawn setting, and a new built-in **Sketch** theme is available. Existing maps keep rooms that were marked hand-drawn.
 
 ### Fix
 - **PDF text rendering:** removed spurious boxes at the ends of multiline text, including room object lists, by handling Windows line endings correctly.
+- Connection Properties dialog no longer cuts off the text of its check boxes and radio buttons on some display scaling settings.
 
 ## [2.0.3] - 2026-10-07
 

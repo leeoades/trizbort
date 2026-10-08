@@ -14,6 +14,18 @@ namespace Trizbort.UI {
       InitializeComponent();
     }
 
+    protected override void OnLoad(EventArgs e) {
+      base.OnLoad(e);
+      // WinForms DPI scaling shrinks auto-sized check boxes and radio buttons inside group boxes a second
+      // time, clipping their text; toggling AutoSize makes them measure themselves again.
+      foreach (Control group in new Control[] { groupBox1, groupBox2 })
+        foreach (Control control in group.Controls)
+          if (control is ButtonBase && control.AutoSize) {
+            control.AutoSize = false;
+            control.AutoSize = true;
+          }
+    }
+
     public Color ConnectionColor {
       get => connectionColorBox.Text == NO_COLOR_SET ? Color.Transparent : connectionColorBox.BackColor;
       set {

@@ -30,7 +30,7 @@ namespace Trizbort.Domain.Elements {
     private BorderDashStyle mBorderStyle = BorderDashStyle.Solid;
     private CornerRadii mCorners;
     private bool mEllipse;
-    private bool mHandDrawnEdges;
+    private HandDrawnStyle mHandDrawnStyle;
     private bool mIsDark;
     private bool mIsEndRoom;
     private bool mIsStartRoom;
@@ -66,7 +66,6 @@ namespace Trizbort.Domain.Elements {
 
     public Room(Project project) : base(project) {
       Name = Settings.DefaultRoomName;
-      HandDrawnEdges = ApplicationSettingsController.AppSettings.HandDrawnGlobal;
       Region = Misc.Region.DefaultRegion;
       Size = new Vector(3 * Settings.GridSize, 2 * Settings.GridSize);
       Position = new Vector(-Size.X / 2, -Size.Y / 2);
@@ -155,15 +154,20 @@ namespace Trizbort.Domain.Elements {
       }
     }
 
-    public bool HandDrawnEdges {
-      get => mHandDrawnEdges;
+    /// <summary>Per-room override of the map's hand-drawn setting.</summary>
+    public HandDrawnStyle HandDrawnStyle {
+      get => mHandDrawnStyle;
       set {
-        if (mHandDrawnEdges != value) {
-          mHandDrawnEdges = value;
+        if (mHandDrawnStyle != value) {
+          mHandDrawnStyle = value;
           RaiseChanged();
         }
       }
     }
+
+    /// <summary>Whether this room is actually drawn hand-drawn, taking the map setting into account.</summary>
+    public bool IsHandDrawn => mHandDrawnStyle == HandDrawnStyle.HandDrawn ||
+                               mHandDrawnStyle == HandDrawnStyle.MapDefault && Settings.HandDrawn;
 
     public bool HasDescription => mDescriptions.Count > 0;
     public override bool HasDialog => true;
@@ -608,9 +612,10 @@ namespace Trizbort.Domain.Elements {
       //2. if (context.Selected) => selected room outline
       //3. if (!Settings.DebugDisableLineRendering => main default outline
 
-      StraightEdges = !HandDrawnEdges;
+      var handDrawn = IsHandDrawn;
+      StraightEdges = !handDrawn;
 
-      var random = new Random(Name.GetHashCode());
+      var random = Sketch.Seeded(ID + 1000);
 
       var topLeft = InnerBounds.GetCorner(CompassPoint.NorthWest);
       var topRight = InnerBounds.GetCorner(CompassPoint.NorthEast);
@@ -665,33 +670,7 @@ namespace Trizbort.Domain.Elements {
         var leftSelect = new LineSegment(bottomLeftSelect, topLeftSelect);
 
         var pathSelected = palette.Path();
-        if (RoundedCorners) {
-          createRoomPath(pathSelected, topSelect, leftSelect);
-        } else if (Ellipse) {
-          pathSelected.AddEllipse(new RectangleF(topSelect.Start.X, topSelect.Start.Y, topSelect.Length, leftSelect.Length));
-        } else if (Octagonal) {
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(bottomLeftSelect, topLeftSelect), quarterPoint(topLeftSelect, bottomLeftSelect)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(topLeftSelect, bottomLeft), quarterPoint(topLeftSelect, topRight)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(topLeftSelect, topRight), quarterPoint(topRightSelect, topLeft)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(topRightSelect, topLeft), quarterPoint(topRightSelect, bottomRight)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(topRightSelect, bottomRight), quarterPoint(bottomRightSelect, topRight)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(bottomRightSelect, topRight), quarterPoint(bottomRightSelect, bottomLeft)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(bottomRightSelect, bottomLeft), quarterPoint(bottomLeftSelect, bottomRight)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(bottomLeftSelect, bottomRight), quarterPoint(bottomLeftSelect, topLeft)),
-                          random, StraightEdges);
-        } else {
-          Drawing.AddLine(pathSelected, topSelect, random, StraightEdges);
-          Drawing.AddLine(pathSelected, rightSelect, random, StraightEdges);
-          Drawing.AddLine(pathSelected, bottomSelect, random, StraightEdges);
-          Drawing.AddLine(pathSelected, leftSelect, random, StraightEdges);
-        }
+        addOutline(pathSelected, tBounds, handDrawn);
 
         SolidBrush brushSelected;
         if (IsReference)
@@ -717,33 +696,7 @@ namespace Trizbort.Domain.Elements {
         var leftSelect = new LineSegment(bottomLeftSelect, topLeftSelect);
 
         var pathSelected = palette.Path();
-        if (RoundedCorners) {
-          createRoomPath(pathSelected, topSelect, leftSelect);
-        } else if (Ellipse) {
-          pathSelected.AddEllipse(new RectangleF(topSelect.Start.X, topSelect.Start.Y, topSelect.Length, leftSelect.Length));
-        } else if (Octagonal) {
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(bottomLeftSelect, topLeftSelect), quarterPoint(topLeftSelect, bottomLeftSelect)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(topLeftSelect, bottomLeftSelect), quarterPoint(topLeftSelect, topRightSelect)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(topLeftSelect, topRightSelect), quarterPoint(topRightSelect, topLeftSelect)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(topRightSelect, topLeftSelect), quarterPoint(topRightSelect, bottomRightSelect)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(topRightSelect, bottomRightSelect), quarterPoint(bottomRightSelect, topRightSelect)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(bottomRightSelect, topRightSelect), quarterPoint(bottomRightSelect, bottomLeftSelect)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(bottomRightSelect, bottomLeftSelect), quarterPoint(bottomLeftSelect, bottomRightSelect)),
-                          random, StraightEdges);
-          Drawing.AddLine(pathSelected, new LineSegment(quarterPoint(bottomLeftSelect, bottomRightSelect), quarterPoint(bottomLeftSelect, topLeftSelect)),
-                          random, StraightEdges);
-        } else {
-          Drawing.AddLine(pathSelected, topSelect, random, StraightEdges);
-          Drawing.AddLine(pathSelected, rightSelect, random, StraightEdges);
-          Drawing.AddLine(pathSelected, bottomSelect, random, StraightEdges);
-          Drawing.AddLine(pathSelected, leftSelect, random, StraightEdges);
-        }
+        addOutline(pathSelected, tBounds, handDrawn);
 
         var brushSelected = Project.Current.ActiveSelectedElement?.ID == ID ? new SolidBrush(Color.Gold) : new SolidBrush(Color.Gold);
         graphics.DrawPath(brushSelected, pathSelected);
@@ -759,34 +712,7 @@ namespace Trizbort.Domain.Elements {
       // this is the main drawing routine for the actual room borders
       if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering && BorderStyle != BorderDashStyle.None) {
         var path = palette.Path();
-
-        if (RoundedCorners) {
-          createRoomPath(path, top, left);
-        } else if (Ellipse) {
-          path.AddEllipse(new RectangleF(top.Start.X, top.Start.Y, top.Length, left.Length));
-        } else if (Octagonal) {
-          Drawing.AddLine(path, new LineSegment(quarterPoint(bottomLeft, topLeft), quarterPoint(topLeft, bottomLeft)),
-                          random, StraightEdges);
-          Drawing.AddLine(path, new LineSegment(quarterPoint(topLeft, bottomLeft), quarterPoint(topLeft, topRight)),
-                          random, StraightEdges);
-          Drawing.AddLine(path, new LineSegment(quarterPoint(topLeft, topRight), quarterPoint(topRight, topLeft)),
-                          random, StraightEdges);
-          Drawing.AddLine(path, new LineSegment(quarterPoint(topRight, topLeft), quarterPoint(topRight, bottomRight)),
-                          random, StraightEdges);
-          Drawing.AddLine(path, new LineSegment(quarterPoint(topRight, bottomRight), quarterPoint(bottomRight, topRight)),
-                          random, StraightEdges);
-          Drawing.AddLine(path, new LineSegment(quarterPoint(bottomRight, topRight), quarterPoint(bottomRight, bottomLeft)),
-                          random, StraightEdges);
-          Drawing.AddLine(path, new LineSegment(quarterPoint(bottomRight, bottomLeft), quarterPoint(bottomLeft, bottomRight)),
-                          random, StraightEdges);
-          Drawing.AddLine(path, new LineSegment(quarterPoint(bottomLeft, bottomRight), quarterPoint(bottomLeft, topLeft)),
-                          random, StraightEdges);
-        } else {
-          Drawing.AddLine(path, top, random, StraightEdges);
-          Drawing.AddLine(path, right, random, StraightEdges);
-          Drawing.AddLine(path, bottom, random, StraightEdges);
-          Drawing.AddLine(path, left, random, StraightEdges);
-        }
+        addOutline(path, InnerBounds, handDrawn);
 
         graphics.DrawPath(brush, path);
 
@@ -1144,7 +1070,10 @@ namespace Trizbort.Domain.Elements {
       else
         Shape = RoomShape.SquareCorners;
 
-      HandDrawnEdges = element.Attribute("handDrawn").ToBool();
+      if (Enum.TryParse(element.Attribute("handDrawnStyle").Text, out HandDrawnStyle handDrawnStyle))
+        HandDrawnStyle = handDrawnStyle;
+      else
+        HandDrawnStyle = element.Attribute("handDrawn").ToBool() ? HandDrawnStyle.HandDrawn : HandDrawnStyle.MapDefault;
       AllCornersEqual = element.Attribute("allcornersequal").ToBool();
 
       Corners = new CornerRadii();
@@ -1251,7 +1180,8 @@ namespace Trizbort.Domain.Elements {
       if (ReferenceRoom != null)
         scribe.Attribute("referenceRoom", ReferenceRoom.ID);
 
-      scribe.Attribute("handDrawn", HandDrawnEdges);
+      scribe.Attribute("handDrawn", IsHandDrawn);
+      scribe.Attribute("handDrawnStyle", HandDrawnStyle.ToString());
       scribe.Attribute("allcornersequal", AllCornersEqual);
       scribe.Attribute("ellipse", Ellipse);
       scribe.Attribute("roundedCorners", RoundedCorners);
@@ -1366,6 +1296,51 @@ namespace Trizbort.Domain.Elements {
       path.CloseFigure();
     }
 
+    /// <summary>
+    ///   Adds this room's outline (in its shape) for the given bounds. Each call uses a fresh
+    ///   generator seeded from the room ID so a hand-drawn outline is stable between redraws
+    ///   and unaffected by selection or start/end-room highlighting.
+    /// </summary>
+    private void addOutline(XGraphicsPath path, Rect bounds, bool handDrawn) {
+      var rect = new RectangleF(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+      var random = Sketch.Seeded(ID);
+      if (RoundedCorners) {
+        if (handDrawn)
+          path.AddPolygon(Sketch.ClosedCurve(Sketch.RoundedRectangle(rect, (float) Corners.TopLeft, (float) Corners.TopRight, (float) Corners.BottomRight, (float) Corners.BottomLeft), random));
+        else
+          createRoomPath(path, new LineSegment(bounds.GetCorner(CompassPoint.NorthWest), bounds.GetCorner(CompassPoint.NorthEast)),
+                         new LineSegment(bounds.GetCorner(CompassPoint.SouthWest), bounds.GetCorner(CompassPoint.NorthWest)));
+        return;
+      }
+
+      if (Ellipse) {
+        if (handDrawn)
+          path.AddPolygon(Sketch.ClosedCurve(Sketch.Ellipse(rect), random));
+        else
+          path.AddEllipse(rect);
+        return;
+      }
+
+      PointF[] vertices;
+      if (Octagonal) {
+        var qw = rect.Width / 4;
+        var qh = rect.Height / 4;
+        vertices = new[] {
+          new PointF(rect.Left, rect.Bottom - qh), new PointF(rect.Left, rect.Top + qh),
+          new PointF(rect.Left + qw, rect.Top), new PointF(rect.Right - qw, rect.Top),
+          new PointF(rect.Right, rect.Top + qh), new PointF(rect.Right, rect.Bottom - qh),
+          new PointF(rect.Right - qw, rect.Bottom), new PointF(rect.Left + qw, rect.Bottom)
+        };
+      } else {
+        vertices = new[] {
+          new PointF(rect.Left, rect.Top), new PointF(rect.Right, rect.Top),
+          new PointF(rect.Right, rect.Bottom), new PointF(rect.Left, rect.Bottom)
+        };
+      }
+
+      path.AddPolygon(handDrawn ? Sketch.Polygon(vertices, random) : vertices);
+    }
+
     private bool isDefaultRegion() {
       return Region == Misc.Region.DefaultRegion || string.IsNullOrEmpty(Region);
     }
@@ -1391,7 +1366,7 @@ namespace Trizbort.Domain.Elements {
         BottomLeft = source.Corners.BottomLeft,
         BottomRight = source.Corners.BottomRight
       };
-      HandDrawnEdges = source.HandDrawnEdges;
+      HandDrawnStyle = source.HandDrawnStyle;
       BorderStyle = source.BorderStyle;
       RoomBorderColor = source.RoomBorderColor;
       RoomFillColor = source.RoomFillColor;
@@ -1445,7 +1420,7 @@ namespace Trizbort.Domain.Elements {
         dialog.IsDark = IsDark;
         dialog.IsStartRoom = IsStartRoom;
         dialog.IsEndRoom = IsEndRoom;
-        dialog.HandDrawnEdges = HandDrawnEdges;
+        dialog.HandDrawnStyle = HandDrawnStyle;
         dialog.Objects = Objects;
         dialog.ObjectsPosition = ObjectsPosition;
         dialog.ObjectsCustomPosition = ObjectsCustomPosition;
@@ -1481,7 +1456,7 @@ namespace Trizbort.Domain.Elements {
           IsDark = dialog.IsDark;
           IsStartRoom = dialog.IsStartRoom;
           IsEndRoom = dialog.IsEndRoom;
-          HandDrawnEdges = dialog.HandDrawnEdges;
+          HandDrawnStyle = dialog.HandDrawnStyle;
           Objects = dialog.Objects;
           BorderStyle = dialog.BorderStyle;
           ObjectsPosition = dialog.ObjectsPosition;

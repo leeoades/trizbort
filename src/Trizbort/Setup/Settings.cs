@@ -27,6 +27,7 @@ namespace Trizbort.Setup {
     private static Font sSubtitleFont;
     private static Font sLineFont;
     private static float sLineWidth;
+    private static bool sHandDrawn;
     private static bool sSnapToGrid;
     private static bool sIsGridVisible;
     private static bool sShowOrigin;
@@ -230,6 +231,17 @@ namespace Trizbort.Setup {
       }
     }
 
+    /// <summary>Map-wide hand-drawn style for room outlines, labels and connections.</summary>
+    public static bool HandDrawn {
+      get => sHandDrawn;
+      set {
+        if (sHandDrawn != value) {
+          sHandDrawn = value;
+          raiseChanged();
+        }
+      }
+    }
+
     public static Font ObjectFont {
       get => sObjectFont;
       set {
@@ -377,6 +389,7 @@ namespace Trizbort.Setup {
       LineWidth = element["lines"]["width"].ToFloat(sLineWidth);
       ConnectionArrowSize = element["lines"]["arrowSize"].ToFloat(sConnectionArrowSize);
       TextOffsetFromConnection = element["lines"]["textOffset"].ToFloat(sTextOffsetFromConnection);
+      HandDrawn = element["lines"]["handDrawn"].ToBool(false);
 
       DarknessStripeSize = element["rooms"]["darknessStripeSize"].ToFloat(sDarknessStripeSize);
       ObjectListOffsetFromRoom = element["rooms"]["objectListOffset"].ToFloat(sObjectListOffsetFromRoom);
@@ -434,6 +447,7 @@ namespace Trizbort.Setup {
       WrapTextAtDashes = ApplicationSettingsController.AppSettings.SpecifyWrapping;
 
       LineWidth = 2.0f;
+      HandDrawn = false;
 
       SnapToGrid = true;
       IsGridVisible = true;
@@ -501,6 +515,7 @@ namespace Trizbort.Setup {
       scribe.Element("width", sLineWidth);
       scribe.Element("arrowSize", sConnectionArrowSize);
       scribe.Element("textOffset", sTextOffsetFromConnection);
+      scribe.Element("handDrawn", sHandDrawn);
       scribe.EndElement();
 
       scribe.StartElement("rooms");
@@ -554,6 +569,7 @@ namespace Trizbort.Setup {
         dialog.LineFont = LineFont;
         dialog.SubtitleFont = SubtitleFont;
         dialog.LineWidth = LineWidth;
+        dialog.HandDrawn = HandDrawn;
         dialog.SnapToGrid = SnapToGrid;
         dialog.GridSize = GridSize;
         dialog.IsGridVisible = IsGridVisible;
@@ -597,6 +613,8 @@ namespace Trizbort.Setup {
           LineFont = dialog.LineFont;
           if (LineWidth != dialog.LineWidth) Project.Current.IsDirty = true;
           LineWidth = dialog.LineWidth;
+          if (HandDrawn != dialog.HandDrawn) Project.Current.IsDirty = true;
+          HandDrawn = dialog.HandDrawn;
           if (SnapToGrid != dialog.SnapToGrid) Project.Current.IsDirty = true;
           SnapToGrid = dialog.SnapToGrid;
           if (GridSize != dialog.GridSize) Project.Current.IsDirty = true;

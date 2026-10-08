@@ -267,6 +267,9 @@ The opening screen for a room's properties will show the following information:
 - A list of objects in the room
 - Where the list is oriented
 - Room border style
+- Room shape, and whether the room is hand-drawn
+
+The **Lines** drop-down on the Room Shapes tab chooses how the room is drawn. **Map setting** (the default) follows the map's **Hand-drawn style** setting in [Lines and Grid](#help_settings_linegrid); the brackets show what that currently is. **Hand-drawn** and **Straight** override the map setting for this room. This works for every room shape, and the preview shows the result.
 
 Since objects in a room are unique, you can only bring up the Properties dialog for rooms one at a time. You should also be able to use the keyboard or the menu bar to change these properties. Trizbort tries to be flexible this way. For instance, to toggle darkness, `Edit->Is Dark Room` in the menu bar or `K` from the keyboard will work. You can also right-click and highlight "dark" from the context menu.
 
@@ -601,7 +604,7 @@ The Lines and Grid tab gives you control over various settings to do with connec
 
 | Setting | Description |
 | --- | --- |
-| Hand Drawn | By default Trizbort gives lines a "hand drawn" appearance. If you prefer straight lines, you can uncheck this box. This applies to connections' lines, the border of a room, and dividing fill lines. |
+| Hand-drawn style | Gives the whole map a sketched look. Connections, room outlines of every shape (square, rounded, ellipse and octagon), dividing fill lines and label outlines are drawn with a gentle, pen-like wobble. Short lines get a small wobble and long lines a larger one, so small rooms stay tidy. Connections also get hand-drawn arrowheads. Individual rooms can override this in their Properties dialog. New maps start with it off; apply the **Sketch** theme to switch it on along with a matching look. |
 | Line Width | The width of lines, in pixels. This applies to both connections' lines and the border of a room. |
 | Arrow Size | The pixel size of the base of arrows drawn on one way connections. |
 | Room Arrow Stalk Length | For connections which are docked to a room's port, Trizbort automatically draws a line directly out from the room in the port's direction before continuing on towards the other end of the line. This is the *stalk*, and its size can be controlled with this setting. For ports such as SSE, the stalk goes in the dominant cardinal direction (south). |
@@ -663,8 +666,8 @@ The Other tab gives you control over miscellaneous settings which don't fit into
 
 #### Themes (Trizbort 2)
 
-Use **Tools -> Themes** to switch between **Classic**, **Parchment**, **Dark** and
-**High contrast**, or to transfer a map's appearance to another map.
+Use **Tools -> Themes** to switch between **Classic**, **Parchment**, **Dark**,
+**High contrast** and **Sketch** (hand-drawn ink on white), or to transfer a map's appearance to another map.
 **Export current theme...** saves the current map-wide appearance as a
 `.trizbort-theme` file. Open another map and choose **Import theme...** to apply it.
 Theme files contain no rooms, connections, map title, author or other map content.
@@ -678,7 +681,7 @@ save the map to keep its new appearance. There is no undo, so save a copy first 
 you want to keep the old style.
 
 Themes include map colours, all four fonts, region fill/text colours, default room
-shape, line width, arrow size, text offsets, connection stalk length, darkness
+shape, hand-drawn style, line width, arrow size, text offsets, connection stalk length, darkness
 stripe size, grid appearance, document margins and dash wrapping. Region palettes
 are matched by name: matching regions get the theme's colours, new regions are
 added, and map-only regions retain their colours. Rooms keep their region

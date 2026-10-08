@@ -104,6 +104,8 @@ namespace Trizbort.UI {
       }
     }
 
+    public bool HandDrawn { get => m_handDrawnCheckBox.Checked; set => m_handDrawnCheckBox.Checked = value; }
+
     public float LineWidth { get => (float) m_lineWidthUpDown.Value; set => m_lineWidthUpDown.Value = (decimal) value; }
 
     public float ObjectListOffsetFromRoom { get => (float) m_objectListOffsetFromRoomNumericUpDown.Value; set => m_objectListOffsetFromRoomNumericUpDown.Value = (decimal) value; }

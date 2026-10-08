@@ -26,7 +26,7 @@ Designer file and follow its wiring (`Click` handler name → method in `MainFor
 calling into `CommandController`/`Canvas`/an exporter).
 
 `MainForm.Themes.cs` adds **Tools → Themes** immediately after Map Settings at runtime.
-It provides Classic, Parchment, Dark and High contrast presets plus theme import/export.
+It provides Classic, Parchment, Dark, High contrast and Sketch (hand-drawn) presets plus theme import/export.
 Maps without individual style overrides apply themes immediately, including room shapes and
 label colours. Otherwise, application asks whether to replace individual styles (Yes),
 preserve them (No, the default), or cancel. Detection uses `MapTheme.HasIndividualStyles`;

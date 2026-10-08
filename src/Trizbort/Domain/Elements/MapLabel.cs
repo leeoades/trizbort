@@ -118,6 +118,11 @@ namespace Trizbort.Domain.Elements {
 
     private XGraphicsPath createPath(Palette palette) {
       var path = palette.Path();
+      if (Settings.HandDrawn) {
+        path.AddPolygon(createSketchOutline());
+        return path;
+      }
+
       if (Shape == RoomShape.Ellipse) {
         path.AddEllipse(InnerBounds.ToRectangleF());
       } else if (Shape == RoomShape.RoundedCorners) {
@@ -138,6 +143,28 @@ namespace Trizbort.Domain.Elements {
         path.AddRectangle(InnerBounds.ToRectangleF());
       }
       return path;
+    }
+
+    private PointF[] createSketchOutline() {
+      var rect = InnerBounds.ToRectangleF();
+      var random = Sketch.Seeded(ID);
+      if (Shape == RoomShape.Ellipse)
+        return Sketch.ClosedCurve(Sketch.Ellipse(rect), random);
+      if (Shape == RoomShape.RoundedCorners) {
+        var radius = Math.Min(30, Math.Min(Width, Height)) / 2;
+        return Sketch.ClosedCurve(Sketch.RoundedRectangle(rect, radius, radius, radius, radius), random);
+      }
+      if (Shape == RoomShape.Octagonal)
+        return Sketch.Polygon(new[] {
+          new PointF(X + Width / 4, Y), new PointF(X + Width * 3 / 4, Y),
+          new PointF(X + Width, Y + Height / 4), new PointF(X + Width, Y + Height * 3 / 4),
+          new PointF(X + Width * 3 / 4, Y + Height), new PointF(X + Width / 4, Y + Height),
+          new PointF(X, Y + Height * 3 / 4), new PointF(X, Y + Height / 4)
+        }, random);
+      return Sketch.Polygon(new[] {
+        new PointF(rect.Left, rect.Top), new PointF(rect.Right, rect.Top),
+        new PointF(rect.Right, rect.Bottom), new PointF(rect.Left, rect.Bottom)
+      }, random);
     }
 
     public void Save(XmlScribe scribe) {

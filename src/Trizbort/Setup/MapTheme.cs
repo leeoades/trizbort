@@ -37,6 +37,10 @@ namespace Trizbort.Setup {
     public float VerticalMargin { get; set; }
     public bool WrapTextAtDashes { get; set; }
 
+    // Optional so that themes exported before hand-drawn became a map setting still load.
+    [JsonProperty(Required = Required.Default)]
+    public bool HandDrawn { get; set; }
+
     public static MapTheme Capture(string name) {
       var colors = new Dictionary<string, string>();
       for (var index = 0; index < Domain.Misc.Colors.Count; index++) {
@@ -68,7 +72,8 @@ namespace Trizbort.Setup {
         DocumentSpecificMargins = Settings.DocumentSpecificMargins,
         HorizontalMargin = Settings.DocHorizontalMargin,
         VerticalMargin = Settings.DocVerticalMargin,
-        WrapTextAtDashes = Settings.WrapTextAtDashes
+        WrapTextAtDashes = Settings.WrapTextAtDashes,
+        HandDrawn = Settings.HandDrawn
       };
     }
 
@@ -91,7 +96,7 @@ namespace Trizbort.Setup {
         room.RoomNameColor != Color.Transparent || room.RoomSubtitleColor != Color.Transparent ||
         room.RoomObjectTextColor != Color.Transparent || room.SecondFillColor != Color.Transparent ||
         room.Shape != Settings.DefaultRoomShape || room.BorderStyle != BorderDashStyle.Solid ||
-        room.HandDrawnEdges || !room.AllCornersEqual ||
+        room.HandDrawnStyle != HandDrawnStyle.MapDefault || !room.AllCornersEqual ||
         room.Corners.TopLeft != defaultCorners.TopLeft || room.Corners.TopRight != defaultCorners.TopRight ||
         room.Corners.BottomLeft != defaultCorners.BottomLeft || room.Corners.BottomRight != defaultCorners.BottomRight))
         return true;
@@ -161,6 +166,7 @@ namespace Trizbort.Setup {
       Settings.DocHorizontalMargin = HorizontalMargin;
       Settings.DocVerticalMargin = VerticalMargin;
       Settings.WrapTextAtDashes = WrapTextAtDashes;
+      Settings.HandDrawn = HandDrawn;
 
       if (replaceIndividualStyles) {
         foreach (var room in Project.Current.Elements.OfType<Room>()) {
@@ -170,7 +176,7 @@ namespace Trizbort.Setup {
           room.StraightEdges = DefaultRoomShape == RoomShape.SquareCorners;
           room.Corners = new CornerRadii();
           room.AllCornersEqual = true;
-          room.HandDrawnEdges = false;
+          room.HandDrawnStyle = HandDrawnStyle.MapDefault;
           room.BorderStyle = BorderDashStyle.Solid;
         }
         foreach (var connection in Project.Current.Elements.OfType<Connection>())
@@ -253,11 +259,12 @@ namespace Trizbort.Setup {
           Color.FromArgb(83, 57, 35), Color.FromArgb(221, 205, 174), RoomShape.RoundedCorners, "Georgia"),
         CreateBuiltIn("Dark", Color.FromArgb(30, 33, 39), Color.FromArgb(48, 53, 62),
           Color.FromArgb(225, 230, 238), Color.FromArgb(65, 70, 80), RoomShape.RoundedCorners, "Segoe UI"),
-        CreateBuiltIn("High contrast", Color.White, Color.White, Color.Black, Color.LightGray, RoomShape.SquareCorners, "Arial")
+        CreateBuiltIn("High contrast", Color.White, Color.White, Color.Black, Color.LightGray, RoomShape.SquareCorners, "Arial"),
+        CreateBuiltIn("Sketch", Color.White, Color.White, Color.FromArgb(60, 60, 60), Color.FromArgb(232, 232, 232), RoomShape.SquareCorners, "Segoe Print", true)
       };
     }
 
-    private static MapTheme CreateBuiltIn(string name, Color canvas, Color fill, Color ink, Color grid, RoomShape shape, string fontName) {
+    private static MapTheme CreateBuiltIn(string name, Color canvas, Color fill, Color ink, Color grid, RoomShape shape, string fontName, bool handDrawn = false) {
       var colors = new Dictionary<string, string>();
       for (var index = 0; index < Domain.Misc.Colors.Count; index++) {
         Domain.Misc.Colors.ToName(index, out var colorName);
@@ -280,7 +287,7 @@ namespace Trizbort.Setup {
         LineFont = new ThemeFont { Name = fontName, Size = 9 },
         LineWidth = 2, ArrowSize = 12, TextOffset = 4, DarknessStripeSize = 24,
         ObjectListOffset = 4, ConnectionStalkLength = 32, DefaultRoomShape = shape,
-        GridSize = 32, GridVisible = true, ShowOrigin = true, WrapTextAtDashes = true
+        GridSize = 32, GridVisible = true, ShowOrigin = true, WrapTextAtDashes = true, HandDrawn = handDrawn
       };
     }
   }

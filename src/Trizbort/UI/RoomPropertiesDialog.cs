@@ -22,6 +22,13 @@ namespace Trizbort.UI {
     public RoomPropertiesDialog(PropertiesStartType start, int id) {
       InitializeComponent();
 
+      cboHandDrawn.Items.AddRange(new object[] {
+        $"Map setting ({(Settings.HandDrawn ? "hand-drawn" : "straight")})",
+        "Hand-drawn",
+        "Straight"
+      });
+      cboHandDrawn.SelectedIndex = 0;
+
       roomID = id;
 
       // load regions control
@@ -85,10 +92,25 @@ namespace Trizbort.UI {
       }
     }
 
-    public bool HandDrawnEdges {
-      get => chkHandDrawnRoom.Checked;
-      set => chkHandDrawnRoom.Checked = value;
+    public HandDrawnStyle HandDrawnStyle {
+      get {
+        switch (cboHandDrawn.SelectedIndex) {
+          case 1: return HandDrawnStyle.HandDrawn;
+          case 2: return HandDrawnStyle.Straight;
+          default: return HandDrawnStyle.MapDefault;
+        }
+      }
+      set {
+        switch (value) {
+          case HandDrawnStyle.HandDrawn: cboHandDrawn.SelectedIndex = 1; break;
+          case HandDrawnStyle.Straight: cboHandDrawn.SelectedIndex = 2; break;
+          default: cboHandDrawn.SelectedIndex = 0; break;
+        }
+      }
     }
+
+    private bool isPreviewHandDrawn => cboHandDrawn.SelectedIndex == 1 ||
+                                       cboHandDrawn.SelectedIndex <= 0 && Settings.HandDrawn;
 
     public bool IsDark {
       get => m_isDarkCheckBox.Checked;
@@ -387,9 +409,6 @@ namespace Trizbort.UI {
         groupRoundedCorners.Visible = false;
       }
 
-      // Hand drawn style is currently only implemented for "Straight Edges" line style.
-      chkHandDrawnRoom.Enabled = (cboDrawType.SelectedItem.ToString() == "Straight Edges");
-
       pnlSampleRoomShape.Invalidate();
     }
 
@@ -429,7 +448,9 @@ namespace Trizbort.UI {
       }
     }
 
-    private void chkHandDrawnRoom_CheckedChanged(object sender, EventArgs e) { }
+    private void cboHandDrawn_SelectedIndexChanged(object sender, EventArgs e) {
+      pnlSampleRoomShape.Invalidate();
+    }
 
     private void chkStartRoom_CheckedChanged(object sender, EventArgs e) {
       if (chkStartRoom.Checked) {
@@ -580,46 +601,44 @@ namespace Trizbort.UI {
 
 
     private void pnlSampleRoomShape_Paint(object sender, PaintEventArgs e) {
-      var graph = pnlSampleRoomShape.CreateGraphics();
-      var path = new GraphicsPath();
-      var pen = new Pen(Color.Black, 2.0f);
+      var graph = e.Graphics;
+      graph.SmoothingMode = SmoothingMode.AntiAlias;
+      var pen = new Pen(Color.Black, 2.0f) {LineJoin = LineJoin.Round};
 
       var rect = new RectangleF(10, 10, 3 * Settings.GridSize, 2 * Settings.GridSize);
+      var handDrawn = isPreviewHandDrawn;
+      var random = Sketch.Seeded(0);
+      var shape = cboDrawType.SelectedItem?.ToString();
 
-      if (cboDrawType.SelectedItem.ToString() == "Rounded Corners") {
-        var corners = new CornerRadii {
-          BottomLeft = (double) txtBottomLeft.Value,
-          BottomRight = (double) txtBottomRight.Value,
-          TopRight = (double) txtTopRight.Value,
-          TopLeft = (double) txtTopLeft.Value
-        };
-
-        path.AddArc(rect.X + rect.Width - (float) corners.TopRight * 2, rect.Y, (float) corners.TopRight * 2,
-          (float) corners.TopRight * 2, 270, 90);
-        path.AddArc(rect.X + rect.Width - (float) corners.BottomRight * 2,
-          rect.Y + rect.Height - (float) corners.BottomRight * 2, (float) corners.BottomRight * 2,
-          (float) corners.BottomRight * 2, 0, 90);
-        path.AddArc(rect.X, rect.Y + rect.Height - (float) corners.BottomLeft * 2, (float) corners.BottomLeft * 2,
-          (float) corners.BottomLeft * 2, 90, 90);
-        path.AddArc(rect.X, rect.Y, (float) corners.TopLeft * 2, (float) corners.TopLeft * 2, 180, 90);
-        path.CloseFigure();
-      } else if (cboDrawType.SelectedItem.ToString() == "Ellipse") {
-        path.AddEllipse(new RectangleF(rect.X, rect.Y, rect.Width, rect.Height));
-      } else if (cboDrawType.SelectedItem.ToString() == "Octagonal") {
-        path.AddLine(rect.X, rect.Y + rect.Height / 4, rect.X, rect.Y + 3 * rect.Height / 4);
-        path.AddLine(rect.X, rect.Y + 3 * rect.Height / 4, rect.X + rect.Width / 4, rect.Y + rect.Height);
-        path.AddLine(rect.X + rect.Width / 4, rect.Y + rect.Height, rect.X + 3 * rect.Width / 4, rect.Y + rect.Height);
-        path.AddLine(rect.X + 3 * rect.Width / 4, rect.Y + rect.Height, rect.X + rect.Width,
-          rect.Y + 3 * rect.Height / 4);
-        path.AddLine(rect.X + rect.Width, rect.Y + rect.Height / 4, rect.X + rect.Width, rect.Y + 3 * rect.Height / 4);
-        path.AddLine(rect.X + rect.Width, rect.Y + rect.Height / 4, rect.X + 3 * rect.Width / 4, rect.Y);
-        path.AddLine(rect.X + 3 * rect.Width / 4, rect.Y, rect.X + rect.Width / 4, rect.Y);
-        path.AddLine(rect.X + rect.Width / 4, rect.Y, rect.X, rect.Y + rect.Height / 4);
-      } else if (cboDrawType.SelectedItem.ToString() == "Straight Edges") {
-        path.AddRectangle(rect);
+      PointF[] outline;
+      if (shape == "Rounded Corners") {
+        var outlinePoints = Sketch.RoundedRectangle(rect, (float) txtTopLeft.Value, (float) txtTopRight.Value,
+          (float) txtBottomRight.Value, (float) txtBottomLeft.Value);
+        outline = handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints;
+      } else if (shape == "Ellipse") {
+        var outlinePoints = Sketch.Ellipse(rect);
+        outline = handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints;
+      } else {
+        PointF[] vertices;
+        if (shape == "Octagonal") {
+          var qw = rect.Width / 4;
+          var qh = rect.Height / 4;
+          vertices = new[] {
+            new PointF(rect.Left, rect.Bottom - qh), new PointF(rect.Left, rect.Top + qh),
+            new PointF(rect.Left + qw, rect.Top), new PointF(rect.Right - qw, rect.Top),
+            new PointF(rect.Right, rect.Top + qh), new PointF(rect.Right, rect.Bottom - qh),
+            new PointF(rect.Right - qw, rect.Bottom), new PointF(rect.Left + qw, rect.Bottom)
+          };
+        } else {
+          vertices = new[] {
+            new PointF(rect.Left, rect.Top), new PointF(rect.Right, rect.Top),
+            new PointF(rect.Right, rect.Bottom), new PointF(rect.Left, rect.Bottom)
+          };
+        }
+        outline = handDrawn ? Sketch.Polygon(vertices, random) : vertices;
       }
 
-      graph.DrawPath(pen, path);
+      graph.DrawPolygon(pen, outline);
     }
 
     private void PositionCheckBox_CheckedChanged(object sender, EventArgs e) {

@@ -29,43 +29,17 @@ namespace Trizbort.Domain.Misc {
     public static Cursor MoveLineCursor => IsDark(Settings.Color[Colors.Canvas]) ? m_moveLineInvertedCursor : m_moveLineCursor;
 
     public static void AddLine(XGraphicsPath path, LineSegment segment, Random random, bool straightEdges) {
-//      if (Settings.HandDrawnDoc && !straightEdges)
-      if (!straightEdges) {
-        var dx = segment.End.X - segment.Start.X;
-        var dy = segment.End.Y - segment.Start.Y;
-        var distance = (float) Math.Sqrt(dx * dx + dy * dy);
-        var points = random.Next(Math.Max(3, (int) (distance / 15)), Math.Max(6, (int) (distance / 8)));
-        var lines = points - 1;
-        var last = segment.Start;
-        for (var line = 0; line < lines; ++line) {
-          Vector next;
-          if (line == 0) {
-            next = last;
-          } else if (line == lines - 1) {
-            next = segment.End;
-          } else {
-            var fraction = line / (float) (lines - 1);
-            var x = segment.Start.X + (segment.End.X - segment.Start.X) * fraction;
-            var y = segment.Start.Y + (segment.End.Y - segment.Start.Y) * fraction;
-
-            x += random.Next(-1, 2);
-            y += random.Next(-1, 2);
-            next = new Vector(x, y);
-          }
-
-          path.AddLine(last.ToPointF(), next.ToPointF());
-          last = next;
-        }
-      } else {
+      if (!straightEdges)
+        path.AddLines(Sketch.Line(segment.Start.ToPointF(), segment.End.ToPointF(), random));
+      else
         path.AddLine(segment.Start.ToPointF(), segment.End.ToPointF());
-      }
     }
 
     public static PointF Divide(PointF pos, float scalar) {
       return new PointF(pos.X / scalar, pos.Y / scalar);
     }
 
-    public static void DrawChevron(XGraphics graphics, PointF pos, float angle, float size, Brush fillBrush) {
+    public static void DrawChevron(XGraphics graphics, PointF pos, float angle, float size, Brush fillBrush, Random sketch = null) {
       if (m_chevronPath == null) {
         var apex = new PointF(0.5f, 0);
         var leftCorner = new PointF(-0.5f, 0.5f);
@@ -76,11 +50,24 @@ namespace Trizbort.Domain.Misc {
         m_chevronPath.AddLine(leftCorner, apex);
       }
 
+      var path = m_chevronPath;
+      if (sketch != null) {
+        // an irregular, slightly lopsided arrowhead, as if inked by hand
+        float jitter() => (float) (sketch.NextDouble() - 0.5) * 0.14f;
+        path = new XGraphicsPath();
+        path.AddPolygon(new[] {
+          new PointF(0.5f + jitter(), jitter()),
+          new PointF(-0.5f + jitter(), -0.5f + jitter()),
+          new PointF(-0.38f + jitter(), jitter() * 0.5f),
+          new PointF(-0.5f + jitter(), 0.5f + jitter())
+        });
+      }
+
       var state = graphics.Save();
       graphics.TranslateTransform(pos.X, pos.Y);
       graphics.RotateTransform(angle);
       graphics.ScaleTransform(size, size);
-      graphics.DrawPath(fillBrush, m_chevronPath);
+      graphics.DrawPath(fillBrush, path);
       graphics.Restore(state);
     }
 

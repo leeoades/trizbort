@@ -338,6 +338,36 @@ namespace Trizbort.Domain.Elements {
     public override void Draw(XGraphics graphics, Palette palette, DrawingContext context) {
       var lineSegments = context.UseSmartLineSegments ? mSmartSegments : getSegments();
       var curved = HasCurveWaypoints;
+      var handDrawn = Settings.HandDrawn;
+      var random = Sketch.Seeded(ID);
+      var chain = new List<PointF>();
+      var sketched = new List<PointF[]>();
+      var chevrons = new List<(Vector position, Vector direction)>();
+      Pen chainPen = null;
+
+      void flushChain() {
+        if (chain.Count > 1) {
+          var stroke = Sketch.Polyline(chain, random);
+          sketched.Add(stroke);
+          graphics.DrawLines(chainPen, stroke);
+        }
+        chain.Clear();
+      }
+
+      void addChevron(Vector position, Vector direction) {
+        if (handDrawn) chevrons.Add((position, direction));
+        else drawChevron(graphics, palette, context, position, direction, null);
+      }
+
+      bool continuesChain(LineSegment segment) {
+        if (chain.Count < 2 || chain[chain.Count - 1] != segment.Start.ToPointF()) return false;
+        var previous = chain[chain.Count - 2];
+        var last = chain[chain.Count - 1];
+        var before = Math.Atan2(last.Y - previous.Y, last.X - previous.X);
+        var after = Math.Atan2(segment.End.Y - segment.Start.Y, segment.End.X - segment.Start.X);
+        var turn = Math.Abs(Math.IEEERemainder(after - before, 2 * Math.PI));
+        return turn < Math.PI / 9;
+      }
 
       foreach (var lineSegment in lineSegments) {
         var pen = palette.GetLinePen(context.Selected, context.Hover, Style == ConnectionStyle.Dashed);
@@ -349,21 +379,57 @@ namespace Trizbort.Domain.Elements {
             specialPen.Color = ConnectionColor;
           }
 
-        if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering)
-          graphics.DrawLine(specialPen ?? pen, lineSegment.Start.ToPointF(), lineSegment.End.ToPointF());
+        if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering) {
+          if (!handDrawn) {
+            graphics.DrawLine(specialPen ?? pen, lineSegment.Start.ToPointF(), lineSegment.End.ToPointF());
+          } else {
+            // join collinear stalks and the many tiny pieces of a flattened curve into single strokes,
+            // so the wobble flows along the whole line instead of kinking at every joint
+            if (!continuesChain(lineSegment)) flushChain();
+            chainPen = specialPen ?? pen;
+            if (chain.Count == 0) chain.Add(lineSegment.Start.ToPointF());
+            chain.Add(lineSegment.End.ToPointF());
+          }
+        }
+
         var delta = lineSegment.Delta;
         if (!curved && Flow == ConnectionFlow.OneWay && delta.Length > Settings.ConnectionArrowSize)
-          drawChevron(graphics, palette, context, lineSegment.Mid, delta);
+          addChevron(lineSegment.Mid, delta);
 
         context.LinesDrawn.Add(lineSegment);
       }
+
+      flushChain();
 
       if (curved && Flow == ConnectionFlow.OneWay) {
         // one arrow per curve span, rather than one per flattened line segment
         getCurvedSegments(out var spans);
         foreach (var span in spans) {
           var mid = CurveGeometry.PolylineMidpoint(span, out var direction);
-          if (direction != Vector.Zero) drawChevron(graphics, palette, context, mid, direction);
+          if (direction != Vector.Zero) addChevron(mid, direction);
+        }
+      }
+
+      if (chevrons.Count > 0) {
+        // place each arrow on the wobbly stroke it belongs to, rather than on the ideal straight line
+        var arrowRandom = Sketch.Seeded(ID + 5000);
+        foreach (var (position, direction) in chevrons) {
+          var target = position.ToPointF();
+          var bestPoint = target;
+          var arrowDirection = direction;
+          var bestDistance = float.MaxValue;
+          foreach (var stroke in sketched) {
+            var point = Sketch.Nearest(stroke, target, out var strokeDirection);
+            var distance = (point.X - target.X) * (point.X - target.X) + (point.Y - target.Y) * (point.Y - target.Y);
+            if (distance >= bestDistance) continue;
+            bestDistance = distance;
+            bestPoint = point;
+            // follow the stroke's local angle, but keep the arrow pointing the way the connection flows
+            var sign = strokeDirection.X * direction.X + strokeDirection.Y * direction.Y >= 0 ? 1 : -1;
+            arrowDirection = new Vector(strokeDirection.X * sign, strokeDirection.Y * sign);
+          }
+          if (arrowDirection == Vector.Zero) arrowDirection = direction;
+          drawChevron(graphics, palette, context, new Vector(bestPoint), arrowDirection, arrowRandom);
         }
       }
 
@@ -373,7 +439,7 @@ namespace Trizbort.Domain.Elements {
       annotate(graphics, palette, lineSegments);
     }
 
-    private void drawChevron(XGraphics graphics, Palette palette, DrawingContext context, Vector position, Vector direction) {
+    private void drawChevron(XGraphics graphics, Palette palette, DrawingContext context, Vector position, Vector direction, Random sketch) {
       var brush = (SolidBrush) palette.GetLineBrush(context.Selected, context.Hover);
       SolidBrush specialBrush = null;
 
@@ -383,7 +449,7 @@ namespace Trizbort.Domain.Elements {
           specialBrush.Color = ConnectionColor;
         }
 
-      Drawing.DrawChevron(graphics, position.ToPointF(), (float) (Math.Atan2(direction.Y, direction.X) / Math.PI * 180), Settings.ConnectionArrowSize, specialBrush ?? brush);
+      Drawing.DrawChevron(graphics, position.ToPointF(), (float) (Math.Atan2(direction.Y, direction.X) / Math.PI * 180), Settings.ConnectionArrowSize, specialBrush ?? brush, sketch);
     }
 
     public void EndLoad(object state) {

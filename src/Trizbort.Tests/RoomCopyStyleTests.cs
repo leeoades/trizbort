@@ -23,7 +23,7 @@ namespace Trizbort.Tests
         Shape = RoomShape.Octagonal,
         AllCornersEqual = false,
         Corners = new CornerRadii { TopLeft = 1, TopRight = 2, BottomLeft = 3, BottomRight = 4 },
-        HandDrawnEdges = true,
+        HandDrawnStyle = HandDrawnStyle.HandDrawn,
         BorderStyle = BorderDashStyle.Dash,
         RoomBorderColor = Color.Red,
         RoomFillColor = Color.Green,
@@ -50,7 +50,7 @@ namespace Trizbort.Tests
       target.Corners.BottomLeft.ShouldBe(3);
       target.Corners.BottomRight.ShouldBe(4);
       target.Corners.ShouldNotBeSameAs(source.Corners);
-      target.HandDrawnEdges.ShouldBeTrue();
+      target.HandDrawnStyle.ShouldBe(HandDrawnStyle.HandDrawn);
       target.BorderStyle.ShouldBe(BorderDashStyle.Dash);
       target.RoomBorderColor.ShouldBe(Color.Red);
       target.RoomFillColor.ShouldBe(Color.Green);

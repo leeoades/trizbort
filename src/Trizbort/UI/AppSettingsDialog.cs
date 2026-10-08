@@ -19,8 +19,6 @@ namespace Trizbort.UI {
 
     public bool DoubleClickToAddRoom { get => chkDoubleClickToAddRoom.Checked; set => chkDoubleClickToAddRoom.Checked = value; }
 
-    public bool HandDrawnGlobal { get => chkDefaultHandDrawn.Checked; set => chkDefaultHandDrawn.Checked = value; }
-
     public bool InvertMouseWheel { get => m_invertWheelCheckBox.Checked; set => m_invertWheelCheckBox.Checked = value; }
 
     public bool LoadLastProjectOnStart { get => chkLoadLast.Checked; set => chkLoadLast.Checked = value; }
@@ -110,10 +108,5 @@ namespace Trizbort.UI {
       SetTooltipRoomDesciptionLimitUI(chkShowDescriptionsInTooltip.Checked);
       SetTooltipConnectionDesciptionLimitUI(chkShowDescriptionsInTooltip.Checked);
 		}
-
-        private void ChkDefaultHandDrawn_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
     }
 }

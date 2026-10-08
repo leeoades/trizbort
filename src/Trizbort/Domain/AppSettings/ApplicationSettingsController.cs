@@ -75,7 +75,6 @@ namespace Trizbort.Domain.AppSettings {
         dialog.GenHorizontalMargin = settings.GenHorizontalMargin;
         dialog.GenVerticalMargin = settings.GenVerticalMargin;
         dialog.LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
-        dialog.HandDrawnGlobal = settings.HandDrawnGlobal;
         dialog.ApplyStyleToNewRooms = settings.ApplyStyleToNewRooms;
         dialog.DoubleClickToAddRoom = settings.DoubleClickToAddRoom;
         dialog.ShowDescriptionsInTooltip = settings.ShowDescriptionsInTooltips;
@@ -99,7 +98,6 @@ namespace Trizbort.Domain.AppSettings {
           settings.GenHorizontalMargin = (int) dialog.GenHorizontalMargin;
           settings.GenVerticalMargin = (int) dialog.GenVerticalMargin;
           settings.LoadLastProjectOnStart = dialog.LoadLastProjectOnStart;
-          settings.HandDrawnGlobal = dialog.HandDrawnGlobal;
           settings.ApplyStyleToNewRooms = dialog.ApplyStyleToNewRooms;
           settings.DoubleClickToAddRoom = dialog.DoubleClickToAddRoom;
           settings.ShowDescriptionsInTooltips = dialog.ShowDescriptionsInTooltip;
@@ -155,7 +153,6 @@ namespace Trizbort.Domain.AppSettings {
               settings.SpecifyGenMargins = root["specifyMargins"].ToBool(settings.SpecifyGenMargins);
               settings.GenHorizontalMargin = root["horizontalMargin"].ToInt(settings.GenHorizontalMargin);
               settings.GenVerticalMargin = root["verticalMargin"].ToInt(settings.GenVerticalMargin);
-              settings.HandDrawnGlobal = root["handDrawnDefault"].ToBool(settings.HandDrawnGlobal);
               settings.ShowObjectsInTooltips = root["showObjectsInTooltips"].ToBool(true);
               settings.ShowDescriptionsInTooltips = root["showDescriptionsInTooltips"].ToBool(true);
 

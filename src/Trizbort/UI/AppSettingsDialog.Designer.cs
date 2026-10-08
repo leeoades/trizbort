@@ -50,7 +50,6 @@
             this.chkSpecifyMargins = new System.Windows.Forms.CheckBox();
             this.labelH = new System.Windows.Forms.Label();
             this.labelV = new System.Windows.Forms.Label();
-            this.chkDefaultHandDrawn = new System.Windows.Forms.CheckBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabGeneral = new System.Windows.Forms.TabPage();
             this.tabToolTips = new System.Windows.Forms.TabPage();
@@ -284,7 +283,6 @@
             this.groupBox3.Controls.Add(this.labelV);
             this.groupBox3.Controls.Add(this.txtDefaultFontName);
             this.groupBox3.Controls.Add(this.labelFont);
-            this.groupBox3.Controls.Add(this.chkDefaultHandDrawn);
             this.groupBox3.Location = new System.Drawing.Point(6, 184);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(400, 89);
@@ -363,16 +361,6 @@
             this.labelV.Size = new System.Drawing.Size(45, 15);
             this.labelV.TabIndex = 10;
             this.labelV.Text = "Vertical";
-            // 
-            // chkDefaultHandDrawn
-            // 
-            this.chkDefaultHandDrawn.Location = new System.Drawing.Point(266, 26);
-            this.chkDefaultHandDrawn.Name = "chkDefaultHandDrawn";
-            this.chkDefaultHandDrawn.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.chkDefaultHandDrawn.Size = new System.Drawing.Size(118, 23);
-            this.chkDefaultHandDrawn.TabIndex = 12;
-            this.chkDefaultHandDrawn.Text = "Hand Drawn";
-            this.chkDefaultHandDrawn.CheckedChanged += new System.EventHandler(this.ChkDefaultHandDrawn_CheckedChanged);
             // 
             // tabControl1
             // 
@@ -613,7 +601,6 @@
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.CheckBox chkSpecifyMargins;
-        private System.Windows.Forms.CheckBox chkDefaultHandDrawn;
         private System.Windows.Forms.CheckBox chkSaveTADSToADV3Lite;
         private System.Windows.Forms.CheckBox chkSaveToImage;
         private System.Windows.Forms.CheckBox chkSaveToPDF;

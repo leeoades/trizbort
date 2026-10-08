@@ -177,9 +177,8 @@ namespace Trizbort.UI
             this.m_handDrawnCheckBox.Name = "m_handDrawnCheckBox";
             this.m_handDrawnCheckBox.Size = new System.Drawing.Size(197, 36);
             this.m_handDrawnCheckBox.TabIndex = 0;
-            this.m_handDrawnCheckBox.Text = "\"&Hand-drawn\"";
+            this.m_handDrawnCheckBox.Text = "&Hand-drawn style";
             this.m_handDrawnCheckBox.UseVisualStyleBackColor = true;
-            this.m_handDrawnCheckBox.Visible = false;
             // 
             // m_lineWidthUpDown
             // 

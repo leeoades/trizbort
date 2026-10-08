@@ -123,7 +123,7 @@ namespace Trizbort.Tests {
         Position = new Vector(200, 300), Size = new Vector(160, 120), Shape = RoomShape.Ellipse,
         RoomFillColor = Color.Red, RoomBorderColor = Color.Blue, RoomNameColor = Color.Yellow,
         RoomSubtitleColor = Color.Green, RoomObjectTextColor = Color.Purple, SecondFillColor = Color.Gray,
-        BorderStyle = BorderDashStyle.Dot, HandDrawnEdges = true,
+        BorderStyle = BorderDashStyle.Dot, HandDrawnStyle = HandDrawnStyle.HandDrawn,
         IsDark = true, IsStartRoom = true, ObjectsPosition = CompassPoint.East
       };
       room.AddDescription("Room description");
@@ -189,7 +189,7 @@ namespace Trizbort.Tests {
       room.SecondFillColor.ShouldBe(replaceStyles ? Color.Transparent : Color.Gray);
       room.Shape.ShouldBe(replaceStyles ? theme.DefaultRoomShape : RoomShape.Ellipse);
       room.BorderStyle.ShouldBe(replaceStyles ? BorderDashStyle.Solid : BorderDashStyle.Dot);
-      room.HandDrawnEdges.ShouldBe(!replaceStyles);
+      (room.HandDrawnStyle == HandDrawnStyle.HandDrawn).ShouldBe(!replaceStyles);
       connection.ConnectionColor.ShouldBe(replaceStyles ? Color.Transparent : Color.Red);
       label.TextColor.ToArgb().ShouldBe((replaceStyles ? ColorTranslator.FromHtml(theme.Colors["lineText"]) : Color.Red).ToArgb());
       new Room(project).Shape.ShouldBe(theme.DefaultRoomShape);
@@ -300,7 +300,7 @@ namespace Trizbort.Tests {
       var project = Project.Current;
       MapTheme.HasIndividualStyles(project).ShouldBeFalse();
       var room = new Room(project) {
-        HandDrawnEdges = false, IsDark = true, IsStartRoom = true, Region = "Forest",
+        HandDrawnStyle = HandDrawnStyle.MapDefault, IsDark = true, IsStartRoom = true, Region = "Forest",
         ObjectsPosition = CompassPoint.East
       };
       project.Elements.Add(room);
@@ -333,7 +333,7 @@ namespace Trizbort.Tests {
     [TestCase("labelBackground")]
     public void IndividualOverrides_RequireAStyleChoice(string style) {
       var project = Project.Current;
-      var room = new Room(project) { HandDrawnEdges = false };
+      var room = new Room(project) { HandDrawnStyle = HandDrawnStyle.MapDefault };
       project.Elements.Add(room);
       var label = new MapLabel(project);
       project.Elements.Add(label);
@@ -348,7 +348,7 @@ namespace Trizbort.Tests {
         case "secondFill": room.SecondFillColor = Color.Red; break;
         case "shape": room.Shape = RoomShape.Ellipse; break;
         case "borderStyle": room.BorderStyle = BorderDashStyle.None; break;
-        case "handDrawn": room.HandDrawnEdges = true; break;
+        case "handDrawn": room.HandDrawnStyle = HandDrawnStyle.HandDrawn; break;
         case "corners": room.Corners.TopLeft = 20; break;
         case "unequalCorners": room.AllCornersEqual = false; break;
         case "connectionColor": connection.ConnectionColor = Color.Red; break;
@@ -360,7 +360,7 @@ namespace Trizbort.Tests {
     }
 
     private static Room AddRoom(Project project, string region = null, Color? fill = null, Color? name = null, RoomShape shape = RoomShape.Octagonal) {
-      var room = new Room(project) { HandDrawnEdges = false, Shape = shape, Region = region };
+      var room = new Room(project) { HandDrawnStyle = HandDrawnStyle.MapDefault, Shape = shape, Region = region };
       if (fill.HasValue) room.RoomFillColor = fill.Value;
       if (name.HasValue) room.RoomNameColor = name.Value;
       project.Elements.Add(room);
@@ -445,10 +445,10 @@ namespace Trizbort.Tests {
           var menu = items[settingsIndex + 1];
           menu.Text.ShouldBe("&Themes");
           menu.DropDownItems.OfType<ToolStripMenuItem>().Select(item => item.Text).ShouldBe(new[] {
-            "Classic", "Parchment", "Dark", "High contrast", "&Import theme...", "&Export current theme...",
+            "Classic", "Parchment", "Dark", "High contrast", "Sketch", "&Import theme...", "&Export current theme...",
             "Infer default room style from &rooms..."
           });
-          var room = new Room(Project.Current) { HandDrawnEdges = false };
+          var room = new Room(Project.Current) { HandDrawnStyle = HandDrawnStyle.MapDefault };
           Project.Current.Elements.Add(room);
           menu.DropDownItems.OfType<ToolStripMenuItem>().Single(item => item.Text == "Dark").PerformClick();
           room.Shape.ShouldBe(MapTheme.BuiltInThemes()[2].DefaultRoomShape);

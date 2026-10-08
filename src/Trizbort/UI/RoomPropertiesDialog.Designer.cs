@@ -75,7 +75,8 @@ namespace Trizbort.UI
             this.m_swCheckBox = new System.Windows.Forms.CheckBox();
             this.m_wCheckBox = new System.Windows.Forms.CheckBox();
             this.m_eCheckBox = new System.Windows.Forms.CheckBox();
-            this.chkHandDrawnRoom = new System.Windows.Forms.CheckBox();
+            this.lblHandDrawn = new System.Windows.Forms.Label();
+            this.cboHandDrawn = new System.Windows.Forms.ComboBox();
             this.groupRoundedCorners = new System.Windows.Forms.Panel();
             this.chkCornersSame = new System.Windows.Forms.CheckBox();
             this.txtBottomRight = new System.Windows.Forms.NumericUpDown();
@@ -690,18 +691,26 @@ namespace Trizbort.UI
             this.m_eCheckBox.UseVisualStyleBackColor = true;
             this.m_eCheckBox.CheckedChanged += new System.EventHandler(this.PositionCheckBox_CheckedChanged);
             // 
-            // chkHandDrawnRoom
+            // lblHandDrawn
             // 
-            this.chkHandDrawnRoom.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.chkHandDrawnRoom.AutoSize = true;
-            this.chkHandDrawnRoom.Location = new System.Drawing.Point(520, 32);
-            this.chkHandDrawnRoom.Margin = new System.Windows.Forms.Padding(6);
-            this.chkHandDrawnRoom.Name = "chkHandDrawnRoom";
-            this.chkHandDrawnRoom.Size = new System.Drawing.Size(249, 36);
-            this.chkHandDrawnRoom.TabIndex = 8;
-            this.chkHandDrawnRoom.Text = "Hand Drawn Edges";
-            this.chkHandDrawnRoom.UseVisualStyleBackColor = true;
-            this.chkHandDrawnRoom.CheckedChanged += new System.EventHandler(this.chkHandDrawnRoom_CheckedChanged);
+            this.lblHandDrawn.AutoSize = true;
+            this.lblHandDrawn.Location = new System.Drawing.Point(520, 36);
+            this.lblHandDrawn.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.lblHandDrawn.Name = "lblHandDrawn";
+            this.lblHandDrawn.Size = new System.Drawing.Size(70, 32);
+            this.lblHandDrawn.TabIndex = 9;
+            this.lblHandDrawn.Text = "&Lines:";
+            // 
+            // cboHandDrawn
+            // 
+            this.cboHandDrawn.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboHandDrawn.FormattingEnabled = true;
+            this.cboHandDrawn.Location = new System.Drawing.Point(600, 30);
+            this.cboHandDrawn.Margin = new System.Windows.Forms.Padding(6);
+            this.cboHandDrawn.Name = "cboHandDrawn";
+            this.cboHandDrawn.Size = new System.Drawing.Size(336, 40);
+            this.cboHandDrawn.TabIndex = 10;
+            this.cboHandDrawn.SelectedIndexChanged += new System.EventHandler(this.cboHandDrawn_SelectedIndexChanged);
             // 
             // groupRoundedCorners
             // 
@@ -1138,7 +1147,8 @@ namespace Trizbort.UI
             // 
             // tabRoomShapes
             // 
-            this.tabRoomShapes.Controls.Add(this.chkHandDrawnRoom);
+            this.tabRoomShapes.Controls.Add(this.lblHandDrawn);
+            this.tabRoomShapes.Controls.Add(this.cboHandDrawn);
             this.tabRoomShapes.Controls.Add(this.groupRoundedCorners);
             this.tabRoomShapes.Controls.Add(this.cboDrawType);
             this.tabRoomShapes.Controls.Add(this.pnlSampleRoomShape);
@@ -1297,7 +1307,8 @@ namespace Trizbort.UI
     private System.Windows.Forms.Label lblObjectSyntaxHelp;
     private System.Windows.Forms.Panel pnlObjectSyntaxHelp;
     private System.Windows.Forms.Label label9;
-    private System.Windows.Forms.CheckBox chkHandDrawnRoom;
+    private System.Windows.Forms.Label lblHandDrawn;
+    private System.Windows.Forms.ComboBox cboHandDrawn;
     private System.Windows.Forms.Label label12;
     private System.Windows.Forms.Label label10;
     private System.Windows.Forms.CheckBox chkCustomPosition;

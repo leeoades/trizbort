@@ -124,7 +124,26 @@ individual element overrides. Applying marks `Project.Current.IsDirty` and emits
 `Settings.Changed` even when only region/default shape values differ.
 
 `MapTheme.HasIndividualStyles` ignores `Room.StraightEdges`: it is derived (reset from
-`HandDrawnEdges` on every draw) rather than a user style.
+`IsHandDrawn` on every draw) rather than a user style. It does count
+`Room.HandDrawnStyle != MapDefault`.
+
+### Hand-drawn style
+
+`Settings.HandDrawn` (map XML `settings/lines/handDrawn`, false on reset/new map; the old
+App Settings `HandDrawnGlobal` option was removed) is the map-wide hand-drawn switch and is part of themes
+(optional JSON `HandDrawn`, absent in older theme files → false). Rooms store
+`HandDrawnStyle` (`MapDefault`/`HandDrawn`/`Straight`) as the `handDrawnStyle` attribute;
+they also write the legacy `handDrawn` yes/no (effective value) for older versions. On load
+with no `handDrawnStyle`, legacy `handDrawn="yes"` → `HandDrawn`, otherwise `MapDefault`.
+`Room.IsHandDrawn` resolves the effective value. Geometry lives in
+`Domain\Misc\Sketch.cs`: a deterministic, length-scaled bow for lines/polylines (exact
+endpoints) and normal-displaced outlines for polygons, ellipses and rounded rectangles.
+Seeds come from element IDs, so the wobble is stable between redraws. Connections join
+contiguous, nearly collinear segments into one sketched stroke (`Sketch.Polyline` adds a bow
+plus a few gentle waves). When sketched, chevrons are deferred and snapped onto the nearest
+point of the sketched stroke (`Sketch.Nearest`) and drawn as jittered, notched arrowheads via
+`Drawing.DrawChevron(..., Random sketch)`. Labels sketch their outline
+when the map setting is on. `RoomStyleInference` does not infer hand-drawn style.
 
 `Setup\RoomStyleInference.cs` lifts per-room styling into map defaults so it can be
 exported. `Analyze` evaluates each property independently and requires ≥75% agreement
@@ -133,7 +152,7 @@ among at least three rooms, using effective colours (override or current default
 to `NoRegion`) → region `RColor`/`TextColor`; border/subtitle/object text → `Colors.Border`,
 `Colors.Subtitle`, `Colors.SmallText`. `Apply` updates those defaults, clears room colour
 overrides equal to the final defaults (so rendering is unchanged), marks dirty and raises
-`Settings.Changed`. Room shapes, corners, border styles, hand-drawn edges and second fills
+`Settings.Changed`. Room shapes, corners, border styles, hand-drawn overrides and second fills
 have no map-level default and are left on rooms.
 
 ## JSON serialization — `Domain\SerializeHelpers` converters are currently unused

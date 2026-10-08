@@ -131,6 +131,7 @@ namespace Trizbort.Domain.Controllers {
       newRoom.Octagonal = room.Octagonal;
       newRoom.Ellipse = room.Ellipse;
       newRoom.StraightEdges = room.StraightEdges;
+      newRoom.HandDrawnStyle = room.HandDrawnStyle;
       newRoom.AllCornersEqual = room.AllCornersEqual;
       newRoom.ArbitraryAutomappedPosition = room.ArbitraryAutomappedPosition;
       newRoom.RoomFillColor = room.RoomFillColor;
@@ -163,6 +164,7 @@ namespace Trizbort.Domain.Controllers {
         Octagonal = room.Octagonal,
         Ellipse = room.Ellipse,
         StraightEdges = room.StraightEdges,
+        HandDrawnStyle = room.HandDrawnStyle,
         AllCornersEqual = room.AllCornersEqual,
         IsStartRoom = room.IsStartRoom,
         IsEndRoom = room.IsEndRoom,
@@ -297,6 +299,7 @@ namespace Trizbort.Domain.Controllers {
       public RoomShape Shape { get; set; }
       public Vector Size { get; set; }
       public bool StraightEdges { get; set; }
+      public HandDrawnStyle HandDrawnStyle { get; set; }
       public string SubTitle { get; set; }
       public int ReferenceRoomId { get; set; }
     }

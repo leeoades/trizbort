@@ -25,7 +25,6 @@ namespace Trizbort.Domain.AppSettings
     public Version DontCareAboutVersion { get; set; }
     public int GenHorizontalMargin { get; set; }
     public int GenVerticalMargin { get; set; }
-    public bool HandDrawnGlobal { get; set; }
     public bool InfiniteScrollBounds { get; set; }
     public bool InvertMouseWheel { get; set; }
     public string LastExportAdventuronFileName { get; set; }

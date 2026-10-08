@@ -1441,6 +1441,7 @@ namespace Trizbort.UI.Controls {
             Size = room.Size,
             Shape = room.Shape,
             StraightEdges = room.StraightEdges,
+            HandDrawnStyle = room.HandDrawnStyle,
             IsDark = room.IsDark,
             Corners = room.Corners
           };
