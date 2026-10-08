@@ -121,7 +121,8 @@ namespace Trizbort.Domain.Misc {
       m_pos = pos;
       m_size = size;
 
-      var text = m_text;
+      // PDFsharp renders carriage returns as glyphs instead of treating them as line breaks.
+      var text = m_text.Replace("\r\n", "\n").Replace('\r', '\n');
       if (text.IndexOf('\n') == -1 && size.X > 0 && size.Y > 0 && graphics.MeasureString(text, font).Width > size.X) {
         // wrap single-line text to fit in rectangle
 
