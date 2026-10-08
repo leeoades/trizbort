@@ -76,28 +76,28 @@ namespace Trizbort.UI {
     public static InputDialog Show(string title, string label)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { new InputDialogItem(label) }, InputBoxButtons.OK);
-      dialog.ShowDialog();
+      UserInteraction.ShowDialog(dialog);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(string title, string label, InputBoxButtons buttons)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { new InputDialogItem(label) }, buttons);
-      dialog.ShowDialog();
+      UserInteraction.ShowDialog(dialog);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(string title, string label, string text)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { new InputDialogItem(label, text) }, InputBoxButtons.OK);
-      dialog.ShowDialog();
+      UserInteraction.ShowDialog(dialog);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(string title, string label, string text, InputBoxButtons buttons)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { new InputDialogItem(label, text) }, buttons);
-      dialog.ShowDialog();
+      UserInteraction.ShowDialog(dialog);
       return new InputDialog(dialog);
     }
 
@@ -110,7 +110,7 @@ namespace Trizbort.UI {
       }
 
       dialogForm dialog = new dialogForm(title, items, InputBoxButtons.OK);
-      dialog.ShowDialog();
+      UserInteraction.ShowDialog(dialog);
       return new InputDialog(dialog);
     }
 
@@ -123,28 +123,28 @@ namespace Trizbort.UI {
       }
 
       dialogForm dialog = new dialogForm(title, items, buttons);
-      dialog.ShowDialog();
+      UserInteraction.ShowDialog(dialog);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(string title, InputDialogItem item)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { item }, InputBoxButtons.OK);
-      dialog.ShowDialog();
+      UserInteraction.ShowDialog(dialog);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(string title, InputDialogItem item, InputBoxButtons buttons)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { item }, buttons);
-      dialog.ShowDialog();
+      UserInteraction.ShowDialog(dialog);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(string title, InputDialogItem[] items)
     {
       dialogForm dialog = new dialogForm(title, items, InputBoxButtons.OK);
-      dialog.ShowDialog();
+      UserInteraction.ShowDialog(dialog);
       return new InputDialog(dialog);
     }
 
@@ -152,35 +152,35 @@ namespace Trizbort.UI {
     {
       dialogForm dialog = new dialogForm(title, items, buttons);
       dialog.StartPosition = FormStartPosition.CenterScreen;
-      dialog.ShowDialog();
+      UserInteraction.ShowDialog(dialog);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(IWin32Window window, string title, string label)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { new InputDialogItem(label) }, InputBoxButtons.OK);
-      dialog.ShowDialog(window);
+      UserInteraction.ShowDialog(dialog, window);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(IWin32Window window, string title, string label, InputBoxButtons buttons)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { new InputDialogItem(label) }, buttons);
-      dialog.ShowDialog(window);
+      UserInteraction.ShowDialog(dialog, window);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(IWin32Window window, string title, string label, string text)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { new InputDialogItem(label, text) }, InputBoxButtons.OK);
-      dialog.ShowDialog(window);
+      UserInteraction.ShowDialog(dialog, window);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(IWin32Window window, string title, string label, string text, InputBoxButtons buttons)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { new InputDialogItem(label, text) }, buttons);
-      dialog.ShowDialog(window);
+      UserInteraction.ShowDialog(dialog, window);
       return new InputDialog(dialog);
     }
 
@@ -193,7 +193,7 @@ namespace Trizbort.UI {
       }
 
       dialogForm dialog = new dialogForm(title, items, InputBoxButtons.OK);
-      dialog.ShowDialog(window);
+      UserInteraction.ShowDialog(dialog, window);
       return new InputDialog(dialog);
     }
 
@@ -206,35 +206,35 @@ namespace Trizbort.UI {
       }
 
       dialogForm dialog = new dialogForm(title, items, buttons);
-      dialog.ShowDialog(window);
+      UserInteraction.ShowDialog(dialog, window);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(IWin32Window window, string title, InputDialogItem item)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { item }, InputBoxButtons.OK);
-      dialog.ShowDialog(window);
+      UserInteraction.ShowDialog(dialog, window);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(IWin32Window window, string title, InputDialogItem item, InputBoxButtons buttons)
     {
       dialogForm dialog = new dialogForm(title, new InputDialogItem[] { item }, buttons);
-      dialog.ShowDialog(window);
+      UserInteraction.ShowDialog(dialog, window);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(IWin32Window window, string title, InputDialogItem[] items)
     {
       dialogForm dialog = new dialogForm(title, items, InputBoxButtons.OK);
-      dialog.ShowDialog(window);
+      UserInteraction.ShowDialog(dialog, window);
       return new InputDialog(dialog);
     }
 
     public static InputDialog Show(IWin32Window window, string title, InputDialogItem[] items, InputBoxButtons buttons)
     {
       dialogForm dialog = new dialogForm(title, items, buttons);
-      dialog.ShowDialog(window);
+      UserInteraction.ShowDialog(dialog, window);
       return new InputDialog(dialog);
     }
 

@@ -25,7 +25,7 @@ namespace Trizbort.UI {
     private void ApplyTheme(MapTheme theme) {
       var choice = DialogResult.Yes;
       if (MapTheme.HasIndividualStyles(Project.Current))
-        choice = MessageBox.Show(this,
+        choice = UserInteraction.ShowMessage(this,
           $"Apply the '{theme.Name}' theme?\n\nYes: replace individual room styles and room, connection and label colours.\n" +
           "No: keep individual styles and change only map-wide settings.\nCancel: leave the map unchanged.\n\n" +
           "Map text, room sizes and positions, region membership and game properties are preserved. There is no undo.",
@@ -43,7 +43,7 @@ namespace Trizbort.UI {
 
     private void ImportTheme() {
       using (var dialog = new OpenFileDialog { Filter = ThemeFilter, Title = "Import map theme" }) {
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        if (UserInteraction.ShowDialog(dialog, this) != DialogResult.OK) return;
         MapTheme theme;
         try {
           theme = MapTheme.Load(dialog.FileName);
@@ -66,7 +66,7 @@ namespace Trizbort.UI {
         Filter = ThemeFilter, DefaultExt = "trizbort-theme", AddExtension = true,
         Title = "Export current map theme", FileName = "My theme.trizbort-theme"
       }) {
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        if (UserInteraction.ShowDialog(dialog, this) != DialogResult.OK) return;
         try {
           MapTheme.Capture(Path.GetFileNameWithoutExtension(dialog.FileName)).Save(dialog.FileName);
         } catch (IOException exception) {
@@ -82,7 +82,7 @@ namespace Trizbort.UI {
     private void InferDefaultRoomStyle() {
       var inference = RoomStyleInference.Analyze(Project.Current);
       if (!inference.HasChanges) {
-        MessageBox.Show(this,
+        UserInteraction.ShowMessage(this,
           $"No room styling is shared by at least {RoomStyleInference.DefaultThreshold:P0} of rooms that isn't already the map default, " +
           "and no rooms have overrides that duplicate the defaults.",
           "Infer default room style", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -94,13 +94,13 @@ namespace Trizbort.UI {
                     $"{inference.RedundantOverrides} individual colour override(s) on {inference.RoomsSimplified} room(s) will be removed " +
                     "because the default now provides them. Rooms that differ keep their own styling, and the map will look the same.\n\n" +
                     "Room shapes are stored per room, so a new default shape applies to new rooms and themes. There is no undo.\n\nContinue?";
-      if (MessageBox.Show(this, message, "Infer default room style", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) return;
+      if (UserInteraction.ShowMessage(this, message, "Infer default room style", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) return;
       inference.Apply();
       Canvas.Refresh();
     }
 
     private void ShowThemeError(Exception exception) {
-      MessageBox.Show(this, $"The theme could not be used.\n\n{exception.Message}",
+      UserInteraction.ShowMessage(this, $"The theme could not be used.\n\n{exception.Message}",
         Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
   }

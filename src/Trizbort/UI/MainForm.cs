@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using CommandLine;
 using PdfSharp.Drawing;
-using PdfSharp.Pdf;
-using PdfSharp.Pdf.Annotations;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Controllers;
@@ -73,7 +71,7 @@ namespace Trizbort.UI {
           dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(lastProjectName);
 
         dialog.Filter = $"{Project.FilterString}|All Files|*.*||";
-        if (dialog.ShowDialog() == DialogResult.OK) {
+        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
           OpenProject(dialog.FileName);
         }
       }
@@ -111,7 +109,7 @@ namespace Trizbort.UI {
 
     private void AutomapStartMenuItem_Click(object sender, EventArgs e) {
       using (var dialog = new AutomapDialog()) {
-        if (dialog.ShowDialog() == DialogResult.OK) Canvas.StartAutomapping(dialog.Data);
+        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) Canvas.StartAutomapping(dialog.Data);
       }
     }
 
@@ -122,7 +120,7 @@ namespace Trizbort.UI {
     private bool checkLoseProject() {
       if (Project.Current.IsDirty) {
         // see if the user would like to save
-        var result = MessageBox.Show(this, $"Do you want to save changes to {Project.Current.Name}?", Text, MessageBoxButtons.YesNoCancel);
+        var result = UserInteraction.ShowMessage(this, $"Do you want to save changes to {Project.Current.Name}?", Text, MessageBoxButtons.YesNoCancel);
         switch (result) {
           case DialogResult.Yes:
             // user would like to save
@@ -268,7 +266,7 @@ namespace Trizbort.UI {
     private void exportCode<T>() where T : CodeExporter, new() {
       using (var exporter = new T()) {
         var s = exporter.Export();
-        Clipboard.SetText(s, TextDataFormat.Text);
+        UserInteraction.SetClipboardText(s, TextDataFormat.Text);
       }
     }
 
@@ -298,7 +296,7 @@ namespace Trizbort.UI {
           // show dialog
           dialog.Title = exporter.FileDialogTitle;
           dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(lastExportFileName);
-          if (dialog.ShowDialog() == DialogResult.OK)
+          if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
             try {
               // export source code
               exporter.Export(dialog.FileName);
@@ -306,7 +304,7 @@ namespace Trizbort.UI {
               return true;
             }
             catch (Exception ex) {
-              MessageBox.Show(Program.MainForm, $"There was a problem exporting the map:\n\n{ex.Message}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+              UserInteraction.ShowMessage(Program.MainForm, $"There was a problem exporting the map:\n\n{ex.Message}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
       }
@@ -378,9 +376,9 @@ namespace Trizbort.UI {
         dialog.Title = "Export Image";
         dialog.DefaultExt = getExtensionForDefaultImageType();
         dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastExportImageFileName);
-        if (dialog.ShowDialog() == DialogResult.OK) {
+        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
           ApplicationSettingsController.AppSettings.LastExportImageFileName = Path.GetDirectoryName(dialog.FileName) + @"\";
-          if (!saveImage(dialog.FileName)) MessageBox.Show("There was an error saving the image file.  Please make sure the image is not already opened.", "Export Image", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+          if (!saveImage(dialog.FileName)) UserInteraction.ShowMessage("There was an error saving the image file.  Please make sure the image is not already opened.", "Export Image", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
         }
       }
     }
@@ -401,12 +399,12 @@ namespace Trizbort.UI {
         dialog.Filter = "PDF Files|*.pdf|All Files|*.*||";
         dialog.Title = "Export PDF";
         dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastExportImageFileName);
-        if (dialog.ShowDialog() == DialogResult.OK)
+        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
           try {
             savePDF(dialog.FileName);
           }
           catch (Exception ex) {
-            MessageBox.Show(Program.MainForm, $"There was a problem exporting the map:\n\n{ex.Message}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            UserInteraction.ShowMessage(Program.MainForm, $"There was a problem exporting the map:\n\n{ex.Message}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
           }
       }
     }
@@ -485,13 +483,13 @@ namespace Trizbort.UI {
 
     private void HelpAboutMenuItem_Click(object sender, EventArgs e) {
       using (var dialog = new AboutDialog()) {
-        dialog.ShowDialog();
+        UserInteraction.ShowDialog(dialog);
       }
     }
 
     private void HelpAndSupportMenuItem_Click(object sender, EventArgs e) {
       using (var dialog = new OnlineHelpDialog()) {
-        dialog.ShowDialog(this);
+        UserInteraction.ShowDialog(dialog, this);
       }
     }
 
@@ -579,7 +577,7 @@ namespace Trizbort.UI {
 
     private void mapStatisticsToolStripMenuItem_Click(object sender, EventArgs e) {
       var frm = new MapStatisticsView();
-      frm.ShowDialog();
+      UserInteraction.ShowDialog(frm);
     }
 
     private void octagonalEdgesToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -608,7 +606,7 @@ namespace Trizbort.UI {
     }
 
     private void ProjectResetToDefaultSettingsMenuItem_Click(object sender, EventArgs e) {
-      if (MessageBox.Show("Restore default settings?\n\nThis will revert any changes to settings in this project.", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) Settings.Reset();
+      if (UserInteraction.ShowMessage("Restore default settings?\n\nThis will revert any changes to settings in this project.", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) Settings.Reset();
     }
 
     private void ProjectSettingsMenuItem_Click(object sender, EventArgs e) {
@@ -680,7 +678,7 @@ namespace Trizbort.UI {
         }
 
         dialog.Filter = $"{Project.FilterString}|All Files|*.*||";
-        if (dialog.ShowDialog() == DialogResult.OK) {
+        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
           ApplicationSettingsController.AppSettings.LastProjectFileName = dialog.FileName;
           Project.Current.FileName = dialog.FileName;
           if (Project.Current.Save(true)) {
@@ -764,58 +762,13 @@ namespace Trizbort.UI {
 
     private void savePDF(string fileName) {
       ApplicationSettingsController.AppSettings.LastExportImageFileName = fileName;
-
-      var doc = new PdfDocument();
-      doc.Info.Title = Project.Current.Title;
-      doc.Info.Author = Project.Current.Author;
-      doc.Info.Creator = Application.ProductName;
-      doc.Info.CreationDate = DateTime.Now;
-      doc.Info.Subject = Project.Current.Description;
-      var page = doc.AddPage();
-
-      var pdfBoundRectangle = Canvas.ComputeCanvasBounds(true);
-      var size = pdfBoundRectangle.Size;
-
-      page.Width = new XUnit(size.X);
-      page.Height = new XUnit(size.Y);
-      using (var graphics = XGraphics.FromPdfPage(page)) {
-        Canvas.Draw(graphics, true, size.X, size.Y);
-      }
-
-      var descripRooms = Project.Current.Elements.OfType<Room>().ToList().Where(p => p.HasDescription);
-
-      foreach (var myroom in descripRooms) {
-        var rect = new XRect();
-        var textAnnot = new PdfTextAnnotation {
-          Contents = myroom.PrimaryDescription,
-          Color = Color.Orange,
-          Icon = PdfTextAnnotationIcon.Note
-        };
-
-        rect.Width = myroom.Width / 4; // first, decide square dimensions
-        rect.Height = myroom.Height / 4;
-        if (rect.Width > rect.Height)
-          rect.Width = rect.Height;
-        else
-          rect.Height = rect.Width;
-
-        if (myroom.Shape == RoomShape.SquareCorners) //Now, place it in the upper left or upper center based on room shape
-          rect.X = myroom.X - pdfBoundRectangle.Left;
-        else
-          rect.X = myroom.X - pdfBoundRectangle.Left + myroom.Width / 2 - rect.Width / 2;
-        rect.Y = pdfBoundRectangle.Height - (myroom.Y - pdfBoundRectangle.Top + rect.Height);
-
-        textAnnot.Rectangle = new PdfRectangle(rect);
-        page.Annotations.Add(textAnnot);
-      }
-
-      doc.Save(fileName);
+      MapPdfExporter.Save(Canvas, fileName);
     }
 
     private bool saveProject() {
       if (Project.Current.FileName.IsUrl())
       {
-        MessageBox.Show("You are trying to save a map loaded from the web.  Please use the 'Save Map As...' to save the map to your local drive.", "Problem saving map.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+        UserInteraction.ShowMessage("You are trying to save a map loaded from the web.  Please use the 'Save Map As...' to save the map to your local drive.", "Problem saving map.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
         return false;
       }
 
@@ -910,13 +863,13 @@ namespace Trizbort.UI {
     private void smartSave(bool silent = false) {
       if (!ApplicationSettingsController.AppSettings.SaveToPDF && !ApplicationSettingsController.AppSettings.SaveToImage) {
         if (!silent)
-          MessageBox.Show("Your settings are set to not save anything. Please check your App Settings if this is not what you want.");
+          UserInteraction.ShowMessage("Your settings are set to not save anything. Please check your App Settings if this is not what you want.");
         return;
       }
 
       var mSaved = false;
       if (Project.Current.FileName.IsUrl() || (!Project.Current.HasFileName || Project.Current.IsDirty)) {
-        if (MessageBox.Show("Your project needs to be saved before we can do a SmartSave.  Would you like to save the project now?", "Save Project?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) {
+        if (UserInteraction.ShowMessage("Your project needs to be saved before we can do a SmartSave.  Would you like to save the project now?", "Save Project?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) {
           mSaved = Project.Current.FileName.IsUrl() ? saveAsProject() : saveProject();
         }
       } else {
@@ -931,7 +884,7 @@ namespace Trizbort.UI {
           if (ApplicationSettingsController.AppSettings.SaveToPDF) {
             sPDFFile = exportPDF();
             if (sPDFFile == string.Empty) {
-              MessageBox.Show("There was an error saving the PDF file during the SmartSave.  Please make sure the PDF is not already opened.", "Smart Save", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+              UserInteraction.ShowMessage("There was an error saving the PDF file during the SmartSave.  Please make sure the PDF is not already opened.", "Smart Save", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
               bSaveError = true;
             }
           }
@@ -940,7 +893,7 @@ namespace Trizbort.UI {
           if (ApplicationSettingsController.AppSettings.SaveToImage) {
             sImageFile = exportImage();
             if (sImageFile == string.Empty) {
-              MessageBox.Show("There was an error saving the Image file during the SmartSave.  Please make sure the Image is not already opened.", "Smart Save", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+              UserInteraction.ShowMessage("There was an error saving the Image file during the SmartSave.  Please make sure the Image is not already opened.", "Smart Save", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
               bSaveError = true;
             }
           }
@@ -955,11 +908,11 @@ namespace Trizbort.UI {
               sText += $"Image file has been saved to {sImageFile}";
             }
 
-            if (!silent) MessageBox.Show(sText, "Smart Save", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (!silent) UserInteraction.ShowMessage(sText, "Smart Save", MessageBoxButtons.OK, MessageBoxIcon.Information);
           }
         }
       } else {
-        MessageBox.Show("No files have been saved during the SmartSave.");
+        UserInteraction.ShowMessage("No files have been saved during the SmartSave.");
       }
     }
 

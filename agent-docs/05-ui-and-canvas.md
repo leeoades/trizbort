@@ -83,14 +83,27 @@ two are independent concerns.
   style/flow/label, toggle room lighting/shape, delete) are dispatched through
   `CommandController` from `Canvas.OnKeyDown()` and menu handlers.
 - **Continuous geometric interaction** (panning, dragging a room, drawing a new connection,
-  resizing) is handled directly inside `Canvas.cs` — it converts the mouse point to world space
-  via `ClientToCanvas()` and mutates `Room.Position`/`Size` or `Connection.VertexList` directly,
-  without going through a controller. This is intentional, not an inconsistency to "fix" —
+  resizing) is coordinated by `Canvas.cs`, converting mouse points with `ClientToCanvas()`.
+  Selected-element movement and accumulated resize deltas delegate to internal
+  `Domain\Misc\MapEditing`; connection drawing and event state remain in Canvas.
+  This does not go through a controller and is intentional, not an inconsistency to "fix" —
   controllers are a convenience façade, not a mandatory gate (see
   [`04-commands-and-controllers.md`](04-commands-and-controllers.md)).
 - **Automap** (`Canvas.Automap.cs`) similarly mutates `Project.Current.Elements` and
   `Room.Position` directly, driven by `Automap\Automap.cs` rather than user input — see
   [`06-automap.md`](06-automap.md).
+
+`MapEditing.Move` is shared by mouse dragging and arrow-key movement. It moves free vertices
+and explicit connection waypoints, keeps docked endpoints attached, and translates unselected
+curve waypoints exactly once when both owners move. `MapEditing.Resize` tracks applied
+movement (not raw cursor displacement) to preserve grid snapping/minimum-size behavior.
+Approximate compass comparisons delegate to `CompassPointHelper.IsSameApproximateDirection`,
+also used by statistics without a main-form dependency.
+
+STA integration tests invoke Canvas's real protected mouse/key/wheel handlers through one
+test helper (Canvas is sealed). They cover resize handles, drag thresholds, movement, selection,
+paste and zoom anchoring; off-screen rendering checks exercise the production drawing path.
+They do not establish OS capture/cursor behavior or full visual equivalence.
 
 ### Connection curve waypoint handles
 
@@ -113,6 +126,26 @@ When the app setting `ApplyStyleToNewRooms` (*Application Settings → Map → P
 name/objects/descriptions), and uses its size. When `DoubleClickToAddRoom` (*Map → Preferences → Double click to add room*, default off) is enabled, `OnMouseDoubleClick` on empty canvas (no element/handle/port hit) calls `AddRoom(true)`. `Canvas.reset()` (new/open project) clears the source.
 
 ## Dialog catalogue (`UI\*.cs`)
+
+### Replaceable desktop interaction boundary
+
+`UI\UserInteraction.cs` routes application message boxes, modal forms, common dialogs
+(file/font/colour pickers) and clipboard text access through internal `IUserInteraction`.
+Its default Windows adapter retains owner, message, buttons, icon, default button and dialog
+result behavior. Call this boundary rather than directly using `MessageBox`, native
+`Form.ShowDialog`/`CommonDialog.ShowDialog`, or `Clipboard` at new application call sites.
+Domain `Element.ShowDialog` methods still prepare/apply properties, but their actual form
+presentation uses the boundary. Room/connection dialog owners permit no main form for tests.
+Canvas same-name Automap disambiguation and the file-watcher prompt also use this boundary.
+
+`TestEnvironment` installs a fail-fast implementation: unexpected UI/clipboard access raises an
+assertion instead of blocking the runner. `UserInteractionTests` substitutes recording/editing
+callbacks and covers public persistence errors/warnings, room/connection OK vs Cancel, colour
+selection, message choices and clipboard copy/paste without opening windows. Restore the
+provider after substitutions; this application still has process-global state and those
+tests are nonparallel. Existing layout/focus/keyboard tests explicitly use `TestDialog` to
+pump real forms at zero opacity with no taskbar entry; they do not show visible dialogs.
+Rendering/control layout stays in WinForms, not behind a synthetic widget abstraction.
 
 ### Map labels
 

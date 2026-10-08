@@ -21,8 +21,9 @@ See [`README.md`](README.md) for the doc map. Read this before touching
   dotnet build src\Trizbort\Trizbort.csproj -c Debug
   dotnet test src\Trizbort.Tests\Trizbort.Tests.csproj -c Debug
   ```
-- Manual map fixtures and runners are in `tests\manual`; they are not part of the automated
-  test suite. Sample maps/transcripts remain in the root `samples` directory.
+- Manual map fixtures and runners are in `tests\manual`. Map files and batch runners are copied
+  into the test output for automated round-trip/reference checks; visual scenarios still need
+  inspection. Sample maps/transcripts remain in the root `samples` directory.
 - This is still a **Windows Forms, Windows-only application**. Porting the runtime from .NET
   Framework 4.8 to .NET 8 did **not** make it cross-platform — WinForms-on-.NET-Core remains
   Windows-only by design. True cross-platform would require a separate UI rewrite (e.g. Avalonia
@@ -176,9 +177,63 @@ unsigned; SmartScreen warnings are possible. No ClickOnce migration is provided:
 old builds need to download this fork's release manually first. The workflow uses its built-in
 token with `contents: write`, not a personal access token.
 
-## Areas not yet exercised by automated verification (as of the initial port spike)
+## Regression safety net
 
-Flagged so future bug reports in these areas aren't surprising: the Automap dialog flow beyond a
-CLI smoke test, every export-language generator's output correctness (structure was verified,
-not full IF-engine compilation of the output), PDF export via the new PDFsharp-GDI package,
-clipboard copy/paste.
+The automated suite includes geometry/document unit tests; real Canvas event, controller and
+selection integration; culture-independent persistence; Automap parsing/graph/error/cancellation
+workflows; all nine language exporter variants; and bounded off-screen rendering/PDF checks.
+It runs actual production behavior rather than implementing a second editor/parser for tests.
+All manual maps receive canonical save/load/save checks, with additional specific assertions
+for selected statistics, graph, version, font and extent scenarios. See `tests\manual\README.md`
+for script equivalents and the remaining visual matrix.
+
+New fixtures use `Unit`, `Integration`, or `Rendering` categories (older tests may be
+uncategorized). Examples:
+
+```
+dotnet test Trizbort.sln -c Debug
+dotnet test Trizbort.sln -c Release
+dotnet test Trizbort.sln -c Debug --filter "TestCategory=Integration|TestCategory=Rendering"
+dotnet test Trizbort.sln -c Debug --collect:"XPlat Code Coverage" --settings coverage.runsettings --results-directory TestResults
+```
+
+`coverlet.collector` produces Cobertura XML under the results directory. `coverage.runsettings`
+includes only application code and excludes generated designer/compiler code. Coverage is a
+guide to missing behavior, not a promise of completeness; there is no percentage gate.
+`.github\workflows\tests.yml` runs Release tests on Windows for PRs and branch pushes and uploads
+TRX/coverage artifacts even on failure (14-day retention). The release workflow is unchanged.
+
+GitHub branch protection on `master` requires the `tests` status check and an up-to-date branch
+before merging, including for administrators. Force pushes and branch deletion are disabled.
+This protection is repository-side configuration, not enforced by the workflow YAML alone;
+keep the job name `tests` stable or update the required check when renaming it.
+
+`TestEnvironment` changes the test process working directory to a unique temporary directory
+and precreates `appsettings.json` to prevent reading/migrating the user's settings.
+It also installs `UnexpectedUserInteraction`, which fails immediately on unexpected message
+boxes, modal dialogs or clipboard access. All production dialog presentation calls go through
+`UI\UserInteraction`; new interaction tests use a recording implementation. Tests specifically
+checking form focus/layout/keyboard dismissal use a zero-opacity, no-taskbar `TestDialog`
+helper, so they can pump WinForms events without visible windows. Mouse integration fixtures
+disable tooltips.
+`IsolatedProjectTests` snapshots/restores map settings, application preferences and
+`Project.Current`, stops the file watcher, and runs nonparallel on STA. Fixtures use the copied
+output directory, not the checkout working directory. Tests do not use the system clipboard,
+file associations, network or desktop screenshots.
+
+`InternalsVisibleTo("Trizbort.Tests")` exposes narrow production seams: `MapEditing`, clipboard
+graph reconstruction, version comparison, error/user-decision callbacks and PDF orchestration.
+Canvas is sealed: `CanvasInput` centrally invokes its protected WinForms event handlers, without
+reflecting private state or injecting OS input. Keep new tests against behavior, not fields.
+
+Small defects exposed by the suite have dedicated regressions: endpoint-filtered intersections,
+room validation classifications, tall-viewport wheel zoom, free-connector keyboard movement,
+pasted metadata/reference independence, map-load metadata loss, empty-map statistics and
+unlabeled counts, dangling-region links, exporter reuse, zero-extent PDF pages, and Automap EOF,
+run-state, conflict-choice and error/cancellation behavior. Characterization cases intentionally
+retain existing semantics such as connection reversal retaining directional labels.
+
+Still not fully automated: dialog interaction, actual clipboard transfer, desktop mouse capture/
+cursor feel, high-DPI/font appearance, minimap presentation and external IF-engine compilation
+of generated source. Off-screen images are scoped geometry/color assertions, not screenshot
+baselines or proof of pixel-perfect visual equivalence.

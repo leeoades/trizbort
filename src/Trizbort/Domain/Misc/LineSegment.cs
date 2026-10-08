@@ -98,7 +98,7 @@ namespace Trizbort.Domain.Misc {
           }
         }
 
-      return intersects != null;
+      return intersects != null && intersects.Count > 0;
     }
 
     public bool IntersectsWith(Rect rect) {

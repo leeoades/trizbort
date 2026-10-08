@@ -620,7 +620,7 @@ namespace Trizbort.Domain.Elements {
       } while (dirToChange != startDir && connRoom.GetConnections(dirToChange).Count > 0);
 
       if (startDir == dirToChange) {
-        MessageBox.Show($"There are no free ports in room {connRoom.Name}", "Connector rotate failed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        UserInteraction.ShowMessage($"There are no free ports in room {connRoom.Name}", "Connector rotate failed", MessageBoxButtons.OK, MessageBoxIcon.Information);
         return;
       }
 
@@ -719,7 +719,7 @@ namespace Trizbort.Domain.Elements {
         dialog.EndText = EndText;
         dialog.ConnectionColor = ConnectionColor;
         dialog.Door = Door;
-        if (dialog.ShowDialog(Project.Canvas) == DialogResult.OK) {
+        if (UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas) == DialogResult.OK) {
           Name = dialog.ConnectionName;
           Description = dialog.ConnectionDescription;
           Style = dialog.IsDotted ? ConnectionStyle.Dashed : ConnectionStyle.Solid;

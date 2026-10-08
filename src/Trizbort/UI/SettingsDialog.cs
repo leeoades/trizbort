@@ -182,7 +182,7 @@ namespace Trizbort.UI {
       if (region != null) {
         var originalRegionName = region.RegionName;
         var frm = new RegionSettings(region, Regions);
-        if (frm.ShowDialog() == DialogResult.OK) {
+        if (UserInteraction.ShowDialog(frm) == DialogResult.OK) {
           region.RColor = frm.RegionToChange.RColor;
           region.TextColor = frm.RegionToChange.TextColor;
           region.RegionName = frm.RegionToChange.RegionName;
@@ -287,11 +287,11 @@ namespace Trizbort.UI {
 
     private void m_okButton_Click(object sender, EventArgs e) {
       if (string.IsNullOrWhiteSpace(txtDefaultRoomName.Text)) {
-        MessageBox.Show("The default room name can't be empty. Please put something in there.", "Empty default name", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        UserInteraction.ShowMessage("The default room name can't be empty. Please put something in there.", "Empty default name", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         txtDefaultRoomName.Focus();
         DialogResult = DialogResult.None;
       } else if (!txtDefaultRoomName.Text.Any(char.IsLetter)) {
-        MessageBox.Show("The default room name must contain one letter. Please include a letter.", "Invalid default name", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        UserInteraction.ShowMessage("The default room name must contain one letter. Please include a letter.", "Invalid default name", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         txtDefaultRoomName.Focus();
         DialogResult = DialogResult.None;
       }
@@ -349,7 +349,7 @@ namespace Trizbort.UI {
 
     private bool regionAlreadyExists(string pNew) {
       if (Regions.Any(p => p != mCurrentRegion && p.RegionName.Equals(pNew, StringComparison.OrdinalIgnoreCase))) {
-        MessageBox.Show($"A Region already exists with the name '{pNew}'");
+        UserInteraction.ShowMessage($"A Region already exists with the name '{pNew}'");
         return true;
       }
 
@@ -394,7 +394,7 @@ namespace Trizbort.UI {
       using (var dialog = new FontDialog()) {
         if (font != null)
           dialog.Font = new Font(font.Name, font.Size, font.Style);
-        if (dialog.ShowDialog(this) == DialogResult.OK) return new Font(dialog.Font.Name, dialog.Font.Size, dialog.Font.Style, GraphicsUnit.World);
+        if (UserInteraction.ShowDialog(dialog, this) == DialogResult.OK) return new Font(dialog.Font.Name, dialog.Font.Size, dialog.Font.Style, GraphicsUnit.World);
       }
 
       return font;

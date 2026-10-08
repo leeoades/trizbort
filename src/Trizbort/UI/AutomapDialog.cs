@@ -67,7 +67,7 @@ namespace Trizbort.UI
         dialog.Title = "Open Transcript";
         dialog.FileName = m_textBox.Text;
         dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(m_textBox.Text);
-        if (dialog.ShowDialog() == DialogResult.OK)
+        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
           m_textBox.Text = dialog.FileName;
       }
     }

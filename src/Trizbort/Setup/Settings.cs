@@ -414,7 +414,9 @@ namespace Trizbort.Setup {
     }
 
 
-    public static void Reset() {
+    public static void Reset() => Reset(true);
+
+    internal static void Reset(bool resetDocumentMetadata) {
       Color[Colors.Canvas] = System.Drawing.Color.White;
       //Color[Colors.Fill] = System.Drawing.Color.White;
       Color[Colors.Border] = System.Drawing.Color.MidnightBlue;
@@ -428,7 +430,8 @@ namespace Trizbort.Setup {
       Color[Colors.StartRoom] = System.Drawing.Color.GreenYellow;
       Color[Colors.EndRoom] = System.Drawing.Color.Red;
 
-      Project.Current.Title = Project.Current.Author = Project.Current.History = Project.Current.Description = "";
+      if (resetDocumentMetadata)
+        Project.Current.Title = Project.Current.Author = Project.Current.History = Project.Current.Description = "";
 
       RoomNameFont = new Font(ApplicationSettingsController.AppSettings.DefaultFontName, 13.0f, FontStyle.Regular, GraphicsUnit.World);
       ObjectFont = new Font(ApplicationSettingsController.AppSettings.DefaultFontName, 11.0f, FontStyle.Regular, GraphicsUnit.World);
@@ -587,7 +590,7 @@ namespace Trizbort.Setup {
         dialog.WrapTextAtDashes = WrapTextAtDashes;
         dialog.ConnectionArrowSize = ConnectionArrowSize;
         dialog.DefaultRoomShape = DefaultRoomShape;
-        if (dialog.ShowDialog() == DialogResult.OK) {
+        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
           for (var index = 0; index < Colors.Count; ++index) {
             if (Color[index] != dialog.ElementColors[index]) Project.Current.IsDirty = true;
             Color[index] = dialog.ElementColors[index];

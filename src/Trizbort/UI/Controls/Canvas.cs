@@ -1,3 +1,4 @@
+using Trizbort.UI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -566,29 +567,8 @@ namespace Trizbort.UI.Controls {
       Origin = origin;
     }
 
-    public bool EqualEnough(CompassPoint dirOne, CompassPoint dirTwo) {
-      //Genstein wrote code for GetRoomInApproximateDirectionFromRoom which may cover this. However, I couldn't find a way through it.
-      if (dirOne == dirTwo)
-        return true;
-
-      if (dirOne == CompassPoint.EastNorthEast || dirOne == CompassPoint.EastSouthEast || dirOne == CompassPoint.East)
-        if (dirTwo == CompassPoint.EastNorthEast || dirTwo == CompassPoint.EastSouthEast || dirTwo == CompassPoint.East)
-          return true;
-
-      if (dirOne == CompassPoint.WestNorthWest || dirOne == CompassPoint.WestSouthWest || dirOne == CompassPoint.West)
-        if (dirTwo == CompassPoint.WestNorthWest || dirTwo == CompassPoint.WestSouthWest || dirTwo == CompassPoint.West)
-          return true;
-
-      if (dirOne == CompassPoint.NorthNorthEast || dirOne == CompassPoint.NorthNorthWest || dirOne == CompassPoint.North)
-        if (dirTwo == CompassPoint.NorthNorthEast || dirTwo == CompassPoint.NorthNorthWest || dirTwo == CompassPoint.North)
-          return true;
-
-      if (dirOne == CompassPoint.SouthSouthEast || dirOne == CompassPoint.SouthSouthWest || dirOne == CompassPoint.South)
-        if (dirTwo == CompassPoint.SouthSouthEast || dirTwo == CompassPoint.SouthSouthWest || dirTwo == CompassPoint.South)
-          return true;
-
-      return false;
-    }
+    public bool EqualEnough(CompassPoint dirOne, CompassPoint dirTwo) =>
+      CompassPointHelper.IsSameApproximateDirection(dirOne, dirTwo);
 
     public int GetHighestZOrderIndex() {
       if (Project.Current.Elements.Count <= 0) return 0;
@@ -1094,7 +1074,7 @@ namespace Trizbort.UI.Controls {
               ApplicationSettingsController.AppSettings.PortAdjustDetail %= 3;
               var x = 4 << ApplicationSettingsController.AppSettings.PortAdjustDetail; // yeah this is cutesy code but it does the job
               if ((ModifierKeys & Keys.Shift) == Keys.Shift) //Shift pops up current port adjust detail
-                MessageBox.Show($"Available ports for readjustment {(ApplicationSettingsController.AppSettings.PortAdjustDetail == 0 ? "de" : "in")}creased to {x} ({desc[ApplicationSettingsController.AppSettings.PortAdjustDetail]}).", "Port Detail Adjust");
+                UserInteraction.ShowMessage($"Available ports for readjustment {(ApplicationSettingsController.AppSettings.PortAdjustDetail == 0 ? "de" : "in")}creased to {x} ({desc[ApplicationSettingsController.AppSettings.PortAdjustDetail]}).", "Port Detail Adjust");
               break;
           }
 
@@ -1161,7 +1141,7 @@ namespace Trizbort.UI.Controls {
           switch (ModifierKeys) {
             case Keys.Control:
               var qf = new QuickFind();
-              qf.ShowDialog();
+              UserInteraction.ShowDialog(qf);
               break;
           }
 
@@ -1333,7 +1313,7 @@ namespace Trizbort.UI.Controls {
     }
 
     protected override void OnMouseWheel(MouseEventArgs e) {
-      if (e.X < 0 || e.X > Width || e.Y < 0 || e.Y > Width)
+      if (e.X < 0 || e.X > Width || e.Y < 0 || e.Y > Height)
         return;
 
       var pos = ClientToCanvas(new PointF(e.X, e.Y));
@@ -1728,25 +1708,9 @@ namespace Trizbort.UI.Controls {
     private void doDragMoveElement(Vector canvasPos) {
       canvasPos = Settings.Snap(canvasPos);
       var delta = canvasPos - mDragOffsetCanvas;
-      foreach (var element in mSelectedElements) moveElementBy(element, delta);
-      moveCurveWaypointsWithRooms(delta);
+      MapEditing.Move(Project.Current.Elements, mSelectedElements, delta);
+      if (trizbortToolTip1.IsShown) trizbortToolTip1.Hide(trizbortToolTip1.LastOwner);
       mDragOffsetCanvas = canvasPos;
-    }
-
-    /// <summary>
-    ///   Keep the bend of unselected curved connections when both docked elements are moved together.
-    /// </summary>
-    private void moveCurveWaypointsWithRooms(Vector delta) {
-      if (delta == Vector.Zero) return;
-      var movedNodes = new HashSet<Element>(mSelectedElements.Where(element => element is ISizeable));
-      if (movedNodes.Count == 0) return;
-
-      foreach (var connection in Project.Current.Elements.OfType<Connection>()) {
-        if (!connection.HasCurveWaypoints || mSelectedElements.Contains(connection)) continue;
-        if (connection.VertexList[0].Port?.Owner is Element start && movedNodes.Contains(start) &&
-            connection.VertexList[connection.VertexList.Count - 1].Port?.Owner is Element end && movedNodes.Contains(end))
-          connection.MoveCurveWaypointsBy(delta);
-      }
     }
 
     private void doDragMoveWaypoint(Point mousePosition, Vector canvasPos) {
@@ -1778,48 +1742,8 @@ namespace Trizbort.UI.Controls {
     }
 
     private void doDragMoveResizeHandle(Vector canvasPos) {
-      // the mouse has moved this much on the canvas since we last successfully resized the element
-      var delta = canvasPos - mDragResizeHandleLastPosition;
-
-      if (hoverHandle != null) {
-        // work out to whether and where we'd like to move the element's corner/edge
-        var newPosition = hoverHandle.OwnerPosition + delta;
-        if (newPosition != hoverHandle.OwnerPosition) {
-          // we'd like to move the element's corner/edge;
-          // try to do so
-          var oldPosition = hoverHandle.OwnerPosition;
-          hoverHandle.OwnerPosition = Settings.Snap(newPosition);
-
-          // *NOTE 1: *IN THEORY* you'd imagine we could just set the corner/edge position to
-          // a grid-snapped version of the mouse position on the canvas. This would work if
-          // our handles were directly over the corner/edge we're resizing, but they may not
-          // be since we may want to display both resize handles and "draw a new connection"
-          // ports for a corner/edge and so move the resize handles outward so both will fit.
-          // Hence this mucking about with delta values instead.
-          //
-          // *NOTE 2: That said, *IN THEORY* you'd imagine we would just set m_dragResizeHandleLastPosition
-          // to canvasPos here, regardless of whether we actually resized the element.
-          // This is true but for a couple of subtle issues:
-          //
-          // i) Elements have a minimum size (even if it's a width and height of 0). If we're
-          // dragging the buttom right corner of an element up/left, we want the element to stop
-          // at said minimum size, and this is handled by the ResizeHandle. However, our mouse
-          // cursor may keep moving up/left in the meantime; when it eventually moves down/right
-          // again, we want the element NOT to resize until the mouse cursor is actually over a
-          // position such that if we moved the element's corner/edge that way it would grow in size.
-          // (Try resizing a window in Windows and see what I mean.) We achieve this by not changing
-          // m_dragResizeHandleLastPosition unless we actually effect a change.
-          //
-          // ii) Snap to grid. If we just set the last position to the canvas mouse position, then
-          // when resizing you'll observe that the mouse cursor "desyncs" with the element's
-          // corner edge the larger we make the element. This is because of accumulated error
-          // in m_dragResizeHandleLastPosition due to the snap. An easy way to resolve this is
-          // to apply the delta by which we actually resized the element instead of using
-          // the canvas mouse position.
-          if (hoverHandle.OwnerPosition.X != oldPosition.X) mDragResizeHandleLastPosition.X += hoverHandle.OwnerPosition.X - oldPosition.X;
-          if (hoverHandle.OwnerPosition.Y != oldPosition.Y) mDragResizeHandleLastPosition.Y += hoverHandle.OwnerPosition.Y - oldPosition.Y;
-        }
-      }
+      if (hoverHandle != null)
+        mDragResizeHandleLastPosition = MapEditing.Resize(hoverHandle, mDragResizeHandleLastPosition, canvasPos);
     }
 
     private void doDragPan(PointF clientPos) {
@@ -2318,35 +2242,7 @@ namespace Trizbort.UI.Controls {
       } else {
         var delta = Settings.SnapToGrid ? Settings.GridSize : 2.0f;
         var offset = bHorizontal ? new Vector(bNegative ? delta : -delta, 0) : new Vector(0, bNegative ? delta : -delta);
-        foreach (var element in SelectedElements)
-          element.Position += offset;
-        moveCurveWaypointsWithRooms(offset);
-      }
-    }
-
-    private void moveElementBy(Element element, Vector delta) {
-      // move any selected moveable elements
-      if (element is IMoveable moveable) {
-        moveable.Position += delta;
-        if (trizbortToolTip1.IsShown) {
-          trizbortToolTip1.Hide(trizbortToolTip1.LastOwner);
-        }
-        //// if tooltip is already shown, move it with the element
-        //// the below code causes tooltip to flicker when moving the element and grid snapping is off
-        //if (trizbortToolTip1.IsShown && element == trizbortToolTip1.HoverElement) {
-        //  var newPoint = GetTooltipPositionFromElement(element);
-        //  if (trizbortToolTip1.IsPositionChanged(newPoint))
-        //    trizbortToolTip1.Show(trizbortToolTip1.TitleText, trizbortToolTip1.LastOwner, newPoint);
-        //}
-      }
-
-      if (element is Connection) {
-        // move any free floating points on selected connections
-        var connection = (Connection) element;
-        foreach (var vertex in connection.VertexList)
-          if (vertex.Port == null)
-            vertex.Position += delta;
-        connection.MoveCurveWaypointsBy(delta);
+        MapEditing.Move(Project.Current.Elements, SelectedElements, offset);
       }
     }
 
@@ -2454,7 +2350,7 @@ namespace Trizbort.UI.Controls {
       }
     }
 
-    private void pasteRooms(bool atCursor, CopyController.CopyObject xx, CopyController controller) {
+    internal void pasteRooms(bool atCursor, CopyController.CopyObject xx, CopyController controller) {
       var newRooms = new List<Room>();
       var newLabels = new List<MapLabel>();
       var copiedNodes = new Dictionary<int, Element>();
@@ -2503,30 +2399,10 @@ namespace Trizbort.UI.Controls {
 
         Refresh();
 
-        foreach (var connection in xx.Connections) {
-          var currentConnection = new Connection(Project.Current);
-          Project.Current.Elements.Add(currentConnection);
-
-          controller.SetConnection(currentConnection, connection);
-
-          foreach (var vertexObj in connection.VertextList)
-            if (vertexObj.Type == CopyController.VertexType.Dock) {
-              if (copiedNodes.TryGetValue(vertexObj.OwnerId, out var foundDock)) {
-                var port = foundDock.PortList.First(p => p.ID == vertexObj.PortId);
-                var vertexOne = new Vertex(port);
-                currentConnection.VertexList.Add(vertexOne);
-              } else {
-                currentConnection.VertexList.Add(new Vertex(vertexObj.Position - new Vector(offsetX, offsetY)));
-              }
-            } else {
-              var vectorOne = new Vector(Convert.ToSingle(vertexObj.Position.X) - offsetX, Convert.ToSingle(vertexObj.Position.Y) - offsetY);
-              var vertexOne = new Vertex(vectorOne);
-              currentConnection.VertexList.Add(vertexOne);
-            }
-
-          controller.SetCurveWaypoints(currentConnection, connection, new Vector(offsetX, offsetY));
-          newConnections.Add(currentConnection);
-        }
+        foreach (var room in newRooms)
+          if (copiedNodes.TryGetValue(room.ReferenceRoomId, out var reference) && reference is Room)
+            room.ReferenceRoomId = reference.ID;
+        newConnections.AddRange(controller.PasteConnections(Project.Current, xx.Connections, copiedNodes, new Vector(offsetX, offsetY)));
 
         mSelectedElements.Clear();
         mSelectedElements.AddRange(newRooms);

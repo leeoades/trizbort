@@ -53,7 +53,7 @@ namespace Trizbort.Tests {
         dialog.Close();
       }));
 
-      dialog.ShowDialog();
+      TestDialog.Show(dialog);
 
       selectedTab.ShouldBe(tabName);
       focused.ShouldBeTrue();

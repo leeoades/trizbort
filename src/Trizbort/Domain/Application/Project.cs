@@ -1,3 +1,4 @@
+using Trizbort.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -94,38 +95,36 @@ namespace Trizbort.Domain.Application {
       if (HasFileName) {
         var nextAvailableFilename = FileName.NextAvailableFilename();
         File.Copy(FileName, nextAvailableFilename);
-        MessageBox.Show($"You project has been backed up to {nextAvailableFilename}.", "Project backed up.", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        UserInteraction.ShowMessage($"You project has been backed up to {nextAvailableFilename}.", "Project backed up.", MessageBoxButtons.OK, MessageBoxIcon.Information);
         return;
       }
 
-      MessageBox.Show("Your project has not yet been saved to a file. There is nothing to backup.", "Nothing to backup.", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+      UserInteraction.ShowMessage("Your project has not yet been saved to a file. There is nothing to backup.", "Nothing to backup.", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
     }
 
     public void CheckDocVersion() {
-      var appVers = Version.Parse(System.Windows.Forms.Application.ProductVersion);
-      var infoList = $"Executable Version = {System.Windows.Forms.Application.ProductVersion}{Environment.NewLine}Document Version = {Version}{Environment.NewLine}{Environment.NewLine}";
+      var appVers = typeof(Project).Assembly.GetName().Version;
+      var infoList = $"Executable Version = {appVers}{Environment.NewLine}Document Version = {Version}{Environment.NewLine}{Environment.NewLine}";
       var newVersionText = "Visit https://github.com/leeoades/trizbort/releases to download the latest version.";
 
-      if (Version.Major < appVers.Major) return;
-      if (Version.Major > appVers.Major) {
-        MessageBox.Show(Program.MainForm, $"{infoList}The document is ahead a major version. Information is very likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+      var warning = DocumentVersionPolicy.Compare(Version, appVers);
+      if (warning == DocumentVersionWarning.None) return;
+      if (warning == DocumentVersionWarning.Major) {
+        UserInteraction.ShowMessage(Program.MainForm, $"{infoList}The document is ahead a major version. Information is very likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         return;
       }
 
-      if (Version.Minor < appVers.Minor) return;
-      if (Version.Minor > appVers.Minor) {
-        MessageBox.Show(Program.MainForm, $"{infoList}The document is ahead a minor version. Information is likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+      if (warning == DocumentVersionWarning.Minor) {
+        UserInteraction.ShowMessage(Program.MainForm, $"{infoList}The document is ahead a minor version. Information is likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         return;
       }
 
-      if (Version.Build < appVers.Build) return;
-      if (Version.Build > appVers.Build) {
-        MessageBox.Show(Program.MainForm, $"{infoList}The document is ahead a build. Information is somewhat likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+      if (warning == DocumentVersionWarning.Build) {
+        UserInteraction.ShowMessage(Program.MainForm, $"{infoList}The document is ahead a build. Information is somewhat likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         return;
       }
 
-      if (Version.MinorRevision < appVers.MinorRevision) return;
-      if (Version.MinorRevision > appVers.MinorRevision) MessageBox.Show(Program.MainForm, $"{infoList}The document is ahead a minor revision. Information may possibly be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+      UserInteraction.ShowMessage(Program.MainForm, $"{infoList}The document is ahead a minor revision. Information may possibly be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
     }
 
     public bool FindElement(int id, out Element element) {
@@ -171,7 +170,7 @@ namespace Trizbort.Domain.Application {
         return false;
       }
       catch (Exception ex) {
-        MessageBox.Show(Program.MainForm, $"There was a problem saving the map:\n\n{ex.Message}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        UserInteraction.ShowMessage(Program.MainForm, $"There was a problem saving the map:\n\n{ex.Message}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
         FileWatcher.StartWatcher();
         return false;
       }

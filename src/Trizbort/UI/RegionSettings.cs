@@ -38,13 +38,13 @@ namespace Trizbort.UI {
       txtRegionName.Text = txtRegionName.Text.Trim().Replace("\"", "'");
       if (Domain.Misc.Region.ValidRegionName(txtRegionName.Text)) {
         if (!txtRegionName.Text.Equals(originalName, StringComparison.OrdinalIgnoreCase) && regions.Any(p => p.RegionName.Equals(txtRegionName.Text, StringComparison.OrdinalIgnoreCase))) {
-          MessageBox.Show($"A Region already exists with the name '{txtRegionName.Text}'");
+          UserInteraction.ShowMessage($"A Region already exists with the name '{txtRegionName.Text}'");
         } else {
           RegionToChange.RegionName = txtRegionName.Text;
           DialogResult = DialogResult.OK;
         }
       } else {
-        MessageBox.Show("You can't have an empty region name", "Empty Region Name", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        UserInteraction.ShowMessage("You can't have an empty region name", "Empty Region Name", MessageBoxButtons.OK, MessageBoxIcon.Error);
         txtRegionName.Focus();
       }
     }

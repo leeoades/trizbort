@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Trizbort.UI;
+using System;
 using System.IO;
 using System.Windows.Forms;
 using Trizbort.Domain.Application;
@@ -40,7 +41,7 @@ namespace Trizbort.Domain.Watchers {
     private void Changed(object sender, FileSystemEventArgs e) {
       StopWatcher();
       Project.Current.Canvas.BeginInvoke(new Action(() => {
-        if (MessageBox.Show(Project.Current.Canvas, $"This map has been modified by another program.{Environment.NewLine}Do you want to reload it{dirtyMessage()}?", "Reload", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+        if (UserInteraction.ShowMessage(TrizbortApplication.MainForm?.Canvas, $"This map has been modified by another program.{Environment.NewLine}Do you want to reload it{dirtyMessage()}?", "Reload", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
           OnReloadMap();
         else
           StartWatcher();

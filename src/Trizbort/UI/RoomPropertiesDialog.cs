@@ -458,7 +458,7 @@ namespace Trizbort.UI {
 
         if (list.Count <= 0) return;
 
-        if (MessageBox.Show(
+        if (UserInteraction.ShowMessage(
               $"The room '{list.First().Name}' is set as the starting room.  Do you want to change it to this room?",
               "Change Starting Room", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
           Project.Current.Elements.OfType<Room>().ToList().ForEach(p => p.IsStartRoom = false);
@@ -503,12 +503,12 @@ namespace Trizbort.UI {
 
     private void m_okButton_Click(object sender, EventArgs e) {
       if (string.IsNullOrWhiteSpace(txtName.Text)) {
-        MessageBox.Show("The room name can't be empty. Please put something in there.", "Empty name",
+        UserInteraction.ShowMessage("The room name can't be empty. Please put something in there.", "Empty name",
           MessageBoxButtons.OK, MessageBoxIcon.Warning);
         txtName.Focus();
         DialogResult = DialogResult.None;
       } else if (!txtName.Text.Any(char.IsLetter)) {
-        MessageBox.Show("The room name must contain one letter.", "Non-alphabetic name", MessageBoxButtons.OK,
+        UserInteraction.ShowMessage("The room name must contain one letter.", "Non-alphabetic name", MessageBoxButtons.OK,
           MessageBoxIcon.Warning);
         txtName.Focus();
         DialogResult = DialogResult.None;

@@ -1,3 +1,4 @@
+using Trizbort.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -185,7 +186,7 @@ namespace Trizbort.UI.Controls {
       using (var dialog = new DisambiguateRoomsDialog()) {
         dialog.SetTranscriptContext(roomName, roomDescription, line);
         dialog.AddAmbiguousRooms(list);
-        dialog.ShowDialog();
+        UserInteraction.ShowDialog(dialog);
         if (dialog.UserDoesntCareAnyMore) {
           // The user has given up on this process! Can't say I blame them.
           // Use the first ambiguous room on the list, as above.

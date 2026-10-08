@@ -15,9 +15,11 @@ commands) and infers rooms, descriptions, and connections between them, populati
 - `Automap\AutomapSettings.cs` — configuration (see table below).
 - `Automap\IAutomapCanvas.cs` — abstraction the parser uses to find/create/connect/select/
   remove rooms, implemented by `UI\Controls\Canvas.Automap.cs`. It keeps most map-mutation calls
-  independent of WinForms, but `Automap.cs` still depends on WinForms directly elsewhere — it
-  shows `AutomapRoomSameDirectionDialog` for ambiguity resolution and raises `MessageBox` errors
-  on transcript I/O failures (see below), so it is not a complete UI-independence boundary.
+  independent of WinForms. Production `Automap.cs` still shows
+  `AutomapRoomSameDirectionDialog` and transcript I/O error message boxes, through callbacks
+  supplied by its default constructor; an internal constructor accepts deterministic decisions/
+  error reporting for tests. Same-name disambiguation still belongs to Canvas, so this is not a
+  complete UI-independence boundary.
 - `Automap\Utility\PeekingStreamReader.cs` — stream reader with lookahead, used so the parser
   can process a transcript that's still growing (live/continuing transcript mode).
 
@@ -45,6 +47,15 @@ UI\AutomapDialog.cs
    previous room, connect to an existing room, or (if ambiguous) ask the user via a dialog.
 6. The current room (`m_lastKnownRoom`) and last movement direction (`m_lastMoveDirection`)
    are tracked across iterations to know what to connect to what.
+
+   Each run initializes room, direction, game-title and stepping state. One-shot parsing processes
+   the final chunk at EOF (a trailing prompt is not required). I/O/access errors report a halted
+   status rather than subsequently claiming completion. Live parsing can be stopped while waiting
+   for text or a single step and clears its owned cancellation source when finished. Keeping the
+   existing room in a same-direction conflict makes that room the current source for subsequent
+   travel. Regression tests exercise all three conflict decisions with real Canvas graph mutations,
+   sequential runs, reader lookahead, cancellation and save/load/export workflows; overlapping
+   concurrent runs and dialog interaction are not covered.
 
 ## Room/description detection heuristics (no regex — rule-based)
 

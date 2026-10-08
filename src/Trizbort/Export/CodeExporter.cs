@@ -221,6 +221,9 @@ namespace Trizbort.Export {
     }
 
     private void prepareContent() {
+      mMapRoomToLocation.Clear();
+      LocationsInExportOrder.Clear();
+      RegionsInExportOrder.Clear();
       findRegions();
       findRooms();
       findExits();

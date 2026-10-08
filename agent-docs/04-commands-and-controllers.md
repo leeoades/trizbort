@@ -52,6 +52,14 @@ undo; they're synchronous façades that mutate `Project.Current`/`Canvas` state 
   visual properties. See [`03-storage-and-persistence.md`](03-storage-and-persistence.md) for
   how this relates to the JSON converters in `Domain\SerializeHelpers`.
 
+`CanvasController` has an internal Canvas-injecting constructor; `CommandController` passes
+its bound Canvas consistently rather than looking up the global main form. The public legacy
+constructor remains for existing callers. This permits command/selection integration tests
+with a real Canvas without constructing the application shell.
+
+Continuous movement/resize behavior is shared through internal `Domain\Misc\MapEditing`
+(see the Canvas reference), not through a new command-history/MVP framework.
+
 ## Practical implication for making changes
 
 - Adding a new **menu command**: wire the menu item in `UI\MainForm.Designer.cs`/`MainForm.cs`,

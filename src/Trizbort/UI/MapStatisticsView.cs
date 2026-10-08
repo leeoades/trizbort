@@ -155,7 +155,7 @@ namespace Trizbort.UI {
       var writer = new StreamWriter(outFile, false, Encoding.UTF8, 2 ^ 16);
       writer.Write(stats);
       writer.Close();
-      MessageBox.Show("Wrote log to " + outFile, "Log file written");
+      UserInteraction.ShowMessage("Wrote log to " + outFile, "Log file written");
     }
 
     private string plur(int x) {

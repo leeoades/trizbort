@@ -1,0 +1,38 @@
+name: Regression tests
+
+on:
+  pull_request:
+  push:
+    branches: ['**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Test and collect coverage
+        run: >-
+          dotnet test Trizbort.sln -c Release
+          --logger "trx;LogFileName=regression.trx"
+          --collect:"XPlat Code Coverage"
+          --settings coverage.runsettings
+          --results-directory TestResults
+      - name: Upload results and coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-results
+          path: TestResults
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,3 +1,4 @@
+using Trizbort.UI;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -55,7 +56,7 @@ namespace Trizbort.Domain.Misc {
       using (var dialog = new ColorDialog()) {
         dialog.Color = color == Color.Transparent ? Color.White : color;
 
-        return dialog.ShowDialog(parent) == DialogResult.OK ? dialog.Color : color;
+        return UserInteraction.ShowDialog(dialog, parent) == DialogResult.OK ? dialog.Color : color;
       }
     }
 

@@ -197,7 +197,7 @@ namespace Trizbort.Domain.Elements {
 
     public override void ShowDialog() {
       using (var dialog = new LabelPropertiesDialog(this))
-        dialog.ShowDialog(Program.MainForm);
+        UserInteraction.ShowDialog(dialog, Program.MainForm);
     }
   }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Trizbort.UI;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,10 +14,19 @@ namespace Trizbort.Domain.Application {
   public class LegacyMapFileEngine : MapFileEngine
   {
     private Project project;
+    private readonly Action<Exception> reportError;
+    private readonly Action<Project> checkVersion;
+    private readonly Action<string, string> reportWarning;
 
-    public LegacyMapFileEngine(Project project)
+    public LegacyMapFileEngine(Project project) : this(project, showError, loaded => loaded.CheckDocVersion()) { }
+
+    internal LegacyMapFileEngine(Project project, Action<Exception> reportError, Action<Project> checkVersion,
+      Action<string, string> reportWarning = null)
     {
       this.project = project;
+      this.reportError = reportError;
+      this.checkVersion = checkVersion;
+      this.reportWarning = reportWarning ?? ((message, title) => UserInteraction.ShowMessage(message, title));
     }
 
     public override bool Load(string fileName)
@@ -26,7 +36,8 @@ namespace Trizbort.Domain.Application {
         if (!fileName.IsUrl() && new FileInfo(fileName).Length == 0)
         {
           // this is an empty file, probably thanks to our Explorer New->Trizbort Map menu option.
-          Settings.Reset();
+          Settings.Reset(false);
+          project.Title = project.Author = project.History = project.Description = "";
           return true;
         }
 
@@ -44,7 +55,7 @@ namespace Trizbort.Domain.Application {
         // file version
         var versionNumber = root.Attribute("version").Text;
         project.SetVersion(versionNumber);
-        project.CheckDocVersion();
+        checkVersion(project);
 
         // load info
         project.Title = root["info"]["title"].Text;
@@ -61,7 +72,7 @@ namespace Trizbort.Domain.Application {
             // Changed the constructor used for elements when loading a file for a significant speed increase
             var room = new Room(project, project.Elements.Count + 1);
             room.ID = element.Attribute("id").ToInt(room.ID);
-            room.Load(element);
+            room.Load(element, reportWarning);
             project.Elements.Add(room);
           }
           else if (element.HasName("label"))
@@ -91,7 +102,7 @@ namespace Trizbort.Domain.Application {
         }
 
         // load settings last, since their load can't be undone
-        Settings.Reset();
+        Settings.Reset(false);
         Settings.Load(root["settings"]);
 
         // setup filewatcher.
@@ -102,17 +113,21 @@ namespace Trizbort.Domain.Application {
       }
       catch (Exception ex)
       {
-        MessageBox.Show(Program.MainForm, $"There was a problem loading the map:{Environment.NewLine}{Environment.NewLine}{ex.Message}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        reportError(ex);
         return false;
       }
 
+    }
+
+    private static void showError(Exception ex) {
+      UserInteraction.ShowMessage(Program.MainForm, $"There was a problem loading the map:{Environment.NewLine}{Environment.NewLine}{ex.Message}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
     public override bool Save(string fileName) {
       try {
         using (var scribe = XmlScribe.Create(fileName)) {
           scribe.StartElement("trizbort");
-          scribe.Attribute("version", System.Windows.Forms.Application.ProductVersion);
+          scribe.Attribute("version", typeof(Project).Assembly.GetName().Version.ToString());
           scribe.StartElement("info");
           if (!string.IsNullOrEmpty(project.Title))
             scribe.Element("title", project.Title);

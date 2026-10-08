@@ -44,7 +44,7 @@ namespace Trizbort.Tests {
           dialog.Close();
         }));
 
-        dialog.ShowDialog();
+        TestDialog.Show(dialog);
 
         controlBounds.ShouldNotBeNull();
         controlBounds.All(bounds => layoutBounds.Contains(bounds)).ShouldBeTrue();
@@ -65,7 +65,7 @@ namespace Trizbort.Tests {
           dialog.Close();
         }));
 
-        dialog.ShowDialog().ShouldBe(DialogResult.OK);
+        TestDialog.Show(dialog).ShouldBe(DialogResult.OK);
         result.ShouldBe(DialogResult.OK);
         handled.ShouldBeTrue();
       }

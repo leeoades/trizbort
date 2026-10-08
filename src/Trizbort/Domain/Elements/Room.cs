@@ -560,7 +560,7 @@ namespace Trizbort.Domain.Elements {
           state = new RoomValidationState {
             Message = "Room has dangling connectors.",
             Status = RoomValidationStatus.Invalid,
-            Type = ValidationType.RoomUniqueName
+            Type = ValidationType.RoomDanglingConnection
           };
           ValidationState.Add(state);
         }
@@ -570,7 +570,7 @@ namespace Trizbort.Domain.Elements {
           state = new RoomValidationState {
             Message = "Room must have a subtitle.",
             Status = RoomValidationStatus.Invalid,
-            Type = ValidationType.RoomUniqueName
+            Type = ValidationType.RoomSubTitle
           };
           ValidationState.Add(state);
         }
@@ -592,7 +592,7 @@ namespace Trizbort.Domain.Elements {
       }
 
       if (zappedOne) RaiseChanged();
-      else MessageBox.Show("No connections were deleted.", "Nothing to delete");
+      else UserInteraction.ShowMessage("No connections were deleted.", "Nothing to delete");
 
 /*      foreach (var b in this.L)
       {
@@ -1039,7 +1039,9 @@ namespace Trizbort.Domain.Elements {
     }
 
 
-    public void Load(XmlElementReader element) {
+    public void Load(XmlElementReader element) => Load(element, (message, title) => UserInteraction.ShowMessage(message, title));
+
+    internal void Load(XmlElementReader element, Action<string, string> reportWarning) {
       Name = element.Attribute("name").Text;
       SubTitle = element.Attribute("subtitle").Text;
       ClearDescriptions();
@@ -1054,12 +1056,12 @@ namespace Trizbort.Domain.Elements {
       ZOrder = element.Attribute("ZOrder").ToInt();
       if (IsStartRoom)
         if (Settings.StartRoomLoaded)
-          MessageBox.Show($"{Name} is a duplicate start room. You may need to erase \"isStartRoom=YES\" from the XML.", "Duplicate start room warning");
+          reportWarning($"{Name} is a duplicate start room. You may need to erase \"isStartRoom=YES\" from the XML.", "Duplicate start room warning");
         else
           Settings.StartRoomLoaded = true;
       if (IsEndRoom)
         if (Settings.EndRoomLoaded)
-          MessageBox.Show($"{Name} is a duplicate end room. You may need to erase \"isEndRoom=YES\" from the XML.", "Duplicate end room warning");
+          reportWarning($"{Name} is a duplicate end room. You may need to erase \"isEndRoom=YES\" from the XML.", "Duplicate end room warning");
         else
           Settings.EndRoomLoaded = true;
       //Note: long term, we probably want an app default for this, but for now, let's force a room shape. #93 should fix this code along with #149.
@@ -1448,7 +1450,7 @@ namespace Trizbort.Domain.Elements {
         dialog.AllCornersEqual = AllCornersEqual;
         dialog.Shape = Shape;
 
-        if (dialog.ShowDialog(Project.Canvas) == DialogResult.OK) {
+        if (UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas) == DialogResult.OK) {
           Name = dialog.RoomName;
           SubTitle = dialog.RoomSubTitle;
           if (PrimaryDescription != dialog.Description) {

@@ -20,7 +20,7 @@ namespace Trizbort.Domain.Controllers {
     }
 
     public void MakeVisible(Element element) {
-      var controller = new CanvasController();
+      var controller = new CanvasController(canvas);
       controller.EnsureVisible(element);
     }
 
@@ -36,12 +36,12 @@ namespace Trizbort.Domain.Controllers {
     }
 
     public void SelectRoomClosestToCenterOfViewport() {
-      var controller = new CanvasController();
+      var controller = new CanvasController(canvas);
       controller.SelectRoomClosestToCenterOfViewport();
     }
 
     public void SelectStartRoom() {
-      var controller = new CanvasController();
+      var controller = new CanvasController(canvas);
       controller.SelectStartRoom();
     }
 
@@ -52,19 +52,19 @@ namespace Trizbort.Domain.Controllers {
 
 
     public void SetConnectionFlow(ConnectionFlow flow) {
-      var controller = new CanvasController();
+      var controller = new CanvasController(canvas);
 
       controller.SetConnectionFlow(flow);
     }
 
     public void SetConnectionLabel(ConnectionLabel label) {
-      var controller = new CanvasController();
+      var controller = new CanvasController(canvas);
 
       controller.SetConnectionLabel(label);
     }
 
     public void SetConnectionStyle(ConnectionStyle style) {
-      var controller = new CanvasController();
+      var controller = new CanvasController(canvas);
 
       controller.SetConnectionStyle(style);
     }
@@ -131,14 +131,14 @@ namespace Trizbort.Domain.Controllers {
 
     public void ToggleConnectionFlow(ConnectionFlow flow) {
       var f = flow == ConnectionFlow.OneWay ? ConnectionFlow.TwoWay : ConnectionFlow.OneWay;
-      var controller = new CanvasController();
+      var controller = new CanvasController(canvas);
 
       controller.SetConnectionFlow(f);
     }
 
     public void ToggleConnectionStyle(ConnectionStyle style) {
       var f = style == ConnectionStyle.Dashed ? ConnectionStyle.Solid : ConnectionStyle.Dashed;
-      var controller = new CanvasController();
+      var controller = new CanvasController(canvas);
 
       controller.SetConnectionStyle(f);
     }

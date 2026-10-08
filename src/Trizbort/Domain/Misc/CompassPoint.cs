@@ -54,6 +54,13 @@ namespace Trizbort.Domain.Misc {
       return i * angleIncrement * (Math.PI / 180);
     }
 
+    public static bool IsSameApproximateDirection(CompassPoint first, CompassPoint second) {
+      return first == second ||
+        first >= CompassPoint.Min && first <= CompassPoint.Max &&
+        second >= CompassPoint.Min && second <= CompassPoint.Max &&
+        GetAutomapDirectionVector(first) == GetAutomapDirectionVector(second);
+    }
+
     public static CompassPoint DirectionFromAngle(out float angle, Vector delta) {
       angle = (float) -(Math.Atan2(delta.Y, delta.X) / Math.PI * 180.0);
       var compassPoint = CompassPoint.East;

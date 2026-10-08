@@ -10,8 +10,10 @@ namespace Trizbort.Domain.Controllers {
     private readonly Canvas canvas;
 
 
-    public CanvasController() {
-      canvas = TrizbortApplication.MainForm.Canvas;
+    public CanvasController() : this(TrizbortApplication.MainForm.Canvas) { }
+
+    internal CanvasController(Canvas canvas) {
+      this.canvas = canvas;
     }
 
     public void EnsureVisible(Element element) {

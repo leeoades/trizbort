@@ -13,8 +13,9 @@ See [`README.md`](README.md) for the doc map. For `Room`/`Connection`/`Project` 
   `Inform6Exporter.cs`, `Inform7Exporter.cs`, `TadsExporter.cs`, `AlanExporter.cs`,
   `HugoExporter.cs`, `ZilExporter.cs`, `QuestExporter.cs` (contains both `QuestExporter` and
   `QuestRoomsExporter`), `AdventuronExporter.cs`.
-- **Image and PDF export are *not* here** — they're implemented directly in `UI\MainForm.cs`
-  (see below), reusing the same `Canvas`/`XGraphics` drawing code used for on-screen rendering.
+- Image export remains in `UI\MainForm.cs`; PDF orchestration lives in internal
+  `Export\MapPdfExporter.cs`, called by the form (see below). Both reuse the same
+  `Canvas`/`XGraphics` drawing code used for on-screen rendering.
 
 ## `CodeExporter` contract
 
@@ -35,6 +36,8 @@ Every language exporter must implement:
 
 Public entry points: `string Export()` (returns generated source as a string) and
 `void Export(string fileName)` (writes directly to a file). Both call `prepareContent()` first.
+Preparation clears prior locations/regions/name lookup state, so an exporter instance can be
+reused after map edits or switching projects without accumulating output.
 
 ### `prepareContent()` — shared input preparation (same for every language)
 
@@ -110,10 +113,21 @@ calls `Canvas.Draw(...)` (the **same** draw method used for on-screen rendering 
 
 ## PDF export
 
-`UI\MainForm.cs`: `FileExportPDFMenuItem_Click()` → `savePDF(string fileName)`. Creates a
+`UI\MainForm.cs`: `FileExportPDFMenuItem_Click()` → `savePDF(string fileName)` →
+`MapPdfExporter.Save(Canvas, fileName)`. Creates a
 `PdfDocument`/page sized to the canvas content bounds, renders via
 `XGraphics.FromPdfPage(...)` + `Canvas.Draw(...)`, and adds room descriptions as
 `PdfTextAnnotation` notes.
+Page dimensions are at least one point, including horizontal/vertical connector-only maps.
+The form retains export-filename preference updates. Tests call this same production exporter,
+reopen the PDF and check page dimensions, metadata, room-description annotations and bounds;
+Canvas drawing restores the previous viewport.
+
+Regression tests cover all nine code exporter variants, shared identifier/region/exit/object/
+door preparation, updated/repeated exports and annotation exclusion. Quest's random game ID is
+validated then normalized for repeat comparisons; XML outputs are parsed structurally.
+Adventuron intentionally exports rooms only. These tests do not compile outputs with external
+IF tools or establish complete language-generator correctness.
 
 Uses the **`PDFsharp-GDI` 6.2.4** NuGet package (`PackageReference` in `src/Trizbort/Trizbort.csproj`) — this
 replaced the unmaintained `PDFsharp-gdi` 1.50.5147 package during the .NET 8 port (see

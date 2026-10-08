@@ -279,7 +279,7 @@ namespace Trizbort.Tests {
           ((CheckBox) dialog.Controls.Find("backgroundEnabled", true)[0]).Checked = true;
           ((Button) (accept ? dialog.AcceptButton : dialog.CancelButton)).PerformClick();
         }));
-        dialog.ShowDialog();
+        TestDialog.Show(dialog);
       }
       label.Text.ShouldBe(accept ? "Updated" : "Original");
       label.Shape.ShouldBe(accept ? RoomShape.Ellipse : RoomShape.SquareCorners);
@@ -335,7 +335,7 @@ namespace Trizbort.Tests {
           ((CheckBox) dialog.Controls.Find("outlineEnabled", true)[0]).Checked = false;
           ((Button) dialog.AcceptButton).PerformClick();
         }));
-        dialog.ShowDialog();
+        TestDialog.Show(dialog);
       }
       label.BorderStyle.ShouldBe(BorderDashStyle.None);
       label.HasBackground.ShouldBeTrue();

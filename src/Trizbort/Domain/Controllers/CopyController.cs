@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Trizbort.UI;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
@@ -37,13 +39,13 @@ namespace Trizbort.Domain.Controllers {
       };
 
       var clipboardText = JsonConvert.SerializeObject(obj, Formatting.Indented, new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Ignore});
-      Clipboard.SetText(clipboardText);
+      UserInteraction.SetClipboardText(clipboardText);
     }
 
     public void CopyElements(List<Element> mSelectedElements) {
       var xx = CreateCopyObject(mSelectedElements);
       var clipboardText = JsonConvert.SerializeObject(xx, Formatting.Indented, new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Ignore});
-      Clipboard.SetText(clipboardText);
+      UserInteraction.SetClipboardText(clipboardText);
     }
 
     public CopyObject CreateCopyObject(IEnumerable<Element> elements) {
@@ -82,7 +84,7 @@ namespace Trizbort.Domain.Controllers {
     public ICopyObj PasteElements() {
       ICopyObj xx;
       try {
-        var clipboardText = Clipboard.GetText();
+        var clipboardText = UserInteraction.GetClipboardText();
 
         if (clipboardText.Contains("\"CopyType\": 1"))
           xx = JsonConvert.DeserializeObject<CopyColorsObj>(clipboardText);
@@ -99,7 +101,10 @@ namespace Trizbort.Domain.Controllers {
     public void SetConnection(Connection newConnection, CopyConnectionObj connection) {
       newConnection.ConnectionColor = connection.ConnectionColor;
       newConnection.Description = connection.Description;
-      newConnection.Door = connection.Door;
+      newConnection.Door = connection.Door == null ? null : new Door {
+        Lockable = connection.Door.Lockable, Locked = connection.Door.Locked,
+        Open = connection.Door.Open, Openable = connection.Door.Openable
+      };
       newConnection.EndText = connection.EndText;
       newConnection.Flow = connection.Flow;
       newConnection.MidText = connection.MidText;
@@ -126,7 +131,10 @@ namespace Trizbort.Domain.Controllers {
       newRoom.ObjectsPosition = room.ObjectsPosition;
       newRoom.BorderStyle = room.BorderStyle;
       newRoom.Region = room.Region;
-      newRoom.Corners = room.Corners;
+      newRoom.Corners = new CornerRadii {
+        TopLeft = room.Corners.TopLeft, TopRight = room.Corners.TopRight,
+        BottomLeft = room.Corners.BottomLeft, BottomRight = room.Corners.BottomRight
+      };
       newRoom.RoundedCorners = room.RoundedCorners;
       newRoom.Octagonal = room.Octagonal;
       newRoom.Ellipse = room.Ellipse;
@@ -223,6 +231,25 @@ namespace Trizbort.Domain.Controllers {
       }
 
       return xx;
+    }
+
+    internal List<Connection> PasteConnections(Project project, IEnumerable<CopyConnectionObj> connections,
+      IReadOnlyDictionary<int, Element> copiedNodes, Vector offset) {
+      var result = new List<Connection>();
+      foreach (var copy in connections) {
+        var connection = new Connection(project);
+        project.Elements.Add(connection);
+        SetConnection(connection, copy);
+        foreach (var vertex in copy.VertextList) {
+          if (vertex.Type == VertexType.Dock && copiedNodes.TryGetValue(vertex.OwnerId, out var node))
+            connection.VertexList.Add(new Vertex(node.PortList.First(port => port.ID == vertex.PortId)));
+          else
+            connection.VertexList.Add(new Vertex(vertex.Position - offset));
+        }
+        SetCurveWaypoints(connection, copy, offset);
+        result.Add(connection);
+      }
+      return result;
     }
 
     public class CopyObject : ICopyObj {

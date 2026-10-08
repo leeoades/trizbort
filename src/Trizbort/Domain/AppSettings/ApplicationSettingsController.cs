@@ -84,7 +84,7 @@ namespace Trizbort.Domain.AppSettings {
         dialog.LimitRoomDescriptionCharactersInTooltip = settings.LimitRoomDescriptionCharactersInTooltip;
         dialog.ToolTipRoomDescriptionCharactersToShow = settings.ToolTipRoomDescriptionCharactersToShow;
 
-        if (dialog.ShowDialog() == DialogResult.OK) {
+        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
           settings.InvertMouseWheel = dialog.InvertMouseWheel;
           settings.ShowFullPathInTitleBar = dialog.ShowFullPathInTitleBar;
           settings.DefaultFontName = dialog.DefaultFontName;

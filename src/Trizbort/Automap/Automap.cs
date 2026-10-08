@@ -17,6 +17,8 @@ namespace Trizbort.Automap
 {
   public sealed class Automap
   {
+    private readonly Action<string, string> reportError;
+    private readonly Func<Room, string, AutomapSameDirectionResult> chooseConflictingRoom;
     public bool UseDottedConnection { get; set; } = false;
 
 
@@ -28,6 +30,7 @@ namespace Trizbort.Automap
         Status = "Automapping is waiting for you to step through it (with F11.)";
         while (!m_stepNow)
         {
+          if (m_tokenSource?.IsCancellationRequested == true) return;
           await Task.Delay(50);
         }
         m_stepNow = false;
@@ -47,8 +50,12 @@ namespace Trizbort.Automap
       return await reader.ReadLineAsync();
     }
 
-    private bool IsPrompt(string line, out string typedCommand)
+    internal bool IsPrompt(string line, out string typedCommand)
     {
+      if (line == null) {
+        typedCommand = null;
+        return false;
+      }
       foreach (var promptMarker in s_promptMarkers)
       {
         var startIndex = line.LastIndexOf(promptMarker);
@@ -63,7 +70,7 @@ namespace Trizbort.Automap
       return false;
     }
 
-    private bool ExtractRoomName(string line, string previousLine, out string name)
+    internal bool ExtractRoomName(string line, string previousLine, out string name)
     {
       name = null;
 
@@ -250,7 +257,7 @@ namespace Trizbort.Automap
       return (word.ToUpper() == word);
     }
 
-    private bool ExtractParagraph(List<string> lines, int lineIndex, out string paragraph)
+    internal bool ExtractParagraph(List<string> lines, int lineIndex, out string paragraph)
     {
       paragraph = null;
       while (lineIndex < lines.Count)
@@ -416,15 +423,10 @@ namespace Trizbort.Automap
               var mOtherRoom = m_lastKnownRoom.GetConnections(CompassPointHelper.GetCompassDirection(m_lastMoveDirection.Value)).FirstOrDefault()?.GetTargetRoom();
               if (mOtherRoom != null)
               {
-                var frm = new AutomapRoomSameDirectionDialog {
-                  Room1 = mOtherRoom,
-                  Room2 = roomName
-                };
-                frm.ShowDialog();
-
-                switch (frm.Result)
+                switch (chooseConflictingRoom(mOtherRoom, roomName))
                 {
                   case AutomapSameDirectionResult.KeepRoom1:
+                    room = mOtherRoom;
                     break;
                   case AutomapSameDirectionResult.KeepRoom2:
                     room = m_canvas.CreateRoom(m_lastKnownRoom, m_lastMoveDirection.Value, roomName, line);
@@ -814,9 +816,34 @@ namespace Trizbort.Automap
     // This implements the static initialization design pattern for a singleton.
     // It prevents having two automap instances trying to write to the map simultaneously.
 
-    private Automap()
+    private Automap() : this(showError, chooseRoom) { }
+
+    internal Automap(Action<string, string> reportError, Func<Room, string, AutomapSameDirectionResult> chooseConflictingRoom)
     {
+      this.reportError = reportError;
+      this.chooseConflictingRoom = chooseConflictingRoom;
       Status = "Automap is not running.";
+    }
+
+    private static void showError(string message, string title) =>
+      UserInteraction.ShowMessage(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+    private static AutomapSameDirectionResult chooseRoom(Room existing, string name) {
+      using (var dialog = new AutomapRoomSameDirectionDialog {Room1 = existing, Room2 = name}) {
+        UserInteraction.ShowDialog(dialog);
+        return dialog.Result;
+      }
+    }
+
+    private void initializeRun(IAutomapCanvas canvas, AutomapSettings settings) {
+      m_canvas = canvas;
+      m_settings = settings;
+      m_firstRoom = true;
+      m_lastKnownRoom = null;
+      m_lastMoveDirection = null;
+      m_gameName = string.Empty;
+      m_stepNow = false;
+      UseDottedConnection = false;
     }
 
     public static Automap Instance { get; } = new Automap();
@@ -863,9 +890,7 @@ namespace Trizbort.Automap
 
     internal async Task StartCL(IAutomapCanvas canvas, AutomapSettings settings)
     {
-      m_canvas = canvas;
-      m_settings = settings;
-      m_firstRoom = true;
+      initializeRun(canvas, settings);
       Debug.Assert(m_settings.AssumeRoomsWithSameNameAreSameRoom || m_settings.VerboseTranscript, "Must assume rooms with same name are same room unless transcript is verbose.");
       Status = "Automapping has started.";
       List<string> lines = new List<string>();
@@ -912,17 +937,22 @@ namespace Trizbort.Automap
           }
 
         }
+        await ProcessTranscriptText(linesBetweenPrompts);
       }
       catch (IOException ex)
       {
         // couldn't read from the file
         Trace("Automap: Error reading line in file.\nError message: " + ex.Message);
-        MessageBox.Show("Error opening transcript file:\n" + ex.Message + "\n\nAutomapping halted.", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        reportError("Error opening transcript file:\n" + ex.Message + "\n\nAutomapping halted.", "File Error");
+        Status = "Automapping halted.";
+        return;
       }
       catch (UnauthorizedAccessException)
       {
-        MessageBox.Show("Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
-                        "or with scripting off in your interpreter.\n\nAutomapping halted.", "Access Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        reportError("Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
+                        "or with scripting off in your interpreter.\n\nAutomapping halted.", "Access Error");
+        Status = "Automapping halted.";
+        return;
       }
 
       Trace("Automap: Gentle thread exit.");
@@ -951,18 +981,18 @@ namespace Trizbort.Automap
         Stop();
       }
 
-      m_canvas = canvas;
-      m_settings = settings;
-      m_firstRoom = true;
+      initializeRun(canvas, settings);
       Debug.Assert(m_settings.AssumeRoomsWithSameNameAreSameRoom || m_settings.VerboseTranscript, "Must assume rooms with same name are same room unless transcript is verbose.");
       Status = "Automapping has started.";
 
+      CancellationTokenSource tokenSource = null;
       try
       {
         using (var stream = File.Open(m_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
           using (var reader = new PeekingStreamReader(stream))
-            using (m_tokenSource = new CancellationTokenSource())
+            using (tokenSource = new CancellationTokenSource())
             {
+              m_tokenSource = tokenSource;
               var lastline = "";
 
               if (m_settings.ContinueTranscript)
@@ -991,7 +1021,7 @@ namespace Trizbort.Automap
                   // ...read a line of text
                   try
                   {
-                    line = await WaitForNewLine(reader, m_tokenSource.Token);
+                    line = await WaitForNewLine(reader, tokenSource.Token);
                     atFileEnd = reader.EndOfStream; // store this now so that it's still valid when we use it below
                   }
                   catch (TaskCanceledException)
@@ -1018,7 +1048,7 @@ namespace Trizbort.Automap
                     try
                     {
                       // we've already read the prompt, now just read the command when the player enters it
-                      command = (await WaitForNewLine(reader, m_tokenSource.Token)).Trim();
+                      command = (await WaitForNewLine(reader, tokenSource.Token)).Trim();
                     }
                     catch (TaskCanceledException)
                     {
@@ -1052,12 +1082,19 @@ namespace Trizbort.Automap
       {
         // couldn't read from the file
         Trace("Automap: Error reading line in file.\nError message: " + ex.Message);
-        MessageBox.Show("Error opening transcript file:\n" + ex.Message + "\n\nAutomapping halted.", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        reportError("Error opening transcript file:\n" + ex.Message + "\n\nAutomapping halted.", "File Error");
+        Status = "Automapping halted.";
+        return;
       }
       catch (UnauthorizedAccessException)
       {
-        MessageBox.Show("Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
-                        "or with scripting off in your interpreter.\n\nAutomapping halted.", "Access Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        reportError("Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
+                        "or with scripting off in your interpreter.\n\nAutomapping halted.", "Access Error");
+        Status = "Automapping halted.";
+        return;
+      }
+      finally {
+        if (ReferenceEquals(m_tokenSource, tokenSource)) m_tokenSource = null;
       }
 
       Trace("Automap: Gentle thread exit.");

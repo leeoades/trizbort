@@ -65,7 +65,7 @@ namespace Trizbort.UI {
           link.LinkVisited = true;
         }
         catch (Win32Exception ex) {
-          MessageBox.Show(this, $"Unable to open the link:\n\n{url}\n\n{ex.Message}",
+          UserInteraction.ShowMessage(this, $"Unable to open the link:\n\n{url}\n\n{ex.Message}",
                           Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
       };

@@ -27,7 +27,8 @@ namespace Trizbort.Domain.Application {
 
     public static string EndRoomName {
       get {
-        var endRoomName = Project.Current.Elements.OfType<Room>().Where(p => p.IsEndRoom).Select(p => p.Name).Aggregate((i, j) => i + ", " + j);
+        var endRoomName = string.Join(", ", Project.Current.Elements.OfType<Room>().Where(p => p.IsEndRoom).Select(p => p.Name));
+        if (endRoomName.Length == 0) return "(None)";
         return endRoomName;
       }
     }
@@ -145,12 +146,12 @@ namespace Trizbort.Domain.Application {
 
     public static string StartRoomName {
       get {
-        var room = Project.Current.Elements.OfType<Room>().First(p => p.IsStartRoom);
+        var room = Project.Current.Elements.OfType<Room>().FirstOrDefault(p => p.IsStartRoom);
         return room != null ? room.Name : "(None)";
       }
     }
 
-    public static int UnlabeledConnections { get { return Project.Current.Elements.OfType<Connection>().Count(p => p.VertexList[0].Connection.StartText != string.Empty || p.VertexList[1].Connection.EndText != string.Empty); } }
+    public static int UnlabeledConnections { get { return Project.Current.Elements.OfType<Connection>().Count(p => p.StartText == string.Empty && p.EndText == string.Empty); } }
 
     public static int UpDown {
       get {
@@ -174,11 +175,11 @@ namespace Trizbort.Domain.Application {
                                                                    var firstRoomConnectionDir = port1.CompassPoint;
                                                                    var secondRoomConnectionDir = port2.CompassPoint;
 
-                                                                   if (ignoreAnnos) return !Project.Current.Canvas.EqualEnough(firstRoomConnectionDir, CompassPointHelper.GetOpposite(secondRoomConnectionDir));
+                                                                   if (ignoreAnnos) return !CompassPointHelper.IsSameApproximateDirection(firstRoomConnectionDir, CompassPointHelper.GetOpposite(secondRoomConnectionDir));
                                                                    if (p.VertexList[0].Connection.StartText != "" || p.VertexList[1].Connection.EndText != "") return false;
 
                                                                    // if the port directions are not (roughly) opposite, then we have a bent connection. Note NN(EW) = N, WW(NS) = W, etc.
-                                                                   return !Project.Current.Canvas.EqualEnough(firstRoomConnectionDir, CompassPointHelper.GetOpposite(secondRoomConnectionDir));
+                                                                   return !CompassPointHelper.IsSameApproximateDirection(firstRoomConnectionDir, CompassPointHelper.GetOpposite(secondRoomConnectionDir));
                                                                  }
                                                                 );
     }
@@ -221,7 +222,7 @@ namespace Trizbort.Domain.Application {
     }
 
     public static bool RegionsLinked(Region r1, Region r2) {
-      return r1 != r2 && Project.Current.Elements.OfType<Room>().ToArray().OrderBy(p => p.Name).Where(p => p.Region == r1.RegionName).SelectMany(room => room.GetConnections()).Any(thisConnection => thisConnection.GetSourceRoom().Region == r2.RegionName || thisConnection.GetTargetRoom().Region == r2.RegionName);
+      return r1 != r2 && Project.Current.Elements.OfType<Room>().ToArray().OrderBy(p => p.Name).Where(p => p.Region == r1.RegionName).SelectMany(room => room.GetConnections()).Any(thisConnection => thisConnection.GetSourceRoom()?.Region == r2.RegionName || thisConnection.GetTargetRoom()?.Region == r2.RegionName);
     }
 
     public static bool RoomHasDupConnection(Room rm, string dupString) {
