@@ -1708,9 +1708,17 @@ namespace Trizbort.UI.Controls {
     private void doDragMoveElement(Vector canvasPos) {
       canvasPos = Settings.Snap(canvasPos);
       var delta = canvasPos - mDragOffsetCanvas;
-      MapEditing.Move(Project.Current.Elements, mSelectedElements, delta);
-      if (trizbortToolTip1.IsShown) trizbortToolTip1.Hide(trizbortToolTip1.LastOwner);
+      moveSelectedElements(delta);
       mDragOffsetCanvas = canvasPos;
+    }
+
+    private void moveSelectedElements(Vector delta) {
+      MapEditing.Move(Project.Current.Elements, mSelectedElements, delta);
+      hideElementToolTip();
+    }
+
+    private void hideElementToolTip() {
+      if (trizbortToolTip1.IsShown) trizbortToolTip1.Hide(trizbortToolTip1.LastOwner);
     }
 
     private void doDragMoveWaypoint(Point mousePosition, Vector canvasPos) {
@@ -1751,9 +1759,7 @@ namespace Trizbort.UI.Controls {
       delta = Drawing.Divide(delta, ZoomFactor);
       Origin = new Vector(Origin.X + delta.X, Origin.Y + delta.Y);
       mPanPosition = clientPos;
-      if (trizbortToolTip1.IsShown) {
-        trizbortToolTip1.Hide(trizbortToolTip1.LastOwner);
-      }
+      hideElementToolTip();
       //// if tooltip is already shown, move it with the element
       //// the below code causes tooltip to flicker when panning
       //if (trizbortToolTip1.IsShown && trizbortToolTip1.HoverElement is Element element) {
@@ -2239,10 +2245,11 @@ namespace Trizbort.UI.Controls {
           Origin += new Vector((bNegative ? -1 : 1) * Viewport.Width / (shift ? 5 : 10), 0);
         else
           Origin += new Vector(0, (bNegative ? -1 : 1) * Viewport.Width / (shift ? 5 : 10));
+        hideElementToolTip();
       } else {
         var delta = Settings.SnapToGrid ? Settings.GridSize : 2.0f;
         var offset = bHorizontal ? new Vector(bNegative ? delta : -delta, 0) : new Vector(0, bNegative ? delta : -delta);
-        MapEditing.Move(Project.Current.Elements, SelectedElements, offset);
+        moveSelectedElements(offset);
       }
     }
 

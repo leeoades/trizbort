@@ -22,23 +22,25 @@ namespace Trizbort.Automap
     public bool UseDottedConnection { get; set; } = false;
 
 
-    private async Task WaitForStep()
+    private async Task WaitForStep(CancellationToken token)
     {
+      token.ThrowIfCancellationRequested();
       // for diagnostic purposes, allow single stepping
       if (m_settings.SingleStep && !m_stepNow)
       {
         Status = "Automapping is waiting for you to step through it (with F11.)";
         while (!m_stepNow)
         {
-          if (m_tokenSource?.IsCancellationRequested == true) return;
-          await Task.Delay(50);
+          await Task.Delay(50, token);
         }
+        token.ThrowIfCancellationRequested();
         m_stepNow = false;
       }
     }
 
     private async Task<string> WaitForNewLine(StreamReader reader, CancellationToken token)
     {
+      token.ThrowIfCancellationRequested();
       if (reader.EndOfStream)
       {
         Status = "Automapping is waiting for more text.";
@@ -398,11 +400,12 @@ namespace Trizbort.Automap
       }
     }
 
-    private async Task ProcessTranscriptText(List<string> lines)
+    private async Task ProcessTranscriptText(List<string> lines, CancellationToken token)
     {
       string previousLine = null;
       for (var index = 0; index < lines.Count; ++index)
       {
+        token.ThrowIfCancellationRequested();
         var line = lines[index];
         string roomName;
         if (ExtractRoomName(line, previousLine, out roomName))
@@ -413,6 +416,7 @@ namespace Trizbort.Automap
 
           // work out which room the transcript is referring to here, asking them if necessary
           var room = FindRoom(roomName, roomDescription, line);
+          token.ThrowIfCancellationRequested();
           if (room == null)
           {
             // new room
@@ -423,7 +427,9 @@ namespace Trizbort.Automap
               var mOtherRoom = m_lastKnownRoom.GetConnections(CompassPointHelper.GetCompassDirection(m_lastMoveDirection.Value)).FirstOrDefault()?.GetTargetRoom();
               if (mOtherRoom != null)
               {
-                switch (chooseConflictingRoom(mOtherRoom, roomName))
+                var decision = chooseConflictingRoom(mOtherRoom, roomName);
+                token.ThrowIfCancellationRequested();
+                switch (decision)
                 {
                   case AutomapSameDirectionResult.KeepRoom1:
                     room = mOtherRoom;
@@ -457,7 +463,7 @@ namespace Trizbort.Automap
                 // most likely this is the game title
                 m_firstRoom = false;
                 m_gameName = roomName;
-                await WaitForStep();
+                await WaitForStep(token);
               }
               else
               {
@@ -466,7 +472,7 @@ namespace Trizbort.Automap
                 room = m_canvas.CreateRoom(m_lastKnownRoom, roomName);
                 if (m_lastKnownRoom == null) { room.IsStartRoom = true; }
                 Trace("{0}: teleported to new room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
-                await WaitForStep();
+                await WaitForStep(token);
               }
             }
             if (room != null)
@@ -474,7 +480,7 @@ namespace Trizbort.Automap
               DeduceExitsFromDescription(room, roomDescription);
               NowInRoom(room);
             }
-            await WaitForStep();
+            await WaitForStep(token);
           }
           else if (room != m_lastKnownRoom)
           {
@@ -487,7 +493,7 @@ namespace Trizbort.Automap
             }
 
             NowInRoom(room);
-            await WaitForStep();
+            await WaitForStep(token);
           }
           else
           {
@@ -891,6 +897,8 @@ namespace Trizbort.Automap
     internal async Task StartCL(IAutomapCanvas canvas, AutomapSettings settings)
     {
       initializeRun(canvas, settings);
+      using var tokenSource = new CancellationTokenSource();
+      m_tokenSource = tokenSource;
       Debug.Assert(m_settings.AssumeRoomsWithSameNameAreSameRoom || m_settings.VerboseTranscript, "Must assume rooms with same name are same room unless transcript is verbose.");
       Status = "Automapping has started.";
       List<string> lines = new List<string>();
@@ -913,13 +921,15 @@ namespace Trizbort.Automap
 
         foreach (var line in lines)
         {
+          tokenSource.Token.ThrowIfCancellationRequested();
           string command;
           if (IsPrompt(line, out command))
           {
             // this is a prompt line
 
             // let's process everything leading up to it since the last prompt, but not necessarily this new prompt itself
-            await ProcessTranscriptText(linesBetweenPrompts);
+            await ProcessTranscriptText(linesBetweenPrompts, tokenSource.Token);
+            tokenSource.Token.ThrowIfCancellationRequested();
 
             // we've now dealt with all lines to this point
             linesBetweenPrompts.Clear();
@@ -937,7 +947,12 @@ namespace Trizbort.Automap
           }
 
         }
-        await ProcessTranscriptText(linesBetweenPrompts);
+        await ProcessTranscriptText(linesBetweenPrompts, tokenSource.Token);
+      }
+      catch (OperationCanceledException) when (tokenSource.IsCancellationRequested)
+      {
+        Status = "Automap is not running.";
+        return;
       }
       catch (IOException ex)
       {
@@ -953,6 +968,9 @@ namespace Trizbort.Automap
                         "or with scripting off in your interpreter.\n\nAutomapping halted.", "Access Error");
         Status = "Automapping halted.";
         return;
+      }
+      finally {
+        if (ReferenceEquals(m_tokenSource, tokenSource)) m_tokenSource = null;
       }
 
       Trace("Automap: Gentle thread exit.");
@@ -1011,6 +1029,7 @@ namespace Trizbort.Automap
               // loop until cancelled
               while (true)
               {
+                tokenSource.Token.ThrowIfCancellationRequested();
                 if (m_settings.ContinueTranscript)
                 {
                   line = lastline;
@@ -1019,15 +1038,8 @@ namespace Trizbort.Automap
                 else
                 {
                   // ...read a line of text
-                  try
-                  {
-                    line = await WaitForNewLine(reader, tokenSource.Token);
-                    atFileEnd = reader.EndOfStream; // store this now so that it's still valid when we use it below
-                  }
-                  catch (TaskCanceledException)
-                  {
-                    break;
-                  }
+                  line = await WaitForNewLine(reader, tokenSource.Token);
+                  atFileEnd = reader.EndOfStream; // store this now so that it's still valid when we use it below
                 }
 
                 //Trace("[" + line + "]");
@@ -1037,7 +1049,8 @@ namespace Trizbort.Automap
                   // this is a prompt line
 
                   // let's process everything leading up to it since the last prompt, but not necessarily this new prompt itself
-                  await ProcessTranscriptText(linesBetweenPrompts);
+                  await ProcessTranscriptText(linesBetweenPrompts, tokenSource.Token);
+                  tokenSource.Token.ThrowIfCancellationRequested();
 
                   // we've now dealt with all lines to this point
                   linesBetweenPrompts.Clear();
@@ -1045,21 +1058,15 @@ namespace Trizbort.Automap
                   // handle the case where we're at the end of the file, waiting for user input
                   if (atFileEnd)
                   {
-                    try
-                    {
-                      // we've already read the prompt, now just read the command when the player enters it
-                      command = (await WaitForNewLine(reader, tokenSource.Token)).Trim();
-                    }
-                    catch (TaskCanceledException)
-                    {
-                      break;
-                    }
+                    // we've already read the prompt, now just read the command when the player enters it
+                    command = (await WaitForNewLine(reader, tokenSource.Token)).Trim();
                   }
 
 //                  var nextParagraph = getTextToNextPrompt(reader);
 
                   // process the next command
-              ProcessPromptCommand(command);
+                  tokenSource.Token.ThrowIfCancellationRequested();
+                  ProcessPromptCommand(command);
 
 //                  if (command.ToUpper().Equals("EXITS"))
 //                  {
@@ -1077,6 +1084,11 @@ namespace Trizbort.Automap
                 }
               }
             }
+      }
+      catch (OperationCanceledException) when (tokenSource?.IsCancellationRequested == true)
+      {
+        Status = "Automap is not running.";
+        return;
       }
       catch (IOException ex)
       {
@@ -1097,8 +1109,6 @@ namespace Trizbort.Automap
         if (ReferenceEquals(m_tokenSource, tokenSource)) m_tokenSource = null;
       }
 
-      Trace("Automap: Gentle thread exit.");
-      Status = "Automapping has completed.";
     }
 
     #endregion

@@ -241,6 +241,7 @@ namespace Trizbort.Tests {
         parser.Stop();
         await run.WaitAsync(TimeSpan.FromSeconds(5));
         parser.Running.ShouldBeFalse();
+        parser.Status.ShouldBe("Automap is not running.");
       }
     }
 
@@ -264,6 +265,121 @@ namespace Trizbort.Tests {
           await run.WaitAsync(TimeSpan.FromSeconds(5));
         }
         parser.Running.ShouldBeFalse();
+      }
+    }
+
+    [TestCase(false, 0)]
+    [TestCase(false, 1)]
+    [TestCase(false, 2)]
+    [TestCase(true, 0)]
+    [TestCase(true, 1)]
+    [TestCase(true, 2)]
+    public async Task StopDuringSingleStep_PreservesBufferedGraphAndSkipsFollowingCommands(bool oneShot, int roomCount) {
+      using (var canvas = new Canvas())
+      using (var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5))) {
+        var parser = CreateParser();
+        var settings = SettingsFor(
+          "Example Game\n\nFirst Room\nExits lead north and east.\n\nLater Room\nA later description.\n\n" +
+          ">tb see Key\n>e\n\nFinal Room\nA final description.\n\n>look\n", guess: true);
+        settings.SingleStep = true;
+        var run = oneShot ? parser.StartCL(canvas, settings) : parser.Start(canvas, settings);
+        try {
+          while (Project.Current.Elements.OfType<Room>().Count() < roomCount) {
+            await WaitForSingleStep(parser, run, deadline.Token);
+            parser.Step();
+            await Task.Delay(10, deadline.Token);
+          }
+          await WaitForSingleStep(parser, run, deadline.Token);
+          var engine = new LegacyMapFileEngine(Project.Current);
+          var before = Files.File("before-stop.trizbort");
+          var after = Files.File("after-stop.trizbort");
+          engine.Save(before).ShouldBeTrue();
+          parser.Stop();
+          // A queued step must not override cancellation.
+          parser.Step();
+          await run.WaitAsync(TimeSpan.FromSeconds(5));
+          engine.Save(after).ShouldBeTrue();
+          File.ReadAllText(after).ShouldBe(File.ReadAllText(before));
+          parser.Running.ShouldBeFalse();
+          parser.Status.ShouldBe("Automap is not running.");
+        } finally {
+          parser.Stop();
+          parser.RunToCompletion();
+          await run.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+      }
+    }
+
+    private static async Task WaitForSingleStep(Parser parser, Task run, CancellationToken token) {
+      while (!parser.Status.Contains("waiting for you to step")) {
+        token.ThrowIfCancellationRequested();
+        run.IsCompleted.ShouldBeFalse();
+        await Task.Yield();
+      }
+    }
+
+    [TestCase(false, AutomapSameDirectionResult.KeepRoom1)]
+    [TestCase(false, AutomapSameDirectionResult.KeepRoom2)]
+    [TestCase(false, AutomapSameDirectionResult.KeepBoth)]
+    [TestCase(true, AutomapSameDirectionResult.KeepRoom1)]
+    [TestCase(true, AutomapSameDirectionResult.KeepRoom2)]
+    [TestCase(true, AutomapSameDirectionResult.KeepBoth)]
+    public async Task StopDuringConflictDecision_DoesNotApplyDecisionOrFollowingCommands(bool oneShot, AutomapSameDirectionResult decision) {
+      using (var canvas = new Canvas()) {
+        var first = ProjectRegressionTests.AddRoom("First Room");
+        var original = ProjectRegressionTests.AddRoom("Original Room");
+        ProjectRegressionTests.Connect(first, original);
+        var engine = new LegacyMapFileEngine(Project.Current);
+        var before = Files.File("before-conflict.trizbort");
+        var after = Files.File("after-conflict.trizbort");
+        var decisions = 0;
+        Parser parser = null;
+        parser = new Parser((message, _) => throw new AssertionException(message), (_, __) => {
+          decisions++;
+          engine.Save(before).ShouldBeTrue();
+          parser.Stop();
+          return decision;
+        });
+        var settings = SettingsFor(
+          "Example Game\n\nFirst Room\nA small room.\n\n>e\n\nReplacement Room\nAnother room.\n\n" +
+          ">tb see Key\n>n\n\nFinal Room\nA final description.\n\n>look\n");
+        var run = oneShot ? parser.StartCL(canvas, settings) : parser.Start(canvas, settings);
+        try {
+          await run.WaitAsync(TimeSpan.FromSeconds(5));
+          decisions.ShouldBe(1);
+          engine.Save(after).ShouldBeTrue();
+          File.ReadAllText(after).ShouldBe(File.ReadAllText(before));
+          parser.Status.ShouldBe("Automap is not running.");
+          parser.Running.ShouldBeFalse();
+        } finally {
+          parser.Stop();
+          await run.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+      }
+    }
+
+    [Test]
+    public async Task SingleStep_RunToCompletionStillProcessesWholeFileAndClearsRunningState() {
+      using (var canvas = new Canvas())
+      using (var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5))) {
+        var parser = CreateParser();
+        var settings = SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n\nSecond Room\nAnother room.\n");
+        settings.SingleStep = true;
+        var run = parser.StartCL(canvas, settings);
+        try {
+          await WaitForSingleStep(parser, run, deadline.Token);
+          parser.Running.ShouldBeTrue();
+          parser.RunToCompletion();
+          await run.WaitAsync(TimeSpan.FromSeconds(5));
+          Project.Current.Elements.OfType<Room>().Select(room => room.Name).ShouldBe(new[] {"First Room", "Second Room"});
+          Project.Current.Elements.OfType<Connection>().Count().ShouldBe(1);
+          parser.Running.ShouldBeFalse();
+          parser.Status.ShouldBe("Automapping has completed.");
+        } finally {
+          parser.Stop();
+          parser.RunToCompletion();
+          await run.WaitAsync(TimeSpan.FromSeconds(5));
+        }
       }
     }
 

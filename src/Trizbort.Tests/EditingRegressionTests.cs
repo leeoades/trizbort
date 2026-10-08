@@ -146,6 +146,71 @@ namespace Trizbort.Tests {
 
   [TestFixture, Category("Integration")]
   public class CanvasInteractionTests : IsolatedProjectTests {
+    private static IEnumerable<TestCaseData> TooltipMovementCases() {
+      foreach (var kind in new[] {"room", "label", "connection"})
+      foreach (var key in new[] {Keys.Left, Keys.Right, Keys.Up, Keys.Down, Keys.None})
+        yield return new TestCaseData(kind, key);
+    }
+
+    [TestCaseSource(nameof(TooltipMovementCases))]
+    public void MovingSelection_DismissesExistingTooltip(string kind, Keys key) {
+      Settings.SnapToGrid = false;
+      using (var canvas = new Canvas {Size = new Size(600, 400)}) {
+        canvas.ZoomFactor = 1;
+        Element element;
+        if (kind == "room") element = ProjectRegressionTests.AddRoom("Room");
+        else if (kind == "label") {
+          element = new MapLabel(Project.Current);
+          Project.Current.Elements.Add(element);
+        } else {
+          element = new Connection(Project.Current, new Vertex(new Vector(-100, 0)), new Vertex(new Vector(100, 0)));
+          Project.Current.Elements.Add(element);
+        }
+        canvas.SelectedElement = element;
+        var center = element is Room room ? room.InnerBounds.Center :
+          element is MapLabel label ? label.InnerBounds.Center : new Vector(-50, 0);
+        if (key == Keys.None) {
+          canvas.MoveMouse(center);
+          canvas.PressMouse(center);
+        }
+        // Seed the tooltip's public lifecycle state without displaying a native popup.
+        var tooltip = (TrizbortToolTip) typeof(Canvas)
+          .GetField("trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
+        tooltip.LastOwner = canvas;
+        tooltip.HoverElement = element;
+        tooltip.IsShown = true;
+        Project.Current.IsDirty = false;
+        if (key == Keys.None) {
+          canvas.MoveMouse(center + new Vector(30, 20));
+          canvas.ReleaseMouse();
+        } else canvas.Key(key);
+        Project.Current.IsDirty.ShouldBeTrue();
+        tooltip.IsShown.ShouldBeFalse();
+        tooltip.LastOwner.ShouldBeNull();
+        tooltip.HoverElement.ShouldBeNull();
+      }
+    }
+
+    [TestCase(Keys.Left)]
+    [TestCase(Keys.Right)]
+    [TestCase(Keys.Up)]
+    [TestCase(Keys.Down)]
+    public void KeyboardPanning_DismissesExistingTooltip(Keys key) {
+      using (var canvas = new Canvas {Size = new Size(600, 400)}) {
+        var tooltip = (TrizbortToolTip) typeof(Canvas)
+          .GetField("trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
+        tooltip.LastOwner = canvas;
+        tooltip.HoverElement = ProjectRegressionTests.AddRoom("Room");
+        tooltip.IsShown = true;
+        var origin = canvas.ClientToCanvas(Point.Empty);
+        canvas.Key(key);
+        canvas.ClientToCanvas(Point.Empty).ShouldNotBe(origin);
+        tooltip.IsShown.ShouldBeFalse();
+        tooltip.LastOwner.ShouldBeNull();
+        tooltip.HoverElement.ShouldBeNull();
+      }
+    }
+
     [TestCase(.1f)]
     [TestCase(1f)]
     [TestCase(4f)]

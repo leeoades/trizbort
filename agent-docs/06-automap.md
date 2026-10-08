@@ -50,8 +50,11 @@ UI\AutomapDialog.cs
 
    Each run initializes room, direction, game-title and stepping state. One-shot parsing processes
    the final chunk at EOF (a trailing prompt is not required). I/O/access errors report a halted
-   status rather than subsequently claiming completion. Live parsing can be stopped while waiting
-   for text or a single step and clears its owned cancellation source when finished. Keeping the
+   status rather than subsequently claiming completion. Both entry points own cancellation tokens;
+   cancellation propagates out of single-step waits and buffered transcript processing before any
+   following prompt command is applied. Stopping during ambiguity callbacks also aborts before
+   applying the returned decision. Cancellation leaves the status "Automap is not running." and
+   clears the owned cancellation source when finished. Keeping the
    existing room in a same-direction conflict makes that room the current source for subsequent
    travel. Regression tests exercise all three conflict decisions with real Canvas graph mutations,
    sequential runs, reader lookahead, cancellation and save/load/export workflows; overlapping

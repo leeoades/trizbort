@@ -93,6 +93,9 @@ two are independent concerns.
   `Room.Position` directly, driven by `Automap\Automap.cs` rather than user input — see
   [`06-automap.md`](06-automap.md).
 
+Canvas shares selection movement and tooltip dismissal between mouse dragging and arrow keys;
+keyboard and mouse panning also dismiss the old tooltip. Regression tests seed tooltip lifecycle
+state without native popups and exercise movement of rooms, labels and free connections.
 `MapEditing.Move` is shared by mouse dragging and arrow-key movement. It moves free vertices
 and explicit connection waypoints, keeps docked endpoints attached, and translates unselected
 curve waypoints exactly once when both owners move. `MapEditing.Resize` tracks applied
