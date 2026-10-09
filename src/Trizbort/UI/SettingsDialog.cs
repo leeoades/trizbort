@@ -203,19 +203,18 @@ namespace Trizbort.UI {
     }
 
     private void ColorListBox_DrawItem(object sender, DrawItemEventArgs e) {
-      using (var palette = new Palette()) {
-        e.DrawBackground();
+      using var palette = new Palette();
+      e.DrawBackground();
 
-        const int COLOR_HORIZONTAL_MARGIN = 2;
-        const int COLOR_VERTICAL_MARGIN = 2;
-        const int COLOR_WIDTH = 24;
-        var colorBounds = new Rectangle(e.Bounds.Left + COLOR_HORIZONTAL_MARGIN, e.Bounds.Top + COLOR_VERTICAL_MARGIN, COLOR_WIDTH, e.Bounds.Height - COLOR_VERTICAL_MARGIN * 2);
-        var textBounds = new Rectangle(colorBounds.Right + COLOR_HORIZONTAL_MARGIN, e.Bounds.Top, e.Bounds.Width - colorBounds.Width - COLOR_HORIZONTAL_MARGIN * 2, e.Bounds.Height);
-        e.Graphics.FillRectangle(palette.Brush(ElementColors[e.Index]), colorBounds);
-        e.Graphics.DrawRectangle(palette.Pen(e.ForeColor, 0), colorBounds);
-        var format = new StringFormat {Trimming = StringTrimming.EllipsisCharacter};
-        e.Graphics.DrawString(m_colorListBox.Items[e.Index].ToString(), e.Font, palette.Brush(e.ForeColor), textBounds, format);
-      }
+      const int COLOR_HORIZONTAL_MARGIN = 2;
+      const int COLOR_VERTICAL_MARGIN = 2;
+      const int COLOR_WIDTH = 24;
+      var colorBounds = new Rectangle(e.Bounds.Left + COLOR_HORIZONTAL_MARGIN, e.Bounds.Top + COLOR_VERTICAL_MARGIN, COLOR_WIDTH, e.Bounds.Height - COLOR_VERTICAL_MARGIN * 2);
+      var textBounds = new Rectangle(colorBounds.Right + COLOR_HORIZONTAL_MARGIN, e.Bounds.Top, e.Bounds.Width - colorBounds.Width - COLOR_HORIZONTAL_MARGIN * 2, e.Bounds.Height);
+      e.Graphics.FillRectangle(palette.Brush(ElementColors[e.Index]), colorBounds);
+      e.Graphics.DrawRectangle(palette.Pen(e.ForeColor, 0), colorBounds);
+      var format = new StringFormat {Trimming = StringTrimming.EllipsisCharacter};
+      e.Graphics.DrawString(m_colorListBox.Items[e.Index].ToString(), e.Font, palette.Brush(e.ForeColor), textBounds, format);
     }
 
     private void createEditBox() {
@@ -359,18 +358,17 @@ namespace Trizbort.UI {
     private void RegionListBox_DrawItem(object sender, DrawItemEventArgs e) {
       if (e.Index < 0) return;
       var txtColorFont = new Font("Arial", 6);
-      using (var palette = new Palette()) {
-        e.DrawBackground();
+      using var palette = new Palette();
+      e.DrawBackground();
 
-        var colorBounds = new Rectangle(e.Bounds.Left + HORIZONTAL_MARGIN, e.Bounds.Top + VERTICAL_MARGIN, WIDTH, e.Bounds.Height - VERTICAL_MARGIN * 2);
-        var textBounds = new Rectangle(colorBounds.Right + HORIZONTAL_MARGIN, e.Bounds.Top, e.Bounds.Width - colorBounds.Width - HORIZONTAL_MARGIN * 2, e.Bounds.Height);
-        var foundRegion = Regions.FirstOrDefault(p => p.RegionName == m_RegionListing.Items[e.Index].ToString());
-        if (foundRegion != null) {
-          e.Graphics.FillRectangle(palette.Brush(foundRegion.RColor), colorBounds);
-          e.Graphics.DrawRectangle(palette.Pen(e.ForeColor, 0), colorBounds);
-          e.Graphics.DrawString(m_RegionListing.Items[e.Index].ToString(), e.Font, palette.Brush(e.ForeColor), textBounds, StringFormats.Left);
-          e.Graphics.DrawString("123", txtColorFont, palette.Brush(foundRegion.TextColor), colorBounds, StringFormats.Center);
-        }
+      var colorBounds = new Rectangle(e.Bounds.Left + HORIZONTAL_MARGIN, e.Bounds.Top + VERTICAL_MARGIN, WIDTH, e.Bounds.Height - VERTICAL_MARGIN * 2);
+      var textBounds = new Rectangle(colorBounds.Right + HORIZONTAL_MARGIN, e.Bounds.Top, e.Bounds.Width - colorBounds.Width - HORIZONTAL_MARGIN * 2, e.Bounds.Height);
+      var foundRegion = Regions.FirstOrDefault(p => p.RegionName == m_RegionListing.Items[e.Index].ToString());
+      if (foundRegion != null) {
+        e.Graphics.FillRectangle(palette.Brush(foundRegion.RColor), colorBounds);
+        e.Graphics.DrawRectangle(palette.Pen(e.ForeColor, 0), colorBounds);
+        e.Graphics.DrawString(m_RegionListing.Items[e.Index].ToString(), e.Font, palette.Brush(e.ForeColor), textBounds, StringFormats.Left);
+        e.Graphics.DrawString("123", txtColorFont, palette.Brush(foundRegion.TextColor), colorBounds, StringFormats.Center);
       }
     }
 
@@ -391,11 +389,10 @@ namespace Trizbort.UI {
     }
 
     private Font showFontDialog(Font font) {
-      using (var dialog = new FontDialog()) {
-        if (font != null)
-          dialog.Font = new Font(font.Name, font.Size, font.Style);
-        if (UserInteraction.ShowDialog(dialog, this) == DialogResult.OK) return new Font(dialog.Font.Name, dialog.Font.Size, dialog.Font.Style, GraphicsUnit.World);
-      }
+      using var dialog = new FontDialog();
+      if (font != null)
+        dialog.Font = new Font(font.Name, font.Size, font.Style);
+      if (UserInteraction.ShowDialog(dialog, this) == DialogResult.OK) return new Font(dialog.Font.Name, dialog.Font.Size, dialog.Font.Style, GraphicsUnit.World);
 
       return font;
     }

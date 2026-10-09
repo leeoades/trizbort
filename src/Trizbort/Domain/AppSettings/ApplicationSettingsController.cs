@@ -61,53 +61,52 @@ namespace Trizbort.Domain.AppSettings {
     }
 
     public static void ShowAppDialog() {
-      using (var dialog = new AppSettingsDialog()) {
-        dialog.InvertMouseWheel = settings.InvertMouseWheel;
-        dialog.ShowFullPathInTitleBar = settings.ShowFullPathInTitleBar;
-        dialog.DefaultFontName = settings.DefaultFontName;
-        dialog.DefaultImageType = settings.DefaultImageType;
-        dialog.PortAdjustDetail = settings.PortAdjustDetail;
-        dialog.SaveToImage = settings.SaveToImage;
-        dialog.SaveToPDF = settings.SaveToPDF;
-        dialog.SaveTADSToADV3Lite = settings.SaveTadstoAdv3Lite;
-        dialog.SaveAt100 = settings.SaveAt100;
-        dialog.SpecifyGenMargins = settings.SpecifyGenMargins;
-        dialog.GenHorizontalMargin = settings.GenHorizontalMargin;
-        dialog.GenVerticalMargin = settings.GenVerticalMargin;
-        dialog.LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
-        dialog.ApplyStyleToNewRooms = settings.ApplyStyleToNewRooms;
-        dialog.DoubleClickToAddRoom = settings.DoubleClickToAddRoom;
-        dialog.ShowDescriptionsInTooltip = settings.ShowDescriptionsInTooltips;
-        dialog.ShowObjectsInTooltip = settings.ShowObjectsInTooltips;
-        dialog.LimitConnectionDescriptionCharactersInTooltip = settings.LimitConnectionDescriptionCharactersInTooltip;
-        dialog.ToolTipConnectionDescriptionCharactersToShow = settings.ToolTipConnectionDescriptionCharactersToShow;        
-        dialog.LimitRoomDescriptionCharactersInTooltip = settings.LimitRoomDescriptionCharactersInTooltip;
-        dialog.ToolTipRoomDescriptionCharactersToShow = settings.ToolTipRoomDescriptionCharactersToShow;
+      using var dialog = new AppSettingsDialog();
+      dialog.InvertMouseWheel = settings.InvertMouseWheel;
+      dialog.ShowFullPathInTitleBar = settings.ShowFullPathInTitleBar;
+      dialog.DefaultFontName = settings.DefaultFontName;
+      dialog.DefaultImageType = settings.DefaultImageType;
+      dialog.PortAdjustDetail = settings.PortAdjustDetail;
+      dialog.SaveToImage = settings.SaveToImage;
+      dialog.SaveToPDF = settings.SaveToPDF;
+      dialog.SaveTADSToADV3Lite = settings.SaveTadstoAdv3Lite;
+      dialog.SaveAt100 = settings.SaveAt100;
+      dialog.SpecifyGenMargins = settings.SpecifyGenMargins;
+      dialog.GenHorizontalMargin = settings.GenHorizontalMargin;
+      dialog.GenVerticalMargin = settings.GenVerticalMargin;
+      dialog.LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
+      dialog.ApplyStyleToNewRooms = settings.ApplyStyleToNewRooms;
+      dialog.DoubleClickToAddRoom = settings.DoubleClickToAddRoom;
+      dialog.ShowDescriptionsInTooltip = settings.ShowDescriptionsInTooltips;
+      dialog.ShowObjectsInTooltip = settings.ShowObjectsInTooltips;
+      dialog.LimitConnectionDescriptionCharactersInTooltip = settings.LimitConnectionDescriptionCharactersInTooltip;
+      dialog.ToolTipConnectionDescriptionCharactersToShow = settings.ToolTipConnectionDescriptionCharactersToShow;        
+      dialog.LimitRoomDescriptionCharactersInTooltip = settings.LimitRoomDescriptionCharactersInTooltip;
+      dialog.ToolTipRoomDescriptionCharactersToShow = settings.ToolTipRoomDescriptionCharactersToShow;
 
-        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
-          settings.InvertMouseWheel = dialog.InvertMouseWheel;
-          settings.ShowFullPathInTitleBar = dialog.ShowFullPathInTitleBar;
-          settings.DefaultFontName = dialog.DefaultFontName;
-          settings.DefaultImageType = dialog.DefaultImageType;
-          settings.PortAdjustDetail = dialog.PortAdjustDetail;
-          settings.SaveAt100 = dialog.SaveAt100;
-          settings.SaveToImage = dialog.SaveToImage;
-          settings.SaveToPDF = dialog.SaveToPDF;
-          settings.SaveTadstoAdv3Lite = dialog.SaveTADSToADV3Lite;
-          settings.SpecifyGenMargins = dialog.SpecifyGenMargins;
-          settings.GenHorizontalMargin = (int) dialog.GenHorizontalMargin;
-          settings.GenVerticalMargin = (int) dialog.GenVerticalMargin;
-          settings.LoadLastProjectOnStart = dialog.LoadLastProjectOnStart;
-          settings.ApplyStyleToNewRooms = dialog.ApplyStyleToNewRooms;
-          settings.DoubleClickToAddRoom = dialog.DoubleClickToAddRoom;
-          settings.ShowDescriptionsInTooltips = dialog.ShowDescriptionsInTooltip;
-          settings.ShowObjectsInTooltips = dialog.ShowObjectsInTooltip;
-          settings.ToolTipConnectionDescriptionCharactersToShow = dialog.ToolTipConnectionDescriptionCharactersToShow;
-          settings.LimitConnectionDescriptionCharactersInTooltip = dialog.LimitConnectionDescriptionCharactersInTooltip;  
-          settings.ToolTipRoomDescriptionCharactersToShow = dialog.ToolTipRoomDescriptionCharactersToShow;
-          settings.LimitRoomDescriptionCharactersInTooltip = dialog.LimitRoomDescriptionCharactersInTooltip;
-          SaveSettings();
-        }
+      if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
+        settings.InvertMouseWheel = dialog.InvertMouseWheel;
+        settings.ShowFullPathInTitleBar = dialog.ShowFullPathInTitleBar;
+        settings.DefaultFontName = dialog.DefaultFontName;
+        settings.DefaultImageType = dialog.DefaultImageType;
+        settings.PortAdjustDetail = dialog.PortAdjustDetail;
+        settings.SaveAt100 = dialog.SaveAt100;
+        settings.SaveToImage = dialog.SaveToImage;
+        settings.SaveToPDF = dialog.SaveToPDF;
+        settings.SaveTadstoAdv3Lite = dialog.SaveTADSToADV3Lite;
+        settings.SpecifyGenMargins = dialog.SpecifyGenMargins;
+        settings.GenHorizontalMargin = (int) dialog.GenHorizontalMargin;
+        settings.GenVerticalMargin = (int) dialog.GenVerticalMargin;
+        settings.LoadLastProjectOnStart = dialog.LoadLastProjectOnStart;
+        settings.ApplyStyleToNewRooms = dialog.ApplyStyleToNewRooms;
+        settings.DoubleClickToAddRoom = dialog.DoubleClickToAddRoom;
+        settings.ShowDescriptionsInTooltips = dialog.ShowDescriptionsInTooltip;
+        settings.ShowObjectsInTooltips = dialog.ShowObjectsInTooltip;
+        settings.ToolTipConnectionDescriptionCharactersToShow = dialog.ToolTipConnectionDescriptionCharactersToShow;
+        settings.LimitConnectionDescriptionCharactersInTooltip = dialog.LimitConnectionDescriptionCharactersInTooltip;  
+        settings.ToolTipRoomDescriptionCharactersToShow = dialog.ToolTipRoomDescriptionCharactersToShow;
+        settings.LimitRoomDescriptionCharactersInTooltip = dialog.LimitRoomDescriptionCharactersInTooltip;
+        SaveSettings();
       }
     }
 

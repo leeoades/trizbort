@@ -24,76 +24,73 @@ namespace Trizbort.Tests {
     [TestCase(SelectTypes.RoomsWithOutObjects, 2)]
     [TestCase(SelectTypes.None, 0)]
     public void SelectionCommands_FilterMixedGraph(SelectTypes type, int count) {
-      using (var canvas = new Canvas()) {
-        var first = ProjectRegressionTests.AddRoom("First");
-        first.Objects = "Key";
-        var second = ProjectRegressionTests.AddRoom("Second");
-        ProjectRegressionTests.AddRoom("Isolated");
-        ProjectRegressionTests.Connect(first, second);
-        Project.Current.Elements.Add(new MapLabel(Project.Current));
-        Project.Current.Elements.Add(new Connection(Project.Current, new Vertex(second.PortAt(CompassPoint.North)), new Vertex(new Vector(10, -100))));
-        new CommandController(canvas).Select(type);
-        canvas.SelectedElements.Count.ShouldBe(count);
-        if (type == SelectTypes.Rooms) canvas.SelectedElements.All(element => element is Room).ShouldBeTrue();
-      }
+      using var canvas = new Canvas();
+      var first = ProjectRegressionTests.AddRoom("First");
+      first.Objects = "Key";
+      var second = ProjectRegressionTests.AddRoom("Second");
+      ProjectRegressionTests.AddRoom("Isolated");
+      ProjectRegressionTests.Connect(first, second);
+      Project.Current.Elements.Add(new MapLabel(Project.Current));
+      Project.Current.Elements.Add(new Connection(Project.Current, new Vertex(second.PortAt(CompassPoint.North)), new Vertex(new Vector(10, -100))));
+      new CommandController(canvas).Select(type);
+      canvas.SelectedElements.Count.ShouldBe(count);
+      if (type == SelectTypes.Rooms) canvas.SelectedElements.All(element => element is Room).ShouldBeTrue();
     }
 
     [Test]
     public void Commands_UpdateOnlySelectedElementsAndCanvasDefaults() {
-      using (var canvas = new Canvas()) {
-        var first = ProjectRegressionTests.AddRoom("First");
-        var second = ProjectRegressionTests.AddRoom("Second");
-        var line = ProjectRegressionTests.Connect(first, second);
-        canvas.SelectedElement = first;
-        var commands = new CommandController(canvas);
-        commands.SetRoomLighting(LightingActionType.ForceDark);
-        commands.SetRoomShape(RoomShape.Ellipse);
-        commands.SetStartRoom();
-        commands.SetEndRoom();
-        first.IsDark.ShouldBeTrue();
-        first.Shape.ShouldBe(RoomShape.Ellipse);
-        first.IsStartRoom.ShouldBeTrue();
-        first.IsEndRoom.ShouldBeTrue();
-        second.IsDark.ShouldBeFalse();
-        second.Shape.ShouldBe(RoomShape.SquareCorners);
-        canvas.SelectedElement = second;
-        commands.SetStartRoom();
-        first.IsStartRoom.ShouldBeFalse();
-        second.IsStartRoom.ShouldBeTrue();
-        canvas.SelectedElement = line;
-        commands.SetConnectionFlow(ConnectionFlow.OneWay);
-        commands.SetConnectionStyle(ConnectionStyle.Dashed);
-        commands.SetConnectionLabel(ConnectionLabel.Up);
-        line.Flow.ShouldBe(ConnectionFlow.OneWay);
-        line.Style.ShouldBe(ConnectionStyle.Dashed);
-        line.StartText.ShouldBe("up");
-        line.EndText.ShouldBe("down");
-        canvas.NewConnectionFlow.ShouldBe(ConnectionFlow.OneWay);
-        canvas.NewConnectionStyle.ShouldBe(ConnectionStyle.Dashed);
-        canvas.NewConnectionLabel.ShouldBe(ConnectionLabel.Up);
-        commands.ToggleConnectionFlow(ConnectionFlow.OneWay);
-        line.Flow.ShouldBe(ConnectionFlow.TwoWay);
-      }
+      using var canvas = new Canvas();
+      var first = ProjectRegressionTests.AddRoom("First");
+      var second = ProjectRegressionTests.AddRoom("Second");
+      var line = ProjectRegressionTests.Connect(first, second);
+      canvas.SelectedElement = first;
+      var commands = new CommandController(canvas);
+      commands.SetRoomLighting(LightingActionType.ForceDark);
+      commands.SetRoomShape(RoomShape.Ellipse);
+      commands.SetStartRoom();
+      commands.SetEndRoom();
+      first.IsDark.ShouldBeTrue();
+      first.Shape.ShouldBe(RoomShape.Ellipse);
+      first.IsStartRoom.ShouldBeTrue();
+      first.IsEndRoom.ShouldBeTrue();
+      second.IsDark.ShouldBeFalse();
+      second.Shape.ShouldBe(RoomShape.SquareCorners);
+      canvas.SelectedElement = second;
+      commands.SetStartRoom();
+      first.IsStartRoom.ShouldBeFalse();
+      second.IsStartRoom.ShouldBeTrue();
+      canvas.SelectedElement = line;
+      commands.SetConnectionFlow(ConnectionFlow.OneWay);
+      commands.SetConnectionStyle(ConnectionStyle.Dashed);
+      commands.SetConnectionLabel(ConnectionLabel.Up);
+      line.Flow.ShouldBe(ConnectionFlow.OneWay);
+      line.Style.ShouldBe(ConnectionStyle.Dashed);
+      line.StartText.ShouldBe("up");
+      line.EndText.ShouldBe("down");
+      canvas.NewConnectionFlow.ShouldBe(ConnectionFlow.OneWay);
+      canvas.NewConnectionStyle.ShouldBe(ConnectionStyle.Dashed);
+      canvas.NewConnectionLabel.ShouldBe(ConnectionLabel.Up);
+      commands.ToggleConnectionFlow(ConnectionFlow.OneWay);
+      line.Flow.ShouldBe(ConnectionFlow.TwoWay);
     }
 
     [Test]
     public void RegionSelectionAndZOrder_RespectExistingSelection() {
-      using (var canvas = new Canvas()) {
-        var first = ProjectRegressionTests.AddRoom("First");
-        var second = ProjectRegressionTests.AddRoom("Second");
-        var third = ProjectRegressionTests.AddRoom("Third");
-        first.Region = second.Region = "Forest";
-        third.Region = "Town";
-        canvas.SelectedElement = first;
-        var commands = new CommandController(canvas);
-        commands.SelectRegions();
-        canvas.SelectedRooms.ShouldBe(new[] {first, second});
-        commands.BringToFront();
-        first.ZOrder.ShouldBeGreaterThan(third.ZOrder);
-        second.ZOrder.ShouldBe(first.ZOrder);
-        commands.SendToBack();
-        first.ZOrder.ShouldBeLessThan(third.ZOrder);
-      }
+      using var canvas = new Canvas();
+      var first = ProjectRegressionTests.AddRoom("First");
+      var second = ProjectRegressionTests.AddRoom("Second");
+      var third = ProjectRegressionTests.AddRoom("Third");
+      first.Region = second.Region = "Forest";
+      third.Region = "Town";
+      canvas.SelectedElement = first;
+      var commands = new CommandController(canvas);
+      commands.SelectRegions();
+      canvas.SelectedRooms.ShouldBe(new[] {first, second});
+      commands.BringToFront();
+      first.ZOrder.ShouldBeGreaterThan(third.ZOrder);
+      second.ZOrder.ShouldBe(first.ZOrder);
+      commands.SendToBack();
+      first.ZOrder.ShouldBeLessThan(third.ZOrder);
     }
 
     [TestCase(ValidationType.RoomDescription)]
@@ -101,37 +98,35 @@ namespace Trizbort.Tests {
     [TestCase(ValidationType.RoomSubTitle)]
     [TestCase(ValidationType.RoomDanglingConnection)]
     public void ValidationCommands_ToggleAndRestoreOnlyTheirRule(ValidationType rule) {
-      using (var canvas = new Canvas()) {
-        var commands = new CommandController(canvas);
-        commands.SetValidation(rule);
-        var flags = new[] {Project.Current.MustHaveDescription, Project.Current.MustHaveUniqueNames,
-          Project.Current.MustHaveSubtitle, Project.Current.MustHaveNoDanglingConnectors};
-        flags.Count(value => value).ShouldBe(1);
-        commands.SetValidation(rule);
-        new[] {Project.Current.MustHaveDescription, Project.Current.MustHaveUniqueNames,
-          Project.Current.MustHaveSubtitle, Project.Current.MustHaveNoDanglingConnectors}.Any(value => value).ShouldBeFalse();
-      }
+      using var canvas = new Canvas();
+      var commands = new CommandController(canvas);
+      commands.SetValidation(rule);
+      var flags = new[] {Project.Current.MustHaveDescription, Project.Current.MustHaveUniqueNames,
+        Project.Current.MustHaveSubtitle, Project.Current.MustHaveNoDanglingConnectors};
+      flags.Count(value => value).ShouldBe(1);
+      commands.SetValidation(rule);
+      new[] {Project.Current.MustHaveDescription, Project.Current.MustHaveUniqueNames,
+        Project.Current.MustHaveSubtitle, Project.Current.MustHaveNoDanglingConnectors}.Any(value => value).ShouldBeFalse();
     }
 
     [Test]
     public void ProjectSwitch_RewiresDirtyEventsAndClearsStaleSelection() {
-      using (var canvas = new Canvas {Size = new Size(600, 400)}) {
-        var oldProject = Project.Current;
-        var old = canvas.AddRoom(false, false, false);
-        oldProject.IsDirty = false;
-        Project.Current = new Project();
-        canvas.SelectedElements.ShouldBeEmpty();
-        old.Name = "Old changed";
-        oldProject.IsDirty.ShouldBeFalse();
-        Project.Current.IsDirty.ShouldBeFalse();
-        var current = canvas.AddRoom(false, false, false);
-        Project.Current.IsDirty = false;
-        current.Name = "Current changed";
-        Project.Current.IsDirty.ShouldBeTrue();
-        Project.Current.Elements.Remove(current);
-        canvas.SelectedElements.ShouldBeEmpty();
-        oldProject.Dispose();
-      }
+      using var canvas = new Canvas {Size = new Size(600, 400)};
+      var oldProject = Project.Current;
+      var old = canvas.AddRoom(false, false, false);
+      oldProject.IsDirty = false;
+      Project.Current = new Project();
+      canvas.SelectedElements.ShouldBeEmpty();
+      old.Name = "Old changed";
+      oldProject.IsDirty.ShouldBeFalse();
+      Project.Current.IsDirty.ShouldBeFalse();
+      var current = canvas.AddRoom(false, false, false);
+      Project.Current.IsDirty = false;
+      current.Name = "Current changed";
+      Project.Current.IsDirty.ShouldBeTrue();
+      Project.Current.Elements.Remove(current);
+      canvas.SelectedElements.ShouldBeEmpty();
+      oldProject.Dispose();
     }
 
     [Test]

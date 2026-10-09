@@ -59,17 +59,14 @@ namespace Trizbort.UI
       base.OnClosed(e);
     }
 
-    private void BrowseButton_Click(object sender, EventArgs e)
-    {
-      using (var dialog = new OpenFileDialog())
-      {
-        dialog.Filter = "Text and Log Files(*.txt, *.log)|*.txt;*.log|All Files|*.*||";
-        dialog.Title = "Open Transcript";
-        dialog.FileName = m_textBox.Text;
-        dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(m_textBox.Text);
-        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
-          m_textBox.Text = dialog.FileName;
-      }
+    private void BrowseButton_Click(object sender, EventArgs e) {
+      using var dialog = new OpenFileDialog();
+      dialog.Filter = "Text and Log Files(*.txt, *.log)|*.txt;*.log|All Files|*.*||";
+      dialog.Title = "Open Transcript";
+      dialog.FileName = m_textBox.Text;
+      dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(m_textBox.Text);
+      if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
+        m_textBox.Text = dialog.FileName;
     }
 
     private void VerboseTranscriptCheckBox_CheckedChanged(object sender, EventArgs e)

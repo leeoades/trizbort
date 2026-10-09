@@ -99,21 +99,20 @@ namespace Trizbort.Tests {
       room.Objects = "Chest [c]\n  Key\nreserved\nForest";
       ProjectRegressionTests.AddRoom("reserved");
       ProjectRegressionTests.AddRoom("Forest");
-      using (var exporter = new PreparationExporter()) {
-        exporter.Export();
-        exporter.Locations.Select(location => location.ExportName).ShouldBe(new[] {"reserved2", "reserved3", "Forest2"});
-        exporter.Regions.Single().ExportName.ShouldBe("Forest");
-        var things = exporter.Locations[0].Things;
-        things.Select(thing => thing.ExportName).Distinct(StringComparer.OrdinalIgnoreCase).Count().ShouldBe(4);
-        things[0].IsContainer.ShouldBeTrue();
-        things[1].Container.ShouldBeSameAs(things[0]);
-        things[0].Contents.ShouldBe(new[] {things[1]});
-        things[2].ExportName.ShouldBe("reserved4");
-        things[3].ExportName.ShouldBe("Forest3");
-        exporter.Export();
-        exporter.Locations.Count.ShouldBe(3);
-        exporter.Locations[0].Things.Count.ShouldBe(4);
-      }
+      using var exporter = new PreparationExporter();
+      exporter.Export();
+      exporter.Locations.Select(location => location.ExportName).ShouldBe(new[] {"reserved2", "reserved3", "Forest2"});
+      exporter.Regions.Single().ExportName.ShouldBe("Forest");
+      var things = exporter.Locations[0].Things;
+      things.Select(thing => thing.ExportName).Distinct(StringComparer.OrdinalIgnoreCase).Count().ShouldBe(4);
+      things[0].IsContainer.ShouldBeTrue();
+      things[1].Container.ShouldBeSameAs(things[0]);
+      things[0].Contents.ShouldBe(new[] {things[1]});
+      things[2].ExportName.ShouldBe("reserved4");
+      things[3].ExportName.ShouldBe("Forest3");
+      exporter.Export();
+      exporter.Locations.Count.ShouldBe(3);
+      exporter.Locations[0].Things.Count.ShouldBe(4);
     }
 
     [TestCase(ConnectionFlow.OneWay, false)]
@@ -125,17 +124,16 @@ namespace Trizbort.Tests {
       connection.Flow = flow;
       connection.Style = ConnectionStyle.Dashed;
       connection.Door = new Door {Locked = true};
-      using (var exporter = new PreparationExporter()) {
-        exporter.Export();
-        var source = exporter.Locations[0];
-        var target = exporter.Locations[1];
-        var exit = source.GetBestExit(MappableDirection.East);
-        exit.Target.ShouldBeSameAs(target);
-        exit.Door.Locked.ShouldBeTrue();
-        exit.Conditional.ShouldBeTrue();
-        Exit.IsReciprocated(source, MappableDirection.East, target).ShouldBe(reciprocal);
-        (target.GetBestExit(MappableDirection.West) != null).ShouldBe(reciprocal);
-      }
+      using var exporter = new PreparationExporter();
+      exporter.Export();
+      var source = exporter.Locations[0];
+      var target = exporter.Locations[1];
+      var exit = source.GetBestExit(MappableDirection.East);
+      exit.Target.ShouldBeSameAs(target);
+      exit.Door.Locked.ShouldBeTrue();
+      exit.Conditional.ShouldBeTrue();
+      Exit.IsReciprocated(source, MappableDirection.East, target).ShouldBe(reciprocal);
+      (target.GetBestExit(MappableDirection.West) != null).ShouldBe(reciprocal);
     }
 
     [Test]

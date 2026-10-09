@@ -220,46 +220,45 @@ namespace Trizbort.Tests {
       var project = new Project();
       Project.Current = project;
       try {
-        using (var canvas = new Canvas {Size = new Size(600, 400)}) {
-          var label = canvas.AddLabel(false, false);
-          canvas.SelectedElement.ShouldBeSameAs(label);
-          var handles = (System.Collections.ICollection) typeof(Canvas).GetField("mHandles", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
-          handles.Count.ShouldBe(8);
-          var width = label.Width;
-          typeof(Canvas).GetMethod("resizeRoom", BindingFlags.Instance | BindingFlags.NonPublic)
-            .Invoke(canvas, new object[] {Keys.Right});
-          label.Width.ShouldBeGreaterThan(width);
-          project.IsDirty = false;
-          label.Text = "Changed";
-          project.IsDirty.ShouldBeTrue();
-          canvas.SelectedElement = null;
-          canvas.HoverElement = label;
-          var ports = (System.Collections.ICollection) typeof(Canvas).GetField("mPorts", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
-          ports.Count.ShouldBe(16);
+        using var canvas = new Canvas {Size = new Size(600, 400)};
+        var label = canvas.AddLabel(false, false);
+        canvas.SelectedElement.ShouldBeSameAs(label);
+        var handles = (System.Collections.ICollection) typeof(Canvas).GetField("mHandles", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
+        handles.Count.ShouldBe(8);
+        var width = label.Width;
+        typeof(Canvas).GetMethod("resizeRoom", BindingFlags.Instance | BindingFlags.NonPublic)
+                      .Invoke(canvas, new object[] {Keys.Right});
+        label.Width.ShouldBeGreaterThan(width);
+        project.IsDirty = false;
+        label.Text = "Changed";
+        project.IsDirty.ShouldBeTrue();
+        canvas.SelectedElement = null;
+        canvas.HoverElement = label;
+        var ports = (System.Collections.ICollection) typeof(Canvas).GetField("mPorts", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
+        ports.Count.ShouldBe(16);
 
-          var room = canvas.AddRoom(false, false, false);
-          var connection = new Connection(project, new Vertex(room.PortAt(CompassPoint.East)), new Vertex(label.PortAt(CompassPoint.West)));
-          project.Elements.Add(connection);
-          var controller = new CopyController();
-          var copy = controller.CreateCopyObject(new Element[] {label, room, connection});
-          typeof(Canvas).GetMethod("pasteRooms", BindingFlags.Instance | BindingFlags.NonPublic)
-            .Invoke(canvas, new object[] {false, copy, controller});
-          canvas.SelectedElements.Count.ShouldBe(3);
-          handles.Count.ShouldBe(0);
-          var pasted = canvas.SelectedElements.OfType<MapLabel>().Single();
-          pasted.Text.ShouldBe("Changed");
-          var pastedLine = canvas.SelectedElements.OfType<Connection>().Single();
-          pastedLine.VertexList[1].Port.Owner.ShouldBeSameAs(pasted);
-          pastedLine.VertexList[0].Port.Owner.ShouldBeSameAs(canvas.SelectedElements.OfType<Room>().Single());
+        var room = canvas.AddRoom(false, false, false);
+        var connection = new Connection(project, new Vertex(room.PortAt(CompassPoint.East)), new Vertex(label.PortAt(CompassPoint.West)));
+        project.Elements.Add(connection);
+        var controller = new CopyController();
+        var copy = controller.CreateCopyObject(new Element[] {label, room, connection});
+        typeof(Canvas).GetMethod("pasteRooms", BindingFlags.Instance | BindingFlags.NonPublic)
+                      .Invoke(canvas, new object[] {false, copy, controller});
+        canvas.SelectedElements.Count.ShouldBe(3);
+        handles.Count.ShouldBe(0);
+        var pasted = canvas.SelectedElements.OfType<MapLabel>().Single();
+        pasted.Text.ShouldBe("Changed");
+        var pastedLine = canvas.SelectedElements.OfType<Connection>().Single();
+        pastedLine.VertexList[1].Port.Owner.ShouldBeSameAs(pasted);
+        pastedLine.VertexList[0].Port.Owner.ShouldBeSameAs(canvas.SelectedElements.OfType<Room>().Single());
 
-          canvas.SelectedElement = connection;
-          var inserted = canvas.AddRoom(false, true, false);
-          project.Elements.ShouldNotContain(connection);
-          var splitLines = project.Elements.OfType<Connection>().Where(line => line.VertexList.Any(vertex => vertex.Port?.Owner == inserted)).ToList();
-          splitLines.Count.ShouldBe(2);
-          splitLines.Any(line => line.VertexList.Any(vertex => vertex.Port?.Owner == label)).ShouldBeTrue();
-          splitLines.All(line => !line.IsDangling).ShouldBeTrue();
-        }
+        canvas.SelectedElement = connection;
+        var inserted = canvas.AddRoom(false, true, false);
+        project.Elements.ShouldNotContain(connection);
+        var splitLines = project.Elements.OfType<Connection>().Where(line => line.VertexList.Any(vertex => vertex.Port?.Owner == inserted)).ToList();
+        splitLines.Count.ShouldBe(2);
+        splitLines.Any(line => line.VertexList.Any(vertex => vertex.Port?.Owner == label)).ShouldBeTrue();
+        splitLines.All(line => !line.IsDangling).ShouldBeTrue();
       }
       finally {
         Project.Current = previous;
@@ -290,39 +289,38 @@ namespace Trizbort.Tests {
     [Test]
     public void Dialog_GroupsVisibilityWithRelatedControls_AndRetainsStyleWhenToggled() {
       var label = new MapLabel(new Project()) {BorderStyle = BorderDashStyle.Dash};
-      using (var dialog = new LabelPropertiesDialog(label)) {
-        var outlineEnabled = (CheckBox) dialog.Controls.Find("outlineEnabled", true)[0];
-        var backgroundEnabled = (CheckBox) dialog.Controls.Find("backgroundEnabled", true)[0];
-        var shape = (ComboBox) dialog.Controls.Find("outlineShape", true)[0];
-        var style = (ComboBox) dialog.Controls.Find("outlineStyle", true)[0];
-        var outlineColor = dialog.Controls.Find("outlineColor", true)[0];
-        var backgroundColor = dialog.Controls.Find("backgroundColor", true)[0];
-        outlineEnabled.Parent.ShouldBeSameAs(shape.Parent);
-        outlineEnabled.Parent.ShouldBeSameAs(style.Parent);
-        outlineEnabled.Parent.ShouldBeSameAs(outlineColor.Parent);
-        backgroundEnabled.Parent.ShouldBeSameAs(backgroundColor.Parent);
-        outlineEnabled.Parent.Parent.ShouldBeOfType<GroupBox>();
-        backgroundEnabled.Parent.Parent.ShouldBeOfType<GroupBox>();
-        style.Items.Contains(BorderDashStyle.None).ShouldBeFalse();
-        style.Enabled.ShouldBeTrue();
-        outlineColor.Enabled.ShouldBeTrue();
-        backgroundColor.Enabled.ShouldBeFalse();
+      using var dialog = new LabelPropertiesDialog(label);
+      var outlineEnabled = (CheckBox) dialog.Controls.Find("outlineEnabled", true)[0];
+      var backgroundEnabled = (CheckBox) dialog.Controls.Find("backgroundEnabled", true)[0];
+      var shape = (ComboBox) dialog.Controls.Find("outlineShape", true)[0];
+      var style = (ComboBox) dialog.Controls.Find("outlineStyle", true)[0];
+      var outlineColor = dialog.Controls.Find("outlineColor", true)[0];
+      var backgroundColor = dialog.Controls.Find("backgroundColor", true)[0];
+      outlineEnabled.Parent.ShouldBeSameAs(shape.Parent);
+      outlineEnabled.Parent.ShouldBeSameAs(style.Parent);
+      outlineEnabled.Parent.ShouldBeSameAs(outlineColor.Parent);
+      backgroundEnabled.Parent.ShouldBeSameAs(backgroundColor.Parent);
+      outlineEnabled.Parent.Parent.ShouldBeOfType<GroupBox>();
+      backgroundEnabled.Parent.Parent.ShouldBeOfType<GroupBox>();
+      style.Items.Contains(BorderDashStyle.None).ShouldBeFalse();
+      style.Enabled.ShouldBeTrue();
+      outlineColor.Enabled.ShouldBeTrue();
+      backgroundColor.Enabled.ShouldBeFalse();
 
-        outlineEnabled.Checked = false;
-        style.Enabled.ShouldBeFalse();
-        outlineColor.Enabled.ShouldBeFalse();
-        shape.Enabled.ShouldBeFalse();
-        backgroundEnabled.Checked = true;
-        backgroundColor.Enabled.ShouldBeTrue();
-        shape.Enabled.ShouldBeTrue();
-        outlineEnabled.Checked = true;
-        style.Enabled.ShouldBeTrue();
-        outlineColor.Enabled.ShouldBeTrue();
-        style.SelectedItem.ShouldBe(BorderDashStyle.Dash);
-        backgroundEnabled.Checked = false;
-        backgroundColor.Enabled.ShouldBeFalse();
-        shape.Enabled.ShouldBeTrue();
-      }
+      outlineEnabled.Checked = false;
+      style.Enabled.ShouldBeFalse();
+      outlineColor.Enabled.ShouldBeFalse();
+      shape.Enabled.ShouldBeFalse();
+      backgroundEnabled.Checked = true;
+      backgroundColor.Enabled.ShouldBeTrue();
+      shape.Enabled.ShouldBeTrue();
+      outlineEnabled.Checked = true;
+      style.Enabled.ShouldBeTrue();
+      outlineColor.Enabled.ShouldBeTrue();
+      style.SelectedItem.ShouldBe(BorderDashStyle.Dash);
+      backgroundEnabled.Checked = false;
+      backgroundColor.Enabled.ShouldBeFalse();
+      shape.Enabled.ShouldBeTrue();
     }
 
     [Test]
@@ -344,12 +342,11 @@ namespace Trizbort.Tests {
 
     private static Bitmap render(MapLabel label, bool selected) {
       var bitmap = new Bitmap(160, 110);
-      using (var native = Graphics.FromImage(bitmap))
-      using (var graphics = XGraphics.FromGraphics(native, new XSize(bitmap.Width, bitmap.Height)))
-      using (var palette = new Palette()) {
-        native.Clear(Color.White);
-        label.Draw(graphics, palette, new DrawingContext(1) {Selected = selected});
-      }
+      using var native = Graphics.FromImage(bitmap);
+      using var graphics = XGraphics.FromGraphics(native, new XSize(bitmap.Width, bitmap.Height));
+      using var palette = new Palette();
+      native.Clear(Color.White);
+      label.Draw(graphics, palette, new DrawingContext(1) {Selected = selected});
       return bitmap;
     }
 

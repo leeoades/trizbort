@@ -183,22 +183,21 @@ namespace Trizbort.Tests {
       var path = Files.File("explorer-new.trizbort");
       File.WriteAllText(path, "");
       try {
-        using (var form = new MainForm()) {
-          form.OpenProject(path);
-          Project.Current.ShouldNotBeSameAs(existing);
-          Project.Current.FileName.ShouldBe(path);
-          Project.Current.Elements.ShouldBeEmpty();
-          Project.Current.Title.ShouldBeEmpty();
-          Project.Current.Author.ShouldBeEmpty();
-          Project.Current.Description.ShouldBeEmpty();
-          Project.Current.History.ShouldBeEmpty();
-          Project.Current.IsDirty.ShouldBeFalse();
-          existing.Elements.ShouldHaveSingleItem().ShouldBeSameAs(room);
-          existing.Title.ShouldBe("Existing title");
-          Settings.GridSize.ShouldBe(32);
-          AssertWatching(path);
-          interaction.Messages.ShouldBeEmpty();
-        }
+        using var form = new MainForm();
+        form.OpenProject(path);
+        Project.Current.ShouldNotBeSameAs(existing);
+        Project.Current.FileName.ShouldBe(path);
+        Project.Current.Elements.ShouldBeEmpty();
+        Project.Current.Title.ShouldBeEmpty();
+        Project.Current.Author.ShouldBeEmpty();
+        Project.Current.Description.ShouldBeEmpty();
+        Project.Current.History.ShouldBeEmpty();
+        Project.Current.IsDirty.ShouldBeFalse();
+        existing.Elements.ShouldHaveSingleItem().ShouldBeSameAs(room);
+        existing.Title.ShouldBe("Existing title");
+        Settings.GridSize.ShouldBe(32);
+        AssertWatching(path);
+        interaction.Messages.ShouldBeEmpty();
       } finally {
         TrizbortApplication.MainForm = previousForm;
         existing.Dispose();
@@ -215,13 +214,12 @@ namespace Trizbort.Tests {
       var existing = Project.Current;
       var path = Files.File(name);
       if (contents != null) File.WriteAllText(path, contents);
-      using (var loaded = new Project {FileName = path}) {
-        loaded.Load().ShouldBeFalse();
-        AssertExistingMap(existing, room);
-        Settings.GridSize.ShouldBe(90);
-        interaction.Messages.ShouldHaveSingleItem().ShouldContain(
-          Path.GetExtension(path) == ".trizbort" ? "problem loading" : "not a known Trizbort file");
-      }
+      using var loaded = new Project {FileName = path};
+      loaded.Load().ShouldBeFalse();
+      AssertExistingMap(existing, room);
+      Settings.GridSize.ShouldBe(90);
+      interaction.Messages.ShouldHaveSingleItem().ShouldContain(
+        Path.GetExtension(path) == ".trizbort" ? "problem loading" : "not a known Trizbort file");
     }
 
     [TestCase(false)]
@@ -232,12 +230,11 @@ namespace Trizbort.Tests {
       var previousDirectory = Environment.CurrentDirectory;
       try {
         Environment.CurrentDirectory = Files.Path;
-        using (var loaded = new Project {FileName = Path.GetFileName(path)}) {
-          loaded.Load().ShouldBeTrue();
-          loaded.Elements.Count.ShouldBe(empty ? 0 : 1);
-          AssertWatching(path);
-          interaction.Messages.ShouldBeEmpty();
-        }
+        using var loaded = new Project {FileName = Path.GetFileName(path)};
+        loaded.Load().ShouldBeTrue();
+        loaded.Elements.Count.ShouldBe(empty ? 0 : 1);
+        AssertWatching(path);
+        interaction.Messages.ShouldBeEmpty();
       } finally {
         Environment.CurrentDirectory = previousDirectory;
       }
@@ -296,14 +293,13 @@ namespace Trizbort.Tests {
 
     [Test]
     public void MessageBoundary_PreservesChoiceButtonsOwnerAndDefaultButton() {
-      using (var owner = new Form()) {
-        interaction.Result = DialogResult.No;
-        UserInteraction.ShowMessage(owner, "Question", "Caption", MessageBoxButtons.YesNoCancel,
-          MessageBoxIcon.Question, MessageBoxDefaultButton.Button2).ShouldBe(DialogResult.No);
-        interaction.Owner.ShouldBeSameAs(owner);
-        interaction.Buttons.ShouldBe(MessageBoxButtons.YesNoCancel);
-        interaction.DefaultButton.ShouldBe(MessageBoxDefaultButton.Button2);
-      }
+      using var owner = new Form();
+      interaction.Result = DialogResult.No;
+      UserInteraction.ShowMessage(owner, "Question", "Caption", MessageBoxButtons.YesNoCancel,
+        MessageBoxIcon.Question, MessageBoxDefaultButton.Button2).ShouldBe(DialogResult.No);
+      interaction.Owner.ShouldBeSameAs(owner);
+      interaction.Buttons.ShouldBe(MessageBoxButtons.YesNoCancel);
+      interaction.DefaultButton.ShouldBe(MessageBoxDefaultButton.Button2);
     }
 
     [Test]

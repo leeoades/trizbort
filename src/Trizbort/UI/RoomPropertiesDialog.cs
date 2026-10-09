@@ -695,19 +695,18 @@ namespace Trizbort.UI {
     }
 
     private void RegionListBox_DrawItem(object sender, DrawItemEventArgs e) {
-      using (var palette = new Palette()) {
-        e.DrawBackground();
+      using var palette = new Palette();
+      e.DrawBackground();
 
-        var colorBounds = new Rectangle(e.Bounds.Left + HORIZONTAL_MARGIN, e.Bounds.Top + VERTICAL_MARGIN, WIDTH,
-          e.Bounds.Height - VERTICAL_MARGIN * 2);
-        var textBounds = new Rectangle(colorBounds.Right + HORIZONTAL_MARGIN, e.Bounds.Top,
-          e.Bounds.Width - colorBounds.Width - HORIZONTAL_MARGIN * 2, e.Bounds.Height);
-        var firstOrDefault = Settings.Regions.FirstOrDefault(p => p.RegionName == cboRegion.Items[e.Index].ToString());
-        if (firstOrDefault != null) e.Graphics.FillRectangle(palette.Brush(firstOrDefault.RColor), colorBounds);
-        e.Graphics.DrawRectangle(palette.Pen(e.ForeColor, 0), colorBounds);
-        e.Graphics.DrawString(cboRegion.Items[e.Index].ToString(), e.Font, palette.Brush(e.ForeColor), textBounds,
-          StringFormats.Left);
-      }
+      var colorBounds = new Rectangle(e.Bounds.Left + HORIZONTAL_MARGIN, e.Bounds.Top + VERTICAL_MARGIN, WIDTH,
+        e.Bounds.Height - VERTICAL_MARGIN * 2);
+      var textBounds = new Rectangle(colorBounds.Right + HORIZONTAL_MARGIN, e.Bounds.Top,
+        e.Bounds.Width - colorBounds.Width - HORIZONTAL_MARGIN * 2, e.Bounds.Height);
+      var firstOrDefault = Settings.Regions.FirstOrDefault(p => p.RegionName == cboRegion.Items[e.Index].ToString());
+      if (firstOrDefault != null) e.Graphics.FillRectangle(palette.Brush(firstOrDefault.RColor), colorBounds);
+      e.Graphics.DrawRectangle(palette.Pen(e.ForeColor, 0), colorBounds);
+      e.Graphics.DrawString(cboRegion.Items[e.Index].ToString(), e.Font, palette.Brush(e.ForeColor), textBounds,
+        StringFormats.Left);
     }
 
     private void RoomPropertiesDialog_KeyUp(object sender, KeyEventArgs e) {

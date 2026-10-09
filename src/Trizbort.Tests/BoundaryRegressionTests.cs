@@ -13,35 +13,33 @@ namespace Trizbort.Tests {
   public class BoundaryRegressionTests : IsolatedProjectTests {
     [Test]
     public void CommandLine_ParsesCombinedMapAutomapSaveAndExportOptions() {
-      using (var parser = new Parser(settings => settings.HelpWriter = null)) {
-        var result = parser.ParseArguments<CommandLineOptions>(new[] {
-          "Trizbort.exe", "map.trizbort", "--automap", "transcript.txt",
-          "--quicksave", "saved.trizbort", "--inform7", "story.ni", "--exit"
-        });
-        result.Tag.ShouldBe(ParserResultType.Parsed);
-        var options = ((Parsed<CommandLineOptions>) result).Value;
-        options.Executable.ShouldBe("Trizbort.exe");
-        options.FileName.ShouldBe("map.trizbort");
-        options.Transcript.ShouldBe("transcript.txt");
-        options.QuickSave.ShouldBe("saved.trizbort");
-        options.I7.ShouldBe("story.ni");
-        options.Exit.ShouldBeTrue();
-      }
+      using var parser = new Parser(settings => settings.HelpWriter = null);
+      var result = parser.ParseArguments<CommandLineOptions>(new[] {
+        "Trizbort.exe", "map.trizbort", "--automap", "transcript.txt",
+        "--quicksave", "saved.trizbort", "--inform7", "story.ni", "--exit"
+      });
+      result.Tag.ShouldBe(ParserResultType.Parsed);
+      var options = ((Parsed<CommandLineOptions>) result).Value;
+      options.Executable.ShouldBe("Trizbort.exe");
+      options.FileName.ShouldBe("map.trizbort");
+      options.Transcript.ShouldBe("transcript.txt");
+      options.QuickSave.ShouldBe("saved.trizbort");
+      options.I7.ShouldBe("story.ni");
+      options.Exit.ShouldBeTrue();
     }
 
     [TestCase("--not-an-option")]
     public void CommandLine_RejectsUnknownOptions(string argument) {
-      using (var parser = new Parser(settings => settings.HelpWriter = null))
-        parser.ParseArguments<CommandLineOptions>(new[] {"Trizbort.exe", argument}).Tag.ShouldBe(ParserResultType.NotParsed);
+      using var parser = new Parser(settings => settings.HelpWriter = null);
+      parser.ParseArguments<CommandLineOptions>(new[] {"Trizbort.exe", argument}).Tag.ShouldBe(ParserResultType.NotParsed);
     }
 
     [Test]
     public void CommandLine_BareAutomapOptionDoesNotSpecifyTranscript() {
-      using (var parser = new Parser(settings => settings.HelpWriter = null)) {
-        var result = parser.ParseArguments<CommandLineOptions>(new[] {"Trizbort.exe", "--automap"});
-        result.Tag.ShouldBe(ParserResultType.Parsed);
-        string.IsNullOrEmpty(((Parsed<CommandLineOptions>) result).Value.Transcript).ShouldBeTrue();
-      }
+      using var parser = new Parser(settings => settings.HelpWriter = null);
+      var result = parser.ParseArguments<CommandLineOptions>(new[] {"Trizbort.exe", "--automap"});
+      result.Tag.ShouldBe(ParserResultType.Parsed);
+      string.IsNullOrEmpty(((Parsed<CommandLineOptions>) result).Value.Transcript).ShouldBeTrue();
     }
 
     [TestCase(".trizbort", true)]

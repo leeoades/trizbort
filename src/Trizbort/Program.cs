@@ -18,12 +18,10 @@ namespace Trizbort
     {
       ApplicationConfiguration.Initialize();
 
-      using (var form = new MainForm())
-      {
-        MainForm = form;
-        Application.Run(form);
-        MainForm = null;
-      }
+      using var form = new MainForm();
+      MainForm = form;
+      Application.Run(form);
+      MainForm = null;
     }
   }
 }

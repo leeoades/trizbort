@@ -280,29 +280,24 @@ namespace Trizbort.UI.Controls {
       var size = ComputeCanvasBounds(true).Size * (ApplicationSettingsController.AppSettings.SaveAt100 ? 1.0f : ZoomFactor);
       size.X = Numeric.Clamp(size.X, 16, 8192);
       size.Y = Numeric.Clamp(size.Y, 16, 8192);
-      using (var nativeGraphics = Graphics.FromHwnd(Handle)) {
-        using (var stream = new System.IO.MemoryStream()) {
-          try {
-            var dc = nativeGraphics.GetHdc();
-            using (var metafile = new System.Drawing.Imaging.Metafile(stream, dc)) {
-              using (var imageGraphics = Graphics.FromImage(metafile)) {
-                using (var graphics = XGraphics.FromGraphics(imageGraphics, new XSize(size.X, size.Y))) {
-                  foreach (var room in rooms) {
-                    if (room.Name.Contains("-")) {
-                      room.MarkNameInvalid();
-                      room.Draw(graphics, palette, context);
-                    }
-                  }
-                }
-              }
-            }
-          }
-          catch {
-          }
-          finally {
-            nativeGraphics.ReleaseHdc();
+      using var nativeGraphics = Graphics.FromHwnd(Handle);
+      using var stream = new System.IO.MemoryStream();
+      try {
+        var dc = nativeGraphics.GetHdc();
+        using var metafile = new System.Drawing.Imaging.Metafile(stream, dc);
+        using var imageGraphics = Graphics.FromImage(metafile);
+        using var graphics = XGraphics.FromGraphics(imageGraphics, new XSize(size.X, size.Y));
+        foreach (var room in rooms) {
+          if (room.Name.Contains("-")) {
+            room.MarkNameInvalid();
+            room.Draw(graphics, palette, context);
           }
         }
+      }
+      catch {
+      }
+      finally {
+        nativeGraphics.ReleaseHdc();
       }
     }
 
@@ -1999,9 +1994,8 @@ namespace Trizbort.UI.Controls {
     private Image generateRegionImage(Region region) {
       var image = new Bitmap(24, 20);
       var g = Graphics.FromImage(image);
-      using (var palette = new Palette()) {
-        g.FillRectangle(palette.Brush(region.RColor), 0, 0, 24, 20);
-      }
+      using var palette = new Palette();
+      g.FillRectangle(palette.Brush(region.RColor), 0, 0, 24, 20);
 
       return image;
     }

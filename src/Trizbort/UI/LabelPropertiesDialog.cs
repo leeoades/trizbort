@@ -111,11 +111,11 @@ namespace Trizbort.UI {
       var button = new Button {Text = "Choose...", BackColor = color, Dock = DockStyle.Fill, UseVisualStyleBackColor = false};
       button.ForeColor = color.GetBrightness() < 0.5f ? Color.White : Color.Black;
       button.Click += (_, __) => {
-        using (var dialog = new ColorDialog {Color = button.BackColor, FullOpen = true})
-          if (UserInteraction.ShowDialog(dialog, button.FindForm()) == DialogResult.OK) {
-            button.BackColor = dialog.Color;
-            button.ForeColor = dialog.Color.GetBrightness() < 0.5f ? Color.White : Color.Black;
-          }
+        using var dialog = new ColorDialog {Color = button.BackColor, FullOpen = true};
+        if (UserInteraction.ShowDialog(dialog, button.FindForm()) == DialogResult.OK) {
+          button.BackColor = dialog.Color;
+          button.ForeColor = dialog.Color.GetBrightness() < 0.5f ? Color.White : Color.Black;
+        }
       };
       return button;
     }

@@ -65,15 +65,14 @@ namespace Trizbort.UI {
       if (!checkLoseProject())
         return;
 
-      using (var dialog = new OpenFileDialog()) {
-        var lastProjectName = ApplicationSettingsController.AppSettings.LastProjectFileName;
-        if (!Uri.IsWellFormedUriString(lastProjectName, UriKind.RelativeOrAbsolute))
-          dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(lastProjectName);
+      using var dialog = new OpenFileDialog();
+      var lastProjectName = ApplicationSettingsController.AppSettings.LastProjectFileName;
+      if (!Uri.IsWellFormedUriString(lastProjectName, UriKind.RelativeOrAbsolute))
+        dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(lastProjectName);
 
-        dialog.Filter = $"{Project.FilterString}|All Files|*.*||";
-        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
-          OpenProject(dialog.FileName);
-        }
+      dialog.Filter = $"{Project.FilterString}|All Files|*.*||";
+      if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
+        OpenProject(dialog.FileName);
       }
     }
 
@@ -108,9 +107,8 @@ namespace Trizbort.UI {
     }
 
     private void AutomapStartMenuItem_Click(object sender, EventArgs e) {
-      using (var dialog = new AutomapDialog()) {
-        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) Canvas.StartAutomapping(dialog.Data);
-      }
+      using var dialog = new AutomapDialog();
+      if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) Canvas.StartAutomapping(dialog.Data);
     }
 
     private void AutomapStopMenuItem_Click(object sender, EventArgs e) {
@@ -264,58 +262,54 @@ namespace Trizbort.UI {
     }
 
     private void exportCode<T>() where T : CodeExporter, new() {
-      using (var exporter = new T()) {
-        var s = exporter.Export();
-        UserInteraction.SetClipboardText(s, TextDataFormat.Text);
-      }
+      using var exporter = new T();
+      var s = exporter.Export();
+      UserInteraction.SetClipboardText(s, TextDataFormat.Text);
     }
 
     private bool exportCode<T>(ref string lastExportFileName) where T : CodeExporter, new() {
-      using (var exporter = new T()) {
-        using (var dialog = new SaveFileDialog()) {
-          // compose filter string for file dialog
-          var filterString = string.Empty;
-          var filters = exporter.FileDialogFilters;
-          foreach (var filter in filters) {
-            if (!string.IsNullOrEmpty(filterString)) filterString += "|";
-            filterString += $"{filter.Key}|*{filter.Value}";
-          }
-
-          if (!string.IsNullOrEmpty(filterString)) filterString += "|";
-          filterString += "All Files|*.*||";
-          dialog.Filter = filterString;
-
-          // set default filter by extension
-          var extension = PathHelper.SafeGetExtension(lastExportFileName);
-          for (var filterIndex = 0; filterIndex < filters.Count; ++filterIndex)
-            if (StringComparer.InvariantCultureIgnoreCase.Compare(extension, filters[filterIndex].Value) == 0) {
-              dialog.FilterIndex = filterIndex + 1; // 1 based index
-              break;
-            }
-
-          // show dialog
-          dialog.Title = exporter.FileDialogTitle;
-          dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(lastExportFileName);
-          if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
-            try {
-              // export source code
-              exporter.Export(dialog.FileName);
-              lastExportFileName = dialog.FileName;
-              return true;
-            }
-            catch (Exception ex) {
-              UserInteraction.ShowMessage(Program.MainForm, $"There was a problem exporting the map:\n\n{ex.Message}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+      using var exporter = new T();
+      using var dialog = new SaveFileDialog();
+      // compose filter string for file dialog
+      var filterString = string.Empty;
+      var filters = exporter.FileDialogFilters;
+      foreach (var filter in filters) {
+        if (!string.IsNullOrEmpty(filterString)) filterString += "|";
+        filterString += $"{filter.Key}|*{filter.Value}";
       }
+
+      if (!string.IsNullOrEmpty(filterString)) filterString += "|";
+      filterString += "All Files|*.*||";
+      dialog.Filter = filterString;
+
+      // set default filter by extension
+      var extension = PathHelper.SafeGetExtension(lastExportFileName);
+      for (var filterIndex = 0; filterIndex < filters.Count; ++filterIndex)
+        if (StringComparer.InvariantCultureIgnoreCase.Compare(extension, filters[filterIndex].Value) == 0) {
+          dialog.FilterIndex = filterIndex + 1; // 1 based index
+          break;
+        }
+
+      // show dialog
+      dialog.Title = exporter.FileDialogTitle;
+      dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(lastExportFileName);
+      if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
+        try {
+          // export source code
+          exporter.Export(dialog.FileName);
+          lastExportFileName = dialog.FileName;
+          return true;
+        }
+        catch (Exception ex) {
+          UserInteraction.ShowMessage(Program.MainForm, $"There was a problem exporting the map:\n\n{ex.Message}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
 
       return false;
     }
 
     private void exportCodeCl<T>(string exportFile) where T : CodeExporter, new() {
-      using (var exporter = new T()) {
-        exporter.Export(exportFile);
-      }
+      using var exporter = new T();
+      exporter.Export(exportFile);
     }
 
     private string exportImage() {
@@ -371,15 +365,14 @@ namespace Trizbort.UI {
     }
 
     private void FileExportImageMenuItem_Click(object sender, EventArgs e) {
-      using (var dialog = new SaveFileDialog()) {
-        dialog.Filter = "PNG Images|*.png|JPEG Images|*.jpg|BMP Images|*.bmp|Enhanced Metafiles (EMF)|*.emf|All Files|*.*||";
-        dialog.Title = "Export Image";
-        dialog.DefaultExt = getExtensionForDefaultImageType();
-        dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastExportImageFileName);
-        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
-          ApplicationSettingsController.AppSettings.LastExportImageFileName = Path.GetDirectoryName(dialog.FileName) + @"\";
-          if (!saveImage(dialog.FileName)) UserInteraction.ShowMessage("There was an error saving the image file.  Please make sure the image is not already opened.", "Export Image", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-        }
+      using var dialog = new SaveFileDialog();
+      dialog.Filter = "PNG Images|*.png|JPEG Images|*.jpg|BMP Images|*.bmp|Enhanced Metafiles (EMF)|*.emf|All Files|*.*||";
+      dialog.Title = "Export Image";
+      dialog.DefaultExt = getExtensionForDefaultImageType();
+      dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastExportImageFileName);
+      if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
+        ApplicationSettingsController.AppSettings.LastExportImageFileName = Path.GetDirectoryName(dialog.FileName) + @"\";
+        if (!saveImage(dialog.FileName)) UserInteraction.ShowMessage("There was an error saving the image file.  Please make sure the image is not already opened.", "Export Image", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
       }
     }
 
@@ -395,18 +388,17 @@ namespace Trizbort.UI {
     }
 
     private void FileExportPDFMenuItem_Click(object sender, EventArgs e) {
-      using (var dialog = new SaveFileDialog()) {
-        dialog.Filter = "PDF Files|*.pdf|All Files|*.*||";
-        dialog.Title = "Export PDF";
-        dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastExportImageFileName);
-        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
-          try {
-            savePDF(dialog.FileName);
-          }
-          catch (Exception ex) {
-            UserInteraction.ShowMessage(Program.MainForm, $"There was a problem exporting the map:\n\n{ex.Message}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-          }
-      }
+      using var dialog = new SaveFileDialog();
+      dialog.Filter = "PDF Files|*.pdf|All Files|*.*||";
+      dialog.Title = "Export PDF";
+      dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastExportImageFileName);
+      if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
+        try {
+          savePDF(dialog.FileName);
+        }
+        catch (Exception ex) {
+          UserInteraction.ShowMessage(Program.MainForm, $"There was a problem exporting the map:\n\n{ex.Message}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     private void FileExportQuestMenuItem_Click(object sender, EventArgs e) {
@@ -482,15 +474,13 @@ namespace Trizbort.UI {
     }
 
     private void HelpAboutMenuItem_Click(object sender, EventArgs e) {
-      using (var dialog = new AboutDialog()) {
-        UserInteraction.ShowDialog(dialog);
-      }
+      using var dialog = new AboutDialog();
+      UserInteraction.ShowDialog(dialog);
     }
 
     private void HelpAndSupportMenuItem_Click(object sender, EventArgs e) {
-      using (var dialog = new OnlineHelpDialog()) {
-        UserInteraction.ShowDialog(dialog, this);
-      }
+      using var dialog = new OnlineHelpDialog();
+      UserInteraction.ShowDialog(dialog, this);
     }
 
     private void hugoToTextToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -667,30 +657,29 @@ namespace Trizbort.UI {
     }
 
     private bool saveAsProject() {
-      using (var dialog = new SaveFileDialog()) {
-        if (!Project.Current.FileName.IsUrl()) {
-          if (!string.IsNullOrEmpty(Project.Current.FileName))
-            dialog.FileName = Project.Current.FileName;
-          else
-            dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastProjectFileName);
-        } else {
-          dialog.FileName = Path.GetFileName(Project.Current.FileName);
-        }
+      using var dialog = new SaveFileDialog();
+      if (!Project.Current.FileName.IsUrl()) {
+        if (!string.IsNullOrEmpty(Project.Current.FileName))
+          dialog.FileName = Project.Current.FileName;
+        else
+          dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastProjectFileName);
+      } else {
+        dialog.FileName = Path.GetFileName(Project.Current.FileName);
+      }
 
-        dialog.Filter = $"{Project.FilterString}|All Files|*.*||";
-        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
-          ApplicationSettingsController.AppSettings.LastProjectFileName = dialog.FileName;
-          Project.Current.FileName = dialog.FileName;
-          if (Project.Current.Save(true)) {
-            if (ApplicationSettingsController.AppSettings.RecentProjects.Contains(Project.Current.FileName)) {
-              ApplicationSettingsController.AppSettings.RecentProjects.Remove(Project.Current.FileName);
-            }
-            ApplicationSettingsController.AppSettings.RecentProjects.Insert(0, Project.Current.FileName);
-            if (ApplicationSettingsController.AppSettings.RecentProjects.Count > ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT) {
-              ApplicationSettingsController.AppSettings.RecentProjects.RemoveRange(ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT, ApplicationSettingsController.AppSettings.RecentProjects.Count - ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT);
-            }
-            return true;
+      dialog.Filter = $"{Project.FilterString}|All Files|*.*||";
+      if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
+        ApplicationSettingsController.AppSettings.LastProjectFileName = dialog.FileName;
+        Project.Current.FileName = dialog.FileName;
+        if (Project.Current.Save(true)) {
+          if (ApplicationSettingsController.AppSettings.RecentProjects.Contains(Project.Current.FileName)) {
+            ApplicationSettingsController.AppSettings.RecentProjects.Remove(Project.Current.FileName);
           }
+          ApplicationSettingsController.AppSettings.RecentProjects.Insert(0, Project.Current.FileName);
+          if (ApplicationSettingsController.AppSettings.RecentProjects.Count > ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT) {
+            ApplicationSettingsController.AppSettings.RecentProjects.RemoveRange(ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT, ApplicationSettingsController.AppSettings.RecentProjects.Count - ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT);
+          }
+          return true;
         }
       }
 
@@ -714,44 +703,42 @@ namespace Trizbort.UI {
       size.Y = Numeric.Clamp(size.Y, 16, 8192);
 
       try {
-        if (Equals(format, ImageFormat.Emf))
-          using (var nativeGraphics = Graphics.FromHwnd(Canvas.Handle)) {
-            using (var stream = new MemoryStream()) {
-              try {
-                var dc = nativeGraphics.GetHdc();
-                using (var metafile = new Metafile(stream, dc)) {
-                  using (var imageGraphics = Graphics.FromImage(metafile)) {
-                    using (var graphics = XGraphics.FromGraphics(imageGraphics, new XSize(size.X, size.Y))) {
-                      Canvas.Draw(graphics, true, size.X, size.Y);
-                    }
-                  }
-
-                  var handle = metafile.GetHenhmetafile();
-                  var copy = CopyEnhMetaFile(handle, fileName);
-                  if (copy == IntPtr.Zero)
-                    sReturn = false;
-
-                  DeleteEnhMetaFile(copy);
-                }
-              }
-              catch {
-                sReturn = false;
-              }
-              finally {
-                nativeGraphics.ReleaseHdc();
-              }
-            }
-          }
-        else
-          using (var bitmap = new Bitmap((int) Math.Ceiling(size.X), (int) Math.Ceiling(size.Y))) {
-            using (var imageGraphics = Graphics.FromImage(bitmap)) {
+        if (Equals(format, ImageFormat.Emf)) {
+          using var nativeGraphics = Graphics.FromHwnd(Canvas.Handle);
+          using var stream = new MemoryStream();
+          try {
+            var dc = nativeGraphics.GetHdc();
+            using var metafile = new Metafile(stream, dc);
+            using (var imageGraphics = Graphics.FromImage(metafile)) {
               using (var graphics = XGraphics.FromGraphics(imageGraphics, new XSize(size.X, size.Y))) {
                 Canvas.Draw(graphics, true, size.X, size.Y);
               }
             }
 
-            bitmap.Save(fileName, format);
+            var handle = metafile.GetHenhmetafile();
+            var copy = CopyEnhMetaFile(handle, fileName);
+            if (copy == IntPtr.Zero)
+              sReturn = false;
+
+            DeleteEnhMetaFile(copy);
           }
+          catch {
+            sReturn = false;
+          }
+          finally {
+            nativeGraphics.ReleaseHdc();
+          }
+        }
+        else {
+          using var bitmap = new Bitmap((int) Math.Ceiling(size.X), (int) Math.Ceiling(size.Y));
+          using (var imageGraphics = Graphics.FromImage(bitmap)) {
+            using (var graphics = XGraphics.FromGraphics(imageGraphics, new XSize(size.X, size.Y))) {
+              Canvas.Draw(graphics, true, size.X, size.Y);
+            }
+          }
+
+          bitmap.Save(fileName, format);
+        }
       }
       catch {
         sReturn = false;

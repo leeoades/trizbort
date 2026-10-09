@@ -53,11 +53,10 @@ namespace Trizbort.Domain.Misc {
     }
 
     public static Color ShowColorDialog(Color color, Form parent) {
-      using (var dialog = new ColorDialog()) {
-        dialog.Color = color == Color.Transparent ? Color.White : color;
+      using var dialog = new ColorDialog();
+      dialog.Color = color == Color.Transparent ? Color.White : color;
 
-        return UserInteraction.ShowDialog(dialog, parent) == DialogResult.OK ? dialog.Color : color;
-      }
+      return UserInteraction.ShowDialog(dialog, parent) == DialogResult.OK ? dialog.Color : color;
     }
 
     public static bool ToName(int color, out string name) {

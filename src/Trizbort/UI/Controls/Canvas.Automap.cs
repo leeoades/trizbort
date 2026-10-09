@@ -183,20 +183,19 @@ namespace Trizbort.UI.Controls {
       if (mDontAskAboutAmbiguities) return list[0];
       if ((string.IsNullOrEmpty(roomDescription) || !list[0].HasDescription) && list.Count == 1) return list[0];
 
-      using (var dialog = new DisambiguateRoomsDialog()) {
-        dialog.SetTranscriptContext(roomName, roomDescription, line);
-        dialog.AddAmbiguousRooms(list);
-        UserInteraction.ShowDialog(dialog);
-        if (dialog.UserDoesntCareAnyMore) {
-          // The user has given up on this process! Can't say I blame them.
-          // Use the first ambiguous room on the list, as above.
-          mDontAskAboutAmbiguities = true;
-          return list[0];
-        }
-
-        // Either the user picked a room, or they said "New Room" in which case we don't match, returning null.
-        return dialog.Disambiguation;
+      using var dialog = new DisambiguateRoomsDialog();
+      dialog.SetTranscriptContext(roomName, roomDescription, line);
+      dialog.AddAmbiguousRooms(list);
+      UserInteraction.ShowDialog(dialog);
+      if (dialog.UserDoesntCareAnyMore) {
+        // The user has given up on this process! Can't say I blame them.
+        // Use the first ambiguous room on the list, as above.
+        mDontAskAboutAmbiguities = true;
+        return list[0];
       }
+
+      // Either the user picked a room, or they said "New Room" in which case we don't match, returning null.
+      return dialog.Disambiguation;
     }
 
     void IAutomapCanvas.RemoveExitStub(Room room, MappableDirection direction) {

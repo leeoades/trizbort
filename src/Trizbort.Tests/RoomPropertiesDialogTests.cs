@@ -34,9 +34,8 @@ namespace Trizbort.Tests {
     [TestCase(PropertiesStartType.Objects, "tabObjects", "txtObjects")]
     [TestCase(PropertiesStartType.Region, "tabRegions", "cboRegion")]
     public void Dialog_OpensWithExpectedTabAndFocus(PropertiesStartType start, string tabName, string controlName) {
-      using (var dialog = CreateDialog(start)) {
-        AssertOpening(dialog, tabName, controlName);
-      }
+      using var dialog = CreateDialog(start);
+      AssertOpening(dialog, tabName, controlName);
     }
 
     [TestCase("tabDescription", "m_descriptionTextBox")]
@@ -71,12 +70,10 @@ namespace Trizbort.Tests {
 
     [Test]
     public void Dialog_DoesNotRememberTabUntilClosed() {
-      using (var unshown = CreateDialog(PropertiesStartType.Objects)) {
-        SelectTab(unshown, "tabColors");
-        using (var dialog = CreateDialog(PropertiesStartType.Objects)) {
-          AssertOpening(dialog, "tabObjects", "txtObjects");
-        }
-      }
+      using var unshown = CreateDialog(PropertiesStartType.Objects);
+      SelectTab(unshown, "tabColors");
+      using var dialog = CreateDialog(PropertiesStartType.Objects);
+      AssertOpening(dialog, "tabObjects", "txtObjects");
     }
 
     [Test]
@@ -113,12 +110,11 @@ namespace Trizbort.Tests {
     [TestCase(Keys.O, "tabObjects", "txtObjects")]
     [TestCase(Keys.E, "tabDescription", "m_descriptionTextBox")]
     public void Dialog_TabShortcutsSelectAndFocusExpectedBox(Keys key, string tabName, string controlName) {
-      using (var dialog = CreateDialog(PropertiesStartType.Objects)) {
-        dialog.Shown += (sender, e) => typeof(Form)
-          .GetMethod("OnKeyUp", BindingFlags.Instance | BindingFlags.NonPublic)
-          .Invoke(dialog, new object[] { new KeyEventArgs(Keys.Alt | key) });
-        AssertOpening(dialog, tabName, controlName);
-      }
+      using var dialog = CreateDialog(PropertiesStartType.Objects);
+      dialog.Shown += (sender, e) => typeof(Form)
+                                     .GetMethod("OnKeyUp", BindingFlags.Instance | BindingFlags.NonPublic)
+                                     .Invoke(dialog, new object[] { new KeyEventArgs(Keys.Alt | key) });
+      AssertOpening(dialog, tabName, controlName);
     }
 
     private static void AssertOpening(Form dialog, string tabName, string controlName,

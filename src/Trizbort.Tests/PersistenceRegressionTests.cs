@@ -36,10 +36,9 @@ namespace Trizbort.Tests {
     [TestCase("invalid")]
     [TestCase("-1.0.0.0")]
     public void InvalidVersion_UsesExistingLegacyZeroVersion(string version) {
-      using (var project = new Project()) {
-        project.SetVersion(version);
-        project.Version.ShouldBe(new Version(0, 0, 0, 0));
-      }
+      using var project = new Project();
+      project.SetVersion(version);
+      project.Version.ShouldBe(new Version(0, 0, 0, 0));
     }
 
     [Test]
@@ -77,17 +76,16 @@ namespace Trizbort.Tests {
       Load(Project.Current, Path.Combine(FixtureDirectory, fixture));
       var engine = new LegacyMapFileEngine(Project.Current);
       engine.Save(Files.File("first.trizbort")).ShouldBeTrue();
-      using (var reloaded = new Project()) {
-        Load(reloaded, Files.File("first.trizbort"));
-        new LegacyMapFileEngine(reloaded).Save(Files.File("second.trizbort")).ShouldBeTrue();
-        XNode.DeepEquals(XDocument.Load(Files.File("first.trizbort")), XDocument.Load(Files.File("second.trizbort"))).ShouldBeTrue(fixture);
-        reloaded.Elements.Count.ShouldBe(Project.Current.Elements.Count);
-        foreach (var connection in reloaded.Elements.OfType<Connection>())
-          foreach (var vertex in connection.VertexList.Where(vertex => vertex.Port != null)) {
-            reloaded.Elements.ShouldContain(vertex.Port.Owner);
-            vertex.Port.Owner.ShouldNotBeSameAs(Project.Current.Elements.Single(element => element.ID == vertex.Port.Owner.ID));
-          }
-      }
+      using var reloaded = new Project();
+      Load(reloaded, Files.File("first.trizbort"));
+      new LegacyMapFileEngine(reloaded).Save(Files.File("second.trizbort")).ShouldBeTrue();
+      XNode.DeepEquals(XDocument.Load(Files.File("first.trizbort")), XDocument.Load(Files.File("second.trizbort"))).ShouldBeTrue(fixture);
+      reloaded.Elements.Count.ShouldBe(Project.Current.Elements.Count);
+      foreach (var connection in reloaded.Elements.OfType<Connection>())
+        foreach (var vertex in connection.VertexList.Where(vertex => vertex.Port != null)) {
+          reloaded.Elements.ShouldContain(vertex.Port.Owner);
+          vertex.Port.Owner.ShouldNotBeSameAs(Project.Current.Elements.Single(element => element.ID == vertex.Port.Owner.ID));
+        }
     }
 
     [TestCase("en-US")]
@@ -120,28 +118,27 @@ namespace Trizbort.Tests {
         Project.Current.Elements.Add(label);
         Project.Current.Elements.Add(new Connection(Project.Current, new Vertex(second.PortAt(CompassPoint.East)), new Vertex(label.PortList[0])));
         new LegacyMapFileEngine(Project.Current).Save(Files.File("rich.trizbort")).ShouldBeTrue();
-        using (var loaded = new Project()) {
-          Load(loaded, Files.File("rich.trizbort"));
-          loaded.Title.ShouldBe(Project.Current.Title);
-          loaded.Author.ShouldBe("Author");
-          loaded.History.Replace("\r\n", "\n").ShouldBe("History\nsecond line");
-          loaded.Description.ShouldBe("Description");
-          var room = loaded.Elements.OfType<Room>().Single(item => item.Name == first.Name);
-          room.Position.ShouldBe(first.Position);
-          room.Size.ShouldBe(first.Size);
-          room.PrimaryDescription.ShouldBe(first.PrimaryDescription);
-          room.Objects.Replace("\r\n", "\n").ShouldBe(first.Objects);
-          room.Region.ShouldBe("Ice & Snow");
-          room.IsStartRoom.ShouldBeTrue();
-          room.IsDark.ShouldBeTrue();
-          var line = loaded.Elements.OfType<Connection>().Single(item => item.Name == "Door");
-          line.GetSourceRoom().ShouldBeSameAs(room);
-          line.Door.Locked.ShouldBeTrue();
-          line.GetCurveWaypoint(CurveWaypoint.Middle).ShouldBe(new Vector(45.5f, -13.25f));
-          loaded.Elements.OfType<MapLabel>().Single().Text.ShouldBe("Note\n<&>");
-          Settings.GridSize.ShouldBe(17.5f);
-          Settings.Regions.Single(region => region.RegionName == "Ice & Snow").TextColor.ToArgb().ShouldBe(Color.Navy.ToArgb());
-        }
+        using var loaded = new Project();
+        Load(loaded, Files.File("rich.trizbort"));
+        loaded.Title.ShouldBe(Project.Current.Title);
+        loaded.Author.ShouldBe("Author");
+        loaded.History.Replace("\r\n", "\n").ShouldBe("History\nsecond line");
+        loaded.Description.ShouldBe("Description");
+        var room = loaded.Elements.OfType<Room>().Single(item => item.Name == first.Name);
+        room.Position.ShouldBe(first.Position);
+        room.Size.ShouldBe(first.Size);
+        room.PrimaryDescription.ShouldBe(first.PrimaryDescription);
+        room.Objects.Replace("\r\n", "\n").ShouldBe(first.Objects);
+        room.Region.ShouldBe("Ice & Snow");
+        room.IsStartRoom.ShouldBeTrue();
+        room.IsDark.ShouldBeTrue();
+        var line = loaded.Elements.OfType<Connection>().Single(item => item.Name == "Door");
+        line.GetSourceRoom().ShouldBeSameAs(room);
+        line.Door.Locked.ShouldBeTrue();
+        line.GetCurveWaypoint(CurveWaypoint.Middle).ShouldBe(new Vector(45.5f, -13.25f));
+        loaded.Elements.OfType<MapLabel>().Single().Text.ShouldBe("Note\n<&>");
+        Settings.GridSize.ShouldBe(17.5f);
+        Settings.Regions.Single(region => region.RegionName == "Ice & Snow").TextColor.ToArgb().ShouldBe(Color.Navy.ToArgb());
       } finally {
         Thread.CurrentThread.CurrentCulture = previous;
       }

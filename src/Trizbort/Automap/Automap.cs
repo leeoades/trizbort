@@ -835,10 +835,9 @@ namespace Trizbort.Automap
       UserInteraction.ShowMessage(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
 
     private static AutomapSameDirectionResult chooseRoom(Room existing, string name) {
-      using (var dialog = new AutomapRoomSameDirectionDialog {Room1 = existing, Room2 = name}) {
-        UserInteraction.ShowDialog(dialog);
-        return dialog.Result;
-      }
+      using var dialog = new AutomapRoomSameDirectionDialog {Room1 = existing, Room2 = name};
+      UserInteraction.ShowDialog(dialog);
+      return dialog.Result;
     }
 
     private void initializeRun(IAutomapCanvas canvas, AutomapSettings settings) {
@@ -1006,84 +1005,81 @@ namespace Trizbort.Automap
       Debug.Assert(m_settings.AssumeRoomsWithSameNameAreSameRoom || m_settings.VerboseTranscript, "Must assume rooms with same name are same room unless transcript is verbose.");
       Status = "Automapping has started.";
 
-      try
-      {
-        using (var stream = File.Open(m_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-          using (var reader = new PeekingStreamReader(stream))
+      try {
+        using var stream = File.Open(m_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new PeekingStreamReader(stream);
+        var lastline = "";
+
+        if (m_settings.ContinueTranscript)
+        {
+          while (!reader.EndOfStream)
+            lastline = await reader.ReadLineAsync();
+        }
+
+        // keep track of lines we read between here and the next prompt
+        var linesBetweenPrompts = new List<string>();
+        Status = "Automapping is processing the transcript.";
+
+        var promptLine = string.Empty;
+        var line = string.Empty;
+        var atFileEnd = false;
+        // loop until cancelled
+        while (true)
+        {
+          tokenSource.Token.ThrowIfCancellationRequested();
+          if (m_settings.ContinueTranscript)
+          {
+            line = lastline;
+            m_settings.ContinueTranscript = false;
+          }
+          else
+          {
+            // ...read a line of text
+            line = await WaitForNewLine(reader, tokenSource.Token);
+            atFileEnd = reader.EndOfStream; // store this now so that it's still valid when we use it below
+          }
+
+          //Trace("[" + line + "]");
+          string command;
+          if (IsPrompt(line, out command))
+          {
+            // this is a prompt line
+
+            // let's process everything leading up to it since the last prompt, but not necessarily this new prompt itself
+            await ProcessTranscriptText(linesBetweenPrompts, tokenSource.Token);
+            tokenSource.Token.ThrowIfCancellationRequested();
+
+            // we've now dealt with all lines to this point
+            linesBetweenPrompts.Clear();
+
+            // handle the case where we're at the end of the file, waiting for user input
+            if (atFileEnd)
             {
-              var lastline = "";
-
-              if (m_settings.ContinueTranscript)
-              {
-                while (!reader.EndOfStream)
-                  lastline = await reader.ReadLineAsync();
-              }
-
-              // keep track of lines we read between here and the next prompt
-              var linesBetweenPrompts = new List<string>();
-              Status = "Automapping is processing the transcript.";
-
-              var promptLine = string.Empty;
-              var line = string.Empty;
-              var atFileEnd = false;
-              // loop until cancelled
-              while (true)
-              {
-                tokenSource.Token.ThrowIfCancellationRequested();
-                if (m_settings.ContinueTranscript)
-                {
-                  line = lastline;
-                  m_settings.ContinueTranscript = false;
-                }
-                else
-                {
-                  // ...read a line of text
-                  line = await WaitForNewLine(reader, tokenSource.Token);
-                  atFileEnd = reader.EndOfStream; // store this now so that it's still valid when we use it below
-                }
-
-                //Trace("[" + line + "]");
-                string command;
-                if (IsPrompt(line, out command))
-                {
-                  // this is a prompt line
-
-                  // let's process everything leading up to it since the last prompt, but not necessarily this new prompt itself
-                  await ProcessTranscriptText(linesBetweenPrompts, tokenSource.Token);
-                  tokenSource.Token.ThrowIfCancellationRequested();
-
-                  // we've now dealt with all lines to this point
-                  linesBetweenPrompts.Clear();
-
-                  // handle the case where we're at the end of the file, waiting for user input
-                  if (atFileEnd)
-                  {
-                    // we've already read the prompt, now just read the command when the player enters it
-                    command = (await WaitForNewLine(reader, tokenSource.Token)).Trim();
-                  }
-
-//                  var nextParagraph = getTextToNextPrompt(reader);
-
-                  // process the next command
-                  tokenSource.Token.ThrowIfCancellationRequested();
-                  ProcessPromptCommand(command);
-
-//                  if (command.ToUpper().Equals("EXITS"))
-//                  {
-//                    // parse the exits command.
-//                    DeduceExitsFromDescription(m_lastKnownRoom, String.Join(" ", nextParagraph));
-//                  }
-
-                  Trace("{0}: {1}{2}", FormatTranscriptLineForDisplay(line), m_lastMoveDirection != null ? "GO " : string.Empty, m_lastMoveDirection != null ? m_lastMoveDirection.Value.ToString().ToUpperInvariant() : string.Empty);
-                }
-                else
-                {
-                  // this line isn't a prompt;
-                  // hang onto it for now in case we meet a prompt shortly.
-                  linesBetweenPrompts.Add(line);
-                }
-              }
+              // we've already read the prompt, now just read the command when the player enters it
+              command = (await WaitForNewLine(reader, tokenSource.Token)).Trim();
             }
+
+            //                  var nextParagraph = getTextToNextPrompt(reader);
+
+            // process the next command
+            tokenSource.Token.ThrowIfCancellationRequested();
+            ProcessPromptCommand(command);
+
+            //                  if (command.ToUpper().Equals("EXITS"))
+            //                  {
+            //                    // parse the exits command.
+            //                    DeduceExitsFromDescription(m_lastKnownRoom, String.Join(" ", nextParagraph));
+            //                  }
+
+            Trace("{0}: {1}{2}", FormatTranscriptLineForDisplay(line), m_lastMoveDirection != null ? "GO " : string.Empty, m_lastMoveDirection != null ? m_lastMoveDirection.Value.ToString().ToUpperInvariant() : string.Empty);
+          }
+          else
+          {
+            // this line isn't a prompt;
+            // hang onto it for now in case we meet a prompt shortly.
+            linesBetweenPrompts.Add(line);
+          }
+        }
       }
       catch (OperationCanceledException) when (tokenSource.IsCancellationRequested)
       {

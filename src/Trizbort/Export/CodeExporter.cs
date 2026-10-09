@@ -58,44 +58,42 @@ namespace Trizbort.Export {
 
     public string Export() {
       string ss;
-      using (var writer = new StringWriter()) {
-        var title = Project.Current.Title;
-        if (string.IsNullOrEmpty(title)) {
-          title = PathHelper.SafeGetFilenameWithoutExtension(Project.Current.FileName);
-          if (string.IsNullOrEmpty(title)) title = "A Trizbort Map";
-        }
-
-        var author = Project.Current.Author;
-        if (string.IsNullOrEmpty(author)) author = "A Trizbort User";
-        var history = Project.Current.History;
-
-        prepareContent();
-        ExportHeader(writer, title, author, Project.Current.Description ?? string.Empty, history);
-        ExportContent(writer);
-
-        ss = writer.ToString();
+      using var writer = new StringWriter();
+      var title = Project.Current.Title;
+      if (string.IsNullOrEmpty(title)) {
+        title = PathHelper.SafeGetFilenameWithoutExtension(Project.Current.FileName);
+        if (string.IsNullOrEmpty(title)) title = "A Trizbort Map";
       }
+
+      var author = Project.Current.Author;
+      if (string.IsNullOrEmpty(author)) author = "A Trizbort User";
+      var history = Project.Current.History;
+
+      prepareContent();
+      ExportHeader(writer, title, author, Project.Current.Description ?? string.Empty, history);
+      ExportContent(writer);
+
+      ss = writer.ToString();
 
       return ss;
     }
 
 
     public void Export(string fileName) {
-      using (var writer = Create(fileName)) {
-        var title = Project.Current.Title;
-        if (string.IsNullOrEmpty(title)) {
-          title = PathHelper.SafeGetFilenameWithoutExtension(Project.Current.FileName);
-          if (string.IsNullOrEmpty(title)) title = "A Trizbort Map";
-        }
-
-        var author = Project.Current.Author;
-        if (string.IsNullOrEmpty(author)) author = "A Trizbort User";
-
-        var history = Project.Current.History;
-        prepareContent();
-        ExportHeader(writer, title, author, Project.Current.Description ?? string.Empty, history);
-        ExportContent(writer);
+      using var writer = Create(fileName);
+      var title = Project.Current.Title;
+      if (string.IsNullOrEmpty(title)) {
+        title = PathHelper.SafeGetFilenameWithoutExtension(Project.Current.FileName);
+        if (string.IsNullOrEmpty(title)) title = "A Trizbort Map";
       }
+
+      var author = Project.Current.Author;
+      if (string.IsNullOrEmpty(author)) author = "A Trizbort User";
+
+      var history = Project.Current.History;
+      prepareContent();
+      ExportHeader(writer, title, author, Project.Current.Description ?? string.Empty, history);
+      ExportContent(writer);
     }
 
     protected virtual StreamWriter Create(string fileName) {

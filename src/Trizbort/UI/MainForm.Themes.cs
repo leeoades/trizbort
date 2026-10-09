@@ -42,40 +42,38 @@ namespace Trizbort.UI {
     }
 
     private void ImportTheme() {
-      using (var dialog = new OpenFileDialog { Filter = ThemeFilter, Title = "Import map theme" }) {
-        if (UserInteraction.ShowDialog(dialog, this) != DialogResult.OK) return;
-        MapTheme theme;
-        try {
-          theme = MapTheme.Load(dialog.FileName);
-        } catch (IOException exception) {
-          ShowThemeError(exception);
-          return;
-        } catch (UnauthorizedAccessException exception) {
-          ShowThemeError(exception);
-          return;
-        } catch (JsonException exception) {
-          ShowThemeError(exception);
-          return;
-        }
-        ApplyTheme(theme);
+      using var dialog = new OpenFileDialog { Filter = ThemeFilter, Title = "Import map theme" };
+      if (UserInteraction.ShowDialog(dialog, this) != DialogResult.OK) return;
+      MapTheme theme;
+      try {
+        theme = MapTheme.Load(dialog.FileName);
+      } catch (IOException exception) {
+        ShowThemeError(exception);
+        return;
+      } catch (UnauthorizedAccessException exception) {
+        ShowThemeError(exception);
+        return;
+      } catch (JsonException exception) {
+        ShowThemeError(exception);
+        return;
       }
+      ApplyTheme(theme);
     }
 
     private void ExportTheme() {
-      using (var dialog = new SaveFileDialog {
+      using var dialog = new SaveFileDialog {
         Filter = ThemeFilter, DefaultExt = "trizbort-theme", AddExtension = true,
         Title = "Export current map theme", FileName = "My theme.trizbort-theme"
-      }) {
-        if (UserInteraction.ShowDialog(dialog, this) != DialogResult.OK) return;
-        try {
-          MapTheme.Capture(Path.GetFileNameWithoutExtension(dialog.FileName)).Save(dialog.FileName);
-        } catch (IOException exception) {
-          ShowThemeError(exception);
-        } catch (UnauthorizedAccessException exception) {
-          ShowThemeError(exception);
-        } catch (JsonException exception) {
-          ShowThemeError(exception);
-        }
+      };
+      if (UserInteraction.ShowDialog(dialog, this) != DialogResult.OK) return;
+      try {
+        MapTheme.Capture(Path.GetFileNameWithoutExtension(dialog.FileName)).Save(dialog.FileName);
+      } catch (IOException exception) {
+        ShowThemeError(exception);
+      } catch (UnauthorizedAccessException exception) {
+        ShowThemeError(exception);
+      } catch (JsonException exception) {
+        ShowThemeError(exception);
       }
     }
 

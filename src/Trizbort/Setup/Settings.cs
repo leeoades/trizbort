@@ -549,128 +549,127 @@ namespace Trizbort.Setup {
     }
 
     public static void ShowMapDialog() {
-      using (var dialog = new SettingsDialog()) {
-        for (var index = 0; index < Colors.Count; ++index) dialog.ElementColors[index] = Color[index];
+      using var dialog = new SettingsDialog();
+      for (var index = 0; index < Colors.Count; ++index) dialog.ElementColors[index] = Color[index];
 
-        //below is code for pulling the region names, text color and background color from Settings.Regions.
-        //it is set up so that Trizbort can check after we click OK or Cancel, and we can see if anything changed.
-        //Currently Trizbort only can check for region names of individual rooms changing.
-        //After talking with Jason, We'll need to refactor code to make this run smoother, but this is the best for now.
+      //below is code for pulling the region names, text color and background color from Settings.Regions.
+      //it is set up so that Trizbort can check after we click OK or Cancel, and we can see if anything changed.
+      //Currently Trizbort only can check for region names of individual rooms changing.
+      //After talking with Jason, We'll need to refactor code to make this run smoother, but this is the best for now.
 
-        var regCount = Regions.Count;
-        var regNameList = Regions.Select(p => p.RegionName).ToList();
-        var regTextColorList = Regions.Select(p => p.TextColor).ToList();
-        var regBkgdColorList = Regions.Select(p => p.RColor).ToList();
+      var regCount = Regions.Count;
+      var regNameList = Regions.Select(p => p.RegionName).ToList();
+      var regTextColorList = Regions.Select(p => p.TextColor).ToList();
+      var regBkgdColorList = Regions.Select(p => p.RColor).ToList();
 
-        dialog.Title = Project.Current.Title;
-        dialog.Author = Project.Current.Author;
-        dialog.Description = Project.Current.Description;
-        dialog.History = Project.Current.History;
-        dialog.DefaultRoomName = DefaultRoomName;
-        dialog.LargeFont = RoomNameFont;
-        dialog.SmallFont = ObjectFont;
-        dialog.LineFont = LineFont;
-        dialog.SubtitleFont = SubtitleFont;
-        dialog.LineWidth = LineWidth;
-        dialog.HandDrawn = HandDrawn;
-        dialog.SnapToGrid = SnapToGrid;
-        dialog.GridSize = GridSize;
-        dialog.IsGridVisible = IsGridVisible;
-        dialog.ShowOrigin = ShowOrigin;
-        dialog.DarknessStripeSize = DarknessStripeSize;
-        dialog.ObjectListOffsetFromRoom = ObjectListOffsetFromRoom;
-        dialog.ConnectionStalkLength = ConnectionStalkLength;
-        dialog.PreferredDistanceBetweenRooms = PreferredDistanceBetweenRooms;
-        dialog.TextOffsetFromConnection = TextOffsetFromConnection;
-        dialog.HandleSize = HandleSize;
-        dialog.SnapToElementSize = SnapToElementSize;
-        dialog.DocumentSpecificMargins = DocumentSpecificMargins;
-        dialog.DocHorizontalMargin = DocHorizontalMargin;
-        dialog.DocVerticalMargin = DocVerticalMargin;
-        dialog.WrapTextAtDashes = WrapTextAtDashes;
-        dialog.ConnectionArrowSize = ConnectionArrowSize;
-        dialog.DefaultRoomShape = DefaultRoomShape;
-        if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
-          for (var index = 0; index < Colors.Count; ++index) {
-            if (Color[index] != dialog.ElementColors[index]) Project.Current.IsDirty = true;
-            Color[index] = dialog.ElementColors[index];
-          }
-
-          if (Project.Current.Title != dialog.Title) Project.Current.IsDirty = true;
-          Project.Current.Title = dialog.Title;
-          if (Project.Current.Author != dialog.Author) Project.Current.IsDirty = true;
-          Project.Current.Author = dialog.Author;
-          if (Project.Current.Description != dialog.Description) Project.Current.IsDirty = true;
-          Project.Current.Description = dialog.Description;
-          if (Project.Current.History != dialog.History) Project.Current.IsDirty = true;
-          Project.Current.History = dialog.History;
-          if (DefaultRoomName != dialog.DefaultRoomName) Project.Current.IsDirty = true;
-          DefaultRoomName = dialog.DefaultRoomName;
-          if (!Equals(RoomNameFont, dialog.LargeFont)) Project.Current.IsDirty = true;
-          RoomNameFont = dialog.LargeFont;
-          if (!Equals(ObjectFont, dialog.SmallFont)) Project.Current.IsDirty = true;
-          ObjectFont = dialog.SmallFont;
-          if (!Equals(SubtitleFont, dialog.SubtitleFont)) Project.Current.IsDirty = true;
-          SubtitleFont = dialog.SubtitleFont;
-          if (!Equals(LineFont, dialog.LineFont)) Project.Current.IsDirty = true;
-          LineFont = dialog.LineFont;
-          if (LineWidth != dialog.LineWidth) Project.Current.IsDirty = true;
-          LineWidth = dialog.LineWidth;
-          if (HandDrawn != dialog.HandDrawn) Project.Current.IsDirty = true;
-          HandDrawn = dialog.HandDrawn;
-          if (SnapToGrid != dialog.SnapToGrid) Project.Current.IsDirty = true;
-          SnapToGrid = dialog.SnapToGrid;
-          if (GridSize != dialog.GridSize) Project.Current.IsDirty = true;
-          GridSize = dialog.GridSize;
-          if (IsGridVisible != dialog.IsGridVisible) Project.Current.IsDirty = true;
-          IsGridVisible = dialog.IsGridVisible;
-          if (ShowOrigin != dialog.ShowOrigin) Project.Current.IsDirty = true;
-          ShowOrigin = dialog.ShowOrigin;
-          if (DarknessStripeSize != dialog.DarknessStripeSize) Project.Current.IsDirty = true;
-          DarknessStripeSize = dialog.DarknessStripeSize;
-          if (ObjectListOffsetFromRoom != dialog.ObjectListOffsetFromRoom) Project.Current.IsDirty = true;
-          ObjectListOffsetFromRoom = dialog.ObjectListOffsetFromRoom;
-          if (ConnectionStalkLength != dialog.ConnectionStalkLength) Project.Current.IsDirty = true;
-          ConnectionStalkLength = dialog.ConnectionStalkLength;
-          if (PreferredDistanceBetweenRooms != dialog.PreferredDistanceBetweenRooms) Project.Current.IsDirty = true;
-          PreferredDistanceBetweenRooms = dialog.PreferredDistanceBetweenRooms;
-          if (TextOffsetFromConnection != dialog.TextOffsetFromConnection) Project.Current.IsDirty = true;
-          TextOffsetFromConnection = dialog.TextOffsetFromConnection;
-          if (HandleSize != dialog.HandleSize) Project.Current.IsDirty = true;
-          HandleSize = dialog.HandleSize;
-          if (SnapToElementSize != dialog.SnapToElementSize) Project.Current.IsDirty = true;
-          SnapToElementSize = dialog.SnapToElementSize;
-          if (ConnectionArrowSize != dialog.ConnectionArrowSize) Project.Current.IsDirty = true;
-          ConnectionArrowSize = dialog.ConnectionArrowSize;
-          if (DocumentSpecificMargins != dialog.DocumentSpecificMargins) Project.Current.IsDirty = true;
-          DocumentSpecificMargins = dialog.DocumentSpecificMargins;
-          if (DocHorizontalMargin != dialog.DocHorizontalMargin) Project.Current.IsDirty = true;
-          DocHorizontalMargin = dialog.DocHorizontalMargin;
-          if (DocVerticalMargin != dialog.DocVerticalMargin) Project.Current.IsDirty = true;
-          DocVerticalMargin = dialog.DocVerticalMargin;
-          if (WrapTextAtDashes != dialog.WrapTextAtDashes) Project.Current.IsDirty = true;
-          WrapTextAtDashes = dialog.WrapTextAtDashes;
-          if (DefaultRoomShape != dialog.DefaultRoomShape) Project.Current.IsDirty = true;
-          DefaultRoomShape = dialog.DefaultRoomShape;
+      dialog.Title = Project.Current.Title;
+      dialog.Author = Project.Current.Author;
+      dialog.Description = Project.Current.Description;
+      dialog.History = Project.Current.History;
+      dialog.DefaultRoomName = DefaultRoomName;
+      dialog.LargeFont = RoomNameFont;
+      dialog.SmallFont = ObjectFont;
+      dialog.LineFont = LineFont;
+      dialog.SubtitleFont = SubtitleFont;
+      dialog.LineWidth = LineWidth;
+      dialog.HandDrawn = HandDrawn;
+      dialog.SnapToGrid = SnapToGrid;
+      dialog.GridSize = GridSize;
+      dialog.IsGridVisible = IsGridVisible;
+      dialog.ShowOrigin = ShowOrigin;
+      dialog.DarknessStripeSize = DarknessStripeSize;
+      dialog.ObjectListOffsetFromRoom = ObjectListOffsetFromRoom;
+      dialog.ConnectionStalkLength = ConnectionStalkLength;
+      dialog.PreferredDistanceBetweenRooms = PreferredDistanceBetweenRooms;
+      dialog.TextOffsetFromConnection = TextOffsetFromConnection;
+      dialog.HandleSize = HandleSize;
+      dialog.SnapToElementSize = SnapToElementSize;
+      dialog.DocumentSpecificMargins = DocumentSpecificMargins;
+      dialog.DocHorizontalMargin = DocHorizontalMargin;
+      dialog.DocVerticalMargin = DocVerticalMargin;
+      dialog.WrapTextAtDashes = WrapTextAtDashes;
+      dialog.ConnectionArrowSize = ConnectionArrowSize;
+      dialog.DefaultRoomShape = DefaultRoomShape;
+      if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
+        for (var index = 0; index < Colors.Count; ++index) {
+          if (Color[index] != dialog.ElementColors[index]) Project.Current.IsDirty = true;
+          Color[index] = dialog.ElementColors[index];
         }
 
-        //Note this needs to be done outside of the "if OK button is clicked" loop for now.
-        //Trizbort makes changes to regions immediately. So we can change a region and hit cancel.
-        //We need to account for that.
-        var newRegCount = Regions.Count;
-        var newReg = Regions.ToArray();
-        if (newRegCount != regCount)
-          Project.Current.IsDirty = true;
-        else
-          for (var index = 0; index < newRegCount; index++) {
-            if (regBkgdColorList[index] != newReg[index].RColor)
-              Project.Current.IsDirty = true;
-            if (regTextColorList[index] != newReg[index].TextColor)
-              Project.Current.IsDirty = true;
-            if (regNameList[index] != newReg[index].RegionName)
-              Project.Current.IsDirty = true;
-          }
+        if (Project.Current.Title != dialog.Title) Project.Current.IsDirty = true;
+        Project.Current.Title = dialog.Title;
+        if (Project.Current.Author != dialog.Author) Project.Current.IsDirty = true;
+        Project.Current.Author = dialog.Author;
+        if (Project.Current.Description != dialog.Description) Project.Current.IsDirty = true;
+        Project.Current.Description = dialog.Description;
+        if (Project.Current.History != dialog.History) Project.Current.IsDirty = true;
+        Project.Current.History = dialog.History;
+        if (DefaultRoomName != dialog.DefaultRoomName) Project.Current.IsDirty = true;
+        DefaultRoomName = dialog.DefaultRoomName;
+        if (!Equals(RoomNameFont, dialog.LargeFont)) Project.Current.IsDirty = true;
+        RoomNameFont = dialog.LargeFont;
+        if (!Equals(ObjectFont, dialog.SmallFont)) Project.Current.IsDirty = true;
+        ObjectFont = dialog.SmallFont;
+        if (!Equals(SubtitleFont, dialog.SubtitleFont)) Project.Current.IsDirty = true;
+        SubtitleFont = dialog.SubtitleFont;
+        if (!Equals(LineFont, dialog.LineFont)) Project.Current.IsDirty = true;
+        LineFont = dialog.LineFont;
+        if (LineWidth != dialog.LineWidth) Project.Current.IsDirty = true;
+        LineWidth = dialog.LineWidth;
+        if (HandDrawn != dialog.HandDrawn) Project.Current.IsDirty = true;
+        HandDrawn = dialog.HandDrawn;
+        if (SnapToGrid != dialog.SnapToGrid) Project.Current.IsDirty = true;
+        SnapToGrid = dialog.SnapToGrid;
+        if (GridSize != dialog.GridSize) Project.Current.IsDirty = true;
+        GridSize = dialog.GridSize;
+        if (IsGridVisible != dialog.IsGridVisible) Project.Current.IsDirty = true;
+        IsGridVisible = dialog.IsGridVisible;
+        if (ShowOrigin != dialog.ShowOrigin) Project.Current.IsDirty = true;
+        ShowOrigin = dialog.ShowOrigin;
+        if (DarknessStripeSize != dialog.DarknessStripeSize) Project.Current.IsDirty = true;
+        DarknessStripeSize = dialog.DarknessStripeSize;
+        if (ObjectListOffsetFromRoom != dialog.ObjectListOffsetFromRoom) Project.Current.IsDirty = true;
+        ObjectListOffsetFromRoom = dialog.ObjectListOffsetFromRoom;
+        if (ConnectionStalkLength != dialog.ConnectionStalkLength) Project.Current.IsDirty = true;
+        ConnectionStalkLength = dialog.ConnectionStalkLength;
+        if (PreferredDistanceBetweenRooms != dialog.PreferredDistanceBetweenRooms) Project.Current.IsDirty = true;
+        PreferredDistanceBetweenRooms = dialog.PreferredDistanceBetweenRooms;
+        if (TextOffsetFromConnection != dialog.TextOffsetFromConnection) Project.Current.IsDirty = true;
+        TextOffsetFromConnection = dialog.TextOffsetFromConnection;
+        if (HandleSize != dialog.HandleSize) Project.Current.IsDirty = true;
+        HandleSize = dialog.HandleSize;
+        if (SnapToElementSize != dialog.SnapToElementSize) Project.Current.IsDirty = true;
+        SnapToElementSize = dialog.SnapToElementSize;
+        if (ConnectionArrowSize != dialog.ConnectionArrowSize) Project.Current.IsDirty = true;
+        ConnectionArrowSize = dialog.ConnectionArrowSize;
+        if (DocumentSpecificMargins != dialog.DocumentSpecificMargins) Project.Current.IsDirty = true;
+        DocumentSpecificMargins = dialog.DocumentSpecificMargins;
+        if (DocHorizontalMargin != dialog.DocHorizontalMargin) Project.Current.IsDirty = true;
+        DocHorizontalMargin = dialog.DocHorizontalMargin;
+        if (DocVerticalMargin != dialog.DocVerticalMargin) Project.Current.IsDirty = true;
+        DocVerticalMargin = dialog.DocVerticalMargin;
+        if (WrapTextAtDashes != dialog.WrapTextAtDashes) Project.Current.IsDirty = true;
+        WrapTextAtDashes = dialog.WrapTextAtDashes;
+        if (DefaultRoomShape != dialog.DefaultRoomShape) Project.Current.IsDirty = true;
+        DefaultRoomShape = dialog.DefaultRoomShape;
       }
+
+      //Note this needs to be done outside of the "if OK button is clicked" loop for now.
+      //Trizbort makes changes to regions immediately. So we can change a region and hit cancel.
+      //We need to account for that.
+      var newRegCount = Regions.Count;
+      var newReg = Regions.ToArray();
+      if (newRegCount != regCount)
+        Project.Current.IsDirty = true;
+      else
+        for (var index = 0; index < newRegCount; index++) {
+          if (regBkgdColorList[index] != newReg[index].RColor)
+            Project.Current.IsDirty = true;
+          if (regTextColorList[index] != newReg[index].TextColor)
+            Project.Current.IsDirty = true;
+          if (regNameList[index] != newReg[index].RegionName)
+            Project.Current.IsDirty = true;
+        }
     }
 
     public static float Snap(float value) {

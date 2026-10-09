@@ -126,27 +126,26 @@ namespace Trizbort.Domain.Application {
 
     public override bool Save(string fileName) {
       try {
-        using (var scribe = XmlScribe.Create(fileName)) {
-          scribe.StartElement("trizbort");
-          scribe.Attribute("version", typeof(Project).Assembly.GetName().Version.ToString());
-          scribe.StartElement("info");
-          if (!string.IsNullOrEmpty(project.Title))
-            scribe.Element("title", project.Title);
-          if (!string.IsNullOrEmpty(project.Author))
-            scribe.Element("author", project.Author);
-          if (!string.IsNullOrEmpty(project.Description))
-            scribe.Element("description", project.Description);
-          if (!string.IsNullOrEmpty(project.History))
-            scribe.Element("history", project.History);
-          scribe.EndElement();
-          scribe.StartElement("map");
-          foreach (var element in project.Elements)
-            saveElement(scribe, element);
-          scribe.EndElement();
-          scribe.StartElement("settings");
-          Settings.Save(scribe);
-          scribe.EndElement();
-        }
+        using var scribe = XmlScribe.Create(fileName);
+        scribe.StartElement("trizbort");
+        scribe.Attribute("version", typeof(Project).Assembly.GetName().Version.ToString());
+        scribe.StartElement("info");
+        if (!string.IsNullOrEmpty(project.Title))
+          scribe.Element("title", project.Title);
+        if (!string.IsNullOrEmpty(project.Author))
+          scribe.Element("author", project.Author);
+        if (!string.IsNullOrEmpty(project.Description))
+          scribe.Element("description", project.Description);
+        if (!string.IsNullOrEmpty(project.History))
+          scribe.Element("history", project.History);
+        scribe.EndElement();
+        scribe.StartElement("map");
+        foreach (var element in project.Elements)
+          saveElement(scribe, element);
+        scribe.EndElement();
+        scribe.StartElement("settings");
+        Settings.Save(scribe);
+        scribe.EndElement();
         return true;
       }
       catch (Exception) {

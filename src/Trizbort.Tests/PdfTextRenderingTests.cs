@@ -39,25 +39,24 @@ namespace Trizbort.Tests {
     }
 
     private static string renderRoom(string lineEnding) {
-      using (var project = new Project())
-      using (var document = new PdfDocument())
-      using (var palette = new Palette()) {
-        var objects = string.Join(lineEnding, new[] {"Keys", "", "Lamp", "Food", "Bottle of water", ""});
-        var room = new Room(project) {
-          Name = "Inside" + lineEnding + "building",
-          SubTitle = "A" + lineEnding + "B",
-          Objects = objects,
-          RoomNameColor = Color.Gray,
-          RoomObjectTextColor = Color.FromArgb(128, 128, 64),
-          Position = new Vector(50, 50)
-        };
-        var page = document.AddPage();
-        using (var graphics = XGraphics.FromPdfPage(page))
-          room.Draw(graphics, palette, new DrawingContext(1));
-        room.Objects.ShouldBe(objects);
-        room.Name.ShouldBe("Inside" + lineEnding + "building");
-        return Encoding.ASCII.GetString(page.Contents.Elements.GetDictionary(0).Stream.Value);
-      }
+      using var project = new Project();
+      using var document = new PdfDocument();
+      using var palette = new Palette();
+      var objects = string.Join(lineEnding, new[] {"Keys", "", "Lamp", "Food", "Bottle of water", ""});
+      var room = new Room(project) {
+        Name = "Inside" + lineEnding + "building",
+        SubTitle = "A" + lineEnding + "B",
+        Objects = objects,
+        RoomNameColor = Color.Gray,
+        RoomObjectTextColor = Color.FromArgb(128, 128, 64),
+        Position = new Vector(50, 50)
+      };
+      var page = document.AddPage();
+      using (var graphics = XGraphics.FromPdfPage(page))
+        room.Draw(graphics, palette, new DrawingContext(1));
+      room.Objects.ShouldBe(objects);
+      room.Name.ShouldBe("Inside" + lineEnding + "building");
+      return Encoding.ASCII.GetString(page.Contents.Elements.GetDictionary(0).Stream.Value);
     }
   }
 }

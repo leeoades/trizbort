@@ -709,27 +709,26 @@ namespace Trizbort.Domain.Elements {
     }
 
     public override void ShowDialog() {
-      using (var dialog = new ConnectionPropertiesDialog()) {
-        dialog.ConnectionName = Name;
-        dialog.ConnectionDescription = Description;
-        dialog.IsDotted = Style == ConnectionStyle.Dashed;
-        dialog.IsDirectional = Flow == ConnectionFlow.OneWay;
-        dialog.StartText = StartText;
-        dialog.MidText = MidText;
-        dialog.EndText = EndText;
-        dialog.ConnectionColor = ConnectionColor;
-        dialog.Door = Door;
-        if (UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas) == DialogResult.OK) {
-          Name = dialog.ConnectionName;
-          Description = dialog.ConnectionDescription;
-          Style = dialog.IsDotted ? ConnectionStyle.Dashed : ConnectionStyle.Solid;
-          Flow = dialog.IsDirectional ? ConnectionFlow.OneWay : ConnectionFlow.TwoWay;
-          ConnectionColor = dialog.ConnectionColor;
-          StartText = dialog.StartText;
-          MidText = dialog.MidText;
-          EndText = dialog.EndText;
-          Door = dialog.Door;
-        }
+      using var dialog = new ConnectionPropertiesDialog();
+      dialog.ConnectionName = Name;
+      dialog.ConnectionDescription = Description;
+      dialog.IsDotted = Style == ConnectionStyle.Dashed;
+      dialog.IsDirectional = Flow == ConnectionFlow.OneWay;
+      dialog.StartText = StartText;
+      dialog.MidText = MidText;
+      dialog.EndText = EndText;
+      dialog.ConnectionColor = ConnectionColor;
+      dialog.Door = Door;
+      if (UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas) == DialogResult.OK) {
+        Name = dialog.ConnectionName;
+        Description = dialog.ConnectionDescription;
+        Style = dialog.IsDotted ? ConnectionStyle.Dashed : ConnectionStyle.Solid;
+        Flow = dialog.IsDirectional ? ConnectionFlow.OneWay : ConnectionFlow.TwoWay;
+        ConnectionColor = dialog.ConnectionColor;
+        StartText = dialog.StartText;
+        MidText = dialog.MidText;
+        EndText = dialog.EndText;
+        Door = dialog.Door;
       }
     }
 

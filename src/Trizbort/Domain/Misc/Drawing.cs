@@ -74,28 +74,27 @@ namespace Trizbort.Domain.Misc {
     public static void DrawHandle(Canvas canvas, XGraphics graphics, Palette palette, Rect bounds, DrawingContext context, bool alwaysAlpha, bool round) {
       if (bounds.Width <= 0 || bounds.Height <= 0) return;
 
-      using (var quality = new Smoothing(graphics, XSmoothingMode.Default)) {
-        XBrush brush;
-        Pen pen;
-        var alpha = 180;
+      using var quality = new Smoothing(graphics, XSmoothingMode.Default);
+      XBrush brush;
+      Pen pen;
+      var alpha = 180;
 
-        if (context.Selected) {
-          if (!alwaysAlpha) alpha = 255;
-          brush = palette.Gradient(bounds, Color.FromArgb(alpha, Color.LemonChiffon), Color.FromArgb(alpha, Color.DarkOrange));
-          pen = palette.Pen(Color.FromArgb(alpha, Color.Chocolate), 0);
-        } else {
-          brush = palette.Gradient(bounds, Color.FromArgb(alpha, Color.LightCyan), Color.FromArgb(alpha, Color.SteelBlue));
-          pen = palette.Pen(Color.FromArgb(alpha, Color.Navy), 0);
-        }
+      if (context.Selected) {
+        if (!alwaysAlpha) alpha = 255;
+        brush = palette.Gradient(bounds, Color.FromArgb(alpha, Color.LemonChiffon), Color.FromArgb(alpha, Color.DarkOrange));
+        pen = palette.Pen(Color.FromArgb(alpha, Color.Chocolate), 0);
+      } else {
+        brush = palette.Gradient(bounds, Color.FromArgb(alpha, Color.LightCyan), Color.FromArgb(alpha, Color.SteelBlue));
+        pen = palette.Pen(Color.FromArgb(alpha, Color.Navy), 0);
+      }
 
-        if (round) {
-          graphics.DrawEllipse(brush, bounds.ToRectangleF());
-//          graphics.DrawRectangle(new XPen(Color.Red), bounds.ToRectangleF() );
-          graphics.DrawEllipse(pen, bounds.ToRectangleF());
-        } else {
-          graphics.DrawRectangle(brush, bounds.ToRectangleF());
-          graphics.DrawRectangle(pen, bounds.ToRectangleF());
-        }
+      if (round) {
+        graphics.DrawEllipse(brush, bounds.ToRectangleF());
+        //          graphics.DrawRectangle(new XPen(Color.Red), bounds.ToRectangleF() );
+        graphics.DrawEllipse(pen, bounds.ToRectangleF());
+      } else {
+        graphics.DrawRectangle(brush, bounds.ToRectangleF());
+        graphics.DrawRectangle(pen, bounds.ToRectangleF());
       }
     }
 
@@ -154,9 +153,8 @@ namespace Trizbort.Domain.Misc {
     }
 
     private static Cursor LoadCursor(byte[] bytes) {
-      using (var stream = new MemoryStream(bytes)) {
-        return new Cursor(stream);
-      }
+      using var stream = new MemoryStream(bytes);
+      return new Cursor(stream);
     }
   }
 }

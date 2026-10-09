@@ -1412,77 +1412,76 @@ namespace Trizbort.Domain.Elements {
     }
 
     private void showRoomDialog(PropertiesStartType start) {
-      using (var dialog = new RoomPropertiesDialog(start, ID)) {
-        dialog.RoomName = Name;
-        dialog.Description = PrimaryDescription;
-        dialog.RoomSubTitle = SubTitle;
-        dialog.IsDark = IsDark;
-        dialog.IsStartRoom = IsStartRoom;
-        dialog.IsEndRoom = IsEndRoom;
-        dialog.HandDrawnStyle = HandDrawnStyle;
-        dialog.Objects = Objects;
-        dialog.ObjectsPosition = ObjectsPosition;
-        dialog.ObjectsCustomPosition = ObjectsCustomPosition;
-        dialog.ObjectsCustomPositionDown = ObjectsCustomPositionDown;
-        dialog.ObjectsCustomPositionRight = ObjectsCustomPositionRight;
-        dialog.BorderStyle = BorderStyle;
+      using var dialog = new RoomPropertiesDialog(start, ID);
+      dialog.RoomName = Name;
+      dialog.Description = PrimaryDescription;
+      dialog.RoomSubTitle = SubTitle;
+      dialog.IsDark = IsDark;
+      dialog.IsStartRoom = IsStartRoom;
+      dialog.IsEndRoom = IsEndRoom;
+      dialog.HandDrawnStyle = HandDrawnStyle;
+      dialog.Objects = Objects;
+      dialog.ObjectsPosition = ObjectsPosition;
+      dialog.ObjectsCustomPosition = ObjectsCustomPosition;
+      dialog.ObjectsCustomPositionDown = ObjectsCustomPositionDown;
+      dialog.ObjectsCustomPositionRight = ObjectsCustomPositionRight;
+      dialog.BorderStyle = BorderStyle;
 
-        dialog.RoomFillColor = RoomFillColor;
-        dialog.SecondFillColor = SecondFillColor;
-        dialog.SecondFillLocation = SecondFillLocation;
-        dialog.RoomBorderColor = RoomBorderColor;
-        dialog.RoomNameColor = RoomNameColor;
-        dialog.ObjectTextColor = RoomObjectTextColor;
-        dialog.RoomSubtitleColor = RoomSubtitleColor;
-        dialog.RoomRegion = Region;
-        dialog.ReferenceRoom = ReferenceRoom;
-        dialog.Corners = Corners;
-        dialog.RoundedCorners = RoundedCorners;
-        //dialog.Octagonal = Octagonal;
-        dialog.Ellipse = Ellipse;
-        dialog.StraightEdges = StraightEdges;
-        dialog.AllCornersEqual = AllCornersEqual;
-        dialog.Shape = Shape;
+      dialog.RoomFillColor = RoomFillColor;
+      dialog.SecondFillColor = SecondFillColor;
+      dialog.SecondFillLocation = SecondFillLocation;
+      dialog.RoomBorderColor = RoomBorderColor;
+      dialog.RoomNameColor = RoomNameColor;
+      dialog.ObjectTextColor = RoomObjectTextColor;
+      dialog.RoomSubtitleColor = RoomSubtitleColor;
+      dialog.RoomRegion = Region;
+      dialog.ReferenceRoom = ReferenceRoom;
+      dialog.Corners = Corners;
+      dialog.RoundedCorners = RoundedCorners;
+      //dialog.Octagonal = Octagonal;
+      dialog.Ellipse = Ellipse;
+      dialog.StraightEdges = StraightEdges;
+      dialog.AllCornersEqual = AllCornersEqual;
+      dialog.Shape = Shape;
 
-        if (UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas) == DialogResult.OK) {
-          Name = dialog.RoomName;
-          SubTitle = dialog.RoomSubTitle;
-          if (PrimaryDescription != dialog.Description) {
-            ClearDescriptions();
-            AddDescription(dialog.Description);
-          }
-
-          IsDark = dialog.IsDark;
-          IsStartRoom = dialog.IsStartRoom;
-          IsEndRoom = dialog.IsEndRoom;
-          HandDrawnStyle = dialog.HandDrawnStyle;
-          Objects = dialog.Objects;
-          BorderStyle = dialog.BorderStyle;
-          ObjectsPosition = dialog.ObjectsPosition;
-          ObjectsCustomPosition = dialog.ObjectsCustomPosition;
-          ObjectsCustomPositionDown = dialog.ObjectsCustomPositionDown;
-          ObjectsCustomPositionRight = dialog.ObjectsCustomPositionRight;
-          // Added for Room specific colors
-          RoomFillColor = dialog.RoomFillColor;
-          RoomSubtitleColor = dialog.RoomSubtitleColor;
-          SecondFillColor = dialog.SecondFillColor;
-          SecondFillLocation = dialog.SecondFillLocation;
-          RoomBorderColor = dialog.RoomBorderColor;
-          RoomNameColor = dialog.RoomNameColor;
-          RoomObjectTextColor = dialog.ObjectTextColor;
-
-
-          Region = dialog.RoomRegion;
-
-          ReferenceRoomId = dialog.ReferenceRoom?.ID ?? -1;
-          Corners = dialog.Corners;
-          RoundedCorners = dialog.RoundedCorners;
-          Shape = dialog.Shape;
-          //Octagonal = dialog.Octagonal;
-          Ellipse = dialog.Ellipse;
-          StraightEdges = dialog.StraightEdges;
-          AllCornersEqual = dialog.AllCornersEqual;
+      if (UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas) == DialogResult.OK) {
+        Name = dialog.RoomName;
+        SubTitle = dialog.RoomSubTitle;
+        if (PrimaryDescription != dialog.Description) {
+          ClearDescriptions();
+          AddDescription(dialog.Description);
         }
+
+        IsDark = dialog.IsDark;
+        IsStartRoom = dialog.IsStartRoom;
+        IsEndRoom = dialog.IsEndRoom;
+        HandDrawnStyle = dialog.HandDrawnStyle;
+        Objects = dialog.Objects;
+        BorderStyle = dialog.BorderStyle;
+        ObjectsPosition = dialog.ObjectsPosition;
+        ObjectsCustomPosition = dialog.ObjectsCustomPosition;
+        ObjectsCustomPositionDown = dialog.ObjectsCustomPositionDown;
+        ObjectsCustomPositionRight = dialog.ObjectsCustomPositionRight;
+        // Added for Room specific colors
+        RoomFillColor = dialog.RoomFillColor;
+        RoomSubtitleColor = dialog.RoomSubtitleColor;
+        SecondFillColor = dialog.SecondFillColor;
+        SecondFillLocation = dialog.SecondFillLocation;
+        RoomBorderColor = dialog.RoomBorderColor;
+        RoomNameColor = dialog.RoomNameColor;
+        RoomObjectTextColor = dialog.ObjectTextColor;
+
+
+        Region = dialog.RoomRegion;
+
+        ReferenceRoomId = dialog.ReferenceRoom?.ID ?? -1;
+        Corners = dialog.Corners;
+        RoundedCorners = dialog.RoundedCorners;
+        Shape = dialog.Shape;
+        //Octagonal = dialog.Octagonal;
+        Ellipse = dialog.Ellipse;
+        StraightEdges = dialog.StraightEdges;
+        AllCornersEqual = dialog.AllCornersEqual;
       }
     }
 
