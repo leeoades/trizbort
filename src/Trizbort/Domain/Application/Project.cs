@@ -12,7 +12,8 @@ using Trizbort.UI.Controls;
 
 namespace Trizbort.Domain.Application;
 
-public class Project : IDisposable {
+public class Project : IDisposable
+{
   public static readonly string FilterString = "Trizbort Map Files|*.trizbort";
 
   public static readonly TrizbortFileWatcher FileWatcher = new();
@@ -72,13 +73,16 @@ public class Project : IDisposable {
   public bool AreRoomsConnected(List<Room> selectedRooms)
   {
     if (selectedRooms.Count < 2) return false;
-    if (selectedRooms.Count == 2) {
+    if (selectedRooms.Count == 2)
+    {
       var room1 = selectedRooms.First();
       var room2 = selectedRooms.Last();
 
-      if (room1.IsConnected && room2.IsConnected) {
+      if (room1.IsConnected && room2.IsConnected)
+      {
         var con = room1.GetConnections();
-        foreach (var connection in con) {
+        foreach (var connection in con)
+        {
           if (connection.GetSourceRoom() == room1)
             if (connection.GetTargetRoom() == room2)
               return true;
@@ -97,7 +101,8 @@ public class Project : IDisposable {
 
   public void Backup()
   {
-    if (HasFileName) {
+    if (HasFileName)
+    {
       var nextAvailableFilename = FileName.NextAvailableFilename();
       File.Copy(FileName, nextAvailableFilename);
       UserInteraction.ShowMessage(
@@ -124,7 +129,8 @@ public class Project : IDisposable {
 
     var warning = DocumentVersionPolicy.Compare(Version, appVers);
     if (warning == DocumentVersionWarning.None) return;
-    if (warning == DocumentVersionWarning.Major) {
+    if (warning == DocumentVersionWarning.Major)
+    {
       UserInteraction.ShowMessage(
         Program.MainForm,
         $"{infoList}The document is ahead a major version. Information is very likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}",
@@ -134,7 +140,8 @@ public class Project : IDisposable {
       return;
     }
 
-    if (warning == DocumentVersionWarning.Minor) {
+    if (warning == DocumentVersionWarning.Minor)
+    {
       UserInteraction.ShowMessage(
         Program.MainForm,
         $"{infoList}The document is ahead a minor version. Information is likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}",
@@ -144,7 +151,8 @@ public class Project : IDisposable {
       return;
     }
 
-    if (warning == DocumentVersionWarning.Build) {
+    if (warning == DocumentVersionWarning.Build)
+    {
       UserInteraction.ShowMessage(
         Program.MainForm,
         $"{infoList}The document is ahead a build. Information is somewhat likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}",
@@ -164,7 +172,8 @@ public class Project : IDisposable {
 
   public bool FindElement(int id, out Element element)
   {
-    foreach (var existing in Elements.Where(existing => existing.Id == id)) {
+    foreach (var existing in Elements.Where(existing => existing.Id == id))
+    {
       element = existing;
       return true;
     }
@@ -196,9 +205,11 @@ public class Project : IDisposable {
   {
     FileWatcher.StopWatcher();
 
-    try {
+    try
+    {
       var saver = new MapSaver(this);
-      if (saver.SaveMap(FileName)) {
+      if (saver.SaveMap(FileName))
+      {
         if (reload) InitFileWWatcher(FileName);
         IsDirty = false;
         FileWatcher.StartWatcher();
@@ -207,7 +218,8 @@ public class Project : IDisposable {
 
       return false;
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       UserInteraction.ShowMessage(
         Program.MainForm,
         $"There was a problem saving the map:\n\n{ex.Message}",
@@ -221,10 +233,12 @@ public class Project : IDisposable {
 
   public void SetVersion(string versionNumber)
   {
-    try {
+    try
+    {
       Version = Version.Parse(versionNumber);
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       Version = new Version(0, 0, 0, 0);
     }
   }
@@ -232,7 +246,8 @@ public class Project : IDisposable {
   private void OnElementRemoved(object sender, ItemEventArgs<Element> e)
   {
     var doomed = new List<Element>();
-    foreach (var element in Elements.OfType<Connection>()) {
+    foreach (var element in Elements.OfType<Connection>())
+    {
       var connection = element;
       foreach (var vertex in connection.VertexList)
         if (vertex.Port != null && vertex.Port.Owner == e.Item)

@@ -4,7 +4,8 @@ using Trizbort.Domain.Application;
 
 namespace Trizbort.Domain.StatusBar;
 
-public class ZoomStatusWidget : IStatusWidget {
+public class ZoomStatusWidget : IStatusWidget
+{
   private readonly ContextMenuStrip _menu;
 
   public ZoomStatusWidget()

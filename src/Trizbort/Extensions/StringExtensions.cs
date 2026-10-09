@@ -3,7 +3,8 @@ using System.Text;
 
 namespace Trizbort.Extensions;
 
-public static class StringExtensions {
+public static class StringExtensions
+{
   public static bool StartsWithVowel(this string c)
   {
     if (string.IsNullOrWhiteSpace(c)) return false;

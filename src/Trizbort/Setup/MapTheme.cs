@@ -12,7 +12,8 @@ using Region = Trizbort.Domain.Misc.Region;
 namespace Trizbort.Setup;
 
 [JsonObject(ItemRequired = Required.Always)]
-public sealed class MapTheme {
+public sealed class MapTheme
+{
   public string Format { get; set; } = "trizbort-theme";
   public int Version { get; set; } = 1;
   public string Name { get; set; }
@@ -44,7 +45,8 @@ public sealed class MapTheme {
   public static MapTheme Capture(string name)
   {
     var colors = new Dictionary<string, string>();
-    for (var index = 0; index < Domain.Misc.Colors.Count; index++) {
+    for (var index = 0; index < Domain.Misc.Colors.Count; index++)
+    {
       Domain.Misc.Colors.ToName(index, out var colorName);
       colors.Add(colorName, ColorTranslator.ToHtml(Settings.Color[index]));
     }
@@ -132,32 +134,38 @@ public sealed class MapTheme {
     }).ToList();
     var fonts = new List<Font>();
     var fontsCreated = false;
-    try {
+    try
+    {
       foreach (var font in new[] { RoomFont, ObjectFont, SubtitleFont, LineFont })
         fonts.Add(font.CreateFont());
       fontsCreated = true;
     }
-    finally {
+    finally
+    {
       if (!fontsCreated)
         foreach (var font in fonts)
           font.Dispose();
     }
 
-    foreach (var pair in colors) {
+    foreach (var pair in colors)
+    {
       Domain.Misc.Colors.FromName(pair.Key, out var index);
       Settings.Color[index] = pair.Value;
     }
 
     // Region membership is map content. Merge palettes without deleting map-only regions.
-    foreach (var region in regions) {
+    foreach (var region in regions)
+    {
       var existing = Settings.Regions.FirstOrDefault(item => string.Equals(
         item.RegionName,
         region.RegionName,
         StringComparison.OrdinalIgnoreCase));
-      if (existing == null) {
+      if (existing == null)
+      {
         Settings.Regions.Add(region);
       }
-      else {
+      else
+      {
         existing.RColor = region.RColor;
         existing.TextColor = region.TextColor;
       }
@@ -183,8 +191,10 @@ public sealed class MapTheme {
     Settings.WrapTextAtDashes = WrapTextAtDashes;
     Settings.HandDrawn = HandDrawn;
 
-    if (replaceIndividualStyles) {
-      foreach (var room in Project.Current.Elements.OfType<Room>()) {
+    if (replaceIndividualStyles)
+    {
+      foreach (var room in Project.Current.Elements.OfType<Room>())
+      {
         room.RoomBorderColor = room.RoomFillColor = room.RoomNameColor =
           room.RoomSubtitleColor = room.RoomObjectTextColor = room.SecondFillColor = Color.Transparent;
         room.Shape = DefaultRoomShape;
@@ -197,7 +207,8 @@ public sealed class MapTheme {
 
       foreach (var connection in Project.Current.Elements.OfType<Connection>())
         connection.ConnectionColor = Color.Transparent;
-      foreach (var label in Project.Current.Elements.OfType<MapLabel>()) {
+      foreach (var label in Project.Current.Elements.OfType<MapLabel>())
+      {
         label.TextColor = colors["lineText"];
         label.BorderColor = colors["border"];
         label.BackgroundColor = regions.Single(region => region.RegionName == Region.DefaultRegion).RColor;
@@ -215,13 +226,15 @@ public sealed class MapTheme {
     if (string.IsNullOrWhiteSpace(Name)) throw new InvalidDataException("The theme needs a name.");
     if (Colors == null || Colors.Count != Domain.Misc.Colors.Count)
       throw new InvalidDataException("The theme must include all map colours.");
-    foreach (var pair in Colors) {
+    foreach (var pair in Colors)
+    {
       if (!Domain.Misc.Colors.FromName(pair.Key, out _))
         throw new InvalidDataException($"Unknown theme colour: {pair.Key}.");
       ParseColor(pair.Value);
     }
 
-    for (var index = 0; index < Domain.Misc.Colors.Count; index++) {
+    for (var index = 0; index < Domain.Misc.Colors.Count; index++)
+    {
       Domain.Misc.Colors.ToName(index, out var name);
       if (!Colors.ContainsKey(name)) throw new InvalidDataException($"Missing theme colour: {name}.");
     }
@@ -231,12 +244,14 @@ public sealed class MapTheme {
         Regions.Select(region => region.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != Regions.Count ||
         Regions.All(region => region.Name != Region.DefaultRegion))
       throw new InvalidDataException("The theme needs uniquely named regions, including NoRegion.");
-    foreach (var region in Regions) {
+    foreach (var region in Regions)
+    {
       ParseColor(region.Fill);
       ParseColor(region.Text);
     }
 
-    foreach (var font in new[] { RoomFont, ObjectFont, SubtitleFont, LineFont }) {
+    foreach (var font in new[] { RoomFont, ObjectFont, SubtitleFont, LineFont })
+    {
       if (font == null) throw new InvalidDataException("The theme must include all four fonts.");
       font.Validate();
     }
@@ -257,10 +272,12 @@ public sealed class MapTheme {
   internal static Color ParseColor(string value)
   {
     if (string.IsNullOrWhiteSpace(value)) throw new InvalidDataException("Empty theme colour.");
-    try {
+    try
+    {
       return ColorTranslator.FromHtml(value);
     }
-    catch (ArgumentException exception) {
+    catch (ArgumentException exception)
+    {
       throw new InvalidDataException($"Invalid theme colour: {value}.", exception);
     }
   }
@@ -336,7 +353,8 @@ public sealed class MapTheme {
     bool handDrawn = false)
   {
     var colors = new Dictionary<string, string>();
-    for (var index = 0; index < Domain.Misc.Colors.Count; index++) {
+    for (var index = 0; index < Domain.Misc.Colors.Count; index++)
+    {
       Domain.Misc.Colors.ToName(index, out var colorName);
       colors[colorName] = ColorTranslator.ToHtml(ink);
     }
@@ -366,14 +384,16 @@ public sealed class MapTheme {
 }
 
 [JsonObject(ItemRequired = Required.Always)]
-public sealed class ThemeRegion {
+public sealed class ThemeRegion
+{
   public string Name { get; set; }
   public string Fill { get; set; }
   public string Text { get; set; }
 }
 
 [JsonObject(ItemRequired = Required.Always)]
-public sealed class ThemeFont {
+public sealed class ThemeFont
+{
   public string Name { get; set; }
   public float Size { get; set; }
   public FontStyle Style { get; set; }
@@ -394,7 +414,8 @@ public sealed class ThemeFont {
   public Font CreateFont()
   {
     var font = new Font(Name, Size, Style, GraphicsUnit.World);
-    if (!string.Equals(font.FontFamily.Name, Name, StringComparison.OrdinalIgnoreCase)) {
+    if (!string.Equals(font.FontFamily.Name, Name, StringComparison.OrdinalIgnoreCase))
+    {
       font.Dispose();
       throw new InvalidDataException($"The theme font '{Name}' is not installed on this computer.");
     }

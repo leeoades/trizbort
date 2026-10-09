@@ -4,7 +4,8 @@ using Trizbort.Automap;
 
 namespace Trizbort.Domain.AppSettings;
 
-public class ApplicationSettings {
+public class ApplicationSettings
+{
   private const string AppSettingsFileName = @".\appsettings.json";
 
   public bool ApplyStyleToNewRooms { get; set; }

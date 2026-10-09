@@ -4,7 +4,8 @@ using Trizbort.Util;
 
 namespace Trizbort.Domain.StatusBar;
 
-public class CapsLockStatusWidget : IStatusWidget {
+public class CapsLockStatusWidget : IStatusWidget
+{
   public StatusItems Id => StatusItems.TsbCapsLock;
   public string Name => "CAPS Lock";
   public string MenuName => "Caps Lock State";

@@ -9,7 +9,8 @@ using Trizbort.Domain.Misc;
 namespace Trizbort.Tests;
 
 [TestFixture]
-public class RoomCopyStyleTests {
+public class RoomCopyStyleTests
+{
   [Test]
   public void CopyStyleFrom_CopiesStylingButNotContent()
   {

@@ -6,21 +6,24 @@ using System.Windows.Forms;
 
 namespace Trizbort.Domain.StatusBar;
 
-public enum StatusItems {
+public enum StatusItems
+{
   TsbInfo = 0,
   TsbCapsLock,
   TsbNumLock,
   TsbZoom
 }
 
-public class StatusItem {
+public class StatusItem
+{
   public StatusItems Id { get; set; }
   public bool Show { get; set; }
   public ToolStripStatusLabel Control { get; set; }
   public IStatusWidget Widget { get; set; }
 }
 
-public class Status {
+public class Status
+{
   public Status(StatusStrip statusBar)
   {
     StatusBar = statusBar;
@@ -38,12 +41,14 @@ public class Status {
 
   public void UpdateStatusBar()
   {
-    if (Items == null) {
+    if (Items == null)
+    {
       SetDefaultItems();
       AddItemsToStatusBar();
     }
 
-    foreach (var statusItem in Items.Where(p => p.Id != StatusItems.TsbInfo)) {
+    foreach (var statusItem in Items.Where(p => p.Id != StatusItems.TsbInfo))
+    {
       statusItem.Control.Text = statusItem.Widget.DisplayText();
       statusItem.Control.ForeColor = statusItem.Widget.DisplayColor;
     }
@@ -52,7 +57,8 @@ public class Status {
   private void AddItemsToStatusBar()
   {
     foreach (var statusItem in Items)
-      if (statusItem.Id == StatusItems.TsbInfo) {
+      if (statusItem.Id == StatusItems.TsbInfo)
+      {
         var infoLabel = new ToolStripStatusLabel(statusItem.Id.ToString()) {
           Spring = true,
           Alignment = ToolStripItemAlignment.Left,
@@ -61,7 +67,8 @@ public class Status {
         StatusBar.Items.Add(infoLabel);
         statusItem.Control = infoLabel;
       }
-      else {
+      else
+      {
         var itemLabel = new ToolStripStatusLabel(statusItem.Id.ToString()) { Tag = statusItem.Id };
         itemLabel.MouseEnter += ShowHelp;
         itemLabel.Click += HandleClick;

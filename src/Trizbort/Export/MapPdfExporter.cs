@@ -11,7 +11,8 @@ using Trizbort.UI.Controls;
 
 namespace Trizbort.Export;
 
-internal static class MapPdfExporter {
+internal static class MapPdfExporter
+{
   public static void Save(Canvas canvas, string fileName)
   {
     using var document = new PdfDocument();
@@ -26,11 +27,13 @@ internal static class MapPdfExporter {
     var height = Math.Max(1, bounds.Height);
     page.Width = new XUnit(width);
     page.Height = new XUnit(height);
-    using (var graphics = XGraphics.FromPdfPage(page)) {
+    using (var graphics = XGraphics.FromPdfPage(page))
+    {
       canvas.Draw(graphics, true, width, height);
     }
 
-    foreach (var room in Project.Current.Elements.OfType<Room>().Where(room => room.HasDescription)) {
+    foreach (var room in Project.Current.Elements.OfType<Room>().Where(room => room.HasDescription))
+    {
       var side = Math.Min(room.Width, room.Height) / 4;
       var rectangle = new XRect(
         room.X - bounds.Left + (room.Shape == RoomShape.SquareCorners ? 0 : room.Width / 2 - side / 2),

@@ -27,33 +27,40 @@ using System.IO;
 
 namespace Trizbort.Util;
 
-internal static class PathHelper {
+internal static class PathHelper
+{
   public static string SafeGetDirectoryName(string fileName)
   {
-    try {
+    try
+    {
       return Path.GetDirectoryName(fileName);
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     }
   }
 
   public static string SafeGetExtension(string fileName)
   {
-    try {
+    try
+    {
       return Path.GetExtension(fileName);
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       return string.Empty;
     }
   }
 
   public static string SafeGetFilenameWithoutExtension(string fileName)
   {
-    try {
+    try
+    {
       return Path.GetFileNameWithoutExtension(fileName);
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       return string.Empty;
     }
   }

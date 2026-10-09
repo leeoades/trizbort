@@ -4,7 +4,8 @@ using Trizbort.Domain.Elements;
 
 namespace Trizbort.Domain.Misc;
 
-public struct Rect {
+public struct Rect
+{
   public static readonly Rect Empty = new(Vector.Zero, Vector.Zero);
   public float Height;
   public float Width;
@@ -67,7 +68,8 @@ public struct Rect {
     var isRounded = myRmShape == RoomShape.RoundedCorners;
     var isEllipse = myRmShape == RoomShape.Ellipse;
     double angleInRadians;
-    if (myRmShape == RoomShape.Ellipse) {
+    if (myRmShape == RoomShape.Ellipse)
+    {
       angleInRadians = CompassPointHelper.CalcRadianForEllipse(point, this);
       return new Vector(
         Center.X + (float)(Width / 2.0 * Math.Cos(angleInRadians)),
@@ -76,10 +78,12 @@ public struct Rect {
 
     if (myRmShape == RoomShape.Ellipse)
       if (point == CompassPoint.NorthEast || point == CompassPoint.NorthWest || point == CompassPoint.SouthWest ||
-          point == CompassPoint.SouthEast) {
+          point == CompassPoint.SouthEast)
+      {
         angleInRadians = CompassPointHelper.CalcRadianForEllipse(point, this);
 
-        if (point == CompassPoint.NorthEast) {
+        if (point == CompassPoint.NorthEast)
+        {
           var rect = new Rect(X + Width, Y, (float)corners.TopRight, (float)corners.TopRight);
           return new Vector(
             rect.Center.X - (float)(corners.TopRight / 2.0) -
@@ -88,14 +92,16 @@ public struct Rect {
             (float)(corners.TopRight / 2.0 * Math.Sin(angleInRadians)));
         }
 
-        if (point == CompassPoint.NorthWest) {
+        if (point == CompassPoint.NorthWest)
+        {
           var rect = new Rect(X, Y, (float)corners.TopLeft, (float)corners.TopLeft);
           return new Vector(
             rect.Center.X - (float)(corners.TopLeft / 2.0) - (float)(corners.TopLeft / 2.0 * Math.Cos(angleInRadians)),
             rect.Center.Y + (float)(corners.TopLeft / 4.0) + (float)(corners.TopLeft / 2.0 * Math.Sin(angleInRadians)));
         }
 
-        if (point == CompassPoint.SouthWest) {
+        if (point == CompassPoint.SouthWest)
+        {
           var rect = new Rect(X, Y + Height, (float)corners.BottomLeft, (float)corners.BottomLeft);
           return new Vector(
             rect.Center.X - (float)(corners.BottomLeft / 2.0) -
@@ -104,7 +110,8 @@ public struct Rect {
             (float)(corners.BottomLeft / 2.0 * Math.Sin(angleInRadians)));
         }
 
-        if (point == CompassPoint.SouthEast) {
+        if (point == CompassPoint.SouthEast)
+        {
           var rect = new Rect(X + Width, Y + Height, (float)corners.BottomRight, (float)corners.BottomRight);
           return new Vector(
             rect.Center.X - (float)(corners.BottomRight / 2.0) -
@@ -114,7 +121,8 @@ public struct Rect {
         }
       }
 
-    switch (point) {
+    switch (point)
+    {
       case CompassPoint.North:
         return new Vector(X + Width / 2, Y);
       case CompassPoint.NorthNorthEast:

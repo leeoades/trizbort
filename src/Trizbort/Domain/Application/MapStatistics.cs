@@ -6,7 +6,8 @@ using Trizbort.Setup;
 
 namespace Trizbort.Domain.Application;
 
-public static class MapStatistics {
+public static class MapStatistics
+{
   public static int CustomConnections {
     get {
       var labeled = Project.Current.Elements.OfType<Connection>()
@@ -78,10 +79,12 @@ public static class MapStatistics {
         // we are looking for dead ends and not isolated rooms, so we need to make sure there is a way into a room before calling it a dead end
         var waysIn = 0;
 
-        foreach (var y in x) {
+        foreach (var y in x)
+        {
           if (y.GetSourceRoom() == null || y.GetTargetRoom() == null)
             continue; // in other words, a dangling connection does not allow a way in.
-          if (y.Flow == ConnectionFlow.TwoWay) {
+          if (y.Flow == ConnectionFlow.TwoWay)
+          {
             if (y.GetSourceRoom() != y.GetTargetRoom()) // make sure it doesn't loop on itself
               return false;
           }
@@ -89,7 +92,8 @@ public static class MapStatistics {
           {
             return false;
           }
-          else {
+          else
+          {
             waysIn++;
           }
         }
@@ -283,7 +287,8 @@ public static class MapStatistics {
   public static bool RoomHasDupConnection(Room rm, string dupString)
   {
     var dupes = 0;
-    foreach (var element in rm.GetConnections()) {
+    foreach (var element in rm.GetConnections())
+    {
       if (element.GetTargetRoom() == rm && element.EndText == dupString) dupes++;
       if (element.GetSourceRoom() == rm && element.StartText == dupString) dupes++;
     }

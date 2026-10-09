@@ -3,7 +3,8 @@ using System.Drawing;
 
 namespace Trizbort.Domain.Misc;
 
-public struct Vector {
+public struct Vector
+{
   public Vector(float scalar)
   {
     X = scalar;
@@ -146,12 +147,14 @@ public struct Vector {
   public void Normalize()
   {
     var length = Length;
-    if (length == 0) {
+    if (length == 0)
+    {
       // avoid division by zero (NaN)
       X = 0;
       Y = 0;
     }
-    else {
+    else
+    {
       X /= length;
       Y /= length;
     }

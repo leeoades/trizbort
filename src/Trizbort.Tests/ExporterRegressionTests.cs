@@ -16,7 +16,8 @@ using Trizbort.Setup;
 
 namespace Trizbort.Tests;
 
-internal class PreparationExporter : CodeExporter {
+internal class PreparationExporter : CodeExporter
+{
   public IReadOnlyList<Location> Locations => LocationsInExportOrder;
   public IReadOnlyList<ExportRegion> Regions => RegionsInExportOrder;
   public override List<KeyValuePair<string, string>> FileDialogFilters => new();
@@ -49,7 +50,8 @@ internal class PreparationExporter : CodeExporter {
 
 [TestFixture]
 [Category("Integration")]
-public class ExporterRegressionTests : IsolatedProjectTests {
+public class ExporterRegressionTests : IsolatedProjectTests
+{
   private static IEnumerable<TestCaseData> Exporters()
   {
     yield return new TestCaseData(new Func<CodeExporter>(() => new Inform6Exporter()), "Include \"Parser\";", "e_to");
@@ -60,7 +62,10 @@ public class ExporterRegressionTests : IsolatedProjectTests {
     yield return new TestCaseData(new Func<CodeExporter>(() => new ZilExporter()), "<VERSION ZIP>", "(EAST TO");
     yield return new TestCaseData(new Func<CodeExporter>(() => new QuestExporter()), "<asl", "alias=\"east\"");
     yield return new TestCaseData(new Func<CodeExporter>(() => new QuestRoomsExporter()), "<object", "alias=\"east\"");
-    yield return new TestCaseData(new Func<CodeExporter>(() => new AdventuronExporter()), "locations {", ", east_oneway,");
+    yield return new TestCaseData(
+      new Func<CodeExporter>(() => new AdventuronExporter()),
+      "locations {",
+      ", east_oneway,");
   }
 
   [TestCaseSource(nameof(Exporters))]
@@ -77,14 +82,16 @@ public class ExporterRegressionTests : IsolatedProjectTests {
     second.AddDescription("A marble hall.");
     ProjectRegressionTests.Connect(first, second);
     var count = Project.Current.Elements.Count;
-    using (var exporter = createExporter()) {
+    using (var exporter = createExporter())
+    {
       var type = exporter.GetType();
       var before = exporter.Export();
       before.ShouldContain(structure);
       before.ToLowerInvariant().ShouldContain(direction.ToLowerInvariant());
       before.ToLowerInvariant().ShouldContain("observatory");
       before.ToLowerInvariant().ShouldContain("gallery");
-      if (type != typeof(AdventuronExporter)) {
+      if (type != typeof(AdventuronExporter))
+      {
         before.ToLowerInvariant().ShouldContain("chest");
         before.ToLowerInvariant().ShouldContain("key");
       }

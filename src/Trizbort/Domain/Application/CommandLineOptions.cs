@@ -2,7 +2,8 @@
 
 namespace Trizbort.Domain.Application;
 
-public class CommandLineOptions {
+public class CommandLineOptions
+{
   [Value(0)] public string Executable { get; set; }
 
   [Value(1)] public string FileName { get; set; }

@@ -1,6 +1,7 @@
 namespace Trizbort.Domain.Enums;
 
-public enum MappableDirection {
+public enum MappableDirection
+{
   North,
   South,
   East,

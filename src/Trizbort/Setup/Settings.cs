@@ -16,7 +16,8 @@ using Region = Trizbort.Domain.Misc.Region;
 namespace Trizbort.Setup;
 
 [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
-public static class Settings {
+public static class Settings
+{
   private const float MinFontSize = 2;
 
   private const float MaxFontSize = 256;
@@ -68,7 +69,8 @@ public static class Settings {
   public static float ConnectionArrowSize {
     get { return _connectionArrowSize; }
     set {
-      if (_connectionArrowSize != value) {
+      if (_connectionArrowSize != value)
+      {
         _connectionArrowSize = value;
         RaiseChanged();
       }
@@ -78,7 +80,8 @@ public static class Settings {
   public static float ConnectionStalkLength {
     get { return _connectionStalkLength; }
     set {
-      if (_connectionStalkLength != value) {
+      if (_connectionStalkLength != value)
+      {
         _connectionStalkLength = value;
         RaiseChanged();
       }
@@ -88,7 +91,8 @@ public static class Settings {
   public static float DarknessStripeSize {
     get { return _darknessStripeSize; }
     set {
-      if (_darknessStripeSize != value) {
+      if (_darknessStripeSize != value)
+      {
         _darknessStripeSize = value;
         RaiseChanged();
       }
@@ -101,7 +105,8 @@ public static class Settings {
   public static float DocHorizontalMargin {
     get { return _docHorizontalMargin; }
     set {
-      if (_docHorizontalMargin != value) {
+      if (_docHorizontalMargin != value)
+      {
         _docHorizontalMargin = value;
         RaiseChanged();
       }
@@ -120,7 +125,8 @@ public static class Settings {
   public static float DocVerticalMargin {
     get { return _docVerticalMargin; }
     set {
-      if (_docVerticalMargin != value) {
+      if (_docVerticalMargin != value)
+      {
         _docVerticalMargin = value;
         RaiseChanged();
       }
@@ -142,7 +148,8 @@ public static class Settings {
   public static float DragDistanceToInitiateNewConnection {
     get { return _dragDistanceToInitiateNewConnection; }
     set {
-      if (_dragDistanceToInitiateNewConnection != value) {
+      if (_dragDistanceToInitiateNewConnection != value)
+      {
         _dragDistanceToInitiateNewConnection = value;
         RaiseChanged();
       }
@@ -154,7 +161,8 @@ public static class Settings {
   public static float GridSize {
     get { return _gridSize; }
     set {
-      if (_gridSize != value) {
+      if (_gridSize != value)
+      {
         _gridSize = value;
         RaiseChanged();
       }
@@ -164,7 +172,8 @@ public static class Settings {
   public static float HandleSize {
     get { return _handleSize; }
     set {
-      if (_handleSize != value) {
+      if (_handleSize != value)
+      {
         _handleSize = value;
         RaiseChanged();
       }
@@ -174,7 +183,8 @@ public static class Settings {
   public static bool IsGridVisible {
     get { return _isGridVisible; }
     set {
-      if (_isGridVisible != value) {
+      if (_isGridVisible != value)
+      {
         _isGridVisible = value;
         RaiseChanged();
       }
@@ -188,7 +198,8 @@ public static class Settings {
   public static Keys KeypadNavigationCreationModifier {
     get { return _keypadNavigationCreationModifier; }
     set {
-      if (_keypadNavigationCreationModifier != value) {
+      if (_keypadNavigationCreationModifier != value)
+      {
         _keypadNavigationCreationModifier = value;
         RaiseChanged();
       }
@@ -202,7 +213,8 @@ public static class Settings {
   public static Keys KeypadNavigationUnexploredModifier {
     get { return _keypadNavigationUnexploredModifier; }
     set {
-      if (_keypadNavigationUnexploredModifier != value) {
+      if (_keypadNavigationUnexploredModifier != value)
+      {
         _keypadNavigationUnexploredModifier = value;
         RaiseChanged();
       }
@@ -212,7 +224,8 @@ public static class Settings {
   public static Font LineFont {
     get { return _lineFont; }
     set {
-      if (!Equals(_lineFont, value)) {
+      if (!Equals(_lineFont, value))
+      {
         _lineFont = value;
         RaiseChanged();
       }
@@ -223,7 +236,8 @@ public static class Settings {
   public static float LineWidth {
     get { return _lineWidth; }
     set {
-      if (_lineWidth != value) {
+      if (_lineWidth != value)
+      {
         _lineWidth = value;
         RaiseChanged();
       }
@@ -234,7 +248,8 @@ public static class Settings {
   public static bool HandDrawn {
     get { return _handDrawn; }
     set {
-      if (_handDrawn != value) {
+      if (_handDrawn != value)
+      {
         _handDrawn = value;
         RaiseChanged();
       }
@@ -244,7 +259,8 @@ public static class Settings {
   public static Font ObjectFont {
     get { return _objectFont; }
     set {
-      if (!Equals(_objectFont, value)) {
+      if (!Equals(_objectFont, value))
+      {
         _objectFont = value;
         RaiseChanged();
       }
@@ -254,7 +270,8 @@ public static class Settings {
   public static float ObjectListOffsetFromRoom {
     get { return _objectListOffsetFromRoom; }
     set {
-      if (_objectListOffsetFromRoom != value) {
+      if (_objectListOffsetFromRoom != value)
+      {
         _objectListOffsetFromRoom = value;
         RaiseChanged();
       }
@@ -264,7 +281,8 @@ public static class Settings {
   public static float PreferredDistanceBetweenRooms {
     get { return _preferredDistanceBetweenRooms; }
     set {
-      if (_preferredDistanceBetweenRooms != value) {
+      if (_preferredDistanceBetweenRooms != value)
+      {
         _preferredDistanceBetweenRooms = value;
         RaiseChanged();
       }
@@ -276,7 +294,8 @@ public static class Settings {
   public static Font RoomNameFont {
     get { return _roomNameFont; }
     set {
-      if (!Equals(_roomNameFont, value)) {
+      if (!Equals(_roomNameFont, value))
+      {
         _roomNameFont = value;
         RaiseChanged();
       }
@@ -286,7 +305,8 @@ public static class Settings {
   public static bool ShowOrigin {
     get { return _showOrigin; }
     set {
-      if (_showOrigin != value) {
+      if (_showOrigin != value)
+      {
         _showOrigin = value;
         RaiseChanged();
       }
@@ -296,7 +316,8 @@ public static class Settings {
   public static float SnapToElementSize {
     get { return _snapToElementSize; }
     set {
-      if (_snapToElementSize != value) {
+      if (_snapToElementSize != value)
+      {
         _snapToElementSize = value;
         RaiseChanged();
       }
@@ -306,7 +327,8 @@ public static class Settings {
   public static bool SnapToGrid {
     get { return _snapToGrid; }
     set {
-      if (_snapToGrid != value) {
+      if (_snapToGrid != value)
+      {
         _snapToGrid = value;
         RaiseChanged();
       }
@@ -318,7 +340,8 @@ public static class Settings {
   public static Font SubtitleFont {
     get { return _subtitleFont; }
     set {
-      if (!Equals(_subtitleFont, value)) {
+      if (!Equals(_subtitleFont, value))
+      {
         _subtitleFont = value;
         RaiseChanged();
       }
@@ -328,7 +351,8 @@ public static class Settings {
   public static float TextOffsetFromConnection {
     get { return _textOffsetFromConnection; }
     set {
-      if (_textOffsetFromConnection != value) {
+      if (_textOffsetFromConnection != value)
+      {
         _textOffsetFromConnection = value;
         RaiseChanged();
       }
@@ -358,7 +382,8 @@ public static class Settings {
           RColor = System.Drawing.Color.White, TextColor = System.Drawing.Color.Blue, RegionName = Region.DefaultRegion
         });
     else
-      foreach (var region in regions.Children) {
+      foreach (var region in regions.Children)
+      {
         var tRegion = new Region {
           TextColor = region.Attribute("TextColor").Text == string.Empty
             ? System.Drawing.Color.Blue
@@ -374,7 +399,8 @@ public static class Settings {
       }
 
     var fonts = element["fonts"];
-    foreach (var font in fonts.Children) {
+    foreach (var font in fonts.Children)
+    {
       var style = FontStyle.Regular;
       if (font.Attribute("bold").ToBool()) style |= FontStyle.Bold;
       if (font.Attribute("italic").ToBool()) style |= FontStyle.Italic;
@@ -491,11 +517,13 @@ public static class Settings {
 
     DocumentSpecificMargins = ApplicationSettingsController.AppSettings.SpecifyGenMargins;
 
-    if (ApplicationSettingsController.AppSettings.SpecifyGenMargins) {
+    if (ApplicationSettingsController.AppSettings.SpecifyGenMargins)
+    {
       DocHorizontalMargin = ApplicationSettingsController.AppSettings.GenHorizontalMargin;
       DocVerticalMargin = ApplicationSettingsController.AppSettings.GenVerticalMargin;
     }
-    else {
+    else
+    {
       DocHorizontalMargin = DocVerticalMargin = 0;
     }
 
@@ -541,7 +569,8 @@ public static class Settings {
     scribe.EndElement();
 
     scribe.StartElement("regions");
-    foreach (var region in Regions.OrderBy(p => p.RegionName)) {
+    foreach (var region in Regions.OrderBy(p => p.RegionName))
+    {
       scribe.StartElement(region.FixupRegionNameForSave());
       scribe.Attribute("Name", region.RegionName);
       scribe.Attribute("TextColor", region.TextColor);
@@ -644,8 +673,10 @@ public static class Settings {
     dialog.WrapTextAtDashes = WrapTextAtDashes;
     dialog.ConnectionArrowSize = ConnectionArrowSize;
     dialog.DefaultRoomShape = DefaultRoomShape;
-    if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
-      for (var index = 0; index < Colors.Count; ++index) {
+    if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
+    {
+      for (var index = 0; index < Colors.Count; ++index)
+      {
         if (Color[index] != dialog.ElementColors[index]) Project.Current.IsDirty = true;
         Color[index] = dialog.ElementColors[index];
       }
@@ -716,7 +747,8 @@ public static class Settings {
     if (newRegCount != regCount)
       Project.Current.IsDirty = true;
     else
-      for (var index = 0; index < newRegCount; index++) {
+      for (var index = 0; index < newRegCount; index++)
+      {
         if (regBkgdColorList[index] != newReg[index].RColor)
           Project.Current.IsDirty = true;
         if (regTextColorList[index] != newReg[index].TextColor)
@@ -729,7 +761,8 @@ public static class Settings {
   public static float Snap(float value)
   {
     float offset = 0;
-    while (value < GridSize) {
+    while (value < GridSize)
+    {
       value += GridSize;
       offset += GridSize;
     }
@@ -746,7 +779,8 @@ public static class Settings {
 
   public static Vector Snap(Vector pos)
   {
-    if (SnapToGrid) {
+    if (SnapToGrid)
+    {
       pos.X = Snap(pos.X);
       pos.Y = Snap(pos.Y);
     }
@@ -757,19 +791,22 @@ public static class Settings {
   private static string ModifierKeysToString(Keys key)
   {
     var builder = new StringBuilder();
-    if ((key & Keys.Shift) == Keys.Shift) {
+    if ((key & Keys.Shift) == Keys.Shift)
+    {
       if (builder.Length != 0)
         builder.Append("|");
       builder.Append("shift");
     }
 
-    if ((key & Keys.Control) == Keys.Control) {
+    if ((key & Keys.Control) == Keys.Control)
+    {
       if (builder.Length != 0)
         builder.Append("|");
       builder.Append("control");
     }
 
-    if ((key & Keys.Alt) == Keys.Alt) {
+    if ((key & Keys.Alt) == Keys.Alt)
+    {
       if (builder.Length != 0)
         builder.Append("|");
       builder.Append("alt");
@@ -813,11 +850,13 @@ public static class Settings {
   }
 
 
-  public class ColorSettings {
+  public class ColorSettings
+  {
     public Color this[int index] {
       get { return _color[index]; }
       set {
-        if (_color[index] != value) {
+        if (_color[index] != value)
+        {
           _color[index] = value;
           RaiseChanged();
         }

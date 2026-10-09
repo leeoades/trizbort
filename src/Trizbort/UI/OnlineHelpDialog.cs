@@ -5,7 +5,8 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI;
 
-public class OnlineHelpDialog : Form {
+public class OnlineHelpDialog : Form
+{
   public const string UserGuideUrl = "https://github.com/leeoades/trizbort/blob/master/Docs/index.md";
   public const string OriginalHelpUrl = "https://trizbort.genstein.net/help/";
 
@@ -65,11 +66,13 @@ public class OnlineHelpDialog : Form {
       Text = url
     };
     link.LinkClicked += (sender, e) => {
-      try {
+      try
+      {
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         link.LinkVisited = true;
       }
-      catch (Win32Exception ex) {
+      catch (Win32Exception ex)
+      {
         UserInteraction.ShowMessage(
           this,
           $"Unable to open the link:\n\n{url}\n\n{ex.Message}",

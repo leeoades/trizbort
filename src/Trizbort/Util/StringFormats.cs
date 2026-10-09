@@ -2,7 +2,8 @@ using System.Drawing;
 
 namespace Trizbort.Util;
 
-internal class StringFormats {
+internal class StringFormats
+{
   static StringFormats()
   {
     Center = new StringFormat {

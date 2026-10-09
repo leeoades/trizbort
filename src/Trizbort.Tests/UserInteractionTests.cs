@@ -11,14 +11,14 @@ using Trizbort.Domain.Application;
 using Trizbort.Domain.Controllers;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
-using Trizbort.Domain.Watchers;
 using Trizbort.Setup;
 using Trizbort.UI;
 using Trizbort.UI.Controls;
 
 namespace Trizbort.Tests;
 
-internal sealed class RecordingUserInteraction : IUserInteraction {
+internal sealed class RecordingUserInteraction : IUserInteraction
+{
   public readonly List<string> Messages = new();
   public MessageBoxButtons Buttons;
   public string ClipboardText = "";
@@ -70,7 +70,8 @@ internal sealed class RecordingUserInteraction : IUserInteraction {
 
 [TestFixture]
 [Category("Integration")]
-public class UserInteractionTests : IsolatedProjectTests {
+public class UserInteractionTests : IsolatedProjectTests
+{
   [SetUp]
   public void SubstituteUI()
   {
@@ -88,7 +89,8 @@ public class UserInteractionTests : IsolatedProjectTests {
     new LegacyMapFileEngine(Project.Current).Save(path).ShouldBeTrue();
     XDocument.Load(path).Root.Attribute("version").Value
              .ShouldBe(typeof(Project).Assembly.GetName().Version.ToString());
-    using (var loaded = new Project()) {
+    using (var loaded = new Project())
+    {
       new MapLoader(loaded).LoadMap(path).ShouldBeTrue();
       loaded.Elements.Count.ShouldBe(1);
       loaded.Version.ShouldBe(typeof(Project).Assembly.GetName().Version);
@@ -112,7 +114,8 @@ public class UserInteractionTests : IsolatedProjectTests {
     var path = Files.File("backup.trizbort");
     File.WriteAllText(path, "Saved map contents");
     Project.Current.FileName = path;
-    for (var index = 1; index <= 2; index++) {
+    for (var index = 1; index <= 2; index++)
+    {
       Project.Current.Backup();
       var backup = Files.File("backup-backup-" + index + ".trizbort");
       File.ReadAllText(backup).ShouldBe("Saved map contents");
@@ -189,7 +192,8 @@ public class UserInteractionTests : IsolatedProjectTests {
     using (var loaded = new Project {
              FileName = path, Title = "Unused title", Author = "Unused author",
              Description = "Unused description", History = "Unused history"
-           }) {
+           })
+    {
       var succeeded = throughProject ? loaded.Load() : new MapLoader(loaded).LoadMap(path);
       succeeded.ShouldBeTrue();
       loaded.Elements.ShouldBeEmpty();
@@ -214,7 +218,8 @@ public class UserInteractionTests : IsolatedProjectTests {
     var previousForm = TrizbortApplication.MainForm;
     var path = Files.File("explorer-new.trizbort");
     File.WriteAllText(path, "");
-    try {
+    try
+    {
       using var form = new MainForm();
       form.OpenProject(path);
       Project.Current.ShouldNotBeSameAs(existing);
@@ -231,7 +236,8 @@ public class UserInteractionTests : IsolatedProjectTests {
       AssertWatching(path);
       _interaction.Messages.ShouldBeEmpty();
     }
-    finally {
+    finally
+    {
       TrizbortApplication.MainForm = previousForm;
       existing.Dispose();
     }
@@ -265,7 +271,8 @@ public class UserInteractionTests : IsolatedProjectTests {
       path,
       empty ? "" : "<trizbort version=\"1.0\"><map><room id=\"1\" name=\"Loaded Room\"/></map></trizbort>");
     var previousDirectory = Environment.CurrentDirectory;
-    try {
+    try
+    {
       Environment.CurrentDirectory = Files.Path;
       using var loaded = new Project { FileName = Path.GetFileName(path) };
       loaded.Load().ShouldBeTrue();
@@ -273,7 +280,8 @@ public class UserInteractionTests : IsolatedProjectTests {
       AssertWatching(path);
       _interaction.Messages.ShouldBeEmpty();
     }
-    finally {
+    finally
+    {
       Environment.CurrentDirectory = previousDirectory;
     }
   }
@@ -379,10 +387,11 @@ public class UserInteractionTests : IsolatedProjectTests {
     var controller = new CopyController();
     controller.CopyColors(source);
     var copy = controller.PasteElements().ShouldBeOfType<CopyController.CopyColorsObj>();
-    copy.Colors.Select(color => color.Name).ShouldBe(new[] {
-      nameof(Room.RoomBorderColor), nameof(Room.RoomFillColor), nameof(Room.RoomNameColor),
-      nameof(Room.RoomObjectTextColor), nameof(Room.RoomSubtitleColor), nameof(Room.SecondFillColor)
-    });
+    copy.Colors.Select(color => color.Name).ShouldBe(
+      new[] {
+        nameof(Room.RoomBorderColor), nameof(Room.RoomFillColor), nameof(Room.RoomNameColor),
+        nameof(Room.RoomObjectTextColor), nameof(Room.RoomSubtitleColor), nameof(Room.SecondFillColor)
+      });
     copy.SecondFillLocation.ShouldBe("Top");
 
     using var canvas = new Canvas();
@@ -408,15 +417,17 @@ public class UserInteractionTests : IsolatedProjectTests {
   {
     var room = ProjectRegressionTests.AddRoom("Target");
     room.RoomFillColor = Color.Blue;
-    new CopyController().SetRoomColors(room, new CopyController.CopyColorsObj {
-      Colors = new List<CopyController.CopyColorObj> {
-        new() { Name = nameof(Room.RoomBorderColor), Color = Color.Red },
-        new() { Name = "FutureColor", Color = Color.Black },
-        new() { Name = nameof(Room.Name), Color = Color.Black },
-        new() { Name = nameof(Room.RoomBorderColor), Color = Color.Green }
-      },
-      SecondFillLocation = "Top"
-    });
+    new CopyController().SetRoomColors(
+      room,
+      new CopyController.CopyColorsObj {
+        Colors = new List<CopyController.CopyColorObj> {
+          new() { Name = nameof(Room.RoomBorderColor), Color = Color.Red },
+          new() { Name = "FutureColor", Color = Color.Black },
+          new() { Name = nameof(Room.Name), Color = Color.Black },
+          new() { Name = nameof(Room.RoomBorderColor), Color = Color.Green }
+        },
+        SecondFillLocation = "Top"
+      });
     room.RoomBorderColor.ShouldBe(Color.Green);
     room.RoomFillColor.ShouldBe(Color.Blue);
     room.SecondFillLocation.ShouldBe("Top");
@@ -428,11 +439,13 @@ public class UserInteractionTests : IsolatedProjectTests {
   {
     UserInteraction.Current = new UnexpectedUserInteraction();
     Should.Throw<AssertionException>(() => UserInteraction.ShowMessage("Unexpected"));
-    using (var form = new Form()) {
+    using (var form = new Form())
+    {
       Should.Throw<AssertionException>(() => UserInteraction.ShowDialog(form));
     }
 
-    using (var dialog = new OpenFileDialog()) {
+    using (var dialog = new OpenFileDialog())
+    {
       Should.Throw<AssertionException>(() => UserInteraction.ShowDialog(dialog));
     }
 

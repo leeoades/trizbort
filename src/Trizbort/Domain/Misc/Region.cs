@@ -4,7 +4,8 @@ using System.Xml;
 
 namespace Trizbort.Domain.Misc;
 
-public class Region {
+public class Region
+{
   public Region()
   {
     RColor = Color.White;

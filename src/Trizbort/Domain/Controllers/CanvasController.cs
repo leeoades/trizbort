@@ -7,7 +7,8 @@ using Trizbort.UI.Controls;
 
 namespace Trizbort.Domain.Controllers;
 
-public class CanvasController {
+public class CanvasController
+{
   private readonly Canvas _canvas;
 
 
@@ -39,7 +40,8 @@ public class CanvasController {
     var viewportCenter = _canvas.Viewport.Center;
     Room closestRoom = null;
     var closestDistance = float.MaxValue;
-    foreach (var element in Project.Current.Elements.OfType<Room>()) {
+    foreach (var element in Project.Current.Elements.OfType<Room>())
+    {
       var roomCenter = element.InnerBounds.Center;
       var distance = roomCenter.Distance(viewportCenter);
 
@@ -55,7 +57,8 @@ public class CanvasController {
   public void SelectStartRoom()
   {
     var startRoom = Project.Current.Elements.OfType<Room>().FirstOrDefault(p => p.IsStartRoom);
-    if (startRoom != null) {
+    if (startRoom != null)
+    {
       _canvas.SelectedElement = startRoom;
       EnsureVisible(startRoom);
     }

@@ -28,7 +28,8 @@ using Settings = Trizbort.Setup.Settings;
 
 namespace Trizbort.UI;
 
-public partial class MainForm : Form {
+public partial class MainForm : Form
+{
   private static readonly TimeSpan _idleProcessingEveryNSeconds = TimeSpan.FromSeconds(0.2);
   private readonly string _caption;
   private readonly CommandController _commandController;
@@ -83,7 +84,8 @@ public partial class MainForm : Form {
 
   protected override void OnClosing(CancelEventArgs e)
   {
-    if (!CheckLoseProject()) {
+    if (!CheckLoseProject())
+    {
       e.Cancel = true;
       return;
     }
@@ -127,14 +129,16 @@ public partial class MainForm : Form {
 
   private bool CheckLoseProject()
   {
-    if (Project.Current.IsDirty) {
+    if (Project.Current.IsDirty)
+    {
       // see if the user would like to save
       var result = UserInteraction.ShowMessage(
         this,
         $"Do you want to save changes to {Project.Current.Name}?",
         Text,
         MessageBoxButtons.YesNoCancel);
-      switch (result) {
+      switch (result)
+      {
         case DialogResult.Yes:
           // user would like to save
           if (!SaveProject()) return false;
@@ -160,14 +164,16 @@ public partial class MainForm : Form {
   private async Task<bool> ClAutoMap(CommandLineOptions options)
   {
     var projectLoaded = false;
-    try {
+    try
+    {
       var cmdLineAutomap = ApplicationSettingsController.AppSettings.Automap;
       cmdLineAutomap.FileName = options.Transcript;
 
       await Canvas.StartAutomapping(cmdLineAutomap, true);
       Canvas.StopAutomapping();
 
-      if (options.QuickSave != null) {
+      if (options.QuickSave != null)
+      {
         SaveAsCmdLineProject(options.QuickSave);
         Project.Current.IsDirty = false;
       }
@@ -175,7 +181,8 @@ public partial class MainForm : Form {
       Project.Current.IsDirty = false;
       projectLoaded = true;
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       // ignored
     }
 
@@ -188,21 +195,24 @@ public partial class MainForm : Form {
   {
     var projectLoaded = false;
 
-    if (options.LoadLastProject) {
+    if (options.LoadLastProject)
+    {
       OpenProject(ApplicationSettingsController.AppSettings.LastProjectFileName);
       projectLoaded = true;
     }
 
     if (options.Transcript != null) projectLoaded = ClAutoMap(options).Result;
 
-    if (options.QuickSave != null && options.Transcript == null) {
+    if (options.QuickSave != null && options.Transcript == null)
+    {
       SaveAsCmdLineProject(options.QuickSave);
       Project.Current.IsDirty = false;
     }
 
 
     if (options.FileName != null)
-      if (!projectLoaded) {
+      if (!projectLoaded)
+      {
         OpenProject(options.FileName);
         projectLoaded = true;
 
@@ -304,7 +314,8 @@ public partial class MainForm : Form {
     // compose filter string for file dialog
     var filterString = string.Empty;
     var filters = exporter.FileDialogFilters;
-    foreach (var filter in filters) {
+    foreach (var filter in filters)
+    {
       if (!string.IsNullOrEmpty(filterString)) filterString += "|";
       filterString += $"{filter.Key}|*{filter.Value}";
     }
@@ -316,7 +327,8 @@ public partial class MainForm : Form {
     // set default filter by extension
     var extension = PathHelper.SafeGetExtension(lastExportFileName);
     for (var filterIndex = 0; filterIndex < filters.Count; ++filterIndex)
-      if (StringComparer.InvariantCultureIgnoreCase.Compare(extension, filters[filterIndex].Value) == 0) {
+      if (StringComparer.InvariantCultureIgnoreCase.Compare(extension, filters[filterIndex].Value) == 0)
+      {
         dialog.FilterIndex = filterIndex + 1; // 1 based index
         break;
       }
@@ -325,13 +337,15 @@ public partial class MainForm : Form {
     dialog.Title = exporter.FileDialogTitle;
     dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(lastExportFileName);
     if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
-      try {
+      try
+      {
         // export source code
         exporter.Export(dialog.FileName);
         lastExportFileName = dialog.FileName;
         return true;
       }
-      catch (Exception ex) {
+      catch (Exception ex)
+      {
         UserInteraction.ShowMessage(
           Program.MainForm,
           $"There was a problem exporting the map:\n\n{ex.Message}",
@@ -357,11 +371,13 @@ public partial class MainForm : Form {
     var extension = GetExtensionForDefaultImageType();
 
     var imageFile = Path.Combine(folder, fileName + extension);
-    try {
+    try
+    {
       if (!SaveImage(imageFile))
         return string.Empty;
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       return string.Empty;
     }
 
@@ -373,10 +389,12 @@ public partial class MainForm : Form {
     var folder = PathHelper.SafeGetDirectoryName(Project.Current.FileName);
     var fileName = PathHelper.SafeGetFilenameWithoutExtension(Project.Current.FileName);
     var pdfFile = Path.Combine(folder, fileName + ".pdf");
-    try {
+    try
+    {
       SavePDF(pdfFile);
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       return string.Empty;
     }
 
@@ -418,7 +436,8 @@ public partial class MainForm : Form {
     dialog.DefaultExt = GetExtensionForDefaultImageType();
     dialog.InitialDirectory =
       PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastExportImageFileName);
-    if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
+    if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
+    {
       ApplicationSettingsController.AppSettings.LastExportImageFileName = Path.GetDirectoryName(dialog.FileName) + @"\";
       if (!SaveImage(dialog.FileName))
         UserInteraction.ShowMessage(
@@ -452,10 +471,12 @@ public partial class MainForm : Form {
     dialog.InitialDirectory =
       PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastExportImageFileName);
     if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
-      try {
+      try
+      {
         SavePDF(dialog.FileName);
       }
-      catch (Exception ex) {
+      catch (Exception ex)
+      {
         UserInteraction.ShowMessage(
           Program.MainForm,
           $"There was a problem exporting the map:\n\n{ex.Message}",
@@ -525,7 +546,8 @@ public partial class MainForm : Form {
   private static string GetExtensionForDefaultImageType()
   {
     var extension = ".png";
-    switch (ApplicationSettingsController.AppSettings.DefaultImageType) {
+    switch (ApplicationSettingsController.AppSettings.DefaultImageType)
+    {
       case 0:
         extension = ".png";
         break;
@@ -588,7 +610,8 @@ public partial class MainForm : Form {
 
   private void EditChangeRegionMenuItemClick(object sender, EventArgs e)
   {
-    if (Canvas.HasSingleSelectedElement && Canvas.SelectedElement.HasDialog && Canvas.SelectedElement is Room element) {
+    if (Canvas.HasSingleSelectedElement && Canvas.SelectedElement.HasDialog && Canvas.SelectedElement is Room element)
+    {
       var room = element;
       room.ShowDialog(PropertiesStartType.Region);
     }
@@ -621,19 +644,22 @@ public partial class MainForm : Form {
     var ext = Parser.Default.ParseArguments<CommandLineOptions>(args)
                     .WithNotParsed(errors => parseErrors = errors.ToList());
 
-    if (ext.Tag == ParserResultType.Parsed) {
+    if (ext.Tag == ParserResultType.Parsed)
+    {
       var result = (Parsed<CommandLineOptions>)ext;
       projectLoaded = CommandLineActions(result.Value);
     }
 
     if (ApplicationSettingsController.AppSettings.LoadLastProjectOnStart && !projectLoaded)
-      try {
+      try
+      {
         if (ApplicationSettingsController.AppSettings.LastProjectFileName.IsUrl() ||
             File.Exists(ApplicationSettingsController.AppSettings.LastProjectFileName))
           BeginInvoke(
             (MethodInvoker)delegate { OpenProject(ApplicationSettingsController.AppSettings.LastProjectFileName); });
       }
-      catch (Exception) {
+      catch (Exception)
+      {
         // ignored
       }
   }
@@ -675,7 +701,8 @@ public partial class MainForm : Form {
   private void OnIdle(object sender, EventArgs e)
   {
     var now = DateTime.Now;
-    if (now - _lastUpdateUITime > _idleProcessingEveryNSeconds) {
+    if (now - _lastUpdateUITime > _idleProcessingEveryNSeconds)
+    {
       _lastUpdateUITime = now;
       Task.Run(UpdateCommandUI);
     }
@@ -760,7 +787,8 @@ public partial class MainForm : Form {
   {
     ApplicationSettingsController.AppSettings.LastProjectFileName = outfile;
     Project.Current.FileName = outfile;
-    if (Project.Current.Save()) {
+    if (Project.Current.Save())
+    {
       if (ApplicationSettingsController.AppSettings.RecentProjects.Contains(Project.Current.FileName))
         ApplicationSettingsController.AppSettings.RecentProjects.Remove(Project.Current.FileName);
       ApplicationSettingsController.AppSettings.RecentProjects.Insert(0, Project.Current.FileName);
@@ -777,22 +805,26 @@ public partial class MainForm : Form {
   private bool SaveAsProject()
   {
     using var dialog = new SaveFileDialog();
-    if (!Project.Current.FileName.IsUrl()) {
+    if (!Project.Current.FileName.IsUrl())
+    {
       if (!string.IsNullOrEmpty(Project.Current.FileName))
         dialog.FileName = Project.Current.FileName;
       else
         dialog.InitialDirectory =
           PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastProjectFileName);
     }
-    else {
+    else
+    {
       dialog.FileName = Path.GetFileName(Project.Current.FileName);
     }
 
     dialog.Filter = $"{Project.FilterString}|All Files|*.*||";
-    if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
+    if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
+    {
       ApplicationSettingsController.AppSettings.LastProjectFileName = dialog.FileName;
       Project.Current.FileName = dialog.FileName;
-      if (Project.Current.Save(true)) {
+      if (Project.Current.Save(true))
+      {
         if (ApplicationSettingsController.AppSettings.RecentProjects.Contains(Project.Current.FileName))
           ApplicationSettingsController.AppSettings.RecentProjects.Remove(Project.Current.FileName);
         ApplicationSettingsController.AppSettings.RecentProjects.Insert(0, Project.Current.FileName);
@@ -827,15 +859,20 @@ public partial class MainForm : Form {
     size.X = Numeric.Clamp(size.X, 16, 8192);
     size.Y = Numeric.Clamp(size.Y, 16, 8192);
 
-    try {
-      if (Equals(format, ImageFormat.Emf)) {
+    try
+    {
+      if (Equals(format, ImageFormat.Emf))
+      {
         using var nativeGraphics = Graphics.FromHwnd(Canvas.Handle);
         using var stream = new MemoryStream();
-        try {
+        try
+        {
           var dc = nativeGraphics.GetHdc();
           using var metafile = new Metafile(stream, dc);
-          using (var imageGraphics = Graphics.FromImage(metafile)) {
-            using (var graphics = XGraphics.FromGraphics(imageGraphics, new XSize(size.X, size.Y))) {
+          using (var imageGraphics = Graphics.FromImage(metafile))
+          {
+            using (var graphics = XGraphics.FromGraphics(imageGraphics, new XSize(size.X, size.Y)))
+            {
               Canvas.Draw(graphics, true, size.X, size.Y);
             }
           }
@@ -847,17 +884,22 @@ public partial class MainForm : Form {
 
           DeleteEnhMetaFile(copy);
         }
-        catch {
+        catch
+        {
           succeeded = false;
         }
-        finally {
+        finally
+        {
           nativeGraphics.ReleaseHdc();
         }
       }
-      else {
+      else
+      {
         using var bitmap = new Bitmap((int)Math.Ceiling(size.X), (int)Math.Ceiling(size.Y));
-        using (var imageGraphics = Graphics.FromImage(bitmap)) {
-          using (var graphics = XGraphics.FromGraphics(imageGraphics, new XSize(size.X, size.Y))) {
+        using (var imageGraphics = Graphics.FromImage(bitmap))
+        {
+          using (var graphics = XGraphics.FromGraphics(imageGraphics, new XSize(size.X, size.Y)))
+          {
             Canvas.Draw(graphics, true, size.X, size.Y);
           }
         }
@@ -865,7 +907,8 @@ public partial class MainForm : Form {
         bitmap.Save(fileName, format);
       }
     }
-    catch {
+    catch
+    {
       succeeded = false;
     }
 
@@ -880,7 +923,8 @@ public partial class MainForm : Form {
 
   private bool SaveProject()
   {
-    if (Project.Current.FileName.IsUrl()) {
+    if (Project.Current.FileName.IsUrl())
+    {
       UserInteraction.ShowMessage(
         "You are trying to save a map loaded from the web.  Please use the 'Save Map As...' to save the map to your local drive.",
         "Problem saving map.",
@@ -891,7 +935,8 @@ public partial class MainForm : Form {
 
     if (!Project.Current.HasFileName) return SaveAsProject();
 
-    if (Project.Current.Save()) {
+    if (Project.Current.Save())
+    {
       if (ApplicationSettingsController.AppSettings.RecentProjects.Contains(Project.Current.FileName))
         ApplicationSettingsController.AppSettings.RecentProjects.Remove(Project.Current.FileName);
       ApplicationSettingsController.AppSettings.RecentProjects.Insert(0, Project.Current.FileName);
@@ -944,7 +989,8 @@ public partial class MainForm : Form {
 
   private void SetupExportMenu()
   {
-    if (Project.Current.Elements.OfType<Room>().Any()) {
+    if (Project.Current.Elements.OfType<Room>().Any())
+    {
       _fileExportAlanMenuItem.Enabled = true;
       _fileExportHugoMenuItem.Enabled = true;
       _fileExportInform7MenuItem.Enabled = true;
@@ -952,7 +998,8 @@ public partial class MainForm : Form {
       _fileExportTADSMenuItem.Enabled = true;
       _zILToolStripMenuItem.Enabled = true;
     }
-    else {
+    else
+    {
       _fileExportAlanMenuItem.Enabled = false;
       _fileExportHugoMenuItem.Enabled = false;
       _fileExportInform7MenuItem.Enabled = false;
@@ -965,25 +1012,30 @@ public partial class MainForm : Form {
   private void SetupMruMenu()
   {
     var existingItems = _fileRecentMapsMenuItem.DropDownItems.Cast<ToolStripItem>().ToList();
-    foreach (var existingItem in existingItems) {
+    foreach (var existingItem in existingItems)
+    {
       existingItem.Click -= FileRecentProject_Click;
       existingItem.Dispose();
     }
 
-    if (ApplicationSettingsController.AppSettings.RecentProjects.Count == 0) {
+    if (ApplicationSettingsController.AppSettings.RecentProjects.Count == 0)
+    {
       _fileRecentMapsMenuItem.Enabled = false;
     }
-    else {
+    else
+    {
       _fileRecentMapsMenuItem.Enabled = true;
       var index = 1;
       var removedFiles = new List<string>();
       foreach (var recentProject in ApplicationSettingsController.AppSettings.RecentProjects)
-        if (recentProject.IsUrl() || File.Exists(recentProject)) {
+        if (recentProject.IsUrl() || File.Exists(recentProject))
+        {
           var menuItem = new ToolStripMenuItem($"&{index++} {recentProject}") { Tag = recentProject };
           menuItem.Click += FileRecentProject_Click;
           _fileRecentMapsMenuItem.DropDownItems.Add(menuItem);
         }
-        else {
+        else
+        {
           removedFiles.Add(recentProject);
         }
 
@@ -995,7 +1047,8 @@ public partial class MainForm : Form {
   private void SmartSave(bool silent = false)
   {
     if (!ApplicationSettingsController.AppSettings.SaveToPDF &&
-        !ApplicationSettingsController.AppSettings.SaveToImage) {
+        !ApplicationSettingsController.AppSettings.SaveToImage)
+    {
       if (!silent)
         UserInteraction.ShowMessage(
           "Your settings are set to not save anything. Please check your App Settings if this is not what you want.");
@@ -1003,7 +1056,8 @@ public partial class MainForm : Form {
     }
 
     var saved = false;
-    if (Project.Current.FileName.IsUrl() || !Project.Current.HasFileName || Project.Current.IsDirty) {
+    if (Project.Current.FileName.IsUrl() || !Project.Current.HasFileName || Project.Current.IsDirty)
+    {
       if (UserInteraction.ShowMessage(
             "Your project needs to be saved before we can do a SmartSave.  Would you like to save the project now?",
             "Save Project?",
@@ -1011,18 +1065,23 @@ public partial class MainForm : Form {
             MessageBoxIcon.Question) ==
           DialogResult.Yes) saved = Project.Current.FileName.IsUrl() ? SaveAsProject() : SaveProject();
     }
-    else {
+    else
+    {
       saved = true;
     }
 
 
-    if (saved) {
-      if (Project.Current.HasFileName) {
+    if (saved)
+    {
+      if (Project.Current.HasFileName)
+      {
         var bSaveError = false;
         var pDFFile = string.Empty;
-        if (ApplicationSettingsController.AppSettings.SaveToPDF) {
+        if (ApplicationSettingsController.AppSettings.SaveToPDF)
+        {
           pDFFile = ExportPDF();
-          if (pDFFile == string.Empty) {
+          if (pDFFile == string.Empty)
+          {
             UserInteraction.ShowMessage(
               "There was an error saving the PDF file during the SmartSave.  Please make sure the PDF is not already opened.",
               "Smart Save",
@@ -1033,9 +1092,11 @@ public partial class MainForm : Form {
         }
 
         var imageFile = string.Empty;
-        if (ApplicationSettingsController.AppSettings.SaveToImage) {
+        if (ApplicationSettingsController.AppSettings.SaveToImage)
+        {
           imageFile = ExportImage();
-          if (imageFile == string.Empty) {
+          if (imageFile == string.Empty)
+          {
             UserInteraction.ShowMessage(
               "There was an error saving the Image file during the SmartSave.  Please make sure the Image is not already opened.",
               "Smart Save",
@@ -1045,11 +1106,13 @@ public partial class MainForm : Form {
           }
         }
 
-        if (!bSaveError) {
+        if (!bSaveError)
+        {
           var text = string.Empty;
           if (ApplicationSettingsController.AppSettings.SaveToPDF) text += $"PDF file has been saved to {pDFFile}";
 
-          if (ApplicationSettingsController.AppSettings.SaveToImage) {
+          if (ApplicationSettingsController.AppSettings.SaveToImage)
+          {
             if (text != string.Empty)
               text += Environment.NewLine;
             text += $"Image file has been saved to {imageFile}";
@@ -1060,7 +1123,8 @@ public partial class MainForm : Form {
         }
       }
     }
-    else {
+    else
+    {
       UserInteraction.ShowMessage("No files have been saved during the SmartSave.");
     }
   }
@@ -1197,7 +1261,8 @@ public partial class MainForm : Form {
 
   private void UpdateToolStripImages()
   {
-    foreach (ToolStripItem item in _toolStrip.Items) {
+    foreach (ToolStripItem item in _toolStrip.Items)
+    {
       if (!(item is ToolStripButton))
         continue;
 
@@ -1305,7 +1370,8 @@ public partial class MainForm : Form {
   public void OpenProject(string fileName)
   {
     var project = new Project { FileName = fileName };
-    if (project.Load()) {
+    if (project.Load())
+    {
       Project.Current = project;
       ApplicationSettingsController.OpenProject(fileName);
     }
@@ -1314,7 +1380,8 @@ public partial class MainForm : Form {
   private void OpenProjectFromUrl(Uri uri)
   {
     var project = new Project { FileName = Path.GetFileName(uri.AbsoluteUri) };
-    if (project.Load(uri)) {
+    if (project.Load(uri))
+    {
       Project.Current = project;
       ApplicationSettingsController.OpenProject(uri.AbsoluteUri);
     }

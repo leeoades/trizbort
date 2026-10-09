@@ -13,7 +13,8 @@ using Trizbort.Extensions;
 
 namespace Trizbort.Export.Languages;
 
-internal class Inform6Exporter : CodeExporter {
+internal class Inform6Exporter : CodeExporter
+{
   private const char SingleQuote = '\'';
   private const char DoubleQuote = '"';
 
@@ -32,17 +33,20 @@ internal class Inform6Exporter : CodeExporter {
 
   protected override void ExportContent(TextWriter writer)
   {
-    if (RegionsInExportOrder.Count > 0) {
+    if (RegionsInExportOrder.Count > 0)
+    {
       foreach (var region in RegionsInExportOrder) writer.WriteLine("Class {0};", region.ExportName);
       writer.WriteLine();
     }
 
-    foreach (var location in LocationsInExportOrder) {
+    foreach (var location in LocationsInExportOrder)
+    {
       // export the location object
       WriteLocation(writer, location);
 
       // export the doors from this location.
-      foreach (var direction in Directions.AllDirections) {
+      foreach (var direction in Directions.AllDirections)
+      {
         var exit = location.GetBestExit(direction);
         if (exit?.Door == null || exit.Exported) continue;
         // remember we've exported this exit
@@ -55,13 +59,16 @@ internal class Inform6Exporter : CodeExporter {
     }
 
     writer.WriteLine("[ Initialise;");
-    if (LocationsInExportOrder.Count > 0) {
+    if (LocationsInExportOrder.Count > 0)
+    {
       var foundStart = false;
       foreach (var location in LocationsInExportOrder.Where(location => location.Room.IsStartRoom))
-        if (foundStart) {
+        if (foundStart)
+        {
           writer.WriteLine("! {0} is a second start-room according to Trizbort.", location.ExportName);
         }
-        else {
+        else
+        {
           writer.WriteLine("    location = {0};", location.ExportName);
           foundStart = true;
         }
@@ -69,7 +76,8 @@ internal class Inform6Exporter : CodeExporter {
       if (!foundStart)
         writer.WriteLine("    location = {0};", LocationsInExportOrder[0].ExportName);
     }
-    else {
+    else
+    {
       writer.WriteLine("    ! location = ...;");
     }
 
@@ -78,7 +86,8 @@ internal class Inform6Exporter : CodeExporter {
     writer.WriteLine();
     writer.WriteLine("Include \"Grammar\";");
     writer.WriteLine();
-    if (!string.IsNullOrEmpty(Project.Current.History)) {
+    if (!string.IsNullOrEmpty(Project.Current.History))
+    {
       writer.WriteLine("Verb meta 'about' * -> About;");
       writer.WriteLine();
       writer.WriteLine("[ AboutSub ;");
@@ -123,7 +132,8 @@ internal class Inform6Exporter : CodeExporter {
 
   private static void ExportThings(TextWriter writer, IEnumerable<Thing> things, Thing container, int indent)
   {
-    foreach (var thing in things.Where(thing => thing.Container == container)) {
+    foreach (var thing in things.Where(thing => thing.Container == container))
+    {
       WriteOneThing(writer, thing, indent, container);
       ExportThings(writer, thing.Contents, thing, indent + 1);
     }
@@ -205,7 +215,8 @@ internal class Inform6Exporter : CodeExporter {
 
   private static string ToI6PropertyName(MappableDirection direction)
   {
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.North:
         return "n_to";
       case MappableDirection.South:
@@ -247,7 +258,8 @@ internal class Inform6Exporter : CodeExporter {
     var words = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
     if (words.Length == 0) return ToI6String("thing", SingleQuote);
     var output = string.Empty;
-    foreach (var word in words) {
+    foreach (var word in words)
+    {
       if (output.Length > 0) output += ' ';
       output += ToI6String(Deaccent(word), SingleQuote);
     }
@@ -291,7 +303,8 @@ internal class Inform6Exporter : CodeExporter {
       ToI6String(location.Room.Name, DoubleQuote));
     writer.WriteLine("  with  description");
     writer.WriteLine("            {0},", ToI6String(location.Room.PrimaryDescription, DoubleQuote));
-    foreach (var direction in Directions.AllDirections) {
+    foreach (var direction in Directions.AllDirections)
+    {
       var exit = location.GetBestExit(direction);
       if (exit != null)
         writer.WriteLine(
@@ -317,10 +330,12 @@ internal class Inform6Exporter : CodeExporter {
 
     var attributes = SetAttributes(thing);
 
-    if (attributes.Count == 0) {
+    if (attributes.Count == 0)
+    {
       writer.WriteLine(";");
     }
-    else {
+    else
+    {
       writer.WriteLine();
       writer.WriteLine("  has " + string.Join(" ", attributes) + ";");
     }
@@ -332,11 +347,14 @@ internal class Inform6Exporter : CodeExporter {
   {
     var attributes = new List<string>();
 
-    if (thing.Contents.Count > 0) {
-      if (thing.Contents.Any(item => item.PartOf)) {
+    if (thing.Contents.Count > 0)
+    {
+      if (thing.Contents.Any(item => item.PartOf))
+      {
         attributes.Add("transparent");
       }
-      else {
+      else
+      {
         attributes.Add("open");
         attributes.Add("container");
       }
@@ -344,10 +362,12 @@ internal class Inform6Exporter : CodeExporter {
 
     if (thing.ProperNamed) attributes.Add("proper");
 
-    if (thing.IsPerson) {
+    if (thing.IsPerson)
+    {
       attributes.Add("animate");
 
-      switch (thing.Gender) { // this may not be entirely true, but for now only animate objects will have a gender.
+      switch (thing.Gender)
+      { // this may not be entirely true, but for now only animate objects will have a gender.
         case Thing.ThingGender.Female:
           attributes.Add("female");
           break;

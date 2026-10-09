@@ -12,7 +12,8 @@ using Region = Trizbort.Domain.Misc.Region;
 
 namespace Trizbort.UI;
 
-public partial class SettingsDialog : Form {
+public partial class SettingsDialog : Form
+{
   private const int HorizontalMargin = 2;
   private const int VerticalMargin = 2;
   private const int ColorSwatchWidth = 24;
@@ -264,10 +265,12 @@ public partial class SettingsDialog : Form {
     var selectedIndex = _regionListing.SelectedIndex;
     if (selectedIndex == -1) return;
     var region = Regions.FirstOrDefault(p => p.RegionName == _regionListing.Items[selectedIndex].ToString());
-    if (region != null) {
+    if (region != null)
+    {
       var originalRegionName = region.RegionName;
       var frm = new RegionSettings(region, Regions);
-      if (UserInteraction.ShowDialog(frm) == DialogResult.OK) {
+      if (UserInteraction.ShowDialog(frm) == DialogResult.OK)
+      {
         region.RColor = frm.RegionToChange.RColor;
         region.TextColor = frm.RegionToChange.TextColor;
         region.RegionName = frm.RegionToChange.RegionName;
@@ -370,14 +373,16 @@ public partial class SettingsDialog : Form {
 
   private void EditBoxKeyPress(object sender, KeyPressEventArgs e)
   {
-    if (e.KeyChar.ToString() == "_" || e.KeyChar.ToString() == ":") {
+    if (e.KeyChar.ToString() == "_" || e.KeyChar.ToString() == ":")
+    {
       e.Handled = true;
       return;
     }
 
     if (e.KeyChar == (char)Keys.Enter || e.KeyChar == (char)Keys.Return) UpdateHideRegionTextBox();
 
-    if (e.KeyChar == (char)Keys.Escape) {
+    if (e.KeyChar == (char)Keys.Escape)
+    {
       _bUpdatingRegionText = true;
       _editBox.Hide();
       _bUpdatingRegionText = false;
@@ -392,7 +397,8 @@ public partial class SettingsDialog : Form {
 
   private void FocusOver(object sender, EventArgs e)
   {
-    if (_editBox.Visible) {
+    if (_editBox.Visible)
+    {
       UpdateHideRegionTextBox();
       _regionListing.Focus();
     }
@@ -405,7 +411,8 @@ public partial class SettingsDialog : Form {
 
   private void OkButtonClick(object sender, EventArgs e)
   {
-    if (string.IsNullOrWhiteSpace(_txtDefaultRoomName.Text)) {
+    if (string.IsNullOrWhiteSpace(_txtDefaultRoomName.Text))
+    {
       UserInteraction.ShowMessage(
         "The default room name can't be empty. Please put something in there.",
         "Empty default name",
@@ -414,7 +421,8 @@ public partial class SettingsDialog : Form {
       _txtDefaultRoomName.Focus();
       DialogResult = DialogResult.None;
     }
-    else if (!_txtDefaultRoomName.Text.Any(char.IsLetter)) {
+    else if (!_txtDefaultRoomName.Text.Any(char.IsLetter))
+    {
       UserInteraction.ShowMessage(
         "The default room name must contain one letter. Please include a letter.",
         "Invalid default name",
@@ -457,7 +465,8 @@ public partial class SettingsDialog : Form {
     var num = 1;
     var newRegionName = "Region1";
 
-    while (Regions.Exists(p => p.RegionName.Equals(newRegionName, StringComparison.OrdinalIgnoreCase))) {
+    while (Regions.Exists(p => p.RegionName.Equals(newRegionName, StringComparison.OrdinalIgnoreCase)))
+    {
       num++;
       newRegionName = $"Region{num}";
     }
@@ -467,12 +476,14 @@ public partial class SettingsDialog : Form {
 
   private void OnChangeColor(object sender, EventArgs e)
   {
-    if (_colorListBox.SelectedItems.Count == 1) {
+    if (_colorListBox.SelectedItems.Count == 1)
+    {
       var color = Colors.ShowColorDialog(ElementColors[_colorListBox.SelectedIndex], this);
       if (color != Color.Empty)
         ElementColors[_colorListBox.SelectedIndex] = color;
     }
-    else {
+    else
+    {
       var color = Colors.ShowColorDialog(Color.Empty, this);
       if (color != Color.Empty)
         foreach (int selectedIndex in _colorListBox.SelectedIndices)
@@ -489,7 +500,8 @@ public partial class SettingsDialog : Form {
 
   private bool RegionAlreadyExists(string pNew)
   {
-    if (Regions.Any(p => p != _currentRegion && p.RegionName.Equals(pNew, StringComparison.OrdinalIgnoreCase))) {
+    if (Regions.Any(p => p != _currentRegion && p.RegionName.Equals(pNew, StringComparison.OrdinalIgnoreCase)))
+    {
       UserInteraction.ShowMessage($"A Region already exists with the name '{pNew}'");
       return true;
     }
@@ -515,7 +527,8 @@ public partial class SettingsDialog : Form {
       e.Bounds.Width - colorBounds.Width - HorizontalMargin * 2,
       e.Bounds.Height);
     var foundRegion = Regions.FirstOrDefault(p => p.RegionName == _regionListing.Items[e.Index].ToString());
-    if (foundRegion != null) {
+    if (foundRegion != null)
+    {
       e.Graphics.FillRectangle(palette.Brush(foundRegion.RColor), colorBounds);
       e.Graphics.DrawRectangle(palette.Pen(e.ForeColor, 0), colorBounds);
       e.Graphics.DrawString(
@@ -541,12 +554,14 @@ public partial class SettingsDialog : Form {
 
   private void SettingsDialog_Load(object sender, EventArgs e)
   {
-    try {
+    try
+    {
       var tab = Properties.Settings.Default.SettingsLastTabIndex;
 
       _tabControl1.SelectedIndex = Convert.ToInt32(tab);
     }
-    catch {
+    catch
+    {
       // ignored
     }
   }
@@ -564,7 +579,8 @@ public partial class SettingsDialog : Form {
 
   private void TabControl1Selected(object sender, TabControlEventArgs e)
   {
-    switch (e.TabPage.Name) {
+    switch (e.TabPage.Name)
+    {
       case "tabRegions":
         _regionListing.Focus();
         break;
@@ -582,18 +598,21 @@ public partial class SettingsDialog : Form {
 
   private void UpdateHideRegionTextBox()
   {
-    if (!_bUpdatingRegionText) {
+    if (!_bUpdatingRegionText)
+    {
       _bUpdatingRegionText = true;
       _editBox.Text = _editBox.Text.Trim().Replace("\"", "'");
       if (Domain.Misc.Region.ValidRegionName(_editBox.Text))
-        if (UpdateRegionName(_editBox.Text, _regionListing.Items[_itemSelected].ToString())) {
+        if (UpdateRegionName(_editBox.Text, _regionListing.Items[_itemSelected].ToString()))
+        {
           _editBox.Hide();
           AddRegionsToListbox();
           _regionListing.SelectedIndex = _itemSelected == 0 ? 0 :
             _itemSelected + 1 >= _regionListing.Items.Count ? _regionListing.Items.Count - 1 : _itemSelected;
           _regionListing.Focus();
         }
-        else {
+        else
+        {
           _editBox.Focus();
           _editBox.SelectAll();
         }

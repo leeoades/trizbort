@@ -6,7 +6,8 @@ using Trizbort.Domain.AppSettings;
 namespace Trizbort.Tests;
 
 [TestFixture]
-public class ApplicationSettingsPersistenceTests {
+public class ApplicationSettingsPersistenceTests
+{
   [Test]
   public void MapPreferences_DefaultToDisabled()
   {

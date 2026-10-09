@@ -1,6 +1,7 @@
 ﻿namespace Trizbort.Domain.Enums;
 
-public enum SelectTypes {
+public enum SelectTypes
+{
   None,
   All,
   Rooms,

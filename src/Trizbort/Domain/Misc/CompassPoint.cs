@@ -4,7 +4,8 @@ using Trizbort.Domain.Enums;
 
 namespace Trizbort.Domain.Misc;
 
-public enum CompassPoint {
+public enum CompassPoint
+{
   North,
   NorthNorthEast,
   NorthEast,
@@ -27,7 +28,8 @@ public enum CompassPoint {
   Max = NorthNorthWest
 }
 
-internal static class CompassPointHelper {
+internal static class CompassPointHelper
+{
   private static readonly string[] _names = {
     "n",
     "nne",
@@ -89,7 +91,8 @@ internal static class CompassPointHelper {
   public static bool FromName(string name, out CompassPoint point)
   {
     for (var index = 0; index < _names.Length; ++index)
-      if (StringComparer.InvariantCultureIgnoreCase.Compare(name ?? string.Empty, _names[index]) == 0) {
+      if (StringComparer.InvariantCultureIgnoreCase.Compare(name ?? string.Empty, _names[index]) == 0)
+      {
         point = (CompassPoint)index;
         return true;
       }
@@ -108,7 +111,8 @@ internal static class CompassPointHelper {
   /// </remarks>
   public static Vector GetAutomapDirectionVector(CompassPoint compassPoint)
   {
-    switch (compassPoint) {
+    switch (compassPoint)
+    {
       case CompassPoint.NorthNorthWest:
       case CompassPoint.North:
       case CompassPoint.NorthNorthEast:
@@ -150,7 +154,8 @@ internal static class CompassPointHelper {
   /// </remarks>
   public static CompassPoint GetAutomapOpposite(CompassPoint point)
   {
-    switch (point) {
+    switch (point)
+    {
       case CompassPoint.North:
         return CompassPoint.South;
       case CompassPoint.NorthNorthEast:
@@ -195,7 +200,8 @@ internal static class CompassPointHelper {
   /// </summary>
   public static CompassPoint GetCompassDirection(MappableDirection direction)
   {
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.Up:
         return CompassPoint.NorthNorthWest;
       case MappableDirection.Down:
@@ -228,7 +234,8 @@ internal static class CompassPointHelper {
 
   public static CompassPoint GetCompassPointFromDirectionVector(Vector vector)
   {
-    if (vector.X < 0) {
+    if (vector.X < 0)
+    {
       if (vector.Y < 0)
         return CompassPoint.NorthWest;
       if (vector.Y > 0)
@@ -236,7 +243,8 @@ internal static class CompassPointHelper {
       return CompassPoint.West;
     }
 
-    if (vector.X > 0) {
+    if (vector.X > 0)
+    {
       if (vector.Y < 0)
         return CompassPoint.NorthEast;
       if (vector.Y > 0)
@@ -278,7 +286,8 @@ internal static class CompassPointHelper {
   /// </summary>
   public static MappableDirection GetOpposite(MappableDirection direction)
   {
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.North:
         return MappableDirection.South;
       case MappableDirection.South:
@@ -335,7 +344,8 @@ internal static class CompassPointHelper {
   public static bool ToName(CompassPoint point, out string name)
   {
     var index = (int)point;
-    if (index >= 0 && index < _names.Length) {
+    if (index >= 0 && index < _names.Length)
+    {
       name = _names[index];
       return true;
     }
@@ -347,7 +357,8 @@ internal static class CompassPointHelper {
 
   private static int GetPointIntegerValue(CompassPoint point)
   {
-    switch (point) {
+    switch (point)
+    {
       case CompassPoint.North:
         return 12;
       case CompassPoint.NorthNorthEast:

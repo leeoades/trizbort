@@ -6,7 +6,8 @@ using Trizbort.Domain.Misc;
 
 namespace Trizbort.Domain.SerializeHelpers;
 
-public class PortConverter : JsonConverter {
+public class PortConverter : JsonConverter
+{
   public override bool CanWrite => false;
 
   public override bool CanConvert(Type objectType)

@@ -10,7 +10,8 @@ using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Trizbort.Domain.AppSettings;
 
-public static class ApplicationSettingsController {
+public static class ApplicationSettingsController
+{
   public const int RecentProjectsMaxCount = 4;
   private const string AppSettingsFileName = @".\appsettings.json";
 
@@ -31,14 +32,16 @@ public static class ApplicationSettingsController {
   public static void LoadSettings()
   {
     // if app settings don't exist, create a default one
-    if (!File.Exists(AppSettingsFileName)) {
+    if (!File.Exists(AppSettingsFileName))
+    {
       if (File.Exists(_legacyAppSettingsPath))
         LoadLegacyAppSettings();
       else
         ResetSettings();
       SaveSettings();
     }
-    else {
+    else
+    {
       AppSettings = JsonConvert.DeserializeObject<ApplicationSettings>(File.ReadAllText(AppSettingsFileName));
     }
   }
@@ -91,7 +94,8 @@ public static class ApplicationSettingsController {
     dialog.LimitRoomDescriptionCharactersInTooltip = AppSettings.LimitRoomDescriptionCharactersInTooltip;
     dialog.ToolTipRoomDescriptionCharactersToShow = AppSettings.ToolTipRoomDescriptionCharactersToShow;
 
-    if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
+    if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
+    {
       AppSettings.InvertMouseWheel = dialog.InvertMouseWheel;
       AppSettings.ShowFullPathInTitleBar = dialog.ShowFullPathInTitleBar;
       AppSettings.DefaultFontName = dialog.DefaultFontName;
@@ -119,12 +123,15 @@ public static class ApplicationSettingsController {
 
   private static void LoadLegacyAppSettings()
   {
-    try {
-      if (File.Exists(_legacyAppSettingsPath)) {
+    try
+    {
+      if (File.Exists(_legacyAppSettingsPath))
+      {
         var doc = new XmlDocument();
         doc.Load(_legacyAppSettingsPath);
         var root = new XmlElementReader(doc.DocumentElement);
-        if (root.Name == "settings") {
+        if (root.Name == "settings")
+        {
           var versionText = root["dontCareAboutVersion"].Text;
           if (!string.IsNullOrEmpty(versionText)) AppSettings.DontCareAboutVersion = new Version(versionText);
           AppSettings.InfiniteScrollBounds = root["infiniteScrollBounds"].ToBool(AppSettings.InfiniteScrollBounds);
@@ -168,7 +175,8 @@ public static class ApplicationSettingsController {
           var recentProjects = root["recentProjects"];
           string fileName;
           var index = 0;
-          do {
+          do
+          {
             fileName = recentProjects[$"fileName{index++}"].Text;
             if (!string.IsNullOrEmpty(fileName)) AppSettings.RecentProjects.Add(fileName);
           } while (!string.IsNullOrEmpty(fileName));
@@ -187,7 +195,8 @@ public static class ApplicationSettingsController {
         }
       }
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       // ignored
     }
   }

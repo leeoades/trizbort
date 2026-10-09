@@ -1,6 +1,7 @@
 namespace Trizbort.Automap;
 
-public struct AutomapSettings {
+public struct AutomapSettings
+{
   public static AutomapSettings Default {
     get {
       var settings = new AutomapSettings {

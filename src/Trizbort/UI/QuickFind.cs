@@ -9,7 +9,8 @@ using Trizbort.Domain.Elements;
 
 namespace Trizbort.UI;
 
-public partial class QuickFind : Form {
+public partial class QuickFind : Form
+{
   private readonly List<FindAutofindCacheItem> _cache;
 
   public QuickFind()
@@ -41,7 +42,8 @@ public partial class QuickFind : Form {
 
     var list = new List<FindAutofindCacheItem>();
 
-    foreach (var item in findCacheItems) {
+    foreach (var item in findCacheItems)
+    {
       var x1 = new FindAutofindCacheItem { Room = item.Element, Text = item.Name?.Trim() };
       var x2 = new FindAutofindCacheItem { Room = item.Element, Text = item.Description?.Trim() };
       var x3 = new FindAutofindCacheItem { Room = item.Element, Text = item.Objects?.Trim() };
@@ -102,7 +104,8 @@ public partial class QuickFind : Form {
     if (e.KeyChar == (int)Keys.Enter) DoFind();
   }
 
-  private class FindAutofindCacheItem {
+  private class FindAutofindCacheItem
+  {
     public Element Room { get; set; }
     public string Text { get; set; }
 

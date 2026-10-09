@@ -2,7 +2,8 @@ using System;
 
 namespace Trizbort.Domain.Application;
 
-internal enum DocumentVersionWarning {
+internal enum DocumentVersionWarning
+{
   None,
   Major,
   Minor,
@@ -10,7 +11,8 @@ internal enum DocumentVersionWarning {
   Revision
 }
 
-internal static class DocumentVersionPolicy {
+internal static class DocumentVersionPolicy
+{
   public static DocumentVersionWarning Compare(Version document, Version application)
   {
     if (document.Major != application.Major)

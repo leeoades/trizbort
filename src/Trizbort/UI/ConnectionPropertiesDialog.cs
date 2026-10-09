@@ -6,7 +6,8 @@ using Trizbort.Domain.Misc;
 
 namespace Trizbort.UI;
 
-public partial class ConnectionPropertiesDialog : Form {
+public partial class ConnectionPropertiesDialog : Form
+{
   private const string NoColorSet = "No Color Set";
 
 
@@ -18,11 +19,13 @@ public partial class ConnectionPropertiesDialog : Form {
   public Color ConnectionColor {
     get { return _connectionColorBox.Text == NoColorSet ? Color.Transparent : _connectionColorBox.BackColor; }
     set {
-      if (value == Color.Transparent) {
+      if (value == Color.Transparent)
+      {
         _connectionColorBox.BackColor = Color.White;
         _connectionColorBox.Text = NoColorSet;
       }
-      else {
+      else
+      {
         _connectionColorBox.BackColor = value;
         _connectionColorBox.Text = string.Empty;
       }
@@ -55,7 +58,8 @@ public partial class ConnectionPropertiesDialog : Form {
         : null;
     }
     set {
-      if (value != null) {
+      if (value != null)
+      {
         _chkDoor.Checked = true;
         _chkLockable.Checked = value.Lockable;
         _chkLocked.Checked = value.Locked;
@@ -107,7 +111,8 @@ public partial class ConnectionPropertiesDialog : Form {
     // time, clipping their text; toggling AutoSize makes them measure themselves again.
     foreach (var group in new Control[] { _groupBox1, _groupBox2 })
       foreach (Control control in group.Controls)
-        if (control is ButtonBase && control.AutoSize) {
+        if (control is ButtonBase && control.AutoSize)
+        {
           control.AutoSize = false;
           control.AutoSize = true;
         }

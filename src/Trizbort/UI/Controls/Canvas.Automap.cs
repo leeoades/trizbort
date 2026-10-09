@@ -12,7 +12,8 @@ using Trizbort.Setup;
 
 namespace Trizbort.UI.Controls;
 
-public partial class Canvas {
+public partial class Canvas
+{
   private readonly Automap.Automap _automap = Automap.Automap.Instance;
   private readonly MultithreadedAutomapCanvas _threadSafeAutomapCanvas;
   private bool _dontAskAboutAmbiguities;
@@ -27,7 +28,8 @@ public partial class Canvas {
 
     var sourceCompassPoint = CompassPointHelper.GetCompassDirection(direction);
     var connection = AddConnection(room, sourceCompassPoint, room, sourceCompassPoint);
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.Up:
         connection.StartText = Connection.Up;
         break;
@@ -52,7 +54,8 @@ public partial class Canvas {
     // otherwise, only match an existing connection if it's pretty close to the one we want.
     var sourceCompassPoint = CompassPointHelper.GetCompassDirection(directionFromSource);
     CompassPoint? acceptableSourceCompassPoint;
-    switch (directionFromSource) {
+    switch (directionFromSource)
+    {
       case MappableDirection.Up:
       case MappableDirection.Down:
       case MappableDirection.In:
@@ -66,7 +69,8 @@ public partial class Canvas {
 
     var connection = FindConnection(source, target, acceptableSourceCompassPoint, out var wrongWay);
 
-    if (connection == null) {
+    if (connection == null)
+    {
       // there is no suitable connection between these rooms:
       var targetCompassPoint = CompassPointHelper.GetAutomapOpposite(sourceCompassPoint);
 
@@ -79,17 +83,20 @@ public partial class Canvas {
       // add a new connection
       connection = AddConnection(source, sourceCompassPoint, target, targetCompassPoint);
 
-      if (_automap.UseDottedConnection) {
+      if (_automap.UseDottedConnection)
+      {
         connection.Style = ConnectionStyle.Dashed;
         _automap.UseDottedConnection = false;
       }
-      else {
+      else
+      {
         connection.Style = ConnectionStyle.Solid;
       }
 
       connection.Flow = assumeTwoWayConnections ? ConnectionFlow.TwoWay : ConnectionFlow.OneWay;
     }
-    else if (wrongWay) {
+    else if (wrongWay)
+    {
       // there is a suitable connection between these rooms, but it goes the wrong way;
       // make it bidirectional since we can now go both ways.
       connection.Flow = ConnectionFlow.TwoWay;
@@ -97,13 +104,15 @@ public partial class Canvas {
 
     // if this is an up/down/in/out connection, mark it as such;
     // but don't override any existing text.
-    switch (directionFromSource) {
+    switch (directionFromSource)
+    {
       case MappableDirection.Up:
       case MappableDirection.Down:
       case MappableDirection.In:
       case MappableDirection.Out:
         if (string.IsNullOrEmpty(connection.StartText) && string.IsNullOrEmpty(connection.EndText))
-          switch (directionFromSource) {
+          switch (directionFromSource)
+          {
             case MappableDirection.Up:
               connection.SetText(wrongWay ? ConnectionLabel.Down : ConnectionLabel.Up);
               break;
@@ -136,12 +145,15 @@ public partial class Canvas {
     var tryLeft = true;
     var distance = 0;
     var initialPosition = room.Position;
-    while (AnyRoomsIntersect(room)) {
-      if (tryOtherSideNext) {
+    while (AnyRoomsIntersect(room))
+    {
+      if (tryOtherSideNext)
+      {
         tryLeft = !tryLeft;
         tryOtherSideNext = false;
       }
-      else {
+      else
+      {
         tryOtherSideNext = true;
         ++distance;
       }
@@ -170,7 +182,8 @@ public partial class Canvas {
 
     PositionRelativeTo(room, existing, CompassPointHelper.GetCompassDirection(directionFromExisting), out var delta);
 
-    if (AnyRoomsIntersect(room)) {
+    if (AnyRoomsIntersect(room))
+    {
       ShiftMap(room.InnerBounds, delta);
       Debug.WriteLine("Shift map.");
     }
@@ -184,7 +197,8 @@ public partial class Canvas {
   {
     var list = new List<Room>();
     foreach (var element in Project.Current.Elements)
-      if (element is Room room1) {
+      if (element is Room room1)
+      {
         var room = room1;
         var matches = matcher(roomName, roomDescription, room);
         if (matches.HasValue && matches.Value) return room;
@@ -199,7 +213,8 @@ public partial class Canvas {
     dialog.SetTranscriptContext(roomName, roomDescription, line);
     dialog.AddAmbiguousRooms(list);
     UserInteraction.ShowDialog(dialog);
-    if (dialog.UserDoesntCareAnyMore) {
+    if (dialog.UserDoesntCareAnyMore)
+    {
       // The user has given up on this process! Can't say I blame them.
       // Use the first ambiguous room on the list, as above.
       _dontAskAboutAmbiguities = true;
@@ -215,7 +230,8 @@ public partial class Canvas {
     if (!Project.Current.Elements.Contains(room)) return;
 
     var compassPoint = CompassPointHelper.GetCompassDirection(direction);
-    foreach (var connection in room.GetConnections(compassPoint)) {
+    foreach (var connection in room.GetConnections(compassPoint))
+    {
       var source = connection.GetSourceRoom(out var sourceCompassPoint);
       var target = connection.GetTargetRoom(out var targetCompassPoint);
       if (source == room && target == room && sourceCompassPoint == compassPoint && targetCompassPoint == compassPoint)
@@ -252,7 +268,8 @@ public partial class Canvas {
   private static bool AnyRoomsIntersect(Room room)
   {
     var bounds = room.InnerBounds;
-    foreach (var element in Project.Current.Elements) {
+    foreach (var element in Project.Current.Elements)
+    {
       if (!(element is Room) || element == room || !element.Intersects(bounds)) continue;
       Debug.WriteLine($"{(element as Room).Name} is blocking {room.Name}.");
       return true;
@@ -279,13 +296,15 @@ public partial class Canvas {
     out bool wrongWay)
   {
     foreach (var element in Project.Current.Elements)
-      if (element is Connection connection) {
+      if (element is Connection connection)
+      {
         var fromRoom = connection.GetSourceRoom(out var fromDirection);
         var toRoom = connection.GetTargetRoom(out var toDirection);
         if (fromRoom == source && toRoom == target && (directionFromSource == null ||
                                                        ApproximateDirectionMatch(
                                                          directionFromSource.Value,
-                                                         fromDirection))) {
+                                                         fromDirection)))
+        {
           // the two rooms are connected already in the given direction, A to B or both ways.
           wrongWay = false;
           return connection;
@@ -294,20 +313,23 @@ public partial class Canvas {
         if (fromRoom == target && toRoom == source && (directionFromSource == null ||
                                                        ApproximateDirectionMatch(
                                                          directionFromSource.Value,
-                                                         toDirection))) {
+                                                         toDirection)))
+        {
           // the two rooms are connected already in the given direction, B to A or both ways.
           wrongWay = connection.Flow == ConnectionFlow.OneWay;
           return connection;
         }
 
-        if (fromRoom == target && toRoom == source) {
+        if (fromRoom == target && toRoom == source)
+        {
           var r1 = (Room.CompassPort)connection.VertexList[1].Port;
           if (directionFromSource != null) r1.CompassPoint = (CompassPoint)directionFromSource;
           wrongWay = connection.Flow == ConnectionFlow.OneWay;
           return connection;
         }
 
-        if (fromRoom == source && toRoom == target) {
+        if (fromRoom == source && toRoom == target)
+        {
           var r1 = (Room.CompassPort)connection.VertexList[0].Port;
           if (directionFromSource != null) r1.CompassPoint = (CompassPoint)directionFromSource;
           wrongWay = false;
@@ -333,13 +355,16 @@ public partial class Canvas {
   {
     // move all elements to the left/right of the origin left/right by the given delta
     foreach (var element in Project.Current.Elements)
-      if (element is Room room) {
+      if (element is Room room)
+      {
         var bounds = room.InnerBounds;
-        if (delta.X < 0) {
+        if (delta.X < 0)
+        {
           if (bounds.Center.X < deltaOrigin.Right)
             room.Position = new Vector(room.Position.X + delta.X, room.Position.Y);
         }
-        else if (delta.X > 0) {
+        else if (delta.X > 0)
+        {
           if (bounds.Center.X > deltaOrigin.Left)
             room.Position = new Vector(room.Position.X + delta.X, room.Position.Y);
         }
@@ -347,13 +372,16 @@ public partial class Canvas {
 
     // move all elements above/below the origin up/down by the given delta
     foreach (var element in Project.Current.Elements)
-      if (element is Room room) {
+      if (element is Room room)
+      {
         var bounds = room.InnerBounds;
-        if (delta.Y < 0) {
+        if (delta.Y < 0)
+        {
           if (bounds.Center.Y < deltaOrigin.Bottom)
             room.Position = new Vector(room.Position.X, room.Position.Y + delta.Y);
         }
-        else if (bounds.Center.Y > deltaOrigin.Top) {
+        else if (bounds.Center.Y > deltaOrigin.Top)
+        {
           if (bounds.Bottom > deltaOrigin.Y) room.Position = new Vector(room.Position.X, room.Position.Y + delta.Y);
         }
       }
@@ -366,7 +394,8 @@ public partial class Canvas {
 
     Vector delta;
     PositionRelativeTo(source, target, targetCompassPoint, out delta);
-    if (AnyRoomsIntersect(source)) {
+    if (AnyRoomsIntersect(source))
+    {
       // didn't work; restore previous position
       source.Position = sourcePosition;
       source.ArbitraryAutomappedPosition = sourceArbitrary;
@@ -393,7 +422,8 @@ public partial class Canvas {
   /// <summary>
   ///   A proxy class which implements IAutomapCanvas, marshalling calls to the real canvas on the main thread.
   /// </summary>
-  private class MultithreadedAutomapCanvas : IAutomapCanvas {
+  private class MultithreadedAutomapCanvas : IAutomapCanvas
+  {
     private readonly IAutomapCanvas _canvas;
     private readonly Control _control;
 
@@ -405,21 +435,25 @@ public partial class Canvas {
 
     public void AddExitStub(Room room, MappableDirection direction)
     {
-      try {
+      try
+      {
         _control.Invoke((MethodInvoker)delegate { _canvas.AddExitStub(room, direction); });
       }
-      catch (Exception) {
+      catch (Exception)
+      {
         // ignored
       }
     }
 
     public void Connect(Room source, MappableDirection directionFromSource, Room target, bool assumeTwoWayConnections)
     {
-      try {
+      try
+      {
         _control.Invoke(
           (MethodInvoker)delegate { _canvas.Connect(source, directionFromSource, target, assumeTwoWayConnections); });
       }
-      catch (Exception) {
+      catch (Exception)
+      {
         // ignored
       }
     }
@@ -427,10 +461,12 @@ public partial class Canvas {
     public Room CreateRoom(Room existing, string name)
     {
       Room room = null;
-      try {
+      try
+      {
         _control.Invoke((MethodInvoker)delegate { room = _canvas.CreateRoom(existing, name); });
       }
-      catch (Exception) {
+      catch (Exception)
+      {
         // ignored
       }
 
@@ -440,11 +476,13 @@ public partial class Canvas {
     public Room CreateRoom(Room existing, MappableDirection directionFromExisting, string roomName, string line)
     {
       Room room = null;
-      try {
+      try
+      {
         _control.Invoke(
           (MethodInvoker)delegate { room = _canvas.CreateRoom(existing, directionFromExisting, roomName, line); });
       }
-      catch (Exception) {
+      catch (Exception)
+      {
         // ignored
       }
 
@@ -454,10 +492,12 @@ public partial class Canvas {
     public Room FindRoom(string roomName, string roomDescription, string line, RoomMatcher matcher)
     {
       Room room = null;
-      try {
+      try
+      {
         _control.Invoke((MethodInvoker)delegate { room = _canvas.FindRoom(roomName, roomDescription, line, matcher); });
       }
-      catch (Exception) {
+      catch (Exception)
+      {
         // ignored
       }
 
@@ -466,30 +506,36 @@ public partial class Canvas {
 
     public void RemoveExitStub(Room room, MappableDirection direction)
     {
-      try {
+      try
+      {
         _control.Invoke((MethodInvoker)delegate { _canvas.RemoveExitStub(room, direction); });
       }
-      catch (Exception) {
+      catch (Exception)
+      {
         // ignored
       }
     }
 
     public void RemoveRoom(Room otherRoom)
     {
-      try {
+      try
+      {
         _control.Invoke((MethodInvoker)delegate { _canvas.RemoveRoom(otherRoom); });
       }
-      catch (Exception) {
+      catch (Exception)
+      {
         // ignored
       }
     }
 
     public void SelectRoom(Room room)
     {
-      try {
+      try
+      {
         _control.Invoke((MethodInvoker)delegate { _canvas.SelectRoom(room); });
       }
-      catch (Exception) {
+      catch (Exception)
+      {
         // ignored
       }
     }

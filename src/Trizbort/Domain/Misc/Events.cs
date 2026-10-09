@@ -3,7 +3,8 @@ using Trizbort.Domain.Application;
 
 namespace Trizbort.Domain.Misc;
 
-public class ProjectChangedEventArgs : EventArgs {
+public class ProjectChangedEventArgs : EventArgs
+{
   public ProjectChangedEventArgs(Project oldProject, Project newProject)
   {
     OldProject = oldProject;
@@ -15,7 +16,8 @@ public class ProjectChangedEventArgs : EventArgs {
   public Project OldProject { get; }
 }
 
-public class ItemEventArgs<T> : EventArgs {
+public class ItemEventArgs<T> : EventArgs
+{
   public ItemEventArgs(T item)
   {
     Item = item;

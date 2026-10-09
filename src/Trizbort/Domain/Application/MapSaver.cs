@@ -2,7 +2,8 @@
 
 namespace Trizbort.Domain.Application;
 
-public class MapSaver {
+public class MapSaver
+{
   private readonly Project _project;
   private MapFileEngine _engine;
 
@@ -13,7 +14,8 @@ public class MapSaver {
 
   public bool SaveMap(string fileName)
   {
-    if (Path.GetExtension(fileName) == ".trizbort") {
+    if (Path.GetExtension(fileName) == ".trizbort")
+    {
       _engine = new LegacyMapFileEngine(_project);
       return _engine.Save(fileName);
     }

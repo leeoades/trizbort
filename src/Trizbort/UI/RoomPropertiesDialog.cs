@@ -12,12 +12,12 @@ using Trizbort.Util;
 
 namespace Trizbort.UI;
 
-internal partial class RoomPropertiesDialog : Form {
+internal partial class RoomPropertiesDialog : Form
+{
   private const int HorizontalMargin = 2;
   private const int VerticalMargin = 2;
   private const int ColorSwatchWidth = 24;
   private const string NoColorSet = "No Color Set";
-  internal static Tab LastClosedTab { get; set; } = Tab.Objects;
   private readonly int _roomId;
   private bool _adjustingPosition;
 
@@ -50,13 +50,16 @@ internal partial class RoomPropertiesDialog : Form {
     if (Settings.Regions.Count > 0)
       _cboRegion.SelectedIndex = 0;
 
-    if (start == PropertiesStartType.Region) {
+    if (start == PropertiesStartType.Region)
+    {
       _tabControl.SelectedTab = _tabRegions;
       ActiveControl = _cboRegion;
     }
-    else {
+    else
+    {
       _tabControl.SelectedIndex = (int)LastClosedTab;
-      switch (LastClosedTab) {
+      switch (LastClosedTab)
+      {
         case Tab.Description:
           ActiveControl = _descriptionTextBox;
           break;
@@ -75,6 +78,8 @@ internal partial class RoomPropertiesDialog : Form {
       }
     }
   }
+
+  internal static Tab LastClosedTab { get; set; } = Tab.Objects;
 
   public bool AllCornersEqual {
     get { return _chkCornersSame.Checked; }
@@ -117,14 +122,16 @@ internal partial class RoomPropertiesDialog : Form {
 
   public HandDrawnStyle HandDrawnStyle {
     get {
-      switch (_cboHandDrawn.SelectedIndex) {
+      switch (_cboHandDrawn.SelectedIndex)
+      {
         case 1: return HandDrawnStyle.HandDrawn;
         case 2: return HandDrawnStyle.Straight;
         default: return HandDrawnStyle.MapDefault;
       }
     }
     set {
-      switch (value) {
+      switch (value)
+      {
         case HandDrawnStyle.HandDrawn: _cboHandDrawn.SelectedIndex = 1; break;
         case HandDrawnStyle.Straight: _cboHandDrawn.SelectedIndex = 2; break;
         default: _cboHandDrawn.SelectedIndex = 0; break;
@@ -185,7 +192,8 @@ internal partial class RoomPropertiesDialog : Form {
       return CompassPoint.WestSouthWest;
     }
     set {
-      switch (value) {
+      switch (value)
+      {
         case CompassPoint.North:
           _nCheckBox.Checked = true;
           break;
@@ -221,11 +229,13 @@ internal partial class RoomPropertiesDialog : Form {
   public Color ObjectTextColor {
     get { return _objectTextTextBox.Watermark == NoColorSet ? Color.Transparent : _objectTextTextBox.BackColor; }
     set {
-      if (value == Color.Transparent) {
+      if (value == Color.Transparent)
+      {
         _objectTextTextBox.BackColor = Color.White;
         _objectTextTextBox.Watermark = NoColorSet;
       }
-      else {
+      else
+      {
         _objectTextTextBox.BackColor = value;
         _objectTextTextBox.Watermark = string.Empty;
       }
@@ -252,11 +262,13 @@ internal partial class RoomPropertiesDialog : Form {
   public Color RoomBorderColor {
     get { return _roomBorderTextBox.Watermark == NoColorSet ? Color.Transparent : _roomBorderTextBox.BackColor; }
     set {
-      if (value == Color.Transparent) {
+      if (value == Color.Transparent)
+      {
         _roomBorderTextBox.BackColor = Color.White;
         _roomBorderTextBox.Watermark = NoColorSet;
       }
-      else {
+      else
+      {
         _roomBorderTextBox.BackColor = value;
         _roomBorderTextBox.Watermark = string.Empty;
       }
@@ -267,11 +279,13 @@ internal partial class RoomPropertiesDialog : Form {
   public Color RoomFillColor {
     get { return _roomFillTextBox.Watermark == NoColorSet ? Color.Transparent : _roomFillTextBox.BackColor; }
     set {
-      if (value == Color.Transparent) {
+      if (value == Color.Transparent)
+      {
         _roomFillTextBox.BackColor = Color.White;
         _roomFillTextBox.Watermark = NoColorSet;
       }
-      else {
+      else
+      {
         _roomFillTextBox.BackColor = value;
         _roomFillTextBox.Watermark = string.Empty;
       }
@@ -287,11 +301,13 @@ internal partial class RoomPropertiesDialog : Form {
   public Color RoomNameColor {
     get { return _roomTextTextBox.Watermark == NoColorSet ? Color.Transparent : _roomTextTextBox.BackColor; }
     set {
-      if (value == Color.Transparent) {
+      if (value == Color.Transparent)
+      {
         _roomTextTextBox.BackColor = Color.White;
         _roomTextTextBox.Watermark = NoColorSet;
       }
-      else {
+      else
+      {
         _roomTextTextBox.BackColor = value;
         _roomTextTextBox.Watermark = string.Empty;
       }
@@ -311,11 +327,13 @@ internal partial class RoomPropertiesDialog : Form {
   public Color RoomSubtitleColor {
     get { return _subTitleTextTextBox.Watermark == NoColorSet ? Color.Transparent : _subTitleTextTextBox.BackColor; }
     set {
-      if (value == Color.Transparent) {
+      if (value == Color.Transparent)
+      {
         _subTitleTextTextBox.BackColor = Color.White;
         _subTitleTextTextBox.Watermark = NoColorSet;
       }
-      else {
+      else
+      {
         _subTitleTextTextBox.BackColor = value;
         _subTitleTextTextBox.Watermark = string.Empty;
       }
@@ -333,11 +351,13 @@ internal partial class RoomPropertiesDialog : Form {
   public Color SecondFillColor {
     get { return _secondFillTextBox.Watermark == NoColorSet ? Color.Transparent : _secondFillTextBox.BackColor; }
     set {
-      if (value == Color.Transparent) {
+      if (value == Color.Transparent)
+      {
         _secondFillTextBox.BackColor = Color.White;
         _secondFillTextBox.Watermark = NoColorSet;
       }
-      else {
+      else
+      {
         _secondFillTextBox.BackColor = value;
         _secondFillTextBox.Watermark = string.Empty;
       }
@@ -347,7 +367,8 @@ internal partial class RoomPropertiesDialog : Form {
   // Added for Room specific colors
   public string SecondFillLocation {
     get {
-      switch (_comboBox1.SelectedIndex) {
+      switch (_comboBox1.SelectedIndex)
+      {
         case 0:
           return "Bottom";
         case 1:
@@ -369,7 +390,8 @@ internal partial class RoomPropertiesDialog : Form {
       }
     }
     set {
-      switch (value) {
+      switch (value)
+      {
         case "Bottom":
           _comboBox1.SelectedIndex = 0;
           break;
@@ -439,14 +461,17 @@ internal partial class RoomPropertiesDialog : Form {
 
   private void CboDrawTypeSelectedIndexChanged(object sender, EventArgs e)
   {
-    if (_cboDrawType.SelectedItem.ToString() == "Ellipse") {
+    if (_cboDrawType.SelectedItem.ToString() == "Ellipse")
+    {
       _groupRoundedCorners.Visible = false;
     }
-    else if (_cboDrawType.SelectedItem.ToString() == "Rounded Corners") {
+    else if (_cboDrawType.SelectedItem.ToString() == "Rounded Corners")
+    {
       _groupRoundedCorners.Location = new Point(_cboDrawType.Left, _cboDrawType.Bottom + 20);
       _groupRoundedCorners.Visible = true;
     }
-    else {
+    else
+    {
       _groupRoundedCorners.Visible = false;
     }
 
@@ -489,7 +514,8 @@ internal partial class RoomPropertiesDialog : Form {
     _txtBottomLeft.Enabled = !_chkCornersSame.Checked;
     _txtBottomRight.Enabled = !_chkCornersSame.Checked;
     _txtTopRight.Enabled = !_chkCornersSame.Checked;
-    if (_chkCornersSame.Checked) {
+    if (_chkCornersSame.Checked)
+    {
       _txtBottomLeft.Value = _txtTopLeft.Value;
       _txtBottomRight.Value = _txtTopLeft.Value;
       _txtTopRight.Value = _txtTopLeft.Value;
@@ -503,7 +529,8 @@ internal partial class RoomPropertiesDialog : Form {
 
   private void ChkStartRoomCheckedChanged(object sender, EventArgs e)
   {
-    if (_chkStartRoom.Checked) {
+    if (_chkStartRoom.Checked)
+    {
       var list = Project.Current.Elements.OfType<Room>().Where(p => p.IsStartRoom && p.Id != _roomId).ToList();
 
       if (list.Count <= 0) return;
@@ -563,7 +590,8 @@ internal partial class RoomPropertiesDialog : Form {
 
   private void OkButtonClick(object sender, EventArgs e)
   {
-    if (string.IsNullOrWhiteSpace(_txtName.Text)) {
+    if (string.IsNullOrWhiteSpace(_txtName.Text))
+    {
       UserInteraction.ShowMessage(
         "The room name can't be empty. Please put something in there.",
         "Empty name",
@@ -572,7 +600,8 @@ internal partial class RoomPropertiesDialog : Form {
       _txtName.Focus();
       DialogResult = DialogResult.None;
     }
-    else if (!_txtName.Text.Any(char.IsLetter)) {
+    else if (!_txtName.Text.Any(char.IsLetter))
+    {
       UserInteraction.ShowMessage(
         "The room name must contain one letter.",
         "Non-alphabetic name",
@@ -667,7 +696,8 @@ internal partial class RoomPropertiesDialog : Form {
 
   private void TabControlEnter(object sender, EventArgs e)
   {
-    switch (_tabControl.SelectedIndex) {
+    switch (_tabControl.SelectedIndex)
+    {
       case (int)Tab.Objects:
         SetObjectsTabFocus();
         break;
@@ -696,7 +726,8 @@ internal partial class RoomPropertiesDialog : Form {
     var shape = _cboDrawType.SelectedItem?.ToString();
 
     PointF[] outline;
-    if (shape == "Rounded Corners") {
+    if (shape == "Rounded Corners")
+    {
       var outlinePoints = Sketch.RoundedRectangle(
         rect,
         (float)_txtTopLeft.Value,
@@ -705,13 +736,16 @@ internal partial class RoomPropertiesDialog : Form {
         (float)_txtBottomLeft.Value);
       outline = handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints;
     }
-    else if (shape == "Ellipse") {
+    else if (shape == "Ellipse")
+    {
       var outlinePoints = Sketch.Ellipse(rect);
       outline = handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints;
     }
-    else {
+    else
+    {
       PointF[] vertices;
-      if (shape == "Octagonal") {
+      if (shape == "Octagonal")
+      {
         var qw = rect.Width / 4;
         var qh = rect.Height / 4;
         vertices = new[] {
@@ -721,7 +755,8 @@ internal partial class RoomPropertiesDialog : Form {
           new PointF(rect.Right - qw, rect.Bottom), new PointF(rect.Left + qw, rect.Bottom)
         };
       }
-      else {
+      else
+      {
         vertices = new[] {
           new PointF(rect.Left, rect.Top), new PointF(rect.Right, rect.Top),
           new PointF(rect.Right, rect.Bottom), new PointF(rect.Left, rect.Bottom)
@@ -740,17 +775,20 @@ internal partial class RoomPropertiesDialog : Form {
       return;
 
     _adjustingPosition = true;
-    try {
+    try
+    {
       var checkBox = (CheckBox)sender;
       if (checkBox.Checked)
-        foreach (Control other in checkBox.Parent.Controls) {
+        foreach (Control other in checkBox.Parent.Controls)
+        {
           var box = other as CheckBox;
           if (box != null && other != checkBox) box.Checked = false;
         }
       else
         _southCheckBox.Checked = true;
     }
-    finally {
+    finally
+    {
       _adjustingPosition = false;
     }
   }
@@ -758,7 +796,8 @@ internal partial class RoomPropertiesDialog : Form {
 
   private void RedrawSampleOnChange(object sender, EventArgs e)
   {
-    if (sender == _txtTopLeft && _chkCornersSame.Checked) {
+    if (sender == _txtTopLeft && _chkCornersSame.Checked)
+    {
       _txtBottomLeft.Value = _txtTopLeft.Value;
       _txtBottomRight.Value = _txtTopLeft.Value;
       _txtTopRight.Value = _txtTopLeft.Value;
@@ -796,7 +835,8 @@ internal partial class RoomPropertiesDialog : Form {
   private void RoomPropertiesDialog_KeyUp(object sender, KeyEventArgs e)
   {
     if (e.Alt)
-      switch (e.KeyCode) {
+      switch (e.KeyCode)
+      {
         case Keys.Y:
           _cboBorderStyle.Focus();
           break;
@@ -845,7 +885,8 @@ internal partial class RoomPropertiesDialog : Form {
 
   private static void SelectAllHandler(object sender, KeyEventArgs e)
   {
-    if (e.Control && e.KeyCode == Keys.A) {
+    if (e.Control && e.KeyCode == Keys.A)
+    {
       ((TextBox)sender).SelectAll();
       e.Handled = true;
     }
@@ -896,7 +937,8 @@ internal partial class RoomPropertiesDialog : Form {
     e.SuppressKeyPress = true;
   }
 
-  internal enum Tab {
+  internal enum Tab
+  {
     Description,
     Objects,
     Colors,

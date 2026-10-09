@@ -5,7 +5,8 @@ namespace Trizbort.Domain.Misc;
 /// <summary>
 ///   The context in which an object's drawing is taking place.
 /// </summary>
-public class DrawingContext {
+public class DrawingContext
+{
   public DrawingContext(float zoomFactor)
   {
     ZoomFactor = zoomFactor;

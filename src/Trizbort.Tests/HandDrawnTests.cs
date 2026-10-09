@@ -19,7 +19,8 @@ namespace Trizbort.Tests;
 [TestFixture]
 [Apartment(ApartmentState.STA)]
 [NonParallelizable]
-public class HandDrawnTests {
+public class HandDrawnTests
+{
   [SetUp]
   public void SetUp()
   {
@@ -102,14 +103,16 @@ public class HandDrawnTests {
     var json = JObject.Parse(JsonConvert.SerializeObject(theme));
     json.Remove("HandDrawn");
     var fileName = Path.GetTempFileName();
-    try {
+    try
+    {
       File.WriteAllText(fileName, json.ToString());
       var older = MapTheme.Load(fileName);
       older.HandDrawn.ShouldBeFalse();
       older.Apply(false);
       Settings.HandDrawn.ShouldBeFalse();
     }
-    finally {
+    finally
+    {
       File.Delete(fileName);
     }
 
@@ -154,7 +157,8 @@ public class HandDrawnTests {
     var ellipse = Sketch.ClosedCurve(Sketch.Ellipse(rect), Sketch.Seeded(7));
     Sketch.ClosedCurve(Sketch.Ellipse(rect), Sketch.Seeded(7)).ShouldBe(ellipse);
 
-    foreach (var point in ellipse) {
+    foreach (var point in ellipse)
+    {
       var dx = (point.X - 48) / 48;
       var dy = (point.Y - 32) / 32;
       var radial = Math.Sqrt(dx * dx + dy * dy);
@@ -177,7 +181,8 @@ public class HandDrawnTests {
   private Project SaveAndReload(Func<string, string> transform)
   {
     var fileName = Path.GetTempFileName();
-    try {
+    try
+    {
       new LegacyMapFileEngine(Project.Current).Save(fileName).ShouldBeTrue();
       File.WriteAllText(fileName, transform(File.ReadAllText(fileName)));
       Settings.Reset();
@@ -187,7 +192,8 @@ public class HandDrawnTests {
       new LegacyMapFileEngine(Project.Current).Load(fileName).ShouldBeTrue();
       return Project.Current;
     }
-    finally {
+    finally
+    {
       File.Delete(fileName);
     }
   }

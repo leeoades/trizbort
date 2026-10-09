@@ -5,7 +5,8 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI.Controls;
 
-public class TrizbortToolTip : ToolTip {
+public class TrizbortToolTip : ToolTip
+{
   private const int TipWidth = 200;
   private const int LineBuffer = 5;
 
@@ -96,7 +97,8 @@ public class TrizbortToolTip : ToolTip {
 
     // draw header
     float titleBoundsY = 0;
-    if (TitleText != string.Empty) {
+    if (TitleText != string.Empty)
+    {
       var titleBounds = new RectangleF(
         new PointF(e.Bounds.X + LineBuffer, e.Bounds.Y + LineBuffer),
         new SizeF(TipWidth - 20, _headerHeight));
@@ -105,7 +107,8 @@ public class TrizbortToolTip : ToolTip {
     }
 
     // draw body
-    if (BodyText != string.Empty) {
+    if (BodyText != string.Empty)
+    {
       var bodyBounds = new RectangleF(
         new PointF(e.Bounds.X + LineBuffer + 10, titleBoundsY + _headerFont.Height + 6),
         new SizeF(TipWidth - 20, _bodyHeight));
@@ -113,11 +116,13 @@ public class TrizbortToolTip : ToolTip {
     }
 
     // draw footer
-    if (FooterText != string.Empty) {
+    if (FooterText != string.Empty)
+    {
       var footerBounds = new RectangleF(
         new PointF(e.Bounds.X + LineBuffer, e.Bounds.Y + _headerHeight + _bodyHeight + LineBuffer),
         new SizeF(TipWidth - 20, _footerHeight));
-      using (var pen = new Pen(Color.Gray)) {
+      using (var pen = new Pen(Color.Gray))
+      {
         g.DrawLine(pen, new PointF(0f, footerBounds.Y), new PointF(TipWidth, footerBounds.Y));
       }
 
@@ -133,7 +138,8 @@ public class TrizbortToolTip : ToolTip {
 
   protected override void Dispose(bool disposing)
   {
-    if (disposing) {
+    if (disposing)
+    {
       _bodyFont.Dispose();
       _headerFont.Dispose();
       _footerFont.Dispose();

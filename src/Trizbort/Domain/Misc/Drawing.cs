@@ -11,7 +11,8 @@ using Settings = Trizbort.Setup.Settings;
 
 namespace Trizbort.Domain.Misc;
 
-internal static class Drawing {
+internal static class Drawing
+{
   private static readonly Cursor _drawLineCursor;
   private static readonly Cursor _drawLineInvertedCursor;
   private static readonly Cursor _moveLineCursor;
@@ -53,7 +54,8 @@ internal static class Drawing {
     Brush fillBrush,
     Random sketch = null)
   {
-    if (_chevronPath == null) {
+    if (_chevronPath == null)
+    {
       var apex = new PointF(0.5f, 0);
       var leftCorner = new PointF(-0.5f, 0.5f);
       var rightCorner = new PointF(-0.5f, -0.5f);
@@ -64,7 +66,8 @@ internal static class Drawing {
     }
 
     var path = _chevronPath;
-    if (sketch != null) {
+    if (sketch != null)
+    {
       // an irregular, slightly lopsided arrowhead, as if inked by hand
       float Jitter()
       {
@@ -105,7 +108,8 @@ internal static class Drawing {
     Pen pen;
     var alpha = 180;
 
-    if (context.Selected) {
+    if (context.Selected)
+    {
       if (!alwaysAlpha) alpha = 255;
       brush = palette.Gradient(
         bounds,
@@ -113,17 +117,20 @@ internal static class Drawing {
         Color.FromArgb(alpha, Color.DarkOrange));
       pen = palette.Pen(Color.FromArgb(alpha, Color.Chocolate), 0);
     }
-    else {
+    else
+    {
       brush = palette.Gradient(bounds, Color.FromArgb(alpha, Color.LightCyan), Color.FromArgb(alpha, Color.SteelBlue));
       pen = palette.Pen(Color.FromArgb(alpha, Color.Navy), 0);
     }
 
-    if (round) {
+    if (round)
+    {
       graphics.DrawEllipse(brush, bounds.ToRectangleF());
       //          graphics.DrawRectangle(new XPen(Color.Red), bounds.ToRectangleF() );
       graphics.DrawEllipse(pen, bounds.ToRectangleF());
     }
-    else {
+    else
+    {
       graphics.DrawRectangle(brush, bounds.ToRectangleF());
       graphics.DrawRectangle(pen, bounds.ToRectangleF());
     }
@@ -153,7 +160,8 @@ internal static class Drawing {
     CompassPoint compassPoint,
     RoomShape? rs = null)
   {
-    switch (compassPoint) {
+    switch (compassPoint)
+    {
       case CompassPoint.North:
       case CompassPoint.NorthEast:
         format.LineAlignment = XLineAlignment.Far;

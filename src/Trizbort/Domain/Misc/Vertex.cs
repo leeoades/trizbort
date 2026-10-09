@@ -11,7 +11,8 @@ namespace Trizbort.Domain.Misc;
 ///   Each vertex is fixed either to a point in space or
 ///   to an element's port.
 /// </remarks>
-public class Vertex {
+public class Vertex
+{
   private Port _port;
 
   private Vector _position;
@@ -35,7 +36,8 @@ public class Vertex {
   public Port Port {
     get { return _port; }
     set {
-      if (_port != value) {
+      if (_port != value)
+      {
         _position = Vector.Zero;
         _port = value;
         RaiseChanged();
@@ -49,7 +51,8 @@ public class Vertex {
       return _position;
     }
     set {
-      if (_position != value) {
+      if (_position != value)
+      {
         _position = value;
         _port = null;
         RaiseChanged();

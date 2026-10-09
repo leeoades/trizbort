@@ -5,12 +5,15 @@ using Trizbort.Setup;
 
 namespace Trizbort.Domain.Misc;
 
-internal static class MapEditing {
+internal static class MapEditing
+{
   public static void Move(IEnumerable<Element> elements, IList<Element> selection, Vector delta)
   {
-    foreach (var element in selection) {
+    foreach (var element in selection)
+    {
       if (element is IMoveable moveable) moveable.Position += delta;
-      if (element is Connection connection) {
+      if (element is Connection connection)
+      {
         foreach (var vertex in connection.VertexList)
           if (vertex.Port == null)
             vertex.Position += delta;
@@ -25,7 +28,8 @@ internal static class MapEditing {
   {
     if (delta == Vector.Zero) return;
     var nodes = new HashSet<Element>(selection.Where(element => element is ISizeable));
-    foreach (var connection in elements.OfType<Connection>()) {
+    foreach (var connection in elements.OfType<Connection>())
+    {
       if (!connection.HasCurveWaypoints || selection.Contains(connection)) continue;
       if (nodes.Contains(connection.VertexList[0].Port?.Owner) &&
           nodes.Contains(connection.VertexList[connection.VertexList.Count - 1].Port?.Owner))

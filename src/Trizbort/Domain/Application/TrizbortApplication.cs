@@ -2,6 +2,7 @@
 
 namespace Trizbort.Domain.Application;
 
-public static class TrizbortApplication {
+public static class TrizbortApplication
+{
   public static MainForm MainForm { get; set; }
 }

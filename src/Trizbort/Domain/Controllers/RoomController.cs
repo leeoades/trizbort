@@ -3,7 +3,8 @@ using Trizbort.Domain.Elements;
 
 namespace Trizbort.Domain.Controllers;
 
-public class RoomController {
+public class RoomController
+{
   public void ForceDarkness(List<Room> selectedRooms)
   {
     selectedRooms.ForEach(room => room.IsDark = true);

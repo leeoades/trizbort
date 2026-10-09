@@ -20,7 +20,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Category("Unit")]
-public class DocumentVersionTests {
+public class DocumentVersionTests
+{
   [TestCase("2.3.4.5", "None")]
   [TestCase("1.9.9.9", "None")]
   [TestCase("3.0.0.0", "Major")]
@@ -52,7 +53,8 @@ public class DocumentVersionTests {
   {
     var current = typeof(Project).Assembly.GetName().Version;
     var parts = new[] { current.Major, current.Minor, current.Build, current.Revision };
-    for (var index = 0; index < parts.Length; index++) {
+    for (var index = 0; index < parts.Length; index++)
+    {
       var changed = (int[])parts.Clone();
       changed[index]++;
       DocumentVersionPolicy.Compare(new Version(changed[0], changed[1], changed[2], changed[3]), current)
@@ -67,7 +69,8 @@ public class DocumentVersionTests {
 
 [TestFixture]
 [Category("Integration")]
-public class PersistenceRegressionTests : IsolatedProjectTests {
+public class PersistenceRegressionTests : IsolatedProjectTests
+{
   internal static string FixtureDirectory => Path.Combine(
     TestContext.CurrentContext.TestDirectory,
     "Fixtures",
@@ -103,7 +106,8 @@ public class PersistenceRegressionTests : IsolatedProjectTests {
          .ShouldBeTrue(fixture);
     reloaded.Elements.Count.ShouldBe(Project.Current.Elements.Count);
     foreach (var connection in reloaded.Elements.OfType<Connection>())
-      foreach (var vertex in connection.VertexList.Where(vertex => vertex.Port != null)) {
+      foreach (var vertex in connection.VertexList.Where(vertex => vertex.Port != null))
+      {
         reloaded.Elements.ShouldContain(vertex.Port.Owner);
         vertex.Port.Owner.ShouldNotBeSameAs(
           Project.Current.Elements.Single(element => element.Id == vertex.Port.Owner.Id));
@@ -116,7 +120,8 @@ public class PersistenceRegressionTests : IsolatedProjectTests {
   public void RichDocument_RoundTripsMetadataGeometryRegionsAndGraphAcrossCultures(string culture)
   {
     var previous = Thread.CurrentThread.CurrentCulture;
-    try {
+    try
+    {
       Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(culture);
       Project.Current.Title = "Title <&> \u00e9";
       Project.Current.Author = "Author";
@@ -165,7 +170,8 @@ public class PersistenceRegressionTests : IsolatedProjectTests {
       Settings.Regions.Single(region => region.RegionName == "Ice & Snow").TextColor.ToArgb()
               .ShouldBe(Color.Navy.ToArgb());
     }
-    finally {
+    finally
+    {
       Thread.CurrentThread.CurrentCulture = previous;
     }
   }

@@ -8,7 +8,8 @@ namespace Trizbort.Domain.Misc;
 /// <summary>
 ///   A docking point at which a connection's vertex may join to an element.
 /// </summary>
-public class Port {
+public class Port
+{
   protected Port(Element owner)
   {
     Owner = owner;

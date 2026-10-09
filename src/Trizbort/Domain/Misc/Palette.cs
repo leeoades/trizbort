@@ -15,7 +15,8 @@ namespace Trizbort.Domain.Misc;
 ///   of their lifetimes and avoids creating them until necessary,
 ///   and then only once.
 /// </remarks>
-public class Palette : IDisposable {
+public class Palette : IDisposable
+{
   private readonly List<IDisposable> _items = new();
   private Brush _borderBrush;
   private Pen _borderPen;
@@ -53,7 +54,8 @@ public class Palette : IDisposable {
 
   public Pen DashedLinePen {
     get {
-      if (_dashedLinePen == null) {
+      if (_dashedLinePen == null)
+      {
         _dashedLinePen = Pen(Settings.Color[Colors.Line]);
         _dashedLinePen.DashStyle = DashStyle.Dot;
       }
@@ -73,7 +75,8 @@ public class Palette : IDisposable {
 
   public Pen HoverDashedLinePen {
     get {
-      if (_hoverDashedLinePen == null) {
+      if (_hoverDashedLinePen == null)
+      {
         _hoverDashedLinePen = Pen(Settings.Color[Colors.HoverLine]);
         _hoverDashedLinePen.DashStyle = DashStyle.Dot;
       }
@@ -99,7 +102,8 @@ public class Palette : IDisposable {
 
   public Pen SelectedDashedLinePen {
     get {
-      if (_selectedDashedLinePen == null) {
+      if (_selectedDashedLinePen == null)
+      {
         _selectedDashedLinePen = Pen(Settings.Color[Colors.SelectedLine]);
         _selectedDashedLinePen.DashStyle = DashStyle.Dot;
       }

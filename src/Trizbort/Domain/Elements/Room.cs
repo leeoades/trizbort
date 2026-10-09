@@ -20,7 +20,8 @@ namespace Trizbort.Domain.Elements;
 /// <summary>
 ///   A room in the project.
 /// </summary>
-public class Room : Element, ISizeable {
+public class Room : Element, ISizeable
+{
   private const CompassPoint DefaultObjectsPosition = CompassPoint.South;
   private readonly List<string> _descriptions = new();
   private readonly TextBlock _name = new();
@@ -96,7 +97,8 @@ public class Room : Element, ISizeable {
   public bool AllCornersEqual {
     get { return _allCornersEqual; }
     set {
-      if (_allCornersEqual != value) {
+      if (_allCornersEqual != value)
+      {
         _allCornersEqual = value;
         RaiseChanged();
       }
@@ -117,27 +119,32 @@ public class Room : Element, ISizeable {
   public CornerRadii Corners {
     get { return _corners; }
     set {
-      if (_corners == null) {
+      if (_corners == null)
+      {
         _corners = value;
         return;
       }
 
-      if (_corners.BottomLeft != value.BottomLeft) {
+      if (_corners.BottomLeft != value.BottomLeft)
+      {
         _corners.BottomLeft = value.BottomLeft;
         RaiseChanged();
       } //mCorners never equals value...
 
-      if (_corners.BottomRight != value.BottomRight) {
+      if (_corners.BottomRight != value.BottomRight)
+      {
         _corners.BottomRight = value.BottomRight;
         RaiseChanged();
       }
 
-      if (_corners.TopLeft != value.TopLeft) {
+      if (_corners.TopLeft != value.TopLeft)
+      {
         _corners.TopLeft = value.TopLeft;
         RaiseChanged();
       }
 
-      if (_corners.TopRight != value.TopRight) {
+      if (_corners.TopRight != value.TopRight)
+      {
         _corners.TopRight = value.TopRight;
         RaiseChanged();
       }
@@ -149,7 +156,8 @@ public class Room : Element, ISizeable {
   public bool Ellipse {
     get { return _ellipse; }
     set {
-      if (_ellipse != value) {
+      if (_ellipse != value)
+      {
         _ellipse = value;
         RaiseChanged();
       }
@@ -160,7 +168,8 @@ public class Room : Element, ISizeable {
   public HandDrawnStyle HandDrawnStyle {
     get { return _handDrawnStyle; }
     set {
-      if (_handDrawnStyle != value) {
+      if (_handDrawnStyle != value)
+      {
         _handDrawnStyle = value;
         RaiseChanged();
       }
@@ -199,7 +208,8 @@ public class Room : Element, ISizeable {
   public bool IsEndRoom {
     get { return _isEndRoom; }
     set {
-      if (_isEndRoom != value) {
+      if (_isEndRoom != value)
+      {
         _isEndRoom = value;
         RaiseChanged();
       }
@@ -211,7 +221,8 @@ public class Room : Element, ISizeable {
   public bool IsStartRoom {
     get { return _isStartRoom; }
     set {
-      if (_isStartRoom != value) {
+      if (_isStartRoom != value)
+      {
         _isStartRoom = value;
         RaiseChanged();
       }
@@ -265,7 +276,8 @@ public class Room : Element, ISizeable {
   public bool Octagonal {
     get { return _octagonal; }
     set {
-      if (_octagonal != value) {
+      if (_octagonal != value)
+      {
         _octagonal = value;
         RaiseChanged();
       }
@@ -289,7 +301,8 @@ public class Room : Element, ISizeable {
   public string Region {
     get { return _roomRegion; }
     set {
-      if (_roomRegion != value) {
+      if (_roomRegion != value)
+      {
         _roomRegion = value;
         RaiseChanged();
       }
@@ -300,7 +313,8 @@ public class Room : Element, ISizeable {
   public Color RoomBorderColor {
     get { return _roomborder; }
     set {
-      if (_roomborder != value) {
+      if (_roomborder != value)
+      {
         _roomborder = value;
         RaiseChanged();
       }
@@ -311,7 +325,8 @@ public class Room : Element, ISizeable {
   public Color RoomFillColor {
     get { return _roomfill; }
     set {
-      if (_roomfill != value) {
+      if (_roomfill != value)
+      {
         _roomfill = value;
         RaiseChanged();
       }
@@ -322,7 +337,8 @@ public class Room : Element, ISizeable {
   public Color RoomNameColor {
     get { return _roomlargetext; }
     set {
-      if (_roomlargetext != value) {
+      if (_roomlargetext != value)
+      {
         _roomlargetext = value;
         RaiseChanged();
       }
@@ -333,7 +349,8 @@ public class Room : Element, ISizeable {
   public Color RoomObjectTextColor {
     get { return _roomsmalltext; }
     set {
-      if (_roomsmalltext != value) {
+      if (_roomsmalltext != value)
+      {
         _roomsmalltext = value;
         RaiseChanged();
       }
@@ -343,7 +360,8 @@ public class Room : Element, ISizeable {
   public Color RoomSubtitleColor {
     get { return _roomSubtitleColor; }
     set {
-      if (_roomSubtitleColor != value) {
+      if (_roomSubtitleColor != value)
+      {
         _roomSubtitleColor = value;
         RaiseChanged();
       }
@@ -353,7 +371,8 @@ public class Room : Element, ISizeable {
   public bool RoundedCorners {
     get { return _roundedCorners; }
     set {
-      if (_roundedCorners != value) {
+      if (_roundedCorners != value)
+      {
         _roundedCorners = value;
         RaiseChanged();
       }
@@ -364,7 +383,8 @@ public class Room : Element, ISizeable {
   public Color SecondFillColor {
     get { return _secondfill; }
     set {
-      if (_secondfill != value) {
+      if (_secondfill != value)
+      {
         _secondfill = value;
         RaiseChanged();
       }
@@ -375,7 +395,8 @@ public class Room : Element, ISizeable {
   public string SecondFillLocation {
     get { return _secondfilllocation; }
     set {
-      if (_secondfilllocation != value) {
+      if (_secondfilllocation != value)
+      {
         _secondfilllocation = value;
         RaiseChanged();
       }
@@ -385,7 +406,8 @@ public class Room : Element, ISizeable {
   public RoomShape Shape {
     get { return _shape; }
     set {
-      if (_shape != value) {
+      if (_shape != value)
+      {
         _shape = value;
         SetRoomShape(value);
         RaiseChanged();
@@ -420,7 +442,8 @@ public class Room : Element, ISizeable {
   public sealed override Vector Position {
     get { return _position; }
     set {
-      if (_position != value) {
+      if (_position != value)
+      {
         _position = value;
         ArbitraryAutomappedPosition = false;
         RaiseChanged();
@@ -437,7 +460,8 @@ public class Room : Element, ISizeable {
   public Vector Size {
     get { return _size; }
     set {
-      if (_size != value) {
+      if (_size != value)
+      {
         _size = value;
         RaiseChanged();
       }
@@ -462,7 +486,8 @@ public class Room : Element, ISizeable {
   public void AdjustAllRoomConnections()
   {
     var somethingChanged = false;
-    foreach (var element in GetConnections()) {
+    foreach (var element in GetConnections())
+    {
       if (element.VertexList[0].Port.Owner == element.VertexList[1].Port.Owner) continue;
 
       var cp = CompassPoint.Min;
@@ -471,57 +496,70 @@ public class Room : Element, ISizeable {
       var yDelta = element.VertexList[0].Port.Owner.Position.Y - element.VertexList[1].Port.Owner.Position.Y;
 
       if (xDelta == 0 && yDelta == 0) continue;
-      if (xDelta == 0) {
+      if (xDelta == 0)
+      {
         cp = CompassPoint.North;
       }
-      else {
+      else
+      {
         var slope = yDelta / xDelta;
         var abSlope = Math.Abs(slope);
         var isNeg = slope > 0;
         var isLeft = xDelta > 0;
-        switch (ApplicationSettingsController.AppSettings.PortAdjustDetail) {
+        switch (ApplicationSettingsController.AppSettings.PortAdjustDetail)
+        {
           //These numbers are decided as follows: tangent of 45 degrees, then 22.5/67.5, then 11.25/33.75/56.25/78.75
           case 0: //fourths
-            if (abSlope > 1) {
+            if (abSlope > 1)
+            {
               cp = CompassPoint.North;
             }
-            else {
+            else
+            {
               cp = CompassPoint.East;
               if (isLeft) cp = CompassPoint.West;
             }
 
             break;
           case 1: //eighths
-            if (abSlope > 2.414) {
+            if (abSlope > 2.414)
+            {
               cp = CompassPoint.North;
             } //incidentally tan (pi/8) = sqrt 2 - 1. Angle bisector theorem/trig identities prove it.
-            else if (abSlope > 0.414) {
+            else if (abSlope > 0.414)
+            {
               cp = CompassPoint.NorthEast;
               if (isNeg) cp = CompassPoint.NorthWest;
             }
-            else {
+            else
+            {
               cp = CompassPoint.East;
               if (isLeft) cp = CompassPoint.West;
             }
 
             break;
           case 2: //sixteenths
-            if (abSlope > 5.03) {
+            if (abSlope > 5.03)
+            {
               cp = CompassPoint.North;
             }
-            else if (abSlope > 1.49) {
+            else if (abSlope > 1.49)
+            {
               cp = CompassPoint.NorthNorthEast;
               if (isNeg) cp = CompassPoint.NorthNorthWest;
             }
-            else if (abSlope > 0.668) {
+            else if (abSlope > 0.668)
+            {
               cp = CompassPoint.NorthEast;
               if (isNeg) cp = CompassPoint.NorthWest;
             }
-            else if (abSlope > 0.197) {
+            else if (abSlope > 0.197)
+            {
               cp = CompassPoint.EastNorthEast;
               if (isNeg) cp = CompassPoint.WestNorthWest;
             }
-            else {
+            else
+            {
               cp = CompassPoint.East;
               if (isLeft) cp = CompassPoint.West;
             }
@@ -536,13 +574,15 @@ public class Room : Element, ISizeable {
       if (backwards)
         cp = CompassPointHelper.GetOpposite(cp);
       var cpInt = (int)cp;
-      if (element.VertexList[0].Port != element.VertexList[0].Port.Owner.PortList[cpInt]) {
+      if (element.VertexList[0].Port != element.VertexList[0].Port.Owner.PortList[cpInt])
+      {
         somethingChanged = true;
         element.VertexList[0].Port = element.VertexList[0].Port.Owner.PortList[cpInt];
       }
 
       var cpIntOpposite = (int)CompassPointHelper.GetOpposite(cp);
-      if (element.VertexList[1].Port != element.VertexList[1].Port.Owner.PortList[cpIntOpposite]) {
+      if (element.VertexList[1].Port != element.VertexList[1].Port.Owner.PortList[cpIntOpposite])
+      {
         element.VertexList[1].Port = element.VertexList[1].Port.Owner.PortList[cpIntOpposite];
         somethingChanged = true;
       }
@@ -556,7 +596,8 @@ public class Room : Element, ISizeable {
     RoomValidationState state;
     ValidationState.Clear();
 
-    if (Project.Current.MustHaveDescription && !HasDescription) {
+    if (Project.Current.MustHaveDescription && !HasDescription)
+    {
       state = new RoomValidationState {
         Message = "There is no description for this room.",
         Status = RoomValidationStatus.Invalid,
@@ -566,7 +607,8 @@ public class Room : Element, ISizeable {
     }
 
     if (Project.Current.MustHaveUniqueNames)
-      if (Project.Current.Elements.OfType<Room>().Count(p => p.Name == Name) > 1) {
+      if (Project.Current.Elements.OfType<Room>().Count(p => p.Name == Name) > 1)
+      {
         state = new RoomValidationState {
           Message = "The room name is not unique.",
           Status = RoomValidationStatus.Invalid,
@@ -576,7 +618,8 @@ public class Room : Element, ISizeable {
       }
 
     if (Project.Current.MustHaveNoDanglingConnectors)
-      if (Project.Current.Elements.OfType<Connection>().Count(p => p.GetSourceRoom() == this && p.IsDangling) > 0) {
+      if (Project.Current.Elements.OfType<Connection>().Count(p => p.GetSourceRoom() == this && p.IsDangling) > 0)
+      {
         state = new RoomValidationState {
           Message = "Room has dangling connectors.",
           Status = RoomValidationStatus.Invalid,
@@ -586,7 +629,8 @@ public class Room : Element, ISizeable {
       }
 
     if (Project.Current.MustHaveSubtitle)
-      if (string.IsNullOrWhiteSpace(SubTitle)) {
+      if (string.IsNullOrWhiteSpace(SubTitle))
+      {
         state = new RoomValidationState {
           Message = "Room must have a subtitle.",
           Status = RoomValidationStatus.Invalid,
@@ -598,7 +642,8 @@ public class Room : Element, ISizeable {
 
   public void ClearDescriptions()
   {
-    if (_descriptions.Count > 0) {
+    if (_descriptions.Count > 0)
+    {
       _descriptions.Clear();
       RaiseChanged();
     }
@@ -608,7 +653,8 @@ public class Room : Element, ISizeable {
   public void DeleteAllRoomConnections()
   {
     var zappedOne = false;
-    foreach (var element in GetConnections()) {
+    foreach (var element in GetConnections())
+    {
       Project.Current.Elements.Remove(element);
       zappedOne = true;
     }
@@ -678,7 +724,8 @@ public class Room : Element, ISizeable {
     context.LinesDrawn.Add(left);
 
     // if starting room: this is the code to draw a yellow-green boundary around the start room
-    if (IsStartRoom || IsEndRoom || IsReference) {
+    if (IsStartRoom || IsEndRoom || IsReference)
+    {
       var tBounds = InnerBounds;
       tBounds.Inflate(5);
 
@@ -706,7 +753,8 @@ public class Room : Element, ISizeable {
     }
 
     //this is the code to draw the yellow boundary around a selected room
-    if (context.Selected) {
+    if (context.Selected)
+    {
       var tBounds = InnerBounds;
       tBounds.Inflate(Project.Current.ActiveSelectedElement?.Id == Id ? 10 : 5);
 
@@ -741,14 +789,16 @@ public class Room : Element, ISizeable {
     if (RoomFillColor != Color.Transparent) brush = new SolidBrush(RoomFillColor);
 
     // this is the main drawing routine for the actual room borders
-    if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering && BorderStyle != BorderDashStyle.None) {
+    if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering && BorderStyle != BorderDashStyle.None)
+    {
       var path = palette.Path();
       AddOutline(path, InnerBounds, handDrawn);
 
       graphics.DrawPath(brush, path);
 
       // Second fill for room specific colors with a split option
-      if (SecondFillColor != Color.Transparent) {
+      if (SecondFillColor != Color.Transparent)
+      {
         var state = graphics.Save();
         graphics.IntersectClip(path);
 
@@ -757,7 +807,8 @@ public class Room : Element, ISizeable {
 
         // Define the second path based on the second fill location
         var secondPath = palette.Path();
-        switch (SecondFillLocation) {
+        switch (SecondFillLocation)
+        {
           case "Bottom":
             Drawing.AddLine(secondPath, centerHorizontal, random, StraightEdges);
             Drawing.AddLine(secondPath, halfRightBottom, random, StraightEdges);
@@ -809,21 +860,25 @@ public class Room : Element, ISizeable {
         graphics.Restore(state);
       }
 
-      if (IsDark) {
+      if (IsDark)
+      {
         var state = graphics.Save();
         var solidbrush = (SolidBrush)palette.BorderBrush;
         var darknessXDistance = Settings.DarknessStripeSize;
         var darknessYDistance = Settings.DarknessStripeSize;
         graphics.IntersectClip(path);
-        if (Ellipse) {
+        if (Ellipse)
+        {
           darknessYDistance = 2 * Height / 5;
           darknessXDistance = 2 * Width / 5;
         }
-        else if (RoundedCorners) {
+        else if (RoundedCorners)
+        {
           if (Corners.TopRight > 2 * Settings.DarknessStripeSize)
             darknessYDistance = darknessXDistance = (float)Corners.TopRight / 2;
         }
-        else if (Octagonal) {
+        else if (Octagonal)
+        {
           darknessXDistance = Width * 7 / 20;
           darknessYDistance = Height * 7 / 20;
         }
@@ -838,12 +893,14 @@ public class Room : Element, ISizeable {
         graphics.Restore(state);
       }
 
-      if (RoomBorderColor == Color.Transparent) {
+      if (RoomBorderColor == Color.Transparent)
+      {
         var pen = palette.BorderPen;
         pen.DashStyle = IsReference ? BorderDashStyle.Dot.ConvertToDashStyle() : BorderStyle.ConvertToDashStyle();
         graphics.DrawPath(pen, path);
       }
-      else {
+      else
+      {
         var roomBorderPen = new Pen(RoomBorderColor, Settings.LineWidth) {
           StartCap = LineCap.Round, EndCap = LineCap.Round,
           DashStyle = IsReference ? BorderDashStyle.Dot.ConvertToDashStyle() : BorderStyle.ConvertToDashStyle()
@@ -865,7 +922,8 @@ public class Room : Element, ISizeable {
       textBounds.Inflate(-5, -5);
 
     if (textBounds.Width > 0 && textBounds.Height > 0)
-      if (!ApplicationSettingsController.AppSettings.DebugDisableTextRendering) {
+      if (!ApplicationSettingsController.AppSettings.DebugDisableTextRendering)
+      {
         var tName = IsReference ? new TextBlock { Text = "To" } : _name;
         var tSubtitle = IsReference ? new TextBlock { Text = ReferenceRoom.Name } : _subTitle;
         var roomTextRect = tName.Draw(
@@ -901,19 +959,22 @@ public class Room : Element, ISizeable {
     brush = palette.SmallTextBrush;
     // Room specific fill brush (White shows global color)
     var bUseObjectRoomBrush = false;
-    if (RoomObjectTextColor != Color.Transparent) {
+    if (RoomObjectTextColor != Color.Transparent)
+    {
       bUseObjectRoomBrush = true;
       brush = new SolidBrush(RoomObjectTextColor);
     }
 
-    if (!string.IsNullOrEmpty(Objects)) {
+    if (!string.IsNullOrEmpty(Objects))
+    {
       var format = new XStringFormat();
       var pos = expandedBounds.GetCorner(_objectsPosition);
 
       var displayText = ObjectList.FormatForDisplay(_objects.Text);
       if (_objectsDisplay.Text != displayText) _objectsDisplay.Text = displayText;
 
-      if (!Drawing.SetAlignmentFromCardinalOrOrdinalDirection(format, _objectsPosition)) {
+      if (!Drawing.SetAlignmentFromCardinalOrOrdinalDirection(format, _objectsPosition))
+      {
         // object list appears inside the room below its name
         format.LineAlignment = XLineAlignment.Far;
         format.Alignment = XStringAlignment.Near;
@@ -932,18 +993,22 @@ public class Room : Element, ISizeable {
           _objectsDisplay.Draw(graphics, font, brush, pos, bounds.Size, format);
         drawnObjectList = true;
       }
-      else if (_objectsPosition == CompassPoint.North || _objectsPosition == CompassPoint.South) {
+      else if (_objectsPosition == CompassPoint.North || _objectsPosition == CompassPoint.South)
+      {
         pos.X += Settings.ObjectListOffsetFromRoom + (ObjectsCustomPosition ? ObjectsCustomPositionRight : 0);
         pos.Y += ObjectsCustomPosition ? ObjectsCustomPositionDown : 0;
       }
-      else {
+      else
+      {
         pos.X += ObjectsCustomPosition ? ObjectsCustomPositionRight : 0;
         pos.Y += ObjectsCustomPosition ? ObjectsCustomPositionDown : 0;
       }
 
       if (!drawnObjectList)
-        if (!ApplicationSettingsController.AppSettings.DebugDisableTextRendering) {
-          if (format.Alignment != XStringAlignment.Near && displayText.Contains(ObjectList.DisplayBullet)) {
+        if (!ApplicationSettingsController.AppSettings.DebugDisableTextRendering)
+        {
+          if (format.Alignment != XStringAlignment.Near && displayText.Contains(ObjectList.DisplayBullet))
+          {
             // right-aligning each line would lose the indentation of contained objects,
             // so instead left-align the lines within a block whose right edge is at pos
             var width = displayText.Replace("\r", string.Empty).Split('\n')
@@ -956,7 +1021,8 @@ public class Room : Element, ISizeable {
         }
     }
 
-    if (!Valid()) {
+    if (!Valid())
+    {
       var path = palette.Path();
       var pen = new Pen(Color.Red, 2.0f);
       pen.DashStyle = DashStyle.Solid;
@@ -989,9 +1055,11 @@ public class Room : Element, ISizeable {
     var connections = new List<Connection>();
 
     // TODO: This is needlessly expensive, traversing as it does the entire project's element list.
-    foreach (var element in Project.Current.Elements.OfType<Connection>()) {
+    foreach (var element in Project.Current.Elements.OfType<Connection>())
+    {
       var connection = element;
-      foreach (var vertex in connection.VertexList) {
+      foreach (var vertex in connection.VertexList)
+      {
         var port = vertex.Port;
         if (port == null || port.Owner != this || !(port is CompassPort))
           continue;
@@ -1033,7 +1101,8 @@ public class Room : Element, ISizeable {
     var compass = (CompassPort)port;
     var inner = InnerBounds.GetCorner(compass.CompassPoint);
     var outer = outerBounds.GetCorner(compass.CompassPoint);
-    switch (compass.CompassPoint) {
+    switch (compass.CompassPoint)
+    {
       case CompassPoint.EastNorthEast:
       case CompassPoint.EastSouthEast:
       case CompassPoint.WestNorthWest:
@@ -1063,7 +1132,8 @@ public class Room : Element, ISizeable {
   public override string GetToolTipHeader()
   {
     var text = $"{Name}{(!IsDefaultRegion() ? $" ({Region})" : string.Empty)}";
-    if (!Valid()) {
+    if (!Valid())
+    {
       if (text.Length > 0) text += " - ";
       text += "Room validation issues:";
     }
@@ -1073,7 +1143,8 @@ public class Room : Element, ISizeable {
 
   public override string GetToolTipText()
   {
-    if (!Valid()) {
+    if (!Valid())
+    {
       var text = "";
       text = ValidationState.Aggregate(
         text,
@@ -1082,11 +1153,13 @@ public class Room : Element, ISizeable {
     }
 
     var desc = string.Empty;
-    if (ApplicationSettingsController.AppSettings.ShowDescriptionsInTooltips) {
+    if (ApplicationSettingsController.AppSettings.ShowDescriptionsInTooltips)
+    {
       desc = $"{PrimaryDescription}";
       var charsToShow = ApplicationSettingsController.AppSettings.ToolTipRoomDescriptionCharactersToShow;
       if (ApplicationSettingsController.AppSettings.LimitRoomDescriptionCharactersInTooltip &
-          desc.Length >= charsToShow) {
+          desc.Length >= charsToShow)
+      {
         desc = desc.Substring(0, charsToShow);
         desc = desc + "...";
       }
@@ -1174,7 +1247,8 @@ public class Room : Element, ISizeable {
     if (element.Attribute("borderstyle").Text != "")
       BorderStyle = (BorderDashStyle)Enum.Parse(typeof(BorderDashStyle), element.Attribute("borderstyle").Text);
 
-    if (Project.Version.CompareTo(new Version(1, 5, 8, 3)) < 0) {
+    if (Project.Version.CompareTo(new Version(1, 5, 8, 3)) < 0)
+    {
       if (element.Attribute("roomFill").Text != "" && element.Attribute("roomFill").Text != "#FFFFFF")
         RoomFillColor = ColorTranslator.FromHtml(element.Attribute("roomFill").Text);
       if (element.Attribute("secondFill").Text != "" && element.Attribute("roomFill").Text != "#FFFFFF")
@@ -1188,7 +1262,8 @@ public class Room : Element, ISizeable {
       if (element.Attribute("roomSmallText").Text != "" && element.Attribute("roomFill").Text != "#FFFFFF")
         RoomObjectTextColor = ColorTranslator.FromHtml(element.Attribute("roomSmallText").Text);
     }
-    else {
+    else
+    {
       if (element.Attribute("roomFill").Text != "")
         RoomFillColor = ColorTranslator.FromHtml(element.Attribute("roomFill").Text);
       if (element.Attribute("secondFill").Text != "")
@@ -1331,13 +1406,15 @@ public class Room : Element, ISizeable {
 
     // Up to this point was added to turn colors to Hex code for xmpl saving/loading
 
-    if (!string.IsNullOrEmpty(Objects) || ObjectsPosition != DefaultObjectsPosition) {
+    if (!string.IsNullOrEmpty(Objects) || ObjectsPosition != DefaultObjectsPosition)
+    {
       scribe.StartElement("objects");
 
       if (ObjectsPosition != DefaultObjectsPosition)
         scribe.Attribute("at", ObjectsPosition);
 
-      if (ObjectsCustomPosition) {
+      if (ObjectsCustomPosition)
+      {
         scribe.Attribute("custom", ObjectsCustomPosition);
         scribe.Attribute("customRight", ObjectsCustomPositionRight);
         scribe.Attribute("customDown", ObjectsCustomPositionDown);
@@ -1431,7 +1508,8 @@ public class Room : Element, ISizeable {
   {
     var rect = new RectangleF(bounds.X, bounds.Y, bounds.Width, bounds.Height);
     var random = Sketch.Seeded(Id);
-    if (RoundedCorners) {
+    if (RoundedCorners)
+    {
       if (handDrawn)
         path.AddPolygon(
           Sketch.ClosedCurve(
@@ -1450,7 +1528,8 @@ public class Room : Element, ISizeable {
       return;
     }
 
-    if (Ellipse) {
+    if (Ellipse)
+    {
       if (handDrawn)
         path.AddPolygon(Sketch.ClosedCurve(Sketch.Ellipse(rect), random));
       else
@@ -1459,7 +1538,8 @@ public class Room : Element, ISizeable {
     }
 
     PointF[] vertices;
-    if (Octagonal) {
+    if (Octagonal)
+    {
       var qw = rect.Width / 4;
       var qh = rect.Height / 4;
       vertices = new[] {
@@ -1469,7 +1549,8 @@ public class Room : Element, ISizeable {
         new PointF(rect.Right - qw, rect.Bottom), new PointF(rect.Left + qw, rect.Bottom)
       };
     }
-    else {
+    else
+    {
       vertices = new[] {
         new PointF(rect.Left, rect.Top), new PointF(rect.Right, rect.Top),
         new PointF(rect.Right, rect.Bottom), new PointF(rect.Left, rect.Bottom)
@@ -1521,7 +1602,8 @@ public class Room : Element, ISizeable {
 
   private void SetRoomShape(RoomShape pShape)
   {
-    switch (pShape) {
+    switch (pShape)
+    {
       case RoomShape.SquareCorners:
         StraightEdges = !StraightEdges;
         Ellipse = false;
@@ -1588,10 +1670,12 @@ public class Room : Element, ISizeable {
     dialog.AllCornersEqual = AllCornersEqual;
     dialog.Shape = Shape;
 
-    if (UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas) == DialogResult.OK) {
+    if (UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas) == DialogResult.OK)
+    {
       Name = dialog.RoomName;
       SubTitle = dialog.RoomSubTitle;
-      if (PrimaryDescription != dialog.Description) {
+      if (PrimaryDescription != dialog.Description)
+      {
         ClearDescriptions();
         AddDescription(dialog.Description);
       }
@@ -1634,7 +1718,8 @@ public class Room : Element, ISizeable {
     return ValidationState == null || ValidationState.Count == 0;
   }
 
-  internal class CompassPort : Port {
+  internal class CompassPort : Port
+  {
     public CompassPort(CompassPoint compassPoint, Element owner) : base(owner)
     {
       CompassPoint = compassPoint;
@@ -1654,7 +1739,8 @@ public class Room : Element, ISizeable {
   }
 }
 
-public class CornerRadii {
+public class CornerRadii
+{
   private double _bottomLeft = 15.0;
   private double _bottomRight = 15.0;
   private double _topLeft = 15.0;
@@ -1697,7 +1783,8 @@ public class CornerRadii {
   }
 }
 
-public enum RoomShape {
+public enum RoomShape
+{
   SquareCorners,
   RoundedCorners,
   Ellipse,
@@ -1705,7 +1792,8 @@ public enum RoomShape {
   NotARoom
 }
 
-public enum PropertiesStartType {
+public enum PropertiesStartType
+{
   RoomName,
   Region,
   Objects

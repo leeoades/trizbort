@@ -17,7 +17,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Category("Integration")]
-public class CommandIntegrationTests : IsolatedProjectTests {
+public class CommandIntegrationTests : IsolatedProjectTests
+{
   [TestCase(SelectTypes.All, 6)]
   [TestCase(SelectTypes.Rooms, 3)]
   [TestCase(SelectTypes.Connections, 2)]

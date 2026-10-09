@@ -3,7 +3,8 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI;
 
-internal interface IUserInteraction {
+internal interface IUserInteraction
+{
   DialogResult ShowMessage(
     IWin32Window owner,
     string text,
@@ -18,7 +19,8 @@ internal interface IUserInteraction {
   void SetClipboardText(string text, TextDataFormat format);
 }
 
-internal static class UserInteraction {
+internal static class UserInteraction
+{
   private static IUserInteraction _current = new WindowsUserInteraction();
 
   internal static IUserInteraction Current {
@@ -67,7 +69,8 @@ internal static class UserInteraction {
     Current.SetClipboardText(text, format);
   }
 
-  private sealed class WindowsUserInteraction : IUserInteraction {
+  private sealed class WindowsUserInteraction : IUserInteraction
+  {
     public DialogResult ShowMessage(
       IWin32Window owner,
       string text,

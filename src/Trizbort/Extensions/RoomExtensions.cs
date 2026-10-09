@@ -4,10 +4,12 @@ using Trizbort.Domain.Enums;
 
 namespace Trizbort.Extensions;
 
-public static class RoomExtensions {
+public static class RoomExtensions
+{
   public static DashStyle ConvertToDashStyle(this BorderDashStyle cxx)
   {
-    switch (cxx) {
+    switch (cxx)
+    {
       case BorderDashStyle.Solid:
         return DashStyle.Solid;
       case BorderDashStyle.Dot:

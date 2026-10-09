@@ -4,14 +4,17 @@ using System.Text.RegularExpressions;
 
 namespace Trizbort.Export.Domain;
 
-public class Thing {
-  public enum Amounts {
+public class Thing
+{
+  public enum Amounts
+  {
     Noforce,
     Singular,
     Plural
   }
 
-  public enum ThingGender {
+  public enum ThingGender
+  {
     Neuter,
     Male,
     Female
@@ -44,12 +47,14 @@ public class Thing {
                      (errString.Length == 1 ? "" : "s") + " " + errString + ".\n";
 
     //P defines a neuter person. F female, M male.
-    if (propString.Contains("f")) {
+    if (propString.Contains("f"))
+    {
       IsPerson = true;
       Gender = ThingGender.Female;
     }
 
-    if (propString.Contains("m")) {
+    if (propString.Contains("m"))
+    {
       if (IsPerson)
         WarningText += "You defined two different genders: " + Enum.GetName(typeof(ThingGender), Gender) +
                        " then male.\n";
@@ -57,7 +62,8 @@ public class Thing {
       IsPerson = true;
     }
 
-    if (propString.Contains("p")) {
+    if (propString.Contains("p"))
+    {
       if (IsPerson)
         WarningText += "You defined two different genders: " + Enum.GetName(typeof(ThingGender), Gender) +
                        " then neuter.\n";
@@ -72,7 +78,8 @@ public class Thing {
     //We can force plural or singular. Default is let Trizbort decide.
     Forceplural = Amounts.Noforce;
     if (propString.Contains("1")) Forceplural = Amounts.Singular;
-    if (propString.Contains("2")) {
+    if (propString.Contains("2"))
+    {
       if (Forceplural != Amounts.Noforce) WarningText += "You defined this object as both singular and plural.\n";
       Forceplural = Amounts.Plural;
     }
@@ -83,7 +90,8 @@ public class Thing {
         WarningText += "You defined this as a person and container. This will cause Inform to throw an error.\n";
       else
         IsContainer = true;
-    if (propString.Contains("s")) {
+    if (propString.Contains("s"))
+    {
       if (IsPerson)
         WarningText +=
           "You defined this as a person and scenery. Inform allows that, but you may not want to hide this person.\n";

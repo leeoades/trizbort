@@ -3,7 +3,8 @@ using System.IO;
 
 namespace Trizbort.Extensions;
 
-public static class FileExtensions {
+public static class FileExtensions
+{
   private static readonly string _numberPattern = "-backup-{0}";
 
   public static string NextAvailableFilename(this string path)
@@ -32,12 +33,14 @@ public static class FileExtensions {
     int min = 1,
       max = 2; // min is inclusive, max is exclusive/untested
 
-    while (File.Exists(string.Format(pattern, max))) {
+    while (File.Exists(string.Format(pattern, max)))
+    {
       min = max;
       max *= 2;
     }
 
-    while (max != min + 1) {
+    while (max != min + 1)
+    {
       var pivot = (max + min) / 2;
       if (File.Exists(string.Format(pattern, pivot)))
         min = pivot;

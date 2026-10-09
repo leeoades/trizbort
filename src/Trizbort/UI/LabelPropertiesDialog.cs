@@ -7,7 +7,8 @@ using Trizbort.Domain.Enums;
 
 namespace Trizbort.UI;
 
-public sealed class LabelPropertiesDialog : Form {
+public sealed class LabelPropertiesDialog : Form
+{
   public LabelPropertiesDialog(MapLabel label)
   {
     Text = "Label Properties";
@@ -132,7 +133,8 @@ public sealed class LabelPropertiesDialog : Form {
     button.ForeColor = color.GetBrightness() < 0.5f ? Color.White : Color.Black;
     button.Click += (_, __) => {
       using var dialog = new ColorDialog { Color = button.BackColor, FullOpen = true };
-      if (UserInteraction.ShowDialog(dialog, button.FindForm()) == DialogResult.OK) {
+      if (UserInteraction.ShowDialog(dialog, button.FindForm()) == DialogResult.OK)
+      {
         button.BackColor = dialog.Color;
         button.ForeColor = dialog.Color.GetBrightness() < 0.5f ? Color.White : Color.Black;
       }

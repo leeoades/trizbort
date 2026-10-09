@@ -9,7 +9,8 @@ namespace Trizbort.Domain.Misc;
 /// <summary>
 ///   A visual handle by which an element may be resized.
 /// </summary>
-internal class ResizeHandle {
+internal class ResizeHandle
+{
   private readonly CompassPoint _compassPoint;
   private readonly ISizeable _owner;
 
@@ -21,7 +22,8 @@ internal class ResizeHandle {
 
   public Cursor Cursor {
     get {
-      switch (_compassPoint) {
+      switch (_compassPoint)
+      {
         case CompassPoint.NorthWest:
         case CompassPoint.SouthEast:
           return Cursors.SizeNWSE;
@@ -79,7 +81,8 @@ internal class ResizeHandle {
 
   private void SetX(float value)
   {
-    switch (_compassPoint) {
+    switch (_compassPoint)
+    {
       case CompassPoint.North:
       case CompassPoint.South:
         break;
@@ -89,7 +92,8 @@ internal class ResizeHandle {
       case CompassPoint.WestSouthWest:
       case CompassPoint.SouthWest:
       default:
-        if (_owner.Width - (value - _owner.X) >= 1) {
+        if (_owner.Width - (value - _owner.X) >= 1)
+        {
           var old = _owner.X;
           _owner.Position = new Vector(value, _owner.Position.Y);
           _owner.Size = new Vector(_owner.Size.X - (_owner.X - old), _owner.Size.Y);
@@ -108,7 +112,8 @@ internal class ResizeHandle {
 
   private void SetY(float value)
   {
-    switch (_compassPoint) {
+    switch (_compassPoint)
+    {
       case CompassPoint.East:
       case CompassPoint.West:
         break;
@@ -117,7 +122,8 @@ internal class ResizeHandle {
       case CompassPoint.North:
       case CompassPoint.NorthNorthEast:
       case CompassPoint.NorthEast:
-        if (_owner.Height - (value - _owner.Y) >= 1) {
+        if (_owner.Height - (value - _owner.Y) >= 1)
+        {
           var old = _owner.Y;
           _owner.Position = new Vector(_owner.Position.X, value);
           _owner.Size = new Vector(_owner.Size.X, _owner.Size.Y - (_owner.Y - old));

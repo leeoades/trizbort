@@ -3,7 +3,8 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI.Controls;
 
-public partial class AutomapBar : UserControl {
+public partial class AutomapBar : UserControl
+{
   public AutomapBar()
   {
     InitializeComponent();

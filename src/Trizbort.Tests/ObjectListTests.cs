@@ -6,7 +6,8 @@ using Trizbort.UI;
 namespace Trizbort.Tests;
 
 [TestFixture]
-public class ObjectListTests {
+public class ObjectListTests
+{
   [Test]
   public void Parse_BulletsDenoteContainment()
   {

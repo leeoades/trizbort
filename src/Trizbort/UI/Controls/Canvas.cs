@@ -27,7 +27,8 @@ using Timer = System.Threading.Timer;
 
 namespace Trizbort.UI.Controls;
 
-public partial class Canvas : UserControl, IAutomapCanvas {
+public partial class Canvas : UserControl, IAutomapCanvas
+{
   private const int RecomputeNMillisecondsAfterChange = 500;
   private static bool _smartLineSegmentsUpToDate;
   private readonly CommandController _commandController;
@@ -138,11 +139,13 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     get { return _minimap.Visible; }
     set {
       _minimap.Visible = value;
-      if (!_minimap.Visible) {
+      if (!_minimap.Visible)
+      {
         _vScrollBar.Top = 0;
         _vScrollBar.Height = Height - _hScrollBar.Height;
       }
-      else {
+      else
+      {
         _vScrollBar.Top = _minimap.Bottom;
         _vScrollBar.Height = Height - _hScrollBar.Height - _minimap.Height;
       }
@@ -198,7 +201,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     get { return _selectedElements.Count > 0 ? _selectedElements[_selectedElements.Count - 1] : null; }
     set {
       var selectedElement = _selectedElements.Count > 0 ? _selectedElements[_selectedElements.Count - 1] : null;
-      if (selectedElement != value) {
+      if (selectedElement != value)
+      {
         _selectedElements.Clear();
         if (value != null) _selectedElements.Add(value);
         UpdateSelection();
@@ -227,7 +231,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   public float ZoomFactor {
     get { return _zoomFactor; }
     set {
-      if (_zoomFactor != value) {
+      if (_zoomFactor != value)
+      {
         _zoomFactor = value;
         _lblZoom.Text = _zoomFactor.ToString("p0");
         Invalidate();
@@ -312,20 +317,24 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     size.Y = Numeric.Clamp(size.Y, 16, 8192);
     using var nativeGraphics = Graphics.FromHwnd(Handle);
     using var stream = new MemoryStream();
-    try {
+    try
+    {
       var dc = nativeGraphics.GetHdc();
       using var metafile = new Metafile(stream, dc);
       using var imageGraphics = Graphics.FromImage(metafile);
       using var graphics = XGraphics.FromGraphics(imageGraphics, new XSize(size.X, size.Y));
       foreach (var room in rooms)
-        if (room.Name.Contains("-")) {
+        if (room.Name.Contains("-"))
+        {
           room.MarkNameInvalid();
           room.Draw(graphics, palette, context);
         }
     }
-    catch {
+    catch
+    {
     }
-    finally {
+    finally
+    {
       nativeGraphics.ReleaseHdc();
     }
   }
@@ -364,10 +373,12 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     pos = Settings.Snap(pos);
 
     var clash = true;
-    while (clash) {
+    while (clash)
+    {
       clash = false;
       foreach (var element in Project.Current.Elements)
-        if (element is IMoveable && ((IMoveable)element).Position == pos) {
+        if (element is IMoveable && ((IMoveable)element).Position == pos)
+        {
           pos.X += Math.Max(2, Settings.GridSize);
           pos.Y += Math.Max(2, Settings.GridSize);
           clash = true;
@@ -378,7 +389,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     Project.Current.Elements.Add(room);
 
     if (insertRoom)
-      if (SelectedElement is Connection) {
+      if (SelectedElement is Connection)
+      {
         var conn = (Connection)SelectedElement;
 
         var targetPort = conn.VertexList[conn.VertexList.Count - 1].Port as Room.CompassPort;
@@ -388,18 +400,22 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         var targetCompass = targetPort?.CompassPoint ?? CompassPoint.North;
         var sourceCompass = sourcePort?.CompassPoint ?? CompassPoint.North;
 
-        if (target == null && source == null) {
+        if (target == null && source == null)
+        {
           conn.VertexList.Add(new Vertex(room.PortAt(CompassPointHelper.GetOpposite(sourceCompass))));
         }
-        else if (source == null) {
+        else if (source == null)
+        {
           conn.VertexList.RemoveAt(0);
           conn.VertexList.Add(new Vertex(room.PortAt(CompassPointHelper.GetOpposite(targetCompass))));
         }
-        else if (target == null) {
+        else if (target == null)
+        {
           conn.VertexList.RemoveAt(conn.VertexList.Count - 1);
           conn.VertexList.Add(new Vertex(room.PortAt(CompassPointHelper.GetOpposite(sourceCompass))));
         }
-        else {
+        else
+        {
           if (target is Room targetRoom && source is Room sourceRoom && targetRoom.Region == sourceRoom.Region)
             room.Region = targetRoom.Region;
 
@@ -488,13 +504,16 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       Rect.Empty,
       (current, element) => element.UnionBoundsWith(current, true));
 
-    if (includePadding) {
-      if (Settings.DocumentSpecificMargins) {
+    if (includePadding)
+    {
+      if (Settings.DocumentSpecificMargins)
+      {
         bounds.Inflate(Settings.DocHorizontalMargin, Settings.DocVerticalMargin);
         return bounds;
       }
 
-      if (ApplicationSettingsController.AppSettings.SpecifyGenMargins) {
+      if (ApplicationSettingsController.AppSettings.SpecifyGenMargins)
+      {
         bounds.Inflate(
           ApplicationSettingsController.AppSettings.GenHorizontalMargin,
           ApplicationSettingsController.AppSettings.GenVerticalMargin);
@@ -525,7 +544,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   public void DeleteSelection()
   {
     var connection = WaypointConnection;
-    if (connection != null && _selectedWaypoint.HasValue && connection.RemoveCurveWaypoint(_selectedWaypoint.Value)) {
+    if (connection != null && _selectedWaypoint.HasValue && connection.RemoveCurveWaypoint(_selectedWaypoint.Value))
+    {
       _selectedWaypoint = null;
       HoverWaypoint = null;
       Invalidate();
@@ -552,7 +572,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
     var zoomFactor = ZoomFactor;
     var origin = Origin;
-    if (finalRender) {
+    if (finalRender)
+    {
       // zoom to fit (0,0)-(width,height)
       var canvasBounds = ComputeCanvasBounds(true);
       ZoomFactor = Math.Min(
@@ -561,7 +582,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       Origin = new Vector(canvasBounds.X + canvasBounds.Width / 2, canvasBounds.Y + canvasBounds.Height / 2);
     }
 
-    using (var palette = new Palette()) {
+    using (var palette = new Palette())
+    {
       // XGraphics.Graphics is null for PDF targets, so fill via XGraphics rather than Graphics.Clear.
       if (finalRender) graphics.DrawRectangle(palette.CanvasBrush, 0, 0, width, height);
 
@@ -571,12 +593,14 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       graphics.ScaleTransform(ZoomFactor, ZoomFactor);
       graphics.TranslateTransform(-Origin.X, -Origin.Y);
 
-      if (ApplicationSettingsController.AppSettings.DebugShowFps && !finalRender) {
+      if (ApplicationSettingsController.AppSettings.DebugShowFps && !finalRender)
+      {
         var canvasBounds = ComputeCanvasBounds(true);
         graphics.DrawRectangle(XPens.Purple, canvasBounds.ToRectangleF());
       }
 
-      if (Settings.ShowOrigin && !finalRender) {
+      if (Settings.ShowOrigin && !finalRender)
+      {
         var pen = palette.Pen(Drawing.Mix(Settings.Color[Colors.Canvas], Settings.Color[Colors.SmallText], 3, 1));
         var n = Settings.GridSize;
         graphics.DrawLine(pen, -n, 0, n, 0);
@@ -586,14 +610,16 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       graphics.SmoothingMode = XSmoothingMode.AntiAlias;
 
       DrawElements(graphics, palette, finalRender);
-      if (!finalRender) {
+      if (!finalRender)
+      {
         DrawHandles(graphics, palette);
         DrawPorts(graphics, palette);
         DrawMarquee(graphics, palette);
       }
 
       stopwatch.Stop();
-      if (ApplicationSettingsController.AppSettings.DebugShowFps && !finalRender) {
+      if (ApplicationSettingsController.AppSettings.DebugShowFps && !finalRender)
+      {
         var fps = 1.0f / (float)stopwatch.Elapsed.TotalSeconds;
         graphics.Graphics.Transform = new Matrix();
         graphics.DrawString(
@@ -603,7 +629,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
           new PointF(10, 20 + Settings.RoomNameFont.GetHeight()));
       }
 
-      if (ApplicationSettingsController.AppSettings.DebugShowMouseCoordinates && !finalRender) {
+      if (ApplicationSettingsController.AppSettings.DebugShowMouseCoordinates && !finalRender)
+      {
         var mouseCoord = MousePosition;
         graphics.Graphics.Transform = new Matrix();
         graphics.DrawString(
@@ -655,19 +682,22 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     var dx = rect1.X - rect2.X;
     var dy = rect1.Y - rect2.Y;
 
-    if (dy == 0 && dx != 0) {
+    if (dy == 0 && dx != 0)
+    {
       if (dx > 0)
         AddConnection(room1, CompassPoint.West, room2, CompassPoint.East);
       else
         AddConnection(room1, CompassPoint.East, room2, CompassPoint.West);
     }
-    else if (dy != 0 && dx == 0) {
+    else if (dy != 0 && dx == 0)
+    {
       if (dy > 0)
         AddConnection(room1, CompassPoint.North, room2, CompassPoint.South);
       else
         AddConnection(room1, CompassPoint.South, room2, CompassPoint.North);
     }
-    else {
+    else
+    {
       if (Math.Abs(dy) >= Math.Abs(dx))
         if (dy > 0)
           AddConnection(room1, CompassPoint.North, room2, CompassPoint.South);
@@ -693,11 +723,13 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     var objs = controller.PasteElements();
 
     if (objs != null)
-      if (objs.GetType() == typeof(CopyController.CopyObject)) {
+      if (objs.GetType() == typeof(CopyController.CopyObject))
+      {
         var xx = objs as CopyController.CopyObject;
         PasteRooms(atCursor, xx, controller);
       }
-      else if (objs.GetType() == typeof(CopyController.CopyColorsObj)) {
+      else if (objs.GetType() == typeof(CopyController.CopyColorsObj))
+      {
         var xx = objs as CopyController.CopyColorsObj;
         PasteColors(xx);
       }
@@ -712,7 +744,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   public void ReverseLineDirection()
   {
     foreach (var element in _selectedElements)
-      if (element is Connection) {
+      if (element is Connection)
+      {
         var connection = (Connection)element;
         connection.Reverse();
       }
@@ -722,7 +755,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   {
     if (cp == null) return null;
 
-    switch (cp) {
+    switch (cp)
+    {
       case CompassPoint.North:
       case CompassPoint.NorthNorthEast:
       case CompassPoint.NorthNorthWest:
@@ -924,7 +958,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     var displaySize = new PointF(Math.Max(0, Width - _vScrollBar.Width), Math.Max(0, Height - _hScrollBar.Height));
 
     Rect clientBounds;
-    if (Project.Current.Elements.Count > 0) {
+    if (Project.Current.Elements.Count > 0)
+    {
       var canvasBounds = Rect.Empty;
       foreach (var element in Project.Current.Elements) canvasBounds = element.UnionBoundsWith(canvasBounds, true);
 
@@ -932,16 +967,19 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       var br = CanvasToClient(canvasBounds.GetCorner(CompassPoint.SouthEast));
       clientBounds = new Rect(tl.X, tl.Y, br.X - tl.X, br.Y - tl.Y);
     }
-    else {
+    else
+    {
       // if there's nothing on the canvas, don't include the origin (0,0) as a "thing" to scroll to
       clientBounds = new Rect(topLeft.X, topLeft.Y, displaySize.X, displaySize.Y);
     }
 
     if (!ApplicationSettingsController.AppSettings.InfiniteScrollBounds && topLeft.Y <= clientBounds.Top &&
-        topLeft.Y + displaySize.Y >= clientBounds.Bottom) {
+        topLeft.Y + displaySize.Y >= clientBounds.Bottom)
+    {
       _vScrollBar.Enabled = false;
     }
-    else {
+    else
+    {
       _vScrollBar.Enabled = true;
       _vScrollBar.Minimum = (int)Math.Min(topLeft.Y, clientBounds.Top);
       _vScrollBar.Maximum =
@@ -954,10 +992,12 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     }
 
     if (!ApplicationSettingsController.AppSettings.InfiniteScrollBounds && topLeft.X <= clientBounds.Left &&
-        topLeft.X + displaySize.X >= clientBounds.Right) {
+        topLeft.X + displaySize.X >= clientBounds.Right)
+    {
       _hScrollBar.Enabled = false;
     }
-    else {
+    else
+    {
       _hScrollBar.Enabled = true;
       _hScrollBar.Minimum = (int)Math.Min(topLeft.X, clientBounds.Left);
       _hScrollBar.Maximum =
@@ -997,7 +1037,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     ResetZoomOrigin();
     var canvasBounds = ComputeCanvasBounds(true);
 
-    if (!Viewport.Contains(canvasBounds)) {
+    if (!Viewport.Contains(canvasBounds))
+    {
       var xRatio = Width / canvasBounds.Width;
       var yRatio = Height / canvasBounds.Height;
 
@@ -1007,7 +1048,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   protected override void Dispose(bool disposing)
   {
-    if (disposing) {
+    if (disposing)
+    {
       StopAutomapping();
       Project.ProjectChanged -= OnProjectChanged;
       Settings.Changed -= OnSettingsChanged;
@@ -1024,7 +1066,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   protected override void OnKeyDown(KeyEventArgs e)
   {
-    switch (e.KeyCode) {
+    switch (e.KeyCode)
+    {
       case Keys.Enter:
         if (SelectedElement == null && Project.Current.ActiveSelectedElement == null)
           _commandController.SelectRoomClosestToCenterOfViewport();
@@ -1044,7 +1087,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.A:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Control | Keys.Shift:
             _commandController.SelectRegions();
             break;
@@ -1069,7 +1113,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.Home:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Control:
             ZoomToFit();
             break;
@@ -1095,7 +1140,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       case Keys.Left:
       case Keys.Up:
       case Keys.Down:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Alt | Keys.Control:
             ResizeRoom(e.KeyCode);
             break;
@@ -1125,7 +1171,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.R:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Control:
             _commandController.SetRoomShape(RoomShape.RoundedCorners);
             break;
@@ -1150,12 +1197,14 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         if (ModifierKeys == Keys.None) _commandController.SetConnectionLabel(ConnectionLabel.Up);
         break;
       case Keys.D:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.None:
             _commandController.SetConnectionLabel(ConnectionLabel.Down);
             break;
           case Keys.Control:
-            if (HasSingleSelectedElement && SelectedElement.GetType() == typeof(Room)) {
+            if (HasSingleSelectedElement && SelectedElement.GetType() == typeof(Room))
+            {
               var x = (Room)SelectedElement;
               x.DeleteAllRoomConnections();
             }
@@ -1166,9 +1215,11 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
       case Keys.OemSemicolon:
       case Keys.Oem5:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.None:
-            if (HasSingleSelectedElement && SelectedElement.GetType() == typeof(Room)) {
+            if (HasSingleSelectedElement && SelectedElement.GetType() == typeof(Room))
+            {
               var room = (Room)SelectedElement;
               room.AdjustAllRoomConnections();
             }
@@ -1200,7 +1251,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.V:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Control:
             Paste(true);
             break;
@@ -1213,7 +1265,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
       case Keys.OemCloseBrackets:
       case Keys.OemOpenBrackets:
-        if (HasSingleSelectedElement && SelectedElement.GetType() == typeof(Connection)) {
+        if (HasSingleSelectedElement && SelectedElement.GetType() == typeof(Connection))
+        {
           var x = (Connection)SelectedElement; //first we see if there is a control key, then, which bracket
           x.RotateConnector(ModifierKeys != Keys.Control, e.KeyCode == Keys.OemOpenBrackets);
         }
@@ -1221,7 +1274,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.J:
-        if (ModifierKeys == Keys.None) {
+        if (ModifierKeys == Keys.None)
+        {
           var selectedRooms = SelectedRooms;
           if (selectedRooms.Count == 2 && !Project.Current.AreRoomsConnected(SelectedRooms))
             JoinSelectedRooms(selectedRooms[0], selectedRooms[1]);
@@ -1230,7 +1284,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.W:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Shift:
             SwapRoomFill();
             break;
@@ -1251,7 +1306,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.F:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Control:
             var qf = new QuickFind();
             UserInteraction.ShowDialog(qf);
@@ -1262,7 +1318,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
       case Keys.K:
 
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.None:
             _commandController.SetRoomLighting(LightingActionType.Toggle);
             break;
@@ -1278,7 +1335,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.F1:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Control:
             ApplicationSettingsController.AppSettings.DebugShowFps =
               !ApplicationSettingsController.AppSettings.DebugShowFps;
@@ -1295,7 +1353,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.F2:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Control:
             ApplicationSettingsController.AppSettings.DebugDisableElementRendering =
               !ApplicationSettingsController.AppSettings.DebugDisableElementRendering;
@@ -1306,7 +1365,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.F3:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Control:
             ApplicationSettingsController.AppSettings.DebugDisableLineRendering =
               !ApplicationSettingsController.AppSettings.DebugDisableLineRendering;
@@ -1327,7 +1387,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
 
       case Keys.F5:
-        switch (ModifierKeys) {
+        switch (ModifierKeys)
+        {
           case Keys.Control:
             ApplicationSettingsController.AppSettings.DebugDisableGridPolyline =
               !ApplicationSettingsController.AppSettings.DebugDisableGridPolyline;
@@ -1370,9 +1431,11 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   protected override void OnMouseClick(MouseEventArgs e)
   {
     if (e.Button == MouseButtons.Left && ModifierKeys == Keys.Control && SelectedElement != null &&
-        SelectedElement.GetType() == typeof(Room)) {
+        SelectedElement.GetType() == typeof(Room))
+    {
       var room = (Room)SelectedElement;
-      if (room.IsReference) {
+      if (room.IsReference)
+      {
         SelectedElement = room.ReferenceRoom;
         _commandController.MakeVisible(room.ReferenceRoom);
       }
@@ -1381,7 +1444,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   protected override void OnMouseDoubleClick(MouseEventArgs e)
   {
-    if (e.Button == MouseButtons.Left) {
+    if (e.Button == MouseButtons.Left)
+    {
       if (CanSelectElements && HasSingleSelectedElement)
         _commandController.ShowElementProperties(SelectedElement);
       else if (ApplicationSettingsController.AppSettings.DoubleClickToAddRoom && CanSelectElements &&
@@ -1408,16 +1472,19 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     if (DragMode != DragModes.None)
       return;
 
-    if (IsDragButton(e)) {
+    if (IsDragButton(e))
+    {
       BeginDragPan(clientPos);
     }
-    else if (e.Button == MouseButtons.Left) {
+    else if (e.Button == MouseButtons.Left)
+    {
       if (CanSelectElements) BeginDragMove(canvasPos);
       if (DragMode == DragModes.None)
         if (HoverPort != null && CanDrawLine)
           BeginDragDrawLine();
     }
-    else if (e.Button == MouseButtons.Right) {
+    else if (e.Button == MouseButtons.Right)
+    {
       if (CanSelectElements)
         BeginDragMove(canvasPos);
     }
@@ -1478,13 +1545,16 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   protected override void OnPaint(PaintEventArgs e)
   {
-    if (DesignMode) {
+    if (DesignMode)
+    {
       e.Graphics.Clear(Settings.Color[Colors.Canvas]);
       return;
     }
 
-    using (var nativeGraphics = Graphics.FromHdc(e.Graphics.GetHdc())) {
-      using (var graphics = XGraphics.FromGraphics(nativeGraphics, new XSize(Width, Height))) {
+    using (var nativeGraphics = Graphics.FromHdc(e.Graphics.GetHdc()))
+    {
+      using (var graphics = XGraphics.FromGraphics(nativeGraphics, new XSize(Width, Height)))
+      {
         Draw(graphics, false, Width, Height);
       }
     }
@@ -1503,7 +1573,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   protected override void WndProc(ref Message m)
   {
-    switch (m.Msg) {
+    switch (m.Msg)
+    {
       case 0x0007: // WM_SETFOCUS
         // do not pass focus to our child controls
         m.Result = IntPtr.Zero;
@@ -1549,7 +1620,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   /// <returns>True if a new connection/room was made; false otherwise.</returns>
   private void AddOrConnectRoomRelativeToSelectedRoom(CompassPoint compassPoint)
   {
-    if (SelectedElement is Room element) {
+    if (SelectedElement is Room element)
+    {
       var room = element;
       var rect = room.InnerBounds;
       rect.Inflate(
@@ -1558,13 +1630,15 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       var centerOfNewRoom = rect.GetCorner(compassPoint);
 
       var existing = HitTestElement(centerOfNewRoom, false);
-      if (existing is Room two) {
+      if (existing is Room two)
+      {
         // just connect the rooms together
         AddConnection(room, compassPoint, two, CompassPointHelper.GetOpposite(compassPoint));
         SelectedElement = existing;
         _commandController.MakeVisible(SelectedElement);
       }
-      else {
+      else
+      {
         // new room entirely
         var newRoom = new Room(Project.Current) {
           Position = new Vector(centerOfNewRoom.X - room.Width / 2, centerOfNewRoom.Y - room.Height / 2),
@@ -1590,11 +1664,13 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   private void AddOrSelectRooms(CompassPoint? compassPoint)
   {
     if (compassPoint != null && !SelectRoomRelativeToSelectedRoom(compassPoint.Value))
-      if (ModifierKeys == Settings.KeypadNavigationCreationModifier) {
+      if (ModifierKeys == Settings.KeypadNavigationCreationModifier)
+      {
         AddOrConnectRoomRelativeToSelectedRoom(compassPoint.Value);
         SelectRoomRelativeToSelectedConnection(compassPoint.Value);
       }
-      else if (ModifierKeys == Settings.KeypadNavigationUnexploredModifier) {
+      else if (ModifierKeys == Settings.KeypadNavigationUnexploredModifier)
+      {
         AddUnexploredConnectionToSelectedRoom(compassPoint.Value);
       }
   }
@@ -1610,7 +1686,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   /// <param name="compassPoint"></param>
   private void AddUnexploredConnectionToSelectedRoom(CompassPoint compassPoint)
   {
-    if (SelectedElement is Room element) {
+    if (SelectedElement is Room element)
+    {
       var room = element;
       AddConnection(room, compassPoint, room, compassPoint);
     }
@@ -1629,7 +1706,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   private void BeginDragMove(Vector canvasPos)
   {
-    if (HoverWaypoint.HasValue && WaypointConnection != null) {
+    if (HoverWaypoint.HasValue && WaypointConnection != null)
+    {
       _dragWaypoint = HoverWaypoint.Value;
       _dragWaypointOffset = WaypointConnection.GetCurveWaypointHandlePosition(_dragWaypoint) - canvasPos;
       // a "ghost" handle only becomes a real waypoint once it is actually dragged
@@ -1637,30 +1715,36 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       DragMode = DragModes.MoveWaypoint;
       Capture = true;
     }
-    else if (HoverHandle != null) {
+    else if (HoverHandle != null)
+    {
       DragMode = DragModes.MoveResizeHandle;
       _dragResizeHandleLastPosition = canvasPos; // unsnapped
       Capture = true;
     }
-    else if (HoverPort != null) {
-      if (HoverPort is MoveablePort) {
+    else if (HoverPort != null)
+    {
+      if (HoverPort is MoveablePort)
+      {
         _dragMovePort = (MoveablePort)HoverPort;
         _dragOffsetCanvas = Settings.Snap(canvasPos - HoverPort.Position);
         DragMode = DragModes.MovePort;
         Capture = true;
       }
     }
-    else {
+    else
+    {
       var hitElement = HitTestElement(canvasPos, false);
 
       var alreadySelected = _selectedElements.Contains(hitElement);
       if (!alreadySelected && (ModifierKeys & (Keys.Control | Keys.Shift)) == Keys.None)
         _selectedElements.Clear();
       else if (hitElement != null) _selectedElements.Remove(hitElement);
-      if ((ModifierKeys & Keys.Shift) == Keys.Shift) {
+      if ((ModifierKeys & Keys.Shift) == Keys.Shift)
+      {
         if (!alreadySelected && hitElement != null) _selectedElements.Add(hitElement);
       }
-      else if (hitElement != null) {
+      else if (hitElement != null)
+      {
         // if we're not holding shift, ensure the current element is selected.
         // we're safe to re-add it since it will definitely have been removed already
         // if it was selected, by the above logic.
@@ -1671,14 +1755,16 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       // update handles, ports, and take defaults for new elements from the most recently selected element.
       UpdateSelection();
 
-      if (hitElement != null && _selectedElements.Contains(hitElement)) {
+      if (hitElement != null && _selectedElements.Contains(hitElement))
+      {
         // if we ended up with the hit element being selected, initiate a drag move.
         DragMode = DragModes.MoveElement;
         canvasPos = Settings.Snap(canvasPos);
         _dragOffsetCanvas = canvasPos;
         Capture = true;
       }
-      else if (hitElement == null) {
+      else if (hitElement == null)
+      {
         // if we didn't hit anything at all, begin a new marquee selection.
         DragMode = DragModes.Marquee;
         _dragOffsetCanvas = canvasPos;
@@ -1703,13 +1789,15 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   {
     Connection connection;
     HoverPort = HitTestPort(canvasPos);
-    if (HoverPort != null && !(HoverPort is MoveablePort)) {
+    if (HoverPort != null && !(HoverPort is MoveablePort))
+    {
       // Only from non-moveable ports, until we fix docking.
       // See also DoDragMovePort().
       // Updated to ignore ID gaps. ID gaps are resolved on load
       connection = new Connection(Project.Current, new Vertex(HoverPort), new Vertex(HoverPort));
     }
-    else {
+    else
+    {
       var pos = Settings.Snap(canvasPos);
       connection = new Connection(Project.Current, new Vertex(pos), new Vertex(pos));
     }
@@ -1749,14 +1837,17 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     var hitElement = HitTestElement(canvasPos, false);
     var regionMenu = _regionToolStripMenuItem;
 
-    if (hitElement != null) {
-      if (hitElement is Room) {
+    if (hitElement != null)
+    {
+      if (hitElement is Room)
+      {
         _lastSelectedRoom = (Room)hitElement;
 
         regionMenu.DropDownItems.Clear();
 
         foreach (var region in Settings.Regions.OrderBy(p => p.RegionName != Domain.Misc.Region.DefaultRegion)
-                                       .ThenBy(p => p.RegionName)) {
+                                       .ThenBy(p => p.RegionName))
+        {
           var item = regionMenu.DropDownItems.Add(region.RegionName, null, RegionContextClick);
           item.Image = GenerateRegionImage(region);
           if (region.RegionName == _lastSelectedRoom.Region)
@@ -1802,7 +1893,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         _darkToolStripMenuItem.Checked = _lastSelectedRoom.IsDark;
       }
 
-      if (hitElement is Connection || hitElement is MapLabel) {
+      if (hitElement is Connection || hitElement is MapLabel)
+      {
         _addRoomToolStripMenuItem.Visible = true;
 
         _renameToolStripMenuItem.Visible = false;
@@ -1837,7 +1929,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         _reverseLineMenuItem.Visible = hitElement is Connection;
       }
     }
-    else {
+    else
+    {
       _renameToolStripMenuItem.Visible = false;
       _darkToolStripMenuItem.Visible = false;
       _regionToolStripMenuItem.Visible = false;
@@ -1904,7 +1997,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     var connection = WaypointConnection;
     if (connection == null) return;
 
-    if (!connection.GetCurveWaypoint(_dragWaypoint).HasValue) {
+    if (!connection.GetCurveWaypoint(_dragWaypoint).HasValue)
+    {
       if (new Vector(_lastMouseDownPosition).Distance(new Vector(mousePosition)) <=
           Settings.DragDistanceToInitiateNewConnection) return;
       if (!connection.CanAddCurveWaypoint(_dragWaypoint)) return;
@@ -1916,18 +2010,22 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   private void DoDragMovePort(Vector canvasPos)
   {
-    if (HoverPort != null && HoverPort != _dragMovePort) {
+    if (HoverPort != null && HoverPort != _dragMovePort)
+    {
       if (_dragMovePort.DockedAt != HoverPort &&
           (!(HoverPort is MoveablePort) || ((MoveablePort)HoverPort).DockedAt != _dragMovePort))
-        if (!(HoverPort is MoveablePort)) {
+        if (!(HoverPort is MoveablePort))
+        {
           _dragMovePort.DockAt(HoverPort);
         }
-        else {
+        else
+        {
           canvasPos = Settings.Snap(canvasPos);
           _dragMovePort.SetPosition(canvasPos - _dragOffsetCanvas);
         }
     }
-    else {
+    else
+    {
       canvasPos = Settings.Snap(canvasPos);
       _dragMovePort.SetPosition(canvasPos - _dragOffsetCanvas);
     }
@@ -1957,7 +2055,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     var elements = DepthSortElements();
 
     if (!context.UseSmartLineSegments)
-      foreach (var element in elements) {
+      foreach (var element in elements)
+      {
         element.PreDraw(context);
         element.Flagged = false;
       }
@@ -1973,16 +2072,19 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       Width / ZoomFactor,
       Height / ZoomFactor);
 
-    foreach (var element in elements) {
+    foreach (var element in elements)
+    {
       context.Selected = element.Flagged && !finalRender;
       context.Hover = !context.Selected && element == HoverElement && !finalRender;
       if (context.Hover && DragMode == DragModes.MovePort) context.Hover = false;
 
-      try {
+      try
+      {
         var elementBounds = element.UnionBoundsWith(Rect.Empty, true).ToRectangleF();
         if (finalRender || clipToScreen.IntersectsWith(elementBounds)) element.Draw(graphics, palette, context);
       }
-      catch (Exception) {
+      catch (Exception)
+      {
         // avoid GDI+ exceptions (vast shapes, etc.) taking down the canvas
       }
     }
@@ -1990,21 +2092,25 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   private void DrawGrid(XGraphics graphics, Palette palette)
   {
-    if (Settings.IsGridVisible && Settings.GridSize * ZoomFactor > 10) {
+    if (Settings.IsGridVisible && Settings.GridSize * ZoomFactor > 10)
+    {
       var topLeft = Settings.Snap(
         ClientToCanvas(new PointF(-Settings.GridSize * ZoomFactor, -Settings.GridSize * ZoomFactor)));
       var bottomRight = Settings.Snap(
         ClientToCanvas(new PointF(Width + Settings.GridSize * ZoomFactor, Height + Settings.GridSize * ZoomFactor)));
       var points = new List<PointF>();
       var even = true;
-      for (var x = topLeft.X; x <= bottomRight.X; x += Settings.GridSize) {
+      for (var x = topLeft.X; x <= bottomRight.X; x += Settings.GridSize)
+      {
         var start = CanvasToClient(new Vector(x, topLeft.Y));
         var end = CanvasToClient(new Vector(x, bottomRight.Y));
-        if (even) {
+        if (even)
+        {
           points.Add(start);
           points.Add(end);
         }
-        else {
+        else
+        {
           points.Add(end);
           points.Add(start);
         }
@@ -2017,14 +2123,17 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       if (!ApplicationSettingsController.AppSettings.DebugDisableGridPolyline)
         graphics.DrawLines(palette.GridPen, points.ToArray());
       points = new List<PointF>();
-      for (var y = topLeft.Y; y <= bottomRight.Y; y += Settings.GridSize) {
+      for (var y = topLeft.Y; y <= bottomRight.Y; y += Settings.GridSize)
+      {
         var start = CanvasToClient(new Vector(topLeft.X, y));
         var end = CanvasToClient(new Vector(bottomRight.X, y));
-        if (even) {
+        if (even)
+        {
           points.Add(start);
           points.Add(end);
         }
-        else {
+        else
+        {
           points.Add(end);
           points.Add(start);
         }
@@ -2046,7 +2155,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
     var context = new DrawingContext(ZoomFactor);
 
-    if (_handles.Count > 1) {
+    if (_handles.Count > 1)
+    {
       var bounds = _handles.Aggregate(
         Rect.Empty,
         (current, handle) =>
@@ -2057,7 +2167,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     }
 
 
-    foreach (var handle in _handles) {
+    foreach (var handle in _handles)
+    {
       context.Selected = handle == HoverHandle;
       handle.Draw(this, graphics, palette, context);
     }
@@ -2085,7 +2196,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     if (connection == null) return;
 
     var context = new DrawingContext(ZoomFactor);
-    foreach (var waypoint in VisibleWaypoints(connection)) {
+    foreach (var waypoint in VisibleWaypoints(connection))
+    {
       var isSet = connection.GetCurveWaypoint(waypoint).HasValue;
       context.Selected = waypoint == HoverWaypoint || waypoint == _selectedWaypoint && isSet;
       Drawing.DrawHandle(this, graphics, palette, WaypointHandleBounds(connection, waypoint), context, !isSet, true);
@@ -2098,7 +2210,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     if (connection == null) return null;
 
     CurveWaypoint? hit = null;
-    foreach (var waypoint in VisibleWaypoints(connection)) {
+    foreach (var waypoint in VisibleWaypoints(connection))
+    {
       var bounds = WaypointHandleBounds(connection, waypoint);
       // be generous so the handles are easy to grab
       bounds.Inflate(WaypointHandleScale / 2);
@@ -2129,7 +2242,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     var context = new DrawingContext(ZoomFactor);
 
     // draw all non-selected ports
-    foreach (var port in _ports.Where(port => HoverPort != port)) {
+    foreach (var port in _ports.Where(port => HoverPort != port))
+    {
       context.Selected = false;
       port.Draw(this, graphics, palette, context);
     }
@@ -2148,17 +2262,21 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   private void EndDrag()
   {
-    if (DragMode == DragModes.MovePort) {
+    if (DragMode == DragModes.MovePort)
+    {
       // clear the selection now the line is drawn
       SelectedElement = null;
 
-      if (_dragMovePort.Owner is Connection) {
+      if (_dragMovePort.Owner is Connection)
+      {
         // remove dead connections
         var connection = (Connection)_dragMovePort.Owner;
         var same = true;
-        if (connection.VertexList.Count > 0) {
+        if (connection.VertexList.Count > 0)
+        {
           var pos = connection.VertexList[0].Position;
-          foreach (var v in connection.VertexList) {
+          foreach (var v in connection.VertexList)
+          {
             if (v.Port?.Owner is Room) same = false;
 
             var distance = v.Position.Distance(pos);
@@ -2170,7 +2288,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         SelectedElement = connection;
       }
     }
-    else if (DragMode == DragModes.Marquee) {
+    else if (DragMode == DragModes.Marquee)
+    {
       var marqueeRect = GetMarqueeCanvasBounds();
       if ((ModifierKeys & (Keys.Shift | Keys.Control)) == Keys.None) _selectedElements.Clear();
       foreach (var element in HitTest(marqueeRect, false))
@@ -2249,7 +2368,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   {
     var connections = room.GetConnections(compassPoint);
     foreach (var connection in connections)
-      foreach (var vertex in connection.VertexList) {
+      foreach (var vertex in connection.VertexList)
+      {
         var port = vertex.Port;
         if (port != null && port.Owner != room && port.Owner is Room) return (Room)port.Owner;
       }
@@ -2278,10 +2398,12 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
       var distance = element.Distance(canvasPos, includeMargins);
       if (distance <= SnapToElementSizeAtCurrentZoomFactor)
-        if (Numeric.ApproxEqual(distance, closestDistance)) {
+        if (Numeric.ApproxEqual(distance, closestDistance))
+        {
           closest.Add(element);
         }
-        else if (distance < closestDistance) {
+        else if (distance < closestDistance)
+        {
           closest.Clear();
           closest.Add(element);
           closestDistance = distance;
@@ -2295,7 +2417,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   private ResizeHandle HitTestHandle(Vector canvasPos)
   {
     // examine handles, topmost (drawn) to lowermost
-    for (var index = _handles.Count - 1; index >= 0; --index) {
+    for (var index = _handles.Count - 1; index >= 0; --index)
+    {
       var handle = _handles[index];
       if (handle.HitTest(canvasPos)) return handle;
     }
@@ -2308,7 +2431,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     Port closest = null;
     var closestDistance = float.MaxValue;
 
-    foreach (var port in _ports) {
+    foreach (var port in _ports)
+    {
       if (DragMode == DragModes.MovePort && port == _dragMovePort) continue;
 
       var distance = port.Distance(canvasPos);
@@ -2318,7 +2442,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       var bounds = port.Owner.UnionBoundsWith(Rect.Empty, true);
       if (bounds.Contains(canvasPos)) snapDistance = DragMode == DragModes.MovePort ? float.MaxValue : 0;
 
-      if (distance <= snapDistance && distance < closestDistance) {
+      if (distance <= snapDistance && distance < closestDistance)
+      {
         closest = port;
         closestDistance = distance;
       }
@@ -2331,7 +2456,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   {
     var returnDir = CompassPoint.North;
 
-    switch (keyCode) {
+    switch (keyCode)
+    {
       case Keys.Left:
       case Keys.NumPad4:
         returnDir = CompassPoint.West;
@@ -2457,11 +2583,13 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
 
     //        newElement = index + 1 > list.Count ? list[0] : list[index+1];
-    if (moveForward) {
+    if (moveForward)
+    {
       index++;
       newElement = list[index == list.Count ? 0 : index % list.Count];
     }
-    else {
+    else
+    {
       index--;
       newElement = list[index == -1 ? list.Count - 1 : index % list.Count];
     }
@@ -2476,14 +2604,16 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     var bHorizontal = keyCode == Keys.Left || keyCode == Keys.Right;
     var bNegative = keyCode == Keys.Right || keyCode == Keys.Down;
 
-    if (SelectedElementCount == 0) {
+    if (SelectedElementCount == 0)
+    {
       if (bHorizontal)
         Origin += new Vector((bNegative ? -1 : 1) * Viewport.Width / (shift ? 5 : 10), 0);
       else
         Origin += new Vector(0, (bNegative ? -1 : 1) * Viewport.Width / (shift ? 5 : 10));
       HideElementToolTip();
     }
-    else {
+    else
+    {
       var delta = Settings.SnapToGrid ? Settings.GridSize : 2.0f;
       var offset = bHorizontal ? new Vector(bNegative ? delta : -delta, 0) : new Vector(0, bNegative ? delta : -delta);
       MoveSelectedElements(offset);
@@ -2507,7 +2637,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   private void OnElementAdded(object sender, ItemEventArgs<Element> e)
   {
-    if (e.Item is Room item) {
+    if (e.Item is Room item)
+    {
       var room = item;
       room.Size = _newRoomSize;
       room.IsDark = _newRoomIsDark;
@@ -2551,7 +2682,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   private void OnProjectChanged(object sender, ProjectChangedEventArgs e)
   {
-    if (e.OldProject != null) {
+    if (e.OldProject != null)
+    {
       e.OldProject.Elements.Added -= OnElementAdded;
       e.OldProject.Elements.Removed -= OnElementRemoved;
 
@@ -2559,7 +2691,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       e.OldProject.Dispose();
     }
 
-    if (e.NewProject != null) {
+    if (e.NewProject != null)
+    {
       e.NewProject.Elements.Added += OnElementAdded;
       e.NewProject.Elements.Removed += OnElementRemoved;
 
@@ -2586,7 +2719,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   private void OnSettingsChanged(object sender, EventArgs e)
   {
     RequestRecomputeSmartSegments();
-    if (Settings.WrappingChanged) {
+    if (Settings.WrappingChanged)
+    {
       RedrawAllRoomsWithDashes();
       Settings.WrappingChanged = false; // might as well go at the end of the RedrawAllRoomsWithDashes method
     }
@@ -2598,9 +2732,7 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   private void PasteColors(CopyController.CopyColorsObj xx)
   {
     var controller = new CopyController();
-    foreach (var element in SelectedElements.OfType<Room>()) {
-      controller.SetRoomColors(element, xx);
-    }
+    foreach (var element in SelectedElements.OfType<Room>()) controller.SetRoomColors(element, xx);
   }
 
   internal void PasteRooms(bool atCursor, CopyController.CopyObject xx, CopyController controller)
@@ -2610,18 +2742,21 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     var copiedNodes = new Dictionary<int, Element>();
     var newConnections = new List<Connection>();
 
-    if (xx != null) {
+    if (xx != null)
+    {
       var firstElement = true;
 
       float offsetX = 0;
       float offsetY = 0;
 
-      foreach (var room in xx.Rooms) {
+      foreach (var room in xx.Rooms)
+      {
         var newRoom = AddRoom(atCursor, false, false);
         newRooms.Add(newRoom);
 
         // set room position
-        if (firstElement) {
+        if (firstElement)
+        {
           var firstX = room.Position.X;
           var firstY = room.Position.Y;
           var newFirstX = newRoom.X;
@@ -2630,7 +2765,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
           offsetX = firstX - newFirstX;
           offsetY = firstY - newFirstY;
         }
-        else {
+        else
+        {
           newRoom.Position = new Vector(room.Position.X - offsetX, room.Position.Y - offsetY);
         }
 
@@ -2639,9 +2775,11 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         copiedNodes[room.OldId] = newRoom;
       }
 
-      foreach (var label in xx.Labels) {
+      foreach (var label in xx.Labels)
+      {
         var newLabel = AddLabel(atCursor, false);
-        if (firstElement) {
+        if (firstElement)
+        {
           offsetX = label.Position.X - newLabel.X;
           offsetY = label.Position.Y - newLabel.Y;
           firstElement = false;
@@ -2693,7 +2831,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     HoverHandle = null;
     _handles.Clear();
     var element = SelectedElement;
-    if (CanSelectElements && element is ISizeable && HasSingleSelectedElement) {
+    if (CanSelectElements && element is ISizeable && HasSingleSelectedElement)
+    {
       var sizeable = (ISizeable)element;
       _handles.Add(new ResizeHandle(CompassPoint.North, sizeable));
       _handles.Add(new ResizeHandle(CompassPoint.South, sizeable));
@@ -2782,14 +2921,16 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   internal void ResizeRoom(Keys keyCode)
   {
-    foreach (var element in SelectedElements.OfType<ISizeable>()) {
+    foreach (var element in SelectedElements.OfType<ISizeable>())
+    {
       var delta = 2.0f;
       if (Settings.SnapToGrid)
         delta = Settings.GridSize;
       var room = element;
 
 
-      switch (keyCode) {
+      switch (keyCode)
+      {
         case Keys.Left:
           var f = room.Width - delta;
           if (f >= Settings.GridSize)
@@ -2844,7 +2985,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
 
   private bool SelectRoomRelativeToSelectedConnection(CompassPoint compassPoint)
   {
-    if (SelectedElement is Connection element) {
+    if (SelectedElement is Connection element)
+    {
       var conn = element;
 
       var firstEndPoint = (Room.CompassPort)conn.VertexList[0].Port;
@@ -2866,9 +3008,11 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         firstOutDirection == CompassPoint.SouthWest &&
         (compassPoint == CompassPoint.South || compassPoint == CompassPoint.West);
 
-      if (overrideDir || firstOutDirection != null && EqualEnough(compassPoint, (CompassPoint)firstOutDirection)) {
+      if (overrideDir || firstOutDirection != null && EqualEnough(compassPoint, (CompassPoint)firstOutDirection))
+      {
         var tSelectedElement = conn.VertexList[0]?.Port?.Owner;
-        if (tSelectedElement != null) {
+        if (tSelectedElement != null)
+        {
           _commandController.MakeVisible(tSelectedElement);
           HoverElement = null;
           SelectedElement = tSelectedElement;
@@ -2889,9 +3033,11 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         secondOutDirection == CompassPoint.SouthWest &&
         (compassPoint == CompassPoint.South || compassPoint == CompassPoint.West);
 
-      if (overrideDir || secondOutDirection != null && EqualEnough(compassPoint, (CompassPoint)secondOutDirection)) {
+      if (overrideDir || secondOutDirection != null && EqualEnough(compassPoint, (CompassPoint)secondOutDirection))
+      {
         var tSelectedElement = conn.VertexList[1]?.Port?.Owner;
-        if (tSelectedElement != null) {
+        if (tSelectedElement != null)
+        {
           _commandController.MakeVisible(tSelectedElement);
           HoverElement = null;
           SelectedElement = tSelectedElement;
@@ -2914,10 +3060,12 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   /// <returns>True if a new room was found and selected; false otherwise.</returns>
   private bool SelectRoomRelativeToSelectedRoom(CompassPoint compassPoint)
   {
-    if (SelectedElement is Room element) {
+    if (SelectedElement is Room element)
+    {
       var room = element;
       var nextRoom = GetRoomInApproximateDirectionFromRoom(room, compassPoint);
-      if (nextRoom != null) {
+      if (nextRoom != null)
+      {
         SelectedElement = nextRoom;
         _commandController.MakeVisible(SelectedElement);
         return true;
@@ -2949,7 +3097,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
   private void ShiftArrowHandler(Keys keyCode)
   {
     if (!HasSingleSelectedElement) return;
-    if (SelectedElement.GetType() == typeof(Connection)) {
+    if (SelectedElement.GetType() == typeof(Connection))
+    {
       CtrlArrowHandler(keyCode);
       return;
     }
@@ -2964,7 +3113,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     if (thisRoom == null) return;
 
     foreach (var tSelectedElement in thisRoom.GetConnections(direction))
-      if (tSelectedElement != null) {
+      if (tSelectedElement != null)
+      {
         _commandController.MakeVisible(tSelectedElement);
         SelectedElement = tSelectedElement;
         Refresh();
@@ -2972,7 +3122,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       }
 
     foreach (var tSelectedElement in thisRoom.GetConnections(CompassPointHelper.RotateClockwise(direction)))
-      if (tSelectedElement != null) {
+      if (tSelectedElement != null)
+      {
         _commandController.MakeVisible(tSelectedElement);
         SelectedElement = tSelectedElement;
         Refresh();
@@ -2980,7 +3131,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
       }
 
     foreach (var tSelectedElement in thisRoom.GetConnections(CompassPointHelper.RotateAntiClockwise(direction)))
-      if (tSelectedElement != null) {
+      if (tSelectedElement != null)
+      {
         _commandController.MakeVisible(tSelectedElement);
         SelectedElement = tSelectedElement;
         Refresh();
@@ -3000,7 +3152,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     var clientPos = new PointF(mousePosition.X, mousePosition.Y);
     var canvasPos = ClientToCanvas(clientPos);
 
-    switch (DragMode) {
+    switch (DragMode)
+    {
       case DragModes.Pan:
         DoDragPan(clientPos);
         break;
@@ -3030,10 +3183,12 @@ public partial class Canvas : UserControl, IAutomapCanvas {
           : Cursors.Default;
 
         if (hoverElement == null || !ApplicationSettingsController.AppSettings.ShowTooltips ||
-            !hoverElement.HasTooltip()) {
+            !hoverElement.HasTooltip())
+        {
           HideElementToolTip();
         }
-        else {
+        else
+        {
           if (_trizbortToolTip1.HoverElement == hoverElement) return;
           HideElementToolTip();
           if (hoverElement.GetToolTipHeader() == string.Empty && hoverElement.GetToolTipText() == string.Empty) return;
@@ -3057,14 +3212,16 @@ public partial class Canvas : UserControl, IAutomapCanvas {
         break;
       case DragModes.DrawLine:
         if (new Vector(_lastMouseDownPosition).Distance(new Vector(mousePosition)) >
-            Settings.DragDistanceToInitiateNewConnection) {
+            Settings.DragDistanceToInitiateNewConnection)
+        {
           var startPos = new PointF(_lastMouseDownPosition.X, _lastMouseDownPosition.Y);
           BeginDrawConnection(ClientToCanvas(startPos));
         }
 
         break;
       case DragModes.Marquee:
-        if (_dragMarqueeLastPosition != canvasPos) {
+        if (_dragMarqueeLastPosition != canvasPos)
+        {
           _dragMarqueeLastPosition = canvasPos;
           Invalidate();
         }
@@ -3088,7 +3245,8 @@ public partial class Canvas : UserControl, IAutomapCanvas {
     Invalidate();
   }
 
-  private enum DragModes {
+  private enum DragModes
+  {
     None,
     Pan,
     MoveElement,

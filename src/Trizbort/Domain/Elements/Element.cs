@@ -8,7 +8,8 @@ using Trizbort.Domain.Misc;
 
 namespace Trizbort.Domain.Elements;
 
-public class Element : IComparable<Element> {
+public class Element : IComparable<Element>
+{
   private int _id;
 
   private int _zOrder;
@@ -101,7 +102,8 @@ public class Element : IComparable<Element> {
   public int CompareTo(Element element)
   {
     var delta = Depth.CompareTo(element.Depth);
-    if (delta == 0) {
+    if (delta == 0)
+    {
       delta = ZOrder.CompareTo(element.ZOrder);
       if (delta == 0)
         delta = Id.CompareTo(element.Id);

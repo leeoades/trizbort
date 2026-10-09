@@ -5,10 +5,12 @@ using Trizbort.UI.Controls;
 
 namespace Trizbort.Domain.Commands;
 
-public class SelectCommand : ICanvasCommand<SelectTypes> {
+public class SelectCommand : ICanvasCommand<SelectTypes>
+{
   public void Execute(Canvas canvas, SelectTypes value)
   {
-    switch (value) {
+    switch (value)
+    {
       case SelectTypes.None:
         canvas.SelectedElement = null;
         break;
@@ -44,7 +46,8 @@ public class SelectCommand : ICanvasCommand<SelectTypes> {
 
   public void Execute(Canvas canvas, SelectTypes value, object other)
   {
-    switch (value) {
+    switch (value)
+    {
       case SelectTypes.Region:
         if (other is IEnumerable<string>)
           canvas.SelectAllRegion((IEnumerable<string>)other);

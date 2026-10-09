@@ -11,25 +11,29 @@ using Trizbort.UI;
 
 namespace Trizbort.Domain.Controllers;
 
-public class CopyController {
-  private static readonly (string Name, Func<Room, Color> Get, Action<Room, Color> Set)[] _roomColors = {
-    (nameof(Room.RoomBorderColor), room => room.RoomBorderColor, (room, color) => room.RoomBorderColor = color),
-    (nameof(Room.RoomFillColor), room => room.RoomFillColor, (room, color) => room.RoomFillColor = color),
-    (nameof(Room.RoomNameColor), room => room.RoomNameColor, (room, color) => room.RoomNameColor = color),
-    (nameof(Room.RoomObjectTextColor), room => room.RoomObjectTextColor, (room, color) => room.RoomObjectTextColor = color),
-    (nameof(Room.RoomSubtitleColor), room => room.RoomSubtitleColor, (room, color) => room.RoomSubtitleColor = color),
-    (nameof(Room.SecondFillColor), room => room.SecondFillColor, (room, color) => room.SecondFillColor = color)
-  };
-
-  public enum CopyType {
+public class CopyController
+{
+  public enum CopyType
+  {
     Rooms,
     Colors
   }
 
-  public enum VertexType {
+  public enum VertexType
+  {
     Dock,
     Point
   }
+
+  private static readonly (string Name, Func<Room, Color> Get, Action<Room, Color> Set)[] _roomColors = {
+    (nameof(Room.RoomBorderColor), room => room.RoomBorderColor, (room, color) => room.RoomBorderColor = color),
+    (nameof(Room.RoomFillColor), room => room.RoomFillColor, (room, color) => room.RoomFillColor = color),
+    (nameof(Room.RoomNameColor), room => room.RoomNameColor, (room, color) => room.RoomNameColor = color),
+    (nameof(Room.RoomObjectTextColor), room => room.RoomObjectTextColor,
+      (room, color) => room.RoomObjectTextColor = color),
+    (nameof(Room.RoomSubtitleColor), room => room.RoomSubtitleColor, (room, color) => room.RoomSubtitleColor = color),
+    (nameof(Room.SecondFillColor), room => room.SecondFillColor, (room, color) => room.SecondFillColor = color)
+  };
 
   public void CopyColors(Room selectedElement)
   {
@@ -49,11 +53,13 @@ public class CopyController {
 
   public void SetRoomColors(Room room, CopyColorsObj copy)
   {
-    foreach (var color in copy.Colors) {
+    foreach (var color in copy.Colors)
+    {
       // Ignore unknown clipboard keys for compatibility with other Trizbort versions.
       var property = _roomColors.FirstOrDefault(property => property.Name == color.Name);
       property.Set?.Invoke(room, color.Color);
     }
+
     room.SecondFillLocation = copy.SecondFillLocation;
   }
 
@@ -71,11 +77,13 @@ public class CopyController {
   {
     var xx = new CopyObject { Rooms = new List<CopyRoomObj>(), Connections = new List<CopyConnectionObj>() };
     foreach (var element in elements)
-      if (element is Room) {
+      if (element is Room)
+      {
         var copy = CreateCopyObj(element as Room);
         xx.Rooms.Add(copy);
       }
-      else if (element is MapLabel label) {
+      else if (element is MapLabel label)
+      {
         xx.Labels.Add(
           new CopyLabelObj {
             OldId = label.Id, Text = label.Text, Position = label.Position, Size = label.Size,
@@ -84,7 +92,8 @@ public class CopyController {
             ZOrder = label.ZOrder
           });
       }
-      else if (element is Connection) {
+      else if (element is Connection)
+      {
         var copy = CreateCopyObj(element as Connection);
         xx.Connections.Add(copy);
       }
@@ -108,7 +117,8 @@ public class CopyController {
   public ICopyObj PasteElements()
   {
     ICopyObj xx;
-    try {
+    try
+    {
       var clipboardText = UserInteraction.GetClipboardText();
 
       if (clipboardText.Contains("\"CopyType\": 1"))
@@ -116,7 +126,8 @@ public class CopyController {
       else
         xx = JsonConvert.DeserializeObject<CopyObject>(clipboardText);
     }
-    catch {
+    catch
+    {
       xx = null;
     }
 
@@ -249,14 +260,17 @@ public class CopyController {
     };
 
     var ii = 0;
-    foreach (var vertex in conn.VertexList) {
+    foreach (var vertex in conn.VertexList)
+    {
       var yy = new CopyVertexObj { Index = ii, Position = vertex.Position };
-      if (vertex.Port != null) {
+      if (vertex.Port != null)
+      {
         yy.Type = VertexType.Dock;
         yy.OwnerId = vertex.Port.Owner.Id;
         yy.PortId = vertex.Port.Id;
       }
-      else {
+      else
+      {
         yy.Type = VertexType.Point;
         yy.Position = vertex.Position;
       }
@@ -276,7 +290,8 @@ public class CopyController {
     Vector offset)
   {
     var result = new List<Connection>();
-    foreach (var copy in connections) {
+    foreach (var copy in connections)
+    {
       var connection = new Connection(project);
       project.Elements.Add(connection);
       SetConnection(connection, copy);
@@ -292,13 +307,15 @@ public class CopyController {
     return result;
   }
 
-  public class CopyObject : ICopyObj {
+  public class CopyObject : ICopyObj
+  {
     public List<CopyConnectionObj> Connections;
     public List<CopyRoomObj> Rooms;
     public List<CopyLabelObj> Labels { get; set; } = new();
   }
 
-  public class CopyLabelObj {
+  public class CopyLabelObj
+  {
     public int OldId { get; set; }
     public string Text { get; set; }
     public Vector Position { get; set; }
@@ -312,7 +329,8 @@ public class CopyController {
     public int ZOrder { get; set; }
   }
 
-  public class CopyConnectionObj {
+  public class CopyConnectionObj
+  {
     public Color ConnectionColor { get; set; }
     public string Description { get; set; }
     public Door Door { get; set; }
@@ -326,7 +344,8 @@ public class CopyController {
     public List<CopyVertexObj> VertextList { get; set; }
   }
 
-  public class CopyVertexObj {
+  public class CopyVertexObj
+  {
     public int Index { get; set; }
     public int OwnerId { get; set; }
     public string PortId { get; set; }
@@ -334,7 +353,8 @@ public class CopyController {
     public VertexType Type { get; set; }
   }
 
-  public class CopyRoomObj {
+  public class CopyRoomObj
+  {
     public bool AllCornersEqual { get; set; }
     public bool ArbitraryAutomappedPosition { get; set; }
     public BorderDashStyle BorderStyle { get; set; }
@@ -372,17 +392,20 @@ public class CopyController {
   }
 
 
-  public class CopyColorsObj : ICopyObj {
+  public class CopyColorsObj : ICopyObj
+  {
     public List<CopyColorObj> Colors { get; set; }
     public CopyType CopyType => CopyType.Colors;
     public string SecondFillLocation { get; set; }
   }
 
-  public class CopyColorObj {
+  public class CopyColorObj
+  {
     public Color Color { get; set; }
     public string Name { get; set; }
   }
 
-  public interface ICopyObj {
+  public interface ICopyObj
+  {
   }
 }

@@ -11,7 +11,8 @@ using Trizbort.Util;
 namespace Trizbort.Tests;
 
 [TestFixture]
-public class ConnectionCurveWaypointTests {
+public class ConnectionCurveWaypointTests
+{
   private static Connection CreateConnection(Project project = null)
   {
     return new Connection(project ?? new Project(), new Vertex(new Vector(0, 0)), new Vertex(new Vector(100, 0)));
@@ -127,8 +128,10 @@ public class ConnectionCurveWaypointTests {
     connection.SetCurveWaypoint(CurveWaypoint.ThreeQuarter, new Vector(-75, 40));
 
     var path = Path.GetTempFileName();
-    try {
-      using (var scribe = XmlScribe.Create(path)) {
+    try
+    {
+      using (var scribe = XmlScribe.Create(path))
+      {
         scribe.StartElement("line");
         connection.Save(scribe);
         scribe.EndElement();
@@ -144,7 +147,8 @@ public class ConnectionCurveWaypointTests {
       loaded.GetCurveWaypoint(CurveWaypoint.Middle).ShouldBe(new Vector(50.5f, 60.25f));
       loaded.GetCurveWaypoint(CurveWaypoint.ThreeQuarter).ShouldBe(new Vector(-75, 40));
     }
-    finally {
+    finally
+    {
       File.Delete(path);
     }
   }

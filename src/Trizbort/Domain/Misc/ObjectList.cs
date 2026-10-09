@@ -9,7 +9,8 @@ namespace Trizbort.Domain.Misc;
 /// <summary>
 ///   One parsed line of a room's free-text object list.
 /// </summary>
-public class ObjectListItem {
+public class ObjectListItem
+{
   /// <summary>The object name, without indentation, bullets or [property] flags.</summary>
   public string Name { get; set; }
 
@@ -40,7 +41,8 @@ public class ObjectListItem {
 ///   -- Gem
 ///   </code>
 /// </summary>
-public static class ObjectList {
+public static class ObjectList
+{
   public const int TabIndent = 4;
   public const int BulletIndent = 4;
   public const string DisplayBullet = "\u2022 ";
@@ -55,12 +57,14 @@ public static class ObjectList {
 
     foreach (var line in text.Replace("\r", string.Empty).Split(
                new[] { '\n' },
-               StringSplitOptions.RemoveEmptyEntries)) {
+               StringSplitOptions.RemoveEmptyEntries))
+    {
       var item = ParseLine(line);
       if (item == null) continue;
 
       for (var index = items.Count - 1; index >= 0; --index)
-        if (item.Indent > items[index].Indent) {
+        if (item.Indent > items[index].Indent)
+        {
           item.ParentIndex = index;
           item.Depth = items[index].Depth + 1;
           break;
@@ -82,7 +86,8 @@ public static class ObjectList {
 
     var content = line.Substring(position).Trim();
     var propString = string.Empty;
-    if (_propertiesRegex.IsMatch(content)) {
+    if (_propertiesRegex.IsMatch(content))
+    {
       propString = Regex.Replace(content, @".*\[", string.Empty);
       propString = Regex.Replace(propString, @"\].*", string.Empty);
     }
@@ -100,17 +105,21 @@ public static class ObjectList {
   public static int LeadingIndentLength(string line, ref int indent)
   {
     var position = 0;
-    while (position < line.Length) {
+    while (position < line.Length)
+    {
       var c = line[position];
-      if (c == ' ') {
+      if (c == ' ')
+      {
         indent += 1;
         ++position;
       }
-      else if (c == '\t') {
+      else if (c == '\t')
+      {
         indent += TabIndent;
         ++position;
       }
-      else if (Array.IndexOf(_bullets, c) >= 0) {
+      else if (Array.IndexOf(_bullets, c) >= 0)
+      {
         // a run of bullet characters only counts as indentation if followed by whitespace,
         // so that names such as "-shaped key" or "*star*" are left alone
         var end = position;
@@ -119,7 +128,8 @@ public static class ObjectList {
         indent += (end - position) * BulletIndent;
         position = end;
       }
-      else {
+      else
+      {
         break;
       }
     }
@@ -154,9 +164,11 @@ public static class ObjectList {
       return _propertiesRegex.Replace(text, string.Empty);
 
     var builder = new StringBuilder();
-    foreach (var item in items) {
+    foreach (var item in items)
+    {
       if (builder.Length > 0) builder.Append("\r\n");
-      if (item.Depth > 0) {
+      if (item.Depth > 0)
+      {
         builder.Append(' ', (item.Depth - 1) * 4 + 2);
         builder.Append(DisplayBullet);
       }

@@ -14,7 +14,8 @@ using Trizbort.Util;
 namespace Trizbort.Tests;
 
 [SetUpFixture]
-public class TestEnvironment {
+public class TestEnvironment
+{
   private TemporaryDirectory _directory;
   private string _previousDirectory;
   private IUserInteraction _previousInteraction;
@@ -42,7 +43,8 @@ public class TestEnvironment {
   }
 }
 
-internal sealed class UnexpectedUserInteraction : IUserInteraction {
+internal sealed class UnexpectedUserInteraction : IUserInteraction
+{
   public DialogResult ShowMessage(
     IWin32Window owner,
     string text,
@@ -75,7 +77,8 @@ internal sealed class UnexpectedUserInteraction : IUserInteraction {
   }
 }
 
-internal static class TestDialog {
+internal static class TestDialog
+{
   public static DialogResult Show(Form dialog)
   {
     dialog.ShowInTaskbar = false;
@@ -84,7 +87,8 @@ internal static class TestDialog {
   }
 }
 
-internal sealed class TemporaryDirectory : IDisposable {
+internal sealed class TemporaryDirectory : IDisposable
+{
   public TemporaryDirectory()
   {
     Directory.CreateDirectory(Path);
@@ -108,7 +112,8 @@ internal sealed class TemporaryDirectory : IDisposable {
 
 [Apartment(ApartmentState.STA)]
 [NonParallelizable]
-public abstract class IsolatedProjectTests {
+public abstract class IsolatedProjectTests
+{
   private string _defaultRoomName;
   private float _dragDistance;
   private string _previousAppSettings;
@@ -133,7 +138,8 @@ public abstract class IsolatedProjectTests {
     _endLoaded = Settings.EndRoomLoaded;
     _wrappingChanged = Settings.WrappingChanged;
     _dragDistance = Settings.DragDistanceToInitiateNewConnection;
-    using (var scribe = XmlScribe.Create(Files.File("settings.xml"))) {
+    using (var scribe = XmlScribe.Create(Files.File("settings.xml")))
+    {
       scribe.StartElement("settings");
       Settings.Save(scribe);
       scribe.EndElement();

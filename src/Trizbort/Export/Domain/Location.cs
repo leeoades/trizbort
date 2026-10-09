@@ -5,7 +5,8 @@ using Trizbort.Domain.Enums;
 
 namespace Trizbort.Export.Domain;
 
-public class Location {
+public class Location
+{
   private readonly List<Exit> _exits = new();
   private readonly Dictionary<MappableDirection, Exit> _mapDirectionToBestExit = new();
 
@@ -34,7 +35,8 @@ public class Location {
   public void PickBestExits()
   {
     _mapDirectionToBestExit.Clear();
-    foreach (var direction in Directions.AllDirections) {
+    foreach (var direction in Directions.AllDirections)
+    {
       var exit = PickBestExit(direction);
       if (exit != null) _mapDirectionToBestExit.Add(direction, exit);
     }
@@ -52,7 +54,8 @@ public class Location {
     // pick the highest priority exit if its direction matches;
     // if the highest priority exit's direction doesn't match,
     // there's no exit in this direction.
-    if (_exits.Count > 0) {
+    if (_exits.Count > 0)
+    {
       var exit = _exits[0];
       if (exit.PrimaryDirection == direction || exit.SecondaryDirection == direction) return exit;
     }

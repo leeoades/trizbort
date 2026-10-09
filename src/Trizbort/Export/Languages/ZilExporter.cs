@@ -13,7 +13,8 @@ using Trizbort.Extensions;
 
 namespace Trizbort.Export.Languages;
 
-internal class ZilExporter : CodeExporter {
+internal class ZilExporter : CodeExporter
+{
   private const char SingleQuote = '\'';
   private const char DoubleQuote = '"';
   private const char Space = ' ';
@@ -32,36 +33,43 @@ internal class ZilExporter : CodeExporter {
     // export location
     bool needConditionalFunction = false,
       wroteConditionalFunction = false;
-    foreach (var location in LocationsInExportOrder) {
+    foreach (var location in LocationsInExportOrder)
+    {
       writer.WriteLine();
       writer.WriteLine($"<ROOM {location.ExportName}");
       writer.WriteLine($"    (DESC {ToZilString(location.Room.Name)})");
       writer.Write("    (IN ROOMS)");
 
-      if (!string.IsNullOrWhiteSpace(location.Room.PrimaryDescription)) {
+      if (!string.IsNullOrWhiteSpace(location.Room.PrimaryDescription))
+      {
         writer.WriteLine();
         writer.Write($"    (LDESC {ToZilString(location.Room.PrimaryDescription)})");
       }
 
-      foreach (var direction in Directions.AllDirections) {
+      foreach (var direction in Directions.AllDirections)
+      {
         var exit = location.GetBestExit(direction);
-        if (exit != null && exit.Conditional) {
+        if (exit != null && exit.Conditional)
+        {
           writer.WriteLine();
           writer.Write($"    ({ToZilPropertyName(direction)} PER TRIZBORT-CONDITIONAL-EXIT)");
           needConditionalFunction = true;
         }
-        else if (exit != null) {
+        else if (exit != null)
+        {
           writer.WriteLine();
           writer.Write($"    ({ToZilPropertyName(direction)} TO {exit.Target.ExportName})");
           var oppositeDirection = CompassPointHelper.GetOpposite(direction);
-          if (Exit.IsReciprocated(location, direction, exit.Target)) {
+          if (Exit.IsReciprocated(location, direction, exit.Target))
+          {
             var reciprocal = exit.Target.GetBestExit(oppositeDirection);
             reciprocal.Exported = true;
           }
         }
       }
 
-      if (!location.Room.IsDark) {
+      if (!location.Room.IsDark)
+      {
         writer.WriteLine();
         writer.Write("    (FLAGS LIGHTBIT)");
       }
@@ -69,7 +77,8 @@ internal class ZilExporter : CodeExporter {
       writer.WriteLine(">");
       writer.WriteLine();
 
-      if (needConditionalFunction && !wroteConditionalFunction) {
+      if (needConditionalFunction && !wroteConditionalFunction)
+      {
         writer.WriteLine();
         writer.WriteLine("<ROUTINE TRIZBORT-CONDITIONAL-EXIT ()");
         writer.WriteLine(
@@ -178,7 +187,8 @@ internal class ZilExporter : CodeExporter {
 
   private static void ExportThings(TextWriter writer, List<Thing> things, Thing container, int indent)
   {
-    foreach (var thing in things.Where(p => p.Container == container)) {
+    foreach (var thing in things.Where(p => p.Container == container))
+    {
       writer.WriteLine();
       writer.WriteLine($"<OBJECT {thing.ExportName}");
 
@@ -234,7 +244,8 @@ internal class ZilExporter : CodeExporter {
 
   private static string ToZilPropertyName(MappableDirection direction)
   {
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.North:
         return "NORTH";
       case MappableDirection.South:

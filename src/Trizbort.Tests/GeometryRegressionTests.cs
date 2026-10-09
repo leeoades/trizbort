@@ -10,7 +10,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Category("Unit")]
-public class GeometryRegressionTests : IsolatedProjectTests {
+public class GeometryRegressionTests : IsolatedProjectTests
+{
   [TestCase(0, 0, 0, 0)]
   [TestCase(3, 4, .6f, .8f)]
   [TestCase(-3, -4, -.6f, -.8f)]

@@ -11,7 +11,8 @@ using Trizbort.Util;
 
 namespace Trizbort.Domain.Application;
 
-public class LegacyMapFileEngine : MapFileEngine {
+public class LegacyMapFileEngine : MapFileEngine
+{
   private readonly Action<Project> _checkVersion;
   private readonly Project _project;
   private readonly Action<Exception> _reportError;
@@ -35,9 +36,11 @@ public class LegacyMapFileEngine : MapFileEngine {
 
   public override bool Load(string fileName)
   {
-    try {
+    try
+    {
       var isLocalFile = File.Exists(fileName);
-      if (isLocalFile && new FileInfo(fileName).Length == 0) {
+      if (isLocalFile && new FileInfo(fileName).Length == 0)
+      {
         // this is an empty file, probably thanks to our Explorer New->Trizbort Map menu option.
         Settings.Reset(false);
         _project.Title = _project.Author = _project.History = _project.Description = "";
@@ -71,20 +74,23 @@ public class LegacyMapFileEngine : MapFileEngine {
       var map = root["map"];
       var mapConnectionToLoadState = new Dictionary<Connection, object>();
       foreach (var element in map.Children)
-        if (element.HasName("room")) {
+        if (element.HasName("room"))
+        {
           // Changed the constructor used for elements when loading a file for a significant speed increase
           var room = new Room(_project, _project.Elements.Count + 1);
           room.Id = element.Attribute("id").ToInt(room.Id);
           room.Load(element, _reportWarning);
           _project.Elements.Add(room);
         }
-        else if (element.HasName("label")) {
+        else if (element.HasName("label"))
+        {
           var label = new MapLabel(_project, _project.Elements.Count + 1);
           label.Id = element.Attribute("id").ToInt(label.Id);
           label.Load(element);
           _project.Elements.Add(label);
         }
-        else if (element.HasName("line") || element.HasName("labelLine")) {
+        else if (element.HasName("line") || element.HasName("labelLine"))
+        {
           // Changed the constructor used for elements when loading a file for a significant speed increase
           var connection = new Connection(_project, _project.Elements.Count + 1);
           connection.Id = element.Attribute("id").ToInt(connection.Id);
@@ -95,7 +101,8 @@ public class LegacyMapFileEngine : MapFileEngine {
         }
 
       // connect them together
-      foreach (var pair in mapConnectionToLoadState) {
+      foreach (var pair in mapConnectionToLoadState)
+      {
         var connection = pair.Key;
         var state = pair.Value;
         connection.EndLoad(state);
@@ -111,7 +118,8 @@ public class LegacyMapFileEngine : MapFileEngine {
 
       return true;
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _reportError(ex);
       return false;
     }
@@ -154,19 +162,22 @@ public class LegacyMapFileEngine : MapFileEngine {
 
   private void SaveElement(XmlScribe scribe, Element element)
   {
-    if (element.GetType() == typeof(Room)) {
+    if (element.GetType() == typeof(Room))
+    {
       scribe.StartElement("room");
       scribe.Attribute("id", element.Id);
       ((Room)element).Save(scribe);
       scribe.EndElement();
     }
-    else if (element is MapLabel label) {
+    else if (element is MapLabel label)
+    {
       scribe.StartElement("label");
       scribe.Attribute("id", label.Id);
       label.Save(scribe);
       scribe.EndElement();
     }
-    else if (element.GetType() == typeof(Connection)) {
+    else if (element.GetType() == typeof(Connection))
+    {
       var connection = (Connection)element;
       // Older readers must ignore label connectors as well as the labels themselves.
       scribe.StartElement(connection.VertexList.Any(vertex => vertex.Port?.Owner is MapLabel) ? "labelLine" : "line");

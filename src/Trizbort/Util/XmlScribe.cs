@@ -7,7 +7,8 @@ using Trizbort.Domain.Misc;
 
 namespace Trizbort.Util;
 
-public class XmlScribe : IDisposable {
+public class XmlScribe : IDisposable
+{
   public static readonly string Yes = "yes";
   public static readonly string No = "no";
 

@@ -10,7 +10,8 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages;
 
-internal class HugoExporter : CodeExporter {
+internal class HugoExporter : CodeExporter
+{
   private const char SingleQuote = '\'';
   private const char DoubleQuote = '"';
 
@@ -30,14 +31,16 @@ internal class HugoExporter : CodeExporter {
   {
     if (RegionsInExportOrder.Count > 0) writer.WriteLine("property region");
 
-    foreach (var location in LocationsInExportOrder) {
+    foreach (var location in LocationsInExportOrder)
+    {
       writer.WriteLine($"room {location.ExportName}");
       writer.WriteLine("{");
 
       if (location.Room.Region != Region.DefaultRegion)
         writer.WriteLine($"\tregion {location.Room.Region}");
 
-      if (!string.IsNullOrEmpty(location.Room.PrimaryDescription)) {
+      if (!string.IsNullOrEmpty(location.Room.PrimaryDescription))
+      {
         writer.WriteLine("\tlong_desc");
         writer.WriteLine("\t\"");
         writer.WriteLine($"\t\t{location.Room.PrimaryDescription}");
@@ -45,7 +48,8 @@ internal class HugoExporter : CodeExporter {
       }
 
       writer.WriteLine();
-      foreach (var direction in Directions.AllDirections) {
+      foreach (var direction in Directions.AllDirections)
+      {
         var exit = location.GetBestExit(direction);
         if (exit != null) writer.WriteLine($"\t{ToHugoPropertyName(direction)} {exit.Target.ExportName}");
       }
@@ -85,7 +89,8 @@ internal class HugoExporter : CodeExporter {
     writer.WriteLine("\tSTATUSTYPE = 1 !1 = score / turns, 2 = time, 3 = moves: score:");
     writer.WriteLine("\tplayer = you");
 
-    if (!string.IsNullOrWhiteSpace(title)) {
+    if (!string.IsNullOrWhiteSpace(title))
+    {
       writer.WriteLine("\tFont(BOLD_ON)");
       writer.WriteLine("\t\"{0}\"", title);
       writer.WriteLine("\tFont(BOLD_OFF)");
@@ -98,10 +103,12 @@ internal class HugoExporter : CodeExporter {
     else if (!string.IsNullOrWhiteSpace(author))
       writer.WriteLine("\t\"by {0}\"", author);
 
-    if (LocationsInExportOrder.Count > 0) {
+    if (LocationsInExportOrder.Count > 0)
+    {
       var foundStart = false;
       foreach (var location in LocationsInExportOrder)
-        if (location.Room.IsStartRoom) {
+        if (location.Room.IsStartRoom)
+        {
           if (foundStart) writer.WriteLine("! {0} is an extra StartRoom. ", location.ExportName);
           writer.WriteLine("\tlocation = {0}", location.ExportName);
           foundStart = true;
@@ -110,7 +117,8 @@ internal class HugoExporter : CodeExporter {
       if (!foundStart)
         writer.WriteLine("\tlocation = {0}", LocationsInExportOrder[0].ExportName);
     }
-    else {
+    else
+    {
       writer.WriteLine("\t! location = ... ");
     }
 
@@ -149,7 +157,8 @@ internal class HugoExporter : CodeExporter {
 
   private static void ExportThings(TextWriter writer, List<Thing> things, Thing container, int indent)
   {
-    foreach (var thing in things.Where(thing => thing.Container == container)) {
+    foreach (var thing in things.Where(thing => thing.Container == container))
+    {
       writer.WriteLine("object {0}", thing.ExportName);
       writer.WriteLine("{");
       writer.WriteLine("\tin {0}", thing.Location.ExportName);
@@ -180,7 +189,8 @@ internal class HugoExporter : CodeExporter {
 
   private static string ToHugoPropertyName(MappableDirection direction)
   {
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.North:
         return "n_to";
       case MappableDirection.South:

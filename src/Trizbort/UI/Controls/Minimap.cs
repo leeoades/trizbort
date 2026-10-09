@@ -10,7 +10,8 @@ using Trizbort.Setup;
 
 namespace Trizbort.UI.Controls;
 
-internal sealed partial class Minimap : UserControl {
+internal sealed partial class Minimap : UserControl
+{
   private const int OuterBorderSize = 2;
   private const int OuterPadding = 3;
   private const int InnerBorderSize = 2;
@@ -41,7 +42,8 @@ internal sealed partial class Minimap : UserControl {
 
   protected override void OnMouseDown(MouseEventArgs e)
   {
-    if (e.Button == MouseButtons.Left) {
+    if (e.Button == MouseButtons.Left)
+    {
       SetCanvasOrigin(e.Location);
       _lastMousePosition = e.Location;
       Capture = true;
@@ -54,7 +56,8 @@ internal sealed partial class Minimap : UserControl {
 
   protected override void OnMouseMove(MouseEventArgs e)
   {
-    if (_draggingViewport && e.Location != _lastMousePosition) {
+    if (_draggingViewport && e.Location != _lastMousePosition)
+    {
       SetCanvasOrigin(e.Location);
       Invalidate();
     }
@@ -66,7 +69,8 @@ internal sealed partial class Minimap : UserControl {
 
   protected override void OnMouseUp(MouseEventArgs e)
   {
-    if (_draggingViewport) {
+    if (_draggingViewport)
+    {
       _draggingViewport = false;
       Capture = false;
       Invalidate();
@@ -78,7 +82,8 @@ internal sealed partial class Minimap : UserControl {
 
   protected override void OnPaint(PaintEventArgs e)
   {
-    if (DesignMode) {
+    if (DesignMode)
+    {
       e.Graphics.Clear(Settings.Color[Colors.Canvas]);
       return;
     }
@@ -88,9 +93,12 @@ internal sealed partial class Minimap : UserControl {
     foreach (var element in Canvas.SelectedElements)
       element.Flagged = true;
 
-    using (var nativeGraphics = Graphics.FromHdc(e.Graphics.GetHdc())) {
-      using (var graphics = XGraphics.FromGraphics(nativeGraphics, new XSize(Width, Height))) {
-        using (var palette = new Palette()) {
+    using (var nativeGraphics = Graphics.FromHdc(e.Graphics.GetHdc()))
+    {
+      using (var graphics = XGraphics.FromGraphics(nativeGraphics, new XSize(Width, Height)))
+      {
+        using (var palette = new Palette())
+        {
           var clientArea = new Rectangle(0, 0, Width, Height);
 
           ControlPaint.DrawBorder3D(nativeGraphics, clientArea, Border3DStyle.Raised);
@@ -107,7 +115,8 @@ internal sealed partial class Minimap : UserControl {
 
           var canvasBounds = (Rect)Canvas?.ComputeCanvasBounds(false);
 
-          foreach (var element in Project.Current.Elements.Where(element => element is ISizeable)) {
+          foreach (var element in Project.Current.Elements.Where(element => element is ISizeable))
+          {
             var roomBounds = CanvasToClient(((ISizeable)element).InnerBounds.ToRectangleF(), canvasBounds, clientArea);
 
             var borderPen = element.Flagged
@@ -118,11 +127,13 @@ internal sealed partial class Minimap : UserControl {
             graphics.DrawRectangle(borderPen, paletteBorderBrush, roomBounds);
           }
 
-          if (Canvas != null) {
+          if (Canvas != null)
+          {
             // draw the viewport area as a selectable "handle"
             var viewportBounds = CanvasToClient(Canvas.Viewport.ToRectangleF(), canvasBounds, clientArea);
             viewportBounds.Intersect(clientArea);
-            if (Project.Current.Elements.Count > 0) {
+            if (Project.Current.Elements.Count > 0)
+            {
               var context = new DrawingContext(1f) { Selected = _draggingViewport };
               Drawing.DrawHandle(Canvas, graphics, palette, new Rect(viewportBounds), context, true, false);
             }
@@ -138,7 +149,8 @@ internal sealed partial class Minimap : UserControl {
 
   protected override void WndProc(ref Message m)
   {
-    switch (m.Msg) {
+    switch (m.Msg)
+    {
       case 0x0007: // WM_SETFOCUS
         // return focus to the canvas
         Canvas.Focus();
@@ -180,18 +192,22 @@ internal sealed partial class Minimap : UserControl {
 
     // limit it to the rectangle in which the center of the viewport may be placed whilst rendering only the occupied portions of the canvas visible
     var restrictedBounds = canvasBounds;
-    if (restrictedBounds.Width > viewport.Width) {
+    if (restrictedBounds.Width > viewport.Width)
+    {
       restrictedBounds.Inflate(-viewport.Width / 2, 0);
     }
-    else {
+    else
+    {
       restrictedBounds.X += restrictedBounds.Width / 2;
       restrictedBounds.Width = 0;
     }
 
-    if (restrictedBounds.Height > viewport.Height) {
+    if (restrictedBounds.Height > viewport.Height)
+    {
       restrictedBounds.Inflate(0, -viewport.Height / 2);
     }
-    else {
+    else
+    {
       restrictedBounds.Y += restrictedBounds.Height / 2;
       restrictedBounds.Height = 0;
     }

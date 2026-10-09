@@ -6,7 +6,8 @@ using Trizbort.Util;
 
 namespace Trizbort.UI;
 
-internal partial class AutomapDialog : Form {
+internal partial class AutomapDialog : Form
+{
   public AutomapDialog()
   {
     InitializeComponent();

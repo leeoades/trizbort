@@ -8,7 +8,8 @@ using Trizbort.UI.Controls;
 
 namespace Trizbort.Domain.Controllers;
 
-public class CommandController {
+public class CommandController
+{
   private readonly Canvas _canvas;
 
   public CommandController(Canvas canvas)
@@ -89,7 +90,8 @@ public class CommandController {
   public void SetRoomLighting(LightingActionType type)
   {
     var controller = new RoomController();
-    switch (type) {
+    switch (type)
+    {
       case LightingActionType.Toggle:
         controller.ToggleDarkness(_canvas.SelectedRooms);
         break;
@@ -113,10 +115,12 @@ public class CommandController {
   public void SetStartRoom()
   {
     if (_canvas.SelectedRooms.Count == 1)
-      if (_canvas.SelectedRooms.First().IsStartRoom) {
+      if (_canvas.SelectedRooms.First().IsStartRoom)
+      {
         _canvas.SelectedRooms.First().IsStartRoom = false;
       }
-      else {
+      else
+      {
         Project.Current.Elements.OfType<Room>().Where(p => p.IsStartRoom).ToList().ForEach(p => p.IsStartRoom = false);
         _canvas.SelectedRooms.First().IsStartRoom = true;
       }
@@ -124,7 +128,8 @@ public class CommandController {
 
   public void SetValidation(ValidationType validationType)
   {
-    switch (validationType) {
+    switch (validationType)
+    {
       case ValidationType.RoomUniqueName:
         Project.Current.MustHaveUniqueNames = !Project.Current.MustHaveUniqueNames;
         break;

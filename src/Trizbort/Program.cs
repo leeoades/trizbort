@@ -4,7 +4,8 @@ using Trizbort.UI;
 
 namespace Trizbort;
 
-internal static class Program {
+internal static class Program
+{
   public static MainForm MainForm { get; private set; }
 
   /// <summary>

@@ -7,7 +7,8 @@ using Trizbort.Setup;
 
 namespace Trizbort.UI;
 
-public partial class MainForm {
+public partial class MainForm
+{
   private const string ThemeFilter = "Trizbort theme (*.trizbort-theme)|*.trizbort-theme";
 
   private void InitializeThemeMenu()
@@ -39,14 +40,17 @@ public partial class MainForm {
         MessageBoxIcon.Question,
         MessageBoxDefaultButton.Button2);
     if (choice == DialogResult.Cancel) return;
-    try {
+    try
+    {
       theme.Apply(choice == DialogResult.Yes);
       Canvas.Refresh();
     }
-    catch (InvalidDataException exception) {
+    catch (InvalidDataException exception)
+    {
       ShowThemeError(exception);
     }
-    catch (ArgumentException exception) {
+    catch (ArgumentException exception)
+    {
       ShowThemeError(exception);
     }
   }
@@ -56,18 +60,22 @@ public partial class MainForm {
     using var dialog = new OpenFileDialog { Filter = ThemeFilter, Title = "Import map theme" };
     if (UserInteraction.ShowDialog(dialog, this) != DialogResult.OK) return;
     MapTheme theme;
-    try {
+    try
+    {
       theme = MapTheme.Load(dialog.FileName);
     }
-    catch (IOException exception) {
+    catch (IOException exception)
+    {
       ShowThemeError(exception);
       return;
     }
-    catch (UnauthorizedAccessException exception) {
+    catch (UnauthorizedAccessException exception)
+    {
       ShowThemeError(exception);
       return;
     }
-    catch (JsonException exception) {
+    catch (JsonException exception)
+    {
       ShowThemeError(exception);
       return;
     }
@@ -82,16 +90,20 @@ public partial class MainForm {
       Title = "Export current map theme", FileName = "My theme.trizbort-theme"
     };
     if (UserInteraction.ShowDialog(dialog, this) != DialogResult.OK) return;
-    try {
+    try
+    {
       MapTheme.Capture(Path.GetFileNameWithoutExtension(dialog.FileName)).Save(dialog.FileName);
     }
-    catch (IOException exception) {
+    catch (IOException exception)
+    {
       ShowThemeError(exception);
     }
-    catch (UnauthorizedAccessException exception) {
+    catch (UnauthorizedAccessException exception)
+    {
       ShowThemeError(exception);
     }
-    catch (JsonException exception) {
+    catch (JsonException exception)
+    {
       ShowThemeError(exception);
     }
   }
@@ -99,7 +111,8 @@ public partial class MainForm {
   private void InferDefaultRoomStyle()
   {
     var inference = RoomStyleInference.Analyze(Project.Current);
-    if (!inference.HasChanges) {
+    if (!inference.HasChanges)
+    {
       UserInteraction.ShowMessage(
         this,
         $"No room styling is shared by at least {RoomStyleInference.DefaultThreshold:P0} of rooms that isn't already the map default, " +

@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 
 namespace Trizbort.Automap.Utility;
 
-public class PeekingStreamReader : StreamReader {
+public class PeekingStreamReader : StreamReader
+{
   private readonly Queue<string> _peeks;
 
   public PeekingStreamReader(Stream stream) : base(stream)

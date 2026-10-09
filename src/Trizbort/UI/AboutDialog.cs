@@ -4,14 +4,17 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI;
 
-public partial class AboutDialog : Form {
+public partial class AboutDialog : Form
+{
   public AboutDialog()
   {
     InitializeComponent();
-    try {
+    try
+    {
       _versionLabel.Text = $"Version {typeof(AboutDialog).Assembly.GetName().Version.ToString().Trim('.', '0')}";
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       // ignored
     }
   }

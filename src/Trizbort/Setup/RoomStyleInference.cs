@@ -13,7 +13,8 @@ namespace Trizbort.Setup;
 ///   Finds room styling shared by a strong majority of rooms, promotes it to the map defaults
 ///   and removes the per-room overrides that become redundant.
 /// </summary>
-public sealed class RoomStyleInference {
+public sealed class RoomStyleInference
+{
   public const double DefaultThreshold = 0.75;
   public const int MinimumRooms = 3;
   private readonly List<string> _changes = new();
@@ -42,12 +43,14 @@ public sealed class RoomStyleInference {
     var rooms = project.Elements.OfType<Room>().ToList();
 
     var shape = Majority(rooms, room => room.Shape, threshold);
-    if (shape.HasValue && shape.Value != Settings.DefaultRoomShape) {
+    if (shape.HasValue && shape.Value != Settings.DefaultRoomShape)
+    {
       inference.InferredShape = shape.Value;
       inference._changes.Add($"Default room shape: {Settings.DefaultRoomShape} -> {shape.Value}");
     }
 
-    foreach (var group in rooms.GroupBy(RegionOf)) {
+    foreach (var group in rooms.GroupBy(RegionOf))
+    {
       var region = group.Key;
       var label = region.RegionName == Region.DefaultRegion ? "rooms with no region" : $"region '{region.RegionName}'";
       inference.InferColor(
@@ -87,7 +90,8 @@ public sealed class RoomStyleInference {
     foreach (var pair in _fillUpdates) pair.Key.RColor = pair.Value;
     foreach (var pair in _textUpdates) pair.Key.TextColor = pair.Value;
 
-    foreach (var room in _project.Elements.OfType<Room>()) {
+    foreach (var room in _project.Elements.OfType<Room>())
+    {
       var region = RegionOf(room);
       if (SameColor(room.RoomFillColor, region.RColor)) room.RoomFillColor = Color.Transparent;
       if (SameColor(room.RoomNameColor, region.TextColor)) room.RoomNameColor = Color.Transparent;
@@ -132,7 +136,8 @@ public sealed class RoomStyleInference {
     var border = _colorUpdates.TryGetValue(MapColors.Border, out var b) ? b : Settings.Color[MapColors.Border];
     var subtitle = _colorUpdates.TryGetValue(MapColors.Subtitle, out var s) ? s : Settings.Color[MapColors.Subtitle];
     var smallText = _colorUpdates.TryGetValue(MapColors.SmallText, out var t) ? t : Settings.Color[MapColors.SmallText];
-    foreach (var room in rooms) {
+    foreach (var room in rooms)
+    {
       var region = RegionOf(room);
       var fill = _fillUpdates.TryGetValue(region, out var f) ? f : region.RColor;
       var text = _textUpdates.TryGetValue(region, out var n) ? n : region.TextColor;

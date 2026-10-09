@@ -13,7 +13,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Apartment(ApartmentState.STA)]
-public class PdfTextRenderingTests {
+public class PdfTextRenderingTests
+{
   [TestCase("\r\n")]
   [TestCase("\r")]
   [TestCase("\n")]
@@ -75,7 +76,8 @@ public class PdfTextRenderingTests {
       Position = new Vector(50, 50)
     };
     var page = document.AddPage();
-    using (var graphics = XGraphics.FromPdfPage(page)) {
+    using (var graphics = XGraphics.FromPdfPage(page))
+    {
       room.Draw(graphics, palette, new DrawingContext(1));
     }
 

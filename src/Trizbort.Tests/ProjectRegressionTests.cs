@@ -10,7 +10,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Category("Unit")]
-public class ProjectRegressionTests : IsolatedProjectTests {
+public class ProjectRegressionTests : IsolatedProjectTests
+{
   [Test]
   public void IDs_UseFirstPositiveGap_AndRejectExistingIDs()
   {

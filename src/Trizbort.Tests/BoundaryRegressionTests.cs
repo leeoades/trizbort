@@ -13,7 +13,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Category("Unit")]
-public class BoundaryRegressionTests : IsolatedProjectTests {
+public class BoundaryRegressionTests : IsolatedProjectTests
+{
   [Test]
   public void CommandLine_ParsesCombinedMapAutomapSaveAndExportOptions()
   {

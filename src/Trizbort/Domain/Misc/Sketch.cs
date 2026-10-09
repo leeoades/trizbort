@@ -9,7 +9,8 @@ namespace Trizbort.Domain.Misc;
 ///   direction whose size scales with the stroke length, so short edges stay tidy and long lines
 ///   wander naturally. All results are deterministic for a given <see cref="Random" /> seed.
 /// </summary>
-public static class Sketch {
+public static class Sketch
+{
   private const float SampleSpacing = 3f;
 
   public static Random Seeded(int seed)
@@ -34,7 +35,8 @@ public static class Sketch {
 
     var count = Math.Max(4, (int)(length / SampleSpacing));
     var points = new PointF[count + 1];
-    for (var i = 0; i <= count; ++i) {
+    for (var i = 0; i <= count; ++i)
+    {
       var t = i / (float)count;
       var offset = bow * Sin(Math.PI * t) + wave * Sin(2 * Math.PI * t) + ripple * Sin(3 * Math.PI * t);
       points[i] = new PointF(start.X + dx * t + nx * offset, start.Y + dy * t + ny * offset);
@@ -49,7 +51,8 @@ public static class Sketch {
   public static PointF[] Polygon(IReadOnlyList<PointF> vertices, Random random)
   {
     var result = new List<PointF>();
-    for (var i = 0; i < vertices.Count; ++i) {
+    for (var i = 0; i < vertices.Count; ++i)
+    {
       var edge = Line(vertices[i], vertices[(i + 1) % vertices.Count], random);
       for (var j = 0; j < edge.Length - 1; ++j) result.Add(edge[j]);
     }
@@ -69,14 +72,16 @@ public static class Sketch {
     var weights = new[] { 0.6f, 0.3f, 0.15f };
     var amplitudes = new float[harmonics.Length];
     var phases = new double[harmonics.Length];
-    for (var k = 0; k < harmonics.Length; ++k) {
+    for (var k = 0; k < harmonics.Length; ++k)
+    {
       amplitudes[k] = amplitude * weights[k] * (0.5f + 0.5f * (float)random.NextDouble());
       phases[k] = random.NextDouble() * Math.PI * 2;
     }
 
     var result = new PointF[points.Count];
     var distance = 0f;
-    for (var i = 0; i < points.Count; ++i) {
+    for (var i = 0; i < points.Count; ++i)
+    {
       if (i > 0) distance += Distance(points[i - 1], points[i]);
       var s = distance / perimeter;
       var offset = 0f;
@@ -106,7 +111,8 @@ public static class Sketch {
 
     var result = new PointF[points.Count];
     var distance = 0f;
-    for (var i = 0; i < points.Count; ++i) {
+    for (var i = 0; i < points.Count; ++i)
+    {
       if (i > 0) distance += Distance(points[i - 1], points[i]);
       var t = distance / length;
       var envelope = Sin(Math.PI * t);
@@ -124,9 +130,11 @@ public static class Sketch {
   {
     var best = 0;
     var bestDistance = float.MaxValue;
-    for (var i = 0; i < points.Count; ++i) {
+    for (var i = 0; i < points.Count; ++i)
+    {
       var d = Distance(points[i], target);
-      if (d < bestDistance) {
+      if (d < bestDistance)
+      {
         bestDistance = d;
         best = i;
       }
@@ -143,7 +151,8 @@ public static class Sketch {
     var perimeter = Math.PI * (rect.Width + rect.Height) / 2;
     var count = Math.Max(16, (int)(perimeter / SampleSpacing));
     var points = new PointF[count];
-    for (var i = 0; i < count; ++i) {
+    for (var i = 0; i < count; ++i)
+    {
       var angle = 2 * Math.PI * i / count;
       points[i] = new PointF(
         rect.X + rect.Width / 2 * (1 + (float)Math.Cos(angle)),
@@ -187,7 +196,8 @@ public static class Sketch {
   private static void AddArc(List<PointF> points, float cx, float cy, float radius, float startDegrees)
   {
     var steps = Math.Max(2, (int)(radius * Math.PI / 2 / SampleSpacing));
-    for (var i = 0; i <= steps; ++i) {
+    for (var i = 0; i <= steps; ++i)
+    {
       var angle = (startDegrees + 90.0 * i / steps) * Math.PI / 180;
       points.Add(new PointF(cx + radius * (float)Math.Cos(angle), cy + radius * (float)Math.Sin(angle)));
     }
@@ -197,7 +207,8 @@ public static class Sketch {
   {
     var result = new List<PointF>();
     var segments = closed ? points.Count : points.Count - 1;
-    for (var i = 0; i < segments; ++i) {
+    for (var i = 0; i < segments; ++i)
+    {
       var a = points[i];
       var b = points[(i + 1) % points.Count];
       var steps = Math.Max(1, (int)Math.Ceiling(Distance(a, b) / SampleSpacing));

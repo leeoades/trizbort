@@ -26,7 +26,8 @@ namespace Trizbort.Domain.Elements;
 ///   to an element's port.
 /// </remarks>
 [SuppressMessage("ReSharper", "CanBeReplacedWithTryCastAndCheckForNull")]
-public class Connection : Element {
+public class Connection : Element
+{
   public const string Up = "up";
   public const string Down = "down";
   public const string In = "in";
@@ -99,7 +100,8 @@ public class Connection : Element {
   public Color ConnectionColor {
     get { return _connectionColor; }
     set {
-      if (_connectionColor != value) {
+      if (_connectionColor != value)
+      {
         _connectionColor = value;
         RaiseChanged();
       }
@@ -111,7 +113,8 @@ public class Connection : Element {
   public string Description {
     get { return _description; }
     set {
-      if (_description != value) {
+      if (_description != value)
+      {
         _description = value;
         RaiseChanged();
       }
@@ -121,7 +124,8 @@ public class Connection : Element {
   public Door Door {
     get { return _door; }
     set {
-      if (_door != value) {
+      if (_door != value)
+      {
         _door = value;
         RaiseChanged();
       }
@@ -131,7 +135,8 @@ public class Connection : Element {
   public string EndText {
     get { return _endText.Text; }
     set {
-      if (_endText.Text != value) {
+      if (_endText.Text != value)
+      {
         _endText.Text = value;
         RaiseChanged();
       }
@@ -141,7 +146,8 @@ public class Connection : Element {
   public ConnectionFlow Flow {
     get { return _flow; }
     set {
-      if (_flow != value) {
+      if (_flow != value)
+      {
         _flow = value;
         RaiseChanged();
       }
@@ -153,7 +159,8 @@ public class Connection : Element {
   public string MidText {
     get { return _midText.Text; }
     set {
-      if (_midText.Text != value) {
+      if (_midText.Text != value)
+      {
         _midText.Text = value;
         RaiseChanged();
       }
@@ -163,7 +170,8 @@ public class Connection : Element {
   public override string Name {
     get { return _name; }
     set {
-      if (_name != value) {
+      if (_name != value)
+      {
         _name = value;
         RaiseChanged();
       }
@@ -173,7 +181,8 @@ public class Connection : Element {
   public string StartText {
     get { return _startText.Text; }
     set {
-      if (_startText.Text != value) {
+      if (_startText.Text != value)
+      {
         _startText.Text = value;
         RaiseChanged();
       }
@@ -183,7 +192,8 @@ public class Connection : Element {
   public ConnectionStyle Style {
     get { return _style; }
     set {
-      if (_style != value) {
+      if (_style != value)
+      {
         _style = value;
         RaiseChanged();
       }
@@ -277,7 +287,8 @@ public class Connection : Element {
         Openable = element.Attribute("openable").Text == "yes"
       };
 
-    switch (element.Attribute("style").Text) {
+    switch (element.Attribute("style").Text)
+    {
       default:
         Style = ConnectionStyle.Solid;
         break;
@@ -286,7 +297,8 @@ public class Connection : Element {
         break;
     }
 
-    switch (element.Attribute("flow").Text) {
+    switch (element.Attribute("flow").Text)
+    {
       default:
         Flow = ConnectionFlow.TwoWay;
         break;
@@ -311,12 +323,14 @@ public class Connection : Element {
     vertexElementList.Sort((a, b) => a.Attribute("index").ToInt().CompareTo(b.Attribute("index").ToInt()));
 
     foreach (var vertexElement in vertexElementList)
-      if (vertexElement.HasName("point")) {
+      if (vertexElement.HasName("point"))
+      {
         var vertex = new Vertex
           { Position = new Vector(vertexElement.Attribute("x").ToFloat(), vertexElement.Attribute("y").ToFloat()) };
         VertexList.Add(vertex);
       }
-      else if (vertexElement.HasName("dock")) {
+      else if (vertexElement.HasName("dock"))
+      {
         var vertex = new Vertex();
         // temporarily leave this vertex as a positional vertex;
         // we can't safely dock it to a port until EndLoad().
@@ -373,7 +387,8 @@ public class Connection : Element {
 
     void FlushChain()
     {
-      if (chain.Count > 1) {
+      if (chain.Count > 1)
+      {
         var stroke = Sketch.Polyline(chain, random);
         sketched.Add(stroke);
         graphics.DrawLines(chainPen, stroke);
@@ -399,21 +414,26 @@ public class Connection : Element {
       return turn < Math.PI / 9;
     }
 
-    foreach (var lineSegment in lineSegments) {
+    foreach (var lineSegment in lineSegments)
+    {
       var pen = palette.GetLinePen(context.Selected, context.Hover, Style == ConnectionStyle.Dashed);
       Pen specialPen = null;
 
       if (!context.Hover)
-        if (ConnectionColor != Color.Transparent && !context.Selected) {
+        if (ConnectionColor != Color.Transparent && !context.Selected)
+        {
           specialPen = (Pen)pen.Clone();
           specialPen.Color = ConnectionColor;
         }
 
-      if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering) {
-        if (!handDrawn) {
+      if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering)
+      {
+        if (!handDrawn)
+        {
           graphics.DrawLine(specialPen ?? pen, lineSegment.Start.ToPointF(), lineSegment.End.ToPointF());
         }
-        else {
+        else
+        {
           // join collinear stalks and the many tiny pieces of a flattened curve into single strokes,
           // so the wobble flows along the whole line instead of kinking at every joint
           if (!ContinuesChain(lineSegment)) FlushChain();
@@ -432,24 +452,29 @@ public class Connection : Element {
 
     FlushChain();
 
-    if (curved && Flow == ConnectionFlow.OneWay) {
+    if (curved && Flow == ConnectionFlow.OneWay)
+    {
       // one arrow per curve span, rather than one per flattened line segment
       GetCurvedSegments(out var spans);
-      foreach (var span in spans) {
+      foreach (var span in spans)
+      {
         var mid = CurveGeometry.PolylineMidpoint(span, out var direction);
         if (direction != Vector.Zero) AddChevron(mid, direction);
       }
     }
 
-    if (chevrons.Count > 0) {
+    if (chevrons.Count > 0)
+    {
       // place each arrow on the wobbly stroke it belongs to, rather than on the ideal straight line
       var arrowRandom = Sketch.Seeded(Id + 5000);
-      foreach (var (position, direction) in chevrons) {
+      foreach (var (position, direction) in chevrons)
+      {
         var target = position.ToPointF();
         var bestPoint = target;
         var arrowDirection = direction;
         var bestDistance = float.MaxValue;
-        foreach (var stroke in sketched) {
+        foreach (var stroke in sketched)
+        {
           var point = Sketch.Nearest(stroke, target, out var strokeDirection);
           var distance = (point.X - target.X) * (point.X - target.X) + (point.Y - target.Y) * (point.Y - target.Y);
           if (distance >= bestDistance) continue;
@@ -483,7 +508,8 @@ public class Connection : Element {
     SolidBrush specialBrush = null;
 
     if (!context.Hover)
-      if (ConnectionColor != Color.Transparent && !context.Selected) {
+      if (ConnectionColor != Color.Transparent && !context.Selected)
+      {
         specialBrush = (SolidBrush)brush.Clone();
         specialBrush.Color = ConnectionColor;
       }
@@ -500,13 +526,16 @@ public class Connection : Element {
   public void EndLoad(object state)
   {
     var elements = (List<XmlElementReader>)state;
-    for (var index = 0; index < elements.Count; ++index) {
+    for (var index = 0; index < elements.Count; ++index)
+    {
       var element = elements[index];
       if (element.HasName("dock"))
-        if (Project.FindElement(element.Attribute("id").ToInt(), out var target)) {
+        if (Project.FindElement(element.Attribute("id").ToInt(), out var target))
+        {
           var portId = element.Attribute("port").Text;
           foreach (var port in target.PortList)
-            if (StringComparer.InvariantCultureIgnoreCase.Compare(portId, port.Id) == 0) {
+            if (StringComparer.InvariantCultureIgnoreCase.Compare(portId, port.Id) == 0)
+            {
               var vertex = VertexList[index];
               vertex.Port = port;
               break;
@@ -533,9 +562,11 @@ public class Connection : Element {
 
   public Room GetSourceRoom(out CompassPoint sourceCompassPoint)
   {
-    if (VertexList.Count > 0) {
+    if (VertexList.Count > 0)
+    {
       var port = VertexList[0].Port;
-      if (port is Room.CompassPort) {
+      if (port is Room.CompassPort)
+      {
         var compassPort = (Room.CompassPort)port;
         sourceCompassPoint = compassPort.CompassPoint;
         return port.Owner as Room;
@@ -554,9 +585,11 @@ public class Connection : Element {
 
   public Room GetTargetRoom(out CompassPoint targetCompassPoint)
   {
-    if (VertexList.Count > 1) {
+    if (VertexList.Count > 1)
+    {
       var port = VertexList[VertexList.Count - 1].Port;
-      if (port is Room.CompassPort) {
+      if (port is Room.CompassPort)
+      {
         var compassPort = (Room.CompassPort)port;
         targetCompassPoint = compassPort.CompassPoint;
         return compassPort.Owner as Room;
@@ -571,7 +604,8 @@ public class Connection : Element {
   {
     start = string.Empty;
     end = string.Empty;
-    switch (label) {
+    switch (label)
+    {
       case ConnectionLabel.None:
         start = string.Empty;
         end = string.Empty;
@@ -613,11 +647,13 @@ public class Connection : Element {
   public override string GetToolTipText()
   {
     var desc = string.Empty;
-    if (ApplicationSettingsController.AppSettings.ShowDescriptionsInTooltips) {
+    if (ApplicationSettingsController.AppSettings.ShowDescriptionsInTooltips)
+    {
       desc = $"{Description}";
       var charsToShow = ApplicationSettingsController.AppSettings.ToolTipConnectionDescriptionCharactersToShow;
       if (ApplicationSettingsController.AppSettings.LimitConnectionDescriptionCharactersInTooltip &
-          desc.Length >= charsToShow) {
+          desc.Length >= charsToShow)
+      {
         desc = desc.Substring(0, charsToShow);
         desc = desc + "...";
       }
@@ -642,7 +678,8 @@ public class Connection : Element {
   public override void RecomputeSmartLineSegments(DrawingContext context)
   {
     _smartSegments.Clear();
-    foreach (var lineSegment in GetSegments()) {
+    foreach (var lineSegment in GetSegments())
+    {
       List<LineSegment> newSegments = null;
       if (Split(lineSegment, context, ref newSegments))
         foreach (var newSegment in newSegments)
@@ -672,7 +709,8 @@ public class Connection : Element {
     var connRoom = (Room)pointToChange.Owner;
     var dirToChange = pointToChange.CompassPoint;
     var startDir = dirToChange;
-    do {
+    do
+    {
       if (whichWay)
         dirToChange--;
       else
@@ -681,7 +719,8 @@ public class Connection : Element {
       if (dirToChange > CompassPoint.Max) dirToChange = CompassPoint.Min;
     } while (dirToChange != startDir && connRoom.GetConnections(dirToChange).Count > 0);
 
-    if (startDir == dirToChange) {
+    if (startDir == dirToChange)
+    {
       UserInteraction.ShowMessage(
         $"There are no free ports in room {connRoom.Name}",
         "Connector rotate failed",
@@ -690,7 +729,8 @@ public class Connection : Element {
       return;
     }
 
-    if (VertexList[upEnd].Port != connRoom.PortList[(int)dirToChange]) {
+    if (VertexList[upEnd].Port != connRoom.PortList[(int)dirToChange])
+    {
       //this should always be different, but just in case...
       VertexList[upEnd].Port = connRoom.PortList[(int)dirToChange];
       RaiseChanged();
@@ -701,7 +741,8 @@ public class Connection : Element {
   {
     scribe.Attribute("name", Name);
     scribe.Attribute("description", Description);
-    if (Door != null) {
+    if (Door != null)
+    {
       scribe.Attribute("door", true);
       scribe.Attribute("lockable", _door.Lockable);
       scribe.Attribute("openable", _door.Openable);
@@ -714,7 +755,8 @@ public class Connection : Element {
 
 
     if (Style != DefaultStyle)
-      switch (Style) {
+      switch (Style)
+      {
         case ConnectionStyle.Solid:
           scribe.Attribute("style", "solid");
           break;
@@ -724,7 +766,8 @@ public class Connection : Element {
       }
 
     if (Flow != DefaultFlow)
-      switch (Flow) {
+      switch (Flow)
+      {
         case ConnectionFlow.OneWay:
           scribe.Attribute("flow", "oneWay");
           break;
@@ -746,15 +789,18 @@ public class Connection : Element {
           scribe.Attribute(_curveWaypointAttributeNames[i], FormatCurveWaypoint(_curveWaypoints[i].Value));
 
     var index = 0;
-    foreach (var vertex in VertexList) {
-      if (vertex.Port != null) {
+    foreach (var vertex in VertexList)
+    {
+      if (vertex.Port != null)
+      {
         scribe.StartElement("dock");
         scribe.Attribute("index", index);
         scribe.Attribute("id", vertex.Port.Owner.Id);
         scribe.Attribute("port", vertex.Port.Id);
         scribe.EndElement();
       }
-      else {
+      else
+      {
         scribe.StartElement("point");
         scribe.Attribute("index", index);
         scribe.Attribute("x", vertex.Position.X);
@@ -791,7 +837,8 @@ public class Connection : Element {
     dialog.EndText = EndText;
     dialog.ConnectionColor = ConnectionColor;
     dialog.Door = Door;
-    if (UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas) == DialogResult.OK) {
+    if (UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas) == DialogResult.OK)
+    {
       Name = dialog.ConnectionName;
       Description = dialog.ConnectionDescription;
       Style = dialog.IsDotted ? ConnectionStyle.Dashed : ConnectionStyle.Solid;
@@ -811,7 +858,8 @@ public class Connection : Element {
       rect = rect.Union(vertex.Position);
 
     if (HasCurveWaypoints)
-      foreach (var segment in GetCurvedSegments(out _)) {
+      foreach (var segment in GetCurvedSegments(out _))
+      {
         rect = rect.Union(segment.Start);
         rect = rect.Union(segment.End);
       }
@@ -830,15 +878,19 @@ public class Connection : Element {
     if (!string.IsNullOrEmpty(EndText))
       Annotate(graphics, palette, lineSegments[lineSegments.Count - 1], _endText, StringAlignment.Far);
 
-    if (!string.IsNullOrEmpty(MidText)) {
+    if (!string.IsNullOrEmpty(MidText))
+    {
       var totalLength = lineSegments.Sum(lineSegment => lineSegment.Length);
       var middle = totalLength / 2;
-      foreach (var lineSegment in lineSegments) {
+      foreach (var lineSegment in lineSegments)
+      {
         var length = lineSegment.Length;
-        if (middle > length) {
+        if (middle > length)
+        {
           middle -= length;
         }
-        else {
+        else
+        {
           middle /= length;
           var pos = lineSegment.Start + lineSegment.Delta * middle;
           var fakeSegment = new LineSegment(
@@ -863,10 +915,12 @@ public class Connection : Element {
     var roomTypeAdjustments = Vector.Zero;
 
     RoomShape roomType;
-    switch (alignment) {
+    switch (alignment)
+    {
       default:
         // detached vertex has no port, so need to check if it exists
-        if (VertexList[0].Port != null) {
+        if (VertexList[0].Port != null)
+        {
           roomType = VertexList[0].Port.Owner.GetRoomType();
           if (roomType == RoomShape.Ellipse || roomType == RoomShape.Octagonal)
             roomTypeAdjustments = RoomTypeAdjustments(VertexList[0]);
@@ -880,7 +934,8 @@ public class Connection : Element {
         break;
       case StringAlignment.Far:
         // detached vertex has no port, so need to check if it exists
-        if (VertexList[1].Port != null) {
+        if (VertexList[1].Port != null)
+        {
           roomType = VertexList[1].Port.Owner.GetRoomType();
           if (roomType == RoomShape.Ellipse || roomType == RoomShape.Octagonal)
             roomTypeAdjustments = RoomTypeAdjustments(VertexList[1]);
@@ -899,14 +954,16 @@ public class Connection : Element {
     var format = new XStringFormat();
     Drawing.SetAlignmentFromCardinalOrOrdinalDirection(format, compassPoint);
 
-    if (alignment == StringAlignment.Center && Math.Abs(angle) == 90) {
+    if (alignment == StringAlignment.Center && Math.Abs(angle) == 90)
+    {
       // HACK: Adjust the anchoring for mid-line text for vertical lines to push
       // the start of the label a bit off the connection line.
       pos = bounds.GetCorner(CompassPoint.East);
       format.LineAlignment = XLineAlignment.Center;
     }
 
-    if (alignment == StringAlignment.Center && Numeric.InRange(angle, -10, 10)) {
+    if (alignment == StringAlignment.Center && Numeric.InRange(angle, -10, 10))
+    {
       // HACK: if the line segment is pretty horizontal and we're drawing mid-line text,
       // move text below the line to get it out of the way of any labels at the ends,
       // and center the text so it fits onto a line between two proximal rooms.
@@ -925,23 +982,27 @@ public class Connection : Element {
     if (HasCurveWaypoints) return GetCurvedSegments(out _);
 
     var list = new List<LineSegment>();
-    if (VertexList.Count > 0) {
+    if (VertexList.Count > 0)
+    {
       var first = VertexList[0];
 
       var index = 0;
       var a = VertexList[index++].Position;
 
-      if (first.Port != null && first.Port.HasStalk) {
+      if (first.Port != null && first.Port.HasStalk)
+      {
         var stalkPos = first.Port.StalkPosition;
         list.Add(new LineSegment(a, stalkPos));
         a = stalkPos;
       }
 
-      while (index < VertexList.Count) {
+      while (index < VertexList.Count)
+      {
         var v = VertexList[index++];
         var b = v.Position;
 
-        if (index == VertexList.Count && v.Port != null && v.Port.HasStalk) {
+        if (index == VertexList.Count && v.Port != null && v.Port.HasStalk)
+        {
           var stalkPos = v.Port.StalkPosition;
           list.Add(new LineSegment(a, stalkPos));
           a = stalkPos;
@@ -974,7 +1035,8 @@ public class Connection : Element {
     points = new List<Vector> { start };
     slots = new List<int>();
     for (var i = 0; i < _curveWaypoints.Length; ++i)
-      if (_curveWaypoints[i].HasValue) {
+      if (_curveWaypoints[i].HasValue)
+      {
         points.Add(_curveWaypoints[i].Value);
         slots.Add(i);
       }
@@ -1044,9 +1106,11 @@ public class Connection : Element {
   {
     e.Item.Connection = null;
     e.Item.Changed -= OnVertexChanged;
-    foreach (var port1 in PortList) {
+    foreach (var port1 in PortList)
+    {
       var port = (VertexPort)port1;
-      if (port.Vertex == e.Item) {
+      if (port.Vertex == e.Item)
+      {
         PortList.Remove(port);
         break;
       }
@@ -1057,7 +1121,8 @@ public class Connection : Element {
   {
     var roomTypeAdjustments = Vector.Zero;
     CompassPointHelper.FromName(vertex.Port.Id, out var dir);
-    switch (dir) {
+    switch (dir)
+    {
       case CompassPoint.SouthEast:
         roomTypeAdjustments = new Vector(8, 6);
         break;
@@ -1109,15 +1174,19 @@ public class Connection : Element {
   /// <returns>True if the line segment was split and newSegments now exists and contains line segments; false otherwise.</returns>
   private bool Split(LineSegment lineSegment, DrawingContext context, ref List<LineSegment> newSegments)
   {
-    foreach (var previousSegment in context.LinesDrawn) {
+    foreach (var previousSegment in context.LinesDrawn)
+    {
       var amount = Math.Max(1, Settings.LineWidth) * 3;
       if (lineSegment.Intersect(previousSegment, true, out var intersects))
-        foreach (var intersect in intersects) {
-          switch (intersect.Type) {
+        foreach (var intersect in intersects)
+        {
+          switch (intersect.Type)
+          {
             case LineSegmentIntersectType.MidPointA:
               var one = new LineSegment(lineSegment.Start, intersect.Position);
               if (one.Shorten(amount))
-                if (!Split(one, context, ref newSegments)) {
+                if (!Split(one, context, ref newSegments))
+                {
                   if (newSegments == null)
                     newSegments = new List<LineSegment>();
                   newSegments.Add(one);
@@ -1125,7 +1194,8 @@ public class Connection : Element {
 
               var two = new LineSegment(intersect.Position, lineSegment.End);
               if (two.Forshorten(amount))
-                if (!Split(two, context, ref newSegments)) {
+                if (!Split(two, context, ref newSegments))
+                {
                   if (newSegments == null)
                     newSegments = new List<LineSegment>();
                   newSegments.Add(two);
@@ -1135,7 +1205,8 @@ public class Connection : Element {
 
             case LineSegmentIntersectType.StartA:
               if (lineSegment.Forshorten(amount))
-                if (!Split(lineSegment, context, ref newSegments)) {
+                if (!Split(lineSegment, context, ref newSegments))
+                {
                   if (newSegments == null)
                     newSegments = new List<LineSegment>();
                   newSegments.Add(lineSegment);
@@ -1145,7 +1216,8 @@ public class Connection : Element {
 
             case LineSegmentIntersectType.EndA:
               if (lineSegment.Shorten(amount))
-                if (!Split(lineSegment, context, ref newSegments)) {
+                if (!Split(lineSegment, context, ref newSegments))
+                {
                   if (newSegments == null)
                     newSegments = new List<LineSegment>();
                   newSegments.Add(lineSegment);
@@ -1163,7 +1235,8 @@ public class Connection : Element {
     return false;
   }
 
-  public class VertexPort : MoveablePort {
+  public class VertexPort : MoveablePort
+  {
     public VertexPort(Vertex vertex, Connection connection) : base(connection)
     {
       Vertex = vertex;
@@ -1195,7 +1268,8 @@ public class Connection : Element {
 /// <summary>
 ///   The waypoint slots through which a connection can be bent into a curve.
 /// </summary>
-public enum CurveWaypoint {
+public enum CurveWaypoint
+{
   Quarter = 0,
   Middle = 1,
   ThreeQuarter = 2
@@ -1204,7 +1278,8 @@ public enum CurveWaypoint {
 /// <summary>
 ///   The visual style of a connection.
 /// </summary>
-public enum ConnectionStyle {
+public enum ConnectionStyle
+{
   Solid,
   Dashed
 }
@@ -1212,7 +1287,8 @@ public enum ConnectionStyle {
 /// <summary>
 ///   The direction in which a connection flows.
 /// </summary>
-public enum ConnectionFlow {
+public enum ConnectionFlow
+{
   TwoWay,
   OneWay
 }
@@ -1221,7 +1297,8 @@ public enum ConnectionFlow {
 ///   The style of label to display on a line.
 ///   This is a simple set of defaults; lines may have entirely custom labels.
 /// </summary>
-public enum ConnectionLabel {
+public enum ConnectionLabel
+{
   None,
   Up,
   Down,

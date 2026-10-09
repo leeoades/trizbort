@@ -2,7 +2,8 @@
 
 namespace Trizbort.Util;
 
-public static class KeyboardHelper {
+public static class KeyboardHelper
+{
   private const byte VkScrollLock = 0x91;
   private const int VkCapsLock = 0x14;
   private const int VkNumLock = 0x90;
@@ -18,7 +19,8 @@ public static class KeyboardHelper {
   public static void SetScrollLockKey(bool newState)
   {
     var scrollLockSet = GetKeyState(VkScrollLock) != 0;
-    if (scrollLockSet != newState) {
+    if (scrollLockSet != newState)
+    {
       KeybdEvent(VkScrollLock, 0, 0, 0);
       KeybdEvent(VkScrollLock, 0, KeyEventKeyUp, 0);
     }
@@ -27,7 +29,8 @@ public static class KeyboardHelper {
   public static void SetCapsLockKey(bool newState)
   {
     var capsLockSet = GetKeyState(VkCapsLock) != 0;
-    if (capsLockSet != newState) {
+    if (capsLockSet != newState)
+    {
       KeybdEvent(VkCapsLock, 0, 0, 0);
       KeybdEvent(VkCapsLock, 0, KeyEventKeyUp, 0);
     }
@@ -36,7 +39,8 @@ public static class KeyboardHelper {
   public static void SetNumLockKey(bool newState)
   {
     var numLockSet = GetKeyState(VkNumLock) != 0;
-    if (numLockSet != newState) {
+    if (numLockSet != newState)
+    {
       KeybdEvent(VkNumLock, 0, 0, 0);
       KeybdEvent(VkNumLock, 0, KeyEventKeyUp, 0);
     }

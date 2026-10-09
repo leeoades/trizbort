@@ -13,7 +13,8 @@ using Trizbort.Util;
 
 namespace Trizbort.Domain.Elements;
 
-public class MapLabel : Element, ISizeable {
+public class MapLabel : Element, ISizeable
+{
   private readonly TextBlock _text = new();
   private Color _backgroundColor = Color.White;
   private Color _borderColor = Color.Black;
@@ -151,7 +152,8 @@ public class MapLabel : Element, ISizeable {
     if (Width <= 0 || Height <= 0) return;
     var path = CreatePath(palette);
     if (HasBackground) graphics.DrawPath(palette.Brush(BackgroundColor), path);
-    if (BorderStyle != BorderDashStyle.None) {
+    if (BorderStyle != BorderDashStyle.None)
+    {
       var pen = palette.Pen(BorderColor);
       pen.DashStyle = BorderStyle.ConvertToDashStyle();
       graphics.DrawPath(pen, path);
@@ -175,15 +177,18 @@ public class MapLabel : Element, ISizeable {
   private XGraphicsPath CreatePath(Palette palette)
   {
     var path = palette.Path();
-    if (Settings.HandDrawn) {
+    if (Settings.HandDrawn)
+    {
       path.AddPolygon(CreateSketchOutline());
       return path;
     }
 
-    if (Shape == RoomShape.Ellipse) {
+    if (Shape == RoomShape.Ellipse)
+    {
       path.AddEllipse(InnerBounds.ToRectangleF());
     }
-    else if (Shape == RoomShape.RoundedCorners) {
+    else if (Shape == RoomShape.RoundedCorners)
+    {
       var diameter = Math.Min(30, Math.Min(Width, Height));
       path.AddArc(X, Y, diameter, diameter, 180, 90);
       path.AddArc(X + Width - diameter, Y, diameter, diameter, 270, 90);
@@ -191,7 +196,8 @@ public class MapLabel : Element, ISizeable {
       path.AddArc(X, Y + Height - diameter, diameter, diameter, 90, 90);
       path.CloseFigure();
     }
-    else if (Shape == RoomShape.Octagonal) {
+    else if (Shape == RoomShape.Octagonal)
+    {
       path.AddPolygon(
         new[] {
           new PointF(X + Width / 4, Y), new PointF(X + Width * 3 / 4, Y),
@@ -200,7 +206,8 @@ public class MapLabel : Element, ISizeable {
           new PointF(X, Y + Height * 3 / 4), new PointF(X, Y + Height / 4)
         });
     }
-    else {
+    else
+    {
       path.AddRectangle(InnerBounds.ToRectangleF());
     }
 
@@ -213,7 +220,8 @@ public class MapLabel : Element, ISizeable {
     var random = Sketch.Seeded(Id);
     if (Shape == RoomShape.Ellipse)
       return Sketch.ClosedCurve(Sketch.Ellipse(rect), random);
-    if (Shape == RoomShape.RoundedCorners) {
+    if (Shape == RoomShape.RoundedCorners)
+    {
       var radius = Math.Min(30, Math.Min(Width, Height)) / 2;
       return Sketch.ClosedCurve(Sketch.RoundedRectangle(rect, radius, radius, radius, radius), random);
     }

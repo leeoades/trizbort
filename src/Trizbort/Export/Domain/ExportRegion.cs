@@ -2,7 +2,8 @@
 
 namespace Trizbort.Export.Domain;
 
-public class ExportRegion {
+public class ExportRegion
+{
   public ExportRegion(Region region, string exportName)
   {
     Region = region;

@@ -2,7 +2,8 @@
 
 namespace Trizbort.Util;
 
-public static class ClipboardHelper {
+public static class ClipboardHelper
+{
   public static bool HasSomethingToPaste()
   {
     return !string.IsNullOrEmpty(UserInteraction.GetClipboardText());

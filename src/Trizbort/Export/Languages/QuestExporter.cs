@@ -10,7 +10,8 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages;
 
-internal class QuestRoomsExporter : CodeExporter {
+internal class QuestRoomsExporter : CodeExporter
+{
   public override List<KeyValuePair<string, string>> FileDialogFilters => new() {
     new KeyValuePair<string, string>("Quest Source Files", ".aslx"),
     new KeyValuePair<string, string>("Text Files", ".txt")
@@ -22,7 +23,8 @@ internal class QuestRoomsExporter : CodeExporter {
 
   protected override void ExportContent(TextWriter writer)
   {
-    foreach (var location in LocationsInExportOrder) {
+    foreach (var location in LocationsInExportOrder)
+    {
       writer.WriteLine("  <object name=\"{0}\">", location.ExportName);
       writer.WriteLine("    <inherit name=\"editor_room\" />");
       writer.WriteLine("    <alias>{0}</alias>", location.Room.Name);
@@ -37,9 +39,11 @@ internal class QuestRoomsExporter : CodeExporter {
       if (!string.IsNullOrEmpty(location.Room.PrimaryDescription))
         writer.WriteLine("    <description>{0}</description>", location.Room.PrimaryDescription);
 
-      foreach (var direction in Directions.AllDirections) {
+      foreach (var direction in Directions.AllDirections)
+      {
         var exit = location.GetBestExit(direction);
-        if (exit != null) {
+        if (exit != null)
+        {
           writer.WriteLine(
             "    <exit alias=\"{0}\" to=\"{1}\">",
             ToQuestPropertyName(direction),
@@ -49,18 +53,21 @@ internal class QuestRoomsExporter : CodeExporter {
         }
       }
 
-      if (location.Room.IsStartRoom) {
+      if (location.Room.IsStartRoom)
+      {
         writer.WriteLine("    <object name=\"player\">");
         writer.WriteLine("      <inherit name=\"editor_object\" />");
         writer.WriteLine("      <inherit name=\"editor_player\" />");
         writer.WriteLine("    </object>");
       }
 
-      foreach (var thing in location.Things) {
+      foreach (var thing in location.Things)
+      {
         writer.WriteLine("    <object name=\"{0}\">", thing.ExportName);
         writer.WriteLine("      <inherit name=\"editor_object\" />");
         if (thing.IsScenery) writer.WriteLine("      <scenery />");
-        if (thing.IsContainer) {
+        if (thing.IsContainer)
+        {
           writer.WriteLine("      <feature_container />");
           writer.WriteLine("      <inherit name=\"container_closed\" />");
         }
@@ -132,7 +139,8 @@ internal class QuestRoomsExporter : CodeExporter {
 
   private static string ToQuestPropertyName(MappableDirection direction)
   {
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.North:
         return "north";
       case MappableDirection.South:
@@ -164,7 +172,8 @@ internal class QuestRoomsExporter : CodeExporter {
   }
 }
 
-internal class QuestExporter : QuestRoomsExporter {
+internal class QuestExporter : QuestRoomsExporter
+{
   public override string FileDialogTitle => "Export Quest Source Code";
 
   protected override void ExportContent(TextWriter writer)

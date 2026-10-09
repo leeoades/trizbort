@@ -7,7 +7,8 @@ using Trizbort.Setup;
 
 namespace Trizbort.Domain.Misc;
 
-internal class TextBlock {
+internal class TextBlock
+{
   private readonly List<string> _lines = new();
   private XStringFormat _actualFormat;
 
@@ -25,17 +26,17 @@ internal class TextBlock {
 
   public static int RebuildCount { get; private set; }
 
-  public void InvalidateLayout()
-  {
-    _invalidLayout = true;
-  }
-
   public string Text {
     get { return _text; }
     set {
       _text = value;
       _invalidLayout = true;
     }
+  }
+
+  public void InvalidateLayout()
+  {
+    _invalidLayout = true;
   }
 
   /// <summary>
@@ -73,7 +74,8 @@ internal class TextBlock {
 
     _sizeChecker = sizeChecker;
 
-    if (_invalidLayout) {
+    if (_invalidLayout)
+    {
       // something vital has changed; rebuild our cached layout data
       RebuildCachedLayout(graphics, font, ref pos, ref size, format);
       _invalidLayout = false;
@@ -89,7 +91,8 @@ internal class TextBlock {
     graphics.SmoothingMode = XSmoothingMode.HighSpeed;
 
     var origin = _origin;
-    foreach (var t in _lines) {
+    foreach (var t in _lines)
+    {
       if (size.Y > 0 && size.Y < _lineHeight)
         break; // not enough remaining vertical space for a whole line
 
@@ -134,7 +137,8 @@ internal class TextBlock {
 
     // PDFsharp renders carriage returns as glyphs instead of treating them as line breaks.
     var text = _text.Replace("\r\n", "\n").Replace('\r', '\n');
-    if (text.IndexOf('\n') == -1 && size.X > 0 && size.Y > 0 && graphics.MeasureString(text, font).Width > size.X) {
+    if (text.IndexOf('\n') == -1 && size.X > 0 && size.Y > 0 && graphics.MeasureString(text, font).Width > size.X)
+    {
       // wrap single-line text to fit in rectangle
 
       // measure a space, countering the APIs unwillingness to measure spaces
@@ -143,7 +147,8 @@ internal class TextBlock {
       var hyphenLength = (float)graphics.MeasureString("-", font).Width;
 
       var wordsStep1 = new List<Word>();
-      foreach (var word in text.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries)) {
+      foreach (var word in text.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries))
+      {
         if (wordsStep1.Count != 0) wordsStep1.Add(new Word(" ", spaceLength));
         wordsStep1.Add(new Word(word, (float)graphics.MeasureString(word, font).Width));
       }
@@ -152,9 +157,11 @@ internal class TextBlock {
       var words = new List<Word>();
       foreach (var splits in wordsStep1.Where(p => !string.IsNullOrWhiteSpace(p.Text))
                                        .Select(word => isSplitDash ? word.Text.Split('-') : new[] { word.Text }))
-        if (splits.Count() > 1) {
+        if (splits.Count() > 1)
+        {
           var tWordList = new List<Word>();
-          foreach (var tWord in splits) {
+          foreach (var tWord in splits)
+          {
             if (words.Count != 0 && tWordList.Count == 0)
               tWordList.Add(new Word(" ", spaceLength));
             else if (tWordList.Count != 0 && isSplitDash)
@@ -165,7 +172,8 @@ internal class TextBlock {
 
           words.AddRange(tWordList);
         }
-        else {
+        else
+        {
           if (words.Count != 0)
             words.Add(new Word(" ", spaceLength));
           words.Add(new Word(splits[0], (float)graphics.MeasureString(splits[0], font).Width));
@@ -176,20 +184,24 @@ internal class TextBlock {
       var line = string.Empty;
 
       foreach (var word in words)
-        if (word.Text != " " && word.Length > Math.Max(0, size.X - lineLength) && lineLength > 0) {
-          if (line.Length > 0) {
+        if (word.Text != " " && word.Length > Math.Max(0, size.X - lineLength) && lineLength > 0)
+        {
+          if (line.Length > 0)
+          {
             if (total.Length > 0) total += "\n";
             total += line;
             lineLength = word.Length + spaceLength;
             line = word.Text;
           }
         }
-        else {
+        else
+        {
           line += word.Text;
           lineLength += word.Length + spaceLength;
         }
 
-      if (line.Length > 0) {
+      if (line.Length > 0)
+      {
         if (total.Length > 0) total += "\n";
         total += line;
       }
@@ -202,7 +214,8 @@ internal class TextBlock {
     _lines.Clear();
     _lines.AddRange(text.Split('\n'));
 
-    switch (_actualFormat.LineAlignment) {
+    switch (_actualFormat.LineAlignment)
+    {
       case XLineAlignment.Near:
       default:
         _origin = pos;
@@ -210,11 +223,13 @@ internal class TextBlock {
         break;
       case XLineAlignment.Far:
         _origin = new Vector(pos.X, pos.Y + size.Y - _lineHeight);
-        if (size.Y > 0) {
+        if (size.Y > 0)
+        {
           var count = _lines.Count;
           while (_origin.Y - _lineHeight >= pos.Y && --count > 0) _origin.Y -= _lineHeight;
         }
-        else {
+        else
+        {
           _origin.Y -= (_lines.Count - 1) * _lineHeight;
         }
 
@@ -228,7 +243,8 @@ internal class TextBlock {
 
     _actualFormat.LineAlignment = XLineAlignment.Near;
 
-    switch (_actualFormat.Alignment) {
+    switch (_actualFormat.Alignment)
+    {
       case XStringAlignment.Far:
         _origin.X = pos.X + size.X;
         break;
@@ -238,7 +254,8 @@ internal class TextBlock {
     }
   }
 
-  private struct Word {
+  private struct Word
+  {
     public readonly float Length;
     public readonly string Text;
 

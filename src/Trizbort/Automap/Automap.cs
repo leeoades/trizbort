@@ -17,7 +17,8 @@ using Region = Trizbort.Domain.Misc.Region;
 
 namespace Trizbort.Automap;
 
-public sealed class Automap {
+public sealed class Automap
+{
   private readonly Func<Room, string, AutomapSameDirectionResult> _chooseConflictingRoom;
   private readonly Action<string, string> _reportError;
   public bool UseDottedConnection { get; set; }
@@ -27,7 +28,8 @@ public sealed class Automap {
   {
     token.ThrowIfCancellationRequested();
     // for diagnostic purposes, allow single stepping
-    if (_settings.SingleStep && !_stepNow) {
+    if (_settings.SingleStep && !_stepNow)
+    {
       Status = "Automapping is waiting for you to step through it (with F11.)";
       while (!_stepNow) await Task.Delay(50, token);
       token.ThrowIfCancellationRequested();
@@ -45,14 +47,17 @@ public sealed class Automap {
 
   internal bool IsPrompt(string line, out string typedCommand)
   {
-    if (line == null) {
+    if (line == null)
+    {
       typedCommand = null;
       return false;
     }
 
-    foreach (var promptMarker in _promptMarkers) {
+    foreach (var promptMarker in _promptMarkers)
+    {
       var startIndex = line.LastIndexOf(promptMarker);
-      if (startIndex != -1 && startIndex < MaxCharactersBeforePrompt) {
+      if (startIndex != -1 && startIndex < MaxCharactersBeforePrompt)
+      {
         var command = line.Substring(startIndex + promptMarker.Length);
         typedCommand = command.Trim();
         return true;
@@ -68,20 +73,23 @@ public sealed class Automap {
     name = null;
 
     string unused;
-    if (previousLine != null && previousLine.Trim().Length > 0 && !IsPrompt(previousLine, out unused)) {
+    if (previousLine != null && previousLine.Trim().Length > 0 && !IsPrompt(previousLine, out unused))
+    {
       // the preceeding line, if any, must be blank, or a prompt
       SetFailureReason("the previous line, if any, must be blank or a prompt");
       return false;
     }
 
-    if (string.IsNullOrEmpty(line)) {
+    if (string.IsNullOrEmpty(line))
+    {
       // blank lines clearly aren't room names
       SetFailureReason("the line is blank");
       return false;
     }
 
     // look for leading whitespace
-    if (line.TrimStart().Length != line.Length) {
+    if (line.TrimStart().Length != line.Length)
+    {
       // lines which start with whitespace aren't room names
       SetFailureReason("the line starts with whitespace");
       return false;
@@ -89,7 +97,8 @@ public sealed class Automap {
 
     // trim whitespace
     line = line.Trim();
-    if (line.Length == 0) {
+    if (line.Length == 0)
+    {
       // we just ran out of line
       SetFailureReason("the line only contains whitespace");
       return false;
@@ -104,13 +113,17 @@ public sealed class Automap {
 
     // strip suffixes such as those in "Bedroom, on the bed" or "Bedroom (on the bed)" or "Bedroom - on the bed"
     bool strippedSuffix;
-    do {
+    do
+    {
       strippedSuffix = false;
-      foreach (var decorativeSuffixMarker in _roomDecorativeSuffixMarkers) {
+      foreach (var decorativeSuffixMarker in _roomDecorativeSuffixMarkers)
+      {
         var indexOfMarker = line.IndexOf(decorativeSuffixMarker, StringComparison.Ordinal);
-        if (indexOfMarker >= 0) {
+        if (indexOfMarker >= 0)
+        {
           var suffixLength = line.Length - indexOfMarker;
-          if (suffixLength > 30) {
+          if (suffixLength > 30)
+          {
             // this looks more like punctuation in a sentence, not a suffix
             SetFailureReason("this line looks more like a sentence");
             return false;
@@ -125,25 +138,29 @@ public sealed class Automap {
 
     // swallow any leading/trailing whitespace we just made
     line = line.Trim();
-    if (line.Length == 0) {
+    if (line.Length == 0)
+    {
       // we just ran out of line
       SetFailureReason("after stripping suffixes from the line, it was blank");
       return false;
     }
 
-    if (!char.IsLetterOrDigit(line[line.Length - 1])) {
+    if (!char.IsLetterOrDigit(line[line.Length - 1]))
+    {
       // the last character of the room description must be a number or a letter
       SetFailureReason("after stripping suffixes from the line, it didn't end with a letter or a number");
       return false;
     }
 
-    if (!char.IsLetterOrDigit(line[0])) {
+    if (!char.IsLetterOrDigit(line[0]))
+    {
       // the first character of the room description must be a number or a letter
       SetFailureReason("the line must start with a letter or a number");
       return false;
     }
 
-    if (!StartsWithCapitalOrNonLetter(line)) {
+    if (!StartsWithCapitalOrNonLetter(line))
+    {
       // if the first character of the room description is a letter, it must be capitalised
       SetFailureReason("the line starts with a letter, but it isn't capitalised");
       return false;
@@ -151,7 +168,8 @@ public sealed class Automap {
 
     // now verify each word of the room name
     var words = line.Split(_wordSeparators, StringSplitOptions.RemoveEmptyEntries);
-    if (words.Length < 1) {
+    if (words.Length < 1)
+    {
       // we must have some words
       SetFailureReason("there are no words on the line");
       return false;
@@ -159,8 +177,10 @@ public sealed class Automap {
 
     var maxWordLength = 0;
     var wordCountWithAllCaps = 0;
-    foreach (var word in words) {
-      if (!IsRoomDescriptionWord(word)) {
+    foreach (var word in words)
+    {
+      if (!IsRoomDescriptionWord(word))
+      {
         // all words must look room description esque for this to be a room name
         SetFailureReason(
           "the word \"{0}\" doesn't look like a room description word{1}{2}{3}",
@@ -171,7 +191,8 @@ public sealed class Automap {
         return false;
       }
 
-      if (!StartsWithCapitalOrNonLetter(word) && word.Length >= 4) {
+      if (!StartsWithCapitalOrNonLetter(word) && word.Length >= 4)
+      {
         // all longish words must start with a capital or non letter.
         SetFailureReason(
           "all words longer than {0} letters, such as \"{1}\", must start with a capital or non letter",
@@ -184,13 +205,15 @@ public sealed class Automap {
       if (IsAllCaps(word)) ++wordCountWithAllCaps;
     }
 
-    if (words.Length > 1 && maxWordLength < 3) {
+    if (words.Length > 1 && maxWordLength < 3)
+    {
       // we must have at least one word over n letters long
       SetFailureReason("there must be at least {0} word(s) over {1} letter(s) long", 1, 3);
       return false;
     }
 
-    if (wordCountWithAllCaps == words.Length) {
+    if (wordCountWithAllCaps == words.Length)
+    {
       // at least one word must not be all caps
       SetFailureReason("at least one word must not be all caps");
       return false;
@@ -203,13 +226,15 @@ public sealed class Automap {
 
   private bool IsRoomDescriptionWord(string word)
   {
-    if (string.IsNullOrEmpty(word)) {
+    if (string.IsNullOrEmpty(word))
+    {
       // there must be a word
       SetFailureReason("the word contains no text");
       return false;
     }
 
-    if (!char.IsLetterOrDigit(word[0]) && word[0] != '#') {
+    if (!char.IsLetterOrDigit(word[0]) && word[0] != '#')
+    {
       // the first character must be a letter or a digit
       SetFailureReason("the word must begin with a letter or a digit");
       return false;
@@ -238,9 +263,11 @@ public sealed class Automap {
   internal bool ExtractParagraph(List<string> lines, int lineIndex, out string paragraph)
   {
     paragraph = null;
-    while (lineIndex < lines.Count) {
+    while (lineIndex < lines.Count)
+    {
       var line = lines[lineIndex].Trim();
-      if (line == "[Previous turn undone.]") {
+      if (line == "[Previous turn undone.]")
+      {
         // Ignore undo reports. This will have the effect of making this room
         // look like a non-verbose room.
         ++lineIndex;
@@ -321,10 +348,12 @@ public sealed class Automap {
     description = description.ToLowerInvariant();
 
     // search it for the names of compass directions
-    foreach (var pair in _namesForExitsInRoomDescriptions) {
+    foreach (var pair in _namesForExitsInRoomDescriptions)
+    {
       var directions = pair.Key;
       var namesOfExits = pair.Value;
-      foreach (var directionName in namesOfExits) {
+      foreach (var directionName in namesOfExits)
+      {
         var index = description.IndexOf(directionName);
         if (index != -1)
           // we found one
@@ -343,29 +372,35 @@ public sealed class Automap {
   private async Task ProcessTranscriptText(List<string> lines, CancellationToken token)
   {
     string previousLine = null;
-    for (var index = 0; index < lines.Count; ++index) {
+    for (var index = 0; index < lines.Count; ++index)
+    {
       token.ThrowIfCancellationRequested();
       var line = lines[index];
       string roomName;
-      if (ExtractRoomName(line, previousLine, out roomName)) {
+      if (ExtractRoomName(line, previousLine, out roomName))
+      {
         string roomDescription;
         ExtractParagraph(lines, index + 1, out roomDescription);
 
         // work out which room the transcript is referring to here, asking them if necessary
         var room = FindRoom(roomName, roomDescription, line);
         token.ThrowIfCancellationRequested();
-        if (room == null) {
+        if (room == null)
+        {
           // new room
-          if (_lastKnownRoom != null && _lastMoveDirection != null) {
+          if (_lastKnownRoom != null && _lastMoveDirection != null)
+          {
             // player moved to new room
             // is there already a connection in that direction?
             var otherRoom = _lastKnownRoom
                             .GetConnections(CompassPointHelper.GetCompassDirection(_lastMoveDirection.Value))
                             .FirstOrDefault()?.GetTargetRoom();
-            if (otherRoom != null) {
+            if (otherRoom != null)
+            {
               var decision = _chooseConflictingRoom(otherRoom, roomName);
               token.ThrowIfCancellationRequested();
-              switch (decision) {
+              switch (decision)
+              {
                 case AutomapSameDirectionResult.KeepRoom1:
                   room = otherRoom;
                   break;
@@ -382,7 +417,8 @@ public sealed class Automap {
                   throw new ArgumentOutOfRangeException();
               }
             }
-            else {
+            else
+            {
               // if not added already, add room to map; and join it up to the previous one
               room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
               _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
@@ -394,14 +430,17 @@ public sealed class Automap {
                 _lastKnownRoom.Name);
             }
           }
-          else {
-            if (_firstRoom || _gameName == roomName) {
+          else
+          {
+            if (_firstRoom || _gameName == roomName)
+            {
               // most likely this is the game title
               _firstRoom = false;
               _gameName = roomName;
               await WaitForStep(token);
             }
-            else {
+            else
+            {
               // player teleported to new room;
               // don't connect it up, as we don't know how they got there
               room = _canvas.CreateRoom(_lastKnownRoom, roomName);
@@ -411,16 +450,19 @@ public sealed class Automap {
             }
           }
 
-          if (room != null) {
+          if (room != null)
+          {
             DeduceExitsFromDescription(room, roomDescription);
             NowInRoom(room);
           }
 
           await WaitForStep(token);
         }
-        else if (room != _lastKnownRoom) {
+        else if (room != _lastKnownRoom)
+        {
           // player moved to existing room
-          if (_lastKnownRoom != null && _lastMoveDirection != null) {
+          if (_lastKnownRoom != null && _lastMoveDirection != null)
+          {
             // player moved sensibly; ensure rooms are connected up
             _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
             Trace(
@@ -434,7 +476,8 @@ public sealed class Automap {
           NowInRoom(room);
           await WaitForStep(token);
         }
-        else {
+        else
+        {
           // player didn't change rooms
           Trace("{0}: still in {1}.", FormatTranscriptLineForDisplay(line), _lastKnownRoom.Name);
         }
@@ -449,7 +492,8 @@ public sealed class Automap {
         // or they're moved to one room and then teleported to another.
         _lastMoveDirection = null;
       }
-      else {
+      else
+      {
         Trace(
           "{0}: {1}{2}{3}",
           FormatTranscriptLineForDisplay(line),
@@ -478,10 +522,12 @@ public sealed class Automap {
     _lastMoveDirection = null;
 
     // first process trizbort commands
-    if (command.ToUpper().StartsWith(_settings.AddRegionCommand.ToUpper())) {
+    if (command.ToUpper().StartsWith(_settings.AddRegionCommand.ToUpper()))
+    {
       var regionName = command.Substring(_settings.AddRegionCommand.Length).Trim();
 
-      if (!string.IsNullOrEmpty(regionName) && _lastKnownRoom != null) {
+      if (!string.IsNullOrEmpty(regionName) && _lastKnownRoom != null)
+      {
         // region already exists, just set the room to it
         if (Settings.Regions.Find(p => p.RegionName.Equals(regionName, StringComparison.OrdinalIgnoreCase)) == null)
           Settings.Regions.Add(
@@ -492,24 +538,29 @@ public sealed class Automap {
       return;
     }
 
-    if (command.ToUpper().StartsWith(_settings.AddObjectCommand.ToUpper())) {
+    if (command.ToUpper().StartsWith(_settings.AddObjectCommand.ToUpper()))
+    {
       // the user wants to add an object to the map
       var objectName = command.Substring(_settings.AddObjectCommand.Length).Trim();
 
-      if (!string.IsNullOrEmpty(objectName) && _lastKnownRoom != null) {
-        if (!string.IsNullOrEmpty(_lastKnownRoom.Objects)) {
+      if (!string.IsNullOrEmpty(objectName) && _lastKnownRoom != null)
+      {
+        if (!string.IsNullOrEmpty(_lastKnownRoom.Objects))
+        {
           var alreadyExists = false;
           foreach (var line in _lastKnownRoom.Objects.Replace("\r", string.Empty).Split(
                      new[] { '\n' },
                      StringSplitOptions.RemoveEmptyEntries))
-            if (StringComparer.InvariantCultureIgnoreCase.Compare(line.Trim(), objectName) == 0) {
+            if (StringComparer.InvariantCultureIgnoreCase.Compare(line.Trim(), objectName) == 0)
+            {
               alreadyExists = true;
               break;
             }
 
           if (!alreadyExists) _lastKnownRoom.Objects += "\r\n" + objectName;
         }
-        else {
+        else
+        {
           _lastKnownRoom.Objects = objectName;
         }
       }
@@ -528,17 +579,21 @@ public sealed class Automap {
 
     // strip out words we consider fluff, like "to".
     var words = new List<string>();
-    foreach (var word in parts) {
+    foreach (var word in parts)
+    {
       var stripWord = false;
       foreach (var strippable in _wordsToStripFromCommands)
-        if (StringComparer.InvariantCultureIgnoreCase.Compare(word, strippable) == 0) {
+        if (StringComparer.InvariantCultureIgnoreCase.Compare(word, strippable) == 0)
+        {
           stripWord = true;
           break;
         }
 
       if (word[0] == '[')
-        for (var temp = 1; temp < word.Length; temp++) {
-          if (word[temp] == ']') {
+        for (var temp = 1; temp < word.Length; temp++)
+        {
+          if (word[temp] == ']')
+          {
             stripWord = true;
             break;
           }
@@ -554,17 +609,20 @@ public sealed class Automap {
     // if the command starts with a word meaning "go", remove it.
     if (words.Count > 0)
       foreach (var wordMeaningGo in _wordsMeaningGo)
-        if (StringComparer.InvariantCultureIgnoreCase.Compare(words[0], wordMeaningGo) == 0) {
+        if (StringComparer.InvariantCultureIgnoreCase.Compare(words[0], wordMeaningGo) == 0)
+        {
           words.RemoveAt(0);
           break;
         }
 
     if (words.Count == 2 && words[0].Equals("trypush"))
-      foreach (var pair in _namesForMovementCommands) {
+      foreach (var pair in _namesForMovementCommands)
+      {
         var direction = pair.Key;
         var wordsForDirection = pair.Value;
         foreach (var wordForDirection in wordsForDirection)
-          if (StringComparer.InvariantCultureIgnoreCase.Compare(words[1], wordForDirection) == 0) {
+          if (StringComparer.InvariantCultureIgnoreCase.Compare(words[1], wordForDirection) == 0)
+          {
             var delta = CompassPointHelper.GetAutomapDirectionVector(CompassPointHelper.GetCompassDirection(direction));
             delta.X *= _lastKnownRoom.Width + Settings.PreferredDistanceBetweenRooms;
             delta.X += _lastKnownRoom.X;
@@ -577,18 +635,21 @@ public sealed class Automap {
     // look for custom tb trizbort commands
     if (words.Count > 0)
       if (words[0].Equals("tb", StringComparison.OrdinalIgnoreCase))
-        if (words.Count > 1) {
+        if (words.Count > 1)
+        {
           if (words[1].Equals("dotted", StringComparison.OrdinalIgnoreCase)) UseDottedConnection = true;
 
           if (words[1].Equals("exit", StringComparison.OrdinalIgnoreCase))
-            if (words.Count > 2) {
+            if (words.Count > 2)
+            {
               var direction = GetDirection(words[2]);
               if (direction != MappableDirection.None)
                 _canvas.AddExitStub(_lastKnownRoom, direction);
             }
 
           if (words[1].Equals("noexit", StringComparison.OrdinalIgnoreCase))
-            if (words.Count > 2) {
+            if (words.Count > 2)
+            {
               var direction = GetDirection(words[2]);
               if (direction != MappableDirection.None)
                 _canvas.RemoveExitStub(_lastKnownRoom, direction);
@@ -605,11 +666,13 @@ public sealed class Automap {
     var possibleDirection = words[0];
 
     // work out which direction it is, if any
-    foreach (var pair in _namesForMovementCommands) {
+    foreach (var pair in _namesForMovementCommands)
+    {
       var direction = pair.Key;
       var wordsForDirection = pair.Value;
       foreach (var wordForDirection in wordsForDirection)
-        if (StringComparer.InvariantCultureIgnoreCase.Compare(possibleDirection, wordForDirection) == 0) {
+        if (StringComparer.InvariantCultureIgnoreCase.Compare(possibleDirection, wordForDirection) == 0)
+        {
           // aha, we know which direction it was
           _lastMoveDirection = direction;
 
@@ -626,7 +689,8 @@ public sealed class Automap {
 
   private MappableDirection GetDirection(string possibleDirection)
   {
-    foreach (var pair in _namesForMovementCommands) {
+    foreach (var pair in _namesForMovementCommands)
+    {
       var direction = pair.Key;
       var wordsForDirection = pair.Value;
       foreach (var wordForDirection in wordsForDirection)
@@ -786,10 +850,12 @@ public sealed class Automap {
   public void Stop()
   {
     if (_tokenSource != null)
-      try {
+      try
+      {
         _tokenSource.Cancel();
       }
-      catch (ObjectDisposedException) {
+      catch (ObjectDisposedException)
+      {
         _tokenSource = null;
       }
 
@@ -808,10 +874,14 @@ public sealed class Automap {
       "Must assume rooms with same name are same room unless transcript is verbose.");
     Status = "Automapping has started.";
     var lines = new List<string>();
-    try {
-      using (var stream = File.Open(_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
-        using (var reader = new StreamReader(stream)) {
-          while (!reader.EndOfStream) {
+    try
+    {
+      using (var stream = File.Open(_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+      {
+        using (var reader = new StreamReader(stream))
+        {
+          while (!reader.EndOfStream)
+          {
             var line = reader.ReadLine();
             lines.Add(line);
           }
@@ -822,10 +892,12 @@ public sealed class Automap {
       var linesBetweenPrompts = new List<string>();
       Status = "Automapping is processing the transcript.";
 
-      foreach (var line in lines) {
+      foreach (var line in lines)
+      {
         tokenSource.Token.ThrowIfCancellationRequested();
         string command;
-        if (IsPrompt(line, out command)) {
+        if (IsPrompt(line, out command))
+        {
           // this is a prompt line
 
           // let's process everything leading up to it since the last prompt, but not necessarily this new prompt itself
@@ -844,7 +916,8 @@ public sealed class Automap {
             _lastMoveDirection != null ? "GO " : string.Empty,
             _lastMoveDirection != null ? _lastMoveDirection.Value.ToString().ToUpperInvariant() : string.Empty);
         }
-        else {
+        else
+        {
           // this line isn't a prompt;
           // hang onto it for now in case we meet a prompt shortly.
           linesBetweenPrompts.Add(line);
@@ -853,18 +926,21 @@ public sealed class Automap {
 
       await ProcessTranscriptText(linesBetweenPrompts, tokenSource.Token);
     }
-    catch (OperationCanceledException) when (tokenSource.IsCancellationRequested) {
+    catch (OperationCanceledException) when (tokenSource.IsCancellationRequested)
+    {
       if (ReferenceEquals(_tokenSource, tokenSource)) Status = "Automap is not running.";
       return;
     }
-    catch (IOException ex) {
+    catch (IOException ex)
+    {
       // couldn't read from the file
       Trace("Automap: Error reading line in file.\nError message: " + ex.Message);
       _reportError("Error opening transcript file:\n" + ex.Message + "\n\nAutomapping halted.", "File Error");
       Status = "Automapping halted.";
       return;
     }
-    catch (UnauthorizedAccessException) {
+    catch (UnauthorizedAccessException)
+    {
       _reportError(
         "Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
         "or with scripting off in your interpreter.\n\nAutomapping halted.",
@@ -872,7 +948,8 @@ public sealed class Automap {
       Status = "Automapping halted.";
       return;
     }
-    finally {
+    finally
+    {
       if (ReferenceEquals(_tokenSource, tokenSource)) _tokenSource = null;
     }
 
@@ -885,7 +962,8 @@ public sealed class Automap {
     var line = reader.PeekReadLine();
     string command;
     var list = new List<string>();
-    while (!IsPrompt(line, out command)) {
+    while (!IsPrompt(line, out command))
+    {
       list.Add(line);
       line = reader.PeekReadLine();
     }
@@ -906,7 +984,8 @@ public sealed class Automap {
       "Must assume rooms with same name are same room unless transcript is verbose.");
     Status = "Automapping has started.";
 
-    try {
+    try
+    {
       using var stream = File.Open(_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
       using var reader = new PeekingStreamReader(stream);
       var lastline = "";
@@ -923,13 +1002,16 @@ public sealed class Automap {
       var line = string.Empty;
       var atFileEnd = false;
       // loop until cancelled
-      while (true) {
+      while (true)
+      {
         tokenSource.Token.ThrowIfCancellationRequested();
-        if (_settings.ContinueTranscript) {
+        if (_settings.ContinueTranscript)
+        {
           line = lastline;
           _settings.ContinueTranscript = false;
         }
-        else {
+        else
+        {
           // ...read a line of text
           line = await WaitForNewLine(reader, tokenSource.Token);
           atFileEnd = reader.EndOfStream; // store this now so that it's still valid when we use it below
@@ -937,7 +1019,8 @@ public sealed class Automap {
 
         //Trace("[" + line + "]");
         string command;
-        if (IsPrompt(line, out command)) {
+        if (IsPrompt(line, out command))
+        {
           // this is a prompt line
 
           // let's process everything leading up to it since the last prompt, but not necessarily this new prompt itself
@@ -970,30 +1053,35 @@ public sealed class Automap {
             _lastMoveDirection != null ? "GO " : string.Empty,
             _lastMoveDirection != null ? _lastMoveDirection.Value.ToString().ToUpperInvariant() : string.Empty);
         }
-        else {
+        else
+        {
           // this line isn't a prompt;
           // hang onto it for now in case we meet a prompt shortly.
           linesBetweenPrompts.Add(line);
         }
       }
     }
-    catch (OperationCanceledException) when (tokenSource.IsCancellationRequested) {
+    catch (OperationCanceledException) when (tokenSource.IsCancellationRequested)
+    {
       if (ReferenceEquals(_tokenSource, tokenSource)) Status = "Automap is not running.";
     }
-    catch (IOException ex) {
+    catch (IOException ex)
+    {
       // couldn't read from the file
       Trace("Automap: Error reading line in file.\nError message: " + ex.Message);
       _reportError("Error opening transcript file:\n" + ex.Message + "\n\nAutomapping halted.", "File Error");
       Status = "Automapping halted.";
     }
-    catch (UnauthorizedAccessException) {
+    catch (UnauthorizedAccessException)
+    {
       _reportError(
         "Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
         "or with scripting off in your interpreter.\n\nAutomapping halted.",
         "Access Error");
       Status = "Automapping halted.";
     }
-    finally {
+    finally
+    {
       if (ReferenceEquals(_tokenSource, tokenSource)) _tokenSource = null;
     }
   }

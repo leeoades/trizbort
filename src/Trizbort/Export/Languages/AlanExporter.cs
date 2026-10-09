@@ -9,7 +9,8 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages;
 
-internal class AlanExporter : CodeExporter {
+internal class AlanExporter : CodeExporter
+{
   public override string FileDialogTitle => "Export Alan Source Code";
 
   public override List<KeyValuePair<string, string>> FileDialogFilters => new() {
@@ -22,7 +23,8 @@ internal class AlanExporter : CodeExporter {
 
   protected override StreamWriter Create(string fileName)
   {
-    if (Path.GetExtension(fileName) == ".inform") {
+    if (Path.GetExtension(fileName) == ".inform")
+    {
       var directoryName = Path.Combine(fileName, "Source");
       Directory.CreateDirectory(directoryName);
       fileName = Path.Combine(directoryName, "Story.ni");
@@ -46,7 +48,8 @@ internal class AlanExporter : CodeExporter {
     writer.WriteLine();
     writer.WriteLine("-- \"{0}\" by {1}", title, author);
 
-    if (!string.IsNullOrWhiteSpace(description)) {
+    if (!string.IsNullOrWhiteSpace(description))
+    {
       writer.WriteLine("-- description: {0}{1}", description, description.EndsWith(".") ? string.Empty : ".");
       writer.WriteLine();
     }
@@ -72,30 +75,36 @@ internal class AlanExporter : CodeExporter {
     var nowhereExits = "";
 
     var description = location.Room.PrimaryDescription;
-    if (!string.IsNullOrWhiteSpace(description)) {
+    if (!string.IsNullOrWhiteSpace(description))
+    {
       writer.WriteLine("  Description");
       writer.WriteLine("  \"{0}\"", description);
     }
-    else {
+    else
+    {
       writer.WriteLine("  Description \"\"");
     }
 
-    foreach (var direction in Directions.AllDirections) {
+    foreach (var direction in Directions.AllDirections)
+    {
       var exit = location.GetBestExit(direction);
 
-      if (exit != null && !exit.Exported) {
+      if (exit != null && !exit.Exported)
+      {
         // remember we've exported this exit
         exit.Exported = true;
 
         writer.WriteLine("  Exit {0} to {1}.", GetAlanName(direction), exit.Target.ExportName);
-        if (exit.Conditional) {
+        if (exit.Conditional)
+        {
           writer.WriteLine("    Check");
           writer.WriteLine("      \"This was marked as a conditional exit in Trizbort, so you'll want to change it.\"");
         }
 
         writer.WriteLine("  End exit.");
       }
-      else {
+      else
+      {
         if (string.IsNullOrWhiteSpace(nowhereExits))
           nowhereExits = GetAlanName(direction);
         else
@@ -103,7 +112,8 @@ internal class AlanExporter : CodeExporter {
       }
     }
 
-    if (!string.IsNullOrWhiteSpace(nowhereExits)) {
+    if (!string.IsNullOrWhiteSpace(nowhereExits))
+    {
       writer.WriteLine();
       writer.WriteLine("  Exit {0} to nowhere", nowhereExits);
       writer.WriteLine("    Check");
@@ -116,13 +126,15 @@ internal class AlanExporter : CodeExporter {
     writer.WriteLine("end The {0}.", location.ExportName);
     writer.WriteLine("");
 
-    if (location.Room.IsStartRoom) {
+    if (location.Room.IsStartRoom)
+    {
       writer.WriteLine("The hero Isa actor at {0}", location.ExportName);
       writer.WriteLine("End The Hero.");
       writer.WriteLine();
     }
 
-    foreach (var thing in location.Things) {
+    foreach (var thing in location.Things)
+    {
       writer.WriteLine(
         "The {0} isa {1} at {2}.",
         thing.ExportName,
@@ -197,7 +209,8 @@ internal class AlanExporter : CodeExporter {
 
   private static string GetAlanName(MappableDirection direction)
   {
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.North:
         return "North";
       case MappableDirection.South:

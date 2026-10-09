@@ -17,7 +17,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Category("Rendering")]
-public class RenderingIntegrationTests : IsolatedProjectTests {
+public class RenderingIntegrationTests : IsolatedProjectTests
+{
   [TestCase(RoomShape.SquareCorners)]
   [TestCase(RoomShape.RoundedCorners)]
   [TestCase(RoomShape.Ellipse)]
@@ -35,7 +36,8 @@ public class RenderingIntegrationTests : IsolatedProjectTests {
     room.RoomFillColor = Color.Red;
     canvas.Origin = Vector.Zero;
     canvas.ZoomFactor = 1;
-    using (var bitmap = Render(canvas, false)) {
+    using (var bitmap = Render(canvas, false))
+    {
       bitmap.GetPixel(150, 100).ToArgb().ShouldBe(Color.Red.ToArgb());
       bitmap.GetPixel(20, 20).ToArgb().ShouldBe(Color.White.ToArgb());
       var handle = new ResizeHandle(CompassPoint.SouthEast, room);
@@ -45,7 +47,8 @@ public class RenderingIntegrationTests : IsolatedProjectTests {
 
     var origin = canvas.Viewport.Center;
     var zoom = canvas.ZoomFactor;
-    using (var bitmap = Render(canvas, true)) {
+    using (var bitmap = Render(canvas, true))
+    {
       bitmap.GetPixel(150, 100).ToArgb().ShouldBe(Color.Red.ToArgb());
     }
 
@@ -86,7 +89,8 @@ public class RenderingIntegrationTests : IsolatedProjectTests {
     page.Annotations.Count.ShouldBe(2);
     Enumerable.Range(0, page.Annotations.Count).Select(index => page.Annotations[index].Elements.GetString("/Contents"))
               .OrderBy(value => value).ShouldBe(new[] { "A bright dome.", "A marble hall." });
-    foreach (var annotation in Enumerable.Range(0, page.Annotations.Count).Select(index => page.Annotations[index])) {
+    foreach (var annotation in Enumerable.Range(0, page.Annotations.Count).Select(index => page.Annotations[index]))
+    {
       annotation.Rectangle.X1.ShouldBeGreaterThanOrEqualTo(0);
       annotation.Rectangle.Y1.ShouldBeGreaterThanOrEqualTo(0);
       annotation.Rectangle.X2.ShouldBeLessThanOrEqualTo(bounds.Width);
@@ -109,16 +113,19 @@ public class RenderingIntegrationTests : IsolatedProjectTests {
     canvas.ZoomFactor.ShouldBeGreaterThan(0);
     canvas.ComputeCanvasBounds(true).Width.ShouldBeGreaterThanOrEqualTo(0);
     canvas.ComputeCanvasBounds(true).Height.ShouldBeGreaterThanOrEqualTo(0);
-    using (var bitmap = Render(canvas, true)) {
+    using (var bitmap = Render(canvas, true))
+    {
       bitmap.Save(Files.File("map.png"), ImageFormat.Png);
-      using (var reopened = Image.FromFile(Files.File("map.png"))) {
+      using (var reopened = Image.FromFile(Files.File("map.png")))
+      {
         reopened.Width.ShouldBe(600);
         reopened.Height.ShouldBe(400);
       }
     }
 
     MapPdfExporter.Save(canvas, Files.File("map.pdf"));
-    using (var pdf = PdfReader.Open(Files.File("map.pdf"), PdfDocumentOpenMode.Import)) {
+    using (var pdf = PdfReader.Open(Files.File("map.pdf"), PdfDocumentOpenMode.Import))
+    {
       pdf.Pages[0].Width.Point.ShouldBeGreaterThan(0);
       pdf.Pages[0].Height.Point.ShouldBeGreaterThan(0);
     }

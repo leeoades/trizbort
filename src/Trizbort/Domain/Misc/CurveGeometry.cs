@@ -6,7 +6,8 @@ namespace Trizbort.Domain.Misc;
 /// <summary>
 ///   Centripetal Catmull-Rom spline helpers used to bend connections through waypoints.
 /// </summary>
-public static class CurveGeometry {
+public static class CurveGeometry
+{
   /// <summary>
   ///   Evaluate the spline span running from <paramref name="p1" /> to <paramref name="p2" />
   ///   at parameter <paramref name="t" /> (0..1), using <paramref name="p0" /> and
@@ -37,7 +38,8 @@ public static class CurveGeometry {
   public static List<List<Vector>> Flatten(IList<Vector> points, Vector before, Vector after, int subdivisions)
   {
     var spans = new List<List<Vector>>();
-    for (var i = 0; i < points.Count - 1; ++i) {
+    for (var i = 0; i < points.Count - 1; ++i)
+    {
       var p0 = i == 0 ? before : points[i - 1];
       var p3 = i + 2 < points.Count ? points[i + 2] : after;
       var span = new List<Vector>(subdivisions + 1);
@@ -62,7 +64,8 @@ public static class CurveGeometry {
     for (var i = 1; i < polyline.Count; ++i) total += polyline[i].Distance(polyline[i - 1]);
 
     var remaining = total / 2;
-    for (var i = 1; i < polyline.Count; ++i) {
+    for (var i = 1; i < polyline.Count; ++i)
+    {
       var delta = polyline[i] - polyline[i - 1];
       var length = delta.Length;
       if (length <= 0) continue;

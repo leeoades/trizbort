@@ -2,7 +2,8 @@ using Trizbort.Domain.Elements;
 
 namespace Trizbort.Domain.Misc;
 
-public abstract class MoveablePort : Port {
+public abstract class MoveablePort : Port
+{
   protected MoveablePort(Element owner) : base(owner)
   {
   }

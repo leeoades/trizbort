@@ -11,7 +11,8 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages;
 
-internal class Inform7Exporter : CodeExporter {
+internal class Inform7Exporter : CodeExporter
+{
   public override List<KeyValuePair<string, string>> FileDialogFilters => new() {
     new KeyValuePair<string, string>("Inform 7 Projects", ".inform"),
     new KeyValuePair<string, string>("Inform 7 Source Files", ".ni"),
@@ -25,7 +26,8 @@ internal class Inform7Exporter : CodeExporter {
 
   protected override StreamWriter Create(string fileName)
   {
-    if (Path.GetExtension(fileName) == ".inform") {
+    if (Path.GetExtension(fileName) == ".inform")
+    {
       var directoryName = Path.Combine(fileName, "Source");
       Directory.CreateDirectory(directoryName);
       fileName = Path.Combine(directoryName, "Story.ni");
@@ -38,18 +40,21 @@ internal class Inform7Exporter : CodeExporter {
   {
     var anyConditionalExits = false;
 
-    if (MapStatistics.NumberOfRoomsWithoutRegion() > 0) {
+    if (MapStatistics.NumberOfRoomsWithoutRegion() > 0)
+    {
       writer.WriteLine("book Regionless Rooms");
       writer.WriteLine();
     }
 
-    foreach (var location in LocationsInExportOrder) {
+    foreach (var location in LocationsInExportOrder)
+    {
       if (location.Room.Region != "NoRegion") continue;
       anyConditionalExits |= PrintThisLoc(writer, location);
     }
 
     // export regions
-    foreach (var region in RegionsInExportOrder) {
+    foreach (var region in RegionsInExportOrder)
+    {
       writer.WriteLine("book {0}", CreateExportName(region.ExportName, null));
       writer.WriteLine();
       writer.WriteLine("There is a region called {0}.", CreateExportName(region.ExportName, null));
@@ -60,7 +65,8 @@ internal class Inform7Exporter : CodeExporter {
           anyConditionalExits |= PrintThisLoc(writer, location);
     }
 
-    if (anyConditionalExits) {
+    if (anyConditionalExits)
+    {
       writer.WriteLine("book conditional exit warning");
       writer.WriteLine();
       writer.WriteLine("To block conditional exits:");
@@ -80,7 +86,8 @@ internal class Inform7Exporter : CodeExporter {
     writer.WriteLine("\"{0}\" by \"{1}\"", title, author);
     writer.WriteLine();
 
-    if (!string.IsNullOrEmpty(description)) {
+    if (!string.IsNullOrEmpty(description))
+    {
       writer.WriteLine(
         "The story description is {0}{1}",
         ToInform7PrintableString(description),
@@ -140,7 +147,8 @@ internal class Inform7Exporter : CodeExporter {
 
     if (myThing.ProperNamed) return "";
 
-    if (string.IsNullOrEmpty(noun) || IsPlural(noun) || myThing.Forceplural == Thing.Amounts.Plural) {
+    if (string.IsNullOrEmpty(noun) || IsPlural(noun) || myThing.Forceplural == Thing.Amounts.Plural)
+    {
       if (!string.IsNullOrEmpty(noun) && char.IsUpper(noun[0])) return string.Empty;
 
       // e.g. "Some canvas", "Some leaves"
@@ -172,7 +180,8 @@ internal class Inform7Exporter : CodeExporter {
 
   private static string GetInform7Name(MappableDirection direction)
   {
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.North:
         return "North";
       case MappableDirection.South:
@@ -239,31 +248,37 @@ internal class Inform7Exporter : CodeExporter {
 
     writer.WriteLine(); // extra blank line for formatting and so utterly blank rooms don't throw an error in Inform IDE
 
-    if (location.Room.IsStartRoom) {
+    if (location.Room.IsStartRoom)
+    {
       writer.Write("The player is in {0}.", location.ExportName);
       writer.WriteLine();
     }
 
     var exportedThings = false;
 
-    foreach (var thing in location.Things) {
+    foreach (var thing in location.Things)
+    {
       exportedThings = true;
 
       var thingText = string.Empty;
 
       if (!thing.IsPerson) thingText += $"{GetArticle(thing)}{thing.ExportName} ";
       thingText += $"{WhatItIs(thing)}";
-      if (thing.Container == null) {
+      if (thing.Container == null)
+      {
         thingText += $" in {thing.Location.ExportName}.";
       }
-      else {
-        if (thing.Container.IsPerson) {
+      else
+      {
+        if (thing.Container.IsPerson)
+        {
           if (thing.Worn)
             thingText += $" worn by {thing.Container.ExportName}.";
           else
             thingText += $" carried by {thing.Container.ExportName}.";
         }
-        else {
+        else
+        {
           if (thing.PartOf)
             thingText += $" part of {thing.Container.ExportName}.";
           else
@@ -290,10 +305,12 @@ internal class Inform7Exporter : CodeExporter {
 
     var exportedExits = false;
     // export the chosen exits from this location.
-    foreach (var direction in Directions.AllDirections) {
+    foreach (var direction in Directions.AllDirections)
+    {
       var exit = location.GetBestExit(direction);
 
-      if (exit != null && !exit.Exported) {
+      if (exit != null && !exit.Exported)
+      {
         // remember we've exported this exit
         exit.Exported = true;
         exportedExits = true;
@@ -308,9 +325,11 @@ internal class Inform7Exporter : CodeExporter {
     if (exportedExits) writer.WriteLine();
 
     var wroteConditionalExit = false;
-    foreach (var direction in Directions.AllDirections) {
+    foreach (var direction in Directions.AllDirections)
+    {
       var exit = location.GetBestExit(direction);
-      if (exit != null && exit.Conditional) {
+      if (exit != null && exit.Conditional)
+      {
         wroteConditionalExit = true;
         writer.WriteLine(
           "Instead of going {0} from {1}, block conditional exits.",
@@ -347,7 +366,8 @@ internal class Inform7Exporter : CodeExporter {
     // "battery-powered brass lantern" -> { "battery-powered", "brass", "lantern" }
     var words = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
     text = string.Empty;
-    foreach (var word in words) {
+    foreach (var word in words)
+    {
       // "battery-powered"
       if (text.Length > 0) text += " and ";
       text += ToInform7UnderstandString(word);
@@ -407,13 +427,15 @@ internal class Inform7Exporter : CodeExporter {
   {
     writer.Write($"{GetInform7Name(direction)} of {location.ExportName} is {exit.Target.ExportName}.");
     var oppositeDirection = CompassPointHelper.GetOpposite(direction);
-    if (Exit.IsReciprocated(location, direction, exit.Target)) {
+    if (Exit.IsReciprocated(location, direction, exit.Target))
+    {
       // only export each connection once, if reciprocated;
       // I7 will infer that the direction is two way unless contradicted.
       var reciprocal = exit.Target.GetBestExit(oppositeDirection);
       reciprocal.Exported = true;
     }
-    else if (exit.Target.GetBestExit(oppositeDirection) == null) {
+    else if (exit.Target.GetBestExit(oppositeDirection) == null)
+    {
       // if we aren't laying down a contradiction which I7 will pick up,
       // then be clear about one way connections.
       writer.Write($" {GetInform7Name(oppositeDirection)} of {exit.Target.ExportName} is nowhere.");

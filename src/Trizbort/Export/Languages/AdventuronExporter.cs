@@ -9,7 +9,8 @@ using Trizbort.Domain.Enums;
 
 namespace Trizbort.Export.Languages;
 
-internal class AdventuronExporter : CodeExporter {
+internal class AdventuronExporter : CodeExporter
+{
   // Adventuron limits headers to 25 characters
   private const int MaximumHeaderLength = 25;
 
@@ -42,7 +43,8 @@ internal class AdventuronExporter : CodeExporter {
     foreach (var location in LocationsInExportOrder.Where(location => location.ExportName.Length > maxLen))
       maxLen = EscapeAdventuronId(location.ExportName).Length;
 
-    foreach (var location in LocationsInExportOrder) {
+    foreach (var location in LocationsInExportOrder)
+    {
       if (isFirst || location.Room.IsStartRoom) startRoom = location.ExportName;
 
       //String subtitle = string.IsNullOrEmpty(location.Room.SubTitle) ? null : location.Room.SubTitle;
@@ -61,7 +63,8 @@ internal class AdventuronExporter : CodeExporter {
       locationsSb.Append(
         "   " + PadRight(EscapeAdventuronId(location.ExportName), maxLen) + " : location \"" + roomDescription + "\"" +
         headerDescription + ";\n");
-      foreach (var direction in Directions.AllDirections) {
+      foreach (var direction in Directions.AllDirections)
+      {
         var exit = location.GetBestExit(direction);
         if (exit != null)
           connectionsSb.Append(
@@ -97,7 +100,8 @@ internal class AdventuronExporter : CodeExporter {
   {
     var sb = new StringBuilder();
     foreach (var c in input.ToCharArray())
-      switch (c) {
+      switch (c)
+      {
         case ' ':
         case '_': {
           if (sb.Length > 0 && sb[sb.Length - 1] != '_') sb.Append("_");
@@ -128,7 +132,8 @@ internal class AdventuronExporter : CodeExporter {
   {
     var sb = new StringBuilder();
     foreach (var c in input.ToCharArray())
-      switch (c) {
+      switch (c)
+      {
         case '\n':
           sb.Append("\\n");
           break;
@@ -204,7 +209,8 @@ internal class AdventuronExporter : CodeExporter {
 
   private static string ToAdventuronDirectionName(MappableDirection direction)
   {
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.North: return "north_oneway";
       case MappableDirection.South: return "south_oneway";
       case MappableDirection.East: return "east_oneway";

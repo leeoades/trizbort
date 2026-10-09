@@ -8,7 +8,8 @@ namespace Trizbort.Util;
 /// <summary>
 ///   Wrapper around an XML attribute for ease of access.
 /// </summary>
-public class XmlAttributeReader {
+public class XmlAttributeReader
+{
   public XmlAttributeReader(string value)
   {
     Text = value;
@@ -55,10 +56,12 @@ public class XmlAttributeReader {
 
   public Color ToColor(Color defaultValue)
   {
-    try {
+    try
+    {
       return ColorTranslator.FromHtml(Text);
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       return defaultValue;
     }
   }

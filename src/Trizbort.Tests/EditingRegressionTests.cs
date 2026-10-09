@@ -16,7 +16,8 @@ using Trizbort.UI.Controls;
 
 namespace Trizbort.Tests;
 
-internal class TestCanvas : Canvas {
+internal class TestCanvas : Canvas
+{
   public void MoveMouse(Vector world)
   {
     var point = Point.Round(CanvasToClient(world));
@@ -52,7 +53,8 @@ internal class TestCanvas : Canvas {
 
 [TestFixture]
 [Category("Unit")]
-public class EditingRegressionTests : IsolatedProjectTests {
+public class EditingRegressionTests : IsolatedProjectTests
+{
   private static IEnumerable<TestCaseData> ResizeCases()
   {
     foreach (var label in new[] { false, true })
@@ -180,7 +182,8 @@ public class EditingRegressionTests : IsolatedProjectTests {
 
 [TestFixture]
 [Category("Integration")]
-public class CanvasInteractionTests : IsolatedProjectTests {
+public class CanvasInteractionTests : IsolatedProjectTests
+{
   [Test]
   public void TooltipHover_RegistersNativeDelayedCursorPositionedTooltipWithoutShowingImmediately()
   {
@@ -217,18 +220,22 @@ public class CanvasInteractionTests : IsolatedProjectTests {
     tooltip.GetToolTip(canvas).ShouldNotBeNullOrEmpty();
     tooltip.IsShown = true;
     tooltip.LastOwner = canvas;
-    if (action == "leave") {
+    if (action == "leave")
+    {
       canvas.LeaveMouse();
     }
-    else if (action == "click") {
+    else if (action == "click")
+    {
       canvas.PressMouse(room.InnerBounds.Center);
       canvas.SelectedElement.ShouldBeSameAs(room);
     }
-    else if (action == "disabled") {
+    else if (action == "disabled")
+    {
       ApplicationSettingsController.AppSettings.ShowObjectsInTooltips = false;
       canvas.MoveMouse(room.InnerBounds.Center + new Vector(1, 1));
     }
-    else {
+    else
+    {
       canvas.MoveMouse(new Vector(250, 150));
     }
 
@@ -281,14 +288,17 @@ public class CanvasInteractionTests : IsolatedProjectTests {
     using var canvas = new TestCanvas { Size = new Size(600, 400) };
     canvas.ZoomFactor = 1;
     Element element;
-    if (kind == "room") {
+    if (kind == "room")
+    {
       element = ProjectRegressionTests.AddRoom("Room");
     }
-    else if (kind == "label") {
+    else if (kind == "label")
+    {
       element = new MapLabel(Project.Current);
       Project.Current.Elements.Add(element);
     }
-    else {
+    else
+    {
       element = new Connection(Project.Current, new Vertex(new Vector(-100, 0)), new Vertex(new Vector(100, 0)));
       Project.Current.Elements.Add(element);
     }
@@ -296,7 +306,8 @@ public class CanvasInteractionTests : IsolatedProjectTests {
     canvas.SelectedElement = element;
     var center = element is Room room ? room.InnerBounds.Center :
       element is MapLabel label ? label.InnerBounds.Center : new Vector(-50, 0);
-    if (key == Keys.None) {
+    if (key == Keys.None)
+    {
       canvas.MoveMouse(center);
       canvas.PressMouse(center);
     }
@@ -307,11 +318,13 @@ public class CanvasInteractionTests : IsolatedProjectTests {
     tooltip.HoverElement = element;
     tooltip.IsShown = true;
     Project.Current.IsDirty = false;
-    if (key == Keys.None) {
+    if (key == Keys.None)
+    {
       canvas.MoveMouse(center + new Vector(30, 20));
       canvas.ReleaseMouse();
     }
-    else {
+    else
+    {
       canvas.Key(key);
     }
 
@@ -412,7 +425,8 @@ public class CanvasInteractionTests : IsolatedProjectTests {
     canvas.MoveMouse(new Vector(0, distance));
     canvas.ReleaseMouse();
     connection.HasCurveWaypoints.ShouldBe(creates);
-    if (creates) {
+    if (creates)
+    {
       connection.GetCurveWaypoint(CurveWaypoint.Middle).ShouldBe(new Vector(0, distance));
       canvas.DeleteSelection();
       connection.HasCurveWaypoints.ShouldBeFalse();
@@ -464,8 +478,10 @@ public class CanvasInteractionTests : IsolatedProjectTests {
     if (includeTarget) selected.Insert(aliasFirst ? 1 : 0, target);
     var copy = JsonConvert.DeserializeObject<CopyController.CopyObject>(
       JsonConvert.SerializeObject(controller.CreateCopyObject(selected)));
-    try {
-      if (crossMap) {
+    try
+    {
+      if (crossMap)
+      {
         Project.Current = new Project();
         ProjectRegressionTests.AddRoom("Unrelated target").Id.ShouldBe(target.Id);
       }
@@ -473,12 +489,14 @@ public class CanvasInteractionTests : IsolatedProjectTests {
       using var canvas = new TestCanvas();
       canvas.PasteRooms(false, copy, controller);
       var pastedAlias = canvas.SelectedRooms.Single(room => room.Name == "Alias");
-      if (includeTarget) {
+      if (includeTarget)
+      {
         var pastedTarget = canvas.SelectedRooms.Single(room => room.Name == "Source target");
         pastedAlias.ReferenceRoom.ShouldBeSameAs(pastedTarget);
         pastedTarget.ShouldNotBeSameAs(target);
       }
-      else {
+      else
+      {
         pastedAlias.ReferenceRoomId.ShouldBe(-1);
         pastedAlias.ReferenceRoom.ShouldBeNull();
         pastedAlias.IsReference.ShouldBeFalse();
@@ -486,8 +504,10 @@ public class CanvasInteractionTests : IsolatedProjectTests {
 
       alias.ReferenceRoomId.ShouldBe(target.Id);
     }
-    finally {
-      if (crossMap) {
+    finally
+    {
+      if (crossMap)
+      {
         Project.Current.Dispose();
         Project.Current = source;
       }

@@ -5,7 +5,8 @@ using System.Drawing;
 
 namespace Trizbort.Extensions;
 
-public static class ColorExtensions {
+public static class ColorExtensions
+{
   public static bool ColorsAreClose(this Color a, Color c2, int threshold = 50)
   {
     int r = a.R - c2.R,
@@ -57,27 +58,33 @@ public static class ColorExtensions {
     var r1 = 0d;
     var g1 = 0d;
     var b1 = 0d;
-    if (hue2 >= 0 && hue2 < 1) {
+    if (hue2 >= 0 && hue2 < 1)
+    {
       r1 = chroma;
       g1 = x;
     }
-    else if (hue2 >= 1 && hue2 < 2) {
+    else if (hue2 >= 1 && hue2 < 2)
+    {
       r1 = x;
       g1 = chroma;
     }
-    else if (hue2 >= 2 && hue2 < 3) {
+    else if (hue2 >= 2 && hue2 < 3)
+    {
       g1 = chroma;
       b1 = x;
     }
-    else if (hue2 >= 3 && hue2 < 4) {
+    else if (hue2 >= 3 && hue2 < 4)
+    {
       g1 = x;
       b1 = chroma;
     }
-    else if (hue2 >= 4 && hue2 < 5) {
+    else if (hue2 >= 4 && hue2 < 5)
+    {
       r1 = x;
       b1 = chroma;
     }
-    else if (hue2 >= 5 && hue2 <= 6) {
+    else if (hue2 >= 5 && hue2 <= 6)
+    {
       r1 = chroma;
       b1 = x;
     }
@@ -133,13 +140,15 @@ public static class ColorExtensions {
     return Math.Min(d2, d3);
   }
 
-  internal struct Rgb {
+  internal struct Rgb
+  {
     internal double B;
     internal double G;
     internal double R;
   }
 
-  internal struct Hsb {
+  internal struct Hsb
+  {
     internal double B;
     internal double H;
     internal double S;

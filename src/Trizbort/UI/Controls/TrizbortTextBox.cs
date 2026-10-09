@@ -4,7 +4,8 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI.Controls;
 
-public class TrizbortTextBox : TextBox {
+public class TrizbortTextBox : TextBox
+{
   private const int EmSetCueBanner = 0x1501;
   private string _cue;
 

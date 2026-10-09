@@ -9,7 +9,8 @@ namespace Trizbort.UI;
 ///   Text editing helpers for the room object list, which uses "-" bullets to show containment
 ///   (see <see cref="ObjectList" />). Kept free of WinForms so it can be unit tested.
 /// </summary>
-public static class ObjectListEditor {
+public static class ObjectListEditor
+{
   /// <summary>
   ///   Indent (or outdent) every line touched by the selection by one level.
   /// </summary>
@@ -25,7 +26,8 @@ public static class ObjectListEditor {
     var newStart = selectionStart;
     var newEnd = selectionEnd;
     var offset = 0;
-    for (var index = first; index <= last; ++index) {
+    for (var index = first; index <= last; ++index)
+    {
       var lineStart = lines[index].Start + offset;
       var lineText = lines[index].Text;
       var change = outdent ? OutdentLine(builder, lineStart, lineText) : IndentLine(builder, lineStart, lineText);
@@ -81,7 +83,8 @@ public static class ObjectListEditor {
     while (whitespace < lineText.Length && (lineText[whitespace] == ' ' || lineText[whitespace] == '\t')) ++whitespace;
 
     if (ObjectList.LeadingIndentLength(lineText) > whitespace && lineText[whitespace] != ' ' &&
-        lineText[whitespace] != '\t') {
+        lineText[whitespace] != '\t')
+    {
       // already bulleted: add another bullet to the run, e.g. "- key" -> "-- key"
       builder.Insert(lineStart + whitespace, '-');
       return new Change { Position = lineStart + whitespace, Length = 1 };
@@ -97,7 +100,8 @@ public static class ObjectListEditor {
     while (whitespace < lineText.Length && (lineText[whitespace] == ' ' || lineText[whitespace] == '\t')) ++whitespace;
 
     var prefix = ObjectList.LeadingIndentLength(lineText);
-    if (prefix > whitespace) {
+    if (prefix > whitespace)
+    {
       // remove one bullet; if it was the last, remove the space following it too
       var runEnd = whitespace;
       while (runEnd < prefix && lineText[runEnd] != ' ' && lineText[runEnd] != '\t') ++runEnd;
@@ -109,7 +113,8 @@ public static class ObjectListEditor {
     }
 
     if (whitespace == 0) return new Change();
-    if (lineText[0] == '\t') {
+    if (lineText[0] == '\t')
+    {
       builder.Remove(lineStart, 1);
       return new Change { Position = lineStart, Length = -1 };
     }
@@ -124,9 +129,11 @@ public static class ObjectListEditor {
   {
     var lines = new List<Line>();
     var start = 0;
-    while (true) {
+    while (true)
+    {
       var end = text.IndexOf('\n', start);
-      if (end < 0) {
+      if (end < 0)
+      {
         lines.Add(new Line { Start = start, Text = text.Substring(start) });
         return lines;
       }
@@ -146,18 +153,21 @@ public static class ObjectListEditor {
     return 0;
   }
 
-  public struct EditResult {
+  public struct EditResult
+  {
     public string Text;
     public int SelectionStart;
     public int SelectionLength;
   }
 
-  private struct Change {
+  private struct Change
+  {
     public int Position;
     public int Length;
   }
 
-  private struct Line {
+  private struct Line
+  {
     public int Start;
     public string Text;
   }

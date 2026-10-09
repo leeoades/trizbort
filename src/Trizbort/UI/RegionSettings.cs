@@ -6,7 +6,8 @@ using Trizbort.Domain.Misc;
 
 namespace Trizbort.UI;
 
-public partial class RegionSettings : Form {
+public partial class RegionSettings : Form
+{
   private readonly string _originalName;
   private readonly List<Region> _regions;
 
@@ -42,17 +43,21 @@ public partial class RegionSettings : Form {
   private void OkButtonClick(object sender, EventArgs e)
   {
     _txtRegionName.Text = _txtRegionName.Text.Trim().Replace("\"", "'");
-    if (Domain.Misc.Region.ValidRegionName(_txtRegionName.Text)) {
+    if (Domain.Misc.Region.ValidRegionName(_txtRegionName.Text))
+    {
       if (!_txtRegionName.Text.Equals(_originalName, StringComparison.OrdinalIgnoreCase) && _regions.Any(p =>
-            p.RegionName.Equals(_txtRegionName.Text, StringComparison.OrdinalIgnoreCase))) {
+            p.RegionName.Equals(_txtRegionName.Text, StringComparison.OrdinalIgnoreCase)))
+      {
         UserInteraction.ShowMessage($"A Region already exists with the name '{_txtRegionName.Text}'");
       }
-      else {
+      else
+      {
         RegionToChange.RegionName = _txtRegionName.Text;
         DialogResult = DialogResult.OK;
       }
     }
-    else {
+    else
+    {
       UserInteraction.ShowMessage(
         "You can't have an empty region name",
         "Empty Region Name",

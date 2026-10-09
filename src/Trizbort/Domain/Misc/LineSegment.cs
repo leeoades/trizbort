@@ -4,7 +4,8 @@ using PdfSharp.Drawing;
 
 namespace Trizbort.Domain.Misc;
 
-public class LineSegment {
+public class LineSegment
+{
   public Vector End;
 
   public ConnectionIconBlock IconBlock1;
@@ -57,37 +58,45 @@ public class LineSegment {
     intersects = null;
     const float small = 0.01f;
 
-    if (Math.Abs(denominator) <= small) {
-      if (Math.Abs(ua) <= small && Math.Abs(ub) <= small) {
+    if (Math.Abs(denominator) <= small)
+    {
+      if (Math.Abs(ua) <= small && Math.Abs(ub) <= small)
+      {
         // lines are coincident:
         // lacking other algorithms which actually work,
         // roll some expensive distance tests to find intersection points
-        if (a.Start.DistanceFromLineSegment(b) <= small) {
+        if (a.Start.DistanceFromLineSegment(b) <= small)
+        {
           intersects = new List<LineSegmentIntersect>();
           intersects.Add(new LineSegmentIntersect(LineSegmentIntersectType.StartA, a.Start));
         }
 
-        if (a.End.DistanceFromLineSegment(b) <= small) {
+        if (a.End.DistanceFromLineSegment(b) <= small)
+        {
           if (intersects == null) intersects = new List<LineSegmentIntersect>();
           intersects.Add(new LineSegmentIntersect(LineSegmentIntersectType.EndA, a.End));
         }
 
-        if (b.Start.DistanceFromLineSegment(a) <= small) {
+        if (b.Start.DistanceFromLineSegment(a) <= small)
+        {
           if (intersects == null) intersects = new List<LineSegmentIntersect>();
           intersects.Add(new LineSegmentIntersect(LineSegmentIntersectType.MidPointA, b.Start));
         }
 
-        if (b.End.DistanceFromLineSegment(a) <= small) {
+        if (b.End.DistanceFromLineSegment(a) <= small)
+        {
           if (intersects == null) intersects = new List<LineSegmentIntersect>();
           intersects.Add(new LineSegmentIntersect(LineSegmentIntersectType.MidPointA, b.End));
         }
       }
     }
-    else {
+    else
+    {
       ua /= denominator;
       ub /= denominator;
 
-      if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
+      if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1)
+      {
         var type = LineSegmentIntersectType.MidPointA;
         if (ua <= small)
           type = LineSegmentIntersectType.StartA;
@@ -99,12 +108,14 @@ public class LineSegment {
     }
 
     if (intersects != null && ignoreEndPointIntersects)
-      for (var index = 0; index < intersects.Count; ++index) {
+      for (var index = 0; index < intersects.Count; ++index)
+      {
         var intersect = intersects[index];
         if (intersect.Position.Distance(a.Start) <= small ||
             intersect.Position.Distance(b.Start) <= small ||
             intersect.Position.Distance(a.End) <= small ||
-            intersect.Position.Distance(b.End) <= small) {
+            intersect.Position.Distance(b.End) <= small)
+        {
           intersects.RemoveAt(index);
           --index;
         }
@@ -140,7 +151,8 @@ public class LineSegment {
     var length = delta.Length;
     delta.Normalize();
 
-    if (length > amount) {
+    if (length > amount)
+    {
       length -= amount;
       End = Start + delta * length;
       return true;
@@ -155,7 +167,8 @@ public class LineSegment {
 /// <summary>
 ///   The type of a line segment intersection.
 /// </summary>
-public enum LineSegmentIntersectType {
+public enum LineSegmentIntersectType
+{
   MidPointA,
   StartA,
   EndA
@@ -164,7 +177,8 @@ public enum LineSegmentIntersectType {
 /// <summary>
 ///   A line segment intersection.
 /// </summary>
-public struct LineSegmentIntersect {
+public struct LineSegmentIntersect
+{
   public LineSegmentIntersect(LineSegmentIntersectType type, Vector pos)
   {
     Type = type;

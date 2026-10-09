@@ -1,6 +1,7 @@
 ﻿namespace Trizbort.Domain.Enums;
 
-public enum BorderDashStyle {
+public enum BorderDashStyle
+{
   None,
   Solid,
   Dot,

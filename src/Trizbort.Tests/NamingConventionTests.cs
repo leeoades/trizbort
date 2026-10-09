@@ -11,7 +11,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Category("Unit")]
-public class NamingConventionTests {
+public class NamingConventionTests
+{
   private const BindingFlags DeclaredMembers =
     BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
     BindingFlags.Static | BindingFlags.DeclaredOnly;
@@ -24,15 +25,18 @@ public class NamingConventionTests {
     var violations = new List<string>();
     foreach (var type in assembly.GetTypes().Where(type =>
                !type.IsDefined(typeof(CompilerGeneratedAttribute), false) &&
-               type.Namespace != "Trizbort.Properties")) {
+               type.Namespace != "Trizbort.Properties"))
+    {
       foreach (var field in type.GetFields(DeclaredMembers).Where(field =>
                  !field.IsDefined(typeof(CompilerGeneratedAttribute), false)))
-        if (field.IsLiteral) {
+        if (field.IsLiteral)
+        {
           if (!char.IsUpper(field.Name[0]) || field.Name.Contains('_'))
             violations.Add(type.Name + "." + field.Name);
         }
         else if (field.IsPrivate &&
-                 (!Regex.IsMatch(field.Name, "^_[a-z]") || Regex.IsMatch(field.Name, "^_[ms][A-Z_]"))) {
+                 (!Regex.IsMatch(field.Name, "^_[a-z]") || Regex.IsMatch(field.Name, "^_[ms][A-Z_]")))
+        {
           violations.Add(type.Name + "." + field.Name);
         }
 

@@ -5,7 +5,8 @@ using Trizbort.Extensions;
 namespace Trizbort.Tests;
 
 [TestFixture]
-public class StringExentensionTests {
+public class StringExentensionTests
+{
   [Test]
   public void StartsWithVowel_EmptyString_ReturnsFalse()
   {

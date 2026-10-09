@@ -12,7 +12,8 @@ using Trizbort.Util;
 
 namespace Trizbort.Export;
 
-public abstract class CodeExporter : IDisposable {
+public abstract class CodeExporter : IDisposable
+{
   private readonly Dictionary<Room, Location> _mapRoomToLocation = new();
 
   protected CodeExporter()
@@ -64,7 +65,8 @@ public abstract class CodeExporter : IDisposable {
     string ss;
     using var writer = new StringWriter();
     var title = Project.Current.Title;
-    if (string.IsNullOrEmpty(title)) {
+    if (string.IsNullOrEmpty(title))
+    {
       title = PathHelper.SafeGetFilenameWithoutExtension(Project.Current.FileName);
       if (string.IsNullOrEmpty(title)) title = "A Trizbort Map";
     }
@@ -87,7 +89,8 @@ public abstract class CodeExporter : IDisposable {
   {
     using var writer = Create(fileName);
     var title = Project.Current.Title;
-    if (string.IsNullOrEmpty(title)) {
+    if (string.IsNullOrEmpty(title))
+    {
       title = PathHelper.SafeGetFilenameWithoutExtension(Project.Current.FileName);
       if (string.IsNullOrEmpty(title)) title = "A Trizbort Map";
     }
@@ -128,7 +131,8 @@ public abstract class CodeExporter : IDisposable {
     // file them by room, and assign them priorities.
     // don't decide yet which exit is "the" from a room in a particular direction,
     // since we need to compare all a room's exits for that.
-    foreach (var connection in Project.Current.Elements.OfType<Connection>()) {
+    foreach (var connection in Project.Current.Elements.OfType<Connection>())
+    {
       var sourceRoom = connection.GetSourceRoom(out var sourceCompassPoint);
       var targetRoom = connection.GetTargetRoom(out var targetCompassPoint);
 
@@ -137,7 +141,8 @@ public abstract class CodeExporter : IDisposable {
       if (sourceRoom == targetRoom && sourceCompassPoint == targetCompassPoint) continue;
 
       if (_mapRoomToLocation.TryGetValue(sourceRoom, out var sourceLocation) &&
-          _mapRoomToLocation.TryGetValue(targetRoom, out var targetLocation)) {
+          _mapRoomToLocation.TryGetValue(targetRoom, out var targetLocation))
+      {
         sourceLocation.AddExit(
           new Exit(
             sourceLocation,
@@ -165,7 +170,8 @@ public abstract class CodeExporter : IDisposable {
     foreach (var reservedWord in ReservedWords)
       mapExportNameToRegion.Add(reservedWord, null);
 
-    foreach (var region in Settings.Regions.Where(p => p.RegionName != Region.DefaultRegion)) {
+    foreach (var region in Settings.Regions.Where(p => p.RegionName != Region.DefaultRegion))
+    {
       var exportName = GetExportName(region.RegionName, null);
       if (exportName == string.Empty)
         exportName = "region";
@@ -188,7 +194,8 @@ public abstract class CodeExporter : IDisposable {
 
     foreach (var region in RegionsInExportOrder) mapExportNameToRoom.Add(region.ExportName, null);
 
-    foreach (var element in Project.Current.Elements.OfType<Room>()) {
+    foreach (var element in Project.Current.Elements.OfType<Room>())
+    {
       var room = element;
 
       // assign each room a unique export name.
@@ -216,14 +223,16 @@ public abstract class CodeExporter : IDisposable {
 
     foreach (var region in RegionsInExportOrder) mapExportNameToThing.Add(region.ExportName, null);
 
-    foreach (var location in LocationsInExportOrder) {
+    foreach (var location in LocationsInExportOrder)
+    {
       var objectsText = location.Room.Objects;
       if (string.IsNullOrEmpty(objectsText)) continue;
 
       // indentation (spaces, tabs or "-" bullets) denotes containment; see ObjectList
       var items = ObjectList.Parse(objectsText);
       var things = new List<Thing>();
-      foreach (var item in items) {
+      foreach (var item in items)
+      {
         // assign each thing a unique export name.
         var exportName = GetExportName(item.Name, null);
         var index = 2;

@@ -10,7 +10,8 @@ namespace Trizbort.Util;
 /// <summary>
 ///   Wrapper around an XmlElement for ease of access.
 /// </summary>
-public class XmlElementReader {
+public class XmlElementReader
+{
   private List<XmlElementReader> _children;
 
   public XmlElementReader()
@@ -25,7 +26,8 @@ public class XmlElementReader {
   public XmlElementReader this[string localName] {
     get {
       if (Element != null)
-        foreach (var node in Element.ChildNodes) {
+        foreach (var node in Element.ChildNodes)
+        {
           if (!(node is XmlElement))
             continue;
 
@@ -39,10 +41,12 @@ public class XmlElementReader {
 
   public List<XmlElementReader> Children {
     get {
-      if (_children == null) {
+      if (_children == null)
+      {
         _children = new List<XmlElementReader>();
         if (Element != null)
-          foreach (var node in Element.ChildNodes) {
+          foreach (var node in Element.ChildNodes)
+          {
             if (!(node is XmlElement))
               continue;
 
@@ -122,10 +126,12 @@ public class XmlElementReader {
 
   public Color ToColor(Color defaultValue)
   {
-    try {
+    try
+    {
       return ColorTranslator.FromHtml(Text);
     }
-    catch (Exception) {
+    catch (Exception)
+    {
       return defaultValue;
     }
   }

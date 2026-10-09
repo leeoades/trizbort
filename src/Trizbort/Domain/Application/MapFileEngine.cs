@@ -1,6 +1,7 @@
 ﻿namespace Trizbort.Domain.Application;
 
-public abstract class MapFileEngine {
+public abstract class MapFileEngine
+{
   private readonly string _fileName;
 
   protected MapFileEngine()

@@ -5,7 +5,8 @@ using Trizbort.Domain.Elements;
 
 namespace Trizbort.Domain.SerializeHelpers;
 
-public class ElementConverter : JsonConverter {
+public class ElementConverter : JsonConverter
+{
   public override bool CanWrite => false;
 
   public override bool CanConvert(Type objectType)

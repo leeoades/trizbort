@@ -1,4 +1,3 @@
-using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -15,7 +14,6 @@ using Trizbort.Domain.Controllers;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
-using Trizbort.Export;
 using Trizbort.Export.Languages;
 using Trizbort.UI;
 using Trizbort.UI.Controls;
@@ -25,7 +23,8 @@ namespace Trizbort.Tests;
 [TestFixture]
 [Apartment(ApartmentState.STA)]
 [NonParallelizable]
-public class MapLabelTests {
+public class MapLabelTests
+{
   [Test]
   public void NewLabel_IsNotARoom_AndCanBeSelectedWithoutOutlineOrBackground()
   {
@@ -113,7 +112,8 @@ public class MapLabelTests {
     project.Elements.Add(ordinaryLine);
     var path = Path.GetTempFileName();
     var loaded = new Project();
-    try {
+    try
+    {
       new LegacyMapFileEngine(project).Save(path).ShouldBeTrue();
       var document = new XmlDocument();
       document.Load(path);
@@ -133,7 +133,8 @@ public class MapLabelTests {
       loadedLine.GetCurveWaypoint(CurveWaypoint.Middle).ShouldBe(new Vector(180, 90));
       loadedLine.IsDangling.ShouldBeFalse();
     }
-    finally {
+    finally
+    {
       Project.FileWatcher.StopWatcher();
       loaded.Dispose();
       File.Delete(path);
@@ -177,24 +178,28 @@ public class MapLabelTests {
       Text = "", Position = new Vector(20, 20), Size = new Vector(100, 60), Shape = shape,
       BackgroundColor = Color.Yellow, BorderColor = Color.Red
     };
-    using (var bitmap = Render(label, false)) {
+    using (var bitmap = Render(label, false))
+    {
       CountNonWhitePixels(bitmap).ShouldBe(0);
     }
 
     label.HasBackground = true;
-    using (var bitmap = Render(label, false)) {
+    using (var bitmap = Render(label, false))
+    {
       bitmap.GetPixel(70, 50).ToArgb().ShouldBe(Color.Yellow.ToArgb());
     }
 
     label.HasBackground = false;
     label.BorderStyle = BorderDashStyle.Solid;
-    using (var bitmap = Render(label, false)) {
+    using (var bitmap = Render(label, false))
+    {
       CountNonWhitePixels(bitmap).ShouldBeGreaterThan(0);
       bitmap.GetPixel(70, 50).ToArgb().ShouldBe(Color.White.ToArgb());
     }
 
     label.BorderStyle = BorderDashStyle.None;
-    using (var bitmap = Render(label, true)) {
+    using (var bitmap = Render(label, true))
+    {
       CountNonWhitePixels(bitmap).ShouldBeGreaterThan(0);
     }
   }
@@ -204,16 +209,21 @@ public class MapLabelTests {
   {
     var label = new MapLabel(new Project())
       { Text = "Notes", Position = new Vector(20, 20), Size = new Vector(100, 60) };
-    using (var bitmap = Render(label, false)) {
+    using (var bitmap = Render(label, false))
+    {
       CountNonWhitePixels(bitmap).ShouldBeGreaterThan(0);
       bitmap.GetPixel(20, 20).ToArgb().ShouldBe(Color.White.ToArgb());
     }
 
-    using (var document = new PdfDocument()) {
-      using (var stream = new MemoryStream()) {
+    using (var document = new PdfDocument())
+    {
+      using (var stream = new MemoryStream())
+      {
         var page = document.AddPage();
-        using (var graphics = XGraphics.FromPdfPage(page)) {
-          using (var palette = new Palette()) {
+        using (var graphics = XGraphics.FromPdfPage(page))
+        {
+          using (var palette = new Palette())
+          {
             label.Draw(graphics, palette, new DrawingContext(1));
           }
         }
@@ -230,11 +240,13 @@ public class MapLabelTests {
     var previous = Project.Current;
     var project = new Project();
     Project.Current = project;
-    try {
+    try
+    {
       var room = new Room(project) { Name = "Observatory" };
       project.Elements.Add(room);
       string expected;
-      using (var exporter = new Inform7Exporter()) {
+      using (var exporter = new Inform7Exporter())
+      {
         expected = exporter.Export();
       }
 
@@ -245,11 +257,13 @@ public class MapLabelTests {
           project,
           new Vertex(room.PortAt(CompassPoint.East)),
           new Vertex(label.PortAt(CompassPoint.West))));
-      using (var exporter = new Inform7Exporter()) {
+      using (var exporter = new Inform7Exporter())
+      {
         exporter.Export().ShouldBe(expected);
       }
     }
-    finally {
+    finally
+    {
       Project.Current = previous;
     }
   }
@@ -260,7 +274,8 @@ public class MapLabelTests {
     var previous = Project.Current;
     var project = new Project();
     Project.Current = project;
-    try {
+    try
+    {
       using var canvas = new Canvas { Size = new Size(600, 400) };
       var label = canvas.AddLabel(false, false);
       canvas.SelectedElement.ShouldBeSameAs(label);
@@ -301,7 +316,8 @@ public class MapLabelTests {
       splitLines.Any(line => line.VertexList.Any(vertex => vertex.Port?.Owner == label)).ShouldBeTrue();
       splitLines.All(line => !line.IsDangling).ShouldBeTrue();
     }
-    finally {
+    finally
+    {
       Project.Current = previous;
     }
   }
@@ -311,7 +327,8 @@ public class MapLabelTests {
   public void Dialog_OnlyAppliesChangesOnOK(bool accept)
   {
     var label = new MapLabel(new Project()) { Text = "Original" };
-    using (var dialog = new LabelPropertiesDialog(label)) {
+    using (var dialog = new LabelPropertiesDialog(label))
+    {
       dialog.Shown += (_, __) => dialog.BeginInvoke(() => {
         ((TextBox)dialog.Controls.Find("labelText", true)[0]).Text = "Updated";
         ((CheckBox)dialog.Controls.Find("outlineEnabled", true)[0]).Checked = true;
@@ -373,7 +390,8 @@ public class MapLabelTests {
     var label = new MapLabel(new Project()) {
       BorderStyle = BorderDashStyle.Dot, Shape = RoomShape.Ellipse, HasBackground = true
     };
-    using (var dialog = new LabelPropertiesDialog(label)) {
+    using (var dialog = new LabelPropertiesDialog(label))
+    {
       dialog.Shown += (_, __) => dialog.BeginInvoke(() => {
         ((CheckBox)dialog.Controls.Find("outlineEnabled", true)[0]).Checked = false;
         ((Button)dialog.AcceptButton).PerformClick();

@@ -6,7 +6,8 @@ using Trizbort.Domain.Misc;
 
 namespace Trizbort.Export.Domain;
 
-public class Exit {
+public class Exit
+{
   // The priority of the this exit's primary direction, compared to other exits which may go in the same direction from
   // the same room.
   // 
@@ -80,10 +81,12 @@ public class Exit {
   //  Test whether an exit is reciprocated in the other direction; i.e. is there a bidirectional connection.
   public static bool IsReciprocated(Location source, MappableDirection direction, Location target)
   {
-    if (target != null) {
+    if (target != null)
+    {
       var oppositeDirection = CompassPointHelper.GetOpposite(direction);
       var reciprocal = target.GetBestExit(oppositeDirection);
-      if (reciprocal != null) {
+      if (reciprocal != null)
+      {
         Debug.Assert(
           reciprocal.PrimaryDirection == oppositeDirection || reciprocal.SecondaryDirection == oppositeDirection,
           "Alleged opposite direction appears to lead somewhere else. Something went wrong whilst building the set of exits from each room.");
@@ -96,7 +99,8 @@ public class Exit {
 
   private void AssignPrimaryDirection()
   {
-    switch (VisualCompassPoint) {
+    switch (VisualCompassPoint)
+    {
       case CompassPoint.NorthNorthWest:
       case CompassPoint.North:
       case CompassPoint.NorthNorthEast:
@@ -138,7 +142,8 @@ public class Exit {
   {
     _primaryPriority = 0;
 
-    switch (VisualCompassPoint) {
+    switch (VisualCompassPoint)
+    {
       case CompassPoint.North:
       case CompassPoint.South:
       case CompassPoint.East:
@@ -163,7 +168,8 @@ public class Exit {
 
   private void AssignSecondaryDirection(string connectionText)
   {
-    switch (connectionText) {
+    switch (connectionText)
+    {
       case Connection.Up:
         SecondaryDirection = MappableDirection.Up;
         break;

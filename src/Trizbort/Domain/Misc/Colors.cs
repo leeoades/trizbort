@@ -6,7 +6,8 @@ using Trizbort.UI;
 
 namespace Trizbort.Domain.Misc;
 
-internal static class Colors {
+internal static class Colors
+{
   public static readonly int Canvas = 0;
   public static readonly int Border = 1;
   public static readonly int Line = 2;
@@ -37,7 +38,8 @@ internal static class Colors {
   public static bool FromName(string name, out int color)
   {
     for (var index = 0; index < _names.Length; ++index)
-      if (StringComparer.InvariantCultureIgnoreCase.Compare(name ?? string.Empty, _names[index]) == 0) {
+      if (StringComparer.InvariantCultureIgnoreCase.Compare(name ?? string.Empty, _names[index]) == 0)
+      {
         color = index;
         return true;
       }
@@ -65,7 +67,8 @@ internal static class Colors {
 
   public static bool ToName(int color, out string name)
   {
-    if (color >= 0 && color < _names.Length) {
+    if (color >= 0 && color < _names.Length)
+    {
       name = _names[color];
       return true;
     }

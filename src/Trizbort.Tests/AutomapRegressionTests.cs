@@ -23,7 +23,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Category("Integration")]
-public class AutomapRegressionTests : IsolatedProjectTests {
+public class AutomapRegressionTests : IsolatedProjectTests
+{
   private static Parser CreateParser()
   {
     return new Parser(
@@ -160,7 +161,8 @@ public class AutomapRegressionTests : IsolatedProjectTests {
     var loaded = new Project();
     PersistenceRegressionTests.Load(loaded, Files.File("automap.trizbort"));
     Project.Current = loaded;
-    using (var exporter = new Inform7Exporter()) {
+    using (var exporter = new Inform7Exporter())
+    {
       var output = exporter.Export();
       output.ShouldContain("First Room");
       output.ShouldContain("Second Room");
@@ -290,8 +292,10 @@ public class AutomapRegressionTests : IsolatedProjectTests {
     var settings = SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n");
     settings.SingleStep = true;
     var run = parser.Start(canvas, settings);
-    try {
-      while (!parser.Status.Contains("waiting for you to step")) {
+    try
+    {
+      while (!parser.Status.Contains("waiting for you to step"))
+      {
         deadline.Token.ThrowIfCancellationRequested();
         run.IsCompleted.ShouldBeFalse();
         await Task.Yield();
@@ -299,7 +303,8 @@ public class AutomapRegressionTests : IsolatedProjectTests {
 
       parser.Running.ShouldBeTrue();
     }
-    finally {
+    finally
+    {
       parser.Stop();
       await run.WaitAsync(TimeSpan.FromSeconds(5));
     }
@@ -324,8 +329,10 @@ public class AutomapRegressionTests : IsolatedProjectTests {
       guess: true);
     settings.SingleStep = true;
     var run = oneShot ? parser.StartCl(canvas, settings) : parser.Start(canvas, settings);
-    try {
-      while (Project.Current.Elements.OfType<Room>().Count() < roomCount) {
+    try
+    {
+      while (Project.Current.Elements.OfType<Room>().Count() < roomCount)
+      {
         await WaitForSingleStep(parser, run, deadline.Token);
         parser.Step();
         await Task.Delay(10, deadline.Token);
@@ -345,7 +352,8 @@ public class AutomapRegressionTests : IsolatedProjectTests {
       parser.Running.ShouldBeFalse();
       parser.Status.ShouldBe("Automap is not running.");
     }
-    finally {
+    finally
+    {
       parser.Stop();
       parser.RunToCompletion();
       await run.WaitAsync(TimeSpan.FromSeconds(5));
@@ -354,7 +362,8 @@ public class AutomapRegressionTests : IsolatedProjectTests {
 
   private static async Task WaitForSingleStep(Parser parser, Task run, CancellationToken token)
   {
-    while (!parser.Status.Contains("waiting for you to step")) {
+    while (!parser.Status.Contains("waiting for you to step"))
+    {
       token.ThrowIfCancellationRequested();
       run.IsCompleted.ShouldBeFalse();
       await Task.Yield();
@@ -392,7 +401,8 @@ public class AutomapRegressionTests : IsolatedProjectTests {
       "Example Game\n\nFirst Room\nA small room.\n\n>e\n\nReplacement Room\nAnother room.\n\n" +
       ">tb see Key\n>n\n\nFinal Room\nA final description.\n\n>look\n");
     var run = oneShot ? parser.StartCl(canvas, settings) : parser.Start(canvas, settings);
-    try {
+    try
+    {
       await run.WaitAsync(TimeSpan.FromSeconds(5));
       decisions.ShouldBe(1);
       engine.Save(after).ShouldBeTrue();
@@ -400,7 +410,8 @@ public class AutomapRegressionTests : IsolatedProjectTests {
       parser.Status.ShouldBe("Automap is not running.");
       parser.Running.ShouldBeFalse();
     }
-    finally {
+    finally
+    {
       parser.Stop();
       await run.WaitAsync(TimeSpan.FromSeconds(5));
     }
@@ -415,7 +426,8 @@ public class AutomapRegressionTests : IsolatedProjectTests {
     var settings = SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n\nSecond Room\nAnother room.\n");
     settings.SingleStep = true;
     var run = parser.StartCl(canvas, settings);
-    try {
+    try
+    {
       await WaitForSingleStep(parser, run, deadline.Token);
       parser.Running.ShouldBeTrue();
       parser.RunToCompletion();
@@ -425,7 +437,8 @@ public class AutomapRegressionTests : IsolatedProjectTests {
       parser.Running.ShouldBeFalse();
       parser.Status.ShouldBe("Automapping has completed.");
     }
-    finally {
+    finally
+    {
       parser.Stop();
       parser.RunToCompletion();
       await run.WaitAsync(TimeSpan.FromSeconds(5));
@@ -470,7 +483,8 @@ public class AutomapRegressionTests : IsolatedProjectTests {
     settings.SingleStep = true;
     var oldRun = oldOneShot ? parser.StartCl(canvas, settings) : parser.Start(canvas, settings);
     var replacement = Task.CompletedTask;
-    try {
+    try
+    {
       await WaitForSingleStep(parser, oldRun, deadline.Token);
       if (explicitStop) parser.Stop();
       var next = SettingsFor(replacementMode == 4 ? "New Game\n\nNew Room\nA new description.\n" : "");
@@ -486,12 +500,14 @@ public class AutomapRegressionTests : IsolatedProjectTests {
       parser.Running.ShouldBe(running);
       Project.Current.Elements.ShouldBeEmpty();
       errors.Count.ShouldBe(replacementMode == 2 || replacementMode == 3 ? 1 : 0);
-      if (replacementMode == 0) {
+      if (replacementMode == 0)
+      {
         parser.Stop();
         await replacement.WaitAsync(TimeSpan.FromSeconds(5));
         parser.Status.ShouldBe("Automap is not running.");
       }
-      else if (replacementMode == 4) {
+      else if (replacementMode == 4)
+      {
         parser.RunToCompletion();
         await replacement.WaitAsync(TimeSpan.FromSeconds(5));
         Project.Current.Elements.OfType<Room>().Single().Name.ShouldBe("New Room");
@@ -500,7 +516,8 @@ public class AutomapRegressionTests : IsolatedProjectTests {
 
       parser.Running.ShouldBeFalse();
     }
-    finally {
+    finally
+    {
       parser.Stop();
       parser.RunToCompletion();
       await Task.WhenAll(oldRun, replacement).WaitAsync(TimeSpan.FromSeconds(5));

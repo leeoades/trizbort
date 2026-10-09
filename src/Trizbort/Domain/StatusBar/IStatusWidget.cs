@@ -2,7 +2,8 @@
 
 namespace Trizbort.Domain.StatusBar;
 
-public interface IStatusWidget {
+public interface IStatusWidget
+{
   StatusItems Id { get; }
   string Name { get; }
   string MenuName { get; }

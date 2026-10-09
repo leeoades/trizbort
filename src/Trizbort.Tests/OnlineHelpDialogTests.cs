@@ -10,7 +10,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Apartment(ApartmentState.STA)]
-public class OnlineHelpDialogTests {
+public class OnlineHelpDialogTests
+{
   [Test]
   public void Dialog_ListsUserGuideFirstThenOriginalHelp()
   {
@@ -72,7 +73,8 @@ public class OnlineHelpDialogTests {
     handled.ShouldBeTrue();
   }
 
-  private class KeyboardHelpDialog : OnlineHelpDialog {
+  private class KeyboardHelpDialog : OnlineHelpDialog
+  {
     public bool PressKey(Keys key)
     {
       return ProcessDialogKey(key);

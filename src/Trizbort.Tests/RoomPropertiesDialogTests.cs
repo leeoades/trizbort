@@ -12,7 +12,8 @@ namespace Trizbort.Tests;
 [TestFixture]
 [Apartment(ApartmentState.STA)]
 [NonParallelizable]
-public class RoomPropertiesDialogTests : IsolatedProjectTests {
+public class RoomPropertiesDialogTests : IsolatedProjectTests
+{
   [SetUp]
   public void ResetRememberedTab()
   {
@@ -44,7 +45,8 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
   [TestCase("tabRoomShapes", "cboDrawType")]
   public void Dialog_RestoresLastClosedTabAndFocus(string tabName, string controlName)
   {
-    using (var previous = CreateDialog(PropertiesStartType.Objects)) {
+    using (var previous = CreateDialog(PropertiesStartType.Objects))
+    {
       AssertOpening(
         previous,
         "tabObjects",
@@ -52,7 +54,8 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
         beforeClose: form => SelectTab(form, tabName));
     }
 
-    using (var dialog = CreateDialog(PropertiesStartType.Objects)) {
+    using (var dialog = CreateDialog(PropertiesStartType.Objects))
+    {
       AssertOpening(dialog, tabName, controlName);
     }
   }
@@ -62,7 +65,8 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
   [TestCase(DialogResult.None)]
   public void Dialog_RemembersTabRegardlessOfCloseResult(DialogResult result)
   {
-    using (var previous = CreateDialog(PropertiesStartType.Objects)) {
+    using (var previous = CreateDialog(PropertiesStartType.Objects))
+    {
       AssertOpening(
         previous,
         "tabObjects",
@@ -71,7 +75,8 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
         form => SelectTab(form, "tabDescription"));
     }
 
-    using (var dialog = CreateDialog(PropertiesStartType.Objects)) {
+    using (var dialog = CreateDialog(PropertiesStartType.Objects))
+    {
       AssertOpening(dialog, "tabDescription", "m_descriptionTextBox");
     }
   }
@@ -88,7 +93,8 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
   [Test]
   public void Dialog_RegionShortcutOverridesAndUpdatesRememberedTab()
   {
-    using (var previous = CreateDialog(PropertiesStartType.Objects)) {
+    using (var previous = CreateDialog(PropertiesStartType.Objects))
+    {
       AssertOpening(
         previous,
         "tabObjects",
@@ -96,11 +102,13 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
         beforeClose: form => SelectTab(form, "tabColors"));
     }
 
-    using (var region = CreateDialog(PropertiesStartType.Region)) {
+    using (var region = CreateDialog(PropertiesStartType.Region))
+    {
       AssertOpening(region, "tabRegions", "cboRegion");
     }
 
-    using (var dialog = CreateDialog(PropertiesStartType.Objects)) {
+    using (var dialog = CreateDialog(PropertiesStartType.Objects))
+    {
       AssertOpening(dialog, "tabRegions", "cboRegion");
     }
   }
@@ -109,7 +117,8 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
   [TestCase(true)]
   public void Room_NormalOpeningRestoresTabEvenForNewOrLoadedDefaultNamedRoom(bool loaded)
   {
-    using (var previous = CreateDialog(PropertiesStartType.Objects)) {
+    using (var previous = CreateDialog(PropertiesStartType.Objects))
+    {
       AssertOpening(
         previous,
         "tabObjects",
@@ -166,7 +175,8 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
     return dialog;
   }
 
-  private class TestRoomPropertiesDialog(PropertiesStartType start) : RoomPropertiesDialog(start, 0) {
+  private class TestRoomPropertiesDialog(PropertiesStartType start) : RoomPropertiesDialog(start, 0)
+  {
     public void PressAltKey(Keys key)
     {
       OnKeyUp(new KeyEventArgs(Keys.Alt | key));

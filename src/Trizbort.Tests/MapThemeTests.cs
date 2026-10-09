@@ -21,7 +21,8 @@ namespace Trizbort.Tests;
 [TestFixture]
 [Apartment(ApartmentState.STA)]
 [NonParallelizable]
-public class MapThemeTests {
+public class MapThemeTests
+{
   [SetUp]
   public void SetUp()
   {
@@ -88,7 +89,8 @@ public class MapThemeTests {
     Project.Current.Title = "Private title";
     var captured = MapTheme.Capture("Shared theme");
     var fileName = Path.GetTempFileName();
-    try {
+    try
+    {
       captured.Save(fileName);
       var json = File.ReadAllText(fileName);
       json.ShouldNotContain("Private");
@@ -101,7 +103,8 @@ public class MapThemeTests {
       JsonConvert.SerializeObject(MapTheme.Capture(imported.Name)).ShouldBe(JsonConvert.SerializeObject(captured));
       Settings.RoomNameFont.Unit.ShouldBe(GraphicsUnit.World);
     }
-    finally {
+    finally
+    {
       File.Delete(fileName);
     }
   }
@@ -214,7 +217,8 @@ public class MapThemeTests {
     Settings.GridSize = 80;
     Settings.RoomNameFont = new Font("Arial", 20);
     JsonConvert.SerializeObject(MapTheme.BuiltInThemes()).ShouldBe(before);
-    foreach (var theme in MapTheme.BuiltInThemes()) {
+    foreach (var theme in MapTheme.BuiltInThemes())
+    {
       theme.Apply(true);
       var captured = MapTheme.Capture(theme.Name);
       JsonConvert.SerializeObject(captured).ShouldBe(JsonConvert.SerializeObject(theme));
@@ -233,7 +237,8 @@ public class MapThemeTests {
   public void InvalidTheme_IsRejectedBeforeAnyMapChanges(string invalidValue)
   {
     var theme = MapTheme.BuiltInThemes()[2];
-    switch (invalidValue) {
+    switch (invalidValue)
+    {
       case "color": theme.Colors["grid"] = "not-a-colour"; break;
       case "missingColor": theme.Colors.Remove("border"); break;
       case "grid": theme.GridSize = 0; break;
@@ -268,7 +273,8 @@ public class MapThemeTests {
   public void Import_RejectsMalformedAndIncompleteFiles()
   {
     var fileName = Path.GetTempFileName();
-    try {
+    try
+    {
       File.WriteAllText(fileName, "not json");
       Should.Throw<JsonException>(() => MapTheme.Load(fileName));
       File.WriteAllText(fileName, "{}");
@@ -280,7 +286,8 @@ public class MapThemeTests {
       File.WriteAllText(fileName, json.ToString());
       Should.Throw<JsonException>(() => MapTheme.Load(fileName));
     }
-    finally {
+    finally
+    {
       File.Delete(fileName);
     }
   }
@@ -295,7 +302,8 @@ public class MapThemeTests {
     var before = JsonConvert.SerializeObject(MapTheme.Capture("Dark"));
     var fileName = Path.GetTempFileName();
     var loaded = new Project();
-    try {
+    try
+    {
       new LegacyMapFileEngine(project).Save(fileName).ShouldBeTrue();
       MapTheme.BuiltInThemes()[0].Apply(false);
       Project.Current = loaded;
@@ -307,7 +315,8 @@ public class MapThemeTests {
       loadedRoom.Shape.ShouldBe(room.Shape);
       loadedRoom.RoomFillColor.ShouldBe(Color.Transparent);
     }
-    finally {
+    finally
+    {
       Project.FileWatcher.StopWatcher();
       Project.Current = project;
       loaded.Dispose();
@@ -363,7 +372,8 @@ public class MapThemeTests {
     project.Elements.Add(label);
     var connection = new Connection(project);
     project.Elements.Add(connection);
-    switch (style) {
+    switch (style)
+    {
       case "fill": room.RoomFillColor = Color.Red; break;
       case "borderColor": room.RoomBorderColor = Color.Red; break;
       case "nameColor": room.RoomNameColor = Color.Red; break;
@@ -474,7 +484,8 @@ public class MapThemeTests {
   public void ThemesMenu_IsNextToMapSettings_WithPresetsAndImportExport()
   {
     var previousForm = TrizbortApplication.MainForm;
-    try {
+    try
+    {
       using var form = new MainForm();
       var tools = form.MainMenuStrip.Items.OfType<ToolStripMenuItem>().Single(item => item.Text == "&Tools");
       var items = tools.DropDownItems.OfType<ToolStripMenuItem>().ToList();
@@ -497,7 +508,8 @@ public class MapThemeTests {
       room.Shape.ShouldBe(RoomShape.SquareCorners);
       MapTheme.HasIndividualStyles(Project.Current).ShouldBeFalse();
     }
-    finally {
+    finally
+    {
       TrizbortApplication.MainForm = previousForm;
     }
   }

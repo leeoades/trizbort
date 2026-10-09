@@ -10,7 +10,8 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI;
 
-public enum InputBoxButtons {
+public enum InputBoxButtons
+{
   Ok,
   OkCancel,
   YesNo,
@@ -19,7 +20,8 @@ public enum InputBoxButtons {
   SaveCancel
 }
 
-public enum InputBoxResult {
+public enum InputBoxResult
+{
   Cancel,
   Ok,
   Yes,
@@ -27,7 +29,8 @@ public enum InputBoxResult {
   Save
 }
 
-public struct InputDialogItem {
+public struct InputDialogItem
+{
   public string Label;
   public string Text;
   public bool IsPassword;
@@ -61,7 +64,8 @@ public struct InputDialogItem {
   }
 }
 
-public class InputDialog {
+public class InputDialog
+{
   private InputDialog(DialogForm dialog)
   {
     Result = dialog.InputResult;
@@ -226,7 +230,8 @@ public class InputDialog {
     return new InputDialog(dialog);
   }
 
-  private class DialogForm : Form {
+  private class DialogForm : Form
+  {
     private readonly Button _button1;
     private readonly Button _button2;
     private readonly Button _button3;
@@ -247,7 +252,8 @@ public class InputDialog {
       // 
       // label
       // 
-      for (var i = 0; i < items.Length; i++) {
+      for (var i = 0; i < items.Length; i++)
+      {
         Label[i].AutoSize = true;
         Label[i].Location = new Point(12, 9 + i * 39);
         Label[i].Name = "label[" + i + "]";
@@ -258,7 +264,8 @@ public class InputDialog {
       // 
       // textBox
       // 
-      for (var i = 0; i < items.Length; i++) {
+      for (var i = 0; i < items.Length; i++)
+      {
         TextBox[i].Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         TextBox[i].Location = new Point(12, 25 + i * 39);
         TextBox[i].Name = "textBox[" + i + "]";
@@ -301,7 +308,8 @@ public class InputDialog {
       //
       // Evaluate MessageBoxButtons
       //
-      switch (buttons) {
+      switch (buttons)
+      {
         case InputBoxButtons.Ok:
           _button1.Text = "OK";
           _button1.Click += OK_Click;

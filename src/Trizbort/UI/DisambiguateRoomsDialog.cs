@@ -5,7 +5,8 @@ using Trizbort.Domain.Elements;
 
 namespace Trizbort.UI;
 
-internal partial class DisambiguateRoomsDialog : Form {
+internal partial class DisambiguateRoomsDialog : Form
+{
   public DisambiguateRoomsDialog()
   {
     InitializeComponent();
@@ -53,12 +54,14 @@ internal partial class DisambiguateRoomsDialog : Form {
 
   private void RoomNamesListBox_SelectedIndexChanged(object sender, EventArgs e)
   {
-    if (_roomNamesListBox.SelectedIndex != -1) {
+    if (_roomNamesListBox.SelectedIndex != -1)
+    {
       _thisRoomButton.Enabled = true;
       var room = (_roomNamesListBox.SelectedItem as AmbiguousRoom).Room;
       _roomDescriptionTextBox.Text = room.PrimaryDescription;
     }
-    else {
+    else
+    {
       _thisRoomButton.Enabled = false;
       _roomDescriptionTextBox.Text = string.Empty;
     }
@@ -68,7 +71,8 @@ internal partial class DisambiguateRoomsDialog : Form {
   ///   A Room reference which will ToString() as the room name.
   ///   For use in the room names list box.
   /// </summary>
-  private class AmbiguousRoom {
+  private class AmbiguousRoom
+  {
     public AmbiguousRoom(Room room)
     {
       Room = room;

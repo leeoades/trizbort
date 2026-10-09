@@ -3,7 +3,8 @@ using PdfSharp.Drawing;
 
 namespace Trizbort.Domain.Misc;
 
-public class ConnectionIconBlock {
+public class ConnectionIconBlock
+{
   private const int HorizontalLineOffset = 15;
   private const int VerticalStemOffset = 15;
   private const int VerticalLineOffset = 5;
@@ -30,7 +31,8 @@ public class ConnectionIconBlock {
     var pos = bounds.GetCorner(compassPoint);
     var offsets = new Size(0, 0);
 
-    switch (compassPoint) {
+    switch (compassPoint)
+    {
       case CompassPoint.NorthWest:
         offsets.Height = -(Offset * 12);
         offsets.Width = -(Offset * 10) - HorizontalLineOffset;

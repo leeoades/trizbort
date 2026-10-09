@@ -3,7 +3,8 @@ using PdfSharp.Drawing;
 
 namespace Trizbort.Util;
 
-internal class Smoothing : IDisposable {
+internal class Smoothing : IDisposable
+{
   public Smoothing(XGraphics graphics, XSmoothingMode mode)
   {
     Graphics = graphics;

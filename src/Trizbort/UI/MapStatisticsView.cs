@@ -9,7 +9,8 @@ using Trizbort.Setup;
 
 namespace Trizbort.UI;
 
-public partial class MapStatisticsView : Form {
+public partial class MapStatisticsView : Form
+{
   public MapStatisticsView()
   {
     InitializeComponent();
@@ -69,10 +70,12 @@ public partial class MapStatisticsView : Form {
     stats += $"# of Regions: {MapStatistics.NumberOfRegions}{Environment.NewLine}";
     stats += $"# of Rooms without a region: {MapStatistics.NumberOfRoomsWithoutRegion()}{Environment.NewLine}";
 
-    if (MapStatistics.NumberOfRegions > 0) {
+    if (MapStatistics.NumberOfRegions > 0)
+    {
       stats += $"Regions:{Environment.NewLine}";
       foreach (var region in Settings.Regions.OrderBy(p => p.RegionName)
-                                     .Where(p => p.RegionName != Domain.Misc.Region.DefaultRegion)) {
+                                     .Where(p => p.RegionName != Domain.Misc.Region.DefaultRegion))
+      {
         var numberOfRoomsInRegion = MapStatistics.NumberOfRoomsInRegion(region.RegionName);
         stats += string.Format(
           "{2} ({0} {3}){1}",
@@ -101,10 +104,12 @@ public partial class MapStatisticsView : Form {
       $"{Environment.NewLine}Room shapes: {MapStatistics.NumberOfRectangularRooms} rectangular, {MapStatistics.NumberOfEllipticalRooms} elliptical, " +
       $"{MapStatistics.NumberOfRoundCornerRooms} round cornered, {MapStatistics.NumberOfOctagonalRooms} octagonal.{Environment.NewLine}";
 
-    if (MapStatistics.NumberOfRegions > 0) {
+    if (MapStatistics.NumberOfRegions > 0)
+    {
       stats += $"{Environment.NewLine}";
       foreach (var region in Settings.Regions.OrderBy(p => p.RegionName)
-                                     .Where(p => p.RegionName != Domain.Misc.Region.DefaultRegion)) {
+                                     .Where(p => p.RegionName != Domain.Misc.Region.DefaultRegion))
+      {
         if (MapStatistics.NumberOfRoomsInRegion(region.RegionName) == 0)
           stats += $"{region.RegionName} has no rooms.";
         else if (MapStatistics.NumberOfRoomsInRegion(region.RegionName) == 1)
@@ -119,11 +124,13 @@ public partial class MapStatisticsView : Form {
 
       stats += $"{Environment.NewLine}";
     }
-    else if (MapStatistics.NumberOfRegions > 1) {
+    else if (MapStatistics.NumberOfRegions > 1)
+    {
       stats += $"{Environment.NewLine}Region Links:{Environment.NewLine}";
       var allRegions = Settings.Regions.OrderBy(p => p.RegionName)
                                .Where(p => p.RegionName != Domain.Misc.Region.DefaultRegion);
-      foreach (var region1 in allRegions) {
+      foreach (var region1 in allRegions)
+      {
         var linkedRegions = string.Join(
           ", ",
           Settings.Regions.OrderBy(p => p.RegionName).ToArray().Where(p => MapStatistics.RegionsLinked(region1, p))
@@ -139,7 +146,8 @@ public partial class MapStatisticsView : Form {
 
       stats += $"{Environment.NewLine}";
     }
-    else {
+    else
+    {
       stats += $"{Environment.NewLine}";
     }
 
@@ -172,10 +180,12 @@ public partial class MapStatisticsView : Form {
     var curFile = Project.Current.FileName;
     string outFile;
 
-    if (string.IsNullOrEmpty(curFile)) {
+    if (string.IsNullOrEmpty(curFile))
+    {
       outFile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\trizbort.log";
     }
-    else {
+    else
+    {
       if (curFile.Contains(".trizbort"))
         outFile = curFile.Replace(".trizbort", ".log");
       else

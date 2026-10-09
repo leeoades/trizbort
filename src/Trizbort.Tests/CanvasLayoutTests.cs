@@ -15,7 +15,8 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Apartment(ApartmentState.STA)]
-public class CanvasLayoutTests {
+public class CanvasLayoutTests
+{
   [TestCase(false)]
   [TestCase(true)]
   public void Canvas_HasNoFloatingControlAtFormerCornerPanelPositionAfterResizing(bool minimapVisible)
@@ -24,7 +25,8 @@ public class CanvasLayoutTests {
     canvas.MinimapVisible = minimapVisible;
     canvas.Controls.OfType<Panel>().ShouldBeEmpty();
 
-    foreach (var size in new[] { new Size(718, 492), new Size(960, 720), new Size(600, 400) }) {
+    foreach (var size in new[] { new Size(718, 492), new Size(960, 720), new Size(600, 400) })
+    {
       canvas.Size = size;
       canvas.PerformLayout();
 
@@ -45,20 +47,23 @@ public class CanvasLayoutTests {
     var previous = Project.Current;
     var project = new Project();
     Project.Current = project;
-    try {
+    try 
+    {
       project.Elements.Add(new Room(project) { Name = "Kitchen" });
       using var canvas = new Canvas();
       using var document = new PdfDocument();
       using var stream = new MemoryStream();
       var page = document.AddPage();
-      using (var graphics = XGraphics.FromPdfPage(page)) {
+      using (var graphics = XGraphics.FromPdfPage(page)) 
+      {
         Should.NotThrow(() => canvas.Draw(graphics, true, (float)page.Width.Point, (float)page.Height.Point));
       }
 
       document.Save(stream);
       stream.Length.ShouldBeGreaterThan(500);
     }
-    finally {
+    finally
+    {
       Project.Current = previous;
     }
   }

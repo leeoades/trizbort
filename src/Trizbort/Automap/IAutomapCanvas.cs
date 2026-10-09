@@ -3,7 +3,8 @@ using Trizbort.Domain.Enums;
 
 namespace Trizbort.Automap;
 
-internal interface IAutomapCanvas {
+internal interface IAutomapCanvas
+{
   /// <summary>
   ///   Find a room matching the given name and, if the given description isn't null, the given description.
   /// </summary>

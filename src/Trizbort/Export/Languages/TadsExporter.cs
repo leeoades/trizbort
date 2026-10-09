@@ -11,7 +11,8 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages;
 
-internal class TadsExporter : CodeExporter {
+internal class TadsExporter : CodeExporter
+{
   private const char SingleQuote = '\'';
   private const char DoubleQuote = '"';
 
@@ -30,13 +31,15 @@ internal class TadsExporter : CodeExporter {
   protected override void ExportContent(TextWriter writer)
   {
     if (ApplicationSettingsController.AppSettings.SaveTadstoAdv3Lite)
-      foreach (var region in RegionsInExportOrder) {
+      foreach (var region in RegionsInExportOrder)
+      {
         writer.WriteLine("{0}: Region", region.ExportName);
         writer.WriteLine(";");
         writer.WriteLine();
       }
 
-    foreach (var location in LocationsInExportOrder) {
+    foreach (var location in LocationsInExportOrder)
+    {
       writer.WriteLine(
         "{0}: {1} {2}",
         location.ExportName,
@@ -47,10 +50,13 @@ internal class TadsExporter : CodeExporter {
       if (ApplicationSettingsController.AppSettings.SaveTadstoAdv3Lite && location.Room.Region != Region.DefaultRegion)
         writer.WriteLine("    regions = [{0}]", location.Room.Region);
       var anyExits = false;
-      foreach (var direction in Directions.AllDirections) {
+      foreach (var direction in Directions.AllDirections)
+      {
         var exit = location.GetBestExit(direction);
-        if (exit != null) {
-          if (!anyExits) {
+        if (exit != null)
+        {
+          if (!anyExits)
+          {
             writer.WriteLine();
             anyExits = true;
           }
@@ -66,10 +72,12 @@ internal class TadsExporter : CodeExporter {
     }
 
     writer.WriteLine("me: Actor");
-    if (LocationsInExportOrder.Count > 0) {
+    if (LocationsInExportOrder.Count > 0)
+    {
       var foundStart = false;
       foreach (var location in LocationsInExportOrder)
-        if (location.Room.IsStartRoom) {
+        if (location.Room.IsStartRoom)
+        {
           if (foundStart) writer.WriteLine("/( {0} is an extra StartRoom. /*", location.ExportName);
           writer.WriteLine("    location = {0}", location.ExportName);
           foundStart = true;
@@ -78,7 +86,8 @@ internal class TadsExporter : CodeExporter {
       if (!foundStart)
         writer.WriteLine("    location = {0}", LocationsInExportOrder[0].ExportName);
     }
-    else {
+    else
+    {
       writer.WriteLine("    /* location = ... */");
     }
 
@@ -101,11 +110,13 @@ internal class TadsExporter : CodeExporter {
   {
     writer.WriteLine("#charset \"us-ascii\"");
     writer.WriteLine();
-    if (ApplicationSettingsController.AppSettings.SaveTadstoAdv3Lite) {
+    if (ApplicationSettingsController.AppSettings.SaveTadstoAdv3Lite)
+    {
       writer.WriteLine("#include <tads.h>");
       writer.WriteLine("#include \"advlite.h\"");
     }
-    else {
+    else
+    {
       writer.WriteLine("#include <adv3.h>");
       writer.WriteLine("#include <en_us.h>");
     }
@@ -149,7 +160,8 @@ internal class TadsExporter : CodeExporter {
 
   private static void ExportThings(TextWriter writer, List<Thing> things, Thing container, int indent)
   {
-    foreach (var thing in things.Where(thing => thing.Container == container)) {
+    foreach (var thing in things.Where(thing => thing.Container == container))
+    {
       writer.WriteLine(
         "{0} {1}: {3} {2} {2}",
         Repeat('+', indent),
@@ -183,7 +195,8 @@ internal class TadsExporter : CodeExporter {
 
   private static string ToTadsPropertyName(MappableDirection direction)
   {
-    switch (direction) {
+    switch (direction)
+    {
       case MappableDirection.North:
         return "north";
       case MappableDirection.South:

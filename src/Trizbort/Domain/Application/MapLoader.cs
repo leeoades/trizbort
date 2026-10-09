@@ -5,7 +5,8 @@ using Trizbort.UI;
 
 namespace Trizbort.Domain.Application;
 
-public class MapLoader {
+public class MapLoader
+{
   private readonly MapFileEngine _loader;
   private readonly Action<string> _reportUnknownFile;
 
