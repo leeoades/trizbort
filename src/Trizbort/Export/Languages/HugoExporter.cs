@@ -8,193 +8,212 @@ using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Trizbort.Export.Domain;
 
-namespace Trizbort.Export.Languages {
-  internal class HugoExporter : CodeExporter {
-    private const char SingleQuote = '\'';
-    private const char DoubleQuote = '"';
+namespace Trizbort.Export.Languages;
 
-    public override List<KeyValuePair<string, string>> FileDialogFilters => new List<KeyValuePair<string, string>> {
-      new KeyValuePair<string, string>("Hugo Source Files", ".hug"),
-      new KeyValuePair<string, string>("Text Files", ".txt")
-    };
+internal class HugoExporter : CodeExporter {
+  private const char SingleQuote = '\'';
+  private const char DoubleQuote = '"';
 
-    public override string FileDialogTitle => "Export Hugo Source Code";
+  public override List<KeyValuePair<string, string>> FileDialogFilters => new() {
+    new KeyValuePair<string, string>("Hugo Source Files", ".hug"),
+    new KeyValuePair<string, string>("Text Files", ".txt")
+  };
 
-    protected override IEnumerable<string> ReservedWords => new[] {"Room", "Actor", "Thing", "Object", "Door", "Chair", "Heavy", "Fixture", "OpenableContainer", "Food", "GameMainDef", "if", "else", "me"};
+  public override string FileDialogTitle => "Export Hugo Source Code";
 
-    protected override void ExportContent(TextWriter writer) {
-      if (RegionsInExportOrder.Count > 0) writer.WriteLine("property region");
+  protected override IEnumerable<string> ReservedWords => new[] {
+    "Room", "Actor", "Thing", "Object", "Door", "Chair", "Heavy", "Fixture", "OpenableContainer", "Food", "GameMainDef",
+    "if", "else", "me"
+  };
 
-      foreach (var location in LocationsInExportOrder) {
-        writer.WriteLine($"room {location.ExportName}");
-        writer.WriteLine("{");
+  protected override void ExportContent(TextWriter writer)
+  {
+    if (RegionsInExportOrder.Count > 0) writer.WriteLine("property region");
 
-        if (location.Room.Region != Region.DefaultRegion)
-          writer.WriteLine($"\tregion {location.Room.Region}");
+    foreach (var location in LocationsInExportOrder) {
+      writer.WriteLine($"room {location.ExportName}");
+      writer.WriteLine("{");
 
-        if (!string.IsNullOrEmpty(location.Room.PrimaryDescription)) {
-          writer.WriteLine("\tlong_desc");
-          writer.WriteLine("\t\"");
-          writer.WriteLine($"\t\t{location.Room.PrimaryDescription}");
-          writer.WriteLine("\t\"");
-        }
+      if (location.Room.Region != Region.DefaultRegion)
+        writer.WriteLine($"\tregion {location.Room.Region}");
 
-        writer.WriteLine();
-        foreach (var direction in Directions.AllDirections) {
-          var exit = location.GetBestExit(direction);
-          if (exit != null) writer.WriteLine($"\t{ToHugoPropertyName(direction)} {exit.Target.ExportName}");
-        }
-
-        writer.WriteLine();
-        if (location.Room.IsDark)
-          writer.WriteLine("\tis not light");
-        writer.WriteLine("}");
-        writer.WriteLine();
-
-        ExportThings(writer, location.Things, null, 1);
+      if (!string.IsNullOrEmpty(location.Room.PrimaryDescription)) {
+        writer.WriteLine("\tlong_desc");
+        writer.WriteLine("\t\"");
+        writer.WriteLine($"\t\t{location.Room.PrimaryDescription}");
+        writer.WriteLine("\t\"");
       }
 
-      writer.WriteLine("player_character you \"you\"");
-      writer.WriteLine("{");
+      writer.WriteLine();
+      foreach (var direction in Directions.AllDirections) {
+        var exit = location.GetBestExit(direction);
+        if (exit != null) writer.WriteLine($"\t{ToHugoPropertyName(direction)} {exit.Target.ExportName}");
+      }
+
+      writer.WriteLine();
+      if (location.Room.IsDark)
+        writer.WriteLine("\tis not light");
       writer.WriteLine("}");
       writer.WriteLine();
+
+      ExportThings(writer, location.Things, null, 1);
     }
-//    protected override Encoding Encoding => Encoding.ASCII;
 
-    protected override void ExportHeader(TextWriter writer, string title, string author, string description, string history) {
-      writer.WriteLine("#include \"verblib.g\" ! grammar must come first");
-      writer.WriteLine();
-      writer.WriteLine("#include \"hugolib.h\"");
-      writer.WriteLine();
-      writer.WriteLine("routine init");
+    writer.WriteLine("player_character you \"you\"");
+    writer.WriteLine("{");
+    writer.WriteLine("}");
+    writer.WriteLine();
+  }
+  //    protected override Encoding Encoding => Encoding.ASCII;
+
+  protected override void ExportHeader(
+    TextWriter writer,
+    string title,
+    string author,
+    string description,
+    string history)
+  {
+    writer.WriteLine("#include \"verblib.g\" ! grammar must come first");
+    writer.WriteLine();
+    writer.WriteLine("#include \"hugolib.h\"");
+    writer.WriteLine();
+    writer.WriteLine("routine init");
+    writer.WriteLine("{");
+    writer.WriteLine("\tcls");
+    writer.WriteLine("\tverbosity = 2");
+    writer.WriteLine("\tcounter = -1");
+    writer.WriteLine("\tSTATUSTYPE = 1 !1 = score / turns, 2 = time, 3 = moves: score:");
+    writer.WriteLine("\tplayer = you");
+
+    if (!string.IsNullOrWhiteSpace(title)) {
+      writer.WriteLine("\tFont(BOLD_ON)");
+      writer.WriteLine("\t\"{0}\"", title);
+      writer.WriteLine("\tFont(BOLD_OFF)");
+    }
+
+    if (!string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(author))
+      writer.WriteLine("\t\"{0}, by {1}\"", description, author);
+    else if (!string.IsNullOrWhiteSpace(description))
+      writer.WriteLine("\t\"{0}\"", description);
+    else if (!string.IsNullOrWhiteSpace(author))
+      writer.WriteLine("\t\"by {0}\"", author);
+
+    if (LocationsInExportOrder.Count > 0) {
+      var foundStart = false;
+      foreach (var location in LocationsInExportOrder)
+        if (location.Room.IsStartRoom) {
+          if (foundStart) writer.WriteLine("! {0} is an extra StartRoom. ", location.ExportName);
+          writer.WriteLine("\tlocation = {0}", location.ExportName);
+          foundStart = true;
+        }
+
+      if (!foundStart)
+        writer.WriteLine("\tlocation = {0}", LocationsInExportOrder[0].ExportName);
+    }
+    else {
+      writer.WriteLine("\t! location = ... ");
+    }
+
+    if (!string.IsNullOrWhiteSpace(history)) ExportHistory(writer, history);
+
+    writer.WriteLine("\tMovePlayer(location)");
+    writer.WriteLine("}");
+    writer.WriteLine();
+  }
+
+  protected override string GetExportName(Room room, int? suffix)
+  {
+    var name = StripOddCharacters(room.Name);
+    if (string.IsNullOrEmpty(name)) name = "room";
+
+    if (suffix != null) name = $"{name}{suffix}";
+    return name;
+  }
+
+  protected override string GetExportName(string displayName, int? suffix)
+  {
+    var name = StripOddCharacters(displayName);
+    if (string.IsNullOrEmpty(name)) name = "item";
+    if (suffix != null) name = $"{name}{suffix}";
+    return name;
+  }
+
+  private void ExportHistory(TextWriter writer, string history)
+  {
+    writer.WriteLine();
+    writer.WriteLine("    showAbout()");
+    writer.WriteLine("    {");
+    writer.WriteLine($"    {DoubleQuote}{history}{DoubleQuote};");
+    writer.WriteLine("    }");
+  }
+
+  private static void ExportThings(TextWriter writer, List<Thing> things, Thing container, int indent)
+  {
+    foreach (var thing in things.Where(thing => thing.Container == container)) {
+      writer.WriteLine("object {0}", thing.ExportName);
       writer.WriteLine("{");
-      writer.WriteLine("\tcls");
-      writer.WriteLine("\tverbosity = 2");
-      writer.WriteLine("\tcounter = -1");
-      writer.WriteLine("\tSTATUSTYPE = 1 !1 = score / turns, 2 = time, 3 = moves: score:");
-      writer.WriteLine("\tplayer = you");
-
-      if (!string.IsNullOrWhiteSpace(title)) {
-        writer.WriteLine("\tFont(BOLD_ON)");
-        writer.WriteLine("\t\"{0}\"", title);
-        writer.WriteLine("\tFont(BOLD_OFF)");
-      }
-
-      if (!string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(author))
-        writer.WriteLine("\t\"{0}, by {1}\"", description, author);
-      else if (!string.IsNullOrWhiteSpace(description))
-        writer.WriteLine("\t\"{0}\"", description);
-      else if (!string.IsNullOrWhiteSpace(author))
-        writer.WriteLine("\t\"by {0}\"", author);
-
-      if (LocationsInExportOrder.Count > 0) {
-        var foundStart = false;
-        foreach (var location in LocationsInExportOrder)
-          if (location.Room.IsStartRoom) {
-            if (foundStart) writer.WriteLine("! {0} is an extra StartRoom. ", location.ExportName);
-            writer.WriteLine("\tlocation = {0}", location.ExportName);
-            foundStart = true;
-          }
-
-        if (!foundStart)
-          writer.WriteLine("\tlocation = {0}", LocationsInExportOrder[0].ExportName);
-      } else {
-        writer.WriteLine("\t! location = ... ");
-      }
-
-      if (!string.IsNullOrWhiteSpace(history)) ExportHistory(writer, history);
-
-      writer.WriteLine("\tMovePlayer(location)");
+      writer.WriteLine("\tin {0}", thing.Location.ExportName);
       writer.WriteLine("}");
       writer.WriteLine();
+
+      ExportThings(writer, thing.Contents, thing, indent + 1);
     }
+  }
 
-    protected override string GetExportName(Room room, int? suffix) {
-      var name = StripOddCharacters(room.Name);
-      if (string.IsNullOrEmpty(name)) name = "room";
+  private static string Repeat(char c, int times)
+  {
+    var text = string.Empty;
+    for (var index = 0; index < times; ++index) text += c;
+    return text;
+  }
 
-      if (suffix != null) name = $"{name}{suffix}";
-      return name;
+  private static string StripOddCharacters(string text, params char[] exclude)
+  {
+    var exclusions = new List<char>(exclude);
+    if (string.IsNullOrEmpty(text)) return string.Empty;
+    var result = string.Empty;
+    foreach (var c in text)
+      if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_' || exclusions.Contains(c))
+        result += c;
+    return result;
+  }
+
+  private static string ToHugoPropertyName(MappableDirection direction)
+  {
+    switch (direction) {
+      case MappableDirection.North:
+        return "n_to";
+      case MappableDirection.South:
+        return "s_to";
+      case MappableDirection.East:
+        return "e_to";
+      case MappableDirection.West:
+        return "w_to";
+      case MappableDirection.NorthEast:
+        return "ne_to";
+      case MappableDirection.NorthWest:
+        return "nw_to";
+      case MappableDirection.SouthEast:
+        return "se_to";
+      case MappableDirection.SouthWest:
+        return "sw_to";
+      case MappableDirection.Up:
+        return "u_to";
+      case MappableDirection.Down:
+        return "d_to";
+      case MappableDirection.In:
+        return "in_to";
+      case MappableDirection.Out:
+        return "out_to";
+      default:
+        Debug.Assert(false, "Unrecognised automap direction.");
+        return "n_to";
     }
+  }
 
-    protected override string GetExportName(string displayName, int? suffix) {
-      var name = StripOddCharacters(displayName);
-      if (string.IsNullOrEmpty(name)) name = "item";
-      if (suffix != null) name = $"{name}{suffix}";
-      return name;
-    }
-
-    private void ExportHistory(TextWriter writer, string history) {
-      writer.WriteLine();
-      writer.WriteLine("    showAbout()");
-      writer.WriteLine("    {");
-      writer.WriteLine($"    {DoubleQuote}{history}{DoubleQuote};");
-      writer.WriteLine("    }");
-    }
-
-    private static void ExportThings(TextWriter writer, List<Thing> things, Thing container, int indent) {
-      foreach (var thing in things.Where(thing => thing.Container == container)) {
-        writer.WriteLine("object {0}", thing.ExportName);
-        writer.WriteLine("{");
-        writer.WriteLine("\tin {0}", thing.Location.ExportName);
-        writer.WriteLine("}");
-        writer.WriteLine();
-
-        ExportThings(writer, thing.Contents, thing, indent + 1);
-      }
-    }
-
-    private static string Repeat(char c, int times) {
-      var text = string.Empty;
-      for (var index = 0; index < times; ++index) text += c;
-      return text;
-    }
-
-    private static string StripOddCharacters(string text, params char[] exclude) {
-      var exclusions = new List<char>(exclude);
-      if (string.IsNullOrEmpty(text)) return string.Empty;
-      var result = string.Empty;
-      foreach (var c in text)
-        if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_' || exclusions.Contains(c))
-          result += c;
-      return result;
-    }
-
-    private static string ToHugoPropertyName(MappableDirection direction) {
-      switch (direction) {
-        case MappableDirection.North:
-          return "n_to";
-        case MappableDirection.South:
-          return "s_to";
-        case MappableDirection.East:
-          return "e_to";
-        case MappableDirection.West:
-          return "w_to";
-        case MappableDirection.NorthEast:
-          return "ne_to";
-        case MappableDirection.NorthWest:
-          return "nw_to";
-        case MappableDirection.SouthEast:
-          return "se_to";
-        case MappableDirection.SouthWest:
-          return "sw_to";
-        case MappableDirection.Up:
-          return "u_to";
-        case MappableDirection.Down:
-          return "d_to";
-        case MappableDirection.In:
-          return "in_to";
-        case MappableDirection.Out:
-          return "out_to";
-        default:
-          Debug.Assert(false, "Unrecognised automap direction.");
-          return "n_to";
-      }
-    }
-
-    private static string ToHugoString(string text, char quote) {
-      if (text == null) text = string.Empty;
-      return string.Format("{1}{0}{1}", text.Replace(quote.ToString(), $@"\{quote}"), quote);
-    }
+  private static string ToHugoString(string text, char quote)
+  {
+    if (text == null) text = string.Empty;
+    return string.Format("{1}{0}{1}", text.Replace(quote.ToString(), $@"\{quote}"), quote);
   }
 }

@@ -1,73 +1,73 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <RootNamespace>Trizbort</RootNamespace>
-    <AssemblyName>Trizbort</AssemblyName>
-    <ApplicationIcon>Map.ico</ApplicationIcon>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <StartupObject>Trizbort.Program</StartupObject>
-    <!-- Replaces the old app.config System.Windows.Forms.ApplicationConfigurationSection
-         (DpiAwareness=PerMonitorV2), which modern .NET's ConfigurationManager does not
-         recognize and which broke all app.config reads, including user settings. -->
-    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <!-- This is a Windows-only WinForms app targeting the Windows-specific TFM;
-         CA1416 (Windows-only API usage) is expected noise here, not a real risk. -->
-    <NoWarn>$(NoWarn);CA1416</NoWarn>
-    <Nullable>disable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<RootNamespace>Trizbort</RootNamespace>
+		<AssemblyName>Trizbort</AssemblyName>
+		<ApplicationIcon>Map.ico</ApplicationIcon>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<StartupObject>Trizbort.Program</StartupObject>
+		<!-- Replaces the old app.config System.Windows.Forms.ApplicationConfigurationSection
+			 (DpiAwareness=PerMonitorV2), which modern .NET's ConfigurationManager does not
+			 recognize and which broke all app.config reads, including user settings. -->
+		<ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<!-- This is a Windows-only WinForms app targeting the Windows-specific TFM;
+			 CA1416 (Windows-only API usage) is expected noise here, not a real risk. -->
+		<NoWarn>$(NoWarn);CA1416</NoWarn>
+		<Nullable>disable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="PDFsharp-GDI" Version="6.2.4" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="CommandLineParser" Version="2.9.1"/>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4"/>
+		<PackageReference Include="PDFsharp-GDI" Version="6.2.4"/>
+	</ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <None Update="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Update="Properties\Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<Compile Update="Properties\Resources.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+		<None Update="Properties\Settings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
+		<Compile Update="Properties\Settings.Designer.cs">
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.settings</DependentUpon>
+		</Compile>
+	</ItemGroup>
 
-  <ItemGroup>
-    <!-- Loose image/cursor files consumed via Properties\Resources.resx ResXFileRef
-         entries at build time; kept as non-build content, matching the legacy project. -->
-    <None Include="Images\Arrow.png" />
-    <None Include="Images\Blank.png" />
-    <None Include="Images\door.png" />
-    <None Include="Images\door_in.png" />
-    <None Include="Images\DrawLine.cur" />
-    <None Include="Images\DrawLine.png" />
-    <None Include="Images\DrawLineInverted.cur" />
-    <None Include="Images\LineDirection.png" />
-    <None Include="Images\LineStyle.png" />
-    <None Include="Images\lock.png" />
-    <None Include="Images\lock_unlock.png" />
-    <None Include="Images\Map.ico" />
-    <None Include="Images\MoveLine.cur" />
-    <None Include="Images\MoveLineInverted.cur" />
-    <None Include="Images\ToolStripBackground.png" />
-    <None Include="Images\ToolStripBackground2.png" />
-    <None Include="Setup\Wizard4.bmp" />
-  </ItemGroup>
+	<ItemGroup>
+		<!-- Loose image/cursor files consumed via Properties\Resources.resx ResXFileRef
+			 entries at build time; kept as non-build content, matching the legacy project. -->
+		<None Include="Images\Arrow.png"/>
+		<None Include="Images\Blank.png"/>
+		<None Include="Images\door.png"/>
+		<None Include="Images\door_in.png"/>
+		<None Include="Images\DrawLine.cur"/>
+		<None Include="Images\DrawLine.png"/>
+		<None Include="Images\DrawLineInverted.cur"/>
+		<None Include="Images\LineDirection.png"/>
+		<None Include="Images\LineStyle.png"/>
+		<None Include="Images\lock.png"/>
+		<None Include="Images\lock_unlock.png"/>
+		<None Include="Images\Map.ico"/>
+		<None Include="Images\MoveLine.cur"/>
+		<None Include="Images\MoveLineInverted.cur"/>
+		<None Include="Images\ToolStripBackground.png"/>
+		<None Include="Images\ToolStripBackground2.png"/>
+		<None Include="Setup\Wizard4.bmp"/>
+	</ItemGroup>
 
 </Project>
