@@ -16,6 +16,7 @@ namespace Trizbort.UI {
     private const int VERTICAL_MARGIN = 2;
     private const int WIDTH = 24;
     private const string NO_COLOR_SET = "No Color Set";
+    private static Tab mLastClosedTab = Tab.Objects;
     private readonly int roomID;
     private bool mAdjustingPosition;
 
@@ -50,9 +51,30 @@ namespace Trizbort.UI {
         m_tabControl.SelectedTab = tabRegions;
         ActiveControl = cboRegion;
       } else {
-        m_tabControl.SelectedTab = tabObjects;
-        ActiveControl = start == PropertiesStartType.RoomName ? txtName : txtObjects;
+        m_tabControl.SelectedIndex = (int)mLastClosedTab;
+        switch (mLastClosedTab) {
+          case Tab.Description:
+            ActiveControl = m_descriptionTextBox;
+            break;
+          case Tab.Objects:
+            ActiveControl = txtObjects;
+            break;
+          case Tab.Colors:
+            ActiveControl = m_changeRoomFillButton;
+            break;
+          case Tab.Regions:
+            ActiveControl = cboRegion;
+            break;
+          case Tab.RoomShapes:
+            ActiveControl = cboDrawType;
+            break;
+        }
       }
+    }
+
+    protected override void OnFormClosed(FormClosedEventArgs e) {
+      mLastClosedTab = (Tab)m_tabControl.SelectedIndex;
+      base.OnFormClosed(e);
     }
 
     public bool AllCornersEqual {

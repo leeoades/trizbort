@@ -1,6 +1,11 @@
 ﻿# Change Log
 All notable changes to this project will be documented in this file.  Version numbers will conform to the semver style versioning (https://semver.org/)
 
+## [Unreleased]
+
+### Change
+- Room Properties now remembers the tab selected when the last dialog closed, including OK and Cancel, across rooms and maps until Trizbort exits. The initial tab is Objects with its text box focused; new rooms no longer automatically focus Name. The region shortcut still opens Regions and also updates the remembered tab when closed. (#5)
+
 ## [2.3.0-beta.1] - 2026-10-09
 
 This is a **beta prerelease for testing**, based on the regression-coverage changes in #17.

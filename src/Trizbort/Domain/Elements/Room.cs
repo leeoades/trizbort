@@ -35,7 +35,6 @@ namespace Trizbort.Domain.Elements {
     private bool mIsDark;
     private bool mIsEndRoom;
     private bool mIsStartRoom;
-    private bool mPropertiesOpened;
     private CompassPoint mObjectsPosition = DEFAULT_OBJECTS_POSITION;
 
     private bool mOctagonal;
@@ -80,7 +79,6 @@ namespace Trizbort.Domain.Elements {
     // Added this second constructor to be used when loading a room
     // This constructor is significantly faster as it doesn't look for gap in the element IDs
     public Room(Project project, int totalIDs) : base(project, totalIDs) {
-      mPropertiesOpened = true;
       Name = Settings.DefaultRoomName;
       Region = Misc.Region.DefaultRegion;
       Size = new Vector(3 * Settings.GridSize, 2 * Settings.GridSize);
@@ -1254,11 +1252,7 @@ namespace Trizbort.Domain.Elements {
 
 
     public override void ShowDialog() {
-      var start = !mPropertiesOpened && Name == Settings.DefaultRoomName
-        ? PropertiesStartType.RoomName
-        : PropertiesStartType.Objects;
-      showRoomDialog(start);
-      mPropertiesOpened = true;
+      showRoomDialog(PropertiesStartType.Objects);
     }
 
     public override string ToString() {
