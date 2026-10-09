@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using Trizbort.Automap;
 using Trizbort.Domain;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;

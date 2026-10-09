@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
-using Trizbort.Domain.Enums;
 using Region = Trizbort.Domain.Misc.Region;
 using MapColors = Trizbort.Domain.Misc.Colors;
 

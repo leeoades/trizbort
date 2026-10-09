@@ -1,9 +1,6 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using Trizbort.Domain.Application;
-using Trizbort.UI.Controls;
-using Trizbort.Util;
 
 namespace Trizbort.Domain.StatusBar {
   public class ZoomStatusWidget : IStatusWidget {

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Trizbort.Automap;
 using Trizbort.Domain;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;

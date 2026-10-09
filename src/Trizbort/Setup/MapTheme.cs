@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
-using Trizbort.Domain.Misc;
 using Region = Trizbort.Domain.Misc.Region;
 
 namespace Trizbort.Setup {

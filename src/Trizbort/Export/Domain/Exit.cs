@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using Trizbort.Automap;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Trizbort.Automap;
 using Trizbort.Domain;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
