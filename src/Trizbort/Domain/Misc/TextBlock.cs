@@ -25,6 +25,11 @@ internal class TextBlock {
 
   public static int RebuildCount { get; private set; }
 
+  public void InvalidateLayout()
+  {
+    _invalidLayout = true;
+  }
+
   public string Text {
     get { return _text; }
     set {

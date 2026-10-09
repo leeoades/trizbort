@@ -9,6 +9,10 @@ namespace Trizbort.Domain.Watchers;
 public class TrizbortFileWatcher : IDisposable {
   private readonly FileSystemWatcher _watcher = new();
 
+  internal string WatchedPath => _watcher.Path;
+  internal string WatchedFilter => _watcher.Filter;
+  internal bool IsWatching => _watcher.EnableRaisingEvents;
+
   public TrizbortFileWatcher()
   {
     _watcher.NotifyFilter = NotifyFilters.LastWrite;

@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using NUnit.Framework;
@@ -17,23 +16,17 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
   [SetUp]
   public void ResetRememberedTab()
   {
-    _previousTab = _lastClosedTab.GetValue(null);
-    _lastClosedTab.SetValue(null, Enum.Parse(_lastClosedTab.FieldType, "Objects"));
+    _previousTab = RoomPropertiesDialog.LastClosedTab;
+    RoomPropertiesDialog.LastClosedTab = RoomPropertiesDialog.Tab.Objects;
   }
 
   [TearDown]
   public void RestoreRememberedTab()
   {
-    _lastClosedTab.SetValue(null, _previousTab);
+    RoomPropertiesDialog.LastClosedTab = _previousTab;
   }
 
-  private static readonly Type _dialogType =
-    typeof(OnlineHelpDialog).Assembly.GetType("Trizbort.UI.RoomPropertiesDialog", true);
-
-  private static readonly FieldInfo _lastClosedTab =
-    _dialogType.GetField("_lastClosedTab", BindingFlags.Static | BindingFlags.NonPublic);
-
-  private object _previousTab;
+  private RoomPropertiesDialog.Tab _previousTab;
 
   [TestCase(PropertiesStartType.RoomName, "tabObjects", "txtObjects")]
   [TestCase(PropertiesStartType.Objects, "tabObjects", "txtObjects")]
@@ -138,9 +131,7 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
   public void Dialog_TabShortcutsSelectAndFocusExpectedBox(Keys key, string tabName, string controlName)
   {
     using var dialog = CreateDialog(PropertiesStartType.Objects);
-    dialog.Shown += (sender, e) => typeof(Form)
-                                   .GetMethod("OnKeyUp", BindingFlags.Instance | BindingFlags.NonPublic)
-                                   .Invoke(dialog, new object[] { new KeyEventArgs(Keys.Alt | key) });
+    dialog.Shown += (sender, e) => dialog.PressAltKey(key);
     AssertOpening(dialog, tabName, controlName);
   }
 
@@ -168,11 +159,18 @@ public class RoomPropertiesDialogTests : IsolatedProjectTests {
     focused.ShouldBeTrue();
   }
 
-  private static Form CreateDialog(PropertiesStartType start)
+  private static TestRoomPropertiesDialog CreateDialog(PropertiesStartType start)
   {
-    var dialog = (Form)Activator.CreateInstance(_dialogType, start, 0);
+    var dialog = new TestRoomPropertiesDialog(start);
     ((ComboBox)dialog.Controls.Find("cboDrawType", true)[0]).SelectedIndex = 0;
     return dialog;
+  }
+
+  private class TestRoomPropertiesDialog(PropertiesStartType start) : RoomPropertiesDialog(start, 0) {
+    public void PressAltKey(Keys key)
+    {
+      OnKeyUp(new KeyEventArgs(Keys.Alt | key));
+    }
   }
 
   private static void SelectTab(Form dialog, string name)

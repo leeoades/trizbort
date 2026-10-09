@@ -1,9 +1,7 @@
 using System;
-using System.Collections;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
@@ -18,6 +16,7 @@ using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Trizbort.Export;
+using Trizbort.Export.Languages;
 using Trizbort.UI;
 using Trizbort.UI.Controls;
 
@@ -234,9 +233,8 @@ public class MapLabelTests {
     try {
       var room = new Room(project) { Name = "Observatory" };
       project.Elements.Add(room);
-      var type = typeof(MapLabel).Assembly.GetType("Trizbort.Export.Languages.Inform7Exporter", true);
       string expected;
-      using (var exporter = (CodeExporter)Activator.CreateInstance(type)) {
+      using (var exporter = new Inform7Exporter()) {
         expected = exporter.Export();
       }
 
@@ -247,7 +245,7 @@ public class MapLabelTests {
           project,
           new Vertex(room.PortAt(CompassPoint.East)),
           new Vertex(label.PortAt(CompassPoint.West))));
-      using (var exporter = (CodeExporter)Activator.CreateInstance(type)) {
+      using (var exporter = new Inform7Exporter()) {
         exporter.Export().ShouldBe(expected);
       }
     }
@@ -266,21 +264,16 @@ public class MapLabelTests {
       using var canvas = new Canvas { Size = new Size(600, 400) };
       var label = canvas.AddLabel(false, false);
       canvas.SelectedElement.ShouldBeSameAs(label);
-      var handles = (ICollection)typeof(Canvas).GetField("_handles", BindingFlags.Instance | BindingFlags.NonPublic)
-                                               .GetValue(canvas);
-      handles.Count.ShouldBe(8);
+      canvas.ResizeHandleCount.ShouldBe(8);
       var width = label.Width;
-      typeof(Canvas).GetMethod("ResizeRoom", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(canvas, new object[] { Keys.Right });
+      canvas.ResizeRoom(Keys.Right);
       label.Width.ShouldBeGreaterThan(width);
       project.IsDirty = false;
       label.Text = "Changed";
       project.IsDirty.ShouldBeTrue();
       canvas.SelectedElement = null;
       canvas.HoverElement = label;
-      var ports = (ICollection)typeof(Canvas).GetField("_ports", BindingFlags.Instance | BindingFlags.NonPublic)
-                                             .GetValue(canvas);
-      ports.Count.ShouldBe(16);
+      canvas.PortCount.ShouldBe(16);
 
       var room = canvas.AddRoom(false, false, false);
       var connection = new Connection(
@@ -290,10 +283,9 @@ public class MapLabelTests {
       project.Elements.Add(connection);
       var controller = new CopyController();
       var copy = controller.CreateCopyObject(new Element[] { label, room, connection });
-      typeof(Canvas).GetMethod("PasteRooms", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(canvas, new object[] { false, copy, controller });
+      canvas.PasteRooms(false, copy, controller);
       canvas.SelectedElements.Count.ShouldBe(3);
-      handles.Count.ShouldBe(0);
+      canvas.ResizeHandleCount.ShouldBe(0);
       var pasted = canvas.SelectedElements.OfType<MapLabel>().Single();
       pasted.Text.ShouldBe("Changed");
       var pastedLine = canvas.SelectedElements.OfType<Connection>().Single();

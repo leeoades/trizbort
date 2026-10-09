@@ -41,6 +41,25 @@ public class PdfTextRenderingTests {
     content.Substring(start, end - start).ShouldNotContain(" rg");
   }
 
+  [Test]
+  public void MarkNameInvalid_RebuildsCachedNameLayoutWithoutChangingContent()
+  {
+    using var project = new Project();
+    using var document = new PdfDocument();
+    using var palette = new Palette();
+    var room = new Room(project) { Name = "Cached name", Position = new Vector(50, 50) };
+    using var graphics = XGraphics.FromPdfPage(document.AddPage());
+    var context = new DrawingContext(1);
+    room.Draw(graphics, palette, context);
+    var rebuilt = TextBlock.RebuildCount;
+    room.Draw(graphics, palette, context);
+    TextBlock.RebuildCount.ShouldBe(rebuilt);
+    room.MarkNameInvalid();
+    room.Draw(graphics, palette, context);
+    TextBlock.RebuildCount.ShouldBe(rebuilt + 1);
+    room.Name.ShouldBe("Cached name");
+  }
+
   private static string RenderRoom(string lineEnding)
   {
     using var project = new Project();

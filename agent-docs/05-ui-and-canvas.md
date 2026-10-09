@@ -103,9 +103,8 @@ two are independent concerns.
 Canvas shares selection movement and tooltip dismissal between mouse dragging and arrow keys;
 keyboard and mouse panning also dismiss the old tooltip. Regression tests seed tooltip lifecycle
 state without native popups and exercise movement of rooms, labels and free connections.
-Tooltip anchors use Canvas client coordinates with the Canvas as their owner; `ToolTip.Show`
-does the screen conversion itself. Regression cases cover room/connection anchors, zoom/pan,
-and moved parent windows at positive and negative screen coordinates without showing popups.
+Tooltips are registered with the Canvas as their owner; Windows supplies cursor-relative
+placement. Tests check native delay configuration, content and dismissal without showing popups.
 `MapEditing.Move` is shared by mouse dragging and arrow-key movement. It moves free vertices
 and explicit connection waypoints, keeps docked endpoints attached, and translates unselected
 curve waypoints exactly once when both owners move. `MapEditing.Resize` tracks applied
@@ -113,8 +112,10 @@ movement (not raw cursor displacement) to preserve grid snapping/minimum-size be
 Approximate compass comparisons delegate to `CompassPointHelper.IsSameApproximateDirection`,
 also used by statistics without a main-form dependency.
 
-STA integration tests invoke Canvas's real protected mouse/key/wheel handlers through one
-test helper (Canvas is sealed). They cover resize handles, drag thresholds, movement, selection,
+STA integration tests invoke Canvas's real protected mouse/key/wheel handlers through the
+`TestCanvas` subclass, without reflection. Canvas is intentionally inheritable for this;
+internal read-only tooltip/handle/port diagnostics avoid exposing mutable collections.
+They cover resize handles, drag thresholds, movement, selection,
 paste and zoom anchoring; off-screen rendering checks exercise the production drawing path.
 They do not establish OS capture/cursor behavior or full visual equivalence.
 
@@ -159,6 +160,11 @@ provider after substitutions; this application still has process-global state an
 tests are nonparallel. Existing layout/focus/keyboard tests explicitly use `TestDialog` to
 pump real forms at zero opacity with no taskbar entry; they do not show visible dialogs.
 Rendering/control layout stays in WinForms, not behind a synthetic widget abstraction.
+
+Tests access internal types via `InternalsVisibleTo("Trizbort.Tests")`, construct dialogs and
+exporters directly, and use typed `RoomPropertiesDialog.LastClosedTab` state and file-watcher
+diagnostics. Reflective enumeration remains appropriate for the naming-convention test;
+assembly metadata access remains the source of the app's version.
 
 ### Map labels
 

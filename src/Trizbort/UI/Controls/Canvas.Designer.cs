@@ -2,7 +2,7 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI.Controls
 {
-  public sealed partial class Canvas
+  public partial class Canvas
     {
         /// <summary> 
         /// Required designer variable.

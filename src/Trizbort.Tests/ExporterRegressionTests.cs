@@ -52,20 +52,20 @@ internal class PreparationExporter : CodeExporter {
 public class ExporterRegressionTests : IsolatedProjectTests {
   private static IEnumerable<TestCaseData> Exporters()
   {
-    yield return new TestCaseData(typeof(Inform6Exporter), "Include \"Parser\";", "e_to");
-    yield return new TestCaseData(typeof(Inform7Exporter), "room", "east");
-    yield return new TestCaseData(typeof(TadsExporter), "gameMain: GameMainDef", "east");
-    yield return new TestCaseData(typeof(AlanExporter), "isa location", "Exit east");
-    yield return new TestCaseData(typeof(HugoExporter), "routine init", "e_to");
-    yield return new TestCaseData(typeof(ZilExporter), "<VERSION ZIP>", "(EAST TO");
-    yield return new TestCaseData(typeof(QuestExporter), "<asl", "alias=\"east\"");
-    yield return new TestCaseData(typeof(QuestRoomsExporter), "<object", "alias=\"east\"");
-    yield return new TestCaseData(typeof(AdventuronExporter), "locations {", ", east_oneway,");
+    yield return new TestCaseData(new Func<CodeExporter>(() => new Inform6Exporter()), "Include \"Parser\";", "e_to");
+    yield return new TestCaseData(new Func<CodeExporter>(() => new Inform7Exporter()), "room", "east");
+    yield return new TestCaseData(new Func<CodeExporter>(() => new TadsExporter()), "gameMain: GameMainDef", "east");
+    yield return new TestCaseData(new Func<CodeExporter>(() => new AlanExporter()), "isa location", "Exit east");
+    yield return new TestCaseData(new Func<CodeExporter>(() => new HugoExporter()), "routine init", "e_to");
+    yield return new TestCaseData(new Func<CodeExporter>(() => new ZilExporter()), "<VERSION ZIP>", "(EAST TO");
+    yield return new TestCaseData(new Func<CodeExporter>(() => new QuestExporter()), "<asl", "alias=\"east\"");
+    yield return new TestCaseData(new Func<CodeExporter>(() => new QuestRoomsExporter()), "<object", "alias=\"east\"");
+    yield return new TestCaseData(new Func<CodeExporter>(() => new AdventuronExporter()), "locations {", ", east_oneway,");
   }
 
   [TestCaseSource(nameof(Exporters))]
   public void AllLanguages_ExportRoomsDirectionsAndUpdatedContentWithoutMutatingMap(
-    Type type,
+    Func<CodeExporter> createExporter,
     string structure,
     string direction)
   {
@@ -77,7 +77,8 @@ public class ExporterRegressionTests : IsolatedProjectTests {
     second.AddDescription("A marble hall.");
     ProjectRegressionTests.Connect(first, second);
     var count = Project.Current.Elements.Count;
-    using (var exporter = (CodeExporter)Activator.CreateInstance(type)) {
+    using (var exporter = createExporter()) {
+      var type = exporter.GetType();
       var before = exporter.Export();
       before.ShouldContain(structure);
       before.ToLowerInvariant().ShouldContain(direction.ToLowerInvariant());

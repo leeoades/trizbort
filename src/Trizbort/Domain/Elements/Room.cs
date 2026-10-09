@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using PdfSharp.Drawing;
@@ -1225,9 +1224,7 @@ public class Room : Element, ISizeable {
 
   public void MarkNameInvalid()
   {
-    // it might be a better idea to make that change via public method
-    var fi = _name.GetType().GetField("_invalidLayout", BindingFlags.NonPublic | BindingFlags.Instance);
-    fi.SetValue(_name, true);
+    _name.InvalidateLayout();
   }
 
   public Port PortAt(CompassPoint compassPoint)

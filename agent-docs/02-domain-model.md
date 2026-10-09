@@ -67,6 +67,8 @@ for the overall layering.
   resolved reference across structural edits).
 - Validation: `ValidationState` (list of `RoomValidationState`, see
   `Domain\RoomValidationState.cs`) populated by `CheckValidation()`.
+- `MarkNameInvalid()` invalidates the cached name layout through `TextBlock.InvalidateLayout()`,
+  without reflective access to private fields.
 - Connection-related helpers: `IsConnected`, `GetConnections()`, `DeleteAllRoomConnections()`,
   `AdjustAllRoomConnections()` (re-anchors connector attachment points after the room moves —
   call this, or go through code paths that already call it, after any bulk room repositioning).

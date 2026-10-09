@@ -27,7 +27,7 @@ using Timer = System.Threading.Timer;
 
 namespace Trizbort.UI.Controls;
 
-public sealed partial class Canvas : UserControl, IAutomapCanvas {
+public partial class Canvas : UserControl, IAutomapCanvas {
   private const int RecomputeNMillisecondsAfterChange = 500;
   private static bool _smartLineSegmentsUpToDate;
   private readonly CommandController _commandController;
@@ -94,6 +94,10 @@ public sealed partial class Canvas : UserControl, IAutomapCanvas {
   }
 
   public bool CanDrawLine => true;
+
+  internal int ResizeHandleCount => _handles.Count;
+  internal int PortCount => _ports.Count;
+  internal TrizbortToolTip ElementToolTip => _trizbortToolTip1;
 
   public bool CanSelectElements => true;
 
@@ -2593,13 +2597,9 @@ public sealed partial class Canvas : UserControl, IAutomapCanvas {
 
   private void PasteColors(CopyController.CopyColorsObj xx)
   {
+    var controller = new CopyController();
     foreach (var element in SelectedElements.OfType<Room>()) {
-      foreach (var obj in xx.Colors) {
-        var propertyInfo = element.GetType().GetProperty(obj.Name);
-        if (propertyInfo != null) propertyInfo.SetValue(element, obj.Color);
-      }
-
-      element.SecondFillLocation = xx.SecondFillLocation;
+      controller.SetRoomColors(element, xx);
     }
   }
 
@@ -2780,7 +2780,7 @@ public sealed partial class Canvas : UserControl, IAutomapCanvas {
     // roomTooltip.SetSuperTooltip(this, null);
   }
 
-  private void ResizeRoom(Keys keyCode)
+  internal void ResizeRoom(Keys keyCode)
   {
     foreach (var element in SelectedElements.OfType<ISizeable>()) {
       var delta = 2.0f;

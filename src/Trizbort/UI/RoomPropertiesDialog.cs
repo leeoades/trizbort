@@ -17,7 +17,7 @@ internal partial class RoomPropertiesDialog : Form {
   private const int VerticalMargin = 2;
   private const int ColorSwatchWidth = 24;
   private const string NoColorSet = "No Color Set";
-  private static Tab _lastClosedTab = Tab.Objects;
+  internal static Tab LastClosedTab { get; set; } = Tab.Objects;
   private readonly int _roomId;
   private bool _adjustingPosition;
 
@@ -55,8 +55,8 @@ internal partial class RoomPropertiesDialog : Form {
       ActiveControl = _cboRegion;
     }
     else {
-      _tabControl.SelectedIndex = (int)_lastClosedTab;
-      switch (_lastClosedTab) {
+      _tabControl.SelectedIndex = (int)LastClosedTab;
+      switch (LastClosedTab) {
         case Tab.Description:
           ActiveControl = _descriptionTextBox;
           break;
@@ -415,7 +415,7 @@ internal partial class RoomPropertiesDialog : Form {
 
   protected override void OnFormClosed(FormClosedEventArgs e)
   {
-    _lastClosedTab = (Tab)_tabControl.SelectedIndex;
+    LastClosedTab = (Tab)_tabControl.SelectedIndex;
     base.OnFormClosed(e);
   }
 
@@ -896,7 +896,7 @@ internal partial class RoomPropertiesDialog : Form {
     e.SuppressKeyPress = true;
   }
 
-  private enum Tab {
+  internal enum Tab {
     Description,
     Objects,
     Colors,

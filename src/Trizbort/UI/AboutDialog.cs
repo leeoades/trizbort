@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace Trizbort.UI;
@@ -10,7 +9,7 @@ public partial class AboutDialog : Form {
   {
     InitializeComponent();
     try {
-      _versionLabel.Text = $"Version {Assembly.GetExecutingAssembly().GetName().Version.ToString().Trim('.', '0')}";
+      _versionLabel.Text = $"Version {typeof(AboutDialog).Assembly.GetName().Version.ToString().Trim('.', '0')}";
     }
     catch (Exception) {
       // ignored

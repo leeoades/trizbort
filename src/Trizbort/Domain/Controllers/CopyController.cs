@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Newtonsoft.Json;
@@ -11,6 +12,15 @@ using Trizbort.UI;
 namespace Trizbort.Domain.Controllers;
 
 public class CopyController {
+  private static readonly (string Name, Func<Room, Color> Get, Action<Room, Color> Set)[] _roomColors = {
+    (nameof(Room.RoomBorderColor), room => room.RoomBorderColor, (room, color) => room.RoomBorderColor = color),
+    (nameof(Room.RoomFillColor), room => room.RoomFillColor, (room, color) => room.RoomFillColor = color),
+    (nameof(Room.RoomNameColor), room => room.RoomNameColor, (room, color) => room.RoomNameColor = color),
+    (nameof(Room.RoomObjectTextColor), room => room.RoomObjectTextColor, (room, color) => room.RoomObjectTextColor = color),
+    (nameof(Room.RoomSubtitleColor), room => room.RoomSubtitleColor, (room, color) => room.RoomSubtitleColor = color),
+    (nameof(Room.SecondFillColor), room => room.SecondFillColor, (room, color) => room.SecondFillColor = color)
+  };
+
   public enum CopyType {
     Rooms,
     Colors
@@ -23,19 +33,10 @@ public class CopyController {
 
   public void CopyColors(Room selectedElement)
   {
-    var colorProperties = selectedElement.GetType().GetProperties().Where(p => p.PropertyType == typeof(Color));
-    var list = new List<CopyColorObj>();
-    foreach (var prop in colorProperties) {
-      var xx = new CopyColorObj {
-        Name = prop.Name,
-        Color = (Color)prop.GetValue(selectedElement)
-      };
-
-      list.Add(xx);
-    }
-
     var obj = new CopyColorsObj {
-      Colors = list,
+      Colors = _roomColors.Select(color => new CopyColorObj {
+        Name = color.Name, Color = color.Get(selectedElement)
+      }).ToList(),
       SecondFillLocation = selectedElement.SecondFillLocation
     };
 
@@ -44,6 +45,16 @@ public class CopyController {
       Formatting.Indented,
       new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
     UserInteraction.SetClipboardText(clipboardText);
+  }
+
+  public void SetRoomColors(Room room, CopyColorsObj copy)
+  {
+    foreach (var color in copy.Colors) {
+      // Ignore unknown clipboard keys for compatibility with other Trizbort versions.
+      var property = _roomColors.FirstOrDefault(property => property.Name == color.Name);
+      property.Set?.Invoke(room, color.Color);
+    }
+    room.SecondFillLocation = copy.SecondFillLocation;
   }
 
   public void CopyElements(List<Element> selectedElements)

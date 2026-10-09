@@ -12,7 +12,7 @@ using Trizbort.Setup;
 
 namespace Trizbort.UI.Controls;
 
-public sealed partial class Canvas {
+public partial class Canvas {
   private readonly Automap.Automap _automap = Automap.Automap.Instance;
   private readonly MultithreadedAutomapCanvas _threadSafeAutomapCanvas;
   private bool _dontAskAboutAmbiguities;

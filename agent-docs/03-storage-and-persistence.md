@@ -112,6 +112,12 @@ Room references are retained only when their target room is included in the copi
 Otherwise paste clears the reference (including same-map pastes): clipboard data carries no
 source-map identity, so retaining source IDs could bind to unrelated or newly created rooms.
 
+Colour clipboard data keeps the existing `Colors` list of `{ Name, Color }` entries and
+`SecondFillLocation`. `CopyController` uses an explicit, strongly typed mapping of the six
+room colour properties for both capture and `SetRoomColors`, not reflective property access.
+Unknown colour keys are ignored for compatibility; partial lists leave unspecified colours
+alone, and duplicate entries apply in order.
+
 ## Three separate settings systems — don't conflate them
 
 | System | File / location | Scope | Used for |

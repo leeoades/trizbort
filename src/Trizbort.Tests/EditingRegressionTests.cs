@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -17,37 +16,37 @@ using Trizbort.UI.Controls;
 
 namespace Trizbort.Tests;
 
-internal static class CanvasInput {
-  private static void Send(Canvas canvas, string method, object args)
+internal class TestCanvas : Canvas {
+  public void MoveMouse(Vector world)
   {
-    typeof(Canvas).GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic).Invoke(canvas, new[] { args });
+    var point = Point.Round(CanvasToClient(world));
+    OnMouseMove(new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 0));
   }
 
-  public static void MoveMouse(this Canvas canvas, Vector world)
+  public void PressMouse(Vector world)
   {
-    var point = Point.Round(canvas.CanvasToClient(world));
-    Send(canvas, "OnMouseMove", new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 0));
+    var point = Point.Round(CanvasToClient(world));
+    OnMouseDown(new MouseEventArgs(MouseButtons.Left, 1, point.X, point.Y, 0));
   }
 
-  public static void PressMouse(this Canvas canvas, Vector world)
+  public void ReleaseMouse()
   {
-    var point = Point.Round(canvas.CanvasToClient(world));
-    Send(canvas, "OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, point.X, point.Y, 0));
+    OnMouseUp(new MouseEventArgs(MouseButtons.Left, 1, 0, 0, 0));
   }
 
-  public static void ReleaseMouse(this Canvas canvas)
+  public void Key(Keys key)
   {
-    Send(canvas, "OnMouseUp", new MouseEventArgs(MouseButtons.Left, 1, 0, 0, 0));
+    OnKeyDown(new KeyEventArgs(key));
   }
 
-  public static void Key(this Canvas canvas, Keys key)
+  public void Wheel(Point point)
   {
-    Send(canvas, "OnKeyDown", new KeyEventArgs(key));
+    OnMouseWheel(new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 120));
   }
 
-  public static void Wheel(this Canvas canvas, Point point)
+  public void LeaveMouse()
   {
-    Send(canvas, "OnMouseWheel", new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 120));
+    OnMouseLeave(EventArgs.Empty);
   }
 }
 
@@ -186,7 +185,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   public void TooltipHover_RegistersNativeDelayedCursorPositionedTooltipWithoutShowingImmediately()
   {
     ApplicationSettingsController.AppSettings.ShowObjectsInTooltips = true;
-    using var canvas = new Canvas { Size = new Size(600, 400) };
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
     var room = ProjectRegressionTests.AddRoom("Room");
     room.Objects = "lamp\nkey\nbag";
     canvas.MoveMouse(room.InnerBounds.Center);
@@ -211,7 +210,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   public void TooltipHover_DismissesVisibleAndPendingTooltip(string action)
   {
     ApplicationSettingsController.AppSettings.ShowObjectsInTooltips = true;
-    using var canvas = new Canvas { Size = new Size(600, 400) };
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
     var room = ProjectRegressionTests.AddRoom("Room");
     canvas.MoveMouse(room.InnerBounds.Center);
     var tooltip = GetTooltip(canvas);
@@ -219,8 +218,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
     tooltip.IsShown = true;
     tooltip.LastOwner = canvas;
     if (action == "leave") {
-      typeof(Canvas).GetMethod("OnMouseLeave", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(canvas, new object[] { EventArgs.Empty });
+      canvas.LeaveMouse();
     }
     else if (action == "click") {
       canvas.PressMouse(room.InnerBounds.Center);
@@ -244,7 +242,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   public void TooltipHover_SwitchesRoomsAndDoesNotChangeConnectionText()
   {
     ApplicationSettingsController.AppSettings.ShowObjectsInTooltips = true;
-    using var canvas = new Canvas { Size = new Size(600, 400) };
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
     var first = ProjectRegressionTests.AddRoom("First");
     var second = ProjectRegressionTests.AddRoom("Second");
     second.Position = new Vector(100, 50);
@@ -266,9 +264,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
 
   private static TrizbortToolTip GetTooltip(Canvas canvas)
   {
-    return (TrizbortToolTip)typeof(Canvas)
-                            .GetField("_trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic)
-                            .GetValue(canvas);
+    return canvas.ElementToolTip;
   }
 
   private static IEnumerable<TestCaseData> TooltipMovementCases()
@@ -282,7 +278,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   public void MovingSelection_DismissesExistingTooltip(string kind, Keys key)
   {
     Settings.SnapToGrid = false;
-    using var canvas = new Canvas { Size = new Size(600, 400) };
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
     canvas.ZoomFactor = 1;
     Element element;
     if (kind == "room") {
@@ -306,9 +302,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
     }
 
     // Seed the tooltip's public lifecycle state without displaying a native popup.
-    var tooltip = (TrizbortToolTip)typeof(Canvas)
-                                   .GetField("_trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic)
-                                   .GetValue(canvas);
+    var tooltip = canvas.ElementToolTip;
     tooltip.LastOwner = canvas;
     tooltip.HoverElement = element;
     tooltip.IsShown = true;
@@ -333,10 +327,8 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   [TestCase(Keys.Down)]
   public void KeyboardPanning_DismissesExistingTooltip(Keys key)
   {
-    using var canvas = new Canvas { Size = new Size(600, 400) };
-    var tooltip = (TrizbortToolTip)typeof(Canvas)
-                                   .GetField("_trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic)
-                                   .GetValue(canvas);
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
+    var tooltip = canvas.ElementToolTip;
     tooltip.LastOwner = canvas;
     tooltip.HoverElement = ProjectRegressionTests.AddRoom("Room");
     tooltip.IsShown = true;
@@ -353,7 +345,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   [TestCase(4f)]
   public void CoordinateTransforms_RoundTripWithNegativeOrigin(float zoom)
   {
-    using var canvas = new Canvas { Size = new Size(601, 401), Origin = new Vector(-100, 70) };
+    using var canvas = new TestCanvas { Size = new Size(601, 401), Origin = new Vector(-100, 70) };
     canvas.ZoomFactor = zoom;
     var point = new Vector(-245.25f, 180.5f);
     canvas.ClientToCanvas(canvas.CanvasToClient(point)).Distance(point).ShouldBeLessThan(.001f);
@@ -366,7 +358,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   public void MouseAndKeyboardMovement_UpdateModelSelectionAndDirtyState()
   {
     Settings.SnapToGrid = false;
-    using var canvas = new Canvas { Size = new Size(600, 400) };
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
     var room = canvas.AddRoom(false, false, false);
     room.Position = new Vector(-50, -30);
     var center = room.InnerBounds.Center;
@@ -390,7 +382,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   {
     Settings.SnapToGrid = true;
     Settings.GridSize = 10;
-    using var canvas = new Canvas { Size = new Size(600, 400) };
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
     var room = canvas.AddRoom(false, false, false);
     room.Position = new Vector(-50, -40);
     room.Size = new Vector(100, 80);
@@ -410,7 +402,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   {
     Settings.SnapToGrid = false;
     Settings.DragDistanceToInitiateNewConnection = 4;
-    using var canvas = new Canvas { Size = new Size(600, 400) };
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
     canvas.ZoomFactor = 1;
     var connection = new Connection(Project.Current, new Vertex(new Vector(-100, 0)), new Vertex(new Vector(100, 0)));
     Project.Current.Elements.Add(connection);
@@ -431,7 +423,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   [Test]
   public void Paste_ClonesStylesAndReferenceRooms_AndSelectsNewGraph()
   {
-    using var canvas = new Canvas { Size = new Size(600, 400) };
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
     var first = canvas.AddRoom(false, false, false);
     first.Name = "First";
     var alias = canvas.AddRoom(false, false, false);
@@ -478,7 +470,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
         ProjectRegressionTests.AddRoom("Unrelated target").Id.ShouldBe(target.Id);
       }
 
-      using var canvas = new Canvas();
+      using var canvas = new TestCanvas();
       canvas.PasteRooms(false, copy, controller);
       var pastedAlias = canvas.SelectedRooms.Single(room => room.Name == "Alias");
       if (includeTarget) {
@@ -511,7 +503,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
     alias.ReferenceRoomId = label.Id;
     var controller = new CopyController();
     var copy = controller.CreateCopyObject(new Element[] { alias, label });
-    using var canvas = new Canvas();
+    using var canvas = new TestCanvas();
     canvas.PasteRooms(false, copy, controller);
     canvas.SelectedRooms.Single().ReferenceRoomId.ShouldBe(-1);
     // The next pasted room receives this ID; it must not become its own target.
@@ -526,7 +518,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   {
     Settings.SnapToGrid = false;
     Settings.DragDistanceToInitiateNewConnection = 4;
-    using var canvas = new Canvas { Size = new Size(600, 400) };
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
     canvas.ZoomFactor = 1;
     var first = ProjectRegressionTests.AddRoom("First");
     first.Position = new Vector(-200, -40);
@@ -555,7 +547,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   public void ChangingSelection_ClearsWaypointDeletionState()
   {
     Settings.SnapToGrid = false;
-    using var canvas = new Canvas { Size = new Size(600, 400) };
+    using var canvas = new TestCanvas { Size = new Size(600, 400) };
     canvas.ZoomFactor = 1;
     var line = new Connection(Project.Current, new Vertex(new Vector(-100, 0)), new Vertex(new Vector(100, 0)));
     Project.Current.Elements.Add(line);
@@ -574,7 +566,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   public void KeyboardMovement_TranslatesFreeConnectionAndItsWaypoints()
   {
     Settings.SnapToGrid = false;
-    using var canvas = new Canvas();
+    using var canvas = new TestCanvas();
     var connection = new Connection(Project.Current, new Vertex(Vector.Zero), new Vertex(new Vector(100, 0)));
     Project.Current.Elements.Add(connection);
     connection.SetCurveWaypoint(CurveWaypoint.Middle, new Vector(50, 60));
@@ -588,7 +580,7 @@ public class CanvasInteractionTests : IsolatedProjectTests {
   public void WheelZoom_AcceptsTallViewport_AndKeepsWorldPointUnderCursor()
   {
     ApplicationSettingsController.AppSettings.InvertMouseWheel = true;
-    using var canvas = new Canvas { Size = new Size(200, 600) };
+    using var canvas = new TestCanvas { Size = new Size(200, 600) };
     canvas.ZoomFactor = 1;
     var point = new Point(100, 450);
     var world = canvas.ClientToCanvas(point);

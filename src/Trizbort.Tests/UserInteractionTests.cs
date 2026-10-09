@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Reflection;
+using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using NUnit.Framework;
@@ -14,6 +14,7 @@ using Trizbort.Domain.Misc;
 using Trizbort.Domain.Watchers;
 using Trizbort.Setup;
 using Trizbort.UI;
+using Trizbort.UI.Controls;
 
 namespace Trizbort.Tests;
 
@@ -172,12 +173,9 @@ public class UserInteractionTests : IsolatedProjectTests {
 
   private static void AssertWatching(string path)
   {
-    var watcher = (FileSystemWatcher)typeof(TrizbortFileWatcher)
-                                     .GetField("_watcher", BindingFlags.Instance | BindingFlags.NonPublic)
-                                     .GetValue(Project.FileWatcher);
-    watcher.Path.ShouldBe(Path.GetDirectoryName(path));
-    watcher.Filter.ShouldBe(Path.GetFileName(path));
-    watcher.EnableRaisingEvents.ShouldBeTrue();
+    Project.FileWatcher.WatchedPath.ShouldBe(Path.GetDirectoryName(path));
+    Project.FileWatcher.WatchedFilter.ShouldBe(Path.GetFileName(path));
+    Project.FileWatcher.IsWatching.ShouldBeTrue();
   }
 
   [TestCase(false)]
@@ -363,6 +361,66 @@ public class UserInteractionTests : IsolatedProjectTests {
     _interaction.ClipboardText.ShouldContain("Copied");
     var copy = controller.PasteElements().ShouldBeOfType<CopyController.CopyObject>();
     copy.Rooms.ShouldHaveSingleItem().Name.ShouldBe("Copied");
+  }
+
+  [Test]
+  public void ClipboardColors_RoundTripAllSixColorsWithoutChangingRoomContent()
+  {
+    var source = ProjectRegressionTests.AddRoom("Source");
+    source.RoomBorderColor = Color.Red;
+    source.RoomFillColor = Color.FromArgb(128, 20, 30, 40);
+    source.RoomNameColor = Color.Blue;
+    source.RoomObjectTextColor = Color.Green;
+    source.RoomSubtitleColor = Color.Transparent;
+    source.SecondFillColor = Color.Yellow;
+    source.SecondFillLocation = "Top";
+    var target = ProjectRegressionTests.AddRoom("Target");
+    target.Objects = "lamp";
+    var controller = new CopyController();
+    controller.CopyColors(source);
+    var copy = controller.PasteElements().ShouldBeOfType<CopyController.CopyColorsObj>();
+    copy.Colors.Select(color => color.Name).ShouldBe(new[] {
+      nameof(Room.RoomBorderColor), nameof(Room.RoomFillColor), nameof(Room.RoomNameColor),
+      nameof(Room.RoomObjectTextColor), nameof(Room.RoomSubtitleColor), nameof(Room.SecondFillColor)
+    });
+    copy.SecondFillLocation.ShouldBe("Top");
+
+    using var canvas = new Canvas();
+    canvas.SelectedElement = target;
+    Project.Current.IsDirty = false;
+    canvas.Paste(false);
+
+    target.RoomBorderColor.ToArgb().ShouldBe(source.RoomBorderColor.ToArgb());
+    target.RoomFillColor.ToArgb().ShouldBe(source.RoomFillColor.ToArgb());
+    target.RoomNameColor.ToArgb().ShouldBe(source.RoomNameColor.ToArgb());
+    target.RoomObjectTextColor.ToArgb().ShouldBe(source.RoomObjectTextColor.ToArgb());
+    target.RoomSubtitleColor.ToArgb().ShouldBe(source.RoomSubtitleColor.ToArgb());
+    target.SecondFillColor.ToArgb().ShouldBe(source.SecondFillColor.ToArgb());
+    target.SecondFillLocation.ShouldBe("Top");
+    target.Name.ShouldBe("Target");
+    target.Objects.ShouldBe("lamp");
+    source.Name.ShouldBe("Source");
+    Project.Current.IsDirty.ShouldBeTrue();
+  }
+
+  [Test]
+  public void ClipboardColors_PartialAndUnknownKeysPreserveUnspecifiedProperties()
+  {
+    var room = ProjectRegressionTests.AddRoom("Target");
+    room.RoomFillColor = Color.Blue;
+    new CopyController().SetRoomColors(room, new CopyController.CopyColorsObj {
+      Colors = new List<CopyController.CopyColorObj> {
+        new() { Name = nameof(Room.RoomBorderColor), Color = Color.Red },
+        new() { Name = "FutureColor", Color = Color.Black },
+        new() { Name = nameof(Room.Name), Color = Color.Black },
+        new() { Name = nameof(Room.RoomBorderColor), Color = Color.Green }
+      },
+      SecondFillLocation = "Top"
+    });
+    room.RoomBorderColor.ShouldBe(Color.Green);
+    room.RoomFillColor.ShouldBe(Color.Blue);
+    room.SecondFillLocation.ShouldBe("Top");
+    room.Name.ShouldBe("Target");
   }
 
   [Test]
