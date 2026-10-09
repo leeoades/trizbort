@@ -18,8 +18,6 @@ namespace Trizbort
     {
       ApplicationConfiguration.Initialize();
 
-      Console.WriteLine(AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName);
-
       using (var form = new MainForm())
       {
         MainForm = form;
