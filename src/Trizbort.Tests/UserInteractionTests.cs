@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Xml.Linq;
@@ -82,6 +83,30 @@ namespace Trizbort.Tests {
       Project.Current.SetVersion(new Version(current.Major + 1, 0, 0, 0).ToString());
       Project.Current.CheckDocVersion();
       interaction.Messages.ShouldHaveSingleItem().ShouldContain("ahead a major version");
+    }
+
+    [Test]
+    public void Backup_CopiesSavedFileAndReportsDestinationWithCorrectMessage() {
+      var path = Files.File("backup.trizbort");
+      File.WriteAllText(path, "Saved map contents");
+      Project.Current.FileName = path;
+      for (var index = 1; index <= 2; index++) {
+        Project.Current.Backup();
+        var backup = Files.File("backup-backup-" + index + ".trizbort");
+        File.ReadAllText(backup).ShouldBe("Saved map contents");
+        interaction.Messages[index - 1].ShouldBe("Project backed up.: Your project has been backed up to " + backup + ".");
+      }
+      interaction.Messages.Count.ShouldBe(2);
+      File.ReadAllText(path).ShouldBe("Saved map contents");
+    }
+
+    [Test]
+    public void Backup_UnsavedProjectReportsNothingToBackUpWithoutCreatingFile() {
+      var files = Directory.GetFiles(Files.Path);
+      Project.Current.Backup();
+      Directory.GetFiles(Files.Path).ShouldBe(files);
+      interaction.Messages.ShouldHaveSingleItem().ShouldBe(
+        "Nothing to backup.: Your project has not yet been saved to a file. There is nothing to backup.");
     }
 
     [Test]

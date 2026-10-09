@@ -108,6 +108,9 @@ Clipboard reconstruction uses `CopyController.PasteConnections` to resolve docks
 copied nodes, leaving omitted endpoints free at their translated positions. Door/corner data
 is cloned; Canvas remaps copied room-reference IDs and selects the newly pasted graph. Tests
 exercise DTO JSON round-trips and production paste without reading the Windows clipboard.
+Room references are retained only when their target room is included in the copied selection.
+Otherwise paste clears the reference (including same-map pastes): clipboard data carries no
+source-map identity, so retaining source IDs could bind to unrelated or newly created rooms.
 
 ## Three separate settings systems — don't conflate them
 

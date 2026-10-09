@@ -95,7 +95,7 @@ namespace Trizbort.Domain.Application {
       if (HasFileName) {
         var nextAvailableFilename = FileName.NextAvailableFilename();
         File.Copy(FileName, nextAvailableFilename);
-        UserInteraction.ShowMessage($"You project has been backed up to {nextAvailableFilename}.", "Project backed up.", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        UserInteraction.ShowMessage($"Your project has been backed up to {nextAvailableFilename}.", "Project backed up.", MessageBoxButtons.OK, MessageBoxIcon.Information);
         return;
       }
 

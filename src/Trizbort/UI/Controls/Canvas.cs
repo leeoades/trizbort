@@ -2407,8 +2407,8 @@ namespace Trizbort.UI.Controls {
         Refresh();
 
         foreach (var room in newRooms)
-          if (copiedNodes.TryGetValue(room.ReferenceRoomId, out var reference) && reference is Room)
-            room.ReferenceRoomId = reference.ID;
+          room.ReferenceRoomId = copiedNodes.TryGetValue(room.ReferenceRoomId, out var reference) && reference is Room
+            ? reference.ID : -1;
         newConnections.AddRange(controller.PasteConnections(Project.Current, xx.Connections, copiedNodes, new Vector(offsetX, offsetY)));
 
         mSelectedElements.Clear();

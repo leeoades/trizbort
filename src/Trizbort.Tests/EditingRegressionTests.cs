@@ -315,6 +315,70 @@ namespace Trizbort.Tests {
       }
     }
 
+    [TestCase(false, false, false)]
+    [TestCase(false, false, true)]
+    [TestCase(false, true, false)]
+    [TestCase(false, true, true)]
+    [TestCase(true, false, false)]
+    [TestCase(true, false, true)]
+    [TestCase(true, true, false)]
+    [TestCase(true, true, true)]
+    public void PasteReferences_ResolveOnlyTargetsIncludedInClipboard(bool crossMap, bool includeTarget, bool aliasFirst) {
+      var source = Project.Current;
+      var target = ProjectRegressionTests.AddRoom("Source target");
+      var alias = ProjectRegressionTests.AddRoom("Alias");
+      alias.ReferenceRoomId = target.ID;
+      var controller = new CopyController();
+      var selected = new List<Element> {alias};
+      if (includeTarget) selected.Insert(aliasFirst ? 1 : 0, target);
+      var copy = JsonConvert.DeserializeObject<CopyController.CopyObject>(
+        JsonConvert.SerializeObject(controller.CreateCopyObject(selected)));
+      try {
+        if (crossMap) {
+          Project.Current = new Project();
+          ProjectRegressionTests.AddRoom("Unrelated target").ID.ShouldBe(target.ID);
+        }
+        using (var canvas = new Canvas()) {
+          canvas.pasteRooms(false, copy, controller);
+          var pastedAlias = canvas.SelectedRooms.Single(room => room.Name == "Alias");
+          if (includeTarget) {
+            var pastedTarget = canvas.SelectedRooms.Single(room => room.Name == "Source target");
+            pastedAlias.ReferenceRoom.ShouldBeSameAs(pastedTarget);
+            pastedTarget.ShouldNotBeSameAs(target);
+          } else {
+            pastedAlias.ReferenceRoomId.ShouldBe(-1);
+            pastedAlias.ReferenceRoom.ShouldBeNull();
+            pastedAlias.IsReference.ShouldBeFalse();
+          }
+          alias.ReferenceRoomId.ShouldBe(target.ID);
+        }
+      } finally {
+        if (crossMap) {
+          Project.Current.Dispose();
+          Project.Current = source;
+        }
+      }
+    }
+
+    [Test]
+    public void PasteReferences_DanglingIdCannotBindToNewRoomOrCopiedLabel() {
+      var alias = ProjectRegressionTests.AddRoom("Alias");
+      var label = new MapLabel(Project.Current);
+      Project.Current.Elements.Add(label);
+      alias.ReferenceRoomId = label.ID;
+      var controller = new CopyController();
+      var copy = controller.CreateCopyObject(new Element[] {alias, label});
+      using (var canvas = new Canvas()) {
+        canvas.pasteRooms(false, copy, controller);
+        canvas.SelectedRooms.Single().ReferenceRoomId.ShouldBe(-1);
+        // The next pasted room receives this ID; it must not become its own target.
+        copy.Rooms.Single().ReferenceRoomId = Project.Current.Elements.Max(element => element.ID) + 1;
+        canvas.pasteRooms(false, copy, controller);
+        canvas.SelectedRooms.Single().ReferenceRoomId.ShouldBe(-1);
+        canvas.SelectedRooms.Single().ReferenceRoom.ShouldBeNull();
+      }
+    }
+
     [Test]
     public void MouseConnectionDrag_CreatesDockedConnectionThroughActualEvents() {
       Settings.SnapToGrid = false;
