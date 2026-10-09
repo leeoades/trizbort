@@ -47,14 +47,14 @@ public class CanvasLayoutTests
     var previous = Project.Current;
     var project = new Project();
     Project.Current = project;
-    try 
+    try
     {
       project.Elements.Add(new Room(project) { Name = "Kitchen" });
       using var canvas = new Canvas();
       using var document = new PdfDocument();
       using var stream = new MemoryStream();
       var page = document.AddPage();
-      using (var graphics = XGraphics.FromPdfPage(page)) 
+      using (var graphics = XGraphics.FromPdfPage(page))
       {
         Should.NotThrow(() => canvas.Draw(graphics, true, (float)page.Width.Point, (float)page.Height.Point));
       }
