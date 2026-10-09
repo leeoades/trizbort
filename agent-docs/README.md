@@ -58,6 +58,13 @@ convert `Project.Elements` into IF-language source code via a shared `CodeExport
 
 ## Repo facts an agent should not have to re-derive
 
+- **C# naming**: PascalCase methods, properties and constants; `_camelCase` private instance
+  and static fields; camelCase parameters and local variables. Avoid `m`/`s` Hungarian
+  prefixes and all-caps constants. `.editorconfig` records these rules. WinForms control
+  `Name` strings, resource keys, native entry points and serialized keys stay unchanged;
+  update reflection lookups when renaming symbols. Generated Resources/Settings code is
+  left to its generator.
+
 - **UI framework**: Windows Forms (not WPF/UWP). Confirmed Windows-only; porting the runtime
   to .NET 8 did **not** make it cross-platform (see `09-build-test-and-dotnet8-port.md`).
 - **Target framework**: `net8.0-windows`, SDK-style `src/Trizbort/Trizbort.csproj`, as of the .NET 8 port

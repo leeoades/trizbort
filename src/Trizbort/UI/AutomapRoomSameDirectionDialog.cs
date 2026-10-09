@@ -25,24 +25,24 @@ namespace Trizbort.UI
 
     private void AutomapRoomSameDirectionDialog_Shown(object sender, EventArgs e)
     {
-      lblMessage.Text = $"Room '{Room1.Name} is already defined in the same direction as room '{Room2}'.  What would you like to do?";
-      btnRoom1.Text = $"Keep '{Room1.Name}'";
-      btnRoom2.Text = $"Keep '{Room2}'";
+      _lblMessage.Text = $"Room '{Room1.Name} is already defined in the same direction as room '{Room2}'.  What would you like to do?";
+      _btnRoom1.Text = $"Keep '{Room1.Name}'";
+      _btnRoom2.Text = $"Keep '{Room2}'";
     }
 
-    private void btnRoom1_Click(object sender, EventArgs e)
+    private void BtnRoom1Click(object sender, EventArgs e)
     {
       Result = AutomapSameDirectionResult.KeepRoom1;
       Hide();
     }
 
-    private void btnRoom2_Click(object sender, EventArgs e)
+    private void BtnRoom2Click(object sender, EventArgs e)
     {
       Result = AutomapSameDirectionResult.KeepRoom2;
       Hide();
     }
 
-    private void btnKeepBoth_Click(object sender, EventArgs e)
+    private void BtnKeepBothClick(object sender, EventArgs e)
     {
       Result = AutomapSameDirectionResult.KeepBoth;
       Hide();

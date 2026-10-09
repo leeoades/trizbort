@@ -16,10 +16,10 @@ namespace Trizbort.Domain.Application {
 
     public static readonly TrizbortFileWatcher FileWatcher = new TrizbortFileWatcher();
 
-    private static Project sMCurrent = new Project();
+    private static Project _current = new Project();
 
     public Project() {
-      Elements.Removed += onElementRemoved;
+      Elements.Removed += OnElementRemoved;
     }
 
     public Element ActiveSelectedElement { get; set; }
@@ -30,12 +30,12 @@ namespace Trizbort.Domain.Application {
 
 
     public static Project Current {
-      get => sMCurrent;
+      get => _current;
       set {
-        if (sMCurrent == value) return;
-        var oldProject = sMCurrent;
-        sMCurrent = value;
-        raiseProjectChanged(oldProject, sMCurrent);
+        if (_current == value) return;
+        var oldProject = _current;
+        _current = value;
+        RaiseProjectChanged(oldProject, _current);
       }
     }
 
@@ -63,7 +63,7 @@ namespace Trizbort.Domain.Application {
     public Version Version { get; private set; }
 
     public void Dispose() {
-      FileWatcher.ReloadMap -= reloadMap;
+      FileWatcher.ReloadMap -= ReloadMap;
     }
 
     public bool AreRoomsConnected(List<Room> selectedRooms) {
@@ -142,7 +142,7 @@ namespace Trizbort.Domain.Application {
     }
 
     public void InitFileWWatcher(string fileName) {
-      FileWatcher.ReloadMap += reloadMap;
+      FileWatcher.ReloadMap += ReloadMap;
       FileWatcher.InitializeWatcher(fileName);
     }
 
@@ -183,7 +183,7 @@ namespace Trizbort.Domain.Application {
       }
     }
 
-    private void onElementRemoved(object sender, ItemEventArgs<Element> e) {
+    private void OnElementRemoved(object sender, ItemEventArgs<Element> e) {
       var doomed = new List<Element>();
       foreach (var element in Elements.OfType<Connection>()) {
         var connection = element;
@@ -196,17 +196,17 @@ namespace Trizbort.Domain.Application {
         Elements.Remove(element);
     }
 
-    private static void raiseProjectChanged(Project oldProject, Project newProject) {
+    private static void RaiseProjectChanged(Project oldProject, Project newProject) {
       var projectChanged = ProjectChanged;
       projectChanged?.Invoke(null, new ProjectChangedEventArgs(oldProject, newProject));
     }
 
-    private void reloadMap(object sender, EventArgs e) {
+    private void ReloadMap(object sender, EventArgs e) {
       TrizbortApplication.MainForm.OpenProject(FileName);
     }
 
     public bool Load() {
-      FileWatcher.ReloadMap -= reloadMap;
+      FileWatcher.ReloadMap -= ReloadMap;
 
       var loader = new MapLoader(this);
       return loader.LoadMap(FileName);
@@ -214,7 +214,7 @@ namespace Trizbort.Domain.Application {
 
     internal bool Load(Uri uri)
     {
-      FileWatcher.ReloadMap -= reloadMap;
+      FileWatcher.ReloadMap -= ReloadMap;
 
       var loader = new MapLoader(this);
       return loader.LoadMap(uri);

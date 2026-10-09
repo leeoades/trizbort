@@ -14,17 +14,17 @@ namespace Trizbort.Domain.Misc {
     public static Vector Evaluate(Vector p0, Vector p1, Vector p2, Vector p3, float t) {
       const float minKnotGap = 1e-3f;
       var t0 = 0f;
-      var t1 = t0 + Math.Max(knotGap(p0, p1), minKnotGap);
-      var t2 = t1 + Math.Max(knotGap(p1, p2), minKnotGap);
-      var t3 = t2 + Math.Max(knotGap(p2, p3), minKnotGap);
+      var t1 = t0 + Math.Max(KnotGap(p0, p1), minKnotGap);
+      var t2 = t1 + Math.Max(KnotGap(p1, p2), minKnotGap);
+      var t3 = t2 + Math.Max(KnotGap(p2, p3), minKnotGap);
       var u = t1 + (t2 - t1) * t;
 
-      var a1 = lerp(p0, p1, t0, t1, u);
-      var a2 = lerp(p1, p2, t1, t2, u);
-      var a3 = lerp(p2, p3, t2, t3, u);
-      var b1 = lerp(a1, a2, t0, t2, u);
-      var b2 = lerp(a2, a3, t1, t3, u);
-      return lerp(b1, b2, t1, t2, u);
+      var a1 = Lerp(p0, p1, t0, t1, u);
+      var a2 = Lerp(p1, p2, t1, t2, u);
+      var a3 = Lerp(p2, p3, t2, t3, u);
+      var b1 = Lerp(a1, a2, t0, t2, u);
+      var b2 = Lerp(a2, a3, t1, t3, u);
+      return Lerp(b1, b2, t1, t2, u);
     }
 
     /// <summary>
@@ -70,11 +70,11 @@ namespace Trizbort.Domain.Misc {
       return polyline[polyline.Count - 1];
     }
 
-    private static float knotGap(Vector a, Vector b) {
+    private static float KnotGap(Vector a, Vector b) {
       return (float) Math.Sqrt(a.Distance(b));
     }
 
-    private static Vector lerp(Vector a, Vector b, float ta, float tb, float u) {
+    private static Vector Lerp(Vector a, Vector b, float ta, float tb, float u) {
       return a * ((tb - u) / (tb - ta)) + b * ((u - ta) / (tb - ta));
     }
   }

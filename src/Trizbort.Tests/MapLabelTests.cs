@@ -111,7 +111,7 @@ namespace Trizbort.Tests {
 
         new LegacyMapFileEngine(loaded).Load(path).ShouldBeTrue();
         var loadedLabel = loaded.Elements.OfType<MapLabel>().Single();
-        assertLabelEqual(loadedLabel, label);
+        AssertLabelEqual(loadedLabel, label);
         loadedLabel.Position.ShouldBe(label.Position);
         loadedLabel.Id.ShouldBe(label.Id);
         var loadedLine = loaded.Elements.OfType<Connection>().Single(line => line.Id == labelLine.Id);
@@ -142,7 +142,7 @@ namespace Trizbort.Tests {
       var pasted = new MapLabel(project);
       controller.SetLabel(pasted, loaded.Labels.Single());
 
-      assertLabelEqual(pasted, label);
+      AssertLabelEqual(pasted, label);
       loaded.Connections.Single().VertextList[0].OwnerId.ShouldBe(label.Id);
       loaded.Connections.Single().VertextList[0].Position.ShouldBe(connection.VertexList[0].Position);
       JsonConvert.DeserializeObject<CopyController.CopyObject>("{\"Rooms\":[],\"Connections\":[]}").Labels.ShouldBeEmpty();
@@ -157,27 +157,27 @@ namespace Trizbort.Tests {
         Text = "", Position = new Vector(20, 20), Size = new Vector(100, 60), Shape = shape,
         BackgroundColor = Color.Yellow, BorderColor = Color.Red
       };
-      using (var bitmap = render(label, false))
-        countNonWhitePixels(bitmap).ShouldBe(0);
+      using (var bitmap = Render(label, false))
+        CountNonWhitePixels(bitmap).ShouldBe(0);
       label.HasBackground = true;
-      using (var bitmap = render(label, false))
+      using (var bitmap = Render(label, false))
         bitmap.GetPixel(70, 50).ToArgb().ShouldBe(Color.Yellow.ToArgb());
       label.HasBackground = false;
       label.BorderStyle = BorderDashStyle.Solid;
-      using (var bitmap = render(label, false)) {
-        countNonWhitePixels(bitmap).ShouldBeGreaterThan(0);
+      using (var bitmap = Render(label, false)) {
+        CountNonWhitePixels(bitmap).ShouldBeGreaterThan(0);
         bitmap.GetPixel(70, 50).ToArgb().ShouldBe(Color.White.ToArgb());
       }
       label.BorderStyle = BorderDashStyle.None;
-      using (var bitmap = render(label, true))
-        countNonWhitePixels(bitmap).ShouldBeGreaterThan(0);
+      using (var bitmap = Render(label, true))
+        CountNonWhitePixels(bitmap).ShouldBeGreaterThan(0);
     }
 
     [Test]
     public void TextOnlyLabel_RendersText_AndCanBeExportedToPdf() {
       var label = new MapLabel(new Project()) {Text = "Notes", Position = new Vector(20, 20), Size = new Vector(100, 60)};
-      using (var bitmap = render(label, false)) {
-        countNonWhitePixels(bitmap).ShouldBeGreaterThan(0);
+      using (var bitmap = Render(label, false)) {
+        CountNonWhitePixels(bitmap).ShouldBeGreaterThan(0);
         bitmap.GetPixel(20, 20).ToArgb().ShouldBe(Color.White.ToArgb());
       }
       using (var document = new PdfDocument())
@@ -223,10 +223,10 @@ namespace Trizbort.Tests {
         using var canvas = new Canvas {Size = new Size(600, 400)};
         var label = canvas.AddLabel(false, false);
         canvas.SelectedElement.ShouldBeSameAs(label);
-        var handles = (System.Collections.ICollection) typeof(Canvas).GetField("mHandles", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
+        var handles = (System.Collections.ICollection) typeof(Canvas).GetField("_handles", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
         handles.Count.ShouldBe(8);
         var width = label.Width;
-        typeof(Canvas).GetMethod("resizeRoom", BindingFlags.Instance | BindingFlags.NonPublic)
+        typeof(Canvas).GetMethod("ResizeRoom", BindingFlags.Instance | BindingFlags.NonPublic)
                       .Invoke(canvas, new object[] {Keys.Right});
         label.Width.ShouldBeGreaterThan(width);
         project.IsDirty = false;
@@ -234,7 +234,7 @@ namespace Trizbort.Tests {
         project.IsDirty.ShouldBeTrue();
         canvas.SelectedElement = null;
         canvas.HoverElement = label;
-        var ports = (System.Collections.ICollection) typeof(Canvas).GetField("mPorts", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
+        var ports = (System.Collections.ICollection) typeof(Canvas).GetField("_ports", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
         ports.Count.ShouldBe(16);
 
         var room = canvas.AddRoom(false, false, false);
@@ -242,7 +242,7 @@ namespace Trizbort.Tests {
         project.Elements.Add(connection);
         var controller = new CopyController();
         var copy = controller.CreateCopyObject(new Element[] {label, room, connection});
-        typeof(Canvas).GetMethod("pasteRooms", BindingFlags.Instance | BindingFlags.NonPublic)
+        typeof(Canvas).GetMethod("PasteRooms", BindingFlags.Instance | BindingFlags.NonPublic)
                       .Invoke(canvas, new object[] {false, copy, controller});
         canvas.SelectedElements.Count.ShouldBe(3);
         handles.Count.ShouldBe(0);
@@ -340,7 +340,7 @@ namespace Trizbort.Tests {
       label.Shape.ShouldBe(RoomShape.Ellipse);
     }
 
-    private static Bitmap render(MapLabel label, bool selected) {
+    private static Bitmap Render(MapLabel label, bool selected) {
       var bitmap = new Bitmap(160, 110);
       using var native = Graphics.FromImage(bitmap);
       using var graphics = XGraphics.FromGraphics(native, new XSize(bitmap.Width, bitmap.Height));
@@ -350,7 +350,7 @@ namespace Trizbort.Tests {
       return bitmap;
     }
 
-    private static int countNonWhitePixels(Bitmap bitmap) {
+    private static int CountNonWhitePixels(Bitmap bitmap) {
       var count = 0;
       for (var x = 0; x < bitmap.Width; x++)
         for (var y = 0; y < bitmap.Height; y++)
@@ -358,7 +358,7 @@ namespace Trizbort.Tests {
       return count;
     }
 
-    private static void assertLabelEqual(MapLabel actual, MapLabel expected) {
+    private static void AssertLabelEqual(MapLabel actual, MapLabel expected) {
       actual.Text.ShouldBe(expected.Text);
       actual.Size.ShouldBe(expected.Size);
       actual.Shape.ShouldBe(expected.Shape);

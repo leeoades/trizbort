@@ -359,7 +359,7 @@ namespace Trizbort.Tests {
       MapTheme.HasIndividualStyles(project).ShouldBeTrue();
     }
 
-    private static Room addRoom(Project project, string region = null, Color? fill = null, Color? name = null, RoomShape shape = RoomShape.Octagonal) {
+    private static Room AddRoom(Project project, string region = null, Color? fill = null, Color? name = null, RoomShape shape = RoomShape.Octagonal) {
       var room = new Room(project) { HandDrawnStyle = HandDrawnStyle.MapDefault, Shape = shape, Region = region };
       if (fill.HasValue) room.RoomFillColor = fill.Value;
       if (name.HasValue) room.RoomNameColor = name.Value;
@@ -372,9 +372,9 @@ namespace Trizbort.Tests {
       var project = Project.Current;
       var cave = ColorTranslator.FromHtml("#400000");
       var grey = ColorTranslator.FromHtml("#808080");
-      var styled = Enumerable.Range(0, 8).Select(_ => addRoom(project, fill: cave, name: grey)).ToList();
-      var exception = addRoom(project, fill: Color.Green, name: grey, shape: RoomShape.Ellipse);
-      var unstyled = addRoom(project);
+      var styled = Enumerable.Range(0, 8).Select(_ => AddRoom(project, fill: cave, name: grey)).ToList();
+      var exception = AddRoom(project, fill: Color.Green, name: grey, shape: RoomShape.Ellipse);
+      var unstyled = AddRoom(project);
       unstyled.RoomBorderColor = Color.MidnightBlue;
       project.IsDirty = false;
 
@@ -404,8 +404,8 @@ namespace Trizbort.Tests {
     public void InferRoomStyle_UsesEachRegionsOwnMajority() {
       var project = Project.Current;
       Settings.Regions.Add(new Region { RegionName = "Forest", RColor = Color.White, TextColor = Color.Black });
-      var forest = Enumerable.Range(0, 3).Select(_ => addRoom(project, "forest", Color.Green)).ToList();
-      var plain = Enumerable.Range(0, 3).Select(_ => addRoom(project, fill: Color.Blue)).ToList();
+      var forest = Enumerable.Range(0, 3).Select(_ => AddRoom(project, "forest", Color.Green)).ToList();
+      var plain = Enumerable.Range(0, 3).Select(_ => AddRoom(project, fill: Color.Blue)).ToList();
 
       RoomStyleInference.Analyze(project).Apply();
 
@@ -418,10 +418,10 @@ namespace Trizbort.Tests {
     public void InferRoomStyle_WithoutStrongMajority_ChangesNothing() {
       var project = Project.Current;
       var defaultFill = Settings.Regions.Single(region => region.RegionName == Region.DefaultRegion).RColor;
-      addRoom(project, fill: Color.Red, shape: RoomShape.Ellipse);
-      addRoom(project, fill: Color.Red, shape: RoomShape.Ellipse);
-      addRoom(project, fill: Color.Blue, shape: RoomShape.Octagonal);
-      addRoom(project, fill: Color.Green, shape: RoomShape.RoundedCorners);
+      AddRoom(project, fill: Color.Red, shape: RoomShape.Ellipse);
+      AddRoom(project, fill: Color.Red, shape: RoomShape.Ellipse);
+      AddRoom(project, fill: Color.Blue, shape: RoomShape.Octagonal);
+      AddRoom(project, fill: Color.Green, shape: RoomShape.RoundedCorners);
       project.IsDirty = false;
 
       var inference = RoomStyleInference.Analyze(project);

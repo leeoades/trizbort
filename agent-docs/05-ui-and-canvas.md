@@ -13,9 +13,9 @@ See [`README.md`](README.md) for the doc map. For what `Room`/`Connection`/`Proj
   [`04-commands-and-controllers.md`](04-commands-and-controllers.md)).
 - Owns project lifecycle: `OpenProject()` (file dialog → load), `OnClosing()` (prompt to save
   dirty work, persist window/canvas size + app settings, stop automapping, dispose the file
-  watcher). `checkLoseProject()` gates any destructive operation (new/open/exit) on unsaved
+  watcher). `CheckLoseProject()` gates any destructive operation (new/open/exit) on unsaved
   changes.
-- Handles command-line actions (`commandLineActions`) — see
+- Handles command-line actions (`CommandLineActions`) — see
   [`08-cli-and-entry-point.md`](08-cli-and-entry-point.md) for the full flag→action mapping.
 - Hosts every language/image/PDF export menu handler — see
   [`07-export-subsystem.md`](07-export-subsystem.md).
@@ -121,22 +121,22 @@ They do not establish OS capture/cursor behavior or full visual equivalence.
 ### Connection curve waypoint handles
 
 When exactly one two-vertex `Connection` is selected, `Canvas` draws round waypoint handles
-(`drawWaypointHandles`, hit-tested by `hitTestWaypoint` before resize handles/ports): 2×
+(`DrawWaypointHandles`, hit-tested by `HitTestWaypoint` before resize handles/ports): 2×
 `Settings.HandleSize` for set waypoints, 1.5× translucent "insert" handles for addable empty
 slots (the midpoint of a straight line; then the 25%/75% points on the curve), scaled so they
-never shrink on screen when zoomed out (`waypointHandleScale`). Dragging uses `DragModes.MoveWaypoint`;
+never shrink on screen when zoomed out (`WaypointHandleScale`). Dragging uses `DragModes.MoveWaypoint`;
 an insert handle only creates a waypoint once dragged past `Settings.DragDistanceToInitiateNewConnection`.
-The clicked/dragged waypoint becomes `mSelectedWaypoint`, and `DeleteSelection()` (Delete key)
+The clicked/dragged waypoint becomes `_selectedWaypoint`, and `DeleteSelection()` (Delete key)
 removes that waypoint instead of the connection. Any selection change clears it. Dragging a
 selected connection moves its waypoints; dragging/arrow-moving rooms also moves the waypoints of
 unselected connections whose *both* ends are docked to moved rooms.
 
 ### New-room defaults
 
-`Canvas` remembers the last selected/changed room (`setRoomDefaultsFrom`, `mNewRoomStyleSource`).
+`Canvas` remembers the last selected/changed room (`SetRoomDefaultsFrom`, `_newRoomStyleSource`).
 When the app setting `ApplyStyleToNewRooms` (*Application Settings → Map → Preferences → Apply style to new rooms*, default off) is enabled, `AddRoom()` (the `R` hotkey / *Add Room* menu) copies that room's styling onto the new room via
 `Room.CopyStyleFrom()` (shape, corners, border, colours, region, dark, objects position — not
-name/objects/descriptions), and uses its size. When `DoubleClickToAddRoom` (*Map → Preferences → Double click to add room*, default off) is enabled, `OnMouseDoubleClick` on empty canvas (no element/handle/port hit) calls `AddRoom(true)`. `Canvas.reset()` (new/open project) clears the source.
+name/objects/descriptions), and uses its size. When `DoubleClickToAddRoom` (*Map → Preferences → Double click to add room*, default off) is enabled, `OnMouseDoubleClick` on empty canvas (no element/handle/port hit) calls `AddRoom(true)`. `Canvas.Reset()` (new/open project) clears the source.
 
 ## Dialog catalogue (`UI\*.cs`)
 
@@ -200,6 +200,6 @@ but not IF-language source export.
 - `Smoothing.cs` — smoothing/interpolation helpers used by rendering.
 - `PathHelper.cs` — safe path/directory/filename handling (used by `MainForm`'s open/save
   dialogs).
-- `KeyboardHelper.cs` — the app's only P/Invoke surface (`user32.dll` `keybd_event`/
-  `GetKeyState`) for num-lock/caps-lock/scroll-lock indicators.
+- `KeyboardHelper.cs` — keyboard P/Invoke helpers (`user32.dll` `keybd_event`, exposed as
+  `KeybdEvent`, and `GetKeyState`) for num-lock/caps-lock/scroll-lock indicators.
 - `ClipboardHelper.cs` — clipboard read/write helpers backing `CopyController`.

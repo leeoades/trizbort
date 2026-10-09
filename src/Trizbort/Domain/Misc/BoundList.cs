@@ -24,21 +24,21 @@ namespace Trizbort.Domain.Misc {
 
     protected override void InsertItem(int index, T item) {
       base.InsertItem(index, item);
-      raiseAdded(item);
+      RaiseAdded(item);
     }
 
     protected override void RemoveItem(int index) {
       var element = Items[index];
       base.RemoveItem(index);
-      raiseRemoved(element);
+      RaiseRemoved(element);
     }
 
-    private void raiseAdded(T item) {
+    private void RaiseAdded(T item) {
       var added = Added;
       if (added != null) added(this, new ItemEventArgs<T>(item));
     }
 
-    private void raiseRemoved(T item) {
+    private void RaiseRemoved(T item) {
       var removed = Removed;
       if (removed != null) removed(this, new ItemEventArgs<T>(item));
     }

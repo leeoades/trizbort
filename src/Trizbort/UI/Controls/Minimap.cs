@@ -10,14 +10,14 @@ using Trizbort.Setup;
 
 namespace Trizbort.UI.Controls {
   internal sealed partial class Minimap : UserControl {
-    private const int OUTER_BORDER_SIZE = 2;
-    private const int OUTER_PADDING = 3;
-    private const int INNER_BORDER_SIZE = 2;
-    private const int INNER_PADDING = 3;
-    private const int TOTAL_PADDING = OUTER_BORDER_SIZE + OUTER_PADDING + INNER_BORDER_SIZE + INNER_PADDING;
-    private bool _mDraggingViewport;
+    private const int OuterBorderSize = 2;
+    private const int OuterPadding = 3;
+    private const int InnerBorderSize = 2;
+    private const int InnerPadding = 3;
+    private const int TotalPadding = OuterBorderSize + OuterPadding + InnerBorderSize + InnerPadding;
+    private bool _draggingViewport;
 
-    private Point _mLastMousePosition;
+    private Point _lastMousePosition;
 
     public Minimap() {
       InitializeComponent();
@@ -38,10 +38,10 @@ namespace Trizbort.UI.Controls {
 
     protected override void OnMouseDown(MouseEventArgs e) {
       if (e.Button == MouseButtons.Left) {
-        setCanvasOrigin(e.Location);
-        _mLastMousePosition = e.Location;
+        SetCanvasOrigin(e.Location);
+        _lastMousePosition = e.Location;
         Capture = true;
-        _mDraggingViewport = true;
+        _draggingViewport = true;
         Invalidate();
       }
 
@@ -49,19 +49,19 @@ namespace Trizbort.UI.Controls {
     }
 
     protected override void OnMouseMove(MouseEventArgs e) {
-      if (_mDraggingViewport && e.Location != _mLastMousePosition) {
-        setCanvasOrigin(e.Location);
+      if (_draggingViewport && e.Location != _lastMousePosition) {
+        SetCanvasOrigin(e.Location);
         Invalidate();
       }
 
-      _mLastMousePosition = e.Location;
+      _lastMousePosition = e.Location;
 
       base.OnMouseMove(e);
     }
 
     protected override void OnMouseUp(MouseEventArgs e) {
-      if (_mDraggingViewport) {
-        _mDraggingViewport = false;
+      if (_draggingViewport) {
+        _draggingViewport = false;
         Capture = false;
         Invalidate();
       }
@@ -87,21 +87,21 @@ namespace Trizbort.UI.Controls {
             var clientArea = new Rectangle(0, 0, Width, Height);
 
             ControlPaint.DrawBorder3D(nativeGraphics, clientArea, Border3DStyle.Raised);
-            clientArea.Inflate(-OUTER_BORDER_SIZE, -OUTER_BORDER_SIZE);
+            clientArea.Inflate(-OuterBorderSize, -OuterBorderSize);
             nativeGraphics.FillRectangle(SystemBrushes.Control, clientArea);
-            clientArea.Inflate(-OUTER_PADDING, -OUTER_PADDING);
+            clientArea.Inflate(-OuterPadding, -OuterPadding);
             ControlPaint.DrawBorder3D(nativeGraphics, clientArea, Border3DStyle.SunkenOuter);
-            clientArea.Inflate(-INNER_BORDER_SIZE, -INNER_BORDER_SIZE);
+            clientArea.Inflate(-InnerBorderSize, -InnerBorderSize);
 
             nativeGraphics.FillRectangle(palette.CanvasBrush, clientArea);
-            clientArea.Inflate(-INNER_PADDING, -INNER_PADDING);
+            clientArea.Inflate(-InnerPadding, -InnerPadding);
 
             //nativeGraphics.FillRectangle(Brushes.Cyan, clientArea);
 
             var canvasBounds = (Rect) Canvas?.ComputeCanvasBounds(false);
 
             foreach (var element in Project.Current.Elements.Where(element => element is ISizeable)) {
-              var roomBounds = canvasToClient(((ISizeable) element).InnerBounds.ToRectangleF(), canvasBounds, clientArea);
+              var roomBounds = CanvasToClient(((ISizeable) element).InnerBounds.ToRectangleF(), canvasBounds, clientArea);
 
               var borderPen = element.Flagged ? palette.Pen(Settings.Color[Colors.SelectedLine], 0) : palette.Pen(Settings.Color[Colors.Border], 0);
               var paletteBorderBrush = element.Flagged ? new SolidBrush(Settings.Color[Colors.SelectedLine]) : palette.FillBrush;
@@ -110,10 +110,10 @@ namespace Trizbort.UI.Controls {
 
             if (Canvas != null) {
               // draw the viewport area as a selectable "handle"
-              var viewportBounds = canvasToClient(Canvas.Viewport.ToRectangleF(), canvasBounds, clientArea);
+              var viewportBounds = CanvasToClient(Canvas.Viewport.ToRectangleF(), canvasBounds, clientArea);
               viewportBounds.Intersect(clientArea);
               if (Project.Current.Elements.Count > 0) {
-                var context = new DrawingContext(1f) {Selected = _mDraggingViewport};
+                var context = new DrawingContext(1f) {Selected = _draggingViewport};
                 Drawing.DrawHandle(Canvas, graphics, palette, new Rect(viewportBounds), context, true, false);
               }
             }
@@ -138,28 +138,28 @@ namespace Trizbort.UI.Controls {
       base.WndProc(ref m);
     }
 
-    private RectangleF canvasToClient(RectangleF bounds, Rect canvasBounds, Rectangle clientArea) {
-      bounds.X = (bounds.X - canvasBounds.Left) / Math.Max(1, canvasBounds.Width) * clientArea.Width + TOTAL_PADDING;
-      bounds.Y = (bounds.Y - canvasBounds.Top) / Math.Max(1, canvasBounds.Height) * clientArea.Height + TOTAL_PADDING;
+    private RectangleF CanvasToClient(RectangleF bounds, Rect canvasBounds, Rectangle clientArea) {
+      bounds.X = (bounds.X - canvasBounds.Left) / Math.Max(1, canvasBounds.Width) * clientArea.Width + TotalPadding;
+      bounds.Y = (bounds.Y - canvasBounds.Top) / Math.Max(1, canvasBounds.Height) * clientArea.Height + TotalPadding;
       bounds.Width = bounds.Width / Math.Max(1, canvasBounds.Width) * clientArea.Width;
       bounds.Height = bounds.Height / Math.Max(1, canvasBounds.Height) * clientArea.Height;
       return bounds;
     }
 
-    private void setCanvasOrigin(Point clientPosition) {
+    private void SetCanvasOrigin(Point clientPosition) {
       if (Canvas == null)
         return;
 
       // get the minimap client area, in pixels, without borders and padding
       var clientArea = new Rect(0, 0, Width, Height);
-      clientArea.Inflate(-TOTAL_PADDING, -TOTAL_PADDING);
+      clientArea.Inflate(-TotalPadding, -TotalPadding);
 
       // clamp the mouse within the client area
       clientPosition = clientArea.Clamp(new Vector(clientPosition)).ToPoint();
 
       // get the mouse position as a percentage of the client area size
-      var x = (clientPosition.X - TOTAL_PADDING) / clientArea.Width;
-      var y = (clientPosition.Y - TOTAL_PADDING) / clientArea.Height;
+      var x = (clientPosition.X - TotalPadding) / clientArea.Width;
+      var y = (clientPosition.Y - TotalPadding) / clientArea.Height;
 
       // get the visible area on the canvas, in canvas coordinates
       var viewport = Canvas.Viewport;

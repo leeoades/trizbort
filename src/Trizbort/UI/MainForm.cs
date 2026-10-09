@@ -28,21 +28,21 @@ using Trizbort.Extensions;
 
 namespace Trizbort.UI {
   public partial class MainForm : Form {
-    private static readonly TimeSpan IdleProcessingEveryNSeconds = TimeSpan.FromSeconds(0.2);
+    private static readonly TimeSpan _idleProcessingEveryNSeconds = TimeSpan.FromSeconds(0.2);
     private readonly CommandController _commandController;
-    private readonly string _mCaption;
+    private readonly string _caption;
     public Canvas Canvas;
 
     // TODO: private ToolStripStatusLabel statusLabel;
     private Status _trizStatusBar;
 
-    private DateTime _mLastUpdateUITime;
+    private DateTime _lastUpdateUITime;
     private SynchronizationContext _synchronizationContext;
 
     public MainForm() {
       InitializeComponent();
-      initializeThemeMenu();
-      m_editMenu.DropDownItems.Add(new ToolStripMenuItem("Add &Label", null, (_, __) => Canvas.AddLabel(false)) {
+      InitializeThemeMenu();
+      _editMenu.DropDownItems.Add(new ToolStripMenuItem("Add &Label", null, (_, __) => Canvas.AddLabel(false)) {
         ShortcutKeyDisplayString = "L"
       });
       _synchronizationContext = SynchronizationContext.Current;
@@ -50,19 +50,19 @@ namespace Trizbort.UI {
 
       _commandController = new CommandController(Canvas);
 
-      _mCaption = Text;
+      _caption = Text;
 
-      Application.Idle += onIdle;
-      _mLastUpdateUITime = DateTime.MinValue;
+      Application.Idle += OnIdle;
+      _lastUpdateUITime = DateTime.MinValue;
 
-      m_automapBar.StopClick += onMAutomapBarOnStopClick;
+      _automapBar.StopClick += OnMAutomapBarOnStopClick;
     }
 
 
     public sealed override string Text { get => base.Text; set => base.Text = value; }
 
     public void OpenProject() {
-      if (!checkLoseProject())
+      if (!CheckLoseProject())
         return;
 
       using var dialog = new OpenFileDialog();
@@ -77,7 +77,7 @@ namespace Trizbort.UI {
     }
 
     protected override void OnClosing(CancelEventArgs e) {
-      if (!checkLoseProject()) {
+      if (!CheckLoseProject()) {
         e.Cancel = true;
         return;
       }
@@ -92,17 +92,17 @@ namespace Trizbort.UI {
       base.OnClosing(e);
     }
 
-    private void alanToTextToolStripMenuItem_Click(object sender, EventArgs e) {
-      exportCode<AlanExporter>();
+    private void AlanToTextToolStripMenuItemClick(object sender, EventArgs e) {
+      ExportCode<AlanExporter>();
     }
 
-    private void adventuronToTextToolStripMenuItem_Click(object sender, EventArgs e)
+    private void AdventuronToTextToolStripMenuItemClick(object sender, EventArgs e)
     {
-        exportCode<AdventuronExporter>();
+        ExportCode<AdventuronExporter>();
     }
 
 
-        private void appSettingsToolStripMenuItem_Click(object sender, EventArgs e) {
+        private void AppSettingsToolStripMenuItemClick(object sender, EventArgs e) {
       ApplicationSettingsController.ShowAppDialog();
     }
 
@@ -115,14 +115,14 @@ namespace Trizbort.UI {
       Canvas.StopAutomapping();
     }
 
-    private bool checkLoseProject() {
+    private bool CheckLoseProject() {
       if (Project.Current.IsDirty) {
         // see if the user would like to save
         var result = UserInteraction.ShowMessage(this, $"Do you want to save changes to {Project.Current.Name}?", Text, MessageBoxButtons.YesNoCancel);
         switch (result) {
           case DialogResult.Yes:
             // user would like to save
-            if (!saveProject()) return false;
+            if (!SaveProject()) return false;
 
             // user saved; carry on
             return true;
@@ -142,7 +142,7 @@ namespace Trizbort.UI {
     }
 
 
-    private async Task<bool> clAutoMap(CommandLineOptions options) {
+    private async Task<bool> ClAutoMap(CommandLineOptions options) {
       var projectLoaded = false;
       try {
         var cmdLineAutomap = ApplicationSettingsController.AppSettings.Automap;
@@ -152,7 +152,7 @@ namespace Trizbort.UI {
         Canvas.StopAutomapping();
 
         if (options.QuickSave != null) {
-          saveAsCmdLineProject(options.QuickSave);
+          SaveAsCmdLineProject(options.QuickSave);
           Project.Current.IsDirty = false;
         }
 
@@ -168,7 +168,7 @@ namespace Trizbort.UI {
     }
 
 
-    private bool commandLineActions(CommandLineOptions options) {
+    private bool CommandLineActions(CommandLineOptions options) {
       var projectLoaded = false;
 
       if (options.LoadLastProject) {
@@ -176,10 +176,10 @@ namespace Trizbort.UI {
         projectLoaded = true;
       }
 
-      if (options.Transcript != null) projectLoaded = clAutoMap(options).Result;
+      if (options.Transcript != null) projectLoaded = ClAutoMap(options).Result;
 
       if (options.QuickSave != null && options.Transcript == null) {
-        saveAsCmdLineProject(options.QuickSave);
+        SaveAsCmdLineProject(options.QuickSave);
         Project.Current.IsDirty = false;
       }
 
@@ -189,25 +189,25 @@ namespace Trizbort.UI {
           OpenProject(options.FileName);
           projectLoaded = true;
 
-          if (options.SmartSave) smartSave(true);
+          if (options.SmartSave) SmartSave(true);
         }
 
-      if (!string.IsNullOrWhiteSpace(options.I6)) exportCodeCl<Inform6Exporter>(options.I6);
+      if (!string.IsNullOrWhiteSpace(options.I6)) ExportCodeCl<Inform6Exporter>(options.I6);
 
-      if (!string.IsNullOrWhiteSpace(options.I7)) exportCodeCl<Inform7Exporter>(options.I7);
+      if (!string.IsNullOrWhiteSpace(options.I7)) ExportCodeCl<Inform7Exporter>(options.I7);
 
-      if (!string.IsNullOrWhiteSpace(options.Tads)) exportCodeCl<TadsExporter>(options.Tads);
+      if (!string.IsNullOrWhiteSpace(options.Tads)) ExportCodeCl<TadsExporter>(options.Tads);
 
 
-      if (!string.IsNullOrWhiteSpace(options.Alan)) exportCodeCl<AlanExporter>(options.Alan);
+      if (!string.IsNullOrWhiteSpace(options.Alan)) ExportCodeCl<AlanExporter>(options.Alan);
 
-      if (!string.IsNullOrWhiteSpace(options.Hugo)) exportCodeCl<HugoExporter>(options.Hugo);
+      if (!string.IsNullOrWhiteSpace(options.Hugo)) ExportCodeCl<HugoExporter>(options.Hugo);
 
-      if (!string.IsNullOrWhiteSpace(options.Zil)) exportCodeCl<ZilExporter>(options.Zil);
+      if (!string.IsNullOrWhiteSpace(options.Zil)) ExportCodeCl<ZilExporter>(options.Zil);
 
-      if (!string.IsNullOrWhiteSpace(options.Quest)) exportCodeCl<QuestExporter>(options.Quest);
+      if (!string.IsNullOrWhiteSpace(options.Quest)) ExportCodeCl<QuestExporter>(options.Quest);
 
-      if (!string.IsNullOrWhiteSpace(options.QuestRooms)) exportCodeCl<QuestRoomsExporter>(options.QuestRooms);
+      if (!string.IsNullOrWhiteSpace(options.QuestRooms)) ExportCodeCl<QuestRoomsExporter>(options.QuestRooms);
 
       if (options.Exit) Close();
 
@@ -252,22 +252,22 @@ namespace Trizbort.UI {
       _commandController.Select(SelectTypes.None);
     }
 
-    private void ellipseToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void EllipseToolStripMenuItemClick(object sender, EventArgs e) {
       foreach (var room in Canvas.SelectedRooms) room.Shape = RoomShape.Ellipse;
       Invalidate();
     }
 
-    private void endRoomToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void EndRoomToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetEndRoom();
     }
 
-    private void exportCode<T>() where T : CodeExporter, new() {
+    private void ExportCode<T>() where T : CodeExporter, new() {
       using var exporter = new T();
       var s = exporter.Export();
       UserInteraction.SetClipboardText(s, TextDataFormat.Text);
     }
 
-    private bool exportCode<T>(ref string lastExportFileName) where T : CodeExporter, new() {
+    private bool ExportCode<T>(ref string lastExportFileName) where T : CodeExporter, new() {
       using var exporter = new T();
       using var dialog = new SaveFileDialog();
       // compose filter string for file dialog
@@ -307,20 +307,20 @@ namespace Trizbort.UI {
       return false;
     }
 
-    private void exportCodeCl<T>(string exportFile) where T : CodeExporter, new() {
+    private void ExportCodeCl<T>(string exportFile) where T : CodeExporter, new() {
       using var exporter = new T();
       exporter.Export(exportFile);
     }
 
-    private string exportImage() {
+    private string ExportImage() {
       var folder = PathHelper.SafeGetDirectoryName(Project.Current.FileName);
       var fileName = PathHelper.SafeGetFilenameWithoutExtension(Project.Current.FileName);
 
-      var extension = getExtensionForDefaultImageType();
+      var extension = GetExtensionForDefaultImageType();
 
       var imageFile = Path.Combine(folder, fileName + extension);
       try {
-        if (!saveImage(imageFile))
+        if (!SaveImage(imageFile))
           return string.Empty;
       }
       catch (Exception) {
@@ -330,12 +330,12 @@ namespace Trizbort.UI {
       return imageFile;
     }
 
-    private string exportPDF() {
+    private string ExportPDF() {
       var folder = PathHelper.SafeGetDirectoryName(Project.Current.FileName);
       var fileName = PathHelper.SafeGetFilenameWithoutExtension(Project.Current.FileName);
       var pdfFile = Path.Combine(folder, fileName + ".pdf");
       try {
-        savePDF(pdfFile);
+        SavePDF(pdfFile);
       }
       catch (Exception) {
         return string.Empty;
@@ -350,41 +350,41 @@ namespace Trizbort.UI {
 
     private void FileExportAlanMenuItem_Click(object sender, EventArgs e) {
       var fileName = ApplicationSettingsController.AppSettings.LastExportAlanFileName;
-      if (exportCode<AlanExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportAlanFileName = fileName;
+      if (ExportCode<AlanExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportAlanFileName = fileName;
     }
 
     private void FileExportAdventuronMenuItem_Click(object sender, EventArgs e)
     {
         var fileName = ApplicationSettingsController.AppSettings.LastExportAdventuronFileName;
-        if (exportCode<AdventuronExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportAdventuronFileName = fileName;
+        if (ExportCode<AdventuronExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportAdventuronFileName = fileName;
     }
 
     private void FileExportHugoMenuItem_Click(object sender, EventArgs e) {
       var fileName = ApplicationSettingsController.AppSettings.LastExportHugoFileName;
-      if (exportCode<HugoExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportHugoFileName = fileName;
+      if (ExportCode<HugoExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportHugoFileName = fileName;
     }
 
     private void FileExportImageMenuItem_Click(object sender, EventArgs e) {
       using var dialog = new SaveFileDialog();
       dialog.Filter = "PNG Images|*.png|JPEG Images|*.jpg|BMP Images|*.bmp|Enhanced Metafiles (EMF)|*.emf|All Files|*.*||";
       dialog.Title = "Export Image";
-      dialog.DefaultExt = getExtensionForDefaultImageType();
+      dialog.DefaultExt = GetExtensionForDefaultImageType();
       dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastExportImageFileName);
       if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
         ApplicationSettingsController.AppSettings.LastExportImageFileName = Path.GetDirectoryName(dialog.FileName) + @"\";
-        if (!saveImage(dialog.FileName)) UserInteraction.ShowMessage("There was an error saving the image file.  Please make sure the image is not already opened.", "Export Image", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+        if (!SaveImage(dialog.FileName)) UserInteraction.ShowMessage("There was an error saving the image file.  Please make sure the image is not already opened.", "Export Image", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
       }
     }
 
 
     private void FileExportInform6MenuItem_Click(object sender, EventArgs e) {
       var fileName = ApplicationSettingsController.AppSettings.LastExportInform6FileName;
-      if (exportCode<Inform6Exporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportInform6FileName = fileName;
+      if (ExportCode<Inform6Exporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportInform6FileName = fileName;
     }
 
     private void FileExportInform7MenuItem_Click(object sender, EventArgs e) {
       var fileName = ApplicationSettingsController.AppSettings.LastExportInform7FileName;
-      if (exportCode<Inform7Exporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportInform7FileName = fileName;
+      if (ExportCode<Inform7Exporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportInform7FileName = fileName;
     }
 
     private void FileExportPDFMenuItem_Click(object sender, EventArgs e) {
@@ -394,7 +394,7 @@ namespace Trizbort.UI {
       dialog.InitialDirectory = PathHelper.SafeGetDirectoryName(ApplicationSettingsController.AppSettings.LastExportImageFileName);
       if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
         try {
-          savePDF(dialog.FileName);
+          SavePDF(dialog.FileName);
         }
         catch (Exception ex) {
           UserInteraction.ShowMessage(Program.MainForm, $"There was a problem exporting the map:\n\n{ex.Message}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -403,23 +403,23 @@ namespace Trizbort.UI {
 
     private void FileExportQuestMenuItem_Click(object sender, EventArgs e) {
       var fileName = ApplicationSettingsController.AppSettings.LastExportQuestFileName;
-      if (exportCode<QuestExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportQuestFileName = fileName;
+      if (ExportCode<QuestExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportQuestFileName = fileName;
     }
 
     private void FileExportTadsMenuItem_Click(object sender, EventArgs e) {
       var fileName = ApplicationSettingsController.AppSettings.LastExportTadsFileName;
-      if (exportCode<TadsExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportTadsFileName = fileName;
+      if (ExportCode<TadsExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportTadsFileName = fileName;
     }
 
 
         private void FileMenu_DropDownOpening(object sender, EventArgs e) {
-      setupMruMenu();
+      SetupMruMenu();
 
-      setupExportMenu();
+      SetupExportMenu();
     }
 
     private void FileNewMenuItem_Click(object sender, EventArgs e) {
-      if (!checkLoseProject())
+      if (!CheckLoseProject())
         return;
 
       Project.Current = new Project();
@@ -431,24 +431,24 @@ namespace Trizbort.UI {
     }
 
     private void FileRecentProject_Click(object sender, EventArgs e) {
-      if (!checkLoseProject()) return;
+      if (!CheckLoseProject()) return;
 
       var fileName = (string) ((ToolStripMenuItem) sender).Tag;
       OpenProject(fileName);
     }
 
     private void FileSaveAsMenuItem_Click(object sender, EventArgs e) {
-      saveAsProject();
+      SaveAsProject();
     }
 
     private void FileSaveMenuItem_Click(object sender, EventArgs e) {
       if (Project.Current.FileName.IsUrl())
-        saveAsProject();
+        SaveAsProject();
       else
-        saveProject();
+        SaveProject();
     }
 
-    private static string getExtensionForDefaultImageType() {
+    private static string GetExtensionForDefaultImageType() {
       var extension = ".png";
       switch (ApplicationSettingsController.AppSettings.DefaultImageType) {
         case 0:
@@ -468,7 +468,7 @@ namespace Trizbort.UI {
       return extension;
     }
 
-    private void handDrawnToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void HandDrawnToolStripMenuItemClick(object sender, EventArgs e) {
       foreach (var room in Canvas.SelectedRooms) room.Shape = RoomShape.SquareCorners;
       Invalidate();
     }
@@ -483,47 +483,47 @@ namespace Trizbort.UI {
       UserInteraction.ShowDialog(dialog, this);
     }
 
-    private void hugoToTextToolStripMenuItem_Click(object sender, EventArgs e) {
-      exportCode<HugoExporter>();
+    private void HugoToTextToolStripMenuItemClick(object sender, EventArgs e) {
+      ExportCode<HugoExporter>();
     }
 
-    private void inform6ToTextToolStripMenuItem_Click(object sender, EventArgs e) {
-      exportCode<Inform6Exporter>();
+    private void Inform6ToTextToolStripMenuItemClick(object sender, EventArgs e) {
+      ExportCode<Inform6Exporter>();
     }
 
-    private void inform7ToTextToolStripMenuItem_Click(object sender, EventArgs e) {
-      exportCode<Inform7Exporter>();
+    private void Inform7ToTextToolStripMenuItemClick(object sender, EventArgs e) {
+      ExportCode<Inform7Exporter>();
     }
 
     private void InLinesMenuItem_Click(object sender, EventArgs e) {
       _commandController.SetConnectionLabel(ConnectionLabel.In);
     }
 
-    private void joinRoomsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void JoinRoomsToolStripMenuItemClick(object sender, EventArgs e) {
       Canvas.JoinSelectedRooms(Canvas.SelectedRooms.First(), Canvas.SelectedRooms.Last());
     }
 
-    private void m_editChangeRegionMenuItem_Click(object sender, EventArgs e) {
+    private void EditChangeRegionMenuItemClick(object sender, EventArgs e) {
       if (Canvas.HasSingleSelectedElement && Canvas.SelectedElement.HasDialog && Canvas.SelectedElement is Room element) {
         var room = element;
         room.ShowDialog(PropertiesStartType.Region);
       }
     }
 
-    private void m_editCopyColorToolMenuItem_Click(object sender, EventArgs e) {
+    private void EditCopyColorToolMenuItemClick(object sender, EventArgs e) {
       Canvas.CopySelectedColor();
     }
 
-    private void m_editCopyMenuItem_Click(object sender, EventArgs e) {
+    private void EditCopyMenuItemClick(object sender, EventArgs e) {
       Canvas.CopySelectedElements();
     }
 
-    private void m_editPasteMenuItem_Click(object sender, EventArgs e) {
+    private void EditPasteMenuItemClick(object sender, EventArgs e) {
       Canvas.Paste(false);
     }
 
     private void MainForm_Load(object sender, EventArgs e) {
-      setupStatusBar();
+      SetupStatusBar();
       Canvas.MinimapVisible = ApplicationSettingsController.AppSettings.ShowMiniMap;
       var projectLoaded = false;
 
@@ -534,7 +534,7 @@ namespace Trizbort.UI {
 
       if (ext.Tag == ParserResultType.Parsed) {
         var result = (Parsed<CommandLineOptions>) ext;
-        projectLoaded = commandLineActions(result.Value);
+        projectLoaded = CommandLineActions(result.Value);
       }
 
       if (ApplicationSettingsController.AppSettings.LoadLastProjectOnStart && !projectLoaded)
@@ -547,43 +547,43 @@ namespace Trizbort.UI {
         }
     }
 
-    private void setupStatusBar() {
-      _trizStatusBar = new Status(statusBar);
+    private void SetupStatusBar() {
+      _trizStatusBar = new Status(_statusBar);
       _trizStatusBar.UpdateStatusBar();
     }
 
-    private void makeRoomDarkToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void MakeRoomDarkToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetRoomLighting(LightingActionType.ForceDark);
     }
 
-    private void makeRoomLightToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void MakeRoomLightToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetRoomLighting(LightingActionType.ForceLight);
     }
 
-    private void mapStatisticsExportToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void MapStatisticsExportToolStripMenuItemClick(object sender, EventArgs e) {
       var frm = new MapStatisticsView();
       frm.MapStatisticsView_Export(sender, e);
     }
 
-    private void mapStatisticsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void MapStatisticsToolStripMenuItemClick(object sender, EventArgs e) {
       var frm = new MapStatisticsView();
       UserInteraction.ShowDialog(frm);
     }
 
-    private void octagonalEdgesToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void OctagonalEdgesToolStripMenuItemClick(object sender, EventArgs e) {
       foreach (var room in Canvas.SelectedRooms) room.Shape = RoomShape.Octagonal;
       Invalidate();
     }
 
-    private void onIdle(object sender, EventArgs e) {
+    private void OnIdle(object sender, EventArgs e) {
       var now = DateTime.Now;
-      if (now - _mLastUpdateUITime > IdleProcessingEveryNSeconds) {
-        _mLastUpdateUITime = now;
-        Task.Run(updateCommandUI);
+      if (now - _lastUpdateUITime > _idleProcessingEveryNSeconds) {
+        _lastUpdateUITime = now;
+        Task.Run(UpdateCommandUI);
       }
     }
 
-    private void onMAutomapBarOnStopClick(object sender, EventArgs e) {
+    private void OnMAutomapBarOnStopClick(object sender, EventArgs e) {
       Canvas.StopAutomapping();
     }
 
@@ -604,44 +604,44 @@ namespace Trizbort.UI {
       Canvas.Refresh();
     }
 
-    private void questRoomsToTextToolStripMenuItem_Click(object sender, EventArgs e) {
-      exportCode<QuestRoomsExporter>();
+    private void QuestRoomsToTextToolStripMenuItemClick(object sender, EventArgs e) {
+      ExportCode<QuestRoomsExporter>();
     }
 
-    private void questToTextToolStripMenuItem_Click(object sender, EventArgs e) {
-      exportCode<QuestExporter>();
+    private void QuestToTextToolStripMenuItemClick(object sender, EventArgs e) {
+      ExportCode<QuestExporter>();
     }
 
     private void ReverseLineMenuItem_Click(object sender, EventArgs e) {
       Canvas.ReverseLineDirection();
     }
 
-    private void roomsMustHaveADescriptionToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void RoomsMustHaveADescriptionToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetValidation(ValidationType.RoomDescription);
       Project.Current.Canvas.Invalidate();
     }
 
-    private void roomsMustHaveASubtitleToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void RoomsMustHaveASubtitleToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetValidation(ValidationType.RoomSubTitle);
       Project.Current.Canvas.Invalidate();
     }
 
-    private void roomsMustHaveUniqueNamesToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void RoomsMustHaveUniqueNamesToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetValidation(ValidationType.RoomUniqueName);
       Project.Current.Canvas.Invalidate();
     }
 
-    private void roomsMustNotHaveADanglingConnectionToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void RoomsMustNotHaveADanglingConnectionToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetValidation(ValidationType.RoomDanglingConnection);
       Project.Current.Canvas.Invalidate();
     }
 
-    private void roundedEdgesToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void RoundedEdgesToolStripMenuItemClick(object sender, EventArgs e) {
       foreach (var room in Canvas.SelectedRooms) room.Shape = RoomShape.RoundedCorners;
       Invalidate();
     }
 
-    private void saveAsCmdLineProject(string outfile) {
+    private void SaveAsCmdLineProject(string outfile) {
       ApplicationSettingsController.AppSettings.LastProjectFileName = outfile;
       Project.Current.FileName = outfile;
       if (Project.Current.Save()) {
@@ -649,14 +649,14 @@ namespace Trizbort.UI {
           ApplicationSettingsController.AppSettings.RecentProjects.Remove(Project.Current.FileName);
         }
         ApplicationSettingsController.AppSettings.RecentProjects.Insert(0, Project.Current.FileName);
-        if (ApplicationSettingsController.AppSettings.RecentProjects.Count > ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT) {
-          ApplicationSettingsController.AppSettings.RecentProjects.RemoveRange(ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT, ApplicationSettingsController.AppSettings.RecentProjects.Count - ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT);
+        if (ApplicationSettingsController.AppSettings.RecentProjects.Count > ApplicationSettingsController.RecentProjectsMaxCount) {
+          ApplicationSettingsController.AppSettings.RecentProjects.RemoveRange(ApplicationSettingsController.RecentProjectsMaxCount, ApplicationSettingsController.AppSettings.RecentProjects.Count - ApplicationSettingsController.RecentProjectsMaxCount);
         }
         Project.Current.IsDirty = false;
       }
     }
 
-    private bool saveAsProject() {
+    private bool SaveAsProject() {
       using var dialog = new SaveFileDialog();
       if (!Project.Current.FileName.IsUrl()) {
         if (!string.IsNullOrEmpty(Project.Current.FileName))
@@ -676,8 +676,8 @@ namespace Trizbort.UI {
             ApplicationSettingsController.AppSettings.RecentProjects.Remove(Project.Current.FileName);
           }
           ApplicationSettingsController.AppSettings.RecentProjects.Insert(0, Project.Current.FileName);
-          if (ApplicationSettingsController.AppSettings.RecentProjects.Count > ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT) {
-            ApplicationSettingsController.AppSettings.RecentProjects.RemoveRange(ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT, ApplicationSettingsController.AppSettings.RecentProjects.Count - ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT);
+          if (ApplicationSettingsController.AppSettings.RecentProjects.Count > ApplicationSettingsController.RecentProjectsMaxCount) {
+            ApplicationSettingsController.AppSettings.RecentProjects.RemoveRange(ApplicationSettingsController.RecentProjectsMaxCount, ApplicationSettingsController.AppSettings.RecentProjects.Count - ApplicationSettingsController.RecentProjectsMaxCount);
           }
           return true;
         }
@@ -686,8 +686,8 @@ namespace Trizbort.UI {
       return false;
     }
 
-    private bool saveImage(string fileName) {
-      var sReturn = true;
+    private bool SaveImage(string fileName) {
+      var succeeded = true;
 
       var format = ImageFormat.Png;
       var ext = Path.GetExtension(fileName);
@@ -718,12 +718,12 @@ namespace Trizbort.UI {
             var handle = metafile.GetHenhmetafile();
             var copy = CopyEnhMetaFile(handle, fileName);
             if (copy == IntPtr.Zero)
-              sReturn = false;
+              succeeded = false;
 
             DeleteEnhMetaFile(copy);
           }
           catch {
-            sReturn = false;
+            succeeded = false;
           }
           finally {
             nativeGraphics.ReleaseHdc();
@@ -741,33 +741,33 @@ namespace Trizbort.UI {
         }
       }
       catch {
-        sReturn = false;
+        succeeded = false;
       }
 
-      return sReturn;
+      return succeeded;
     }
 
-    private void savePDF(string fileName) {
+    private void SavePDF(string fileName) {
       ApplicationSettingsController.AppSettings.LastExportImageFileName = fileName;
       MapPdfExporter.Save(Canvas, fileName);
     }
 
-    private bool saveProject() {
+    private bool SaveProject() {
       if (Project.Current.FileName.IsUrl())
       {
         UserInteraction.ShowMessage("You are trying to save a map loaded from the web.  Please use the 'Save Map As...' to save the map to your local drive.", "Problem saving map.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
         return false;
       }
 
-      if (!Project.Current.HasFileName) return saveAsProject();
+      if (!Project.Current.HasFileName) return SaveAsProject();
 
       if (Project.Current.Save()) {
         if (ApplicationSettingsController.AppSettings.RecentProjects.Contains(Project.Current.FileName)) {
           ApplicationSettingsController.AppSettings.RecentProjects.Remove(Project.Current.FileName);
         }
         ApplicationSettingsController.AppSettings.RecentProjects.Insert(0, Project.Current.FileName);
-        if (ApplicationSettingsController.AppSettings.RecentProjects.Count > ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT) {
-          ApplicationSettingsController.AppSettings.RecentProjects.RemoveRange(ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT, ApplicationSettingsController.AppSettings.RecentProjects.Count - ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT);
+        if (ApplicationSettingsController.AppSettings.RecentProjects.Count > ApplicationSettingsController.RecentProjectsMaxCount) {
+          ApplicationSettingsController.AppSettings.RecentProjects.RemoveRange(ApplicationSettingsController.RecentProjectsMaxCount, ApplicationSettingsController.AppSettings.RecentProjects.Count - ApplicationSettingsController.RecentProjectsMaxCount);
         }
         return true;
       }
@@ -775,70 +775,70 @@ namespace Trizbort.UI {
       return false;
     }
 
-    private void selectAllConnectionsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SelectAllConnectionsToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.Select(SelectTypes.Connections);
     }
 
-    private void selectAllRoomsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SelectAllRoomsToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.Select(SelectTypes.Rooms);
     }
 
-    private void selectDanglingConnectionsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SelectDanglingConnectionsToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.Select(SelectTypes.DanglingConnections);
     }
 
-    private void selectedUnconnectedRoomsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SelectedUnconnectedRoomsToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.Select(SelectTypes.UnconnectedRooms);
     }
 
-    private void selectRoomsWObjectsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SelectRoomsWObjectsToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.Select(SelectTypes.RoomsWithObjects);
     }
 
-    private void selectRoomsWoObjectsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SelectRoomsWoObjectsToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.Select(SelectTypes.RoomsWithOutObjects);
     }
 
-    private void selectSelfLoopingConnectionsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SelectSelfLoopingConnectionsToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.Select(SelectTypes.SelfLoopingConnections);
     }
 
-    private void setupExportMenu() {
+    private void SetupExportMenu() {
       if (Project.Current.Elements.OfType<Room>().Any()) {
-        m_fileExportAlanMenuItem.Enabled = true;
-        m_fileExportHugoMenuItem.Enabled = true;
-        m_fileExportInform7MenuItem.Enabled = true;
-        m_fileExportInform6MenuItem.Enabled = true;
-        m_fileExportTADSMenuItem.Enabled = true;
-        zILToolStripMenuItem.Enabled = true;
+        _fileExportAlanMenuItem.Enabled = true;
+        _fileExportHugoMenuItem.Enabled = true;
+        _fileExportInform7MenuItem.Enabled = true;
+        _fileExportInform6MenuItem.Enabled = true;
+        _fileExportTADSMenuItem.Enabled = true;
+        _zILToolStripMenuItem.Enabled = true;
       } else {
-        m_fileExportAlanMenuItem.Enabled = false;
-        m_fileExportHugoMenuItem.Enabled = false;
-        m_fileExportInform7MenuItem.Enabled = false;
-        m_fileExportInform6MenuItem.Enabled = false;
-        m_fileExportTADSMenuItem.Enabled = false;
-        zILToolStripMenuItem.Enabled = false;
+        _fileExportAlanMenuItem.Enabled = false;
+        _fileExportHugoMenuItem.Enabled = false;
+        _fileExportInform7MenuItem.Enabled = false;
+        _fileExportInform6MenuItem.Enabled = false;
+        _fileExportTADSMenuItem.Enabled = false;
+        _zILToolStripMenuItem.Enabled = false;
       }
     }
 
-    private void setupMruMenu() {
-      var existingItems = m_fileRecentMapsMenuItem.DropDownItems.Cast<ToolStripItem>().ToList();
+    private void SetupMruMenu() {
+      var existingItems = _fileRecentMapsMenuItem.DropDownItems.Cast<ToolStripItem>().ToList();
       foreach (var existingItem in existingItems) {
         existingItem.Click -= FileRecentProject_Click;
         existingItem.Dispose();
       }
 
       if (ApplicationSettingsController.AppSettings.RecentProjects.Count == 0) {
-        m_fileRecentMapsMenuItem.Enabled = false;
+        _fileRecentMapsMenuItem.Enabled = false;
       } else {
-        m_fileRecentMapsMenuItem.Enabled = true;
+        _fileRecentMapsMenuItem.Enabled = true;
         var index = 1;
         var removedFiles = new List<string>();
         foreach (var recentProject in ApplicationSettingsController.AppSettings.RecentProjects)
           if (recentProject.IsUrl() || File.Exists(recentProject)) {
             var menuItem = new ToolStripMenuItem($"&{index++} {recentProject}") {Tag = recentProject};
             menuItem.Click += FileRecentProject_Click;
-            m_fileRecentMapsMenuItem.DropDownItems.Add(menuItem);
+            _fileRecentMapsMenuItem.DropDownItems.Add(menuItem);
           } else {
             removedFiles.Add(recentProject);
           }
@@ -847,55 +847,55 @@ namespace Trizbort.UI {
       }
     }
 
-    private void smartSave(bool silent = false) {
+    private void SmartSave(bool silent = false) {
       if (!ApplicationSettingsController.AppSettings.SaveToPDF && !ApplicationSettingsController.AppSettings.SaveToImage) {
         if (!silent)
           UserInteraction.ShowMessage("Your settings are set to not save anything. Please check your App Settings if this is not what you want.");
         return;
       }
 
-      var mSaved = false;
+      var saved = false;
       if (Project.Current.FileName.IsUrl() || (!Project.Current.HasFileName || Project.Current.IsDirty)) {
         if (UserInteraction.ShowMessage("Your project needs to be saved before we can do a SmartSave.  Would you like to save the project now?", "Save Project?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) {
-          mSaved = Project.Current.FileName.IsUrl() ? saveAsProject() : saveProject();
+          saved = Project.Current.FileName.IsUrl() ? SaveAsProject() : SaveProject();
         }
       } else {
-        mSaved = true;
+        saved = true;
       }
 
 
-      if (mSaved) {
+      if (saved) {
         if (Project.Current.HasFileName) {
           var bSaveError = false;
-          var sPDFFile = string.Empty;
+          var pDFFile = string.Empty;
           if (ApplicationSettingsController.AppSettings.SaveToPDF) {
-            sPDFFile = exportPDF();
-            if (sPDFFile == string.Empty) {
+            pDFFile = ExportPDF();
+            if (pDFFile == string.Empty) {
               UserInteraction.ShowMessage("There was an error saving the PDF file during the SmartSave.  Please make sure the PDF is not already opened.", "Smart Save", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
               bSaveError = true;
             }
           }
 
-          var sImageFile = string.Empty;
+          var imageFile = string.Empty;
           if (ApplicationSettingsController.AppSettings.SaveToImage) {
-            sImageFile = exportImage();
-            if (sImageFile == string.Empty) {
+            imageFile = ExportImage();
+            if (imageFile == string.Empty) {
               UserInteraction.ShowMessage("There was an error saving the Image file during the SmartSave.  Please make sure the Image is not already opened.", "Smart Save", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
               bSaveError = true;
             }
           }
 
           if (!bSaveError) {
-            var sText = string.Empty;
-            if (ApplicationSettingsController.AppSettings.SaveToPDF) sText += $"PDF file has been saved to {sPDFFile}";
+            var text = string.Empty;
+            if (ApplicationSettingsController.AppSettings.SaveToPDF) text += $"PDF file has been saved to {pDFFile}";
 
             if (ApplicationSettingsController.AppSettings.SaveToImage) {
-              if (sText != string.Empty)
-                sText += Environment.NewLine;
-              sText += $"Image file has been saved to {sImageFile}";
+              if (text != string.Empty)
+                text += Environment.NewLine;
+              text += $"Image file has been saved to {imageFile}";
             }
 
-            if (!silent) UserInteraction.ShowMessage(sText, "Smart Save", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (!silent) UserInteraction.ShowMessage(text, "Smart Save", MessageBoxButtons.OK, MessageBoxIcon.Information);
           }
         }
       } else {
@@ -903,32 +903,32 @@ namespace Trizbort.UI {
       }
     }
 
-    private void smartSaveToolStripMenuItem_Click(object sender, EventArgs e) {
-      smartSave();
+    private void SmartSaveToolStripMenuItemClick(object sender, EventArgs e) {
+      SmartSave();
     }
 
-    private void startRoomToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void StartRoomToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetStartRoom();
     }
 
-    private void swapFormatsFillsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SwapFormatsFillsToolStripMenuItemClick(object sender, EventArgs e) {
       Canvas.SwapRoomFill();
     }
 
-    private void swapNamesToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SwapNamesToolStripMenuItemClick(object sender, EventArgs e) {
       Canvas.SwapRoomNames();
     }
 
-    private void swapObjectsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SwapObjectsToolStripMenuItemClick(object sender, EventArgs e) {
       Canvas.SwapRooms();
     }
 
-    private void swapRegionsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SwapRegionsToolStripMenuItemClick(object sender, EventArgs e) {
       Canvas.SwapRoomRegions();
     }
 
-    private void tADSToTextToolStripMenuItem_Click(object sender, EventArgs e) {
-      exportCode<TadsExporter>();
+    private void TADSToTextToolStripMenuItemClick(object sender, EventArgs e) {
+      ExportCode<TadsExporter>();
     }
 
     private void ToggleDirectionalLines_Click(object sender, EventArgs e) {
@@ -939,79 +939,79 @@ namespace Trizbort.UI {
       _commandController.ToggleConnectionStyle(Canvas.NewConnectionStyle);
     }
 
-    private void toggleTextToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void ToggleTextToolStripMenuItemClick(object sender, EventArgs e) {
       Canvas.ToggleText();
     }
 
-    private void updateCommandUI() {
+    private void UpdateCommandUI() {
 
       _synchronizationContext.Post(o => {
         // caption
-        Text = $"{(ApplicationSettingsController.AppSettings.ShowFullPathInTitleBar && !string.IsNullOrEmpty(Project.Current.FileName) ? Project.Current.FileName : Project.Current.Name)}{(Project.Current.IsDirty ? "*" : string.Empty)} - {_mCaption} - {Application.ProductVersion}";
+        Text = $"{(ApplicationSettingsController.AppSettings.ShowFullPathInTitleBar && !string.IsNullOrEmpty(Project.Current.FileName) ? Project.Current.FileName : Project.Current.Name)}{(Project.Current.IsDirty ? "*" : string.Empty)} - {_caption} - {Application.ProductVersion}";
         _trizStatusBar.UpdateStatusBar();
 
         // line drawing options
-        m_toggleDottedLinesButton.Checked = Canvas.NewConnectionStyle == ConnectionStyle.Dashed;
-        m_toggleDottedLinesMenuItem.Checked = m_toggleDottedLinesButton.Checked;
-        m_toggleDirectionalLinesButton.Checked = Canvas.NewConnectionFlow == ConnectionFlow.OneWay;
-        m_toggleDirectionalLinesMenuItem.Checked = m_toggleDirectionalLinesButton.Checked;
-        m_plainLinesMenuItem.Checked = !m_toggleDirectionalLinesMenuItem.Checked && !m_toggleDottedLinesMenuItem.Checked && Canvas.NewConnectionLabel == ConnectionLabel.None;
-        m_upLinesMenuItem.Checked = Canvas.NewConnectionLabel == ConnectionLabel.Up;
-        m_downLinesMenuItem.Checked = Canvas.NewConnectionLabel == ConnectionLabel.Down;
-        m_inLinesMenuItem.Checked = Canvas.NewConnectionLabel == ConnectionLabel.In;
-        m_outLinesMenuItem.Checked = Canvas.NewConnectionLabel == ConnectionLabel.Out;
+        _toggleDottedLinesButton.Checked = Canvas.NewConnectionStyle == ConnectionStyle.Dashed;
+        _toggleDottedLinesMenuItem.Checked = _toggleDottedLinesButton.Checked;
+        _toggleDirectionalLinesButton.Checked = Canvas.NewConnectionFlow == ConnectionFlow.OneWay;
+        _toggleDirectionalLinesMenuItem.Checked = _toggleDirectionalLinesButton.Checked;
+        _plainLinesMenuItem.Checked = !_toggleDirectionalLinesMenuItem.Checked && !_toggleDottedLinesMenuItem.Checked && Canvas.NewConnectionLabel == ConnectionLabel.None;
+        _upLinesMenuItem.Checked = Canvas.NewConnectionLabel == ConnectionLabel.Up;
+        _downLinesMenuItem.Checked = Canvas.NewConnectionLabel == ConnectionLabel.Down;
+        _inLinesMenuItem.Checked = Canvas.NewConnectionLabel == ConnectionLabel.In;
+        _outLinesMenuItem.Checked = Canvas.NewConnectionLabel == ConnectionLabel.Out;
 
         // selection-specific commands
         var hasSelectedElement = Canvas.SelectedElement != null;
-        m_editDeleteMenuItem.Enabled = hasSelectedElement;
-        m_editPropertiesMenuItem.Enabled = Canvas.HasSingleSelectedElement;
-        m_editSelectNoneMenuItem.Enabled = hasSelectedElement;
-        m_editSelectAllMenuItem.Enabled = Canvas.SelectedElementCount < Project.Current.Elements.Count;
-        m_editCopyMenuItem.Enabled = Canvas.SelectedElement != null;
-        m_editCopyColorToolMenuItem.Enabled = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room;
-        m_editPasteMenuItem.Enabled = ClipboardHelper.HasSomethingToPaste();
+        _editDeleteMenuItem.Enabled = hasSelectedElement;
+        _editPropertiesMenuItem.Enabled = Canvas.HasSingleSelectedElement;
+        _editSelectNoneMenuItem.Enabled = hasSelectedElement;
+        _editSelectAllMenuItem.Enabled = Canvas.SelectedElementCount < Project.Current.Elements.Count;
+        _editCopyMenuItem.Enabled = Canvas.SelectedElement != null;
+        _editCopyColorToolMenuItem.Enabled = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room;
+        _editPasteMenuItem.Enabled = ClipboardHelper.HasSomethingToPaste();
         if (Canvas.HasSingleSelectedElement) //Allow flipping light in all rooms if 1+ are selected. Issue #138 flicker
-          m_editIsDarkMenuItem.Enabled = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room;
+          _editIsDarkMenuItem.Enabled = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room;
         else
-          m_editIsDarkMenuItem.Enabled = hasSelectedElement;
-        m_editIsDarkMenuItem.Checked = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room && ((Room) Canvas.SelectedElement).IsDark;
-        m_editRenameMenuItem.Enabled = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room;
-        joinRoomsToolStripMenuItem.Enabled = Canvas.SelectedRooms.Count == 2 && !Project.Current.AreRoomsConnected(Canvas.SelectedRooms);
-        swapObjectsToolStripMenuItem.Enabled = Canvas.SelectedRooms.Count == 2;
-        swapNamesToolStripMenuItem.Enabled = Canvas.SelectedRooms.Count == 2;
-        swapFormatsFillsToolStripMenuItem.Enabled = Canvas.SelectedRooms.Count == 2;
-        swapRegionsToolStripMenuItem.Enabled = Canvas.SelectedRooms.Count == 2;
+          _editIsDarkMenuItem.Enabled = hasSelectedElement;
+        _editIsDarkMenuItem.Checked = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room && ((Room) Canvas.SelectedElement).IsDark;
+        _editRenameMenuItem.Enabled = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room;
+        _joinRoomsToolStripMenuItem.Enabled = Canvas.SelectedRooms.Count == 2 && !Project.Current.AreRoomsConnected(Canvas.SelectedRooms);
+        _swapObjectsToolStripMenuItem.Enabled = Canvas.SelectedRooms.Count == 2;
+        _swapNamesToolStripMenuItem.Enabled = Canvas.SelectedRooms.Count == 2;
+        _swapFormatsFillsToolStripMenuItem.Enabled = Canvas.SelectedRooms.Count == 2;
+        _swapRegionsToolStripMenuItem.Enabled = Canvas.SelectedRooms.Count == 2;
 
-        startRoomToolStripMenuItem.Enabled = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room;
-        startRoomToolStripMenuItem.Checked = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room && ((Room) Canvas.SelectedElement).IsStartRoom;
-        endRoomToolStripMenuItem.Enabled = Canvas.HasSelectedRooms;
-        endRoomToolStripMenuItem.Checked = Canvas.HasSelectedRooms && (Canvas.SelectedRooms.Any(p=>p.IsEndRoom));
+        _startRoomToolStripMenuItem.Enabled = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room;
+        _startRoomToolStripMenuItem.Checked = Canvas.HasSingleSelectedElement && Canvas.SelectedElement is Room && ((Room) Canvas.SelectedElement).IsStartRoom;
+        _endRoomToolStripMenuItem.Enabled = Canvas.HasSelectedRooms;
+        _endRoomToolStripMenuItem.Checked = Canvas.HasSelectedRooms && (Canvas.SelectedRooms.Any(p=>p.IsEndRoom));
 
 
-        roomsMustHaveUniqueNamesToolStripMenuItem.Checked = Project.Current.MustHaveUniqueNames;
-        roomsMustHaveADescriptionToolStripMenuItem.Checked = Project.Current.MustHaveDescription;
-        roomsMustHaveASubtitleToolStripMenuItem.Checked = Project.Current.MustHaveSubtitle;
-        roomsMustNotHaveADanglingConnectionToolStripMenuItem.Checked = Project.Current.MustHaveNoDanglingConnectors;
+        _roomsMustHaveUniqueNamesToolStripMenuItem.Checked = Project.Current.MustHaveUniqueNames;
+        _roomsMustHaveADescriptionToolStripMenuItem.Checked = Project.Current.MustHaveDescription;
+        _roomsMustHaveASubtitleToolStripMenuItem.Checked = Project.Current.MustHaveSubtitle;
+        _roomsMustNotHaveADanglingConnectionToolStripMenuItem.Checked = Project.Current.MustHaveNoDanglingConnectors;
 
-        m_editChangeRegionMenuItem.Enabled = Canvas.SelectedRooms.Any() && Settings.Regions.Count > 1;
-        handDrawnToolStripMenuItem.Enabled = Canvas.SelectedRooms.Any();
-        ellipseToolStripMenuItem.Enabled = Canvas.SelectedRooms.Any();
-        roundedEdgesToolStripMenuItem.Enabled = Canvas.SelectedRooms.Any();
-        octagonalEdgesToolStripMenuItem.Enabled = Canvas.SelectedRooms.Any();
-        m_reverseLineMenuItem.Enabled = Canvas.HasSelectedElement<Connection>();
+        _editChangeRegionMenuItem.Enabled = Canvas.SelectedRooms.Any() && Settings.Regions.Count > 1;
+        _handDrawnToolStripMenuItem.Enabled = Canvas.SelectedRooms.Any();
+        _ellipseToolStripMenuItem.Enabled = Canvas.SelectedRooms.Any();
+        _roundedEdgesToolStripMenuItem.Enabled = Canvas.SelectedRooms.Any();
+        _octagonalEdgesToolStripMenuItem.Enabled = Canvas.SelectedRooms.Any();
+        _reverseLineMenuItem.Enabled = Canvas.HasSelectedElement<Connection>();
 
         // automapping
-        m_automapStartMenuItem.Enabled = !Canvas.IsAutomapping;
-        m_automapStopMenuItem.Enabled = Canvas.IsAutomapping;
-        m_automapBar.Visible = Canvas.IsAutomapping;
-        m_automapBar.Status = Canvas.AutomappingStatus;
+        _automapStartMenuItem.Enabled = !Canvas.IsAutomapping;
+        _automapStopMenuItem.Enabled = Canvas.IsAutomapping;
+        _automapBar.Visible = Canvas.IsAutomapping;
+        _automapBar.Status = Canvas.AutomappingStatus;
 
         // minimap
-        m_viewMinimapMenuItem.Checked = Canvas.MinimapVisible;
+        _viewMinimapMenuItem.Checked = Canvas.MinimapVisible;
 
-        m_viewShowGridMenuItem.Checked = Settings.IsGridVisible;
+        _viewShowGridMenuItem.Checked = Settings.IsGridVisible;
 
-        updateToolStripImages();
+        UpdateToolStripImages();
         Canvas.UpdateScrollBars();
 
 
@@ -1019,8 +1019,8 @@ namespace Trizbort.UI {
 
     }
 
-    private void updateToolStripImages() {
-      foreach (ToolStripItem item in m_toolStrip.Items) {
+    private void UpdateToolStripImages() {
+      foreach (ToolStripItem item in _toolStrip.Items) {
         if (!(item is ToolStripButton))
           continue;
 
@@ -1043,8 +1043,8 @@ namespace Trizbort.UI {
     }
 
     private void ViewShowGridMenuItem_Click(object sender, EventArgs e) {
-      m_viewShowGridMenuItem.Checked = !m_viewShowGridMenuItem.Checked;
-      Settings.IsGridVisible = m_viewShowGridMenuItem.Checked;
+      _viewShowGridMenuItem.Checked = !_viewShowGridMenuItem.Checked;
+      Settings.IsGridVisible = _viewShowGridMenuItem.Checked;
       Project.Current.IsDirty = true;
     }
 
@@ -1080,16 +1080,16 @@ namespace Trizbort.UI {
       Canvas.ZoomFactor = 2.0f;
     }
 
-    private void zILToClipboardToolStripMenuItem_Click(object sender, EventArgs e) {
-      exportCode<ZilExporter>();
+    private void ZILToClipboardToolStripMenuItemClick(object sender, EventArgs e) {
+      ExportCode<ZilExporter>();
     }
 
-    private void zILToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void ZILToolStripMenuItemClick(object sender, EventArgs e) {
       var fileName = ApplicationSettingsController.AppSettings.LastExportZilFileName;
-      if (exportCode<ZilExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportZilFileName = fileName;
+      if (ExportCode<ZilExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportZilFileName = fileName;
     }
 
-    private void m_fileOpenFromWebMenuItem_Click(object sender, EventArgs e) {
+    private void FileOpenFromWebMenuItemClick(object sender, EventArgs e) {
       string url = string.Empty;
       InputDialogItem[] items = {
         new InputDialogItem("URL", url)
@@ -1097,17 +1097,17 @@ namespace Trizbort.UI {
 
       InputDialog input = InputDialog.Show("Load from Web", items, InputBoxButtons.OkCancel);
       if (input.Result == InputBoxResult.Ok) {
-        openUrl(input.Items["URL"]);
+        OpenUrl(input.Items["URL"]);
       }
     }
 
-    private void openUrl(string url) {
-      if (!checkLoseProject())
+    private void OpenUrl(string url) {
+      if (!CheckLoseProject())
         return;
 
       var uri = new Uri(url);
 
-      openProjectFromUrl(uri);
+      OpenProjectFromUrl(uri);
     }
 
     public void OpenProject(string fileName) {
@@ -1118,7 +1118,7 @@ namespace Trizbort.UI {
       }
     }
 
-    private void openProjectFromUrl(Uri uri) {
+    private void OpenProjectFromUrl(Uri uri) {
       var project = new Project { FileName = Path.GetFileName(uri.AbsoluteUri) };
       if (project.Load(uri))
       {

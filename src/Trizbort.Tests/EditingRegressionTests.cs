@@ -17,32 +17,32 @@ using Trizbort.UI.Controls;
 
 namespace Trizbort.Tests {
   internal static class CanvasInput {
-    private static void send(Canvas canvas, string method, object args) =>
+    private static void Send(Canvas canvas, string method, object args) =>
       typeof(Canvas).GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic).Invoke(canvas, new[] {args});
 
     public static void MoveMouse(this Canvas canvas, Vector world) {
       var point = Point.Round(canvas.CanvasToClient(world));
-      send(canvas, "OnMouseMove", new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 0));
+      Send(canvas, "OnMouseMove", new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 0));
     }
     public static void PressMouse(this Canvas canvas, Vector world) {
       var point = Point.Round(canvas.CanvasToClient(world));
-      send(canvas, "OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, point.X, point.Y, 0));
+      Send(canvas, "OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, point.X, point.Y, 0));
     }
-    public static void ReleaseMouse(this Canvas canvas) => send(canvas, "OnMouseUp", new MouseEventArgs(MouseButtons.Left, 1, 0, 0, 0));
-    public static void Key(this Canvas canvas, Keys key) => send(canvas, "OnKeyDown", new KeyEventArgs(key));
-    public static void Wheel(this Canvas canvas, Point point) => send(canvas, "OnMouseWheel", new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 120));
+    public static void ReleaseMouse(this Canvas canvas) => Send(canvas, "OnMouseUp", new MouseEventArgs(MouseButtons.Left, 1, 0, 0, 0));
+    public static void Key(this Canvas canvas, Keys key) => Send(canvas, "OnKeyDown", new KeyEventArgs(key));
+    public static void Wheel(this Canvas canvas, Point point) => Send(canvas, "OnMouseWheel", new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 120));
   }
 
   [TestFixture, Category("Unit")]
   public class EditingRegressionTests : IsolatedProjectTests {
-    private static IEnumerable<TestCaseData> resizeCases() {
+    private static IEnumerable<TestCaseData> ResizeCases() {
       foreach (var label in new[] {false, true})
       foreach (var point in new[] {CompassPoint.North, CompassPoint.NorthEast, CompassPoint.East, CompassPoint.SouthEast,
         CompassPoint.South, CompassPoint.SouthWest, CompassPoint.West, CompassPoint.NorthWest})
         yield return new TestCaseData(label, point);
     }
 
-    [TestCaseSource(nameof(resizeCases))]
+    [TestCaseSource(nameof(ResizeCases))]
     public void Resize_AllHandlesChangeOnlyTheirEdges(bool label, CompassPoint point) {
       ISizeable node = label ? (ISizeable) new MapLabel(Project.Current) : new Room(Project.Current);
       node.Position = new Vector(10, 20);
@@ -62,7 +62,7 @@ namespace Trizbort.Tests {
       node.InnerBounds.Bottom.ShouldBe(movesBottom ? 110 : 100);
     }
 
-    [TestCaseSource(nameof(resizeCases))]
+    [TestCaseSource(nameof(ResizeCases))]
     public void Resize_RejectsInversionAndAllowsOneUnitMinimum(bool label, CompassPoint point) {
       ISizeable node = label ? (ISizeable) new MapLabel(Project.Current) : new Room(Project.Current);
       node.Position = Vector.Zero;
@@ -155,7 +155,7 @@ namespace Trizbort.Tests {
       var room = ProjectRegressionTests.AddRoom("Room");
       room.Objects = "lamp\nkey\nbag";
       canvas.MoveMouse(room.InnerBounds.Center);
-      var tooltip = getTooltip(canvas);
+      var tooltip = GetTooltip(canvas);
       tooltip.GetToolTip(canvas).ShouldBe(room.GetToolTipHeader());
       tooltip.FooterText.ShouldBe(room.GetToolTipFooter());
       tooltip.HoverElement.ShouldBeSameAs(room);
@@ -178,7 +178,7 @@ namespace Trizbort.Tests {
       using var canvas = new Canvas {Size = new Size(600, 400)};
       var room = ProjectRegressionTests.AddRoom("Room");
       canvas.MoveMouse(room.InnerBounds.Center);
-      var tooltip = getTooltip(canvas);
+      var tooltip = GetTooltip(canvas);
       tooltip.GetToolTip(canvas).ShouldNotBeNullOrEmpty();
       tooltip.IsShown = true;
       tooltip.LastOwner = canvas;
@@ -209,29 +209,29 @@ namespace Trizbort.Tests {
       second.Position = new Vector(100, 50);
       canvas.MoveMouse(first.InnerBounds.Center);
       canvas.MoveMouse(second.InnerBounds.Center);
-      getTooltip(canvas).GetToolTip(canvas).ShouldBe(second.GetToolTipHeader());
+      GetTooltip(canvas).GetToolTip(canvas).ShouldBe(second.GetToolTipHeader());
 
       var connection = new Connection(Project.Current,
         new Vertex(new Vector(-200, -150)), new Vertex(new Vector(200, -150))) {Name = "Connection", MidText = "path"};
       Project.Current.Elements.Add(connection);
       Project.Current.IsDirty = false;
       canvas.MoveMouse(new Vector(0, -150));
-      getTooltip(canvas).HoverElement.ShouldBeSameAs(connection);
+      GetTooltip(canvas).HoverElement.ShouldBeSameAs(connection);
       connection.MidText.ShouldBe("path");
       Project.Current.IsDirty.ShouldBeFalse();
     }
 
-    private static TrizbortToolTip getTooltip(Canvas canvas) =>
+    private static TrizbortToolTip GetTooltip(Canvas canvas) =>
       (TrizbortToolTip)typeof(Canvas)
-        .GetField("trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
+        .GetField("_trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
 
-    private static IEnumerable<TestCaseData> tooltipMovementCases() {
+    private static IEnumerable<TestCaseData> TooltipMovementCases() {
       foreach (var kind in new[] {"room", "label", "connection"})
       foreach (var key in new[] {Keys.Left, Keys.Right, Keys.Up, Keys.Down, Keys.None})
         yield return new TestCaseData(kind, key);
     }
 
-    [TestCaseSource(nameof(tooltipMovementCases))]
+    [TestCaseSource(nameof(TooltipMovementCases))]
     public void MovingSelection_DismissesExistingTooltip(string kind, Keys key) {
       Settings.SnapToGrid = false;
       using var canvas = new Canvas {Size = new Size(600, 400)};
@@ -254,7 +254,7 @@ namespace Trizbort.Tests {
       }
       // Seed the tooltip's public lifecycle state without displaying a native popup.
       var tooltip = (TrizbortToolTip) typeof(Canvas)
-                                      .GetField("trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
+                                      .GetField("_trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
       tooltip.LastOwner = canvas;
       tooltip.HoverElement = element;
       tooltip.IsShown = true;
@@ -276,7 +276,7 @@ namespace Trizbort.Tests {
     public void KeyboardPanning_DismissesExistingTooltip(Keys key) {
       using var canvas = new Canvas {Size = new Size(600, 400)};
       var tooltip = (TrizbortToolTip) typeof(Canvas)
-                                      .GetField("trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
+                                      .GetField("_trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
       tooltip.LastOwner = canvas;
       tooltip.HoverElement = ProjectRegressionTests.AddRoom("Room");
       tooltip.IsShown = true;

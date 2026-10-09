@@ -27,7 +27,7 @@ namespace Trizbort.Domain.Misc {
   }
 
   internal static class CompassPointHelper {
-    private static readonly string[] Names = {
+    private static readonly string[] _names = {
       "n",
       "nne",
       "ne",
@@ -49,7 +49,7 @@ namespace Trizbort.Domain.Misc {
 
     public static double CalcRadianForEllipse(CompassPoint point, Rect rect) {
       var angleIncrement = 360.0 / 16.0;
-      var i = getPointIntegerValue(point);
+      var i = GetPointIntegerValue(point);
       return i * angleIncrement * (Math.PI / 180);
     }
 
@@ -83,8 +83,8 @@ namespace Trizbort.Domain.Misc {
     }
 
     public static bool FromName(string name, out CompassPoint point) {
-      for (var index = 0; index < Names.Length; ++index)
-        if (StringComparer.InvariantCultureIgnoreCase.Compare(name ?? string.Empty, Names[index]) == 0) {
+      for (var index = 0; index < _names.Length; ++index)
+        if (StringComparer.InvariantCultureIgnoreCase.Compare(name ?? string.Empty, _names[index]) == 0) {
           point = (CompassPoint) index;
           return true;
         }
@@ -320,8 +320,8 @@ namespace Trizbort.Domain.Misc {
 
     public static bool ToName(CompassPoint point, out string name) {
       var index = (int) point;
-      if (index >= 0 && index < Names.Length) {
-        name = Names[index];
+      if (index >= 0 && index < _names.Length) {
+        name = _names[index];
         return true;
       }
 
@@ -330,7 +330,7 @@ namespace Trizbort.Domain.Misc {
     }
 
 
-    private static int getPointIntegerValue(CompassPoint point) {
+    private static int GetPointIntegerValue(CompassPoint point) {
       switch (point) {
         case CompassPoint.North:
           return 12;

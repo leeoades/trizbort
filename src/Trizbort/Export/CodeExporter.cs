@@ -12,7 +12,7 @@ using Trizbort.Util;
 
 namespace Trizbort.Export {
   public abstract partial class CodeExporter : IDisposable {
-    private readonly Dictionary<Room, Location> _mMapRoomToLocation = new Dictionary<Room, Location>();
+    private readonly Dictionary<Room, Location> _mapRoomToLocation = new Dictionary<Room, Location>();
 
     protected CodeExporter() {
       LocationsInExportOrder = new List<Location>();
@@ -68,7 +68,7 @@ namespace Trizbort.Export {
       if (string.IsNullOrEmpty(author)) author = "A Trizbort User";
       var history = Project.Current.History;
 
-      prepareContent();
+      PrepareContent();
       ExportHeader(writer, title, author, Project.Current.Description ?? string.Empty, history);
       ExportContent(writer);
 
@@ -90,7 +90,7 @@ namespace Trizbort.Export {
       if (string.IsNullOrEmpty(author)) author = "A Trizbort User";
 
       var history = Project.Current.History;
-      prepareContent();
+      PrepareContent();
       ExportHeader(writer, title, author, Project.Current.Description ?? string.Empty, history);
       ExportContent(writer);
     }
@@ -109,7 +109,7 @@ namespace Trizbort.Export {
     protected abstract string GetExportName(Room room, int? suffix);
     protected abstract string GetExportName(string displayName, int? suffix);
 
-    private void findExits() {
+    private void FindExits() {
       // find the exits from each room,
       // file them by room, and assign them priorities.
       // don't decide yet which exit is "the" from a room in a particular direction,
@@ -122,8 +122,8 @@ namespace Trizbort.Export {
 
         if (sourceRoom == targetRoom && sourceCompassPoint == targetCompassPoint) continue;
 
-        if (_mMapRoomToLocation.TryGetValue(sourceRoom, out var sourceLocation) &&
-            _mMapRoomToLocation.TryGetValue(targetRoom, out var targetLocation)) {
+        if (_mapRoomToLocation.TryGetValue(sourceRoom, out var sourceLocation) &&
+            _mapRoomToLocation.TryGetValue(targetRoom, out var targetLocation)) {
           sourceLocation.AddExit(new Exit(sourceLocation, targetLocation, sourceCompassPoint, connection.StartText,
             connection));
 
@@ -134,7 +134,7 @@ namespace Trizbort.Export {
       }
     }
 
-    private void findRegions() {
+    private void FindRegions() {
       var mapExportNameToRegion = new Dictionary<string, Region>(StringComparer.InvariantCultureIgnoreCase);
 
       foreach (var reservedWord in ReservedWords)
@@ -154,7 +154,7 @@ namespace Trizbort.Export {
       }
     }
 
-    private void findRooms() {
+    private void FindRooms() {
       var mapExportNameToRoom = new Dictionary<string, Room>(StringComparer.InvariantCultureIgnoreCase);
 
       // prevent use of reserved words
@@ -175,11 +175,11 @@ namespace Trizbort.Export {
         mapExportNameToRoom[exportName] = room;
         var location = new Location(room, exportName);
         LocationsInExportOrder.Add(location);
-        _mMapRoomToLocation[room] = location;
+        _mapRoomToLocation[room] = location;
       }
     }
 
-    private void findThings() {
+    private void FindThings() {
       var mapExportNameToThing = new Dictionary<string, Thing>(StringComparer.InvariantCultureIgnoreCase);
 
       // prevent use of reserved words
@@ -211,21 +211,21 @@ namespace Trizbort.Export {
       }
     }
 
-    private void pickBestExits() {
+    private void PickBestExits() {
       // for every direction from every room, if there are one or more exits
       // in said direction, pick the best one.
       foreach (var location in LocationsInExportOrder) location.PickBestExits();
     }
 
-    private void prepareContent() {
-      _mMapRoomToLocation.Clear();
+    private void PrepareContent() {
+      _mapRoomToLocation.Clear();
       LocationsInExportOrder.Clear();
       RegionsInExportOrder.Clear();
-      findRegions();
-      findRooms();
-      findExits();
-      pickBestExits();
-      findThings();
+      FindRegions();
+      FindRooms();
+      FindExits();
+      PickBestExits();
+      FindThings();
     }
   }
 }

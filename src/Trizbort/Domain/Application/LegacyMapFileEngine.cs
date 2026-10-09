@@ -17,7 +17,7 @@ namespace Trizbort.Domain.Application {
     private readonly Action<Project> _checkVersion;
     private readonly Action<string, string> _reportWarning;
 
-    public LegacyMapFileEngine(Project project) : this(project, showError, loaded => loaded.CheckDocVersion()) { }
+    public LegacyMapFileEngine(Project project) : this(project, ShowError, loaded => loaded.CheckDocVersion()) { }
 
     internal LegacyMapFileEngine(Project project, Action<Exception> reportError, Action<Project> checkVersion,
       Action<string, string> reportWarning = null)
@@ -120,7 +120,7 @@ namespace Trizbort.Domain.Application {
 
     }
 
-    private static void showError(Exception ex) {
+    private static void ShowError(Exception ex) {
       UserInteraction.ShowMessage(Program.MainForm, $"There was a problem loading the map:{Environment.NewLine}{Environment.NewLine}{ex.Message}", System.Windows.Forms.Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
@@ -141,7 +141,7 @@ namespace Trizbort.Domain.Application {
         scribe.EndElement();
         scribe.StartElement("map");
         foreach (var element in _project.Elements)
-          saveElement(scribe, element);
+          SaveElement(scribe, element);
         scribe.EndElement();
         scribe.StartElement("settings");
         Settings.Save(scribe);
@@ -153,7 +153,7 @@ namespace Trizbort.Domain.Application {
       }
     }
 
-    private void saveElement(XmlScribe scribe, Element element)
+    private void SaveElement(XmlScribe scribe, Element element)
     {
       if (element.GetType() == typeof(Room))
       {

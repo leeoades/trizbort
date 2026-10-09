@@ -124,7 +124,7 @@ Things worth remembering:
 
 - `ApplicationSettingsController` also knows how to **migrate a legacy settings file**:
   `%LOCALAPPDATA%\Genstein\Trizbort\Settings.xml`. If `appsettings.json` doesn't exist yet but
-  that legacy XML does, it's imported once (`loadLegacyAppSettings()`) and then written out as
+  that legacy XML does, it's imported once (`LoadLegacyAppSettings()`) and then written out as
   the new `appsettings.json`. Don't delete that migration path without a deliberate decision —
   users upgrading from old installs depend on it.
 - `appsettings.json` is written relative to the **current working directory**, not

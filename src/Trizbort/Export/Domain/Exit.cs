@@ -16,7 +16,7 @@ namespace Trizbort.Export.Domain
       // For example, a northerly exit which is docked to the N compass point and which
       // does not go up, down, in or out is a higher priority than a northerly exit
       // docked to the NNE compass point and which also goes up.
-      private int _mPrimaryPriority;
+      private int _primaryPriority;
 
       public Exit(Location source, Location target, CompassPoint visualCompassPoint, string connectionText, Connection connection) {
         Source = source;
@@ -27,12 +27,12 @@ namespace Trizbort.Export.Domain
         ConnectionDescription = connection.Description;
         Conditional = connection.Style == ConnectionStyle.Dashed;
 
-        assignPrimaryPriority();
-        assignSecondaryDirection(connectionText);
+        AssignPrimaryPriority();
+        AssignSecondaryDirection(connectionText);
         if (SecondaryDirection != null)
           PrimaryDirection = (MappableDirection) SecondaryDirection;
         else
-          assignPrimaryDirection();
+          AssignPrimaryDirection();
       }
 
       //   True if this exit requires some in-game action from the player to be used; false otherwise.
@@ -66,7 +66,7 @@ namespace Trizbort.Export.Domain
       //   Get the priority of the exit, in the given direction, with respect to other exits.
       //   Higher priorities indicate more suitable exits.
       public int GetPriority(MappableDirection direction) {
-        if (direction == PrimaryDirection) return _mPrimaryPriority;
+        if (direction == PrimaryDirection) return _primaryPriority;
         if (direction == SecondaryDirection) return 1;
         return -1;
       }
@@ -85,7 +85,7 @@ namespace Trizbort.Export.Domain
         return false;
       }
 
-      private void assignPrimaryDirection() {
+      private void AssignPrimaryDirection() {
         switch (VisualCompassPoint) {
           case CompassPoint.NorthNorthWest:
           case CompassPoint.North:
@@ -124,8 +124,8 @@ namespace Trizbort.Export.Domain
         }
       }
 
-      private void assignPrimaryPriority() {
-        _mPrimaryPriority = 0;
+      private void AssignPrimaryPriority() {
+        _primaryPriority = 0;
 
         switch (VisualCompassPoint) {
           case CompassPoint.North:
@@ -137,31 +137,31 @@ namespace Trizbort.Export.Domain
           case CompassPoint.SouthWest:
           case CompassPoint.NorthWest:
             if (SecondaryDirection == null)
-              _mPrimaryPriority += 4;
+              _primaryPriority += 4;
             else
-              _mPrimaryPriority -= 2;
+              _primaryPriority -= 2;
             break;
           default:
             if (SecondaryDirection == null)
-              _mPrimaryPriority += 3;
+              _primaryPriority += 3;
             else
-              _mPrimaryPriority -= 1;
+              _primaryPriority -= 1;
             break;
         }
       }
 
-      private void assignSecondaryDirection(string connectionText) {
+      private void AssignSecondaryDirection(string connectionText) {
         switch (connectionText) {
-          case Connection.UP:
+          case Connection.Up:
             SecondaryDirection = MappableDirection.Up;
             break;
-          case Connection.DOWN:
+          case Connection.Down:
             SecondaryDirection = MappableDirection.Down;
             break;
-          case Connection.IN:
+          case Connection.In:
             SecondaryDirection = MappableDirection.In;
             break;
-          case Connection.OUT:
+          case Connection.Out:
             SecondaryDirection = MappableDirection.Out;
             break;
           default:

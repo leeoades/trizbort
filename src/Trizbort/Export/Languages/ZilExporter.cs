@@ -13,9 +13,9 @@ using Trizbort.Extensions;
 
 namespace Trizbort.Export.Languages {
   internal class ZilExporter : CodeExporter {
-    private const char SINGLE_QUOTE = '\'';
-    private const char DOUBLE_QUOTE = '"';
-    private const char SPACE = ' ';
+    private const char SingleQuote = '\'';
+    private const char DoubleQuote = '"';
+    private const char Space = ' ';
 
     public override List<KeyValuePair<string, string>> FileDialogFilters => new List<KeyValuePair<string, string>> {
       new KeyValuePair<string, string>("ZIL Source File", ".zil"),
@@ -32,23 +32,23 @@ namespace Trizbort.Export.Languages {
       foreach (var location in LocationsInExportOrder) {
         writer.WriteLine();
         writer.WriteLine($"<ROOM {location.ExportName}");
-        writer.WriteLine($"    (DESC {toZilString(location.Room.Name)})");
+        writer.WriteLine($"    (DESC {ToZilString(location.Room.Name)})");
         writer.Write($"    (IN ROOMS)");
 
         if (!String.IsNullOrWhiteSpace(location.Room.PrimaryDescription)) {
           writer.WriteLine();
-          writer.Write($"    (LDESC {toZilString(location.Room.PrimaryDescription)})");
+          writer.Write($"    (LDESC {ToZilString(location.Room.PrimaryDescription)})");
         }
 
         foreach (var direction in Directions.AllDirections) {
           var exit = location.GetBestExit(direction);
           if (exit != null && exit.Conditional) {
             writer.WriteLine();
-            writer.Write($"    ({toZilPropertyName(direction)} PER TRIZBORT-CONDITIONAL-EXIT)");
+            writer.Write($"    ({ToZilPropertyName(direction)} PER TRIZBORT-CONDITIONAL-EXIT)");
             needConditionalFunction = true;
           } else if (exit != null) {
             writer.WriteLine();
-            writer.Write($"    ({toZilPropertyName(direction)} TO {exit.Target.ExportName})");
+            writer.Write($"    ({ToZilPropertyName(direction)} TO {exit.Target.ExportName})");
             var oppositeDirection = CompassPointHelper.GetOpposite(direction);
             if (Exit.IsReciprocated(location, direction, exit.Target)) {
               var reciprocal = exit.Target.GetBestExit(oppositeDirection);
@@ -68,13 +68,13 @@ namespace Trizbort.Export.Languages {
         if (needConditionalFunction && !wroteConditionalFunction) {
           writer.WriteLine();
           writer.WriteLine("<ROUTINE TRIZBORT-CONDITIONAL-EXIT ()");
-          writer.WriteLine($"    <TELL {DOUBLE_QUOTE}An export nymph appears on your keyboard. She says, 'You can't go that way, as that exit was marked as conditional, you know, a dotted line, in Trizbort. Obviously in your game you'll have a better rationale for this than, er, me.' She looks embarrassed. 'Bye!'{DOUBLE_QUOTE} CR>");
+          writer.WriteLine($"    <TELL {DoubleQuote}An export nymph appears on your keyboard. She says, 'You can't go that way, as that exit was marked as conditional, you know, a dotted line, in Trizbort. Obviously in your game you'll have a better rationale for this than, er, me.' She looks embarrassed. 'Bye!'{DoubleQuote} CR>");
           writer.WriteLine("    <RFALSE>>");
           writer.WriteLine();
           wroteConditionalFunction = true;
         }
 
-        exportThings(writer, location.Things, null, 1);
+        ExportThings(writer, location.Things, null, 1);
       }
     }
 
@@ -83,18 +83,18 @@ namespace Trizbort.Export.Languages {
       var list = Project.Current.Elements.OfType<Room>().Where(p => p.IsStartRoom).ToList();
       var startingRoom = list.Count == 0 ? LocationsInExportOrder.First() : LocationsInExportOrder.Find(p => p.Room.Id == list.First().Id);
 
-      writer.WriteLine($"{DOUBLE_QUOTE}{title} main file{DOUBLE_QUOTE}");
+      writer.WriteLine($"{DoubleQuote}{title} main file{DoubleQuote}");
       writer.WriteLine();
       writer.WriteLine("<VERSION ZIP>");
       writer.WriteLine("<CONSTANT RELEASEID 1>");
       writer.WriteLine();
-      writer.WriteLine($"{DOUBLE_QUOTE}Main Loop{DOUBLE_QUOTE}");
+      writer.WriteLine($"{DoubleQuote}Main Loop{DoubleQuote}");
       writer.WriteLine();
-      writer.WriteLine($"<CONSTANT GAME-BANNER {DOUBLE_QUOTE}{title}|An interactive fiction by {author}{DOUBLE_QUOTE}>");
+      writer.WriteLine($"<CONSTANT GAME-BANNER {DoubleQuote}{title}|An interactive fiction by {author}{DoubleQuote}>");
       writer.WriteLine();
       writer.WriteLine($"<ROUTINE GO ()");
       writer.WriteLine($"    <CRLF> <CRLF>");
-      writer.WriteLine($"    <TELL {toZilString(description)} CR CR>");
+      writer.WriteLine($"    <TELL {ToZilString(description)} CR CR>");
       writer.WriteLine($"    <V-VERSION> <CRLF>");
       writer.WriteLine($"    <SETG HERE ,{startingRoom.ExportName}>");
       writer.WriteLine($"    <MOVE ,PLAYER ,HERE>");
@@ -107,25 +107,25 @@ namespace Trizbort.Export.Languages {
       writer.WriteLine($"                      <CLOCKER>)>)>");
       writer.WriteLine($"        <SETG HERE <LOC ,WINNER>>>>");
       writer.WriteLine();
-      writer.WriteLine($"<INSERT-FILE {DOUBLE_QUOTE}parser{DOUBLE_QUOTE}>");
+      writer.WriteLine($"<INSERT-FILE {DoubleQuote}parser{DoubleQuote}>");
       writer.WriteLine();
 
-      if (!String.IsNullOrWhiteSpace(history)) exportHistory(writer, history);
+      if (!String.IsNullOrWhiteSpace(history)) ExportHistory(writer, history);
 
-      writer.WriteLine($"{DOUBLE_QUOTE}Objects{DOUBLE_QUOTE}");
+      writer.WriteLine($"{DoubleQuote}Objects{DoubleQuote}");
     }
 
 
     protected override string GetExportName(Room room, int? suffix) {
       var name = room.Name.ToUpper().Replace(' ', '-');
-      if (suffix != null || containsWord(name, ReservedWords) || containsOddCharacters(name)) name = stripOddCharacters(name.Replace(" ", "-"));
+      if (suffix != null || ContainsWord(name, ReservedWords) || ContainsOddCharacters(name)) name = StripOddCharacters(name.Replace(" ", "-"));
       if (suffix != null) name = $"{name}-{suffix}";
 
       return name;
     }
 
     protected override string GetExportName(string displayName, int? suffix) {
-      var name = stripOddCharacters(displayName);
+      var name = StripOddCharacters(displayName);
 
       name = name.ToUpper().Replace(' ', '-');
 
@@ -134,29 +134,29 @@ namespace Trizbort.Export.Languages {
       return name;
     }
 
-    private static bool containsOddCharacters(string text) {
+    private static bool ContainsOddCharacters(string text) {
       return text.Any(c => c != ' ' && c != '-' && !char.IsLetterOrDigit(c));
     }
 
-    private static bool containsWord(string text, IEnumerable<string> words) {
-      return words.Any(word => containsWord(text, word));
+    private static bool ContainsWord(string text, IEnumerable<string> words) {
+      return words.Any(word => ContainsWord(text, word));
     }
 
-    private static bool containsWord(string text, string word) {
+    private static bool ContainsWord(string text, string word) {
       if (String.IsNullOrEmpty(text)) return String.IsNullOrEmpty(word);
       var words = text.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
       return words.Any(wordFound => StringComparer.InvariantCultureIgnoreCase.Compare(word, wordFound) == 0);
     }
 
-    private void exportHistory(TextWriter writer, string history) {
+    private void ExportHistory(TextWriter writer, string history) {
       writer.WriteLine("<SYNTAX ABOUT = V-ABOUT>");
       writer.WriteLine();
       writer.WriteLine("<ROUTINE V-ABOUT ()");
-      writer.WriteLine($"    <TELL {toZilString(history)} CR>>");
+      writer.WriteLine($"    <TELL {ToZilString(history)} CR>>");
       writer.WriteLine();
     }
 
-    private static void exportThings(TextWriter writer, List<Thing> things, Thing container, int indent) {
+    private static void ExportThings(TextWriter writer, List<Thing> things, Thing container, int indent) {
       foreach (var thing in things.Where(p => p.Container == container)) {
         writer.WriteLine();
         writer.WriteLine($"<OBJECT {thing.ExportName}");
@@ -166,21 +166,21 @@ namespace Trizbort.Export.Languages {
         else
           writer.WriteLine($"    (IN {thing.Container.ExportName})");
 
-        writer.WriteLine($"    (DESC {toZilString(thing.DisplayName)})");
+        writer.WriteLine($"    (DESC {ToZilString(thing.DisplayName)})");
 
-        var words = getObjectWords(thing);
+        var words = GetObjectWords(thing);
         if (words.Count > 0) writer.WriteLine($"    (SYNONYM {words[words.Count - 1]})");
-        if (words.Count > 1) writer.WriteLine($"    (ADJECTIVE {String.Join($"{SPACE}", words.Take(words.Count - 1))})");
+        if (words.Count > 1) writer.WriteLine($"    (ADJECTIVE {String.Join($"{Space}", words.Take(words.Count - 1))})");
 
-        writer.WriteLine($"    (FLAGS {getFlags(thing)})>");
+        writer.WriteLine($"    (FLAGS {GetFlags(thing)})>");
         writer.WriteLine();
 
         if (thing.Contents.Any())
-          exportThings(writer, thing.Contents, thing, indent++);
+          ExportThings(writer, thing.Contents, thing, indent++);
       }
     }
 
-    private static string getFlags(Thing thing) {
+    private static string GetFlags(Thing thing) {
       var flags = new StringBuilder("TAKEBIT");
 
       if (thing.DisplayName.StartsWithVowel()) flags.Append(" VOWELBIT");
@@ -190,24 +190,24 @@ namespace Trizbort.Export.Languages {
       return flags.ToString();
     }
 
-    private static IList<string> getObjectWords(Thing thing) {
+    private static IList<string> GetObjectWords(Thing thing) {
       var synonyms = String.Empty;
       var list = new List<string>();
 
       var words = thing.DisplayName.Split(' ').ToList();
 
-      words.ForEach(p => list.Add(stripOddCharacters(p).ToUpper()));
+      words.ForEach(p => list.Add(StripOddCharacters(p).ToUpper()));
 
       return list;
     }
 
-    private static string stripOddCharacters(string text, params char[] exceptChars) {
+    private static string StripOddCharacters(string text, params char[] exceptChars) {
       var exceptCharsList = new List<char>(exceptChars);
       var newText = text.Where(c => c == ' ' || c == '-' || char.IsLetterOrDigit(c) || exceptCharsList.Contains(c)).Aggregate(String.Empty, (current, c) => current + c);
       return String.IsNullOrEmpty(newText) ? "object" : newText;
     }
 
-    private static string toZilPropertyName(MappableDirection direction) {
+    private static string ToZilPropertyName(MappableDirection direction) {
       switch (direction) {
         case MappableDirection.North:
           return "NORTH";
@@ -238,9 +238,9 @@ namespace Trizbort.Export.Languages {
       }
     }
 
-    private static string toZilString(string str) {
+    private static string ToZilString(string str) {
       if (str == null) str = String.Empty;
-      return DOUBLE_QUOTE + str.Replace('\n', '|').Replace($"{DOUBLE_QUOTE}", $"\\{DOUBLE_QUOTE}") + DOUBLE_QUOTE;
+      return DoubleQuote + str.Replace('\n', '|').Replace($"{DoubleQuote}", $"\\{DoubleQuote}") + DoubleQuote;
     }
   }
 }

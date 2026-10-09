@@ -3,10 +3,10 @@ using PdfSharp.Drawing;
 
 namespace Trizbort.Domain.Misc {
   public class ConnectionIconBlock {
-    private const int HORIZONTAL_LINE_OFFSET = 15;
-    private const int VERTICAL_STEM_OFFSET = 15;
-    private const int VERTICAL_LINE_OFFSET = 5;
-    private const int HORIZONTAL_STEM_OFFSET = 5;
+    private const int HorizontalLineOffset = 15;
+    private const int VerticalStemOffset = 15;
+    private const int VerticalLineOffset = 5;
+    private const int HorizontalStemOffset = 5;
 
     public ConnectionIconBlock(LineSegment segment, int offset) {
       Segment = segment;
@@ -30,42 +30,42 @@ namespace Trizbort.Domain.Misc {
       switch (compassPoint) {
         case CompassPoint.NorthWest:
           offsets.Height = -(Offset * 12);
-          offsets.Width = -(Offset * 10) - HORIZONTAL_LINE_OFFSET;
+          offsets.Width = -(Offset * 10) - HorizontalLineOffset;
           break;
 
         case CompassPoint.NorthEast:
           offsets.Height = -(Offset * 12);
-          offsets.Width = Offset * 10 + HORIZONTAL_STEM_OFFSET;
+          offsets.Width = Offset * 10 + HorizontalStemOffset;
           break;
 
         case CompassPoint.SouthEast:
           offsets.Height = Offset * 12;
-          offsets.Width = Offset * 10 + HORIZONTAL_LINE_OFFSET;
+          offsets.Width = Offset * 10 + HorizontalLineOffset;
           break;
 
         case CompassPoint.SouthWest:
-          offsets.Height = Offset * 12 + VERTICAL_LINE_OFFSET;
+          offsets.Height = Offset * 12 + VerticalLineOffset;
           offsets.Width = -(Offset * 10);
           break;
 
         case CompassPoint.East:
-          offsets.Height = VERTICAL_LINE_OFFSET;
-          offsets.Width = Offset * 16 + HORIZONTAL_STEM_OFFSET;
+          offsets.Height = VerticalLineOffset;
+          offsets.Width = Offset * 16 + HorizontalStemOffset;
           break;
 
         case CompassPoint.West:
-          offsets.Height = VERTICAL_LINE_OFFSET;
-          offsets.Width = -(Offset * 16) - HORIZONTAL_LINE_OFFSET;
+          offsets.Height = VerticalLineOffset;
+          offsets.Width = -(Offset * 16) - HorizontalLineOffset;
           break;
 
         case CompassPoint.South:
-          offsets.Height = Offset * 16 + VERTICAL_STEM_OFFSET;
-          offsets.Width = -HORIZONTAL_LINE_OFFSET;
+          offsets.Height = Offset * 16 + VerticalStemOffset;
+          offsets.Width = -HorizontalLineOffset;
           break;
 
         case CompassPoint.North:
-          offsets.Height = -(Offset * 16) - VERTICAL_STEM_OFFSET;
-          offsets.Width = -HORIZONTAL_LINE_OFFSET;
+          offsets.Height = -(Offset * 16) - VerticalStemOffset;
+          offsets.Width = -HorizontalLineOffset;
           break;
       }
 

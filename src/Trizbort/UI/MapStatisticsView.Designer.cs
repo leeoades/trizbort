@@ -5,7 +5,7 @@
     /// <summary>
     /// Required designer variable.
     /// </summary>
-    private System.ComponentModel.IContainer components = null;
+    private System.ComponentModel.IContainer _components = null;
 
     /// <summary>
     /// Clean up any resources being used.
@@ -13,9 +13,9 @@
     /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
     protected override void Dispose(bool disposing)
     {
-      if (disposing && (components != null))
+      if (disposing && (_components != null))
       {
-        components.Dispose();
+        _components.Dispose();
       }
       base.Dispose(disposing);
     }
@@ -28,27 +28,27 @@
     /// </summary>
     private void InitializeComponent()
     {
-            this.txtStats = new System.Windows.Forms.TextBox();
+            this._txtStats = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // txtStats
             // 
-            this.txtStats.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txtStats.Location = new System.Drawing.Point(26, 26);
-            this.txtStats.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
-            this.txtStats.Multiline = true;
-            this.txtStats.Name = "txtStats";
-            this.txtStats.ReadOnly = true;
-            this.txtStats.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtStats.Size = new System.Drawing.Size(800, 616);
-            this.txtStats.TabIndex = 0;
+            this._txtStats.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this._txtStats.Location = new System.Drawing.Point(26, 26);
+            this._txtStats.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this._txtStats.Multiline = true;
+            this._txtStats.Name = "txtStats";
+            this._txtStats.ReadOnly = true;
+            this._txtStats.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this._txtStats.Size = new System.Drawing.Size(800, 616);
+            this._txtStats.TabIndex = 0;
             // 
             // MapStatisticsView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(192F, 192F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(850, 666);
-            this.Controls.Add(this.txtStats);
+            this.Controls.Add(this._txtStats);
             this.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
@@ -65,6 +65,6 @@
 
     #endregion
 
-    private System.Windows.Forms.TextBox txtStats;
+    private System.Windows.Forms.TextBox _txtStats;
   }
 }

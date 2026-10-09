@@ -120,7 +120,7 @@ namespace Trizbort.Tests {
       _interaction.Messages[1].ShouldContain("problem saving");
     }
 
-    private Room prepareExistingMap() {
+    private Room PrepareExistingMap() {
       var room = ProjectRegressionTests.AddRoom("Existing Room");
       Project.Current.Title = "Existing title";
       Project.Current.Author = "Existing author";
@@ -131,7 +131,7 @@ namespace Trizbort.Tests {
       return room;
     }
 
-    private static void assertExistingMap(Project existing, Room room) {
+    private static void AssertExistingMap(Project existing, Room room) {
       Project.Current.ShouldBeSameAs(existing);
       existing.Elements.ShouldHaveSingleItem().ShouldBeSameAs(room);
       existing.Title.ShouldBe("Existing title");
@@ -141,9 +141,9 @@ namespace Trizbort.Tests {
       existing.IsDirty.ShouldBeTrue();
     }
 
-    private static void assertWatching(string path) {
+    private static void AssertWatching(string path) {
       var watcher = (FileSystemWatcher) typeof(TrizbortFileWatcher)
-        .GetField("watcher", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Project.FileWatcher);
+        .GetField("_watcher", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Project.FileWatcher);
       watcher.Path.ShouldBe(Path.GetDirectoryName(path));
       watcher.Filter.ShouldBe(Path.GetFileName(path));
       watcher.EnableRaisingEvents.ShouldBeTrue();
@@ -152,7 +152,7 @@ namespace Trizbort.Tests {
     [TestCase(false)]
     [TestCase(true)]
     public void EmptyLocalMap_PublicLoadSucceedsWithoutClearingCurrentMetadata(bool throughProject) {
-      var room = prepareExistingMap();
+      var room = PrepareExistingMap();
       var existing = Project.Current;
       var path = Files.File("empty.trizbort");
       File.WriteAllText(path, "");
@@ -167,15 +167,15 @@ namespace Trizbort.Tests {
         loaded.History.ShouldBeEmpty();
         loaded.IsDirty.ShouldBeFalse();
         Settings.GridSize.ShouldBe(32);
-        assertExistingMap(existing, room);
-        assertWatching(path);
+        AssertExistingMap(existing, room);
+        AssertWatching(path);
       }
       _interaction.Messages.ShouldBeEmpty();
     }
 
     [Test]
     public void OpenEmptyLocalMap_ReplacesCurrentProjectWithBlankMap() {
-      var room = prepareExistingMap();
+      var room = PrepareExistingMap();
       var existing = Project.Current;
       var previousForm = TrizbortApplication.MainForm;
       var path = Files.File("explorer-new.trizbort");
@@ -194,7 +194,7 @@ namespace Trizbort.Tests {
         existing.Elements.ShouldHaveSingleItem().ShouldBeSameAs(room);
         existing.Title.ShouldBe("Existing title");
         Settings.GridSize.ShouldBe(32);
-        assertWatching(path);
+        AssertWatching(path);
         _interaction.Messages.ShouldBeEmpty();
       } finally {
         TrizbortApplication.MainForm = previousForm;
@@ -208,13 +208,13 @@ namespace Trizbort.Tests {
     [TestCase("malformed.trizbort", "<trizbort>")]
     [TestCase("whitespace.trizbort", " \r\n\t")]
     public void FailedPublicLoad_PreservesCurrentMapAndReportsError(string name, string contents) {
-      var room = prepareExistingMap();
+      var room = PrepareExistingMap();
       var existing = Project.Current;
       var path = Files.File(name);
       if (contents != null) File.WriteAllText(path, contents);
       using var loaded = new Project {FileName = path};
       loaded.Load().ShouldBeFalse();
-      assertExistingMap(existing, room);
+      AssertExistingMap(existing, room);
       Settings.GridSize.ShouldBe(90);
       _interaction.Messages.ShouldHaveSingleItem().ShouldContain(
         Path.GetExtension(path) == ".trizbort" ? "problem loading" : "not a known Trizbort file");
@@ -231,7 +231,7 @@ namespace Trizbort.Tests {
         using var loaded = new Project {FileName = Path.GetFileName(path)};
         loaded.Load().ShouldBeTrue();
         loaded.Elements.Count.ShouldBe(empty ? 0 : 1);
-        assertWatching(path);
+        AssertWatching(path);
         _interaction.Messages.ShouldBeEmpty();
       } finally {
         Environment.CurrentDirectory = previousDirectory;

@@ -30,7 +30,7 @@ namespace Trizbort.Tests {
       room.RoomFillColor = Color.Red;
       canvas.Origin = Vector.Zero;
       canvas.ZoomFactor = 1;
-      using (var bitmap = render(canvas, false)) {
+      using (var bitmap = Render(canvas, false)) {
         bitmap.GetPixel(150, 100).ToArgb().ShouldBe(Color.Red.ToArgb());
         bitmap.GetPixel(20, 20).ToArgb().ShouldBe(Color.White.ToArgb());
         var handle = new ResizeHandle(CompassPoint.SouthEast, room);
@@ -39,7 +39,7 @@ namespace Trizbort.Tests {
       }
       var origin = canvas.Viewport.Center;
       var zoom = canvas.ZoomFactor;
-      using (var bitmap = render(canvas, true))
+      using (var bitmap = Render(canvas, true))
         bitmap.GetPixel(150, 100).ToArgb().ShouldBe(Color.Red.ToArgb());
       canvas.Viewport.Center.ShouldBe(origin);
       canvas.ZoomFactor.ShouldBe(zoom);
@@ -97,7 +97,7 @@ namespace Trizbort.Tests {
       canvas.ZoomFactor.ShouldBeGreaterThan(0);
       canvas.ComputeCanvasBounds(true).Width.ShouldBeGreaterThanOrEqualTo(0);
       canvas.ComputeCanvasBounds(true).Height.ShouldBeGreaterThanOrEqualTo(0);
-      using (var bitmap = render(canvas, true)) {
+      using (var bitmap = Render(canvas, true)) {
         bitmap.Save(Files.File("map.png"), System.Drawing.Imaging.ImageFormat.Png);
         using (var reopened = Image.FromFile(Files.File("map.png"))) {
           reopened.Width.ShouldBe(600);
@@ -111,7 +111,7 @@ namespace Trizbort.Tests {
       }
     }
 
-    private static Bitmap render(Canvas canvas, bool final) {
+    private static Bitmap Render(Canvas canvas, bool final) {
       var bitmap = new Bitmap(canvas.Width, canvas.Height);
       using var native = Graphics.FromImage(bitmap);
       using var graphics = XGraphics.FromGraphics(native, new XSize(bitmap.Width, bitmap.Height));

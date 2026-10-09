@@ -11,22 +11,22 @@ using Settings = Trizbort.Setup.Settings;
 
 namespace Trizbort.Domain.Misc {
   internal static class Drawing {
-    private static readonly Cursor MDrawLineCursor;
-    private static readonly Cursor MDrawLineInvertedCursor;
-    private static readonly Cursor MMoveLineCursor;
-    private static readonly Cursor MMoveLineInvertedCursor;
-    private static XGraphicsPath sMChevronPath;
+    private static readonly Cursor _drawLineCursor;
+    private static readonly Cursor _drawLineInvertedCursor;
+    private static readonly Cursor _moveLineCursor;
+    private static readonly Cursor _moveLineInvertedCursor;
+    private static XGraphicsPath _chevronPath;
 
     static Drawing() {
-      MDrawLineCursor = loadCursor(Resources.DrawLineCursor);
-      MDrawLineInvertedCursor = loadCursor(Resources.DrawLineInvertedCursor);
-      MMoveLineCursor = loadCursor(Resources.MoveLineCursor);
-      MMoveLineInvertedCursor = loadCursor(Resources.MoveLineInvertedCursor);
+      _drawLineCursor = LoadCursor(Resources.DrawLineCursor);
+      _drawLineInvertedCursor = LoadCursor(Resources.DrawLineInvertedCursor);
+      _moveLineCursor = LoadCursor(Resources.MoveLineCursor);
+      _moveLineInvertedCursor = LoadCursor(Resources.MoveLineInvertedCursor);
     }
 
-    public static Cursor DrawLineCursor => IsDark(Settings.Color[Colors.Canvas]) ? MDrawLineInvertedCursor : MDrawLineCursor;
+    public static Cursor DrawLineCursor => IsDark(Settings.Color[Colors.Canvas]) ? _drawLineInvertedCursor : _drawLineCursor;
 
-    public static Cursor MoveLineCursor => IsDark(Settings.Color[Colors.Canvas]) ? MMoveLineInvertedCursor : MMoveLineCursor;
+    public static Cursor MoveLineCursor => IsDark(Settings.Color[Colors.Canvas]) ? _moveLineInvertedCursor : _moveLineCursor;
 
     public static void AddLine(XGraphicsPath path, LineSegment segment, Random random, bool straightEdges) {
       if (!straightEdges)
@@ -40,26 +40,26 @@ namespace Trizbort.Domain.Misc {
     }
 
     public static void DrawChevron(XGraphics graphics, PointF pos, float angle, float size, Brush fillBrush, Random sketch = null) {
-      if (sMChevronPath == null) {
+      if (_chevronPath == null) {
         var apex = new PointF(0.5f, 0);
         var leftCorner = new PointF(-0.5f, 0.5f);
         var rightCorner = new PointF(-0.5f, -0.5f);
-        sMChevronPath = new XGraphicsPath();
-        sMChevronPath.AddLine(apex, rightCorner);
-        sMChevronPath.AddLine(rightCorner, leftCorner);
-        sMChevronPath.AddLine(leftCorner, apex);
+        _chevronPath = new XGraphicsPath();
+        _chevronPath.AddLine(apex, rightCorner);
+        _chevronPath.AddLine(rightCorner, leftCorner);
+        _chevronPath.AddLine(leftCorner, apex);
       }
 
-      var path = sMChevronPath;
+      var path = _chevronPath;
       if (sketch != null) {
         // an irregular, slightly lopsided arrowhead, as if inked by hand
-        float jitter() => (float) (sketch.NextDouble() - 0.5) * 0.14f;
+        float Jitter() => (float) (sketch.NextDouble() - 0.5) * 0.14f;
         path = new XGraphicsPath();
         path.AddPolygon(new[] {
-          new PointF(0.5f + jitter(), jitter()),
-          new PointF(-0.5f + jitter(), -0.5f + jitter()),
-          new PointF(-0.38f + jitter(), jitter() * 0.5f),
-          new PointF(-0.5f + jitter(), 0.5f + jitter())
+          new PointF(0.5f + Jitter(), Jitter()),
+          new PointF(-0.5f + Jitter(), -0.5f + Jitter()),
+          new PointF(-0.38f + Jitter(), Jitter() * 0.5f),
+          new PointF(-0.5f + Jitter(), 0.5f + Jitter())
         });
       }
 
@@ -152,7 +152,7 @@ namespace Trizbort.Domain.Misc {
       return new Rectangle((int) rect.X, (int) rect.Y, (int) rect.Width, (int) rect.Height);
     }
 
-    private static Cursor loadCursor(byte[] bytes) {
+    private static Cursor LoadCursor(byte[] bytes) {
       using var stream = new MemoryStream(bytes);
       return new Cursor(stream);
     }

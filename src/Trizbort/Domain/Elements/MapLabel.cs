@@ -24,14 +24,14 @@ namespace Trizbort.Domain.Elements {
     private Color _backgroundColor = Color.White;
 
     public MapLabel(Project project) : base(project) {
-      initialize();
+      Initialize();
     }
 
     public MapLabel(Project project, int id) : base(project, id) {
-      initialize();
+      Initialize();
     }
 
-    private void initialize() {
+    private void Initialize() {
       Text = "Label";
       for (var point = CompassPoint.Min; point <= CompassPoint.Max; point++)
         PortList.Add(new Room.CompassPort(point, this));
@@ -50,21 +50,21 @@ namespace Trizbort.Domain.Elements {
       }
     }
 
-    public override Vector Position { get => _position; set => setField(ref _position, value); }
-    public Vector Size { get => _size; set => setField(ref _size, value); }
+    public override Vector Position { get => _position; set => SetField(ref _position, value); }
+    public Vector Size { get => _size; set => SetField(ref _size, value); }
     public float X => Position.X;
     public float Y => Position.Y;
     public float Width => Size.X;
     public float Height => Size.Y;
     public Rect InnerBounds => new Rect(Position, Size);
-    public RoomShape Shape { get => _shape; set => setField(ref _shape, value); }
-    public BorderDashStyle BorderStyle { get => _borderStyle; set => setField(ref _borderStyle, value); }
-    public bool HasBackground { get => _hasBackground; set => setField(ref _hasBackground, value); }
-    public Color TextColor { get => _textColor; set => setField(ref _textColor, value); }
-    public Color BorderColor { get => _borderColor; set => setField(ref _borderColor, value); }
-    public Color BackgroundColor { get => _backgroundColor; set => setField(ref _backgroundColor, value); }
+    public RoomShape Shape { get => _shape; set => SetField(ref _shape, value); }
+    public BorderDashStyle BorderStyle { get => _borderStyle; set => SetField(ref _borderStyle, value); }
+    public bool HasBackground { get => _hasBackground; set => SetField(ref _hasBackground, value); }
+    public Color TextColor { get => _textColor; set => SetField(ref _textColor, value); }
+    public Color BorderColor { get => _borderColor; set => SetField(ref _borderColor, value); }
+    public Color BackgroundColor { get => _backgroundColor; set => SetField(ref _backgroundColor, value); }
 
-    private void setField<T>(ref T field, T value) {
+    private void SetField<T>(ref T field, T value) {
       if (EqualityComparer<T>.Default.Equals(field, value)) return;
       field = value;
       RaiseChanged();
@@ -100,7 +100,7 @@ namespace Trizbort.Domain.Elements {
 
     public override void Draw(XGraphics graphics, Palette palette, DrawingContext context) {
       if (Width <= 0 || Height <= 0) return;
-      var path = createPath(palette);
+      var path = CreatePath(palette);
       if (HasBackground) graphics.DrawPath(palette.Brush(BackgroundColor), path);
       if (BorderStyle != BorderDashStyle.None) {
         var pen = palette.Pen(BorderColor);
@@ -116,10 +116,10 @@ namespace Trizbort.Domain.Elements {
         _text.Draw(graphics, Settings.RoomNameFont, palette.Brush(TextColor), bounds.Position, bounds.Size, XStringFormats.Center);
     }
 
-    private XGraphicsPath createPath(Palette palette) {
+    private XGraphicsPath CreatePath(Palette palette) {
       var path = palette.Path();
       if (Settings.HandDrawn) {
-        path.AddPolygon(createSketchOutline());
+        path.AddPolygon(CreateSketchOutline());
         return path;
       }
 
@@ -145,7 +145,7 @@ namespace Trizbort.Domain.Elements {
       return path;
     }
 
-    private PointF[] createSketchOutline() {
+    private PointF[] CreateSketchOutline() {
       var rect = InnerBounds.ToRectangleF();
       var random = Sketch.Seeded(Id);
       if (Shape == RoomShape.Ellipse)

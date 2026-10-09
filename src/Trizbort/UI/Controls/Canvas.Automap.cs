@@ -12,25 +12,25 @@ using Trizbort.Setup;
 
 namespace Trizbort.UI.Controls {
   public sealed partial class Canvas {
-    private readonly Automap.Automap _mAutomap = Automap.Automap.Instance;
-    private readonly MultithreadedAutomapCanvas _mThreadSafeAutomapCanvas;
-    private bool _mDontAskAboutAmbiguities;
-    public string AutomappingStatus => _mAutomap.Status;
+    private readonly Automap.Automap _automap = Automap.Automap.Instance;
+    private readonly MultithreadedAutomapCanvas _threadSafeAutomapCanvas;
+    private bool _dontAskAboutAmbiguities;
+    public string AutomappingStatus => _automap.Status;
 
 
-    public bool IsAutomapping => _mAutomap.Running;
+    public bool IsAutomapping => _automap.Running;
 
     void IAutomapCanvas.AddExitStub(Room room, MappableDirection direction) {
       if (!Project.Current.Elements.Contains(room)) return;
 
       var sourceCompassPoint = CompassPointHelper.GetCompassDirection(direction);
-      var connection = addConnection(room, sourceCompassPoint, room, sourceCompassPoint);
+      var connection = AddConnection(room, sourceCompassPoint, room, sourceCompassPoint);
       switch (direction) {
         case MappableDirection.Up:
-          connection.StartText = Connection.UP;
+          connection.StartText = Connection.Up;
           break;
         case MappableDirection.Down:
-          connection.StartText = Connection.DOWN;
+          connection.StartText = Connection.Down;
           break;
       }
     }
@@ -57,7 +57,7 @@ namespace Trizbort.UI.Controls {
           break;
       }
 
-      var connection = findConnection(source, target, acceptableSourceCompassPoint, out var wrongWay);
+      var connection = FindConnection(source, target, acceptableSourceCompassPoint, out var wrongWay);
 
       if (connection == null) {
         // there is no suitable connection between these rooms:
@@ -67,14 +67,14 @@ namespace Trizbort.UI.Controls {
         // we won't need this very often, but it can be useful especially if the user teleports into a room
         // and then steps out into an existing one (this can appear to happen if the user moves into a 
         // dark room, turns on the light, then leaves).
-        tryMoveRoomsForTidyConnection(source, sourceCompassPoint, target, targetCompassPoint);
+        TryMoveRoomsForTidyConnection(source, sourceCompassPoint, target, targetCompassPoint);
 
         // add a new connection
-        connection = addConnection(source, sourceCompassPoint, target, targetCompassPoint);
+        connection = AddConnection(source, sourceCompassPoint, target, targetCompassPoint);
 
-        if (_mAutomap.UseDottedConnection) {
+        if (_automap.UseDottedConnection) {
           connection.Style = ConnectionStyle.Dashed;
-          _mAutomap.UseDottedConnection = false;
+          _automap.UseDottedConnection = false;
         } else {
           connection.Style = ConnectionStyle.Solid;
         }
@@ -125,7 +125,7 @@ namespace Trizbort.UI.Controls {
       var tryLeft = true;
       var distance = 0;
       var initialPosition = room.Position;
-      while (anyRoomsIntersect(room)) {
+      while (AnyRoomsIntersect(room)) {
         if (tryOtherSideNext) {
           tryLeft = !tryLeft;
           tryOtherSideNext = false;
@@ -155,10 +155,10 @@ namespace Trizbort.UI.Controls {
       var room = new Room(Project.Current) {Name = roomName};
       if (line != roomName) room.SubTitle = line.Replace(roomName, "");
 
-      positionRelativeTo(room, existing, CompassPointHelper.GetCompassDirection(directionFromExisting), out var delta);
+      PositionRelativeTo(room, existing, CompassPointHelper.GetCompassDirection(directionFromExisting), out var delta);
 
-      if (anyRoomsIntersect(room)) {
-        shiftMap(room.InnerBounds, delta);
+      if (AnyRoomsIntersect(room)) {
+        ShiftMap(room.InnerBounds, delta);
         Debug.WriteLine("Shift map.");
       }
 
@@ -179,7 +179,7 @@ namespace Trizbort.UI.Controls {
       }
 
       if (list.Count == 0) return null;
-      if (_mDontAskAboutAmbiguities) return list[0];
+      if (_dontAskAboutAmbiguities) return list[0];
       if ((string.IsNullOrEmpty(roomDescription) || !list[0].HasDescription) && list.Count == 1) return list[0];
 
       using var dialog = new DisambiguateRoomsDialog();
@@ -189,7 +189,7 @@ namespace Trizbort.UI.Controls {
       if (dialog.UserDoesntCareAnyMore) {
         // The user has given up on this process! Can't say I blame them.
         // Use the first ambiguous room on the list, as above.
-        _mDontAskAboutAmbiguities = true;
+        _dontAskAboutAmbiguities = true;
         return list[0];
       }
 
@@ -218,18 +218,18 @@ namespace Trizbort.UI.Controls {
     public Task StartAutomapping(AutomapSettings settings, bool justParseFile = false) {
       StopAutomapping();
 
-      var task = justParseFile ? _mAutomap.StartCl(_mThreadSafeAutomapCanvas, settings) : _mAutomap.Start(_mThreadSafeAutomapCanvas, settings);
+      var task = justParseFile ? _automap.StartCl(_threadSafeAutomapCanvas, settings) : _automap.Start(_threadSafeAutomapCanvas, settings);
 
-      _mDontAskAboutAmbiguities = false;
+      _dontAskAboutAmbiguities = false;
 
       return task;
     }
 
     public void StopAutomapping() {
-      _mAutomap.Stop();
+      _automap.Stop();
     }
 
-    private static bool anyRoomsIntersect(Room room) {
+    private static bool AnyRoomsIntersect(Room room) {
       var bounds = room.InnerBounds;
       foreach (var element in Project.Current.Elements) {
         if (!(element is Room) || element == room || !element.Intersects(bounds)) continue;
@@ -246,22 +246,22 @@ namespace Trizbort.UI.Controls {
     /// <remarks>
     ///   Two compass points match if they are on the same side of a box representing the room.
     /// </remarks>
-    private static bool approximateDirectionMatch(CompassPoint one, CompassPoint two) {
+    private static bool ApproximateDirectionMatch(CompassPoint one, CompassPoint two) {
       return CompassPointHelper.GetAutomapDirectionVector(one) == CompassPointHelper.GetAutomapDirectionVector(two);
     }
 
-    private static Connection findConnection(Room source, Room target, CompassPoint? directionFromSource, out bool wrongWay) {
+    private static Connection FindConnection(Room source, Room target, CompassPoint? directionFromSource, out bool wrongWay) {
       foreach (var element in Project.Current.Elements) {
         if (element is Connection connection) {
           var fromRoom = connection.GetSourceRoom(out var fromDirection);
           var toRoom = connection.GetTargetRoom(out var toDirection);
-          if (fromRoom == source && toRoom == target && (directionFromSource == null || approximateDirectionMatch(directionFromSource.Value, fromDirection))) {
+          if (fromRoom == source && toRoom == target && (directionFromSource == null || ApproximateDirectionMatch(directionFromSource.Value, fromDirection))) {
             // the two rooms are connected already in the given direction, A to B or both ways.
             wrongWay = false;
             return connection;
           }
 
-          if (fromRoom == target && toRoom == source && (directionFromSource == null || approximateDirectionMatch(directionFromSource.Value, toDirection))) {
+          if (fromRoom == target && toRoom == source && (directionFromSource == null || ApproximateDirectionMatch(directionFromSource.Value, toDirection))) {
             // the two rooms are connected already in the given direction, B to A or both ways.
             wrongWay = connection.Flow == ConnectionFlow.OneWay;
             return connection;
@@ -287,7 +287,7 @@ namespace Trizbort.UI.Controls {
       return null;
     }
 
-    private static void positionRelativeTo(Room room, Room existing, CompassPoint existingCompassPoint, out Vector delta) {
+    private static void PositionRelativeTo(Room room, Room existing, CompassPoint existingCompassPoint, out Vector delta) {
       delta = CompassPointHelper.GetAutomapDirectionVector(existingCompassPoint);
       delta.X *= Settings.PreferredDistanceBetweenRooms + room.Width;
       delta.Y *= Settings.PreferredDistanceBetweenRooms + room.Height;
@@ -296,7 +296,7 @@ namespace Trizbort.UI.Controls {
       room.Position = Settings.Snap(new Vector(newRoomCenter.X - room.Width / 2, newRoomCenter.Y - room.Height / 2));
     }
 
-    private void shiftMap(Rect deltaOrigin, Vector delta) {
+    private void ShiftMap(Rect deltaOrigin, Vector delta) {
       // move all elements to the left/right of the origin left/right by the given delta
       foreach (var element in Project.Current.Elements) {
         if (element is Room room) {
@@ -322,13 +322,13 @@ namespace Trizbort.UI.Controls {
       }
     }
 
-    private static bool tryMoveRoomForTidyConnection(Room source, CompassPoint targetCompassPoint, Room target) {
+    private static bool TryMoveRoomForTidyConnection(Room source, CompassPoint targetCompassPoint, Room target) {
       var sourceArbitrary = source.ArbitraryAutomappedPosition;
       var sourcePosition = source.Position;
 
       Vector delta;
-      positionRelativeTo(source, target, targetCompassPoint, out delta);
-      if (anyRoomsIntersect(source)) {
+      PositionRelativeTo(source, target, targetCompassPoint, out delta);
+      if (AnyRoomsIntersect(source)) {
         // didn't work; restore previous position
         source.Position = sourcePosition;
         source.ArbitraryAutomappedPosition = sourceArbitrary;
@@ -339,34 +339,34 @@ namespace Trizbort.UI.Controls {
       return true;
     }
 
-    private void tryMoveRoomsForTidyConnection(Room source, CompassPoint sourceCompassPoint, Room target, CompassPoint targetCompassPoint) {
+    private void TryMoveRoomsForTidyConnection(Room source, CompassPoint sourceCompassPoint, Room target, CompassPoint targetCompassPoint) {
       if (source.ArbitraryAutomappedPosition && !source.IsConnected)
-        if (tryMoveRoomForTidyConnection(source, targetCompassPoint, target))
+        if (TryMoveRoomForTidyConnection(source, targetCompassPoint, target))
           return;
-      if (target.ArbitraryAutomappedPosition && !target.IsConnected) tryMoveRoomForTidyConnection(target, sourceCompassPoint, source);
+      if (target.ArbitraryAutomappedPosition && !target.IsConnected) TryMoveRoomForTidyConnection(target, sourceCompassPoint, source);
     }
 
     /// <summary>
     ///   A proxy class which implements IAutomapCanvas, marshalling calls to the real canvas on the main thread.
     /// </summary>
     private class MultithreadedAutomapCanvas : IAutomapCanvas {
-      private readonly IAutomapCanvas _mCanvas;
-      private readonly Control _mControl;
+      private readonly IAutomapCanvas _canvas;
+      private readonly Control _control;
 
       public MultithreadedAutomapCanvas(Canvas canvas) {
-        _mControl = canvas;
-        _mCanvas = canvas;
+        _control = canvas;
+        _canvas = canvas;
       }
 
       public void AddExitStub(Room room, MappableDirection direction) {
-        try { _mControl.Invoke((MethodInvoker) delegate { _mCanvas.AddExitStub(room, direction); }); }
+        try { _control.Invoke((MethodInvoker) delegate { _canvas.AddExitStub(room, direction); }); }
         catch (Exception) {
           // ignored
         }
       }
 
       public void Connect(Room source, MappableDirection directionFromSource, Room target, bool assumeTwoWayConnections) {
-        try { _mControl.Invoke((MethodInvoker) delegate { _mCanvas.Connect(source, directionFromSource, target, assumeTwoWayConnections); }); }
+        try { _control.Invoke((MethodInvoker) delegate { _canvas.Connect(source, directionFromSource, target, assumeTwoWayConnections); }); }
         catch (Exception) {
           // ignored
         }
@@ -374,7 +374,7 @@ namespace Trizbort.UI.Controls {
 
       public Room CreateRoom(Room existing, string name) {
         Room room = null;
-        try { _mControl.Invoke((MethodInvoker) delegate { room = _mCanvas.CreateRoom(existing, name); }); }
+        try { _control.Invoke((MethodInvoker) delegate { room = _canvas.CreateRoom(existing, name); }); }
         catch (Exception) {
           // ignored
         }
@@ -384,7 +384,7 @@ namespace Trizbort.UI.Controls {
 
       public Room CreateRoom(Room existing, MappableDirection directionFromExisting, string roomName, string line) {
         Room room = null;
-        try { _mControl.Invoke((MethodInvoker) delegate { room = _mCanvas.CreateRoom(existing, directionFromExisting, roomName, line); }); }
+        try { _control.Invoke((MethodInvoker) delegate { room = _canvas.CreateRoom(existing, directionFromExisting, roomName, line); }); }
         catch (Exception) {
           // ignored
         }
@@ -394,7 +394,7 @@ namespace Trizbort.UI.Controls {
 
       public Room FindRoom(string roomName, string roomDescription, string line, RoomMatcher matcher) {
         Room room = null;
-        try { _mControl.Invoke((MethodInvoker) delegate { room = _mCanvas.FindRoom(roomName, roomDescription, line, matcher); }); }
+        try { _control.Invoke((MethodInvoker) delegate { room = _canvas.FindRoom(roomName, roomDescription, line, matcher); }); }
         catch (Exception) {
           // ignored
         }
@@ -403,21 +403,21 @@ namespace Trizbort.UI.Controls {
       }
 
       public void RemoveExitStub(Room room, MappableDirection direction) {
-        try { _mControl.Invoke((MethodInvoker) delegate { _mCanvas.RemoveExitStub(room, direction); }); }
+        try { _control.Invoke((MethodInvoker) delegate { _canvas.RemoveExitStub(room, direction); }); }
         catch (Exception) {
           // ignored
         }
       }
 
-      public void RemoveRoom(Room mOtherRoom) {
-        try { _mControl.Invoke((MethodInvoker) delegate { _mCanvas.RemoveRoom(mOtherRoom); }); }
+      public void RemoveRoom(Room otherRoom) {
+        try { _control.Invoke((MethodInvoker) delegate { _canvas.RemoveRoom(otherRoom); }); }
         catch (Exception) {
           // ignored
         }
       }
 
       public void SelectRoom(Room room) {
-        try { _mControl.Invoke((MethodInvoker) delegate { _mCanvas.SelectRoom(room); }); }
+        try { _control.Invoke((MethodInvoker) delegate { _canvas.SelectRoom(room); }); }
         catch (Exception) {
           // ignored
         }

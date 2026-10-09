@@ -17,9 +17,9 @@ namespace Trizbort.Tests {
     [TestCase("\r")]
     [TestCase("\n")]
     public void MultilineText_UsesTheSamePdfLayoutForAllLineEndings(string lineEnding) {
-      var content = renderRoom(lineEnding);
+      var content = RenderRoom(lineEnding);
 
-      content.ShouldBe(renderRoom("\n"));
+      content.ShouldBe(RenderRoom("\n"));
       content.ShouldNotContain(@"\r");
       content.ShouldContain("(Keys) Tj");
       content.ShouldContain("(Lamp) Tj");
@@ -29,7 +29,7 @@ namespace Trizbort.Tests {
 
     [Test]
     public void ObjectList_UsesItsConfiguredColourForEveryLine() {
-      var content = renderRoom("\r\n");
+      var content = RenderRoom("\r\n");
 
       var start = content.IndexOf("(Keys) Tj");
       var end = content.IndexOf("(Bottle of water) Tj", start);
@@ -38,7 +38,7 @@ namespace Trizbort.Tests {
       content.Substring(start, end - start).ShouldNotContain(" rg");
     }
 
-    private static string renderRoom(string lineEnding) {
+    private static string RenderRoom(string lineEnding) {
       using var project = new Project();
       using var document = new PdfDocument();
       using var palette = new Palette();

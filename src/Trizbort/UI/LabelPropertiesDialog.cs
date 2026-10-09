@@ -26,36 +26,36 @@ namespace Trizbort.UI {
 
       var text = new TextBox {Name = "labelText", Text = label.Text, Multiline = true, AcceptsReturn = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Fill};
       layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-      addRow(layout, 0, "&Text", text);
-      var textColor = colorButton(label.TextColor);
-      addRow(layout, 1, "Text colour", textColor);
+      AddRow(layout, 0, "&Text", text);
+      var textColor = ColorButton(label.TextColor);
+      AddRow(layout, 1, "Text colour", textColor);
 
-      var outlineGroup = createGroup("Outline", 4, out var outlineLayout);
+      var outlineGroup = CreateGroup("Outline", 4, out var outlineLayout);
       var outlineEnabled = new CheckBox {Name = "outlineEnabled", Text = "&Enabled", Checked = label.BorderStyle != BorderDashStyle.None, AutoSize = true};
       outlineLayout.Controls.Add(outlineEnabled, 0, 0);
       outlineLayout.SetColumnSpan(outlineEnabled, 2);
       var shape = new ComboBox {Name = "outlineShape", DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill};
       shape.Items.AddRange(Enum.GetValues<RoomShape>().Where(value => value != RoomShape.NotARoom).Cast<object>().ToArray());
       shape.SelectedItem = label.Shape;
-      addRow(outlineLayout, 1, "&Shape", shape);
+      AddRow(outlineLayout, 1, "&Shape", shape);
       var outline = new ComboBox {Name = "outlineStyle", DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill};
       outline.Items.AddRange(Enum.GetValues<BorderDashStyle>().Where(value => value != BorderDashStyle.None && value != BorderDashStyle.Custom).Cast<object>().ToArray());
       outline.SelectedItem = outlineEnabled.Checked ? label.BorderStyle : BorderDashStyle.Solid;
-      addRow(outlineLayout, 2, "Line &style", outline);
-      var borderColor = colorButton(label.BorderColor);
+      AddRow(outlineLayout, 2, "Line &style", outline);
+      var borderColor = ColorButton(label.BorderColor);
       borderColor.Name = "outlineColor";
-      addRow(outlineLayout, 3, "Colour", borderColor);
+      AddRow(outlineLayout, 3, "Colour", borderColor);
       layout.Controls.Add(outlineGroup, 0, 2);
       layout.SetColumnSpan(outlineGroup, 2);
       layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 162));
 
-      var backgroundGroup = createGroup("Background", 2, out var backgroundLayout);
+      var backgroundGroup = CreateGroup("Background", 2, out var backgroundLayout);
       var background = new CheckBox {Name = "backgroundEnabled", Text = "E&nabled", Checked = label.HasBackground, AutoSize = true};
       backgroundLayout.Controls.Add(background, 0, 0);
       backgroundLayout.SetColumnSpan(background, 2);
-      var backgroundColor = colorButton(label.BackgroundColor);
+      var backgroundColor = ColorButton(label.BackgroundColor);
       backgroundColor.Name = "backgroundColor";
-      addRow(backgroundLayout, 1, "Colour", backgroundColor);
+      AddRow(backgroundLayout, 1, "Colour", backgroundColor);
       layout.Controls.Add(backgroundGroup, 0, 3);
       layout.SetColumnSpan(backgroundGroup, 2);
       layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 98));
@@ -91,13 +91,13 @@ namespace Trizbort.UI {
       Shown += (_, __) => { text.Focus(); text.SelectAll(); };
     }
 
-    private static void addRow(TableLayoutPanel layout, int row, string caption, Control control) {
+    private static void AddRow(TableLayoutPanel layout, int row, string caption, Control control) {
       if (row > 0) layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
       layout.Controls.Add(new Label {Text = caption, AutoSize = true, Anchor = AnchorStyles.Left}, 0, row);
       layout.Controls.Add(control, 1, row);
     }
 
-    private static GroupBox createGroup(string caption, int rows, out TableLayoutPanel layout) {
+    private static GroupBox CreateGroup(string caption, int rows, out TableLayoutPanel layout) {
       var group = new GroupBox {Text = caption, Dock = DockStyle.Fill, Padding = new Padding(10)};
       layout = new TableLayoutPanel {Dock = DockStyle.Fill, ColumnCount = 2, RowCount = rows};
       layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
@@ -107,7 +107,7 @@ namespace Trizbort.UI {
       return group;
     }
 
-    private static Button colorButton(Color color) {
+    private static Button ColorButton(Color color) {
       var button = new Button {Text = "Choose...", BackColor = color, Dock = DockStyle.Fill, UseVisualStyleBackColor = false};
       button.ForeColor = color.GetBrightness() < 0.5f ? Color.White : Color.Black;
       button.Click += (_, __) => {

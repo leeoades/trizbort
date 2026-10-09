@@ -9,17 +9,17 @@ namespace Trizbort.Domain.Misc {
   ///   A visual handle by which an element may be resized.
   /// </summary>
   internal class ResizeHandle {
-    private readonly CompassPoint _mCompassPoint;
-    private readonly ISizeable _mOwner;
+    private readonly CompassPoint _compassPoint;
+    private readonly ISizeable _owner;
 
     public ResizeHandle(CompassPoint compassPoint, ISizeable owner) {
-      _mCompassPoint = compassPoint;
-      _mOwner = owner;
+      _compassPoint = compassPoint;
+      _owner = owner;
     }
 
     public Cursor Cursor {
       get {
-        switch (_mCompassPoint) {
+        switch (_compassPoint) {
           case CompassPoint.NorthWest:
           case CompassPoint.SouthEast:
             return Cursors.SizeNWSE;
@@ -40,21 +40,21 @@ namespace Trizbort.Domain.Misc {
 
     public Vector OwnerPosition {
       get {
-        var pos = _mOwner.InnerBounds.GetCorner(_mCompassPoint);
+        var pos = _owner.InnerBounds.GetCorner(_compassPoint);
         return pos;
       }
       set {
-        setX(value.X);
-        setY(value.Y);
+        SetX(value.X);
+        SetY(value.Y);
       }
     }
 
     public Vector Position {
       get {
-        var tBounds = _mOwner.InnerBounds;
+        var tBounds = _owner.InnerBounds;
 
-        var pos = tBounds.GetCorner(_mCompassPoint);
-        if (_mOwner is Room) pos = tBounds.GetCorner(_mCompassPoint, ((Room) _mOwner).Shape, ((Room) _mOwner).Corners);
+        var pos = tBounds.GetCorner(_compassPoint);
+        if (_owner is Room) pos = tBounds.GetCorner(_compassPoint, ((Room) _owner).Shape, ((Room) _owner).Corners);
         pos.X -= Size.X / 2;
         pos.Y -= Size.Y / 2;
         return pos;
@@ -73,8 +73,8 @@ namespace Trizbort.Domain.Misc {
       return Bounds.Contains(pos);
     }
 
-    private void setX(float value) {
-      switch (_mCompassPoint) {
+    private void SetX(float value) {
+      switch (_compassPoint) {
         case CompassPoint.North:
         case CompassPoint.South:
           break;
@@ -84,10 +84,10 @@ namespace Trizbort.Domain.Misc {
         case CompassPoint.WestSouthWest:
         case CompassPoint.SouthWest:
         default:
-          if (_mOwner.Width - (value - _mOwner.X) >= 1) {
-            var old = _mOwner.X;
-            _mOwner.Position = new Vector(value, _mOwner.Position.Y);
-            _mOwner.Size = new Vector(_mOwner.Size.X - (_mOwner.X - old), _mOwner.Size.Y);
+          if (_owner.Width - (value - _owner.X) >= 1) {
+            var old = _owner.X;
+            _owner.Position = new Vector(value, _owner.Position.Y);
+            _owner.Size = new Vector(_owner.Size.X - (_owner.X - old), _owner.Size.Y);
           }
 
           break;
@@ -96,13 +96,13 @@ namespace Trizbort.Domain.Misc {
         case CompassPoint.East:
         case CompassPoint.EastSouthEast:
         case CompassPoint.SouthEast:
-          if (value - _mOwner.X >= 1) _mOwner.Size = new Vector(value - _mOwner.X, _mOwner.Size.Y);
+          if (value - _owner.X >= 1) _owner.Size = new Vector(value - _owner.X, _owner.Size.Y);
           break;
       }
     }
 
-    private void setY(float value) {
-      switch (_mCompassPoint) {
+    private void SetY(float value) {
+      switch (_compassPoint) {
         case CompassPoint.East:
         case CompassPoint.West:
           break;
@@ -111,10 +111,10 @@ namespace Trizbort.Domain.Misc {
         case CompassPoint.North:
         case CompassPoint.NorthNorthEast:
         case CompassPoint.NorthEast:
-          if (_mOwner.Height - (value - _mOwner.Y) >= 1) {
-            var old = _mOwner.Y;
-            _mOwner.Position = new Vector(_mOwner.Position.X, value);
-            _mOwner.Size = new Vector(_mOwner.Size.X, _mOwner.Size.Y - (_mOwner.Y - old));
+          if (_owner.Height - (value - _owner.Y) >= 1) {
+            var old = _owner.Y;
+            _owner.Position = new Vector(_owner.Position.X, value);
+            _owner.Size = new Vector(_owner.Size.X, _owner.Size.Y - (_owner.Y - old));
           }
 
           break;
@@ -123,7 +123,7 @@ namespace Trizbort.Domain.Misc {
         case CompassPoint.South:
         case CompassPoint.SouthSouthEast:
         case CompassPoint.SouthEast:
-          if (value - _mOwner.Y >= 1) _mOwner.Size = new Vector(_mOwner.Size.X, value - _mOwner.Y);
+          if (value - _owner.Y >= 1) _owner.Size = new Vector(_owner.Size.X, value - _owner.Y);
           break;
       }
     }

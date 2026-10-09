@@ -10,8 +10,8 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages {
   internal class HugoExporter : CodeExporter {
-    private const char SINGLE_QUOTE = '\'';
-    private const char DOUBLE_QUOTE = '"';
+    private const char SingleQuote = '\'';
+    private const char DoubleQuote = '"';
 
     public override List<KeyValuePair<string, string>> FileDialogFilters => new List<KeyValuePair<string, string>> {
       new KeyValuePair<string, string>("Hugo Source Files", ".hug"),
@@ -42,7 +42,7 @@ namespace Trizbort.Export.Languages {
         writer.WriteLine();
         foreach (var direction in Directions.AllDirections) {
           var exit = location.GetBestExit(direction);
-          if (exit != null) writer.WriteLine($"\t{toHugoPropertyName(direction)} {exit.Target.ExportName}");
+          if (exit != null) writer.WriteLine($"\t{ToHugoPropertyName(direction)} {exit.Target.ExportName}");
         }
 
         writer.WriteLine();
@@ -51,7 +51,7 @@ namespace Trizbort.Export.Languages {
         writer.WriteLine("}");
         writer.WriteLine();
 
-        exportThings(writer, location.Things, null, 1);
+        ExportThings(writer, location.Things, null, 1);
       }
 
       writer.WriteLine("player_character you \"you\"");
@@ -102,7 +102,7 @@ namespace Trizbort.Export.Languages {
         writer.WriteLine("\t! location = ... ");
       }
 
-      if (!string.IsNullOrWhiteSpace(history)) exportHistory(writer, history);
+      if (!string.IsNullOrWhiteSpace(history)) ExportHistory(writer, history);
 
       writer.WriteLine("\tMovePlayer(location)");
       writer.WriteLine("}");
@@ -110,7 +110,7 @@ namespace Trizbort.Export.Languages {
     }
 
     protected override string GetExportName(Room room, int? suffix) {
-      var name = stripOddCharacters(room.Name);
+      var name = StripOddCharacters(room.Name);
       if (string.IsNullOrEmpty(name)) name = "room";
 
       if (suffix != null) name = $"{name}{suffix}";
@@ -118,21 +118,21 @@ namespace Trizbort.Export.Languages {
     }
 
     protected override string GetExportName(string displayName, int? suffix) {
-      var name = stripOddCharacters(displayName);
+      var name = StripOddCharacters(displayName);
       if (string.IsNullOrEmpty(name)) name = "item";
       if (suffix != null) name = $"{name}{suffix}";
       return name;
     }
 
-    private void exportHistory(TextWriter writer, string history) {
+    private void ExportHistory(TextWriter writer, string history) {
       writer.WriteLine();
       writer.WriteLine("    showAbout()");
       writer.WriteLine("    {");
-      writer.WriteLine($"    {DOUBLE_QUOTE}{history}{DOUBLE_QUOTE};");
+      writer.WriteLine($"    {DoubleQuote}{history}{DoubleQuote};");
       writer.WriteLine("    }");
     }
 
-    private static void exportThings(TextWriter writer, List<Thing> things, Thing container, int indent) {
+    private static void ExportThings(TextWriter writer, List<Thing> things, Thing container, int indent) {
       foreach (var thing in things.Where(thing => thing.Container == container)) {
         writer.WriteLine("object {0}", thing.ExportName);
         writer.WriteLine("{");
@@ -140,17 +140,17 @@ namespace Trizbort.Export.Languages {
         writer.WriteLine("}");
         writer.WriteLine();
 
-        exportThings(writer, thing.Contents, thing, indent + 1);
+        ExportThings(writer, thing.Contents, thing, indent + 1);
       }
     }
 
-    private static string repeat(char c, int times) {
+    private static string Repeat(char c, int times) {
       var text = string.Empty;
       for (var index = 0; index < times; ++index) text += c;
       return text;
     }
 
-    private static string stripOddCharacters(string text, params char[] exclude) {
+    private static string StripOddCharacters(string text, params char[] exclude) {
       var exclusions = new List<char>(exclude);
       if (string.IsNullOrEmpty(text)) return string.Empty;
       var result = string.Empty;
@@ -160,7 +160,7 @@ namespace Trizbort.Export.Languages {
       return result;
     }
 
-    private static string toHugoPropertyName(MappableDirection direction) {
+    private static string ToHugoPropertyName(MappableDirection direction) {
       switch (direction) {
         case MappableDirection.North:
           return "n_to";
@@ -192,7 +192,7 @@ namespace Trizbort.Export.Languages {
       }
     }
 
-    private static string toHugoString(string text, char quote) {
+    private static string ToHugoString(string text, char quote) {
       if (text == null) text = string.Empty;
       return string.Format("{1}{0}{1}", text.Replace(quote.ToString(), $@"\{quote}"), quote);
     }

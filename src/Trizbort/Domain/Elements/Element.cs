@@ -8,16 +8,16 @@ using Trizbort.Domain.Misc;
 
 namespace Trizbort.Domain.Elements {
   public class Element : IComparable<Element> {
-    private int _mId;
+    private int _id;
 
     private int _zOrder;
 
     public Element() {
-      initElement(null);
+      InitElement(null);
     }
 
     public Element(Project project) {
-      initElement(project);
+      InitElement(project);
       var id = GetNextId();
       Id = id;
     }
@@ -25,7 +25,7 @@ namespace Trizbort.Domain.Elements {
     // Added this second constructor to be used when loading a room
     // This constructor is significantly faster as it doesn't look for gap in the element IDs
     public Element(Project project, int totalIDs) {
-      initElement(project);
+      InitElement(project);
       Id = totalIDs;
     }
 
@@ -51,11 +51,11 @@ namespace Trizbort.Domain.Elements {
     ///   Get the unique identifier of this element.
     /// </summary>
     public int Id {
-      get => _mId;
+      get => _id;
       set {
         if (Project != null)
           if (!Project.IsElementIdInUse(value))
-            _mId = value;
+            _id = value;
       }
     }
 
@@ -237,7 +237,7 @@ namespace Trizbort.Domain.Elements {
       changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void initElement(Project project) {
+    private void InitElement(Project project) {
       Project = project;
     }
   }

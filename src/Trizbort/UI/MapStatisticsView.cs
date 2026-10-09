@@ -13,7 +13,7 @@ namespace Trizbort.UI {
       InitializeComponent();
     }
 
-    private string mapStatisticsString() {
+    private string MapStatisticsString() {
       var stats = string.Empty;
 
       if (MapStatistics.NumberOfRooms == 0) return "No rooms to take stats of.";
@@ -56,7 +56,7 @@ namespace Trizbort.UI {
       stats += $"# of Dead Ends: {MapStatistics.NumberOfDeadEnds}{Environment.NewLine}";
 
       stats += $"{Environment.NewLine}";
-      stats += $"{MapStatistics.NumberOfDoors} door{plur(MapStatistics.NumberOfDoors)}, {MapStatistics.NumberOfLockedDoors} locked, {MapStatistics.NumberOfLockableDoors} lockable, {MapStatistics.NumberOfOpenDoors} open, {MapStatistics.NumberOfOpenableDoors} openable{Environment.NewLine}";
+      stats += $"{MapStatistics.NumberOfDoors} door{Plur(MapStatistics.NumberOfDoors)}, {MapStatistics.NumberOfLockedDoors} locked, {MapStatistics.NumberOfLockableDoors} lockable, {MapStatistics.NumberOfOpenDoors} open, {MapStatistics.NumberOfOpenableDoors} openable{Environment.NewLine}";
 
       stats += $"{Environment.NewLine}";
       stats += $"# of Regions: {MapStatistics.NumberOfRegions}{Environment.NewLine}";
@@ -120,13 +120,13 @@ namespace Trizbort.UI {
         stats += $"{Environment.NewLine}";
       }
 
-      stats += $"{MapStatistics.UpDown} up-down connection{plur(MapStatistics.UpDown)}{Environment.NewLine}";
-      stats += $"{MapStatistics.InOut} in-out connection{plur(MapStatistics.InOut)}{Environment.NewLine}";
-      stats += $"{MapStatistics.CustomConnections} custom connection{plur(MapStatistics.CustomConnections)}{Environment.NewLine}";
-      stats += $"{MapStatistics.DiagonalConnections(2)} diagonal connection{plur(MapStatistics.DiagonalConnections(2))} (2-way){Environment.NewLine}";
-      stats += $"{MapStatistics.DiagonalConnections(1)} diagonal connection{plur(MapStatistics.DiagonalConnections(1))} (1-way){Environment.NewLine}";
-      stats += $"{MapStatistics.HasMiddleText} connection{plur(MapStatistics.HasMiddleText)} with middle text{Environment.NewLine}";
-      stats += $"{MapStatistics.BentConnections(true)} bent connection{plur(MapStatistics.BentConnections(true))}, {MapStatistics.BentConnections(false)} with no text{Environment.NewLine}";
+      stats += $"{MapStatistics.UpDown} up-down connection{Plur(MapStatistics.UpDown)}{Environment.NewLine}";
+      stats += $"{MapStatistics.InOut} in-out connection{Plur(MapStatistics.InOut)}{Environment.NewLine}";
+      stats += $"{MapStatistics.CustomConnections} custom connection{Plur(MapStatistics.CustomConnections)}{Environment.NewLine}";
+      stats += $"{MapStatistics.DiagonalConnections(2)} diagonal connection{Plur(MapStatistics.DiagonalConnections(2))} (2-way){Environment.NewLine}";
+      stats += $"{MapStatistics.DiagonalConnections(1)} diagonal connection{Plur(MapStatistics.DiagonalConnections(1))} (1-way){Environment.NewLine}";
+      stats += $"{MapStatistics.HasMiddleText} connection{Plur(MapStatistics.HasMiddleText)} with middle text{Environment.NewLine}";
+      stats += $"{MapStatistics.BentConnections(true)} bent connection{Plur(MapStatistics.BentConnections(true))}, {MapStatistics.BentConnections(false)} with no text{Environment.NewLine}";
       stats += Environment.NewLine;
 
       stats += MapStatistics.DupConnectionList("in") + Environment.NewLine;
@@ -138,7 +138,7 @@ namespace Trizbort.UI {
     }
 
     public void MapStatisticsView_Export(object sender, EventArgs e) {
-      var stats = mapStatisticsString();
+      var stats = MapStatisticsString();
 
       var curFile = Project.Current.FileName;
       string outFile;
@@ -158,14 +158,14 @@ namespace Trizbort.UI {
       UserInteraction.ShowMessage("Wrote log to " + outFile, "Log file written");
     }
 
-    private string plur(int x) {
+    private string Plur(int x) {
       return x == 1 ? "" : "s";
     }
 
     private void MapStatisticsView_Load(object sender, EventArgs e) {
-      txtStats.Text = mapStatisticsString();
-      txtStats.SelectionStart = 1;
-      txtStats.SelectionLength = 0;
+      _txtStats.Text = MapStatisticsString();
+      _txtStats.SelectionStart = 1;
+      _txtStats.SelectionLength = 0;
     }
   }
 }

@@ -13,7 +13,7 @@ namespace Trizbort.Tests
   [TestFixture]
   public class ConnectionCurveWaypointTests
   {
-    private static Connection createConnection(Project project = null) {
+    private static Connection CreateConnection(Project project = null) {
       return new Connection(project ?? new Project(), new Vertex(new Vector(0, 0)), new Vertex(new Vector(100, 0)));
     }
 
@@ -32,7 +32,7 @@ namespace Trizbort.Tests
     [Test]
     public void StraightConnection_OffersOnlyMiddleHandle_AtMidpoint()
     {
-      var connection = createConnection();
+      var connection = CreateConnection();
 
       connection.HasCurveWaypoints.ShouldBeFalse();
       connection.CanAddCurveWaypoint(CurveWaypoint.Middle).ShouldBeTrue();
@@ -44,7 +44,7 @@ namespace Trizbort.Tests
     [Test]
     public void SettingMiddle_BendsLineThroughIt_AndOffersQuarterHandlesOnTheCurve()
     {
-      var connection = createConnection();
+      var connection = CreateConnection();
       var middle = new Vector(50, 60);
 
       connection.SetCurveWaypoint(CurveWaypoint.Middle, middle);
@@ -67,7 +67,7 @@ namespace Trizbort.Tests
     [Test]
     public void AllThreeWaypoints_LineTravelsThroughEach()
     {
-      var connection = createConnection();
+      var connection = CreateConnection();
       var points = new[] {new Vector(20, 40), new Vector(50, -30), new Vector(80, 40)};
 
       connection.SetCurveWaypoint(CurveWaypoint.Quarter, points[0]);
@@ -81,7 +81,7 @@ namespace Trizbort.Tests
     [Test]
     public void RemoveCurveWaypoint_RemovesOnlyThatWaypoint()
     {
-      var connection = createConnection();
+      var connection = CreateConnection();
       connection.SetCurveWaypoint(CurveWaypoint.Middle, new Vector(50, 60));
       connection.SetCurveWaypoint(CurveWaypoint.Quarter, new Vector(25, 40));
 
@@ -96,7 +96,7 @@ namespace Trizbort.Tests
     [Test]
     public void Reverse_SwapsQuarterWaypoints()
     {
-      var connection = createConnection();
+      var connection = CreateConnection();
       connection.SetCurveWaypoint(CurveWaypoint.Quarter, new Vector(25, 40));
       connection.SetCurveWaypoint(CurveWaypoint.ThreeQuarter, new Vector(75, 40));
 
@@ -109,7 +109,7 @@ namespace Trizbort.Tests
     [Test]
     public void MoveCurveWaypointsBy_TranslatesWaypoints()
     {
-      var connection = createConnection();
+      var connection = CreateConnection();
       connection.SetCurveWaypoint(CurveWaypoint.Middle, new Vector(50, 60));
 
       connection.MoveCurveWaypointsBy(new Vector(10, -5));
@@ -121,7 +121,7 @@ namespace Trizbort.Tests
     public void SaveAndLoad_RoundTripsWaypoints()
     {
       var project = new Project();
-      var connection = createConnection(project);
+      var connection = CreateConnection(project);
       connection.SetCurveWaypoint(CurveWaypoint.Middle, new Vector(50.5f, 60.25f));
       connection.SetCurveWaypoint(CurveWaypoint.ThreeQuarter, new Vector(-75, 40));
 

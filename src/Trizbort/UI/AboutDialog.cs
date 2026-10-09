@@ -8,14 +8,14 @@ namespace Trizbort.UI {
     public AboutDialog() {
       InitializeComponent();
       try {
-        m_versionLabel.Text = $"Version {Assembly.GetExecutingAssembly().GetName().Version.ToString().Trim('.', '0')}";
+        _versionLabel.Text = $"Version {Assembly.GetExecutingAssembly().GetName().Version.ToString().Trim('.', '0')}";
       }
       catch (Exception) {
         // ignored
       }
     }
 
-    private void onLinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+    private void OnLinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
       var label = (LinkLabel) sender;
       var url = label.Text.Substring(label.LinkArea.Start, label.LinkArea.Length);
       if (!url.StartsWith("http")) url = "http://" + url;

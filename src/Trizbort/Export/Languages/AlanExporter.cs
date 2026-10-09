@@ -50,12 +50,12 @@ namespace Trizbort.Export.Languages
 
       if (!string.IsNullOrWhiteSpace(history))
       {
-        exportHistory(writer, history);
+        ExportHistory(writer, history);
       }
 
     }
 
-    private static void exportHistory(TextWriter writer, string history)
+    private static void ExportHistory(TextWriter writer, string history)
     {
       string historyCoded = history.Replace("\r\n", "\"\r\n    \"");
       writer.WriteLine("Verb about");
@@ -64,7 +64,7 @@ namespace Trizbort.Export.Languages
       writer.WriteLine("");
     }
 
-    private void printThisLoc(TextWriter writer, Location location)
+    private void PrintThisLoc(TextWriter writer, Location location)
     {
         // remember we've exported this location
 
@@ -90,7 +90,7 @@ namespace Trizbort.Export.Languages
             // remember we've exported this exit
             exit.Exported = true;
 
-            writer.WriteLine("  Exit {0} to {1}.", getAlanName(direction), exit.Target.ExportName);
+            writer.WriteLine("  Exit {0} to {1}.", GetAlanName(direction), exit.Target.ExportName);
             if (exit.Conditional)
             {
               writer.WriteLine("    Check");
@@ -101,9 +101,9 @@ namespace Trizbort.Export.Languages
           else 
           {
             if (string.IsNullOrWhiteSpace(nowhereExits))
-              nowhereExits = getAlanName(direction);
+              nowhereExits = GetAlanName(direction);
             else
-              nowhereExits += " " + getAlanName(direction);
+              nowhereExits += " " + GetAlanName(direction);
           }
         }
         if (!string.IsNullOrWhiteSpace(nowhereExits))
@@ -150,28 +150,28 @@ namespace Trizbort.Export.Languages
     {
       foreach (var location in LocationsInExportOrder)
       {
-        printThisLoc(writer, location);
+        PrintThisLoc(writer, location);
       }
     }
 
     protected override string GetExportName(Room room, int? suffix)
     {
-      return getExportName(room.Name, suffix);
+      return CreateExportName(room.Name, suffix);
     }
 
     protected override string GetExportName(string displayName, int? suffix)
     {
-      return getExportName(displayName, suffix);
+      return CreateExportName(displayName, suffix);
     }
 
-    private string getExportName(string name, int? suffix)
+    private string CreateExportName(string name, int? suffix)
     {
       bool spaceless = true;
 
-      if (containsOddCharacters(name))
-        name = stripOddCharacters(name);
+      if (ContainsOddCharacters(name))
+        name = StripOddCharacters(name);
 
-      if (containsWord(name, ReservedWords) && suffix == null) suffix = 1;
+      if (ContainsWord(name, ReservedWords) && suffix == null) suffix = 1;
 
       if (suffix != null)
         name = $"{name}{(spaceless ? string.Empty : " ")}{suffix}";
@@ -179,12 +179,12 @@ namespace Trizbort.Export.Languages
       return name;
     }
 
-    private static bool containsWord(string text, IEnumerable<string> words)
+    private static bool ContainsWord(string text, IEnumerable<string> words)
     {
-      return words.Any(word => containsWord(text, (string) word));
+      return words.Any(word => ContainsWord(text, (string) word));
     }
 
-    private static bool containsWord(string text, string word)
+    private static bool ContainsWord(string text, string word)
     {
       if (string.IsNullOrEmpty(text))
       {
@@ -194,19 +194,19 @@ namespace Trizbort.Export.Languages
       return words.Any(wordFound => StringComparer.InvariantCultureIgnoreCase.Compare(word, wordFound) == 0);
     }
 
-    private static bool containsOddCharacters(string text)
+    private static bool ContainsOddCharacters(string text)
     {
       return text.Any(c => c != ' ' && c != '-' && !char.IsLetterOrDigit(c));
     }
 
-    private static string stripOddCharacters(string text, params char[] exceptChars)
+    private static string StripOddCharacters(string text, params char[] exceptChars)
     {
       var exceptCharsList = new List<char>(exceptChars);
       var newText = text.Where(c => c == ' ' || c == '-' || char.IsLetterOrDigit(c) || exceptCharsList.Contains(c)).Aggregate(string.Empty, (current, c) => current + c);
       return string.IsNullOrEmpty(newText) ? "object" : newText;
     }
 
-    private static string getAlanName(MappableDirection direction)
+    private static string GetAlanName(MappableDirection direction)
     {
       switch (direction)
       {

@@ -12,111 +12,111 @@ using Trizbort.Util;
 
 namespace Trizbort.UI {
   internal partial class RoomPropertiesDialog : Form {
-    private const int HORIZONTAL_MARGIN = 2;
-    private const int VERTICAL_MARGIN = 2;
-    private const int WIDTH = 24;
-    private const string NO_COLOR_SET = "No Color Set";
-    private static Tab sMLastClosedTab = Tab.Objects;
+    private const int HorizontalMargin = 2;
+    private const int VerticalMargin = 2;
+    private const int ColorSwatchWidth = 24;
+    private const string NoColorSet = "No Color Set";
+    private static Tab _lastClosedTab = Tab.Objects;
     private readonly int _roomId;
-    private bool _mAdjustingPosition;
+    private bool _adjustingPosition;
 
     public RoomPropertiesDialog(PropertiesStartType start, int id) {
       InitializeComponent();
 
-      cboHandDrawn.Items.AddRange(new object[] {
+      _cboHandDrawn.Items.AddRange(new object[] {
         $"Map setting ({(Settings.HandDrawn ? "hand-drawn" : "straight")})",
         "Hand-drawn",
         "Straight"
       });
-      cboHandDrawn.SelectedIndex = 0;
+      _cboHandDrawn.SelectedIndex = 0;
 
       _roomId = id;
 
       // load regions control
-      cboRegion.Items.Clear();
+      _cboRegion.Items.Clear();
       foreach (var region in Settings.Regions.OrderBy(p => p.RegionName != Domain.Misc.Region.DefaultRegion)
-        .ThenBy(p => p.RegionName)) cboRegion.Items.Add(region.RegionName);
+        .ThenBy(p => p.RegionName)) _cboRegion.Items.Add(region.RegionName);
 
-      cboRegion.DrawMode = DrawMode.OwnerDrawFixed;
-      cboRegion.DrawItem += RegionListBox_DrawItem;
+      _cboRegion.DrawMode = DrawMode.OwnerDrawFixed;
+      _cboRegion.DrawItem += RegionListBox_DrawItem;
 
-      cboReference.Items.Add("");
+      _cboReference.Items.Add("");
       foreach (var room in Project.Current.Elements.OfType<Room>().Where(p => p.Id != _roomId).OrderBy(p => p.Name))
-        cboReference.Items.Add(room);
+        _cboReference.Items.Add(room);
 
       if (Settings.Regions.Count > 0)
-        cboRegion.SelectedIndex = 0;
+        _cboRegion.SelectedIndex = 0;
 
       if (start == PropertiesStartType.Region) {
-        m_tabControl.SelectedTab = tabRegions;
-        ActiveControl = cboRegion;
+        _tabControl.SelectedTab = _tabRegions;
+        ActiveControl = _cboRegion;
       } else {
-        m_tabControl.SelectedIndex = (int)sMLastClosedTab;
-        switch (sMLastClosedTab) {
+        _tabControl.SelectedIndex = (int)_lastClosedTab;
+        switch (_lastClosedTab) {
           case Tab.Description:
-            ActiveControl = m_descriptionTextBox;
+            ActiveControl = _descriptionTextBox;
             break;
           case Tab.Objects:
-            ActiveControl = txtObjects;
+            ActiveControl = _txtObjects;
             break;
           case Tab.Colors:
-            ActiveControl = m_changeRoomFillButton;
+            ActiveControl = _changeRoomFillButton;
             break;
           case Tab.Regions:
-            ActiveControl = cboRegion;
+            ActiveControl = _cboRegion;
             break;
           case Tab.RoomShapes:
-            ActiveControl = cboDrawType;
+            ActiveControl = _cboDrawType;
             break;
         }
       }
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e) {
-      sMLastClosedTab = (Tab)m_tabControl.SelectedIndex;
+      _lastClosedTab = (Tab)_tabControl.SelectedIndex;
       base.OnFormClosed(e);
     }
 
     public bool AllCornersEqual {
-      get => chkCornersSame.Checked;
-      set => chkCornersSame.Checked = value;
+      get => _chkCornersSame.Checked;
+      set => _chkCornersSame.Checked = value;
     }
 
     public BorderDashStyle BorderStyle {
-      get => (BorderDashStyle) Enum.Parse(typeof(BorderDashStyle), cboBorderStyle.SelectedItem.ToString());
-      set => cboBorderStyle.SelectedItem = value.ToString();
+      get => (BorderDashStyle) Enum.Parse(typeof(BorderDashStyle), _cboBorderStyle.SelectedItem.ToString());
+      set => _cboBorderStyle.SelectedItem = value.ToString();
     }
 
     public CornerRadii Corners {
       get => new CornerRadii {
-        BottomLeft = (double) txtBottomLeft.Value,
-        BottomRight = (double) txtBottomRight.Value,
-        TopRight = (double) txtTopRight.Value,
-        TopLeft = (double) txtTopLeft.Value
+        BottomLeft = (double) _txtBottomLeft.Value,
+        BottomRight = (double) _txtBottomRight.Value,
+        TopRight = (double) _txtTopRight.Value,
+        TopLeft = (double) _txtTopLeft.Value
       };
       set {
-        txtBottomRight.Value = new decimal(value.BottomRight);
-        txtTopLeft.Value = new decimal(value.TopLeft);
-        txtBottomLeft.Value = new decimal(value.BottomLeft);
-        txtTopRight.Value = new decimal(value.TopRight);
+        _txtBottomRight.Value = new decimal(value.BottomRight);
+        _txtTopLeft.Value = new decimal(value.TopLeft);
+        _txtBottomLeft.Value = new decimal(value.BottomLeft);
+        _txtTopRight.Value = new decimal(value.TopRight);
       }
     }
 
     public string Description {
-      get => m_descriptionTextBox.Text;
-      set => m_descriptionTextBox.Text = value;
+      get => _descriptionTextBox.Text;
+      set => _descriptionTextBox.Text = value;
     }
 
     public bool Ellipse {
-      get => cboDrawType.SelectedItem.ToString() == "Ellipse";
+      get => _cboDrawType.SelectedItem.ToString() == "Ellipse";
       set {
-        if (value) cboDrawType.SelectedItem = "Ellipse";
+        if (value) _cboDrawType.SelectedItem = "Ellipse";
       }
     }
 
     public HandDrawnStyle HandDrawnStyle {
       get {
-        switch (cboHandDrawn.SelectedIndex) {
+        switch (_cboHandDrawn.SelectedIndex) {
           case 1: return HandDrawnStyle.HandDrawn;
           case 2: return HandDrawnStyle.Straight;
           default: return HandDrawnStyle.MapDefault;
@@ -124,93 +124,93 @@ namespace Trizbort.UI {
       }
       set {
         switch (value) {
-          case HandDrawnStyle.HandDrawn: cboHandDrawn.SelectedIndex = 1; break;
-          case HandDrawnStyle.Straight: cboHandDrawn.SelectedIndex = 2; break;
-          default: cboHandDrawn.SelectedIndex = 0; break;
+          case HandDrawnStyle.HandDrawn: _cboHandDrawn.SelectedIndex = 1; break;
+          case HandDrawnStyle.Straight: _cboHandDrawn.SelectedIndex = 2; break;
+          default: _cboHandDrawn.SelectedIndex = 0; break;
         }
       }
     }
 
-    private bool IsPreviewHandDrawn => cboHandDrawn.SelectedIndex == 1 ||
-                                       cboHandDrawn.SelectedIndex <= 0 && Settings.HandDrawn;
+    private bool IsPreviewHandDrawn => _cboHandDrawn.SelectedIndex == 1 ||
+                                       _cboHandDrawn.SelectedIndex <= 0 && Settings.HandDrawn;
 
     public bool IsDark {
-      get => m_isDarkCheckBox.Checked;
-      set => m_isDarkCheckBox.Checked = value;
+      get => _isDarkCheckBox.Checked;
+      set => _isDarkCheckBox.Checked = value;
     }
 
     public bool IsEndRoom {
-      get => chkEndRoom.Checked;
-      set => chkEndRoom.Checked = value;
+      get => _chkEndRoom.Checked;
+      set => _chkEndRoom.Checked = value;
     }
 
-    public bool IsReference => cboReference.SelectedItem?.ToString() != string.Empty;
+    public bool IsReference => _cboReference.SelectedItem?.ToString() != string.Empty;
 
     public bool IsStartRoom {
-      get => chkStartRoom.Checked;
-      set => chkStartRoom.Checked = value;
+      get => _chkStartRoom.Checked;
+      set => _chkStartRoom.Checked = value;
     }
 
     public string Objects {
-      get => txtObjects.Text;
-      set => txtObjects.Text = value;
+      get => _txtObjects.Text;
+      set => _txtObjects.Text = value;
     }
 
     public bool ObjectsCustomPosition {
-      get => chkCustomPosition.Checked;
-      set => chkCustomPosition.Checked = value;
+      get => _chkCustomPosition.Checked;
+      set => _chkCustomPosition.Checked = value;
     }
 
     public int ObjectsCustomPositionDown {
-      get => (int) txtDown.Value;
-      set => txtDown.Value = value;
+      get => (int) _txtDown.Value;
+      set => _txtDown.Value = value;
     }
 
     public int ObjectsCustomPositionRight {
-      get => (int) txtRight.Value;
-      set => txtRight.Value = value;
+      get => (int) _txtRight.Value;
+      set => _txtRight.Value = value;
     }
 
     public CompassPoint ObjectsPosition {
       get {
-        if (m_nCheckBox.Checked) return CompassPoint.North;
-        if (m_sCheckBox.Checked) return CompassPoint.South;
-        if (m_eCheckBox.Checked) return CompassPoint.East;
-        if (m_wCheckBox.Checked) return CompassPoint.West;
-        if (m_neCheckBox.Checked) return CompassPoint.NorthEast;
-        if (m_nwCheckBox.Checked) return CompassPoint.NorthWest;
-        if (m_seCheckBox.Checked) return CompassPoint.SouthEast;
-        if (m_swCheckBox.Checked) return CompassPoint.SouthWest;
+        if (_nCheckBox.Checked) return CompassPoint.North;
+        if (_southCheckBox.Checked) return CompassPoint.South;
+        if (_eCheckBox.Checked) return CompassPoint.East;
+        if (_wCheckBox.Checked) return CompassPoint.West;
+        if (_neCheckBox.Checked) return CompassPoint.NorthEast;
+        if (_nwCheckBox.Checked) return CompassPoint.NorthWest;
+        if (_seCheckBox.Checked) return CompassPoint.SouthEast;
+        if (_swCheckBox.Checked) return CompassPoint.SouthWest;
         return CompassPoint.WestSouthWest;
       }
       set {
         switch (value) {
           case CompassPoint.North:
-            m_nCheckBox.Checked = true;
+            _nCheckBox.Checked = true;
             break;
           case CompassPoint.South:
-            m_sCheckBox.Checked = true;
+            _southCheckBox.Checked = true;
             break;
           case CompassPoint.East:
-            m_eCheckBox.Checked = true;
+            _eCheckBox.Checked = true;
             break;
           case CompassPoint.West:
-            m_wCheckBox.Checked = true;
+            _wCheckBox.Checked = true;
             break;
           case CompassPoint.NorthEast:
-            m_neCheckBox.Checked = true;
+            _neCheckBox.Checked = true;
             break;
           case CompassPoint.NorthWest:
-            m_nwCheckBox.Checked = true;
+            _nwCheckBox.Checked = true;
             break;
           case CompassPoint.SouthEast:
-            m_seCheckBox.Checked = true;
+            _seCheckBox.Checked = true;
             break;
           case CompassPoint.SouthWest:
-            m_swCheckBox.Checked = true;
+            _swCheckBox.Checked = true;
             break;
           default:
-            m_cCheckBox.Checked = true;
+            _cCheckBox.Checked = true;
             break;
         }
       }
@@ -218,121 +218,121 @@ namespace Trizbort.UI {
 
     // Added for Room specific colors
     public Color ObjectTextColor {
-      get => m_objectTextTextBox.Watermark == NO_COLOR_SET ? Color.Transparent : m_objectTextTextBox.BackColor;
+      get => _objectTextTextBox.Watermark == NoColorSet ? Color.Transparent : _objectTextTextBox.BackColor;
       set {
         if (value == Color.Transparent) {
-          m_objectTextTextBox.BackColor = Color.White;
-          m_objectTextTextBox.Watermark = NO_COLOR_SET;
+          _objectTextTextBox.BackColor = Color.White;
+          _objectTextTextBox.Watermark = NoColorSet;
         } else {
-          m_objectTextTextBox.BackColor = value;
-          m_objectTextTextBox.Watermark = string.Empty;
+          _objectTextTextBox.BackColor = value;
+          _objectTextTextBox.Watermark = string.Empty;
         }
       }
     }
 
     public bool Octagonal {
-      get => cboDrawType.SelectedItem.ToString() == "Octagonal";
+      get => _cboDrawType.SelectedItem.ToString() == "Octagonal";
       set {
-        if (value) cboDrawType.SelectedItem = "Octagonal";
+        if (value) _cboDrawType.SelectedItem = "Octagonal";
       }
     }
 
     public Room ReferenceRoom {
       get {
-        if (cboReference.SelectedItem != null && cboReference.SelectedItem.ToString() != "")
-          return (Room) cboReference.SelectedItem;
+        if (_cboReference.SelectedItem != null && _cboReference.SelectedItem.ToString() != "")
+          return (Room) _cboReference.SelectedItem;
         return null;
       }
-      set => cboReference.SelectedItem = value;
+      set => _cboReference.SelectedItem = value;
     }
 
     // Added for Room specific colors
     public Color RoomBorderColor {
-      get => m_roomBorderTextBox.Watermark == NO_COLOR_SET ? Color.Transparent : m_roomBorderTextBox.BackColor;
+      get => _roomBorderTextBox.Watermark == NoColorSet ? Color.Transparent : _roomBorderTextBox.BackColor;
       set {
         if (value == Color.Transparent) {
-          m_roomBorderTextBox.BackColor = Color.White;
-          m_roomBorderTextBox.Watermark = NO_COLOR_SET;
+          _roomBorderTextBox.BackColor = Color.White;
+          _roomBorderTextBox.Watermark = NoColorSet;
         } else {
-          m_roomBorderTextBox.BackColor = value;
-          m_roomBorderTextBox.Watermark = string.Empty;
+          _roomBorderTextBox.BackColor = value;
+          _roomBorderTextBox.Watermark = string.Empty;
         }
       }
     }
 
     // Added for Room specific colors
     public Color RoomFillColor {
-      get => m_roomFillTextBox.Watermark == NO_COLOR_SET ? Color.Transparent : m_roomFillTextBox.BackColor;
+      get => _roomFillTextBox.Watermark == NoColorSet ? Color.Transparent : _roomFillTextBox.BackColor;
       set {
         if (value == Color.Transparent) {
-          m_roomFillTextBox.BackColor = Color.White;
-          m_roomFillTextBox.Watermark = NO_COLOR_SET;
+          _roomFillTextBox.BackColor = Color.White;
+          _roomFillTextBox.Watermark = NoColorSet;
         } else {
-          m_roomFillTextBox.BackColor = value;
-          m_roomFillTextBox.Watermark = string.Empty;
+          _roomFillTextBox.BackColor = value;
+          _roomFillTextBox.Watermark = string.Empty;
         }
       }
     }
 
     public string RoomName {
-      get => txtName.Text.Trim();
-      set => txtName.Text = value;
+      get => _txtName.Text.Trim();
+      set => _txtName.Text = value;
     }
 
     // Added for Room specific colors
     public Color RoomNameColor {
-      get => m_roomTextTextBox.Watermark == NO_COLOR_SET ? Color.Transparent : m_roomTextTextBox.BackColor;
+      get => _roomTextTextBox.Watermark == NoColorSet ? Color.Transparent : _roomTextTextBox.BackColor;
       set {
         if (value == Color.Transparent) {
-          m_roomTextTextBox.BackColor = Color.White;
-          m_roomTextTextBox.Watermark = NO_COLOR_SET;
+          _roomTextTextBox.BackColor = Color.White;
+          _roomTextTextBox.Watermark = NoColorSet;
         } else {
-          m_roomTextTextBox.BackColor = value;
-          m_roomTextTextBox.Watermark = string.Empty;
+          _roomTextTextBox.BackColor = value;
+          _roomTextTextBox.Watermark = string.Empty;
         }
       }
     }
 
     public string RoomRegion {
-      get => cboRegion.SelectedItem?.ToString() ?? string.Empty;
-      set => cboRegion.SelectedItem = value;
+      get => _cboRegion.SelectedItem?.ToString() ?? string.Empty;
+      set => _cboRegion.SelectedItem = value;
     }
 
     public string RoomSubTitle {
-      get => txtSubTitle.Text;
-      set => txtSubTitle.Text = value;
+      get => _txtSubTitle.Text;
+      set => _txtSubTitle.Text = value;
     }
 
     public Color RoomSubtitleColor {
-      get => m_subTitleTextTextBox.Watermark == NO_COLOR_SET ? Color.Transparent : m_subTitleTextTextBox.BackColor;
+      get => _subTitleTextTextBox.Watermark == NoColorSet ? Color.Transparent : _subTitleTextTextBox.BackColor;
       set {
         if (value == Color.Transparent) {
-          m_subTitleTextTextBox.BackColor = Color.White;
-          m_subTitleTextTextBox.Watermark = NO_COLOR_SET;
+          _subTitleTextTextBox.BackColor = Color.White;
+          _subTitleTextTextBox.Watermark = NoColorSet;
         } else {
-          m_subTitleTextTextBox.BackColor = value;
-          m_subTitleTextTextBox.Watermark = string.Empty;
+          _subTitleTextTextBox.BackColor = value;
+          _subTitleTextTextBox.Watermark = string.Empty;
         }
       }
     }
 
     public bool RoundedCorners {
-      get => cboDrawType.SelectedItem.ToString() == "Rounded Corners";
+      get => _cboDrawType.SelectedItem.ToString() == "Rounded Corners";
       set {
-        if (value) cboDrawType.SelectedItem = "Rounded Corners";
+        if (value) _cboDrawType.SelectedItem = "Rounded Corners";
       }
     }
 
     // Added for Room specific colors
     public Color SecondFillColor {
-      get => m_secondFillTextBox.Watermark == NO_COLOR_SET ? Color.Transparent : m_secondFillTextBox.BackColor;
+      get => _secondFillTextBox.Watermark == NoColorSet ? Color.Transparent : _secondFillTextBox.BackColor;
       set {
         if (value == Color.Transparent) {
-          m_secondFillTextBox.BackColor = Color.White;
-          m_secondFillTextBox.Watermark = NO_COLOR_SET;
+          _secondFillTextBox.BackColor = Color.White;
+          _secondFillTextBox.Watermark = NoColorSet;
         } else {
-          m_secondFillTextBox.BackColor = value;
-          m_secondFillTextBox.Watermark = string.Empty;
+          _secondFillTextBox.BackColor = value;
+          _secondFillTextBox.Watermark = string.Empty;
         }
       }
     }
@@ -340,7 +340,7 @@ namespace Trizbort.UI {
     // Added for Room specific colors
     public string SecondFillLocation {
       get {
-        switch (comboBox1.SelectedIndex) {
+        switch (_comboBox1.SelectedIndex) {
           case 0:
             return "Bottom";
           case 1:
@@ -364,118 +364,118 @@ namespace Trizbort.UI {
       set {
         switch (value) {
           case "Bottom":
-            comboBox1.SelectedIndex = 0;
+            _comboBox1.SelectedIndex = 0;
             break;
           case "BottomRight":
-            comboBox1.SelectedIndex = 1;
+            _comboBox1.SelectedIndex = 1;
             break;
           case "BottomLeft":
-            comboBox1.SelectedIndex = 2;
+            _comboBox1.SelectedIndex = 2;
             break;
           case "Left":
-            comboBox1.SelectedIndex = 3;
+            _comboBox1.SelectedIndex = 3;
             break;
           case "Right":
-            comboBox1.SelectedIndex = 4;
+            _comboBox1.SelectedIndex = 4;
             break;
           case "TopRight":
-            comboBox1.SelectedIndex = 5;
+            _comboBox1.SelectedIndex = 5;
             break;
           case "TopLeft":
-            comboBox1.SelectedIndex = 6;
+            _comboBox1.SelectedIndex = 6;
             break;
           case "Top":
-            comboBox1.SelectedIndex = 7;
+            _comboBox1.SelectedIndex = 7;
             break;
           default:
-            comboBox1.SelectedIndex = 0;
+            _comboBox1.SelectedIndex = 0;
             break;
         }
       }
     }
 
     public RoomShape Shape {
-      get => (RoomShape) cboDrawType.SelectedIndex;
-      set => cboDrawType.SelectedIndex = (int) value;
+      get => (RoomShape) _cboDrawType.SelectedIndex;
+      set => _cboDrawType.SelectedIndex = (int) value;
     }
 
     public bool StraightEdges {
-      get => cboDrawType.SelectedItem.ToString() == "Straight Edges";
+      get => _cboDrawType.SelectedItem.ToString() == "Straight Edges";
       set {
-        if (value) cboDrawType.SelectedItem = "Straight Edges";
+        if (value) _cboDrawType.SelectedItem = "Straight Edges";
       }
     }
 
     // Added for Room specific colors
-    private void button1_Click(object sender, EventArgs e) {
-      changeRoomBorderColor();
+    private void Button1Click(object sender, EventArgs e) {
+      ChangeRoomBorderColor();
     }
 
     // Added for Room specific colors
-    private void button2_Click(object sender, EventArgs e) {
-      changeRoomTextColor();
+    private void Button2Click(object sender, EventArgs e) {
+      ChangeRoomTextColor();
     }
 
     // Added for Room specific colors
-    private void button3_Click(object sender, EventArgs e) {
-      changeObjectTextColor();
+    private void Button3Click(object sender, EventArgs e) {
+      ChangeObjectTextColor();
     }
 
-    private void cboDrawType_SelectedIndexChanged(object sender, EventArgs e) {
-      if (cboDrawType.SelectedItem.ToString() == "Ellipse") {
-        groupRoundedCorners.Visible = false;
-      } else if (cboDrawType.SelectedItem.ToString() == "Rounded Corners") {
-        groupRoundedCorners.Location = new Point(cboDrawType.Left, cboDrawType.Bottom + 20);
-        groupRoundedCorners.Visible = true;
+    private void CboDrawTypeSelectedIndexChanged(object sender, EventArgs e) {
+      if (_cboDrawType.SelectedItem.ToString() == "Ellipse") {
+        _groupRoundedCorners.Visible = false;
+      } else if (_cboDrawType.SelectedItem.ToString() == "Rounded Corners") {
+        _groupRoundedCorners.Location = new Point(_cboDrawType.Left, _cboDrawType.Bottom + 20);
+        _groupRoundedCorners.Visible = true;
       } else {
-        groupRoundedCorners.Visible = false;
+        _groupRoundedCorners.Visible = false;
       }
 
-      pnlSampleRoomShape.Invalidate();
+      _pnlSampleRoomShape.Invalidate();
     }
 
-    private void changeObjectTextColor() {
-      if (m_tabControl.SelectedTab == tabColors) ObjectTextColor = Colors.ShowColorDialog(ObjectTextColor, this);
+    private void ChangeObjectTextColor() {
+      if (_tabControl.SelectedTab == _tabColors) ObjectTextColor = Colors.ShowColorDialog(ObjectTextColor, this);
     }
 
-    private void changeRoomBorderColor() {
-      if (m_tabControl.SelectedTab == tabColors) RoomBorderColor = Colors.ShowColorDialog(RoomBorderColor, this);
+    private void ChangeRoomBorderColor() {
+      if (_tabControl.SelectedTab == _tabColors) RoomBorderColor = Colors.ShowColorDialog(RoomBorderColor, this);
     }
 
-    private void changeRoomFillColor() {
-      if (m_tabControl.SelectedTab == tabColors) RoomFillColor = Colors.ShowColorDialog(RoomFillColor, this);
+    private void ChangeRoomFillColor() {
+      if (_tabControl.SelectedTab == _tabColors) RoomFillColor = Colors.ShowColorDialog(RoomFillColor, this);
     }
 
-    private void changeRoomTextColor() {
-      if (m_tabControl.SelectedTab == tabColors) RoomNameColor = Colors.ShowColorDialog(RoomNameColor, this);
+    private void ChangeRoomTextColor() {
+      if (_tabControl.SelectedTab == _tabColors) RoomNameColor = Colors.ShowColorDialog(RoomNameColor, this);
     }
 
     // Added for Room specific colors
-    private void changeSecondFillColor() {
-      if (m_tabControl.SelectedTab == tabColors) SecondFillColor = Colors.ShowColorDialog(SecondFillColor, this);
+    private void ChangeSecondFillColor() {
+      if (_tabControl.SelectedTab == _tabColors) SecondFillColor = Colors.ShowColorDialog(SecondFillColor, this);
     }
 
-    private void changeSubtitleColor() {
-      if (m_tabControl.SelectedTab == tabColors) RoomSubtitleColor = Colors.ShowColorDialog(RoomSubtitleColor, this);
+    private void ChangeSubtitleColor() {
+      if (_tabControl.SelectedTab == _tabColors) RoomSubtitleColor = Colors.ShowColorDialog(RoomSubtitleColor, this);
     }
 
-    private void chkCornersSame_CheckedChanged(object sender, EventArgs e) {
-      txtBottomLeft.Enabled = !chkCornersSame.Checked;
-      txtBottomRight.Enabled = !chkCornersSame.Checked;
-      txtTopRight.Enabled = !chkCornersSame.Checked;
-      if (chkCornersSame.Checked) {
-        txtBottomLeft.Value = txtTopLeft.Value;
-        txtBottomRight.Value = txtTopLeft.Value;
-        txtTopRight.Value = txtTopLeft.Value;
+    private void ChkCornersSameCheckedChanged(object sender, EventArgs e) {
+      _txtBottomLeft.Enabled = !_chkCornersSame.Checked;
+      _txtBottomRight.Enabled = !_chkCornersSame.Checked;
+      _txtTopRight.Enabled = !_chkCornersSame.Checked;
+      if (_chkCornersSame.Checked) {
+        _txtBottomLeft.Value = _txtTopLeft.Value;
+        _txtBottomRight.Value = _txtTopLeft.Value;
+        _txtTopRight.Value = _txtTopLeft.Value;
       }
     }
 
-    private void cboHandDrawn_SelectedIndexChanged(object sender, EventArgs e) {
-      pnlSampleRoomShape.Invalidate();
+    private void CboHandDrawnSelectedIndexChanged(object sender, EventArgs e) {
+      _pnlSampleRoomShape.Invalidate();
     }
 
-    private void chkStartRoom_CheckedChanged(object sender, EventArgs e) {
-      if (chkStartRoom.Checked) {
+    private void ChkStartRoomCheckedChanged(object sender, EventArgs e) {
+      if (_chkStartRoom.Checked) {
         var list = Project.Current.Elements.OfType<Room>().Where(p => p.IsStartRoom && p.Id != _roomId).ToList();
 
         if (list.Count <= 0) return;
@@ -485,144 +485,144 @@ namespace Trizbort.UI {
               "Change Starting Room", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
           Project.Current.Elements.OfType<Room>().ToList().ForEach(p => p.IsStartRoom = false);
         else
-          chkStartRoom.Checked = false;
+          _chkStartRoom.Checked = false;
       }
     }
 
-    private void lblObjectSyntaxHelp_Click(object sender, EventArgs e) {
-      pnlObjectSyntaxHelp.Visible = !pnlObjectSyntaxHelp.Visible;
+    private void LblObjectSyntaxHelpClick(object sender, EventArgs e) {
+      _pnlObjectSyntaxHelp.Visible = !_pnlObjectSyntaxHelp.Visible;
     }
 
-    private void m_changeLargeFontButton_Click(object sender, EventArgs e) {
-      changeRoomFillColor();
+    private void ChangeLargeFontButtonClick(object sender, EventArgs e) {
+      ChangeRoomFillColor();
     }
 
     // Added for Room specific colors
-    private void m_changeSecondFillButton_Click(object sender, EventArgs e) {
-      changeSecondFillColor();
+    private void ChangeSecondFillButtonClick(object sender, EventArgs e) {
+      ChangeSecondFillColor();
     }
 
-    private void m_changeSubtitleTextButton_Click(object sender, EventArgs e) {
-      changeSubtitleColor();
+    private void ChangeSubtitleTextButtonClick(object sender, EventArgs e) {
+      ChangeSubtitleColor();
     }
 
-    private void m_descriptionTextBox_KeyDown(object sender, KeyEventArgs e) {
-      selectAllHandler(sender, e);
+    private void DescriptionTextBoxKeyDown(object sender, KeyEventArgs e) {
+      SelectAllHandler(sender, e);
     }
 
-    private void m_objectTextTextBox_ButtonCustomClick(object sender, EventArgs e) {
+    private void ObjectTextTextBoxButtonCustomClick(object sender, EventArgs e) {
       ObjectTextColor = Color.Transparent;
-      m_changeObjectTextButton.Focus();
+      _changeObjectTextButton.Focus();
     }
 
-    private void m_objectTextTextBox_DoubleClick(object sender, EventArgs e) {
-      changeObjectTextColor();
+    private void ObjectTextTextBoxDoubleClick(object sender, EventArgs e) {
+      ChangeObjectTextColor();
     }
 
-    private void m_objectTextTextBox_Enter(object sender, EventArgs e) {
-      m_changeObjectTextButton.Focus();
+    private void ObjectTextTextBoxEnter(object sender, EventArgs e) {
+      _changeObjectTextButton.Focus();
     }
 
-    private void m_okButton_Click(object sender, EventArgs e) {
-      if (string.IsNullOrWhiteSpace(txtName.Text)) {
+    private void OkButtonClick(object sender, EventArgs e) {
+      if (string.IsNullOrWhiteSpace(_txtName.Text)) {
         UserInteraction.ShowMessage("The room name can't be empty. Please put something in there.", "Empty name",
           MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        txtName.Focus();
+        _txtName.Focus();
         DialogResult = DialogResult.None;
-      } else if (!txtName.Text.Any(char.IsLetter)) {
+      } else if (!_txtName.Text.Any(char.IsLetter)) {
         UserInteraction.ShowMessage("The room name must contain one letter.", "Non-alphabetic name", MessageBoxButtons.OK,
           MessageBoxIcon.Warning);
-        txtName.Focus();
+        _txtName.Focus();
         DialogResult = DialogResult.None;
       }
     }
 
-    private void m_roomBorderTextBox_ButtonCustomClick(object sender, EventArgs e) {
+    private void RoomBorderTextBoxButtonCustomClick(object sender, EventArgs e) {
       RoomBorderColor = Color.Transparent;
-      m_changeRoomBorderButton.Focus();
+      _changeRoomBorderButton.Focus();
     }
 
-    private void m_roomBorderTextBox_DoubleClick(object sender, EventArgs e) {
-      changeRoomBorderColor();
+    private void RoomBorderTextBoxDoubleClick(object sender, EventArgs e) {
+      ChangeRoomBorderColor();
     }
 
-    private void m_roomBorderTextBox_Enter(object sender, EventArgs e) {
-      m_changeRoomBorderButton.Focus();
+    private void RoomBorderTextBoxEnter(object sender, EventArgs e) {
+      _changeRoomBorderButton.Focus();
     }
 
 
-    private void m_roomFillTextBox_ButtonCustomClick(object sender, EventArgs e) {
+    private void RoomFillTextBoxButtonCustomClick(object sender, EventArgs e) {
       RoomFillColor = Color.Transparent;
-      m_changeRoomFillButton.Focus();
+      _changeRoomFillButton.Focus();
     }
 
-    private void m_roomFillTextBox_DoubleClick(object sender, EventArgs e) {
-      changeRoomFillColor();
+    private void RoomFillTextBoxDoubleClick(object sender, EventArgs e) {
+      ChangeRoomFillColor();
     }
 
-    private void m_roomFillTextBox_Enter(object sender, EventArgs e) {
-      m_changeRoomFillButton.Focus();
+    private void RoomFillTextBoxEnter(object sender, EventArgs e) {
+      _changeRoomFillButton.Focus();
     }
 
-    private void m_roomTextTextBox_ButtonCustomClick(object sender, EventArgs e) {
+    private void RoomTextTextBoxButtonCustomClick(object sender, EventArgs e) {
       RoomNameColor = Color.Transparent;
-      m_changeRoomTextButton.Focus();
+      _changeRoomTextButton.Focus();
     }
 
-    private void m_roomTextTextBox_DoubleClick(object sender, EventArgs e) {
-      changeRoomTextColor();
+    private void RoomTextTextBoxDoubleClick(object sender, EventArgs e) {
+      ChangeRoomTextColor();
     }
 
-    private void m_roomTextTextBox_Enter(object sender, EventArgs e) {
-      m_changeRoomTextButton.Focus();
+    private void RoomTextTextBoxEnter(object sender, EventArgs e) {
+      _changeRoomTextButton.Focus();
     }
 
-    private void m_secondFillTextBox_ButtonCustomClick(object sender, EventArgs e) {
+    private void SecondFillTextBoxButtonCustomClick(object sender, EventArgs e) {
       SecondFillColor = Color.Transparent;
-      m_changeSecondFillButton.Focus();
+      _changeSecondFillButton.Focus();
     }
 
-    private void m_secondFillTextBox_DoubleClick(object sender, EventArgs e) {
-      changeSecondFillColor();
+    private void SecondFillTextBoxDoubleClick(object sender, EventArgs e) {
+      ChangeSecondFillColor();
     }
 
-    private void m_secondFillTextBox_Enter(object sender, EventArgs e) {
-      m_changeSecondFillButton.Focus();
+    private void SecondFillTextBoxEnter(object sender, EventArgs e) {
+      _changeSecondFillButton.Focus();
     }
 
-    private void m_subTitleTextTextBox_ButtonCustomClick(object sender, EventArgs e) {
+    private void SubTitleTextTextBoxButtonCustomClick(object sender, EventArgs e) {
       RoomSubtitleColor = Color.Transparent;
-      m_changeSubtitleTextButton.Focus();
+      _changeSubtitleTextButton.Focus();
     }
 
-    private void m_subTitleTextTextBox_DoubleClick(object sender, EventArgs e) {
-      changeSubtitleColor();
+    private void SubTitleTextTextBoxDoubleClick(object sender, EventArgs e) {
+      ChangeSubtitleColor();
     }
 
-    private void m_subTitleTextTextBox_Enter(object sender, EventArgs e) {
-      m_changeSubtitleTextButton.Focus();
+    private void SubTitleTextTextBoxEnter(object sender, EventArgs e) {
+      _changeSubtitleTextButton.Focus();
     }
 
 
-    private void m_tabControl_Enter(object sender, EventArgs e) {
-      switch (m_tabControl.SelectedIndex) {
+    private void TabControlEnter(object sender, EventArgs e) {
+      switch (_tabControl.SelectedIndex) {
         case (int) Tab.Objects:
-          setObjectsTabFocus();
+          SetObjectsTabFocus();
           break;
         case (int) Tab.Description:
-          setDescriptionTabFocus();
+          SetDescriptionTabFocus();
           break;
         case (int) Tab.Regions:
-          setRegionsTabFocus();
+          SetRegionsTabFocus();
           break;
         case (int) Tab.Colors:
-          setColorsTabFocus();
+          SetColorsTabFocus();
           break;
       }
     }
 
 
-    private void pnlSampleRoomShape_Paint(object sender, PaintEventArgs e) {
+    private void PnlSampleRoomShapePaint(object sender, PaintEventArgs e) {
       var graph = e.Graphics;
       graph.SmoothingMode = SmoothingMode.AntiAlias;
       var pen = new Pen(Color.Black, 2.0f) {LineJoin = LineJoin.Round};
@@ -630,12 +630,12 @@ namespace Trizbort.UI {
       var rect = new RectangleF(10, 10, 3 * Settings.GridSize, 2 * Settings.GridSize);
       var handDrawn = IsPreviewHandDrawn;
       var random = Sketch.Seeded(0);
-      var shape = cboDrawType.SelectedItem?.ToString();
+      var shape = _cboDrawType.SelectedItem?.ToString();
 
       PointF[] outline;
       if (shape == "Rounded Corners") {
-        var outlinePoints = Sketch.RoundedRectangle(rect, (float) txtTopLeft.Value, (float) txtTopRight.Value,
-          (float) txtBottomRight.Value, (float) txtBottomLeft.Value);
+        var outlinePoints = Sketch.RoundedRectangle(rect, (float) _txtTopLeft.Value, (float) _txtTopRight.Value,
+          (float) _txtBottomRight.Value, (float) _txtBottomLeft.Value);
         outline = handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints;
       } else if (shape == "Ellipse") {
         var outlinePoints = Sketch.Ellipse(rect);
@@ -664,10 +664,10 @@ namespace Trizbort.UI {
     }
 
     private void PositionCheckBox_CheckedChanged(object sender, EventArgs e) {
-      if (_mAdjustingPosition)
+      if (_adjustingPosition)
         return;
 
-      _mAdjustingPosition = true;
+      _adjustingPosition = true;
       try {
         var checkBox = (CheckBox) sender;
         if (checkBox.Checked)
@@ -676,36 +676,36 @@ namespace Trizbort.UI {
             if (box != null && other != checkBox) box.Checked = false;
           }
         else
-          m_sCheckBox.Checked = true;
+          _southCheckBox.Checked = true;
       }
       finally {
-        _mAdjustingPosition = false;
+        _adjustingPosition = false;
       }
     }
 
 
-    private void redrawSampleOnChange(object sender, EventArgs e) {
-      if (sender == txtTopLeft && chkCornersSame.Checked) {
-        txtBottomLeft.Value = txtTopLeft.Value;
-        txtBottomRight.Value = txtTopLeft.Value;
-        txtTopRight.Value = txtTopLeft.Value;
+    private void RedrawSampleOnChange(object sender, EventArgs e) {
+      if (sender == _txtTopLeft && _chkCornersSame.Checked) {
+        _txtBottomLeft.Value = _txtTopLeft.Value;
+        _txtBottomRight.Value = _txtTopLeft.Value;
+        _txtTopRight.Value = _txtTopLeft.Value;
       }
 
-      pnlSampleRoomShape.Invalidate();
+      _pnlSampleRoomShape.Invalidate();
     }
 
     private void RegionListBox_DrawItem(object sender, DrawItemEventArgs e) {
       using var palette = new Palette();
       e.DrawBackground();
 
-      var colorBounds = new Rectangle(e.Bounds.Left + HORIZONTAL_MARGIN, e.Bounds.Top + VERTICAL_MARGIN, WIDTH,
-        e.Bounds.Height - VERTICAL_MARGIN * 2);
-      var textBounds = new Rectangle(colorBounds.Right + HORIZONTAL_MARGIN, e.Bounds.Top,
-        e.Bounds.Width - colorBounds.Width - HORIZONTAL_MARGIN * 2, e.Bounds.Height);
-      var firstOrDefault = Settings.Regions.FirstOrDefault(p => p.RegionName == cboRegion.Items[e.Index].ToString());
+      var colorBounds = new Rectangle(e.Bounds.Left + HorizontalMargin, e.Bounds.Top + VerticalMargin, ColorSwatchWidth,
+        e.Bounds.Height - VerticalMargin * 2);
+      var textBounds = new Rectangle(colorBounds.Right + HorizontalMargin, e.Bounds.Top,
+        e.Bounds.Width - colorBounds.Width - HorizontalMargin * 2, e.Bounds.Height);
+      var firstOrDefault = Settings.Regions.FirstOrDefault(p => p.RegionName == _cboRegion.Items[e.Index].ToString());
       if (firstOrDefault != null) e.Graphics.FillRectangle(palette.Brush(firstOrDefault.RColor), colorBounds);
       e.Graphics.DrawRectangle(palette.Pen(e.ForeColor, 0), colorBounds);
-      e.Graphics.DrawString(cboRegion.Items[e.Index].ToString(), e.Font, palette.Brush(e.ForeColor), textBounds,
+      e.Graphics.DrawString(_cboRegion.Items[e.Index].ToString(), e.Font, palette.Brush(e.ForeColor), textBounds,
         StringFormats.Left);
     }
 
@@ -713,90 +713,90 @@ namespace Trizbort.UI {
       if (e.Alt)
         switch (e.KeyCode) {
           case Keys.Y:
-            cboBorderStyle.Focus();
+            _cboBorderStyle.Focus();
             break;
 
           case Keys.F:
-            changeRoomFillColor();
+            ChangeRoomFillColor();
             break;
 
           case Keys.S:
-            changeSecondFillColor();
+            ChangeSecondFillColor();
             break;
 
           case Keys.B:
-            changeRoomBorderColor();
+            ChangeRoomBorderColor();
             break;
 
           case Keys.T:
-            changeRoomTextColor();
+            ChangeRoomTextColor();
             break;
 
           case Keys.J:
-            changeObjectTextColor();
+            ChangeObjectTextColor();
             break;
 
           case Keys.O:
-            m_tabControl.SelectedIndex = (int) Tab.Objects;
-            setObjectsTabFocus();
+            _tabControl.SelectedIndex = (int) Tab.Objects;
+            SetObjectsTabFocus();
             break;
 
           case Keys.E:
-            m_tabControl.SelectedIndex = (int) Tab.Description;
-            setDescriptionTabFocus();
+            _tabControl.SelectedIndex = (int) Tab.Description;
+            SetDescriptionTabFocus();
             break;
 
           case Keys.G:
-            m_tabControl.SelectedIndex = (int) Tab.Regions;
-            setRegionsTabFocus();
+            _tabControl.SelectedIndex = (int) Tab.Regions;
+            SetRegionsTabFocus();
             break;
 
           case Keys.C:
-            m_tabControl.SelectedIndex = (int) Tab.Colors;
-            setColorsTabFocus();
+            _tabControl.SelectedIndex = (int) Tab.Colors;
+            SetColorsTabFocus();
             break;
         }
     }
 
-    private static void selectAllHandler(object sender, KeyEventArgs e) {
+    private static void SelectAllHandler(object sender, KeyEventArgs e) {
       if (e.Control && e.KeyCode == Keys.A) {
         ((TextBox) sender).SelectAll();
         e.Handled = true;
       }
     }
 
-    private void setColorsTabFocus() {
-      m_changeRoomFillButton.Focus();
+    private void SetColorsTabFocus() {
+      _changeRoomFillButton.Focus();
     }
 
-    private void setDescriptionTabFocus() {
-      m_descriptionTextBox.Focus();
-      m_descriptionTextBox.SelectAll();
+    private void SetDescriptionTabFocus() {
+      _descriptionTextBox.Focus();
+      _descriptionTextBox.SelectAll();
     }
 
-    private void setObjectsTabFocus() {
-      txtObjects.Focus();
+    private void SetObjectsTabFocus() {
+      _txtObjects.Focus();
     }
 
-    private void setRegionsTabFocus() {
-      cboRegion.Focus();
+    private void SetRegionsTabFocus() {
+      _cboRegion.Focus();
     }
 
-    private void txtObjects_KeyDown(object sender, KeyEventArgs e) {
-      selectAllHandler(sender, e);
+    private void TxtObjectsKeyDown(object sender, KeyEventArgs e) {
+      SelectAllHandler(sender, e);
       if (e.Handled) return;
 
       ObjectListEditor.EditResult? result = null;
       if (e.KeyCode == Keys.Tab && !e.Control && !e.Alt)
-        result = ObjectListEditor.ChangeIndent(txtObjects.Text, txtObjects.SelectionStart, txtObjects.SelectionLength, e.Shift);
+        result = ObjectListEditor.ChangeIndent(_txtObjects.Text, _txtObjects.SelectionStart, _txtObjects.SelectionLength, e.Shift);
       else if (e.KeyCode == Keys.Enter && e.Modifiers == Keys.None)
-        result = ObjectListEditor.NewLine(txtObjects.Text, txtObjects.SelectionStart, txtObjects.SelectionLength);
+        result = ObjectListEditor.NewLine(_txtObjects.Text, _txtObjects.SelectionStart, _txtObjects.SelectionLength);
 
       if (result == null) return;
 
-      txtObjects.Text = result.Value.Text;
-      txtObjects.Select(result.Value.SelectionStart, result.Value.SelectionLength);
-      txtObjects.ScrollToCaret();
+      _txtObjects.Text = result.Value.Text;
+      _txtObjects.Select(result.Value.SelectionStart, result.Value.SelectionLength);
+      _txtObjects.ScrollToCaret();
       e.Handled = true;
       e.SuppressKeyPress = true;
     }

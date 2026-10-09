@@ -35,8 +35,8 @@ namespace Trizbort.Export.Languages {
         foreach (var direction in Directions.AllDirections) {
           var exit = location.GetBestExit(direction);
           if (exit != null) {
-            writer.WriteLine("    <exit alias=\"{0}\" to=\"{1}\">", toQuestPropertyName(direction), exit.Target.ExportName);
-            writer.WriteLine("      <inherit name=\"{0}direction\" />", toQuestPropertyName(direction));
+            writer.WriteLine("    <exit alias=\"{0}\" to=\"{1}\">", ToQuestPropertyName(direction), exit.Target.ExportName);
+            writer.WriteLine("      <inherit name=\"{0}direction\" />", ToQuestPropertyName(direction));
             writer.WriteLine("    </exit>");
           }
         }
@@ -84,15 +84,15 @@ namespace Trizbort.Export.Languages {
     protected override void ExportHeader(TextWriter writer, string title, string author, string description, string history) { }
 
     protected override string GetExportName(Room room, int? suffix) {
-      return getExportName(room.Name, suffix);
+      return CreateExportName(room.Name, suffix);
     }
 
     protected override string GetExportName(string displayName, int? suffix) {
-      return getExportName(displayName, suffix);
+      return CreateExportName(displayName, suffix);
     }
 
-    private static string getExportName(string displayName, int? suffix) {
-      var name = stripOddCharacters(displayName);
+    private static string CreateExportName(string displayName, int? suffix) {
+      var name = StripOddCharacters(displayName);
       if (string.IsNullOrEmpty(name)) name = "item";
 
       if (suffix != null) name = $"{name}{suffix}";
@@ -100,7 +100,7 @@ namespace Trizbort.Export.Languages {
       return name;
     }
 
-    private static string stripOddCharacters(string text, params char[] exclude) {
+    private static string StripOddCharacters(string text, params char[] exclude) {
       var exclusions = new List<char>(exclude);
       if (string.IsNullOrEmpty(text)) return string.Empty;
       var result = string.Empty;
@@ -111,7 +111,7 @@ namespace Trizbort.Export.Languages {
     }
 
 
-    private static string toQuestPropertyName(MappableDirection direction) {
+    private static string ToQuestPropertyName(MappableDirection direction) {
       switch (direction) {
         case MappableDirection.North:
           return "north";

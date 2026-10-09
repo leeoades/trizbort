@@ -55,30 +55,30 @@ namespace Trizbort.Domain.Controllers {
 
     public void SetConnectionFlow(ConnectionFlow connectionFlow) {
       var elements = _canvas.SelectedConnections;
-      setConnectionFlow(elements, connectionFlow);
+      SetConnectionFlow(elements, connectionFlow);
     }
 
     public void SetConnectionLabel(ConnectionLabel label) {
       var elements = _canvas.SelectedConnections;
-      setConnectionLabel(elements, label);
+      SetConnectionLabel(elements, label);
     }
 
     public void SetConnectionStyle(ConnectionStyle style) {
       var elements = _canvas.SelectedConnections;
-      setConnectionStyle(elements, style);
+      SetConnectionStyle(elements, style);
     }
 
-    private void setConnectionFlow(List<Connection> connections, ConnectionFlow connectionFlow) {
+    private void SetConnectionFlow(List<Connection> connections, ConnectionFlow connectionFlow) {
       connections.ForEach(p => p.Flow = connectionFlow);
       _canvas.NewConnectionFlow = connectionFlow;
     }
 
-    private void setConnectionLabel(List<Connection> connections, ConnectionLabel label) {
+    private void SetConnectionLabel(List<Connection> connections, ConnectionLabel label) {
       connections.ForEach(p => p.SetText(label));
       _canvas.NewConnectionLabel = label;
     }
 
-    private void setConnectionStyle(List<Connection> connections, ConnectionStyle style) {
+    private void SetConnectionStyle(List<Connection> connections, ConnectionStyle style) {
       connections.ForEach(p => p.Style = style);
       _canvas.NewConnectionStyle = style;
     }

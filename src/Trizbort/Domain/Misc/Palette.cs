@@ -15,117 +15,117 @@ namespace Trizbort.Domain.Misc {
   ///   and then only once.
   /// </remarks>
   public class Palette : IDisposable {
-    private readonly List<IDisposable> _mItems = new List<IDisposable>();
-    private Brush _mBorderBrush;
-    private Pen _mBorderPen;
-    private Brush _mCanvasBrush;
-    private Pen _mDashedLinePen;
-    private Brush _mFillBrush;
+    private readonly List<IDisposable> _items = new List<IDisposable>();
+    private Brush _borderBrush;
+    private Pen _borderPen;
+    private Brush _canvasBrush;
+    private Pen _dashedLinePen;
+    private Brush _fillBrush;
     // TODO: private Pen m_fillPen;
-    private Pen _mGridPen;
-    private Pen _mHoverDashedLinePen;
-    private Brush _mHoverLineBrush;
-    private Pen _mHoverLinePen;
+    private Pen _gridPen;
+    private Pen _hoverDashedLinePen;
+    private Brush _hoverLineBrush;
+    private Pen _hoverLinePen;
 
-    private Brush _mLineBrush;
+    private Brush _lineBrush;
 
-    private Pen _mLinePen;
-    private Brush _mLineTextBrush;
-    private Pen _mMarqueeBorderPen;
-    private Brush _mMarqueeFillBrush;
-    private Pen _mResizeBorderPen;
-    private Pen _mSelectedDashedLinePen;
-    private Brush _mSelectedLineBrush;
-    private Pen _mSelectedLinePen;
-    private Brush _mSmallTextBrush;
-    private Brush _mSubTitleTextBrush;
+    private Pen _linePen;
+    private Brush _lineTextBrush;
+    private Pen _marqueeBorderPen;
+    private Brush _marqueeFillBrush;
+    private Pen _resizeBorderPen;
+    private Pen _selectedDashedLinePen;
+    private Brush _selectedLineBrush;
+    private Pen _selectedLinePen;
+    private Brush _smallTextBrush;
+    private Brush _subTitleTextBrush;
     // TODO: private Pen m_subTitleTextPen;
 
-    public Brush BorderBrush => _mBorderBrush ?? (_mBorderBrush = Brush(Settings.Color[Colors.Border]));
+    public Brush BorderBrush => _borderBrush ?? (_borderBrush = Brush(Settings.Color[Colors.Border]));
 
-    public Pen BorderPen => _mBorderPen ?? (_mBorderPen = Pen(Settings.Color[Colors.Border]));
+    public Pen BorderPen => _borderPen ?? (_borderPen = Pen(Settings.Color[Colors.Border]));
 
-    public Brush CanvasBrush => _mCanvasBrush ?? (_mCanvasBrush = Brush(Settings.Color[Colors.Canvas]));
+    public Brush CanvasBrush => _canvasBrush ?? (_canvasBrush = Brush(Settings.Color[Colors.Canvas]));
 
     public Pen DashedLinePen {
       get {
-        if (_mDashedLinePen == null) {
-          _mDashedLinePen = Pen(Settings.Color[Colors.Line]);
-          _mDashedLinePen.DashStyle = DashStyle.Dot;
+        if (_dashedLinePen == null) {
+          _dashedLinePen = Pen(Settings.Color[Colors.Line]);
+          _dashedLinePen.DashStyle = DashStyle.Dot;
         }
 
-        return _mDashedLinePen;
+        return _dashedLinePen;
       }
     }
 
-    public Brush FillBrush => _mFillBrush ?? (_mFillBrush = Brush(Color.White));
+    public Brush FillBrush => _fillBrush ?? (_fillBrush = Brush(Color.White));
 
     //public Pen FillPen
     //{
     //    get { return m_fillPen ?? (m_fillPen = Pen(Settings.Color[Colors.Fill])); }
     //}
 
-    public Pen GridPen => _mGridPen ?? (_mGridPen = Pen(Settings.Color[Colors.Grid], 0));
+    public Pen GridPen => _gridPen ?? (_gridPen = Pen(Settings.Color[Colors.Grid], 0));
 
     public Pen HoverDashedLinePen {
       get {
-        if (_mHoverDashedLinePen == null) {
-          _mHoverDashedLinePen = Pen(Settings.Color[Colors.HoverLine]);
-          _mHoverDashedLinePen.DashStyle = DashStyle.Dot;
+        if (_hoverDashedLinePen == null) {
+          _hoverDashedLinePen = Pen(Settings.Color[Colors.HoverLine]);
+          _hoverDashedLinePen.DashStyle = DashStyle.Dot;
         }
 
-        return _mHoverDashedLinePen;
+        return _hoverDashedLinePen;
       }
     }
 
-    public Brush HoverLineBrush => _mHoverLineBrush ?? (_mHoverLineBrush = Brush(Settings.Color[Colors.HoverLine]));
-    public Pen HoverLinePen => _mHoverLinePen ?? (_mHoverLinePen = Pen(Settings.Color[Colors.HoverLine]));
+    public Brush HoverLineBrush => _hoverLineBrush ?? (_hoverLineBrush = Brush(Settings.Color[Colors.HoverLine]));
+    public Pen HoverLinePen => _hoverLinePen ?? (_hoverLinePen = Pen(Settings.Color[Colors.HoverLine]));
 
-    public Brush LineBrush => _mLineBrush ?? (_mLineBrush = Brush(Settings.Color[Colors.Line]));
-    public Pen LinePen => _mLinePen ?? (_mLinePen = Pen(Settings.Color[Colors.Line]));
-    public Brush LineTextBrush => _mLineTextBrush ?? (_mLineTextBrush = Brush(Settings.Color[Colors.LineText]));
+    public Brush LineBrush => _lineBrush ?? (_lineBrush = Brush(Settings.Color[Colors.Line]));
+    public Pen LinePen => _linePen ?? (_linePen = Pen(Settings.Color[Colors.Line]));
+    public Brush LineTextBrush => _lineTextBrush ?? (_lineTextBrush = Brush(Settings.Color[Colors.LineText]));
 
-    public Pen MarqueeBorderPen => _mMarqueeBorderPen ?? (_mMarqueeBorderPen = Pen(Color.FromArgb(120, Settings.Color[Colors.Border]), 0));
-    public Brush MarqueeFillBrush => _mMarqueeFillBrush ?? (_mMarqueeFillBrush = Brush(Color.FromArgb(80, Settings.Color[Colors.Border])));
+    public Pen MarqueeBorderPen => _marqueeBorderPen ?? (_marqueeBorderPen = Pen(Color.FromArgb(120, Settings.Color[Colors.Border]), 0));
+    public Brush MarqueeFillBrush => _marqueeFillBrush ?? (_marqueeFillBrush = Brush(Color.FromArgb(80, Settings.Color[Colors.Border])));
 
-    public Pen ResizeBorderPen => _mResizeBorderPen ?? (_mResizeBorderPen = Pen(Color.FromArgb(64, Color.SteelBlue), 6));
+    public Pen ResizeBorderPen => _resizeBorderPen ?? (_resizeBorderPen = Pen(Color.FromArgb(64, Color.SteelBlue), 6));
 
     public Pen SelectedDashedLinePen {
       get {
-        if (_mSelectedDashedLinePen == null) {
-          _mSelectedDashedLinePen = Pen(Settings.Color[Colors.SelectedLine]);
-          _mSelectedDashedLinePen.DashStyle = DashStyle.Dot;
+        if (_selectedDashedLinePen == null) {
+          _selectedDashedLinePen = Pen(Settings.Color[Colors.SelectedLine]);
+          _selectedDashedLinePen.DashStyle = DashStyle.Dot;
         }
 
-        return _mSelectedDashedLinePen;
+        return _selectedDashedLinePen;
       }
     }
 
-    public Brush SelectedLineBrush => _mSelectedLineBrush ?? (_mSelectedLineBrush = Brush(Settings.Color[Colors.SelectedLine]));
-    public Pen SelectedLinePen => _mSelectedLinePen ?? (_mSelectedLinePen = Pen(Settings.Color[Colors.SelectedLine]));
+    public Brush SelectedLineBrush => _selectedLineBrush ?? (_selectedLineBrush = Brush(Settings.Color[Colors.SelectedLine]));
+    public Pen SelectedLinePen => _selectedLinePen ?? (_selectedLinePen = Pen(Settings.Color[Colors.SelectedLine]));
 
-    public Brush SmallTextBrush => _mSmallTextBrush ?? (_mSmallTextBrush = Brush(Settings.Color[Colors.SmallText]));
-    public Brush SubtitleTextBrush => _mSubTitleTextBrush ?? (_mSubTitleTextBrush = Brush(Settings.Color[Colors.Subtitle]));
+    public Brush SmallTextBrush => _smallTextBrush ?? (_smallTextBrush = Brush(Settings.Color[Colors.SmallText]));
+    public Brush SubtitleTextBrush => _subTitleTextBrush ?? (_subTitleTextBrush = Brush(Settings.Color[Colors.Subtitle]));
 
     public void Dispose() {
-      foreach (var item in _mItems) item.Dispose();
+      foreach (var item in _items) item.Dispose();
     }
 
     public Brush Brush(Color color) {
       var brush = new SolidBrush(color);
-      _mItems.Add(brush);
+      _items.Add(brush);
       return brush;
     }
 
     public Font Font(string familyName, float emSize) {
       var font = new Font(familyName, emSize, FontStyle.Regular, GraphicsUnit.World);
-      _mItems.Add(font);
+      _items.Add(font);
       return font;
     }
 
     public Font Font(Font prototype, FontStyle newStyle) {
       var font = new Font(prototype, newStyle);
-      _mItems.Add(font);
+      _items.Add(font);
       return font;
     }
 
@@ -160,7 +160,7 @@ namespace Trizbort.Domain.Misc {
 
     public Pen Pen(Color color, float width) {
       var pen = new Pen(color, width) {StartCap = LineCap.Round, EndCap = LineCap.Round};
-      _mItems.Add(pen);
+      _items.Add(pen);
       return pen;
     }
   }

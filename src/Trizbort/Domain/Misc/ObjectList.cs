@@ -40,12 +40,12 @@ namespace Trizbort.Domain.Misc {
   ///   </code>
   /// </summary>
   public static class ObjectList {
-    public const int TAB_INDENT = 4;
-    public const int BULLET_INDENT = 4;
-    public const string DISPLAY_BULLET = "\u2022 ";
+    public const int TabIndent = 4;
+    public const int BulletIndent = 4;
+    public const string DisplayBullet = "\u2022 ";
 
-    private static readonly Regex PropertiesRegex = new Regex(@"\[[^\]\[]*\]");
-    private static readonly char[] Bullets = {'-', '*', '\u2022'};
+    private static readonly Regex _propertiesRegex = new Regex(@"\[[^\]\[]*\]");
+    private static readonly char[] _bullets = {'-', '*', '\u2022'};
 
     public static List<ObjectListItem> Parse(string text) {
       var items = new List<ObjectListItem>();
@@ -77,12 +77,12 @@ namespace Trizbort.Domain.Misc {
 
       var content = line.Substring(position).Trim();
       var propString = string.Empty;
-      if (PropertiesRegex.IsMatch(content)) {
+      if (_propertiesRegex.IsMatch(content)) {
         propString = Regex.Replace(content, @".*\[", string.Empty);
         propString = Regex.Replace(propString, @"\].*", string.Empty);
       }
 
-      var name = PropertiesRegex.Replace(content, string.Empty).Trim();
+      var name = _propertiesRegex.Replace(content, string.Empty).Trim();
       if (string.IsNullOrEmpty(name)) return null;
 
       return new ObjectListItem {Name = name, PropString = propString, Indent = indent};
@@ -100,15 +100,15 @@ namespace Trizbort.Domain.Misc {
           indent += 1;
           ++position;
         } else if (c == '\t') {
-          indent += TAB_INDENT;
+          indent += TabIndent;
           ++position;
-        } else if (Array.IndexOf(Bullets, c) >= 0) {
+        } else if (Array.IndexOf(_bullets, c) >= 0) {
           // a run of bullet characters only counts as indentation if followed by whitespace,
           // so that names such as "-shaped key" or "*star*" are left alone
           var end = position;
-          while (end < line.Length && Array.IndexOf(Bullets, line[end]) >= 0) ++end;
+          while (end < line.Length && Array.IndexOf(_bullets, line[end]) >= 0) ++end;
           if (end >= line.Length || !char.IsWhiteSpace(line[end])) break;
-          indent += (end - position) * BULLET_INDENT;
+          indent += (end - position) * BulletIndent;
           position = end;
         } else {
           break;
@@ -139,14 +139,14 @@ namespace Trizbort.Domain.Misc {
 
       var items = Parse(text);
       if (!HasNesting(items))
-        return PropertiesRegex.Replace(text, string.Empty);
+        return _propertiesRegex.Replace(text, string.Empty);
 
       var builder = new StringBuilder();
       foreach (var item in items) {
         if (builder.Length > 0) builder.Append("\r\n");
         if (item.Depth > 0) {
           builder.Append(' ', (item.Depth - 1) * 4 + 2);
-          builder.Append(DISPLAY_BULLET);
+          builder.Append(DisplayBullet);
         }
 
         builder.Append(item.Name);

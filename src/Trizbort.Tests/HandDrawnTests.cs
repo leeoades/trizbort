@@ -63,9 +63,9 @@ namespace Trizbort.Tests {
     [Test]
     public void MapSettingAndRoomOverrides_RoundTripThroughMapFile() {
       Settings.HandDrawn = true;
-      addRooms(HandDrawnStyle.MapDefault, HandDrawnStyle.HandDrawn, HandDrawnStyle.Straight);
+      AddRooms(HandDrawnStyle.MapDefault, HandDrawnStyle.HandDrawn, HandDrawnStyle.Straight);
 
-      var loaded = saveAndReload(xml => xml);
+      var loaded = SaveAndReload(xml => xml);
 
       Settings.HandDrawn.ShouldBeTrue();
       loaded.Elements.OfType<Room>().OrderBy(room => room.Name).Select(room => room.HandDrawnStyle)
@@ -74,9 +74,9 @@ namespace Trizbort.Tests {
 
     [Test]
     public void LegacyMaps_LoadHandDrawnRoomsAsOverrides_AndTheRestAsMapDefault() {
-      addRooms(HandDrawnStyle.HandDrawn, HandDrawnStyle.Straight);
+      AddRooms(HandDrawnStyle.HandDrawn, HandDrawnStyle.Straight);
 
-      var loaded = saveAndReload(xml => {
+      var loaded = SaveAndReload(xml => {
         xml = Regex.Replace(xml, @"\s*handDrawnStyle=""[^""]*""", "");
         return Regex.Replace(xml, @"\s*<handDrawn>[^<]*</handDrawn>", "");
       });
@@ -154,14 +154,14 @@ namespace Trizbort.Tests {
       rounded.ShouldAllBe(point => point.X > -3 && point.X < 99 && point.Y > -3 && point.Y < 67);
     }
 
-    private void addRooms(params HandDrawnStyle[] styles) {
+    private void AddRooms(params HandDrawnStyle[] styles) {
       for (var index = 0; index < styles.Length; index++)
         Project.Current.Elements.Add(new Room(Project.Current) {
           Name = $"Room {index}", Position = new Vector(index * 200, 0), HandDrawnStyle = styles[index]
         });
     }
 
-    private Project saveAndReload(Func<string, string> transform) {
+    private Project SaveAndReload(Func<string, string> transform) {
       var fileName = Path.GetTempFileName();
       try {
         new LegacyMapFileEngine(Project.Current).Save(fileName).ShouldBeTrue();

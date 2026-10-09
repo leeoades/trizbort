@@ -84,8 +84,8 @@ namespace Trizbort.Extensions {
       var g = rgb.G;
       var b = rgb.B;
 
-      var max = ColorExtensions.max(r, g, b);
-      var min = ColorExtensions.min(r, g, b);
+      var max = ColorExtensions.Max(r, g, b);
+      var min = ColorExtensions.Min(r, g, b);
       var chroma = max - min;
       var hue2 = 0d;
       if (chroma != 0)
@@ -107,12 +107,12 @@ namespace Trizbort.Extensions {
       };
     }
 
-    private static double max(double d1, double d2, double d3) {
+    private static double Max(double d1, double d2, double d3) {
       if (d1 > d2) return Math.Max(d1, d3);
       return Math.Max(d2, d3);
     }
 
-    private static double min(double d1, double d2, double d3) {
+    private static double Min(double d1, double d2, double d3) {
       if (d1 < d2) return Math.Min(d1, d3);
       return Math.Min(d2, d3);
     }

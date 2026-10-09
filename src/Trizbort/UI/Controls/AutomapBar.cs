@@ -7,7 +7,7 @@ namespace Trizbort.UI.Controls {
       InitializeComponent();
     }
 
-    public string Status { set => m_statusLabel.Text = value; }
+    public string Status { set => _statusLabel.Text = value; }
 
     public event EventHandler StopClick;
 

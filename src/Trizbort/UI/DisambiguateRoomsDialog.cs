@@ -11,31 +11,31 @@ namespace Trizbort.UI
         {
             InitializeComponent();
 
-            m_thisRoomButton.Enabled = false;
+            _thisRoomButton.Enabled = false;
         }
 
         public void SetTranscriptContext(string roomName, string roomDescription, string line)
         {
-            m_transcriptContextTextBox.Text = string.Format("{0}\n{1}", line, roomDescription).Replace("\r", string.Empty).Replace("\n", "\r\n");
+            _transcriptContextTextBox.Text = string.Format("{0}\n{1}", line, roomDescription).Replace("\r", string.Empty).Replace("\n", "\r\n");
         }
 
         protected override void OnLoad(EventArgs e)
         {
-            if (m_roomNamesListBox.Items.Count == 1)
+            if (_roomNamesListBox.Items.Count == 1)
             {
                 // if there's only one option, select it
-                m_roomNamesListBox.SelectedIndex = 0;
+                _roomNamesListBox.SelectedIndex = 0;
             }
 
-            m_transcriptContextTextBox.Focus();
-            m_transcriptContextTextBox.Select(0, 0);
+            _transcriptContextTextBox.Focus();
+            _transcriptContextTextBox.Select(0, 0);
 
             base.OnLoad(e);
         }
 
         public void AddAmbiguousRoom(Room room)
         {
-            m_roomNamesListBox.Items.Add(new AmbiguousRoom(room));
+            _roomNamesListBox.Items.Add(new AmbiguousRoom(room));
         }
 
         public void AddAmbiguousRooms(IEnumerable<Room> rooms)
@@ -48,16 +48,16 @@ namespace Trizbort.UI
 
         private void RoomNamesListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (m_roomNamesListBox.SelectedIndex != -1)
+            if (_roomNamesListBox.SelectedIndex != -1)
             {
-                m_thisRoomButton.Enabled = true;
-                var room = (m_roomNamesListBox.SelectedItem as AmbiguousRoom).Room;
-                m_roomDescriptionTextBox.Text = room.PrimaryDescription;
+                _thisRoomButton.Enabled = true;
+                var room = (_roomNamesListBox.SelectedItem as AmbiguousRoom).Room;
+                _roomDescriptionTextBox.Text = room.PrimaryDescription;
             }
             else
             {
-                m_thisRoomButton.Enabled = false;
-                m_roomDescriptionTextBox.Text = string.Empty;
+                _thisRoomButton.Enabled = false;
+                _roomDescriptionTextBox.Text = string.Empty;
             }
         }
 
@@ -65,9 +65,9 @@ namespace Trizbort.UI
         {
             get
             {
-                if (DialogResult == DialogResult.Yes && m_roomNamesListBox.SelectedIndex != -1)
+                if (DialogResult == DialogResult.Yes && _roomNamesListBox.SelectedIndex != -1)
                 {
-                    return (m_roomNamesListBox.SelectedItem as AmbiguousRoom).Room;
+                    return (_roomNamesListBox.SelectedItem as AmbiguousRoom).Room;
                 }
                 return null;
             }

@@ -12,11 +12,11 @@ namespace Trizbort.UI {
   }
 
   internal static class UserInteraction {
-    private static IUserInteraction sCurrent = new WindowsUserInteraction();
+    private static IUserInteraction _current = new WindowsUserInteraction();
 
     internal static IUserInteraction Current {
-      get => sCurrent;
-      set => sCurrent = value ?? throw new ArgumentNullException(nameof(value));
+      get => _current;
+      set => _current = value ?? throw new ArgumentNullException(nameof(value));
     }
 
     public static DialogResult ShowMessage(string text, string caption = "", MessageBoxButtons buttons = MessageBoxButtons.OK,

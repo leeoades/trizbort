@@ -35,24 +35,24 @@ Every language exporter must implement:
   produce valid, unique language identifiers from arbitrary room/object display names.
 
 Public entry points: `string Export()` (returns generated source as a string) and
-`void Export(string fileName)` (writes directly to a file). Both call `prepareContent()` first.
+`void Export(string fileName)` (writes directly to a file). Both call `PrepareContent()` first.
 Preparation clears prior locations/regions/name lookup state, so an exporter instance can be
 reused after map edits or switching projects without accumulating output.
 
-### `prepareContent()` — shared input preparation (same for every language)
+### `PrepareContent()` — shared input preparation (same for every language)
 
-1. `findRegions()` — iterates the map-level `Settings.Regions` list (not `Room.Region` directly),
+1. `FindRegions()` — iterates the map-level `Settings.Regions` list (not `Room.Region` directly),
    excludes the default region, and maps each to an `ExportRegion` with a unique generated name.
    Note this list can contain regions no room actually uses — exporters rely on it for
    name/lookup purposes, not as a "distinct regions actually in use" computation.
-2. `findRooms()` — iterates `Project.Current.Elements.OfType<Room>()`, builds a `Location` per
+2. `FindRooms()` — iterates `Project.Current.Elements.OfType<Room>()`, builds a `Location` per
    room with a unique generated name.
-3. `findExits()` — iterates `Project.Current.Elements.OfType<Connection>()`, resolves each
+3. `FindExits()` — iterates `Project.Current.Elements.OfType<Connection>()`, resolves each
    connection's source/target room + compass point (via `Connection.GetSourceRoom`/
    `GetTargetRoom`, see [`02-domain-model.md`](02-domain-model.md)), and records `Exit` objects.
-4. `pickBestExits()` — when multiple connections could serve as "the" exit in a given direction,
+4. `PickBestExits()` — when multiple connections could serve as "the" exit in a given direction,
    picks the preferred one.
-5. `findThings()` — parses each room's free-text `Objects` field into structured `Thing`
+5. `FindThings()` — parses each room's free-text `Objects` field into structured `Thing`
    objects (`Export\Domain\Thing.cs`) via the shared `Domain\Misc\ObjectList.Parse` (also used by
    `Room.Draw` for map display). **Indentation indicates containment** (a more-indented
    line is "inside" the preceding less-indented one); indentation may be spaces, tabs, or
@@ -76,18 +76,18 @@ exporter at once** — check `CodeExporter` before assuming a bug is language-sp
 - `ExportHeader()` emits story title/author/description, a generated-map "volume", and a
   history "chapter".
 - `ExportContent()` emits regionless rooms first, then each region as an Inform 7
-  book+region, calling `printThisLoc()` per room.
-- `printThisLoc()` emits the room declaration (`Room.PrimaryDescription`, dark-room state,
+  book+region, calling `PrintThisLoc()` per room.
+- `PrintThisLoc()` emits the room declaration (`Room.PrimaryDescription`, dark-room state,
   region membership, start-room marker), then iterates `Location.Things` to emit object prose
-  (article selection, type/properties via `whatItIs()` — handles persons/scenery/containers/
+  (article selection, type/properties via `WhatItIs()` — handles persons/scenery/containers/
   supporters/plural/proper-named objects — containment as `in`/`part of`/`carried by`/`worn
   by`, plus `Understand ... as ...` synonyms), then loops `Directions.AllDirections` and, for
-  each direction with a `GetBestExit`, emits either a plain exit (`writeNormalExit`) or a door
-  (`writeDoor`, including lock state).
+  each direction with a `GetBestExit`, emits either a plain exit (`WriteNormalExit`) or a door
+  (`WriteDoor`, including lock state).
 - Reciprocal connections are marked exported once they're emitted in one direction so they
   aren't duplicated; genuinely one-way exits emit the opposite direction as explicitly
   `nowhere`. Conditional exits become "Instead of going ..." rules.
-- `getInform7Name()` maps `MappableDirection` → Inform 7 direction names.
+- `GetInform7Name()` maps `MappableDirection` → Inform 7 direction names.
 
 Other language exporters follow the same shape (prepared `Location`/`Exit`/`Thing` data →
 language-specific header/body/direction-name/object-prose methods) — use Inform7Exporter as the
@@ -100,20 +100,20 @@ target's syntax for conventions.
 2. Implement the abstract members listed above.
 3. Add a CLI option in `CommandLineOptions.cs` if it should be scriptable (see
    [`08-cli-and-entry-point.md`](08-cli-and-entry-point.md)) and a menu item in
-   `MainForm.Designer.cs`/`MainForm.cs` calling the generic `exportCode<TExporter>()` helper.
+   `MainForm.Designer.cs`/`MainForm.cs` calling the generic `ExportCode<TExporter>()` helper.
 4. There is no plugin/registry mechanism — new exporters are wired in explicitly at both the CLI
    dispatch and the menu level.
 
 ## Image export
 
-`UI\MainForm.cs`: `FileExportImageMenuItem_Click()` → `saveImage(string fileName)`. Supports
+`UI\MainForm.cs`: `FileExportImageMenuItem_Click()` → `SaveImage(string fileName)`. Supports
 PNG/JPEG/BMP/EMF. Computes canvas content bounds, creates a GDI bitmap or enhanced metafile,
 calls `Canvas.Draw(...)` (the **same** draw method used for on-screen rendering — see
 [`05-ui-and-canvas.md`](05-ui-and-canvas.md)) against it, and saves the result.
 
 ## PDF export
 
-`UI\MainForm.cs`: `FileExportPDFMenuItem_Click()` → `savePDF(string fileName)` →
+`UI\MainForm.cs`: `FileExportPDFMenuItem_Click()` → `SavePDF(string fileName)` →
 `MapPdfExporter.Save(Canvas, fileName)`. Creates a
 `PdfDocument`/page sized to the canvas content bounds, renders via
 `XGraphics.FromPdfPage(...)` + `Canvas.Draw(...)`, and adds room descriptions as

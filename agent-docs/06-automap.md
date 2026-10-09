@@ -144,10 +144,10 @@ commands, **and** `SingleStep`/`ContinueTranscript`/`AssumeTwoWayConnections`) a
 `ApplicationSettings.Automap` is a plain `AutomapSettings` struct field, and
 `ApplicationSettingsController.SaveSettings()` serializes the whole `ApplicationSettings` object
 to `appsettings.json` with `JsonConvert.SerializeObject` — every public field of the struct goes
-in, not just the subset the legacy-XML migration path (`loadLegacyAppSettings()`) happens to map.
+in, not just the subset the legacy-XML migration path (`LoadLegacyAppSettings()`) happens to map.
 `UI\AutomapDialog.cs`'s `Data` property round-trips all nine fields to/from its controls
-(`SingleStep` ↔ `m_singleStepCheckBox`, `ContinueTranscript` ↔ `m_startFromEndCheckBox`,
-`AssumeTwoWayConnections` ↔ `chkAssumeTwoWayConnections`, etc.) — see
+(`SingleStep` ↔ `_singleStepCheckBox`, `ContinueTranscript` ↔ `_startFromEndCheckBox`,
+`AssumeTwoWayConnections` ↔ `_chkAssumeTwoWayConnections`, etc.) — see
 [`03-storage-and-persistence.md`](03-storage-and-persistence.md) for the broader settings picture.
 
 ## Debugging a bad automap result

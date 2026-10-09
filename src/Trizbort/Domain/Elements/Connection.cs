@@ -26,36 +26,36 @@ namespace Trizbort.Domain.Elements {
   /// </remarks>
   [SuppressMessage("ReSharper", "CanBeReplacedWithTryCastAndCheckForNull")]
   public class Connection : Element {
-    public const string UP = "up";
-    public const string DOWN = "down";
-    public const string IN = "in";
-    public const string OUT = "out";
-    private const ConnectionStyle DEFAULT_STYLE = ConnectionStyle.Solid;
-    private const ConnectionFlow DEFAULT_FLOW = ConnectionFlow.TwoWay;
-    private const int CURVE_SUBDIVISIONS = 16;
-    private static readonly string[] CurveWaypointAttributeNames = {"curveQuarter", "curveMiddle", "curveThreeQuarter"};
-    private readonly Vector?[] _mCurveWaypoints = new Vector?[3];
-    private readonly TextBlock _mEndText = new TextBlock();
-    private readonly TextBlock _mMidText = new TextBlock();
-    private readonly List<LineSegment> _mSmartSegments = new List<LineSegment>();
-    private readonly TextBlock _mStartText = new TextBlock();
+    public const string Up = "up";
+    public const string Down = "down";
+    public const string In = "in";
+    public const string Out = "out";
+    private const ConnectionStyle DefaultStyle = ConnectionStyle.Solid;
+    private const ConnectionFlow DefaultFlow = ConnectionFlow.TwoWay;
+    private const int CurveSubdivisions = 16;
+    private static readonly string[] _curveWaypointAttributeNames = {"curveQuarter", "curveMiddle", "curveThreeQuarter"};
+    private readonly Vector?[] _curveWaypoints = new Vector?[3];
+    private readonly TextBlock _endText = new TextBlock();
+    private readonly TextBlock _midText = new TextBlock();
+    private readonly List<LineSegment> _smartSegments = new List<LineSegment>();
+    private readonly TextBlock _startText = new TextBlock();
     private string _description = string.Empty;
     private Door _door;
-    private Color _mConnectionColor = Color.Transparent;
-    private ConnectionFlow _mFlow = DEFAULT_FLOW;
-    private ConnectionStyle _mStyle = DEFAULT_STYLE;
+    private Color _connectionColor = Color.Transparent;
+    private ConnectionFlow _flow = DefaultFlow;
+    private ConnectionStyle _style = DefaultStyle;
     private string _name = string.Empty;
 
     public Connection() { }
 
     public Connection(Project project) : base(project) {
-      initEvents();
+      InitEvents();
     }
 
     // Added this second constructor to be used when loading a room
     // This constructor is significantly faster as it doesn't look for gap in the element IDs
     public Connection(Project project, int totalIDs) : base(project, totalIDs) {
-      initEvents();
+      InitEvents();
     }
 
     public Connection(Project project, Vertex a, Vertex b)
@@ -85,10 +85,10 @@ namespace Trizbort.Domain.Elements {
     }
 
     public Color ConnectionColor {
-      get => _mConnectionColor;
+      get => _connectionColor;
       set {
-        if (_mConnectionColor != value) {
-          _mConnectionColor = value;
+        if (_connectionColor != value) {
+          _connectionColor = value;
           RaiseChanged();
         }
       }
@@ -117,20 +117,20 @@ namespace Trizbort.Domain.Elements {
     }
 
     public string EndText {
-      get => _mEndText.Text;
+      get => _endText.Text;
       set {
-        if (_mEndText.Text != value) {
-          _mEndText.Text = value;
+        if (_endText.Text != value) {
+          _endText.Text = value;
           RaiseChanged();
         }
       }
     }
 
     public ConnectionFlow Flow {
-      get => _mFlow;
+      get => _flow;
       set {
-        if (_mFlow != value) {
-          _mFlow = value;
+        if (_flow != value) {
+          _flow = value;
           RaiseChanged();
         }
       }
@@ -139,10 +139,10 @@ namespace Trizbort.Domain.Elements {
     public override bool HasDialog => true;
 
     public string MidText {
-      get => _mMidText.Text;
+      get => _midText.Text;
       set {
-        if (_mMidText.Text != value) {
-          _mMidText.Text = value;
+        if (_midText.Text != value) {
+          _midText.Text = value;
           RaiseChanged();
         }
       }
@@ -159,20 +159,20 @@ namespace Trizbort.Domain.Elements {
     }
 
     public string StartText {
-      get => _mStartText.Text;
+      get => _startText.Text;
       set {
-        if (_mStartText.Text != value) {
-          _mStartText.Text = value;
+        if (_startText.Text != value) {
+          _startText.Text = value;
           RaiseChanged();
         }
       }
     }
 
     public ConnectionStyle Style {
-      get => _mStyle;
+      get => _style;
       set {
-        if (_mStyle != value) {
-          _mStyle = value;
+        if (_style != value) {
+          _style = value;
           RaiseChanged();
         }
       }
@@ -188,35 +188,35 @@ namespace Trizbort.Domain.Elements {
 
     public bool IsDangling => VertexList.Count < 2 || VertexList[0].Port == null || VertexList[VertexList.Count - 1].Port == null;
 
-    public bool HasCurveWaypoints => SupportsCurveWaypoints && _mCurveWaypoints.Any(w => w.HasValue);
+    public bool HasCurveWaypoints => SupportsCurveWaypoints && _curveWaypoints.Any(w => w.HasValue);
 
     public Vector? GetCurveWaypoint(CurveWaypoint waypoint) {
-      return _mCurveWaypoints[(int) waypoint];
+      return _curveWaypoints[(int) waypoint];
     }
 
     public void SetCurveWaypoint(CurveWaypoint waypoint, Vector? position) {
-      if (_mCurveWaypoints[(int) waypoint] == position) return;
-      _mCurveWaypoints[(int) waypoint] = position;
+      if (_curveWaypoints[(int) waypoint] == position) return;
+      _curveWaypoints[(int) waypoint] = position;
       RaiseChanged();
     }
 
     public bool RemoveCurveWaypoint(CurveWaypoint waypoint) {
-      if (!_mCurveWaypoints[(int) waypoint].HasValue) return false;
+      if (!_curveWaypoints[(int) waypoint].HasValue) return false;
       SetCurveWaypoint(waypoint, null);
       return true;
     }
 
     public void ClearCurveWaypoints() {
-      if (!_mCurveWaypoints.Any(w => w.HasValue)) return;
-      for (var i = 0; i < _mCurveWaypoints.Length; ++i) _mCurveWaypoints[i] = null;
+      if (!_curveWaypoints.Any(w => w.HasValue)) return;
+      for (var i = 0; i < _curveWaypoints.Length; ++i) _curveWaypoints[i] = null;
       RaiseChanged();
     }
 
     public void MoveCurveWaypointsBy(Vector delta) {
-      if (delta == Vector.Zero || !_mCurveWaypoints.Any(w => w.HasValue)) return;
-      for (var i = 0; i < _mCurveWaypoints.Length; ++i)
-        if (_mCurveWaypoints[i].HasValue)
-          _mCurveWaypoints[i] = _mCurveWaypoints[i].Value + delta;
+      if (delta == Vector.Zero || !_curveWaypoints.Any(w => w.HasValue)) return;
+      for (var i = 0; i < _curveWaypoints.Length; ++i)
+        if (_curveWaypoints[i].HasValue)
+          _curveWaypoints[i] = _curveWaypoints[i].Value + delta;
       RaiseChanged();
     }
 
@@ -225,7 +225,7 @@ namespace Trizbort.Domain.Elements {
     ///   once the connection has been bent.
     /// </summary>
     public bool CanAddCurveWaypoint(CurveWaypoint waypoint) {
-      if (!SupportsCurveWaypoints || _mCurveWaypoints[(int) waypoint].HasValue) return false;
+      if (!SupportsCurveWaypoints || _curveWaypoints[(int) waypoint].HasValue) return false;
       return waypoint == CurveWaypoint.Middle || HasCurveWaypoints;
     }
 
@@ -234,10 +234,10 @@ namespace Trizbort.Domain.Elements {
     ///   current line/curve at which a new waypoint would be inserted.
     /// </summary>
     public Vector GetCurveWaypointHandlePosition(CurveWaypoint waypoint) {
-      var existing = _mCurveWaypoints[(int) waypoint];
+      var existing = _curveWaypoints[(int) waypoint];
       if (existing.HasValue) return existing.Value;
 
-      getCurveControlPoints(out var points, out var slots, out var before, out var after);
+      GetCurveControlPoints(out var points, out var slots, out var before, out var after);
       if (points.Count == 2) return points[0] + (points[1] - points[0]) * 0.5f;
 
       // find the span this empty slot falls within
@@ -282,8 +282,8 @@ namespace Trizbort.Domain.Elements {
       EndText = element.Attribute("endText").Text;
       if (element.Attribute("color").Text != "") ConnectionColor = ColorTranslator.FromHtml(element.Attribute("color").Text);
 
-      for (var i = 0; i < CurveWaypointAttributeNames.Length; ++i)
-        _mCurveWaypoints[i] = parseCurveWaypoint(element.Attribute(CurveWaypointAttributeNames[i]).Text);
+      for (var i = 0; i < _curveWaypointAttributeNames.Length; ++i)
+        _curveWaypoints[i] = ParseCurveWaypoint(element.Attribute(_curveWaypointAttributeNames[i]).Text);
 
       var vertexElementList = new List<XmlElementReader>();
       vertexElementList.AddRange(element.Children);
@@ -330,13 +330,13 @@ namespace Trizbort.Domain.Elements {
 
     public override float Distance(Vector pos, bool includeMargins) {
       var distance = float.MaxValue;
-      foreach (var segment in getSegments())
+      foreach (var segment in GetSegments())
         distance = Math.Min(distance, pos.DistanceFromLineSegment(segment));
       return distance;
     }
 
     public override void Draw(XGraphics graphics, Palette palette, DrawingContext context) {
-      var lineSegments = context.UseSmartLineSegments ? _mSmartSegments : getSegments();
+      var lineSegments = context.UseSmartLineSegments ? _smartSegments : GetSegments();
       var curved = HasCurveWaypoints;
       var handDrawn = Settings.HandDrawn;
       var random = Sketch.Seeded(Id);
@@ -345,7 +345,7 @@ namespace Trizbort.Domain.Elements {
       var chevrons = new List<(Vector position, Vector direction)>();
       Pen chainPen = null;
 
-      void flushChain() {
+      void FlushChain() {
         if (chain.Count > 1) {
           var stroke = Sketch.Polyline(chain, random);
           sketched.Add(stroke);
@@ -354,12 +354,12 @@ namespace Trizbort.Domain.Elements {
         chain.Clear();
       }
 
-      void addChevron(Vector position, Vector direction) {
+      void AddChevron(Vector position, Vector direction) {
         if (handDrawn) chevrons.Add((position, direction));
-        else drawChevron(graphics, palette, context, position, direction, null);
+        else DrawChevron(graphics, palette, context, position, direction, null);
       }
 
-      bool continuesChain(LineSegment segment) {
+      bool ContinuesChain(LineSegment segment) {
         if (chain.Count < 2 || chain[chain.Count - 1] != segment.Start.ToPointF()) return false;
         var previous = chain[chain.Count - 2];
         var last = chain[chain.Count - 1];
@@ -385,7 +385,7 @@ namespace Trizbort.Domain.Elements {
           } else {
             // join collinear stalks and the many tiny pieces of a flattened curve into single strokes,
             // so the wobble flows along the whole line instead of kinking at every joint
-            if (!continuesChain(lineSegment)) flushChain();
+            if (!ContinuesChain(lineSegment)) FlushChain();
             chainPen = specialPen ?? pen;
             if (chain.Count == 0) chain.Add(lineSegment.Start.ToPointF());
             chain.Add(lineSegment.End.ToPointF());
@@ -394,19 +394,19 @@ namespace Trizbort.Domain.Elements {
 
         var delta = lineSegment.Delta;
         if (!curved && Flow == ConnectionFlow.OneWay && delta.Length > Settings.ConnectionArrowSize)
-          addChevron(lineSegment.Mid, delta);
+          AddChevron(lineSegment.Mid, delta);
 
         context.LinesDrawn.Add(lineSegment);
       }
 
-      flushChain();
+      FlushChain();
 
       if (curved && Flow == ConnectionFlow.OneWay) {
         // one arrow per curve span, rather than one per flattened line segment
-        getCurvedSegments(out var spans);
+        GetCurvedSegments(out var spans);
         foreach (var span in spans) {
           var mid = CurveGeometry.PolylineMidpoint(span, out var direction);
-          if (direction != Vector.Zero) addChevron(mid, direction);
+          if (direction != Vector.Zero) AddChevron(mid, direction);
         }
       }
 
@@ -429,17 +429,17 @@ namespace Trizbort.Domain.Elements {
             arrowDirection = new Vector(strokeDirection.X * sign, strokeDirection.Y * sign);
           }
           if (arrowDirection == Vector.Zero) arrowDirection = direction;
-          drawChevron(graphics, palette, context, new Vector(bestPoint), arrowDirection, arrowRandom);
+          DrawChevron(graphics, palette, context, new Vector(bestPoint), arrowDirection, arrowRandom);
         }
       }
 
       if (_door != null && lineSegments.Count > 0)
-        showDoorIcons(graphics, lineSegments[0]);
+        ShowDoorIcons(graphics, lineSegments[0]);
 
-      annotate(graphics, palette, lineSegments);
+      Annotate(graphics, palette, lineSegments);
     }
 
-    private void drawChevron(XGraphics graphics, Palette palette, DrawingContext context, Vector position, Vector direction, Random sketch) {
+    private void DrawChevron(XGraphics graphics, Palette palette, DrawingContext context, Vector position, Vector direction, Random sketch) {
       var brush = (SolidBrush) palette.GetLineBrush(context.Selected, context.Hover);
       SolidBrush specialBrush = null;
 
@@ -524,20 +524,20 @@ namespace Trizbort.Domain.Elements {
           end = string.Empty;
           break;
         case ConnectionLabel.Up:
-          start = UP;
-          end = DOWN;
+          start = Up;
+          end = Down;
           break;
         case ConnectionLabel.Down:
-          start = DOWN;
-          end = UP;
+          start = Down;
+          end = Up;
           break;
         case ConnectionLabel.In:
-          start = IN;
-          end = OUT;
+          start = In;
+          end = Out;
           break;
         case ConnectionLabel.Out:
-          start = OUT;
-          end = IN;
+          start = Out;
+          end = In;
           break;
       }
     }
@@ -574,32 +574,32 @@ namespace Trizbort.Domain.Elements {
     }
 
     public override bool Intersects(Rect rect) {
-      foreach (var segment in getSegments())
+      foreach (var segment in GetSegments())
         if (segment.IntersectsWith(rect))
           return true;
       return false;
     }
 
     public override void RecomputeSmartLineSegments(DrawingContext context) {
-      _mSmartSegments.Clear();
-      foreach (var lineSegment in getSegments()) {
+      _smartSegments.Clear();
+      foreach (var lineSegment in GetSegments()) {
         List<LineSegment> newSegments = null;
-        if (split(lineSegment, context, ref newSegments))
+        if (Split(lineSegment, context, ref newSegments))
           foreach (var newSegment in newSegments)
-            _mSmartSegments.Add(newSegment);
+            _smartSegments.Add(newSegment);
         else
-          _mSmartSegments.Add(lineSegment);
+          _smartSegments.Add(lineSegment);
       }
 
-      foreach (var segment in _mSmartSegments)
+      foreach (var segment in _smartSegments)
         context.LinesDrawn.Add(segment);
     }
 
     public void Reverse() {
       VertexList.Reverse();
-      var quarter = _mCurveWaypoints[(int) CurveWaypoint.Quarter];
-      _mCurveWaypoints[(int) CurveWaypoint.Quarter] = _mCurveWaypoints[(int) CurveWaypoint.ThreeQuarter];
-      _mCurveWaypoints[(int) CurveWaypoint.ThreeQuarter] = quarter;
+      var quarter = _curveWaypoints[(int) CurveWaypoint.Quarter];
+      _curveWaypoints[(int) CurveWaypoint.Quarter] = _curveWaypoints[(int) CurveWaypoint.ThreeQuarter];
+      _curveWaypoints[(int) CurveWaypoint.ThreeQuarter] = quarter;
       RaiseChanged();
     }
 
@@ -646,7 +646,7 @@ namespace Trizbort.Domain.Elements {
         scribe.Attribute("color", Colors.SaveColor(ConnectionColor));
 
 
-      if (Style != DEFAULT_STYLE)
+      if (Style != DefaultStyle)
         switch (Style) {
           case ConnectionStyle.Solid:
             scribe.Attribute("style", "solid");
@@ -655,7 +655,7 @@ namespace Trizbort.Domain.Elements {
             scribe.Attribute("style", "dashed");
             break;
         }
-      if (Flow != DEFAULT_FLOW)
+      if (Flow != DefaultFlow)
         switch (Flow) {
           case ConnectionFlow.OneWay:
             scribe.Attribute("flow", "oneWay");
@@ -673,9 +673,9 @@ namespace Trizbort.Domain.Elements {
         scribe.Attribute("endText", EndText);
 
       if (HasCurveWaypoints)
-        for (var i = 0; i < CurveWaypointAttributeNames.Length; ++i)
-          if (_mCurveWaypoints[i].HasValue)
-            scribe.Attribute(CurveWaypointAttributeNames[i], formatCurveWaypoint(_mCurveWaypoints[i].Value));
+        for (var i = 0; i < _curveWaypointAttributeNames.Length; ++i)
+          if (_curveWaypoints[i].HasValue)
+            scribe.Attribute(_curveWaypointAttributeNames[i], FormatCurveWaypoint(_curveWaypoints[i].Value));
 
       var index = 0;
       foreach (var vertex in VertexList) {
@@ -738,7 +738,7 @@ namespace Trizbort.Domain.Elements {
         rect = rect.Union(vertex.Position);
 
       if (HasCurveWaypoints)
-        foreach (var segment in getCurvedSegments(out _)) {
+        foreach (var segment in GetCurvedSegments(out _)) {
           rect = rect.Union(segment.Start);
           rect = rect.Union(segment.End);
         }
@@ -746,15 +746,15 @@ namespace Trizbort.Domain.Elements {
       return rect;
     }
 
-    private void annotate(XGraphics graphics, Palette palette, List<LineSegment> lineSegments) {
+    private void Annotate(XGraphics graphics, Palette palette, List<LineSegment> lineSegments) {
       if (lineSegments.Count == 0)
         return;
 
       if (!string.IsNullOrEmpty(StartText))
-        annotate(graphics, palette, lineSegments[0], _mStartText, StringAlignment.Near);
+        Annotate(graphics, palette, lineSegments[0], _startText, StringAlignment.Near);
 
       if (!string.IsNullOrEmpty(EndText))
-        annotate(graphics, palette, lineSegments[lineSegments.Count - 1], _mEndText, StringAlignment.Far);
+        Annotate(graphics, palette, lineSegments[lineSegments.Count - 1], _endText, StringAlignment.Far);
 
       if (!string.IsNullOrEmpty(MidText)) {
         var totalLength = lineSegments.Sum(lineSegment => lineSegment.Length);
@@ -767,14 +767,14 @@ namespace Trizbort.Domain.Elements {
             middle /= length;
             var pos = lineSegment.Start + lineSegment.Delta * middle;
             var fakeSegment = new LineSegment(pos - lineSegment.Delta * Numeric.Small, pos + lineSegment.Delta * Numeric.Small);
-            annotate(graphics, palette, fakeSegment, _mMidText, StringAlignment.Center);
+            Annotate(graphics, palette, fakeSegment, _midText, StringAlignment.Center);
             break;
           }
         }
       }
     }
 
-    private void annotate(XGraphics graphics, Palette palette, LineSegment lineSegment, TextBlock text, StringAlignment alignment) {
+    private void Annotate(XGraphics graphics, Palette palette, LineSegment lineSegment, TextBlock text, StringAlignment alignment) {
       Vector point;
       var delta = lineSegment.Delta;
       var roomTypeAdjustments = Vector.Zero;
@@ -786,7 +786,7 @@ namespace Trizbort.Domain.Elements {
           if (VertexList[0].Port != null) {
             roomType = VertexList[0].Port.Owner.GetRoomType();
             if (roomType == RoomShape.Ellipse || roomType == RoomShape.Octagonal)
-              roomTypeAdjustments = this.roomTypeAdjustments(VertexList[0]);
+              roomTypeAdjustments = this.RoomTypeAdjustments(VertexList[0]);
           }
           point = lineSegment.Start + roomTypeAdjustments;
           delta.Negate();
@@ -799,7 +799,7 @@ namespace Trizbort.Domain.Elements {
           if (VertexList[1].Port != null) {
             roomType = VertexList[1].Port.Owner.GetRoomType();
             if (roomType == RoomShape.Ellipse || roomType == RoomShape.Octagonal)
-              roomTypeAdjustments = this.roomTypeAdjustments(VertexList[1]);
+              roomTypeAdjustments = this.RoomTypeAdjustments(VertexList[1]);
           }
           point = lineSegment.End + roomTypeAdjustments;
           break;
@@ -835,8 +835,8 @@ namespace Trizbort.Domain.Elements {
         text.Draw(graphics, Settings.LineFont, palette.LineTextBrush, pos, Vector.Zero, format);
     }
 
-    private List<LineSegment> getSegments() {
-      if (HasCurveWaypoints) return getCurvedSegments(out _);
+    private List<LineSegment> GetSegments() {
+      if (HasCurveWaypoints) return GetCurvedSegments(out _);
 
       var list = new List<LineSegment>();
       if (VertexList.Count > 0) {
@@ -874,7 +874,7 @@ namespace Trizbort.Domain.Elements {
     ///   order, then the end anchor. Anchors are the port stalk ends where stalks exist, and the
     ///   phantom points make the curve leave/enter along the stalk direction.
     /// </summary>
-    private void getCurveControlPoints(out List<Vector> points, out List<int> slots, out Vector before, out Vector after) {
+    private void GetCurveControlPoints(out List<Vector> points, out List<int> slots, out Vector before, out Vector after) {
       var startVertex = VertexList[0];
       var endVertex = VertexList[VertexList.Count - 1];
       var start = startVertex.Position;
@@ -886,9 +886,9 @@ namespace Trizbort.Domain.Elements {
 
       points = new List<Vector> {start};
       slots = new List<int>();
-      for (var i = 0; i < _mCurveWaypoints.Length; ++i)
-        if (_mCurveWaypoints[i].HasValue) {
-          points.Add(_mCurveWaypoints[i].Value);
+      for (var i = 0; i < _curveWaypoints.Length; ++i)
+        if (_curveWaypoints[i].HasValue) {
+          points.Add(_curveWaypoints[i].Value);
           slots.Add(i);
         }
 
@@ -898,16 +898,16 @@ namespace Trizbort.Domain.Elements {
       after = endHasStalk ? endVertex.Position : end * 2 - points[points.Count - 2];
     }
 
-    private List<LineSegment> getCurvedSegments(out List<List<Vector>> spans) {
+    private List<LineSegment> GetCurvedSegments(out List<List<Vector>> spans) {
       var list = new List<LineSegment>();
-      getCurveControlPoints(out var points, out _, out var before, out var after);
+      GetCurveControlPoints(out var points, out _, out var before, out var after);
       var startVertex = VertexList[0];
       var endVertex = VertexList[VertexList.Count - 1];
 
       if (startVertex.Port != null && startVertex.Port.HasStalk)
         list.Add(new LineSegment(startVertex.Position, points[0]));
 
-      spans = CurveGeometry.Flatten(points, before, after, CURVE_SUBDIVISIONS);
+      spans = CurveGeometry.Flatten(points, before, after, CurveSubdivisions);
       foreach (var span in spans)
         for (var i = 1; i < span.Count; ++i)
           if (span[i] != span[i - 1])
@@ -919,7 +919,7 @@ namespace Trizbort.Domain.Elements {
       return list;
     }
 
-    private static Vector? parseCurveWaypoint(string text) {
+    private static Vector? ParseCurveWaypoint(string text) {
       if (string.IsNullOrEmpty(text)) return null;
       var parts = text.Split(',');
       if (parts.Length != 2) return null;
@@ -928,28 +928,28 @@ namespace Trizbort.Domain.Elements {
       return new Vector(x, y);
     }
 
-    private static string formatCurveWaypoint(Vector position) {
+    private static string FormatCurveWaypoint(Vector position) {
       return string.Format(CultureInfo.InvariantCulture, "{0},{1}", position.X, position.Y);
     }
 
-    private void initEvents() {
-      VertexList.Added += onVertexAdded;
-      VertexList.Removed += onVertexRemoved;
+    private void InitEvents() {
+      VertexList.Added += OnVertexAdded;
+      VertexList.Removed += OnVertexRemoved;
     }
 
-    private void onVertexAdded(object sender, ItemEventArgs<Vertex> e) {
+    private void OnVertexAdded(object sender, ItemEventArgs<Vertex> e) {
       e.Item.Connection = this;
-      e.Item.Changed += onVertexChanged;
+      e.Item.Changed += OnVertexChanged;
       PortList.Add(new VertexPort(e.Item, this));
     }
 
-    private void onVertexChanged(object sender, EventArgs e) {
+    private void OnVertexChanged(object sender, EventArgs e) {
       RaiseChanged();
     }
 
-    private void onVertexRemoved(object sender, ItemEventArgs<Vertex> e) {
+    private void OnVertexRemoved(object sender, ItemEventArgs<Vertex> e) {
       e.Item.Connection = null;
-      e.Item.Changed -= onVertexChanged;
+      e.Item.Changed -= OnVertexChanged;
       foreach (var port1 in PortList) {
         var port = (VertexPort) port1;
         if (port.Vertex == e.Item) {
@@ -959,7 +959,7 @@ namespace Trizbort.Domain.Elements {
       }
     }
 
-    private Vector roomTypeAdjustments(Vertex vertex) {
+    private Vector RoomTypeAdjustments(Vertex vertex) {
       var roomTypeAdjustments = Vector.Zero;
       CompassPointHelper.FromName(vertex.Port.Id, out var dir);
       switch (dir) {
@@ -992,7 +992,7 @@ namespace Trizbort.Domain.Elements {
       return roomTypeAdjustments;
     }
 
-    private void showDoorIcons(XGraphics graphics, LineSegment lineSegment) {
+    private void ShowDoorIcons(XGraphics graphics, LineSegment lineSegment) {
       var doorIcon = _door.Open ? new Bitmap(Resources.Door_Open) : new Bitmap(Resources.Door);
       var doorLock = _door.Locked ? new Bitmap(Resources.Lock) : new Bitmap(Resources.Unlocked);
       lineSegment.IconBlock1.Image = doorIcon;
@@ -1011,7 +1011,7 @@ namespace Trizbort.Domain.Elements {
     ///   list.
     /// </param>
     /// <returns>True if the line segment was split and newSegments now exists and contains line segments; false otherwise.</returns>
-    private bool split(LineSegment lineSegment, DrawingContext context, ref List<LineSegment> newSegments) {
+    private bool Split(LineSegment lineSegment, DrawingContext context, ref List<LineSegment> newSegments) {
       foreach (var previousSegment in context.LinesDrawn) {
         var amount = Math.Max(1, Settings.LineWidth) * 3;
         if (lineSegment.Intersect(previousSegment, true, out var intersects))
@@ -1020,7 +1020,7 @@ namespace Trizbort.Domain.Elements {
               case LineSegmentIntersectType.MidPointA:
                 var one = new LineSegment(lineSegment.Start, intersect.Position);
                 if (one.Shorten(amount))
-                  if (!split(one, context, ref newSegments)) {
+                  if (!Split(one, context, ref newSegments)) {
                     if (newSegments == null)
                       newSegments = new List<LineSegment>();
                     newSegments.Add(one);
@@ -1028,7 +1028,7 @@ namespace Trizbort.Domain.Elements {
 
                 var two = new LineSegment(intersect.Position, lineSegment.End);
                 if (two.Forshorten(amount))
-                  if (!split(two, context, ref newSegments)) {
+                  if (!Split(two, context, ref newSegments)) {
                     if (newSegments == null)
                       newSegments = new List<LineSegment>();
                     newSegments.Add(two);
@@ -1038,7 +1038,7 @@ namespace Trizbort.Domain.Elements {
 
               case LineSegmentIntersectType.StartA:
                 if (lineSegment.Forshorten(amount))
-                  if (!split(lineSegment, context, ref newSegments)) {
+                  if (!Split(lineSegment, context, ref newSegments)) {
                     if (newSegments == null)
                       newSegments = new List<LineSegment>();
                     newSegments.Add(lineSegment);
@@ -1048,7 +1048,7 @@ namespace Trizbort.Domain.Elements {
 
               case LineSegmentIntersectType.EndA:
                 if (lineSegment.Shorten(amount))
-                  if (!split(lineSegment, context, ref newSegments)) {
+                  if (!Split(lineSegment, context, ref newSegments)) {
                     if (newSegments == null)
                       newSegments = new List<LineSegment>();
                     newSegments.Add(lineSegment);

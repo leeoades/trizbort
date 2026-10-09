@@ -6,29 +6,29 @@ using PdfSharp.Drawing;
 
 namespace Trizbort.Domain.Misc {
   internal class TextBlock {
-    public static int SRebuildCount;
-    private readonly List<string> _mLines = new List<string>();
-    private XStringFormat _mActualFormat;
+    private static int _rebuildCount;
+    private readonly List<string> _lines = new List<string>();
+    private XStringFormat _actualFormat;
 
-    private Vector _mDelta;
+    private Vector _delta;
 
     // cached layout data to speed drawing
-    private bool _mInvalidLayout = true;
-    private float _mLineHeight;
-    private Vector _mOrigin;
-    private Vector _mPos;
-    private XStringFormat _mRequestedFormat;
-    private Vector _mSize;
-    private XSize _mSizeChecker;
-    private string _mText = string.Empty;
+    private bool _invalidLayout = true;
+    private float _lineHeight;
+    private Vector _origin;
+    private Vector _pos;
+    private XStringFormat _requestedFormat;
+    private Vector _size;
+    private XSize _sizeChecker;
+    private string _text = string.Empty;
 
-    public static int RebuildCount => SRebuildCount;
+    public static int RebuildCount => _rebuildCount;
 
     public string Text {
-      get => _mText;
+      get => _text;
       set {
-        _mText = value;
-        _mInvalidLayout = true;
+        _text = value;
+        _invalidLayout = true;
       }
     }
 
@@ -53,25 +53,25 @@ namespace Trizbort.Domain.Misc {
       // do a quick test to see if text is going to get drawn at the same size as last time;
       // if so, assume we don't need to recompute our layout for that reason.
       var sizeChecker = graphics.MeasureString("M q", font);
-            if (sizeChecker != _mSizeChecker ||
-                pos != _mPos ||
-                _mSize != size ||
-                _mRequestedFormat.Alignment != format.Alignment ||
-                _mRequestedFormat.LineAlignment != format.LineAlignment)
+            if (sizeChecker != _sizeChecker ||
+                pos != _pos ||
+                _size != size ||
+                _requestedFormat.Alignment != format.Alignment ||
+                _requestedFormat.LineAlignment != format.LineAlignment)
             {
-                _mInvalidLayout = true;
+                _invalidLayout = true;
             }
 
             // TODO: removed || m_requestedFormat.FormatFlags != format.FormatFlags from if check based on error 
             // error CS1061: 'XStringFormat' does not contain a definition for 'FormatFlags'
             // This seems relevant : https://forum.pdfsharp.net/viewtopic.php?f=2&t=3898
 
-            _mSizeChecker = sizeChecker;
+            _sizeChecker = sizeChecker;
 
-      if (_mInvalidLayout) {
+      if (_invalidLayout) {
         // something vital has changed; rebuild our cached layout data
-        rebuildCachedLayout(graphics, font, ref pos, ref size, format);
-        _mInvalidLayout = false;
+        RebuildCachedLayout(graphics, font, ref pos, ref size, format);
+        _invalidLayout = false;
       }
 
       var state = graphics.Save();
@@ -83,9 +83,9 @@ namespace Trizbort.Domain.Misc {
       var smoothingMode = graphics.SmoothingMode;
       graphics.SmoothingMode = XSmoothingMode.HighSpeed;
 
-      var origin = _mOrigin;
-      foreach (var t in _mLines) {
-        if (size.Y > 0 && size.Y < _mLineHeight)
+      var origin = _origin;
+      foreach (var t in _lines) {
+        if (size.Y > 0 && size.Y < _lineHeight)
           break; // not enough remaining vertical space for a whole line
 
         var line = t;
@@ -93,36 +93,36 @@ namespace Trizbort.Domain.Misc {
         graphics.SmoothingMode = XSmoothingMode.HighQuality;
 
 
-        graphics.DrawString(line, font, brush, origin.X, origin.Y, _mActualFormat);
-        origin += _mDelta;
-        size.Y -= _mLineHeight;
+        graphics.DrawString(line, font, brush, origin.X, origin.Y, _actualFormat);
+        origin += _delta;
+        size.Y -= _lineHeight;
       }
 
       graphics.SmoothingMode = smoothingMode;
       graphics.Restore(state);
 
-      var actualTextRect = new Rect(pos.X, _mOrigin.Y, size.X, _mLineHeight * _mLines.Count);
+      var actualTextRect = new Rect(pos.X, _origin.Y, size.X, _lineHeight * _lines.Count);
       return actualTextRect;
     }
 
-    private void rebuildCachedLayout(XGraphics graphics, Font font, ref Vector pos, ref Vector size, XStringFormat baseFormat) {
+    private void RebuildCachedLayout(XGraphics graphics, Font font, ref Vector pos, ref Vector size, XStringFormat baseFormat) {
       // for diagnostic purposes
-      ++SRebuildCount;
+      ++_rebuildCount;
 
       // store current settings to help us tell if we need a rebuild next time around
-      _mRequestedFormat = new XStringFormat();
-      _mRequestedFormat.Alignment = baseFormat.Alignment;
+      _requestedFormat = new XStringFormat();
+      _requestedFormat.Alignment = baseFormat.Alignment;
       // TODO: m_requestedFormat.FormatFlags = baseFormat.FormatFlags;
-      _mRequestedFormat.LineAlignment = baseFormat.LineAlignment;
-      _mActualFormat = new XStringFormat();
-      _mActualFormat.Alignment = baseFormat.Alignment;
+      _requestedFormat.LineAlignment = baseFormat.LineAlignment;
+      _actualFormat = new XStringFormat();
+      _actualFormat.Alignment = baseFormat.Alignment;
       // TODO: m_actualFormat.FormatFlags = baseFormat.FormatFlags;
-      _mActualFormat.LineAlignment = baseFormat.LineAlignment;
-      _mPos = pos;
-      _mSize = size;
+      _actualFormat.LineAlignment = baseFormat.LineAlignment;
+      _pos = pos;
+      _size = size;
 
       // PDFsharp renders carriage returns as glyphs instead of treating them as line breaks.
-      var text = _mText.Replace("\r\n", "\n").Replace('\r', '\n');
+      var text = _text.Replace("\r\n", "\n").Replace('\r', '\n');
       if (text.IndexOf('\n') == -1 && size.X > 0 && size.Y > 0 && graphics.MeasureString(text, font).Width > size.X) {
         // wrap single-line text to fit in rectangle
 
@@ -182,42 +182,42 @@ namespace Trizbort.Domain.Misc {
         text = total;
       }
 
-      _mLineHeight = font.GetHeight();
+      _lineHeight = font.GetHeight();
 
-      _mLines.Clear();
-      _mLines.AddRange(text.Split('\n'));
+      _lines.Clear();
+      _lines.AddRange(text.Split('\n'));
 
-      switch (_mActualFormat.LineAlignment) {
+      switch (_actualFormat.LineAlignment) {
         case XLineAlignment.Near:
         default:
-          _mOrigin = pos;
-          _mDelta = new Vector(0, _mLineHeight);
+          _origin = pos;
+          _delta = new Vector(0, _lineHeight);
           break;
         case XLineAlignment.Far:
-          _mOrigin = new Vector(pos.X, pos.Y + size.Y - _mLineHeight);
+          _origin = new Vector(pos.X, pos.Y + size.Y - _lineHeight);
           if (size.Y > 0) {
-            var count = _mLines.Count;
-            while (_mOrigin.Y - _mLineHeight >= pos.Y && --count > 0) _mOrigin.Y -= _mLineHeight;
+            var count = _lines.Count;
+            while (_origin.Y - _lineHeight >= pos.Y && --count > 0) _origin.Y -= _lineHeight;
           } else {
-            _mOrigin.Y -= (_mLines.Count - 1) * _mLineHeight;
+            _origin.Y -= (_lines.Count - 1) * _lineHeight;
           }
 
-          _mDelta = new Vector(0, _mLineHeight);
+          _delta = new Vector(0, _lineHeight);
           break;
         case XLineAlignment.Center:
-          _mOrigin = new Vector(pos.X, pos.Y + size.Y / 2 - (_mLines.Count - 1) * _mLineHeight / 2 - _mLineHeight / 2);
-          _mDelta = new Vector(0, _mLineHeight);
+          _origin = new Vector(pos.X, pos.Y + size.Y / 2 - (_lines.Count - 1) * _lineHeight / 2 - _lineHeight / 2);
+          _delta = new Vector(0, _lineHeight);
           break;
       }
 
-      _mActualFormat.LineAlignment = XLineAlignment.Near;
+      _actualFormat.LineAlignment = XLineAlignment.Near;
 
-      switch (_mActualFormat.Alignment) {
+      switch (_actualFormat.Alignment) {
         case XStringAlignment.Far:
-          _mOrigin.X = pos.X + size.X;
+          _origin.X = pos.X + size.X;
           break;
         case XStringAlignment.Center:
-          _mOrigin.X = pos.X + size.X / 2;
+          _origin.X = pos.X + size.X / 2;
           break;
       }
     }

@@ -21,7 +21,7 @@ namespace Trizbort.Automap
     void RemoveExitStub(Room room, MappableDirection direction);
 
     void SelectRoom(Room room);
-    void RemoveRoom(Room mOtherRoom);
+    void RemoveRoom(Room otherRoom);
   }
 
   internal delegate bool? RoomMatcher(string roomName, string roomDescription, Room room);

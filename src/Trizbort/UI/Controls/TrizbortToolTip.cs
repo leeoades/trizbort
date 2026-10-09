@@ -19,8 +19,8 @@ namespace Trizbort.UI.Controls {
     private readonly Font _bodyFont;
     private readonly Font _headerFont;
     private readonly Font _footerFont;
-    private const int TIP_WIDTH = 200;
-    private const int LINE_BUFFER = 5;
+    private const int TipWidth = 200;
+    private const int LineBuffer = 5;
     private int _tipHeight;
     private int _headerHeight = 0;
     private int _footerHeight = 0;
@@ -61,18 +61,18 @@ namespace Trizbort.UI.Controls {
       //calc footer size
       SizeF footerStringSize = graphics.MeasureString(FooterText, _footerFont);
 
-      _headerBottom = Math.Ceiling(headerStringSize.Width/TIP_WIDTH * (_headerFont.Height + LINE_BUFFER));
-      _headerHeight = Convert.ToInt32(_headerBottom) + (int)headerStringSize.Height + LINE_BUFFER;
+      _headerBottom = Math.Ceiling(headerStringSize.Width/TipWidth * (_headerFont.Height + LineBuffer));
+      _headerHeight = Convert.ToInt32(_headerBottom) + (int)headerStringSize.Height + LineBuffer;
       if (FooterText != string.Empty)
-        _footerHeight = Convert.ToInt32(Math.Ceiling(footerStringSize.Width/TIP_WIDTH * (_footerFont.Height + LINE_BUFFER))) + (int)footerStringSize.Height + LINE_BUFFER;
+        _footerHeight = Convert.ToInt32(Math.Ceiling(footerStringSize.Width/TipWidth * (_footerFont.Height + LineBuffer))) + (int)footerStringSize.Height + LineBuffer;
 
       if (BodyText != string.Empty)
-        _bodyHeight = Convert.ToInt32(Math.Ceiling(bodyStringSize.Width/TIP_WIDTH * (_bodyFont.Height + LINE_BUFFER))) + (int)bodyStringSize.Height + LINE_BUFFER;
+        _bodyHeight = Convert.ToInt32(Math.Ceiling(bodyStringSize.Width/TipWidth * (_bodyFont.Height + LineBuffer))) + (int)bodyStringSize.Height + LineBuffer;
 
 
       _tipHeight = _headerHeight + _bodyHeight + _footerHeight;
        
-      e.ToolTipSize = new Size(TIP_WIDTH, _tipHeight);
+      e.ToolTipSize = new Size(TipWidth, _tipHeight);
     }
 
     private void OnDraw(object sender, DrawToolTipEventArgs e) {
@@ -91,22 +91,22 @@ namespace Trizbort.UI.Controls {
       // draw header
       float titleBoundsY = 0;
       if (TitleText != string.Empty) {
-        var titleBounds = new RectangleF(new PointF(e.Bounds.X + LINE_BUFFER, e.Bounds.Y + LINE_BUFFER), new SizeF(TIP_WIDTH-20,_headerHeight));
+        var titleBounds = new RectangleF(new PointF(e.Bounds.X + LineBuffer, e.Bounds.Y + LineBuffer), new SizeF(TipWidth-20,_headerHeight));
         g.DrawString(TitleText, _headerFont, textBrush, titleBounds); // top layer
         titleBoundsY = titleBounds.Y;
       }
       
       // draw body
       if (BodyText != string.Empty) {
-        var bodyBounds = new RectangleF(new PointF(e.Bounds.X + LINE_BUFFER + 10, titleBoundsY + _headerFont.Height + 6), new SizeF(TIP_WIDTH-20,_bodyHeight));
+        var bodyBounds = new RectangleF(new PointF(e.Bounds.X + LineBuffer + 10, titleBoundsY + _headerFont.Height + 6), new SizeF(TipWidth-20,_bodyHeight));
         g.DrawString(BodyText, _bodyFont, textBrush, bodyBounds); // top layer
       }
 
       // draw footer
       if (FooterText != string.Empty) {
-        var footerBounds = new RectangleF(new PointF(e.Bounds.X + LINE_BUFFER, e.Bounds.Y + _headerHeight + _bodyHeight + LINE_BUFFER), new SizeF(TIP_WIDTH-20,_footerHeight));
+        var footerBounds = new RectangleF(new PointF(e.Bounds.X + LineBuffer, e.Bounds.Y + _headerHeight + _bodyHeight + LineBuffer), new SizeF(TipWidth-20,_footerHeight));
         using (var pen = new Pen(Color.Gray))
-          g.DrawLine(pen, new PointF(0f, footerBounds.Y), new PointF(TIP_WIDTH, footerBounds.Y));
+          g.DrawLine(pen, new PointF(0f, footerBounds.Y), new PointF(TipWidth, footerBounds.Y));
         g.DrawString(FooterText, _footerFont, textBrush, new RectangleF(new PointF(footerBounds.Location.X, footerBounds.Location.Y+2), footerBounds.Size)); 
       }
 

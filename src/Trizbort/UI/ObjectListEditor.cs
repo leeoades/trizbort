@@ -20,10 +20,10 @@ namespace Trizbort.UI {
     /// </summary>
     public static EditResult ChangeIndent(string text, int selectionStart, int selectionLength, bool outdent) {
       text = text ?? string.Empty;
-      var lines = getLines(text);
-      var first = lineIndexAt(lines, selectionStart);
+      var lines = GetLines(text);
+      var first = LineIndexAt(lines, selectionStart);
       var selectionEnd = selectionStart + selectionLength;
-      var last = lineIndexAt(lines, selectionLength > 0 ? selectionEnd - 1 : selectionEnd);
+      var last = LineIndexAt(lines, selectionLength > 0 ? selectionEnd - 1 : selectionEnd);
 
       var builder = new StringBuilder(text);
       var newStart = selectionStart;
@@ -32,19 +32,19 @@ namespace Trizbort.UI {
       for (var index = first; index <= last; ++index) {
         var lineStart = lines[index].Start + offset;
         var lineText = lines[index].Text;
-        var change = outdent ? outdentLine(builder, lineStart, lineText) : indentLine(builder, lineStart, lineText);
+        var change = outdent ? OutdentLine(builder, lineStart, lineText) : IndentLine(builder, lineStart, lineText);
         if (change.Length == 0) continue;
 
         offset += change.Length;
-        newStart = adjust(newStart, change, selectionLength > 0);
-        newEnd = adjust(newEnd, change, false);
+        newStart = Adjust(newStart, change, selectionLength > 0);
+        newEnd = Adjust(newEnd, change, false);
       }
 
       if (selectionLength == 0) newEnd = newStart;
       return new EditResult {Text = builder.ToString(), SelectionStart = newStart, SelectionLength = Math.Max(0, newEnd - newStart)};
     }
 
-    private static int adjust(int position, Change change, bool keepAtInsertionPoint) {
+    private static int Adjust(int position, Change change, bool keepAtInsertionPoint) {
       if (change.Length > 0)
         return position > change.Position || (position == change.Position && !keepAtInsertionPoint) ? position + change.Length : position;
       return position <= change.Position ? position : Math.Max(change.Position, position + change.Length);
@@ -57,8 +57,8 @@ namespace Trizbort.UI {
     /// </summary>
     public static EditResult? NewLine(string text, int selectionStart, int selectionLength) {
       text = text ?? string.Empty;
-      var lines = getLines(text);
-      var line = lines[lineIndexAt(lines, selectionStart)];
+      var lines = GetLines(text);
+      var line = lines[LineIndexAt(lines, selectionStart)];
       var prefixLength = ObjectList.LeadingIndentLength(line.Text);
       if (prefixLength == 0) return null;
 
@@ -78,7 +78,7 @@ namespace Trizbort.UI {
       public int Length;
     }
 
-    private static Change indentLine(StringBuilder builder, int lineStart, string lineText) {
+    private static Change IndentLine(StringBuilder builder, int lineStart, string lineText) {
       var whitespace = 0;
       while (whitespace < lineText.Length && (lineText[whitespace] == ' ' || lineText[whitespace] == '\t')) ++whitespace;
 
@@ -92,7 +92,7 @@ namespace Trizbort.UI {
       return new Change {Position = lineStart + whitespace, Length = 2};
     }
 
-    private static Change outdentLine(StringBuilder builder, int lineStart, string lineText) {
+    private static Change OutdentLine(StringBuilder builder, int lineStart, string lineText) {
       var whitespace = 0;
       while (whitespace < lineText.Length && (lineText[whitespace] == ' ' || lineText[whitespace] == '\t')) ++whitespace;
 
@@ -114,7 +114,7 @@ namespace Trizbort.UI {
       }
 
       var spaces = 0;
-      while (spaces < Math.Min(ObjectList.TAB_INDENT, whitespace) && lineText[spaces] == ' ') ++spaces;
+      while (spaces < Math.Min(ObjectList.TabIndent, whitespace) && lineText[spaces] == ' ') ++spaces;
       builder.Remove(lineStart, spaces);
       return new Change {Position = lineStart, Length = -spaces};
     }
@@ -124,7 +124,7 @@ namespace Trizbort.UI {
       public string Text;
     }
 
-    private static List<Line> getLines(string text) {
+    private static List<Line> GetLines(string text) {
       var lines = new List<Line>();
       var start = 0;
       while (true) {
@@ -141,7 +141,7 @@ namespace Trizbort.UI {
       }
     }
 
-    private static int lineIndexAt(List<Line> lines, int position) {
+    private static int LineIndexAt(List<Line> lines, int position) {
       for (var index = lines.Count - 1; index >= 0; --index)
         if (position >= lines[index].Start)
           return index;

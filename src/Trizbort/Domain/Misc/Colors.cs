@@ -19,7 +19,7 @@ namespace Trizbort.Domain.Misc {
     public static readonly int EndRoom = 10;
     public static readonly int Count = 11;
 
-    private static readonly string[] Names = {
+    private static readonly string[] _names = {
       "canvas",
       "border",
       "line",
@@ -34,8 +34,8 @@ namespace Trizbort.Domain.Misc {
     };
 
     public static bool FromName(string name, out int color) {
-      for (var index = 0; index < Names.Length; ++index)
-        if (StringComparer.InvariantCultureIgnoreCase.Compare(name ?? string.Empty, Names[index]) == 0) {
+      for (var index = 0; index < _names.Length; ++index)
+        if (StringComparer.InvariantCultureIgnoreCase.Compare(name ?? string.Empty, _names[index]) == 0) {
           color = index;
           return true;
         }
@@ -60,8 +60,8 @@ namespace Trizbort.Domain.Misc {
     }
 
     public static bool ToName(int color, out string name) {
-      if (color >= 0 && color < Names.Length) {
-        name = Names[color];
+      if (color >= 0 && color < _names.Length) {
+        name = _names[color];
         return true;
       }
 

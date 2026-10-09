@@ -16,39 +16,39 @@ using Region = Trizbort.Domain.Misc.Region;
 namespace Trizbort.Setup {
   [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
   public static class Settings {
-    private const float MIN_FONT_SIZE = 2;
+    private const float MinFontSize = 2;
 
-    private const float MAX_FONT_SIZE = 256;
+    private const float MaxFontSize = 256;
 
     // per-map settings, saved with the map
-    private static readonly Color[] SColor = new Color[Colors.Count];
-    private static Font sRoomNameFont;
-    private static Font sObjectFont;
-    private static Font sSubtitleFont;
-    private static Font sLineFont;
-    private static float sLineWidth;
-    private static bool sHandDrawn;
-    private static bool sSnapToGrid;
-    private static bool sIsGridVisible;
-    private static bool sShowOrigin;
-    private static float sGridSize;
-    private static float sDarknessStripeSize;
-    private static float sObjectListOffsetFromRoom;
-    private static float sConnectionStalkLength;
-    private static float sPreferredDistanceBetweenRooms;
-    private static float sTextOffsetFromConnection;
-    private static float sHandleSize;
-    private static float sSnapToElementSize;
-    private static bool sDocSpecificMargins;
-    private static float sDocHorizontalMargin;
-    private static float sDocVerticalMargin;
-    private static bool sWrapTextAtDashes;
-    private static bool sWrappingChanged;
-    private static float sDragDistanceToInitiateNewConnection;
-    private static float sConnectionArrowSize;
-    private static Keys sKeypadNavigationCreationModifier;
+    private static readonly Color[] _color = new Color[Colors.Count];
+    private static Font _roomNameFont;
+    private static Font _objectFont;
+    private static Font _subtitleFont;
+    private static Font _lineFont;
+    private static float _lineWidth;
+    private static bool _handDrawn;
+    private static bool _snapToGrid;
+    private static bool _isGridVisible;
+    private static bool _showOrigin;
+    private static float _gridSize;
+    private static float _darknessStripeSize;
+    private static float _objectListOffsetFromRoom;
+    private static float _connectionStalkLength;
+    private static float _preferredDistanceBetweenRooms;
+    private static float _textOffsetFromConnection;
+    private static float _handleSize;
+    private static float _snapToElementSize;
+    private static bool _docSpecificMargins;
+    private static float _docHorizontalMargin;
+    private static float _docVerticalMargin;
+    private static bool _wrapTextAtDashes;
+    private static bool _wrappingChanged;
+    private static float _dragDistanceToInitiateNewConnection;
+    private static float _connectionArrowSize;
+    private static Keys _keypadNavigationCreationModifier;
 
-    private static Keys sKeypadNavigationUnexploredModifier;
+    private static Keys _keypadNavigationUnexploredModifier;
 
     // application settings, saved for the user
     // TODO: private static AutomapSettings sAutomap;
@@ -65,31 +65,31 @@ namespace Trizbort.Setup {
     public static ColorSettings Color { get; }
 
     public static float ConnectionArrowSize {
-      get => sConnectionArrowSize;
+      get => _connectionArrowSize;
       set {
-        if (sConnectionArrowSize != value) {
-          sConnectionArrowSize = value;
-          raiseChanged();
+        if (_connectionArrowSize != value) {
+          _connectionArrowSize = value;
+          RaiseChanged();
         }
       }
     }
 
     public static float ConnectionStalkLength {
-      get => sConnectionStalkLength;
+      get => _connectionStalkLength;
       set {
-        if (sConnectionStalkLength != value) {
-          sConnectionStalkLength = value;
-          raiseChanged();
+        if (_connectionStalkLength != value) {
+          _connectionStalkLength = value;
+          RaiseChanged();
         }
       }
     }
 
     public static float DarknessStripeSize {
-      get => sDarknessStripeSize;
+      get => _darknessStripeSize;
       set {
-        if (sDarknessStripeSize != value) {
-          sDarknessStripeSize = value;
-          raiseChanged();
+        if (_darknessStripeSize != value) {
+          _darknessStripeSize = value;
+          RaiseChanged();
         }
       }
     }
@@ -98,54 +98,54 @@ namespace Trizbort.Setup {
     public static RoomShape DefaultRoomShape { get; set; }
 
     public static float DocHorizontalMargin {
-      get => sDocHorizontalMargin;
+      get => _docHorizontalMargin;
       set {
-        if (sDocHorizontalMargin != value) {
-          sDocHorizontalMargin = value;
-          raiseChanged();
+        if (_docHorizontalMargin != value) {
+          _docHorizontalMargin = value;
+          RaiseChanged();
         }
       }
     }
 
     public static bool DocumentSpecificMargins {
-      get => sDocSpecificMargins;
+      get => _docSpecificMargins;
       set {
-        if (sDocSpecificMargins == value) return;
-        sDocSpecificMargins = value;
-        raiseChanged();
+        if (_docSpecificMargins == value) return;
+        _docSpecificMargins = value;
+        RaiseChanged();
       }
     }
 
     public static float DocVerticalMargin {
-      get => sDocVerticalMargin;
+      get => _docVerticalMargin;
       set {
-        if (sDocVerticalMargin != value) {
-          sDocVerticalMargin = value;
-          raiseChanged();
+        if (_docVerticalMargin != value) {
+          _docVerticalMargin = value;
+          RaiseChanged();
         }
       }
     }
 
     public static bool WrapTextAtDashes {
-      get => sWrapTextAtDashes;
+      get => _wrapTextAtDashes;
       set {
-        if (sWrapTextAtDashes == value) return;
-        sWrapTextAtDashes = value;
-        sWrappingChanged = true;
-        raiseChanged();
+        if (_wrapTextAtDashes == value) return;
+        _wrapTextAtDashes = value;
+        _wrappingChanged = true;
+        RaiseChanged();
       }
     }
 
     public static bool WrappingChanged {
-      get => sWrappingChanged;
-      set => sWrappingChanged = value;  
+      get => _wrappingChanged;
+      set => _wrappingChanged = value;
     }
     public static float DragDistanceToInitiateNewConnection {
-      get => sDragDistanceToInitiateNewConnection;
+      get => _dragDistanceToInitiateNewConnection;
       set {
-        if (sDragDistanceToInitiateNewConnection != value) {
-          sDragDistanceToInitiateNewConnection = value;
-          raiseChanged();
+        if (_dragDistanceToInitiateNewConnection != value) {
+          _dragDistanceToInitiateNewConnection = value;
+          RaiseChanged();
         }
       }
     }
@@ -153,31 +153,31 @@ namespace Trizbort.Setup {
     public static bool EndRoomLoaded { get; set; }
 
     public static float GridSize {
-      get => sGridSize;
+      get => _gridSize;
       set {
-        if (sGridSize != value) {
-          sGridSize = value;
-          raiseChanged();
+        if (_gridSize != value) {
+          _gridSize = value;
+          RaiseChanged();
         }
       }
     }
 
     public static float HandleSize {
-      get => sHandleSize;
+      get => _handleSize;
       set {
-        if (sHandleSize != value) {
-          sHandleSize = value;
-          raiseChanged();
+        if (_handleSize != value) {
+          _handleSize = value;
+          RaiseChanged();
         }
       }
     }
 
     public static bool IsGridVisible {
-      get => sIsGridVisible;
+      get => _isGridVisible;
       set {
-        if (sIsGridVisible != value) {
-          sIsGridVisible = value;
-          raiseChanged();
+        if (_isGridVisible != value) {
+          _isGridVisible = value;
+          RaiseChanged();
         }
       }
     }
@@ -187,11 +187,11 @@ namespace Trizbort.Setup {
     ///   to create new rooms from the currently selected room.
     /// </summary>
     public static Keys KeypadNavigationCreationModifier {
-      get => sKeypadNavigationCreationModifier;
+      get => _keypadNavigationCreationModifier;
       set {
-        if (sKeypadNavigationCreationModifier != value) {
-          sKeypadNavigationCreationModifier = value;
-          raiseChanged();
+        if (_keypadNavigationCreationModifier != value) {
+          _keypadNavigationCreationModifier = value;
+          RaiseChanged();
         }
       }
     }
@@ -201,73 +201,73 @@ namespace Trizbort.Setup {
     ///   to mark "unexplored" connections from the currently selected room.
     /// </summary>
     public static Keys KeypadNavigationUnexploredModifier {
-      get => sKeypadNavigationUnexploredModifier;
+      get => _keypadNavigationUnexploredModifier;
       set {
-        if (sKeypadNavigationUnexploredModifier != value) {
-          sKeypadNavigationUnexploredModifier = value;
-          raiseChanged();
+        if (_keypadNavigationUnexploredModifier != value) {
+          _keypadNavigationUnexploredModifier = value;
+          RaiseChanged();
         }
       }
     }
 
     public static Font LineFont {
-      get => sLineFont;
+      get => _lineFont;
       set {
-        if (!Equals(sLineFont, value)) {
-          sLineFont = value;
-          raiseChanged();
+        if (!Equals(_lineFont, value)) {
+          _lineFont = value;
+          RaiseChanged();
         }
       }
     }
 
 
     public static float LineWidth {
-      get => sLineWidth;
+      get => _lineWidth;
       set {
-        if (sLineWidth != value) {
-          sLineWidth = value;
-          raiseChanged();
+        if (_lineWidth != value) {
+          _lineWidth = value;
+          RaiseChanged();
         }
       }
     }
 
     /// <summary>Map-wide hand-drawn style for room outlines, labels and connections.</summary>
     public static bool HandDrawn {
-      get => sHandDrawn;
+      get => _handDrawn;
       set {
-        if (sHandDrawn != value) {
-          sHandDrawn = value;
-          raiseChanged();
+        if (_handDrawn != value) {
+          _handDrawn = value;
+          RaiseChanged();
         }
       }
     }
 
     public static Font ObjectFont {
-      get => sObjectFont;
+      get => _objectFont;
       set {
-        if (!Equals(sObjectFont, value)) {
-          sObjectFont = value;
-          raiseChanged();
+        if (!Equals(_objectFont, value)) {
+          _objectFont = value;
+          RaiseChanged();
         }
       }
     }
 
     public static float ObjectListOffsetFromRoom {
-      get => sObjectListOffsetFromRoom;
+      get => _objectListOffsetFromRoom;
       set {
-        if (sObjectListOffsetFromRoom != value) {
-          sObjectListOffsetFromRoom = value;
-          raiseChanged();
+        if (_objectListOffsetFromRoom != value) {
+          _objectListOffsetFromRoom = value;
+          RaiseChanged();
         }
       }
     }
 
     public static float PreferredDistanceBetweenRooms {
-      get => sPreferredDistanceBetweenRooms;
+      get => _preferredDistanceBetweenRooms;
       set {
-        if (sPreferredDistanceBetweenRooms != value) {
-          sPreferredDistanceBetweenRooms = value;
-          raiseChanged();
+        if (_preferredDistanceBetweenRooms != value) {
+          _preferredDistanceBetweenRooms = value;
+          RaiseChanged();
         }
       }
     }
@@ -275,41 +275,41 @@ namespace Trizbort.Setup {
     public static List<Region> Regions { get; private set; }
 
     public static Font RoomNameFont {
-      get => sRoomNameFont;
+      get => _roomNameFont;
       set {
-        if (!Equals(sRoomNameFont, value)) {
-          sRoomNameFont = value;
-          raiseChanged();
+        if (!Equals(_roomNameFont, value)) {
+          _roomNameFont = value;
+          RaiseChanged();
         }
       }
     }
 
     public static bool ShowOrigin {
-      get => sShowOrigin;
+      get => _showOrigin;
       set {
-        if (sShowOrigin != value) {
-          sShowOrigin = value;
-          raiseChanged();
+        if (_showOrigin != value) {
+          _showOrigin = value;
+          RaiseChanged();
         }
       }
     }
 
     public static float SnapToElementSize {
-      get => sSnapToElementSize;
+      get => _snapToElementSize;
       set {
-        if (sSnapToElementSize != value) {
-          sSnapToElementSize = value;
-          raiseChanged();
+        if (_snapToElementSize != value) {
+          _snapToElementSize = value;
+          RaiseChanged();
         }
       }
     }
 
     public static bool SnapToGrid {
-      get => sSnapToGrid;
+      get => _snapToGrid;
       set {
-        if (sSnapToGrid != value) {
-          sSnapToGrid = value;
-          raiseChanged();
+        if (_snapToGrid != value) {
+          _snapToGrid = value;
+          RaiseChanged();
         }
       }
     }
@@ -317,21 +317,21 @@ namespace Trizbort.Setup {
     public static bool StartRoomLoaded { get; set; }
 
     public static Font SubtitleFont {
-      get => sSubtitleFont;
+      get => _subtitleFont;
       set {
-        if (!Equals(sSubtitleFont, value)) {
-          sSubtitleFont = value;
-          raiseChanged();
+        if (!Equals(_subtitleFont, value)) {
+          _subtitleFont = value;
+          RaiseChanged();
         }
       }
     }
 
     public static float TextOffsetFromConnection {
-      get => sTextOffsetFromConnection;
+      get => _textOffsetFromConnection;
       set {
-        if (sTextOffsetFromConnection != value) {
-          sTextOffsetFromConnection = value;
-          raiseChanged();
+        if (_textOffsetFromConnection != value) {
+          _textOffsetFromConnection = value;
+          RaiseChanged();
         }
       }
     }
@@ -339,7 +339,7 @@ namespace Trizbort.Setup {
     public static event EventHandler Changed;
 
     internal static void NotifyThemeApplied() {
-      raiseChanged();
+      RaiseChanged();
     }
 
     public static void Load(XmlElementReader element) {
@@ -373,44 +373,44 @@ namespace Trizbort.Setup {
         if (font.Attribute("underline").ToBool()) style |= FontStyle.Underline;
         if (font.Attribute("strikeout").ToBool()) style |= FontStyle.Strikeout;
         if (font.Name == "room")
-          RoomNameFont = new Font(font.ToText(RoomNameFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(RoomNameFont.Size), MIN_FONT_SIZE, MAX_FONT_SIZE), style, GraphicsUnit.World);
+          RoomNameFont = new Font(font.ToText(RoomNameFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(RoomNameFont.Size), MinFontSize, MaxFontSize), style, GraphicsUnit.World);
         else if (font.Name == "object")
-          ObjectFont = new Font(font.ToText(ObjectFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(ObjectFont.Size), MIN_FONT_SIZE, MAX_FONT_SIZE), style, GraphicsUnit.World);
+          ObjectFont = new Font(font.ToText(ObjectFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(ObjectFont.Size), MinFontSize, MaxFontSize), style, GraphicsUnit.World);
         else if (font.Name == "subTitle")
-          SubtitleFont = new Font(font.ToText(SubtitleFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(SubtitleFont.Size), MIN_FONT_SIZE, MAX_FONT_SIZE), style, GraphicsUnit.World);
-        else if (font.Name == "line") LineFont = new Font(font.ToText(LineFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(LineFont.Size), MIN_FONT_SIZE, MAX_FONT_SIZE), style, GraphicsUnit.World);
+          SubtitleFont = new Font(font.ToText(SubtitleFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(SubtitleFont.Size), MinFontSize, MaxFontSize), style, GraphicsUnit.World);
+        else if (font.Name == "line") LineFont = new Font(font.ToText(LineFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(LineFont.Size), MinFontSize, MaxFontSize), style, GraphicsUnit.World);
       }
 
-      SnapToGrid = element["grid"]["snapTo"].ToBool(sSnapToGrid);
-      IsGridVisible = element["grid"]["visible"].ToBool(sIsGridVisible);
-      GridSize = element["grid"]["size"].ToFloat(sGridSize);
-      ShowOrigin = element["grid"]["showOrigin"].ToBool(sShowOrigin);
+      SnapToGrid = element["grid"]["snapTo"].ToBool(_snapToGrid);
+      IsGridVisible = element["grid"]["visible"].ToBool(_isGridVisible);
+      GridSize = element["grid"]["size"].ToFloat(_gridSize);
+      ShowOrigin = element["grid"]["showOrigin"].ToBool(_showOrigin);
 
-      LineWidth = element["lines"]["width"].ToFloat(sLineWidth);
-      ConnectionArrowSize = element["lines"]["arrowSize"].ToFloat(sConnectionArrowSize);
-      TextOffsetFromConnection = element["lines"]["textOffset"].ToFloat(sTextOffsetFromConnection);
+      LineWidth = element["lines"]["width"].ToFloat(_lineWidth);
+      ConnectionArrowSize = element["lines"]["arrowSize"].ToFloat(_connectionArrowSize);
+      TextOffsetFromConnection = element["lines"]["textOffset"].ToFloat(_textOffsetFromConnection);
       HandDrawn = element["lines"]["handDrawn"].ToBool(false);
 
-      DarknessStripeSize = element["rooms"]["darknessStripeSize"].ToFloat(sDarknessStripeSize);
-      ObjectListOffsetFromRoom = element["rooms"]["objectListOffset"].ToFloat(sObjectListOffsetFromRoom);
-      ConnectionStalkLength = element["rooms"]["connectionStalkLength"].ToFloat(sConnectionStalkLength);
-      PreferredDistanceBetweenRooms = element["rooms"]["preferredDistanceBetweenRooms"].ToFloat(sConnectionStalkLength * 2); // introduced in v1.2, hence default based on existing setting
+      DarknessStripeSize = element["rooms"]["darknessStripeSize"].ToFloat(_darknessStripeSize);
+      ObjectListOffsetFromRoom = element["rooms"]["objectListOffset"].ToFloat(_objectListOffsetFromRoom);
+      ConnectionStalkLength = element["rooms"]["connectionStalkLength"].ToFloat(_connectionStalkLength);
+      PreferredDistanceBetweenRooms = element["rooms"]["preferredDistanceBetweenRooms"].ToFloat(_connectionStalkLength * 2); // introduced in v1.2, hence default based on existing setting
 
       DefaultRoomShape = (RoomShape) element["rooms"]["defaultRoomShape"].ToInt();
       DefaultRoomName = element["rooms"]["defaultRoomName"].Text;
       if (string.IsNullOrEmpty(DefaultRoomName))
         DefaultRoomName = "Cave";
 
-      HandleSize = element["ui"]["handleSize"].ToFloat(sHandleSize);
-      SnapToElementSize = element["ui"]["snapToElementSize"].ToFloat(sSnapToElementSize);
+      HandleSize = element["ui"]["handleSize"].ToFloat(_handleSize);
+      SnapToElementSize = element["ui"]["snapToElementSize"].ToFloat(_snapToElementSize);
 
-      DocumentSpecificMargins = element["margins"]["documentSpecific"].ToBool(sDocSpecificMargins);
-      DocHorizontalMargin = element["margins"]["horizontal"].ToFloat(sDocHorizontalMargin);
-      DocVerticalMargin = element["margins"]["vertical"].ToFloat(sDocVerticalMargin);
+      DocumentSpecificMargins = element["margins"]["documentSpecific"].ToBool(_docSpecificMargins);
+      DocHorizontalMargin = element["margins"]["horizontal"].ToFloat(_docHorizontalMargin);
+      DocVerticalMargin = element["margins"]["vertical"].ToFloat(_docVerticalMargin);
       WrapTextAtDashes = element["margins"]["wrapDashes"].ToBool(true); // maybe should be somewhere else
 
-      KeypadNavigationCreationModifier = stringToModifierKeys(element["keypadNavigation"]["creationModifier"].Text, sKeypadNavigationCreationModifier);
-      KeypadNavigationUnexploredModifier = stringToModifierKeys(element["keypadNavigation"]["unexploredModifier"].Text, sKeypadNavigationUnexploredModifier);
+      KeypadNavigationCreationModifier = StringToModifierKeys(element["keypadNavigation"]["creationModifier"].Text, _keypadNavigationCreationModifier);
+      KeypadNavigationUnexploredModifier = StringToModifierKeys(element["keypadNavigation"]["unexploredModifier"].Text, _keypadNavigationUnexploredModifier);
     }
 
 
@@ -501,50 +501,50 @@ namespace Trizbort.Setup {
 
       // save fonts
       scribe.StartElement("fonts");
-      saveFont(scribe, sRoomNameFont, "room");
-      saveFont(scribe, sObjectFont, "object");
-      saveFont(scribe, sSubtitleFont, "subTitle");
-      saveFont(scribe, sLineFont, "line");
+      SaveFont(scribe, _roomNameFont, "room");
+      SaveFont(scribe, _objectFont, "object");
+      SaveFont(scribe, _subtitleFont, "subTitle");
+      SaveFont(scribe, _lineFont, "line");
       scribe.EndElement();
 
       scribe.StartElement("grid");
-      scribe.Element("snapTo", sSnapToGrid);
-      scribe.Element("visible", sIsGridVisible);
-      scribe.Element("showOrigin", sShowOrigin);
-      scribe.Element("size", sGridSize);
+      scribe.Element("snapTo", _snapToGrid);
+      scribe.Element("visible", _isGridVisible);
+      scribe.Element("showOrigin", _showOrigin);
+      scribe.Element("size", _gridSize);
       scribe.EndElement();
 
       scribe.StartElement("lines");
-      scribe.Element("width", sLineWidth);
-      scribe.Element("arrowSize", sConnectionArrowSize);
-      scribe.Element("textOffset", sTextOffsetFromConnection);
-      scribe.Element("handDrawn", sHandDrawn);
+      scribe.Element("width", _lineWidth);
+      scribe.Element("arrowSize", _connectionArrowSize);
+      scribe.Element("textOffset", _textOffsetFromConnection);
+      scribe.Element("handDrawn", _handDrawn);
       scribe.EndElement();
 
       scribe.StartElement("rooms");
-      scribe.Element("darknessStripeSize", sDarknessStripeSize);
-      scribe.Element("objectListOffset", sObjectListOffsetFromRoom);
-      scribe.Element("connectionStalkLength", sConnectionStalkLength);
-      scribe.Element("preferredDistanceBetweenRooms", sPreferredDistanceBetweenRooms);
+      scribe.Element("darknessStripeSize", _darknessStripeSize);
+      scribe.Element("objectListOffset", _objectListOffsetFromRoom);
+      scribe.Element("connectionStalkLength", _connectionStalkLength);
+      scribe.Element("preferredDistanceBetweenRooms", _preferredDistanceBetweenRooms);
       scribe.Element("defaultRoomName", DefaultRoomName);
       scribe.Element("defaultRoomShape", (int) DefaultRoomShape);
       scribe.EndElement();
 
       scribe.StartElement("ui");
-      scribe.Element("handleSize", sHandleSize);
-      scribe.Element("snapToElementSize", sSnapToElementSize);
+      scribe.Element("handleSize", _handleSize);
+      scribe.Element("snapToElementSize", _snapToElementSize);
       scribe.EndElement();
 
       scribe.StartElement("margins");
-      scribe.Element("documentSpecific", sDocSpecificMargins);
-      scribe.Element("horizontal", sDocHorizontalMargin);
-      scribe.Element("vertical", sDocVerticalMargin);
-      scribe.Element("wrapDashes", sWrapTextAtDashes); // maybe should be somewhere else
+      scribe.Element("documentSpecific", _docSpecificMargins);
+      scribe.Element("horizontal", _docHorizontalMargin);
+      scribe.Element("vertical", _docVerticalMargin);
+      scribe.Element("wrapDashes", _wrapTextAtDashes); // maybe should be somewhere else
       scribe.EndElement();
 
       scribe.StartElement("keypadNavigation");
-      scribe.Element("creationModifier", modifierKeysToString(sKeypadNavigationCreationModifier));
-      scribe.Element("unexploredModifier", modifierKeysToString(sKeypadNavigationUnexploredModifier));
+      scribe.Element("creationModifier", ModifierKeysToString(_keypadNavigationCreationModifier));
+      scribe.Element("unexploredModifier", ModifierKeysToString(_keypadNavigationUnexploredModifier));
       scribe.EndElement();
     }
 
@@ -698,7 +698,7 @@ namespace Trizbort.Setup {
       return pos;
     }
 
-    private static string modifierKeysToString(Keys key) {
+    private static string ModifierKeysToString(Keys key) {
       var builder = new StringBuilder();
       if ((key & Keys.Shift) == Keys.Shift) {
         if (builder.Length != 0)
@@ -722,12 +722,12 @@ namespace Trizbort.Setup {
       return builder.ToString();
     }
 
-    private static void raiseChanged() {
+    private static void RaiseChanged() {
       var changed = Changed;
       changed?.Invoke(null, EventArgs.Empty);
     }
 
-    private static void saveFont(XmlScribe scribe, Font font, string name) {
+    private static void SaveFont(XmlScribe scribe, Font font, string name) {
       scribe.StartElement(name);
       scribe.Attribute("size", font.Size);
       if ((font.Style & FontStyle.Bold) == FontStyle.Bold) scribe.Attribute("bold", true);
@@ -738,7 +738,7 @@ namespace Trizbort.Setup {
       scribe.EndElement();
     }
 
-    private static Keys stringToModifierKeys(string text, Keys defaultValue) {
+    private static Keys StringToModifierKeys(string text, Keys defaultValue) {
       if (string.IsNullOrEmpty(text)) return defaultValue;
 
       var value = Keys.None;
@@ -755,11 +755,11 @@ namespace Trizbort.Setup {
 
     public class ColorSettings {
       public Color this[int index] {
-        get => SColor[index];
+        get => _color[index];
         set {
-          if (SColor[index] != value) {
-            SColor[index] = value;
-            raiseChanged();
+          if (_color[index] != value) {
+            _color[index] = value;
+            RaiseChanged();
           }
         }
       }

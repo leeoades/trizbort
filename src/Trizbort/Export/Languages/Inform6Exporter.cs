@@ -13,8 +13,8 @@ using Trizbort.Extensions;
 
 namespace Trizbort.Export.Languages {
   internal class Inform6Exporter : CodeExporter {
-    private const char SINGLE_QUOTE = '\'';
-    private const char DOUBLE_QUOTE = '"';
+    private const char SingleQuote = '\'';
+    private const char DoubleQuote = '"';
 
     public override List<KeyValuePair<string, string>> FileDialogFilters => new List<KeyValuePair<string, string>> {
       new KeyValuePair<string, string>("Inform 6 Source Files", ".inf"),
@@ -37,7 +37,7 @@ namespace Trizbort.Export.Languages {
 
       foreach (var location in LocationsInExportOrder) {
         // export the location object
-        writeLocation(writer, location);
+        WriteLocation(writer, location);
 
         // export the doors from this location.
         foreach (var direction in Directions.AllDirections) {
@@ -45,11 +45,11 @@ namespace Trizbort.Export.Languages {
           if (exit?.Door == null || exit.Exported) continue;
           // remember we've exported this exit
           exit.Exported = true;
-          writeDoor(writer, location, direction, exit);
+          WriteDoor(writer, location, direction, exit);
         }
 
         // export the objects in this location
-        exportThings(writer, location.Things, null, 1);
+        ExportThings(writer, location.Things, null, 1);
       }
 
       writer.WriteLine("[ Initialise;");
@@ -80,7 +80,7 @@ namespace Trizbort.Export.Languages {
         writer.WriteLine("Verb meta 'about' * -> About;");
         writer.WriteLine();
         writer.WriteLine("[ AboutSub ;");
-        writer.WriteLine("  print({0});", toI6String(Project.Current.History, DOUBLE_QUOTE));
+        writer.WriteLine("  print({0});", ToI6String(Project.Current.History, DoubleQuote));
         writer.WriteLine("];");
         writer.WriteLine();
       }
@@ -90,8 +90,8 @@ namespace Trizbort.Export.Languages {
 
     protected override void ExportHeader(TextWriter writer, string title, string author, string description,
                                          string history) {
-      writer.WriteLine("Constant Story {0};", toI6String(title, DOUBLE_QUOTE));
-      writer.WriteLine("Constant Headline {0};", toI6String($"^By {author}^{description}^^", DOUBLE_QUOTE));
+      writer.WriteLine("Constant Story {0};", ToI6String(title, DoubleQuote));
+      writer.WriteLine("Constant Headline {0};", ToI6String($"^By {author}^{description}^^", DoubleQuote));
       writer.WriteLine();
       writer.WriteLine("Include \"Parser\";");
       writer.WriteLine("Include \"VerbLib\";");
@@ -99,28 +99,28 @@ namespace Trizbort.Export.Languages {
     }
 
     protected override string GetExportName(Room room, int? suffix) {
-      var name = Deaccent(stripUnaccentedCharacters(room.Name)).Replace(" ", "").Replace("-", "");
+      var name = Deaccent(StripUnaccentedCharacters(room.Name)).Replace(" ", "").Replace("-", "");
       if (string.IsNullOrEmpty(name)) name = "room";
       if (suffix != null) name = $"{name}{suffix}";
       return name;
     }
 
     protected override string GetExportName(string displayName, int? suffix) {
-      var name = Deaccent(stripUnaccentedCharacters(displayName)).Replace(" ", "").Replace("-", "");
+      var name = Deaccent(StripUnaccentedCharacters(displayName)).Replace(" ", "").Replace("-", "");
       if (string.IsNullOrEmpty(name)) name = "item";
       if (suffix != null) name = $"{name}{suffix}";
       return name;
     }
 
-    private static void exportThings(TextWriter writer, IEnumerable<Thing> things, Thing container, int indent) {
+    private static void ExportThings(TextWriter writer, IEnumerable<Thing> things, Thing container, int indent) {
       foreach (var thing in things.Where(thing => thing.Container == container)) {
-        writeOneThing(writer, thing, indent, container);
-        exportThings(writer, thing.Contents, thing, indent + 1);
+        WriteOneThing(writer, thing, indent, container);
+        ExportThings(writer, thing.Contents, thing, indent + 1);
       }
     }
 
 
-    private static string stripOddCharacters(string text, params char[] exclude) {
+    private static string StripOddCharacters(string text, params char[] exclude) {
       var exclusions = new List<char>(exclude);
       if (string.IsNullOrEmpty(text)) return string.Empty;
       var result = string.Empty;
@@ -131,13 +131,13 @@ namespace Trizbort.Export.Languages {
       return result;
     }
 
-    private static string stripUnaccentedCharacters(string text) {
-      return stripOddCharacters(text, '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�',
+    private static string StripUnaccentedCharacters(string text) {
+      return StripOddCharacters(text, '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�',
         '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�',
         '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', ' ', '-');
     }
 
-    private static string toI6PropertyName(MappableDirection direction) {
+    private static string ToI6PropertyName(MappableDirection direction) {
       switch (direction) {
         case MappableDirection.North:
           return "n_to";
@@ -169,37 +169,37 @@ namespace Trizbort.Export.Languages {
       }
     }
 
-    private static string toI6String(string text, char quote) {
+    private static string ToI6String(string text, char quote) {
       if (text == null) text = string.Empty;
       return string.Format("{1}{0}{1}", text.Replace('\"', '~').Replace("\r", string.Empty).Replace('\n', '^'), quote);
     }
 
-    private static string toI6Words(string text) {
+    private static string ToI6Words(string text) {
       var words = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-      if (words.Length == 0) return toI6String("thing", SINGLE_QUOTE);
+      if (words.Length == 0) return ToI6String("thing", SingleQuote);
       var output = string.Empty;
       foreach (var word in words) {
         if (output.Length > 0) output += ' ';
-        output += toI6String(Deaccent(word), SINGLE_QUOTE);
+        output += ToI6String(Deaccent(word), SingleQuote);
       }
 
       return output;
     }
 
-    private void writeDoor(TextWriter writer, Location location, MappableDirection direction, Exit exit) {
+    private void WriteDoor(TextWriter writer, Location location, MappableDirection direction, Exit exit) {
       var oppositeDirection = CompassPointHelper.GetOpposite(direction);
       var reciprocal = exit.Target.GetBestExit(oppositeDirection);
       writer.WriteLine("Object {0} {1}", GetExportName(exit.ConnectionName, null), exit.ConnectionDescription);
-      writer.WriteLine("  with  name {0},", toI6Words(Deaccent(stripUnaccentedCharacters(exit.ConnectionName))));
-      writer.WriteLine("        description {0},", toI6String(exit.ConnectionDescription, DOUBLE_QUOTE));
+      writer.WriteLine("  with  name {0},", ToI6Words(Deaccent(StripUnaccentedCharacters(exit.ConnectionName))));
+      writer.WriteLine("        description {0},", ToI6String(exit.ConnectionDescription, DoubleQuote));
       writer.WriteLine("        found_in {0} {1},", location.ExportName, exit.Target.ExportName);
       writer.WriteLine("        door_to [; if (self in {0}) return {1}; return {0};],", 
         location.ExportName, 
         exit.Target.ExportName);
       writer.WriteLine("        door_dir [; if (self in {0}) return {1}; return {2}; ],", 
         location.ExportName, 
-        toI6PropertyName(direction), 
-        toI6PropertyName(oppositeDirection));
+        ToI6PropertyName(direction),
+        ToI6PropertyName(oppositeDirection));
       writer.WriteLine("  has   door {0} {1} {2} {3} ;", 
         exit.Door.Openable ? "openable" : string.Empty,
         exit.Door.Open ? "open" : "~open", 
@@ -209,18 +209,18 @@ namespace Trizbort.Export.Languages {
       writer.WriteLine();
     }
 
-    private void writeLocation(TextWriter writer, Location location) {
+    private void WriteLocation(TextWriter writer, Location location) {
       writer.WriteLine("{0}  {1} {2}",
         location.Room.Region == Region.DefaultRegion ? "Object" : GetExportName(location.Room.Region, null),
         location.ExportName, 
-        toI6String(location.Room.Name, DOUBLE_QUOTE));
+        ToI6String(location.Room.Name, DoubleQuote));
       writer.WriteLine("  with  description");
-      writer.WriteLine("            {0},", toI6String(location.Room.PrimaryDescription, DOUBLE_QUOTE));
+      writer.WriteLine("            {0},", ToI6String(location.Room.PrimaryDescription, DoubleQuote));
       foreach (var direction in Directions.AllDirections) {
         var exit = location.GetBestExit(direction);
         if (exit != null)
           writer.WriteLine("        {0} {1},", 
-            toI6PropertyName(direction), 
+            ToI6PropertyName(direction),
             exit.Door != null ? GetExportName(exit.ConnectionName, null) : exit.Target.ExportName);
       }
 
@@ -228,16 +228,16 @@ namespace Trizbort.Export.Languages {
       writer.WriteLine();
     }
 
-    private static void writeOneThing(TextWriter writer, Thing thing, int indent, Thing container) {
+    private static void WriteOneThing(TextWriter writer, Thing thing, int indent, Thing container) {
       writer.WriteLine("Object {0} {1} {2}", 
         "-> ".Repeat( indent), 
         thing.ExportName,
-        toI6String(stripUnaccentedCharacters(thing.DisplayName).Trim(), DOUBLE_QUOTE));
+        ToI6String(StripUnaccentedCharacters(thing.DisplayName).Trim(), DoubleQuote));
 
-      writer.WriteLine("  with  name {0},", toI6Words(Deaccent(stripUnaccentedCharacters(thing.DisplayName))));
-      writer.Write("        description {0}", toI6String(thing.DisplayName, DOUBLE_QUOTE));
+      writer.WriteLine("  with  name {0},", ToI6Words(Deaccent(StripUnaccentedCharacters(thing.DisplayName))));
+      writer.Write("        description {0}", ToI6String(thing.DisplayName, DoubleQuote));
 
-      var attributes = setAttributes(thing);
+      var attributes = SetAttributes(thing);
 
       if (attributes.Count == 0) {
         writer.WriteLine(";");
@@ -250,7 +250,7 @@ namespace Trizbort.Export.Languages {
       writer.WriteLine();
     }
 
-    private static List<string> setAttributes(Thing thing) {
+    private static List<string> SetAttributes(Thing thing) {
       var attributes = new List<string>();
 
       if (thing.Contents.Count > 0) {

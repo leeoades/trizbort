@@ -68,10 +68,10 @@ namespace Trizbort.Tests {
         (message, title) => TestContext.Out.WriteLine(title + ": " + message)).Load(path).ShouldBeTrue(failure?.ToString());
     }
 
-    private static IEnumerable<string> manualMaps() => Directory.GetFiles(FixtureDirectory, "*.trizbort")
+    private static IEnumerable<string> ManualMaps() => Directory.GetFiles(FixtureDirectory, "*.trizbort")
       .Select(Path.GetFileName).OrderBy(name => name);
 
-    [TestCaseSource(nameof(manualMaps))]
+    [TestCaseSource(nameof(ManualMaps))]
     public void LegacyManualMap_LoadSaveReloadPreservesCanonicalContent(string fixture) {
       Load(Project.Current, Path.Combine(FixtureDirectory, fixture));
       var engine = new LegacyMapFileEngine(Project.Current);
@@ -192,7 +192,7 @@ namespace Trizbort.Tests {
         .Select(line => Regex.Match(line, @"([^\\\s]+\.trizbort)\s*$", RegexOptions.IgnoreCase))
         .Where(match => match.Success).Select(match => match.Groups[1].Value).ToArray();
       foreach (var reference in references) File.Exists(Path.Combine(FixtureDirectory, reference)).ShouldBeTrue(reference);
-      var unassigned = manualMaps().Except(references, StringComparer.OrdinalIgnoreCase).OrderBy(name => name).ToArray();
+      var unassigned = ManualMaps().Except(references, StringComparer.OrdinalIgnoreCase).OrderBy(name => name).ToArray();
       unassigned.ShouldBe(new[] {
         "17-by-17.trizbort", "object-testing.trizbort", "region-accent-clash.trizbort", "region-accent-one.trizbort",
         "roomstats-case-insensitive-duplicate-testing.trizbort", "roomstats-duplicate-testing.trizbort"

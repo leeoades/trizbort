@@ -29,7 +29,7 @@ namespace Trizbort.Tests {
 
   [TestFixture, Category("Integration")]
   public class ExporterRegressionTests : IsolatedProjectTests {
-    private static IEnumerable<TestCaseData> exporters() {
+    private static IEnumerable<TestCaseData> Exporters() {
       yield return new TestCaseData(typeof(Inform6Exporter), "Include \"Parser\";", "e_to");
       yield return new TestCaseData(typeof(Inform7Exporter), "room", "east");
       yield return new TestCaseData(typeof(TadsExporter), "gameMain: GameMainDef", "east");
@@ -41,7 +41,7 @@ namespace Trizbort.Tests {
       yield return new TestCaseData(typeof(AdventuronExporter), "locations {", ", east_oneway,");
     }
 
-    [TestCaseSource(nameof(exporters))]
+    [TestCaseSource(nameof(Exporters))]
     public void AllLanguages_ExportRoomsDirectionsAndUpdatedContentWithoutMutatingMap(Type type, string structure, string direction) {
       var first = ProjectRegressionTests.AddRoom("Observatory");
       first.AddDescription("A bright dome.");
@@ -61,13 +61,13 @@ namespace Trizbort.Tests {
           before.ToLowerInvariant().ShouldContain("chest");
           before.ToLowerInvariant().ShouldContain("key");
         }
-        normalize(type, exporter.Export()).ShouldBe(normalize(type, before));
+        Normalize(type, exporter.Export()).ShouldBe(Normalize(type, before));
         if (type == typeof(QuestExporter)) XDocument.Parse(before).Root.Name.LocalName.ShouldBe("asl");
         if (type == typeof(QuestRoomsExporter)) XDocument.Parse("<rooms>" + before + "</rooms>").Root.Elements("object").Count().ShouldBe(2);
         var label = new MapLabel(Project.Current) {Text = "AnnotationMustNotLeak"};
         Project.Current.Elements.Add(label);
         Project.Current.Elements.Add(new Connection(Project.Current, new Vertex(first.PortAt(CompassPoint.North)), new Vertex(label.PortList[0])));
-        normalize(type, exporter.Export()).ShouldBe(normalize(type, before));
+        Normalize(type, exporter.Export()).ShouldBe(Normalize(type, before));
         first.Name = "Planetarium";
         exporter.Export().ToLowerInvariant().ShouldContain("planetarium");
         new LegacyMapFileEngine(Project.Current).Save(Files.File("map.trizbort")).ShouldBeTrue();
@@ -82,7 +82,7 @@ namespace Trizbort.Tests {
       Project.Current.Elements.Count.ShouldBe(5);
     }
 
-    private static string normalize(Type type, string output) {
+    private static string Normalize(Type type, string output) {
       if (type != typeof(QuestExporter)) return output;
       var document = XDocument.Parse(output);
       var id = document.Root.Element("game").Element("gameid");

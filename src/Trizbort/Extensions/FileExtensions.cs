@@ -3,19 +3,19 @@ using System.IO;
 
 namespace Trizbort.Extensions {
   public static class FileExtensions {
-    private static readonly string NumberPattern = "-backup-{0}";
+    private static readonly string _numberPattern = "-backup-{0}";
 
     public static string NextAvailableFilename(this string path) {
       if (!File.Exists(path))
         return path;
 
       if (Path.HasExtension(path))
-        return getNextFilename(path.Insert(path.LastIndexOf(Path.GetExtension(path), StringComparison.CurrentCultureIgnoreCase), NumberPattern));
+        return GetNextFilename(path.Insert(path.LastIndexOf(Path.GetExtension(path), StringComparison.CurrentCultureIgnoreCase), _numberPattern));
 
-      return getNextFilename(path + NumberPattern);
+      return GetNextFilename(path + _numberPattern);
     }
 
-    private static string getNextFilename(string pattern) {
+    private static string GetNextFilename(string pattern) {
       var tmp = string.Format(pattern, 1);
       if (tmp == pattern)
         throw new ArgumentException("The pattern must include an index place-holder", nameof(pattern));

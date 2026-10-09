@@ -41,8 +41,8 @@ namespace Trizbort.Domain.Controllers {
       UserInteraction.SetClipboardText(clipboardText);
     }
 
-    public void CopyElements(List<Element> mSelectedElements) {
-      var xx = CreateCopyObject(mSelectedElements);
+    public void CopyElements(List<Element> selectedElements) {
+      var xx = CreateCopyObject(selectedElements);
       var clipboardText = JsonConvert.SerializeObject(xx, Formatting.Indented, new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Ignore});
       UserInteraction.SetClipboardText(clipboardText);
     }
@@ -51,7 +51,7 @@ namespace Trizbort.Domain.Controllers {
       var xx = new CopyObject {Rooms = new List<CopyRoomObj>(), Connections = new List<CopyConnectionObj>()};
       foreach (var element in elements)
         if (element is Room) {
-          var copy = createCopyObj(element as Room);
+          var copy = CreateCopyObj(element as Room);
           xx.Rooms.Add(copy);
         } else if (element is MapLabel label) {
           xx.Labels.Add(new CopyLabelObj {
@@ -61,7 +61,7 @@ namespace Trizbort.Domain.Controllers {
             ZOrder = label.ZOrder
           });
         } else if (element is Connection) {
-          var copy = createCopyObj(element as Connection);
+          var copy = CreateCopyObj(element as Connection);
           xx.Connections.Add(copy);
         }
 
@@ -156,7 +156,7 @@ namespace Trizbort.Domain.Controllers {
       newRoom.ReferenceRoomId = room.ReferenceRoomId;
     }
 
-    private CopyRoomObj createCopyObj(Room room) {
+    private CopyRoomObj CreateCopyObj(Room room) {
       var xx = new CopyRoomObj {
         Name = room.Name,
         Shape = room.Shape,
@@ -197,7 +197,7 @@ namespace Trizbort.Domain.Controllers {
       return xx;
     }
 
-    private CopyConnectionObj createCopyObj(Connection conn) {
+    private CopyConnectionObj CreateCopyObj(Connection conn) {
       var xx = new CopyConnectionObj {
         ConnectionColor = conn.ConnectionColor,
         Description = conn.Description,

@@ -6,7 +6,7 @@ namespace Trizbort.Domain.AppSettings
 {
   public class ApplicationSettings
   {
-    private const string APP_SETTINGS_FILE_NAME = @".\appsettings.json";
+    private const string AppSettingsFileName = @".\appsettings.json";
 
     public bool ApplyStyleToNewRooms { get; set; }
     public bool DoubleClickToAddRoom { get; set; }

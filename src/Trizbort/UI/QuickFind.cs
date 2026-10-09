@@ -14,23 +14,23 @@ namespace Trizbort.UI {
     public QuickFind() {
       InitializeComponent();
 
-      _cache = buildFindCache();
+      _cache = BuildFindCache();
       _cache = _cache.OrderBy(p => p.Text).ToList();
 
       var source = new AutoCompleteStringCollection();
       source.AddRange(_cache.Select(p => p.ToString()).ToArray());
-      txtFind.AutoCompleteCustomSource = source;
+      _txtFind.AutoCompleteCustomSource = source;
     }
 
-    private void btnCancel_Click(object sender, EventArgs e) {
+    private void BtnCancelClick(object sender, EventArgs e) {
       Close();
     }
 
-    private void btnFind_Click(object sender, EventArgs e) {
-      doFind();
+    private void BtnFindClick(object sender, EventArgs e) {
+      DoFind();
     }
 
-    private List<FindAutofindCacheItem> buildFindCache() {
+    private List<FindAutofindCacheItem> BuildFindCache() {
       var indexer = new Indexer();
       var findCacheItems = indexer.Index();
 
@@ -52,11 +52,11 @@ namespace Trizbort.UI {
       return list;
     }
 
-    private void doFind() {
-      var s = txtFind.Text;
+    private void DoFind() {
+      var s = _txtFind.Text;
       if (string.IsNullOrWhiteSpace(s)) Close();
 
-      var found = getResults(s);
+      var found = GetResults(s);
 
       var controller = new CanvasController();
       controller.SelectElements(found);
@@ -68,13 +68,13 @@ namespace Trizbort.UI {
       Close();
     }
 
-    private List<Element> getResults(string s) {
+    private List<Element> GetResults(string s) {
       var list = _cache.Where(xx => xx.Text?.IndexOf(s, StringComparison.CurrentCultureIgnoreCase) > -1).Select(p => p.Room).ToList();
       return list;
     }
 
     private void QuickFind_Activated(object sender, EventArgs e) {
-      txtFind.Focus();
+      _txtFind.Focus();
     }
 
     private void QuickFind_Deactivate(object sender, EventArgs e) {
@@ -95,9 +95,9 @@ namespace Trizbort.UI {
       }
     }
 
-    private void txtFind_KeyPress(object sender, KeyPressEventArgs e)
+    private void TxtFindKeyPress(object sender, KeyPressEventArgs e)
     {
-      if (e.KeyChar == (int) Keys.Enter) doFind();
+      if (e.KeyChar == (int) Keys.Enter) DoFind();
     }
   }
 }

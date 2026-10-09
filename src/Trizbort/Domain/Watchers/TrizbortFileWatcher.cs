@@ -10,7 +10,7 @@ namespace Trizbort.Domain.Watchers {
 
     public TrizbortFileWatcher() {
       _watcher.NotifyFilter = NotifyFilters.LastWrite;
-      _watcher.Changed += changed;
+      _watcher.Changed += Changed;
     }
 
     public void Dispose() {
@@ -38,17 +38,17 @@ namespace Trizbort.Domain.Watchers {
       ReloadMap?.Invoke(this, EventArgs.Empty);
     }
 
-    private void changed(object sender, FileSystemEventArgs e) {
+    private void Changed(object sender, FileSystemEventArgs e) {
       StopWatcher();
       Project.Current.Canvas.BeginInvoke(new Action(() => {
-        if (UserInteraction.ShowMessage(TrizbortApplication.MainForm?.Canvas, $"This map has been modified by another program.{Environment.NewLine}Do you want to reload it{dirtyMessage()}?", "Reload", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+        if (UserInteraction.ShowMessage(TrizbortApplication.MainForm?.Canvas, $"This map has been modified by another program.{Environment.NewLine}Do you want to reload it{DirtyMessage()}?", "Reload", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
           OnReloadMap();
         else
           StartWatcher();
       }));
     }
 
-    private string dirtyMessage() {
+    private string DirtyMessage() {
       if (!Project.Current.IsDirty) return "";
       return " and lose changes made in Trizbort";
     }

@@ -11,8 +11,8 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages {
   internal class TadsExporter : CodeExporter {
-    private const char SINGLE_QUOTE = '\'';
-    private const char DOUBLE_QUOTE = '"';
+    private const char SingleQuote = '\'';
+    private const char DoubleQuote = '"';
 
     public override List<KeyValuePair<string, string>> FileDialogFilters => new List<KeyValuePair<string, string>> {
       new KeyValuePair<string, string>("TADS Source Files", ".t"),
@@ -32,8 +32,8 @@ namespace Trizbort.Export.Languages {
         }
 
       foreach (var location in LocationsInExportOrder) {
-        writer.WriteLine("{0}: {1} {2}", location.ExportName, location.Room.IsDark ? "DarkRoom" : "Room", toTadsString(location.Room.Name, SINGLE_QUOTE));
-        if (!string.IsNullOrEmpty(location.Room.PrimaryDescription)) writer.WriteLine("    {0}", toTadsString(location.Room.PrimaryDescription, DOUBLE_QUOTE));
+        writer.WriteLine("{0}: {1} {2}", location.ExportName, location.Room.IsDark ? "DarkRoom" : "Room", ToTadsString(location.Room.Name, SingleQuote));
+        if (!string.IsNullOrEmpty(location.Room.PrimaryDescription)) writer.WriteLine("    {0}", ToTadsString(location.Room.PrimaryDescription, DoubleQuote));
         if (ApplicationSettingsController.AppSettings.SaveTadstoAdv3Lite && location.Room.Region != Region.DefaultRegion) writer.WriteLine("    regions = [{0}]", location.Room.Region);
         var anyExits = false;
         foreach (var direction in Directions.AllDirections) {
@@ -44,14 +44,14 @@ namespace Trizbort.Export.Languages {
               anyExits = true;
             }
 
-            writer.WriteLine("    {0} = {1}", toTadsPropertyName(direction), exit.Target.ExportName);
+            writer.WriteLine("    {0} = {1}", ToTadsPropertyName(direction), exit.Target.ExportName);
           }
         }
 
         writer.WriteLine(";");
         writer.WriteLine();
 
-        exportThings(writer, location.Things, null, 1);
+        ExportThings(writer, location.Things, null, 1);
       }
 
       writer.WriteLine("me: Actor");
@@ -93,17 +93,17 @@ namespace Trizbort.Export.Languages {
 
       writer.WriteLine();
       writer.WriteLine("versionInfo : GameID");
-      writer.WriteLine("    name = {0}", toTadsString(title, SINGLE_QUOTE));
-      writer.WriteLine("    byline = {0}", toTadsString($"By {author}", SINGLE_QUOTE));
+      writer.WriteLine("    name = {0}", ToTadsString(title, SingleQuote));
+      writer.WriteLine("    byline = {0}", ToTadsString($"By {author}", SingleQuote));
       writer.WriteLine("    version = '1'");
-      writer.WriteLine("    desc = {0}", toTadsString(description, SINGLE_QUOTE));
-      if (!string.IsNullOrWhiteSpace(history)) exportHistory(writer, history);
+      writer.WriteLine("    desc = {0}", ToTadsString(description, SingleQuote));
+      if (!string.IsNullOrWhiteSpace(history)) ExportHistory(writer, history);
       writer.WriteLine(";");
       writer.WriteLine();
     }
 
     protected override string GetExportName(Room room, int? suffix) {
-      var name = stripOddCharacters(room.Name);
+      var name = StripOddCharacters(room.Name);
       if (string.IsNullOrEmpty(name)) name = "room";
 
       if (suffix != null) name = $"{name}{suffix}";
@@ -111,37 +111,37 @@ namespace Trizbort.Export.Languages {
     }
 
     protected override string GetExportName(string displayName, int? suffix) {
-      var name = stripOddCharacters(displayName);
+      var name = StripOddCharacters(displayName);
       if (string.IsNullOrEmpty(name)) name = "item";
       if (suffix != null) name = $"{name}{suffix}";
       return name;
     }
 
-    private void exportHistory(TextWriter writer, string history) {
+    private void ExportHistory(TextWriter writer, string history) {
       writer.WriteLine();
       writer.WriteLine("    showAbout()");
       writer.WriteLine("    {");
-      writer.WriteLine($"    {DOUBLE_QUOTE}{history}{DOUBLE_QUOTE};");
+      writer.WriteLine($"    {DoubleQuote}{history}{DoubleQuote};");
       writer.WriteLine("    }");
     }
 
-    private static void exportThings(TextWriter writer, List<Thing> things, Thing container, int indent) {
+    private static void ExportThings(TextWriter writer, List<Thing> things, Thing container, int indent) {
       foreach (var thing in things.Where(thing => thing.Container == container)) {
-        writer.WriteLine("{0} {1}: {3} {2} {2}", repeat('+', indent), thing.ExportName, toTadsString(stripOddCharacters(thing.DisplayName, ' ', '-').Trim(), SINGLE_QUOTE), thing.Contents.Count > 0 ? "Container" : "Thing");
+        writer.WriteLine("{0} {1}: {3} {2} {2}", Repeat('+', indent), thing.ExportName, ToTadsString(StripOddCharacters(thing.DisplayName, ' ', '-').Trim(), SingleQuote), thing.Contents.Count > 0 ? "Container" : "Thing");
         writer.WriteLine(";");
         writer.WriteLine();
 
-        exportThings(writer, thing.Contents, thing, indent + 1);
+        ExportThings(writer, thing.Contents, thing, indent + 1);
       }
     }
 
-    private static string repeat(char c, int times) {
+    private static string Repeat(char c, int times) {
       var text = string.Empty;
       for (var index = 0; index < times; ++index) text += c;
       return text;
     }
 
-    private static string stripOddCharacters(string text, params char[] exclude) {
+    private static string StripOddCharacters(string text, params char[] exclude) {
       var exclusions = new List<char>(exclude);
       if (string.IsNullOrEmpty(text)) return string.Empty;
       var result = string.Empty;
@@ -151,7 +151,7 @@ namespace Trizbort.Export.Languages {
       return result;
     }
 
-    private static string toTadsPropertyName(MappableDirection direction) {
+    private static string ToTadsPropertyName(MappableDirection direction) {
       switch (direction) {
         case MappableDirection.North:
           return "north";
@@ -183,7 +183,7 @@ namespace Trizbort.Export.Languages {
       }
     }
 
-    private static string toTadsString(string text, char quote) {
+    private static string ToTadsString(string text, char quote) {
       if (text == null) text = string.Empty;
       return string.Format("{1}{0}{1}", text.Replace(quote.ToString(), $@"\{quote}"), quote);
     }

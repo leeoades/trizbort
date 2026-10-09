@@ -42,19 +42,19 @@ namespace Trizbort.Export.Languages {
 
       foreach (var location in LocationsInExportOrder) {
         if (location.Room.Region != "NoRegion") continue;
-        anyConditionalExits |= printThisLoc(writer, location);
+        anyConditionalExits |= PrintThisLoc(writer, location);
       }
 
       // export regions
       foreach (var region in RegionsInExportOrder) {
-        writer.WriteLine("book {0}", getExportName(region.ExportName, null));
+        writer.WriteLine("book {0}", CreateExportName(region.ExportName, null));
         writer.WriteLine();
-        writer.WriteLine("There is a region called {0}.", getExportName(region.ExportName, null));
+        writer.WriteLine("There is a region called {0}.", CreateExportName(region.ExportName, null));
         writer.WriteLine();
         // export each location
         foreach (var location in LocationsInExportOrder) {
           if ((location.Room.Region == region.Region.RegionName) ||(location.Room.Region == region.ExportName))
-            anyConditionalExits |= printThisLoc(writer, location);
+            anyConditionalExits |= PrintThisLoc(writer, location);
         }
       }
 
@@ -74,7 +74,7 @@ namespace Trizbort.Export.Languages {
       writer.WriteLine();
 
       if (!string.IsNullOrEmpty(description)) {
-        writer.WriteLine("The story description is {0}{1}", toInform7PrintableString(description),
+        writer.WriteLine("The story description is {0}{1}", ToInform7PrintableString(description),
           description.EndsWith(".") ? string.Empty : ".");
         writer.WriteLine();
       }
@@ -83,32 +83,32 @@ namespace Trizbort.Export.Languages {
       writer.WriteLine();
 
       if (!string.IsNullOrWhiteSpace(history))
-        exportHistory(writer, history);
+        ExportHistory(writer, history);
     }
 
     protected override string GetExportName(Room room, int? suffix) {
-      return getExportName(room.Name, suffix);
+      return CreateExportName(room.Name, suffix);
     }
 
     protected override string GetExportName(string displayName, int? suffix) {
-      return getExportName(displayName, suffix);
+      return CreateExportName(displayName, suffix);
     }
 
-    private static bool containsOddCharacters(string text) {
+    private static bool ContainsOddCharacters(string text) {
       return text.Any(c => c != ' ' && c != '-' && !char.IsLetterOrDigit(c));
     }
 
-    private static bool containsWord(string text, IEnumerable<string> words) {
-      return words.Any(word => containsWord(text, word));
+    private static bool ContainsWord(string text, IEnumerable<string> words) {
+      return words.Any(word => ContainsWord(text, word));
     }
 
-    private static bool containsWord(string text, string word) {
+    private static bool ContainsWord(string text, string word) {
       if (string.IsNullOrEmpty(text)) return string.IsNullOrEmpty(word);
       var words = text.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
       return words.Any(wordFound => StringComparer.InvariantCultureIgnoreCase.Compare(word, wordFound) == 0);
     }
 
-    private static void exportHistory(TextWriter writer, string history) {
+    private static void ExportHistory(TextWriter writer, string history) {
       var historyCoded = history.Replace("\r\n", "\r\n[line break]");
       writer.WriteLine("chapter about");
       writer.WriteLine("");
@@ -119,12 +119,12 @@ namespace Trizbort.Export.Languages {
       writer.WriteLine("");
     }
 
-    private string getArticle(Thing myThing) {
+    private string GetArticle(Thing myThing) {
       var noun = myThing.ExportName;
 
       if (myThing.ProperNamed) return "";
 
-      if (string.IsNullOrEmpty(noun) || isPlural(noun) || myThing.Forceplural == Thing.Amounts.Plural) {
+      if (string.IsNullOrEmpty(noun) || IsPlural(noun) || myThing.Forceplural == Thing.Amounts.Plural) {
         if (!string.IsNullOrEmpty(noun) && char.IsUpper(noun[0])) return string.Empty;
 
         // e.g. "Some canvas", "Some leaves"
@@ -137,13 +137,13 @@ namespace Trizbort.Export.Languages {
       return "A ";
     }
 
-    private string getExportName(string name, int? suffix) {
+    private string CreateExportName(string name, int? suffix) {
       var spaceless = true;
 
-      if (containsOddCharacters(name))
-        name = stripOddCharacters(name);
+      if (ContainsOddCharacters(name))
+        name = StripOddCharacters(name);
 
-      if (containsWord(name, ReservedWords))
+      if (ContainsWord(name, ReservedWords))
         if (suffix == null)
           suffix = 1;
 
@@ -153,7 +153,7 @@ namespace Trizbort.Export.Languages {
       return name;
     }
 
-    private static string getInform7Name(MappableDirection direction) {
+    private static string GetInform7Name(MappableDirection direction) {
       switch (direction) {
         case MappableDirection.North:
           return "North";
@@ -184,16 +184,16 @@ namespace Trizbort.Export.Languages {
       }
     }
 
-    private static string isAre(Thing myThing) {
+    private static string IsAre(Thing myThing) {
       if (myThing.Forceplural == Thing.Amounts.Plural) return "are";
       return "is";
     }
 
-    private static bool isPlural(string noun) {
+    private static bool IsPlural(string noun) {
       return !string.IsNullOrEmpty(noun) && !char.IsUpper(noun[0]) && noun.EndsWith("s") && !noun.EndsWith("ss");
     }
 
-    private bool printThisLoc(TextWriter writer, Location location) {
+    private bool PrintThisLoc(TextWriter writer, Location location) {
       // remember we've exported this location
 
       writer.WriteLine("part {0}", location.ExportName);
@@ -203,10 +203,10 @@ namespace Trizbort.Export.Languages {
       // these can occur with rooms called "West of House", or one room called "Cave" and one called "Damp Cave", etc.
       writer.Write("There is a room called {0}.", location.ExportName);
       if (location.ExportName != location.Room.Name)
-        writer.Write(" The printed name of it is {0}.", toInform7PrintableString(location.Room.Name));
+        writer.Write(" The printed name of it is {0}.", ToInform7PrintableString(location.Room.Name));
       var description = location.Room.PrimaryDescription;
       if (!string.IsNullOrEmpty(description))
-        writer.Write(" {0}{1}", toInform7PrintableString(description), description.EndsWith(".") ? string.Empty : ".");
+        writer.Write(" {0}{1}", ToInform7PrintableString(description), description.EndsWith(".") ? string.Empty : ".");
       if (location.Room.IsDark) writer.Write(" It is dark.");
 
       if (!string.IsNullOrEmpty(location.Room.Region) && !location.Room.Region.Equals(Region.DefaultRegion))
@@ -230,9 +230,9 @@ namespace Trizbort.Export.Languages {
         var thingText = string.Empty;
 
         if (!thing.IsPerson) {
-          thingText += $"{getArticle(thing)}{thing.ExportName} ";
+          thingText += $"{GetArticle(thing)}{thing.ExportName} ";
         } 
-        thingText += $"{whatItIs(thing)}";
+        thingText += $"{WhatItIs(thing)}";
         if (thing.Container == null) {
           thingText += $" in {thing.Location.ExportName}.";
         } else {
@@ -257,8 +257,8 @@ namespace Trizbort.Export.Languages {
         
         if (thing.DisplayName != thing.ExportName)
           writer.Write(" It is privately-named. The printed name of it is {0}{1} Understand {2} as {3}.",
-            toInform7PrintableString(thing.DisplayName), thing.DisplayName.EndsWith(".") ? string.Empty : ".",
-            toInform7UnderstandWords(thing.DisplayName), thing.ExportName);
+            ToInform7PrintableString(thing.DisplayName), thing.DisplayName.EndsWith(".") ? string.Empty : ".",
+            ToInform7UnderstandWords(thing.DisplayName), thing.ExportName);
         writer.WriteLine();
         if (!string.IsNullOrWhiteSpace(thing.WarningText))
           writer.WriteLine($"[Note: there were errors with your bracketed definitions.\n{thing.WarningText}]");
@@ -277,9 +277,9 @@ namespace Trizbort.Export.Languages {
           exportedExits = true;
 
           if (exit.Door == null)
-            writeNormalExit(writer, location, direction, exit);
+            WriteNormalExit(writer, location, direction, exit);
           else
-            writeDoor(writer, location, direction, exit);
+            WriteDoor(writer, location, direction, exit);
         }
       }
 
@@ -291,7 +291,7 @@ namespace Trizbort.Export.Languages {
         if (exit != null && exit.Conditional) {
           wroteConditionalExit = true;
           writer.WriteLine("Instead of going {0} from {1}, block conditional exits.",
-            getInform7Name(direction).ToLowerInvariant(), location.ExportName);
+            GetInform7Name(direction).ToLowerInvariant(), location.ExportName);
         }
       }
 
@@ -300,29 +300,29 @@ namespace Trizbort.Export.Languages {
       return wroteConditionalExit;
     }
 
-    private static string stripOddCharacters(string text, params char[] exceptChars) {
+    private static string StripOddCharacters(string text, params char[] exceptChars) {
       var exceptCharsList = new List<char>(exceptChars);
       var newText = text.Where(c => c == ' ' || c == '-' || char.IsLetterOrDigit(c) || exceptCharsList.Contains(c))
         .Aggregate(string.Empty, (current, c) => current + c);
       return string.IsNullOrEmpty(newText) ? "object" : newText;
     }
 
-    private static string toInform7PrintableString(string text) {
+    private static string ToInform7PrintableString(string text) {
       return $"\"{text.Replace("'", "[']").Replace("\"", "'")}\"";
     }
 
-    private static string toInform7UnderstandString(string text) {
-      return $"\"{stripOddCharacters(text, '\'')}\"";
+    private static string ToInform7UnderstandString(string text) {
+      return $"\"{StripOddCharacters(text, '\'')}\"";
     }
 
-    private static string toInform7UnderstandWords(string text) {
+    private static string ToInform7UnderstandWords(string text) {
       // "battery-powered brass lantern" -> { "battery-powered", "brass", "lantern" }
       var words = text.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
       text = string.Empty;
       foreach (var word in words) {
         // "battery-powered"
         if (text.Length > 0) text += " and ";
-        text += toInform7UnderstandString(word);
+        text += ToInform7UnderstandString(word);
 
         //// "battery-powered" -> { "battery", "powered" }
         //var parts = word.Split(new char[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
@@ -342,7 +342,7 @@ namespace Trizbort.Export.Languages {
       return text;
     }
 
-    private static string whatItIs(Thing thing) {
+    private static string WhatItIs(Thing thing) {
       var whatString = string.Empty;
       if (thing.IsPerson) {
         whatString += $"{thing.ExportName} is a " + Enum.GetName(typeof(Thing.ThingGender), thing.Gender) + " person";
@@ -360,7 +360,7 @@ namespace Trizbort.Export.Languages {
       return whatString;
     }
 
-    private void writeDoor(TextWriter writer, Location location, MappableDirection direction, Exit exit) {
+    private void WriteDoor(TextWriter writer, Location location, MappableDirection direction, Exit exit) {
       var oppositeDirection = CompassPointHelper.GetOpposite(direction);
       var reciprocal = exit.Target.GetBestExit(oppositeDirection);
       writer.WriteLine(
@@ -370,13 +370,13 @@ namespace Trizbort.Export.Languages {
       writer.WriteLine(
         $"{exit.ConnectionName} is {(exit.Door.Locked ? "locked" : "unlocked")} and {(exit.Door.Lockable ? "lockable" : "not lockable")}.");
       writer.WriteLine(
-        $"The description of {exit.ConnectionName} is {toInform7PrintableString(exit.ConnectionDescription)}.");
+        $"The description of {exit.ConnectionName} is {ToInform7PrintableString(exit.ConnectionDescription)}.");
       reciprocal.Exported = true;
       writer.WriteLine();
     }
 
-    private static void writeNormalExit(TextWriter writer, Location location, MappableDirection direction, Exit exit) {
-      writer.Write($"{getInform7Name(direction)} of {location.ExportName} is {exit.Target.ExportName}.");
+    private static void WriteNormalExit(TextWriter writer, Location location, MappableDirection direction, Exit exit) {
+      writer.Write($"{GetInform7Name(direction)} of {location.ExportName} is {exit.Target.ExportName}.");
       var oppositeDirection = CompassPointHelper.GetOpposite(direction);
       if (Exit.IsReciprocated(location, direction, exit.Target)) {
         // only export each connection once, if reciprocated;
@@ -387,7 +387,7 @@ namespace Trizbort.Export.Languages {
       else if (exit.Target.GetBestExit(oppositeDirection) == null) {
         // if we aren't laying down a contradiction which I7 will pick up,
         // then be clear about one way connections.
-        writer.Write($" {getInform7Name(oppositeDirection)} of {exit.Target.ExportName} is nowhere.");
+        writer.Write($" {GetInform7Name(oppositeDirection)} of {exit.Target.ExportName} is nowhere.");
       }
 
       writer.WriteLine();

@@ -25,40 +25,40 @@ using Timer = System.Threading.Timer;
 
 namespace Trizbort.UI.Controls {
   public sealed partial class Canvas : UserControl, IAutomapCanvas {
-    private const int RECOMPUTE_N_MILLISECONDS_AFTER_CHANGE = 500;
-    private static bool sMSmartLineSegmentsUpToDate;
+    private const int RecomputeNMillisecondsAfterChange = 500;
+    private static bool _smartLineSegmentsUpToDate;
     private readonly CommandController _commandController;
-    private readonly List<ResizeHandle> _mHandles = new List<ResizeHandle>();
-    private readonly List<Port> _mPorts = new List<Port>();
-    private readonly Timer _mRecomputeTimer;
-    private readonly List<Element> _mSelectedElements = new List<Element>();
+    private readonly List<ResizeHandle> _handles = new List<ResizeHandle>();
+    private readonly List<Port> _ports = new List<Port>();
+    private readonly Timer _recomputeTimer;
+    private readonly List<Element> _selectedElements = new List<Element>();
     private Room _lastSelectedRoom;
-    private bool _mDoNotUpdateScrollBarsNextPaint;
-    private Vector _mDragMarqueeLastPosition;
-    private DragModes _mDragMode;
-    private MoveablePort _mDragMovePort;
-    private Vector _mDragOffsetCanvas;
-    private Vector _mDragResizeHandleLastPosition;
-    private Element _mHoverElement;
-    private ResizeHandle _mHoverHandle;
-    private Port _mHoverPort;
-    private CurveWaypoint? _mHoverWaypoint;
-    private CurveWaypoint? _mSelectedWaypoint;
-    private CurveWaypoint _mDragWaypoint;
-    private Vector _mDragWaypointOffset;
-    private Point _mLastKnownMousePosition;
-    private Point _mLastMouseDownPosition;
-    private ConnectionFlow _mNewConnectionFlow;
-    private ConnectionLabel _mNewConnectionLabel;
-    private ConnectionStyle _mNewConnectionStyle;
-    private bool _mNewRoomIsDark;
-    private CompassPoint _mNewRoomObjectsPosition;
-    private Vector _mNewRoomSize;
-    private Room _mNewRoomStyleSource;
-    private Vector _mOrigin;
-    private PointF _mPanPosition;
-    private bool _mUpdatingScrollBars;
-    private float _mZoomFactor;
+    private bool _doNotUpdateScrollBarsNextPaint;
+    private Vector _dragMarqueeLastPosition;
+    private DragModes _dragMode;
+    private MoveablePort _dragMovePort;
+    private Vector _dragOffsetCanvas;
+    private Vector _dragResizeHandleLastPosition;
+    private Element _hoverElement;
+    private ResizeHandle _hoverHandle;
+    private Port _hoverPort;
+    private CurveWaypoint? _hoverWaypoint;
+    private CurveWaypoint? _selectedWaypoint;
+    private CurveWaypoint _dragWaypoint;
+    private Vector _dragWaypointOffset;
+    private Point _lastKnownMousePosition;
+    private Point _lastMouseDownPosition;
+    private ConnectionFlow _newConnectionFlow;
+    private ConnectionLabel _newConnectionLabel;
+    private ConnectionStyle _newConnectionStyle;
+    private bool _newRoomIsDark;
+    private CompassPoint _newRoomObjectsPosition;
+    private Vector _newRoomSize;
+    private Room _newRoomStyleSource;
+    private Vector _origin;
+    private PointF _panPosition;
+    private bool _updatingScrollBars;
+    private float _zoomFactor;
 
     public Canvas() {
       InitializeComponent();
@@ -72,19 +72,19 @@ namespace Trizbort.UI.Controls {
       SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.ResizeRedraw, true);
       DoubleBuffered = true;
 
-      PreviewKeyDown += onPreviewKeyDown;
-      ctxCanvasMenu.Items.Insert(0, new ToolStripMenuItem("Add &Label", null, (_, __) => AddLabel(true)));
+      PreviewKeyDown += OnPreviewKeyDown;
+      _ctxCanvasMenu.Items.Insert(0, new ToolStripMenuItem("Add &Label", null, (_, __) => AddLabel(true)));
 
-      _mRecomputeTimer = new Timer(onRecomputeTimerTick);
+      _recomputeTimer = new Timer(OnRecomputeTimerTick);
 
-      Project.ProjectChanged += onProjectChanged;
-      onProjectChanged(this, new ProjectChangedEventArgs(null, Project.Current));
+      Project.ProjectChanged += OnProjectChanged;
+      OnProjectChanged(this, new ProjectChangedEventArgs(null, Project.Current));
 
-      Settings.Changed += onSettingsChanged;
-      onSettingsChanged(this, EventArgs.Empty);
+      Settings.Changed += OnSettingsChanged;
+      OnSettingsChanged(this, EventArgs.Empty);
 
-      _mThreadSafeAutomapCanvas = new MultithreadedAutomapCanvas(this);
-      m_minimap.Canvas = this;
+      _threadSafeAutomapCanvas = new MultithreadedAutomapCanvas(this);
+      _minimap.Canvas = this;
     }
 
     public bool CanDrawLine => true;
@@ -102,100 +102,100 @@ namespace Trizbort.UI.Controls {
         var cursor = HoverHandle?.Cursor;
         if (cursor != null) return cursor;
 
-        if (HoverElement is IMoveable && _mSelectedElements.Contains(HoverElement)) return Cursors.SizeAll;
+        if (HoverElement is IMoveable && _selectedElements.Contains(HoverElement)) return Cursors.SizeAll;
         return base.Cursor;
       }
       set => base.Cursor = value;
     }
 
-    public bool HasSelectedRooms => _mSelectedElements.OfType<Room>().Any();
+    public bool HasSelectedRooms => _selectedElements.OfType<Room>().Any();
     public bool HasSingleSelectedElement => SelectedElementCount == 1;
-    public bool HasSingleSelectedRoom => _mSelectedElements.OfType<Room>().Count() == 1;
+    public bool HasSingleSelectedRoom => _selectedElements.OfType<Room>().Count() == 1;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Element HoverElement {
-      get => _mHoverElement;
+      get => _hoverElement;
       set {
-        if (_mHoverElement == value) return;
-        _mHoverElement = value;
-        recreatePorts();
+        if (_hoverElement == value) return;
+        _hoverElement = value;
+        RecreatePorts();
       }
     }
 
     public bool MinimapVisible {
-      get => m_minimap.Visible;
+      get => _minimap.Visible;
       set {
-        m_minimap.Visible = value;
-        if (!m_minimap.Visible) {
-          m_vScrollBar.Top = 0;
-          m_vScrollBar.Height = Height - m_hScrollBar.Height;
+        _minimap.Visible = value;
+        if (!_minimap.Visible) {
+          _vScrollBar.Top = 0;
+          _vScrollBar.Height = Height - _hScrollBar.Height;
         } else {
-          m_vScrollBar.Top = m_minimap.Bottom;
-          m_vScrollBar.Height = Height - m_hScrollBar.Height - m_minimap.Height;
+          _vScrollBar.Top = _minimap.Bottom;
+          _vScrollBar.Height = Height - _hScrollBar.Height - _minimap.Height;
         }
       }
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public ConnectionFlow NewConnectionFlow {
-      get => _mNewConnectionFlow;
+      get => _newConnectionFlow;
       set {
-        if (_mNewConnectionFlow == value) return;
-        _mNewConnectionFlow = value;
-        raiseNewConnectionFlowChanged();
+        if (_newConnectionFlow == value) return;
+        _newConnectionFlow = value;
+        RaiseNewConnectionFlowChanged();
       }
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public ConnectionLabel NewConnectionLabel {
-      get => _mNewConnectionLabel;
+      get => _newConnectionLabel;
       set {
-        if (_mNewConnectionLabel == value) return;
-        _mNewConnectionLabel = value;
-        raiseNewConnectionLabelChanged();
+        if (_newConnectionLabel == value) return;
+        _newConnectionLabel = value;
+        RaiseNewConnectionLabelChanged();
       }
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public ConnectionStyle NewConnectionStyle {
-      get => _mNewConnectionStyle;
+      get => _newConnectionStyle;
       set {
-        if (_mNewConnectionStyle == value) return;
-        _mNewConnectionStyle = value;
-        raiseNewConnectionStyleChanged();
+        if (_newConnectionStyle == value) return;
+        _newConnectionStyle = value;
+        RaiseNewConnectionStyleChanged();
       }
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Vector Origin {
-      private get => _mOrigin;
+      private get => _origin;
       set {
-        if (_mOrigin == value) return;
-        _mOrigin = value;
+        if (_origin == value) return;
+        _origin = value;
         Invalidate();
       }
     }
 
-    public List<Connection> SelectedConnections { get { return _mSelectedElements.Where(p => p is Connection).ToList().Cast<Connection>().ToList(); } }
+    public List<Connection> SelectedConnections { get { return _selectedElements.Where(p => p is Connection).ToList().Cast<Connection>().ToList(); } }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Element SelectedElement {
-      get => _mSelectedElements.Count > 0 ? _mSelectedElements[_mSelectedElements.Count - 1] : null;
+      get => _selectedElements.Count > 0 ? _selectedElements[_selectedElements.Count - 1] : null;
       set {
-        var selectedElement = _mSelectedElements.Count > 0 ? _mSelectedElements[_mSelectedElements.Count - 1] : null;
+        var selectedElement = _selectedElements.Count > 0 ? _selectedElements[_selectedElements.Count - 1] : null;
         if (selectedElement != value) {
-          _mSelectedElements.Clear();
-          if (value != null) _mSelectedElements.Add(value);
-          updateSelection();
+          _selectedElements.Clear();
+          if (value != null) _selectedElements.Add(value);
+          UpdateSelection();
         }
       }
     }
 
-    public int SelectedElementCount => _mSelectedElements.Count;
+    public int SelectedElementCount => _selectedElements.Count;
 
-    public IList<Element> SelectedElements => _mSelectedElements;
+    public IList<Element> SelectedElements => _selectedElements;
 
-    public List<Room> SelectedRooms { get { return _mSelectedElements.Where(p => p is Room).ToList().Cast<Room>().ToList(); } }
+    public List<Room> SelectedRooms { get { return _selectedElements.Where(p => p is Room).ToList().Cast<Room>().ToList(); } }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Rect Viewport {
@@ -208,11 +208,11 @@ namespace Trizbort.UI.Controls {
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public float ZoomFactor {
-      get => _mZoomFactor;
+      get => _zoomFactor;
       set {
-        if (_mZoomFactor != value) {
-          _mZoomFactor = value;
-          lblZoom.Text = _mZoomFactor.ToString("p0");
+        if (_zoomFactor != value) {
+          _zoomFactor = value;
+          _lblZoom.Text = _zoomFactor.ToString("p0");
           Invalidate();
         }
       }
@@ -220,39 +220,39 @@ namespace Trizbort.UI.Controls {
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     private DragModes DragMode {
-      get => _mDragMode;
+      get => _dragMode;
       set {
-        _mDragMode = value;
-        recreatePorts();
+        _dragMode = value;
+        RecreatePorts();
       }
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     private ResizeHandle HoverHandle {
-      get => _mHoverHandle;
+      get => _hoverHandle;
       set {
-        if (_mHoverHandle == value) return;
-        _mHoverHandle = value;
+        if (_hoverHandle == value) return;
+        _hoverHandle = value;
         Invalidate();
       }
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     private Port HoverPort {
-      get => _mHoverPort;
+      get => _hoverPort;
       set {
-        if (_mHoverPort == value) return;
-        _mHoverPort = value;
+        if (_hoverPort == value) return;
+        _hoverPort = value;
         Invalidate();
       }
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     private CurveWaypoint? HoverWaypoint {
-      get => _mHoverWaypoint;
+      get => _hoverWaypoint;
       set {
-        if (_mHoverWaypoint == value) return;
-        _mHoverWaypoint = value;
+        if (_hoverWaypoint == value) return;
+        _hoverWaypoint = value;
         Invalidate();
       }
     }
@@ -300,8 +300,8 @@ namespace Trizbort.UI.Controls {
       }
     }
 
-    public void RemoveRoom(Room mOtherRoom) {
-      Project.Current.Elements.Remove(mOtherRoom);
+    public void RemoveRoom(Room otherRoom) {
+      Project.Current.Elements.Remove(otherRoom);
     }
 
     public MapLabel AddLabel(bool atCursor, bool showDialog = true) {
@@ -316,9 +316,9 @@ namespace Trizbort.UI.Controls {
     }
 
     public Room AddRoom(bool atCursor, bool insertRoom = false, bool doRefresh = true) {
-      var room = new Room(Project.Current) {Size = _mNewRoomSize};
+      var room = new Room(Project.Current) {Size = _newRoomSize};
       if (ApplicationSettingsController.AppSettings.ApplyStyleToNewRooms)
-        room.CopyStyleFrom(_mNewRoomStyleSource);
+        room.CopyStyleFrom(_newRoomStyleSource);
 
       // Changed this to ignore ID gaps. ID gaps are resolved on load
 
@@ -371,8 +371,8 @@ namespace Trizbort.UI.Controls {
             if (target is Room targetRoom && source is Room sourceRoom && targetRoom.Region == sourceRoom.Region)
               room.Region = targetRoom.Region;
 
-            addConnection(source, sourceCompass, room, targetCompass);
-            addConnection(room, sourceCompass, target, targetCompass);
+            AddConnection(source, sourceCompass, room, targetCompass);
+            AddConnection(room, sourceCompass, target, targetCompass);
 
             Project.Current.Elements.Remove(conn);
           }
@@ -416,9 +416,9 @@ namespace Trizbort.UI.Controls {
       return s;
     }
 
-    public void ChangeZoom(float mZoom) {
-      lblZoom.Text = mZoom.ToString("p0");
-      _mZoomFactor = mZoom;
+    public void ChangeZoom(float zoom) {
+      _lblZoom.Text = zoom.ToString("p0");
+      _zoomFactor = zoom;
       Invalidate();
     }
 
@@ -473,22 +473,22 @@ namespace Trizbort.UI.Controls {
 
     public void CopySelectedElements() {
       var controller = new CopyController();
-      controller.CopyElements(_mSelectedElements);
+      controller.CopyElements(_selectedElements);
     }
 
     public void DeleteSelection() {
       var connection = WaypointConnection;
-      if (connection != null && _mSelectedWaypoint.HasValue && connection.RemoveCurveWaypoint(_mSelectedWaypoint.Value)) {
-        _mSelectedWaypoint = null;
+      if (connection != null && _selectedWaypoint.HasValue && connection.RemoveCurveWaypoint(_selectedWaypoint.Value)) {
+        _selectedWaypoint = null;
         HoverWaypoint = null;
         Invalidate();
         return;
       }
 
-      var doomedElements = new List<Element>(_mSelectedElements);
+      var doomedElements = new List<Element>(_selectedElements);
       foreach (var element in doomedElements) Project.Current.Elements.Remove(element);
-      _mSelectedElements.Clear();
-      updateSelection();
+      _selectedElements.Clear();
+      UpdateSelection();
     }
 
     /// <summary>
@@ -515,7 +515,7 @@ namespace Trizbort.UI.Controls {
         // XGraphics.Graphics is null for PDF targets, so fill via XGraphics rather than Graphics.Clear.
         if (finalRender) graphics.DrawRectangle(palette.CanvasBrush, 0, 0, width, height);
 
-        if (!finalRender) drawGrid(graphics, palette);
+        if (!finalRender) DrawGrid(graphics, palette);
 
         graphics.TranslateTransform(width / 2, height / 2);
         graphics.ScaleTransform(ZoomFactor, ZoomFactor);
@@ -535,11 +535,11 @@ namespace Trizbort.UI.Controls {
 
         graphics.SmoothingMode = XSmoothingMode.AntiAlias;
 
-        drawElements(graphics, palette, finalRender);
+        DrawElements(graphics, palette, finalRender);
         if (!finalRender) {
-          drawHandles(graphics, palette);
-          drawPorts(graphics, palette);
-          drawMarquee(graphics, palette);
+          DrawHandles(graphics, palette);
+          DrawPorts(graphics, palette);
+          DrawMarquee(graphics, palette);
         }
 
         stopwatch.Stop();
@@ -577,7 +577,7 @@ namespace Trizbort.UI.Controls {
     }
 
     public bool HasSelectedElement<T>() where T : Element {
-      return _mSelectedElements.OfType<T>().Any();
+      return _selectedElements.OfType<T>().Any();
     }
 
     public void JoinSelectedRooms(Room room1, Room room2) {
@@ -589,24 +589,24 @@ namespace Trizbort.UI.Controls {
 
       if (dy == 0 && dx != 0) {
         if (dx > 0)
-          addConnection(room1, CompassPoint.West, room2, CompassPoint.East);
+          AddConnection(room1, CompassPoint.West, room2, CompassPoint.East);
         else
-          addConnection(room1, CompassPoint.East, room2, CompassPoint.West);
+          AddConnection(room1, CompassPoint.East, room2, CompassPoint.West);
       } else if (dy != 0 && dx == 0) {
         if (dy > 0)
-          addConnection(room1, CompassPoint.North, room2, CompassPoint.South);
+          AddConnection(room1, CompassPoint.North, room2, CompassPoint.South);
         else
-          addConnection(room1, CompassPoint.South, room2, CompassPoint.North);
+          AddConnection(room1, CompassPoint.South, room2, CompassPoint.North);
       } else {
         if (Math.Abs(dy) >= Math.Abs(dx))
           if (dy > 0)
-            addConnection(room1, CompassPoint.North, room2, CompassPoint.South);
+            AddConnection(room1, CompassPoint.North, room2, CompassPoint.South);
           else
-            addConnection(room1, CompassPoint.South, room2, CompassPoint.North);
+            AddConnection(room1, CompassPoint.South, room2, CompassPoint.North);
         else if (dx > 0)
-          addConnection(room1, CompassPoint.West, room2, CompassPoint.East);
+          AddConnection(room1, CompassPoint.West, room2, CompassPoint.East);
         else
-          addConnection(room1, CompassPoint.East, room2, CompassPoint.West);
+          AddConnection(room1, CompassPoint.East, room2, CompassPoint.West);
       }
     }
 
@@ -627,7 +627,7 @@ namespace Trizbort.UI.Controls {
           PasteRooms(atCursor, xx, controller);
         } else if (objs.GetType() == typeof(CopyController.CopyColorsObj)) {
           var xx = objs as CopyController.CopyColorsObj;
-          pasteColors(xx);
+          PasteColors(xx);
         }
     }
 
@@ -637,7 +637,7 @@ namespace Trizbort.UI.Controls {
     }
 
     public void ReverseLineDirection() {
-      foreach (var element in _mSelectedElements)
+      foreach (var element in _selectedElements)
         if (element is Connection) {
           var connection = (Connection) element;
           connection.Reverse();
@@ -685,67 +685,67 @@ namespace Trizbort.UI.Controls {
     }
 
     public void SelectAll() {
-      _mSelectedElements.Clear();
-      _mSelectedElements.AddRange(Project.Current.Elements);
-      updateSelection();
+      _selectedElements.Clear();
+      _selectedElements.AddRange(Project.Current.Elements);
+      UpdateSelection();
     }
 
     public void SelectAllConnections() {
-      _mSelectedElements.Clear();
-      _mSelectedElements.AddRange(Project.Current.Elements.OfType<Connection>());
-      updateSelection();
+      _selectedElements.Clear();
+      _selectedElements.AddRange(Project.Current.Elements.OfType<Connection>());
+      UpdateSelection();
     }
 
     public void SelectAllRegion(IEnumerable<string> regions) {
-      _mSelectedElements.Clear();
+      _selectedElements.Clear();
       var regionRooms = Project.Current.Elements.OfType<Room>().ToList().Where(p => regions.Contains(p.Region));
-      _mSelectedElements.AddRange(regionRooms);
-      updateSelection();
+      _selectedElements.AddRange(regionRooms);
+      UpdateSelection();
     }
 
     public void SelectAllRooms() {
-      _mSelectedElements.Clear();
-      _mSelectedElements.AddRange(Project.Current.Elements.OfType<Room>());
-      updateSelection();
+      _selectedElements.Clear();
+      _selectedElements.AddRange(Project.Current.Elements.OfType<Room>());
+      UpdateSelection();
     }
 
     public void SelectAllUnconnectedRooms() {
-      _mSelectedElements.Clear();
-      _mSelectedElements.AddRange(Project.Current.Elements.OfType<Room>().Where(p => p.GetConnections().Count == 0));
-      updateSelection();
+      _selectedElements.Clear();
+      _selectedElements.AddRange(Project.Current.Elements.OfType<Room>().Where(p => p.GetConnections().Count == 0));
+      UpdateSelection();
     }
 
     public void SelectDanglingConnections() {
-      _mSelectedElements.Clear();
-      _mSelectedElements.AddRange(Project.Current.Elements.OfType<Connection>().Where(p => p.IsDangling));
-      updateSelection();
+      _selectedElements.Clear();
+      _selectedElements.AddRange(Project.Current.Elements.OfType<Connection>().Where(p => p.IsDangling));
+      UpdateSelection();
     }
 
     public void SelectElements(List<Element> elements) {
-      _mSelectedElements.Clear();
-      _mSelectedElements.AddRange(elements);
+      _selectedElements.Clear();
+      _selectedElements.AddRange(elements);
     }
 
     public void SelectRoomsWithObjects() {
-      _mSelectedElements.Clear();
-      _mSelectedElements.AddRange(Project.Current.Elements.OfType<Room>().Where(p => p.ListOfObjects().Count > 0));
-      updateSelection();
+      _selectedElements.Clear();
+      _selectedElements.AddRange(Project.Current.Elements.OfType<Room>().Where(p => p.ListOfObjects().Count > 0));
+      UpdateSelection();
     }
 
     public void SelectRoomsWithoutObjects() {
-      _mSelectedElements.Clear();
-      _mSelectedElements.AddRange(Project.Current.Elements.OfType<Room>().Where(p => p.ListOfObjects().Count == 0));
-      updateSelection();
+      _selectedElements.Clear();
+      _selectedElements.AddRange(Project.Current.Elements.OfType<Room>().Where(p => p.ListOfObjects().Count == 0));
+      UpdateSelection();
     }
 
     public void SelectSelfLoopingConnections() {
-      _mSelectedElements.Clear();
-      _mSelectedElements.AddRange(Project.Current.Elements.OfType<Connection>().Where(p => {
+      _selectedElements.Clear();
+      _selectedElements.AddRange(Project.Current.Elements.OfType<Connection>().Where(p => {
         var sourceRoom = p.GetSourceRoom();
         var targetRoom = p.GetTargetRoom();
         return sourceRoom != null && targetRoom != null && sourceRoom == targetRoom;
       }));
-      updateSelection();
+      UpdateSelection();
     }
 
     public void SetDefaultConnectionColor() {
@@ -823,10 +823,10 @@ namespace Trizbort.UI.Controls {
     }
 
     public void UpdateScrollBars() {
-      _mUpdatingScrollBars = true;
+      _updatingScrollBars = true;
 
       var topLeft = PointF.Empty;
-      var displaySize = new PointF(Math.Max(0, Width - m_vScrollBar.Width), Math.Max(0, Height - m_hScrollBar.Height));
+      var displaySize = new PointF(Math.Max(0, Width - _vScrollBar.Width), Math.Max(0, Height - _hScrollBar.Height));
 
       Rect clientBounds;
       if (Project.Current.Elements.Count > 0) {
@@ -842,28 +842,28 @@ namespace Trizbort.UI.Controls {
       }
 
       if (!ApplicationSettingsController.AppSettings.InfiniteScrollBounds && topLeft.Y <= clientBounds.Top && topLeft.Y + displaySize.Y >= clientBounds.Bottom) {
-        m_vScrollBar.Enabled = false;
+        _vScrollBar.Enabled = false;
       } else {
-        m_vScrollBar.Enabled = true;
-        m_vScrollBar.Minimum = (int) Math.Min(topLeft.Y, clientBounds.Top);
-        m_vScrollBar.Maximum = (int) Math.Max(topLeft.Y + displaySize.Y, clientBounds.Bottom) - 1; // -1 since Maximum is actually maximum value + 1; see MSDN.
-        m_vScrollBar.Value = (int) Math.Max(m_vScrollBar.Minimum, Math.Min(m_vScrollBar.Maximum, topLeft.Y));
-        m_vScrollBar.LargeChange = (int) displaySize.Y;
-        m_vScrollBar.SmallChange = (int) (displaySize.Y / 10);
+        _vScrollBar.Enabled = true;
+        _vScrollBar.Minimum = (int) Math.Min(topLeft.Y, clientBounds.Top);
+        _vScrollBar.Maximum = (int) Math.Max(topLeft.Y + displaySize.Y, clientBounds.Bottom) - 1; // -1 since Maximum is actually maximum value + 1; see MSDN.
+        _vScrollBar.Value = (int) Math.Max(_vScrollBar.Minimum, Math.Min(_vScrollBar.Maximum, topLeft.Y));
+        _vScrollBar.LargeChange = (int) displaySize.Y;
+        _vScrollBar.SmallChange = (int) (displaySize.Y / 10);
       }
 
       if (!ApplicationSettingsController.AppSettings.InfiniteScrollBounds && topLeft.X <= clientBounds.Left && topLeft.X + displaySize.X >= clientBounds.Right) {
-        m_hScrollBar.Enabled = false;
+        _hScrollBar.Enabled = false;
       } else {
-        m_hScrollBar.Enabled = true;
-        m_hScrollBar.Minimum = (int) Math.Min(topLeft.X, clientBounds.Left);
-        m_hScrollBar.Maximum = (int) Math.Max(topLeft.X + displaySize.X, clientBounds.Right) - 1; // -1 since Maximum is actually maximum value + 1; see MSDN.
-        m_hScrollBar.Value = (int) Math.Max(m_hScrollBar.Minimum, Math.Min(m_hScrollBar.Maximum, topLeft.X));
-        m_hScrollBar.LargeChange = (int) displaySize.X;
-        m_hScrollBar.SmallChange = (int) (displaySize.X / 10);
+        _hScrollBar.Enabled = true;
+        _hScrollBar.Minimum = (int) Math.Min(topLeft.X, clientBounds.Left);
+        _hScrollBar.Maximum = (int) Math.Max(topLeft.X + displaySize.X, clientBounds.Right) - 1; // -1 since Maximum is actually maximum value + 1; see MSDN.
+        _hScrollBar.Value = (int) Math.Max(_hScrollBar.Minimum, Math.Min(_hScrollBar.Maximum, topLeft.X));
+        _hScrollBar.LargeChange = (int) displaySize.X;
+        _hScrollBar.SmallChange = (int) (displaySize.X / 10);
       }
 
-      _mUpdatingScrollBars = false;
+      _updatingScrollBars = false;
     }
 
     public void ZoomIn() {
@@ -897,14 +897,14 @@ namespace Trizbort.UI.Controls {
     protected override void Dispose(bool disposing) {
       if (disposing) {
         StopAutomapping();
-        Project.ProjectChanged -= onProjectChanged;
-        Settings.Changed -= onSettingsChanged;
-        Project.Current.Elements.Added -= onElementAdded;
-        Project.Current.Elements.Removed -= onElementRemoved;
-        foreach (var element in Project.Current.Elements) element.Changed -= onElementChanged;
-        _mRecomputeTimer?.Dispose();
-        trizbortToolTip1?.Dispose();
-        components?.Dispose();
+        Project.ProjectChanged -= OnProjectChanged;
+        Settings.Changed -= OnSettingsChanged;
+        Project.Current.Elements.Added -= OnElementAdded;
+        Project.Current.Elements.Removed -= OnElementRemoved;
+        foreach (var element in Project.Current.Elements) element.Changed -= OnElementChanged;
+        _recomputeTimer?.Dispose();
+        _trizbortToolTip1?.Dispose();
+        _components?.Dispose();
       }
 
       base.Dispose(disposing);
@@ -960,7 +960,7 @@ namespace Trizbort.UI.Controls {
               ZoomToFit();
               break;
             case Keys.Shift:
-              shiftArrowHandler(Keys.Home);
+              ShiftArrowHandler(Keys.Home);
               break;
             default:
               ResetZoomOrigin();
@@ -973,7 +973,7 @@ namespace Trizbort.UI.Controls {
         case Keys.PageDown:
         case Keys.End:
           if (ModifierKeys == Keys.Shift)
-            shiftArrowHandler(e.KeyCode);
+            ShiftArrowHandler(e.KeyCode);
           break;
 
 
@@ -983,16 +983,16 @@ namespace Trizbort.UI.Controls {
         case Keys.Down:
           switch (ModifierKeys) {
             case Keys.Alt | Keys.Control:
-              resizeRoom(e.KeyCode);
+              ResizeRoom(e.KeyCode);
               break;
             case Keys.Control:
-              ctrlArrowHandler(e.KeyCode);
+              CtrlArrowHandler(e.KeyCode);
               break;
             case Keys.Shift:
-              shiftArrowHandler(e.KeyCode);
+              ShiftArrowHandler(e.KeyCode);
               break;
             default:
-              moveArrowKeyHandler(e.KeyCode, e.Shift);
+              MoveArrowKeyHandler(e.KeyCode, e.Shift);
               break;
           }
 
@@ -1192,12 +1192,12 @@ namespace Trizbort.UI.Controls {
               break;
 
             case Keys.Shift:
-              moveActiveSelected(false);
+              MoveActiveSelected(false);
 
               break;
 
             default:
-              moveActiveSelected();
+              MoveActiveSelected();
 
               break;
           }
@@ -1213,7 +1213,7 @@ namespace Trizbort.UI.Controls {
 
             default:
               if (IsAutomapping)
-                _mAutomap.RunToCompletion();
+                _automap.RunToCompletion();
 
               break;
           }
@@ -1222,7 +1222,7 @@ namespace Trizbort.UI.Controls {
 
         case Keys.F11:
           if (IsAutomapping)
-            _mAutomap.Step();
+            _automap.Step();
 
           break;
 
@@ -1235,9 +1235,9 @@ namespace Trizbort.UI.Controls {
         case Keys.NumPad4:
         case Keys.NumPad7:
           if (ModifierKeys == Keys.Shift)
-            shiftArrowHandler(e.KeyCode);
+            ShiftArrowHandler(e.KeyCode);
           else
-            addOrSelectRooms(indicatedDirection(e.KeyCode));
+            AddOrSelectRooms(IndicatedDirection(e.KeyCode));
           break;
       }
 
@@ -1258,36 +1258,36 @@ namespace Trizbort.UI.Controls {
       if (e.Button == MouseButtons.Left) {
         if (CanSelectElements && HasSingleSelectedElement)
           _commandController.ShowElementProperties(SelectedElement);
-        else if (ApplicationSettingsController.AppSettings.DoubleClickToAddRoom && CanSelectElements && isEmptySpace(e.Location))
+        else if (ApplicationSettingsController.AppSettings.DoubleClickToAddRoom && CanSelectElements && IsEmptySpace(e.Location))
           AddRoom(true);
       }
       base.OnMouseDoubleClick(e);
     }
 
-    private bool isEmptySpace(Point clientPos) {
+    private bool IsEmptySpace(Point clientPos) {
       if (HoverHandle != null || HoverPort != null || HoverWaypoint.HasValue) return false;
-      return hitTestElement(ClientToCanvas(new PointF(clientPos.X, clientPos.Y)), false) == null;
+      return HitTestElement(ClientToCanvas(new PointF(clientPos.X, clientPos.Y)), false) == null;
     }
 
     protected override void OnMouseDown(MouseEventArgs e) {
-      hideElementToolTip();
+      HideElementToolTip();
       var clientPos = new PointF(e.X, e.Y);
       var canvasPos = ClientToCanvas(clientPos);
-      _mLastMouseDownPosition = e.Location;
+      _lastMouseDownPosition = e.Location;
 
       if (DragMode != DragModes.None)
         return;
 
-      if (isDragButton(e)) {
-        beginDragPan(clientPos);
+      if (IsDragButton(e)) {
+        BeginDragPan(clientPos);
       } else if (e.Button == MouseButtons.Left) {
-        if (CanSelectElements) beginDragMove(canvasPos);
+        if (CanSelectElements) BeginDragMove(canvasPos);
         if (DragMode == DragModes.None)
           if (HoverPort != null && CanDrawLine)
-            beginDragDrawLine();
+            BeginDragDrawLine();
       } else if (e.Button == MouseButtons.Right) {
         if (CanSelectElements)
-          beginDragMove(canvasPos);
+          BeginDragMove(canvasPos);
       }
 
       base.OnMouseDown(e);
@@ -1295,37 +1295,37 @@ namespace Trizbort.UI.Controls {
 
     protected override void OnMouseMove(MouseEventArgs e) {
       // ignore spurious mouse move events
-      if (_mLastKnownMousePosition == e.Location) return;
-      _mLastKnownMousePosition = e.Location;
+      if (_lastKnownMousePosition == e.Location) return;
+      _lastKnownMousePosition = e.Location;
 
-      updateDragHover(e.Location);
+      UpdateDragHover(e.Location);
       base.OnMouseMove(e);
     }
 
     protected override void OnMouseUp(MouseEventArgs e) {
-      endDrag();
+      EndDrag();
 
       base.OnMouseUp(e);
     }
 
     protected override void OnMouseLeave(EventArgs e) {
-      hideElementToolTip();
+      HideElementToolTip();
       base.OnMouseLeave(e);
     }
 
     protected override void OnMouseWheel(MouseEventArgs e) {
-      hideElementToolTip();
+      HideElementToolTip();
       if (e.X < 0 || e.X > Width || e.Y < 0 || e.Y > Height)
         return;
 
       var pos = ClientToCanvas(new PointF(e.X, e.Y));
 
-      if (isZoomIn(e.Delta))
+      if (IsZoomIn(e.Delta))
         if (ModifierKeys == Keys.Control)
           ZoomInMicro();
         else
           ZoomIn();
-      else if (isZoomOut(e.Delta) && ZoomFactor > 1 / 100.0f)
+      else if (IsZoomOut(e.Delta) && ZoomFactor > 1 / 100.0f)
         if (ModifierKeys == Keys.Control)
           ZoomOutMicro();
         else
@@ -1335,7 +1335,7 @@ namespace Trizbort.UI.Controls {
       Origin = Origin - (newPos - pos);
 
       Invalidate();
-      updateDragHover(e.Location);
+      UpdateDragHover(e.Location);
 
       base.OnMouseWheel(e);
     }
@@ -1356,12 +1356,12 @@ namespace Trizbort.UI.Controls {
 
       // update our scroll bars, unless this paint event was caused by the scroll bars,
       // in which case messing with them may cause the scroll bars to throw exceptions.
-      if (!_mDoNotUpdateScrollBarsNextPaint) UpdateScrollBars();
-      _mDoNotUpdateScrollBarsNextPaint = false;
+      if (!_doNotUpdateScrollBarsNextPaint) UpdateScrollBars();
+      _doNotUpdateScrollBarsNextPaint = false;
 
       // update the minimap
-      m_minimap.Invalidate();
-      m_minimap.Update();
+      _minimap.Invalidate();
+      _minimap.Update();
     }
 
     protected override void WndProc(ref Message m) {
@@ -1382,7 +1382,7 @@ namespace Trizbort.UI.Controls {
     /// <param name="compassPointOne">The direction of the connection in the first room.</param>
     /// <param name="roomTwo">The second room.</param>
     /// <param name="compassPointTwo">The direction of the connection in the second room.</param>
-    private Connection addConnection(Element roomOne, CompassPoint compassPointOne, Element roomTwo, CompassPoint compassPointTwo) {
+    private Connection AddConnection(Element roomOne, CompassPoint compassPointOne, Element roomTwo, CompassPoint compassPointTwo) {
       var vertexOne = new Vertex(roomOne.PortList.OfType<Room.CompassPort>().First(port => port.CompassPoint == compassPointOne));
       var vertexTwo = new Vertex(roomTwo.PortList.OfType<Room.CompassPort>().First(port => port.CompassPoint == compassPointTwo));
       var connection = new Connection(Project.Current, vertexOne, vertexTwo) {
@@ -1402,17 +1402,17 @@ namespace Trizbort.UI.Controls {
     /// </summary>
     /// <param name="compassPoint">The direction to consider.</param>
     /// <returns>True if a new connection/room was made; false otherwise.</returns>
-    private void addOrConnectRoomRelativeToSelectedRoom(CompassPoint compassPoint) {
+    private void AddOrConnectRoomRelativeToSelectedRoom(CompassPoint compassPoint) {
       if (SelectedElement is Room element) {
         var room = element;
         var rect = room.InnerBounds;
         rect.Inflate(Settings.PreferredDistanceBetweenRooms + room.Width / 2, Settings.PreferredDistanceBetweenRooms + room.Height / 2);
         var centerOfNewRoom = rect.GetCorner(compassPoint);
 
-        var existing = hitTestElement(centerOfNewRoom, false);
+        var existing = HitTestElement(centerOfNewRoom, false);
         if (existing is Room two) {
           // just connect the rooms together
-          addConnection(room, compassPoint, two, CompassPointHelper.GetOpposite(compassPoint));
+          AddConnection(room, compassPoint, two, CompassPointHelper.GetOpposite(compassPoint));
           SelectedElement = existing;
           _commandController.MakeVisible(SelectedElement);
         } else {
@@ -1429,7 +1429,7 @@ namespace Trizbort.UI.Controls {
           };
 
           Project.Current.Elements.Add(newRoom);
-          addConnection(room, compassPoint, newRoom, CompassPointHelper.GetOpposite(compassPoint));
+          AddConnection(room, compassPoint, newRoom, CompassPointHelper.GetOpposite(compassPoint));
           SelectedElement = newRoom;
           _commandController.MakeVisible(SelectedElement);
           Refresh();
@@ -1438,17 +1438,17 @@ namespace Trizbort.UI.Controls {
       }
     }
 
-    private void addOrSelectRooms(CompassPoint? compassPoint) {
-      if (compassPoint != null && !selectRoomRelativeToSelectedRoom(compassPoint.Value))
+    private void AddOrSelectRooms(CompassPoint? compassPoint) {
+      if (compassPoint != null && !SelectRoomRelativeToSelectedRoom(compassPoint.Value))
         if (ModifierKeys == Settings.KeypadNavigationCreationModifier) {
-          addOrConnectRoomRelativeToSelectedRoom(compassPoint.Value);
-          selectRoomRelativeToSelectedConnection(compassPoint.Value);
+          AddOrConnectRoomRelativeToSelectedRoom(compassPoint.Value);
+          SelectRoomRelativeToSelectedConnection(compassPoint.Value);
         } else if (ModifierKeys == Settings.KeypadNavigationUnexploredModifier) {
-          addUnexploredConnectionToSelectedRoom(compassPoint.Value);
+          AddUnexploredConnectionToSelectedRoom(compassPoint.Value);
         }
     }
 
-    private void addRoomToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void AddRoomToolStripMenuItemClick(object sender, EventArgs e) {
       AddRoom(true, true);
     }
 
@@ -1456,72 +1456,72 @@ namespace Trizbort.UI.Controls {
     ///   Add an "unexplored" (loopback) connection from
     /// </summary>
     /// <param name="compassPoint"></param>
-    private void addUnexploredConnectionToSelectedRoom(CompassPoint compassPoint) {
+    private void AddUnexploredConnectionToSelectedRoom(CompassPoint compassPoint) {
       if (SelectedElement is Room element) {
         var room = element;
-        addConnection(room, compassPoint, room, compassPoint);
+        AddConnection(room, compassPoint, room, compassPoint);
       }
     }
 
-    private void applicationSettingsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void ApplicationSettingsToolStripMenuItemClick(object sender, EventArgs e) {
       ApplicationSettingsController.ShowAppDialog();
     }
 
-    private void beginDragDrawLine() {
+    private void BeginDragDrawLine() {
       DragMode = DragModes.DrawLine;
       Capture = true;
     }
 
-    private void beginDragMove(Vector canvasPos) {
+    private void BeginDragMove(Vector canvasPos) {
       if (HoverWaypoint.HasValue && WaypointConnection != null) {
-        _mDragWaypoint = HoverWaypoint.Value;
-        _mDragWaypointOffset = WaypointConnection.GetCurveWaypointHandlePosition(_mDragWaypoint) - canvasPos;
+        _dragWaypoint = HoverWaypoint.Value;
+        _dragWaypointOffset = WaypointConnection.GetCurveWaypointHandlePosition(_dragWaypoint) - canvasPos;
         // a "ghost" handle only becomes a real waypoint once it is actually dragged
-        _mSelectedWaypoint = WaypointConnection.GetCurveWaypoint(_mDragWaypoint).HasValue ? _mDragWaypoint : (CurveWaypoint?) null;
+        _selectedWaypoint = WaypointConnection.GetCurveWaypoint(_dragWaypoint).HasValue ? _dragWaypoint : (CurveWaypoint?) null;
         DragMode = DragModes.MoveWaypoint;
         Capture = true;
       } else if (HoverHandle != null) {
         DragMode = DragModes.MoveResizeHandle;
-        _mDragResizeHandleLastPosition = canvasPos; // unsnapped
+        _dragResizeHandleLastPosition = canvasPos; // unsnapped
         Capture = true;
       } else if (HoverPort != null) {
         if (HoverPort is MoveablePort) {
-          _mDragMovePort = (MoveablePort) HoverPort;
-          _mDragOffsetCanvas = Settings.Snap(canvasPos - HoverPort.Position);
+          _dragMovePort = (MoveablePort) HoverPort;
+          _dragOffsetCanvas = Settings.Snap(canvasPos - HoverPort.Position);
           DragMode = DragModes.MovePort;
           Capture = true;
         }
       } else {
-        var hitElement = hitTestElement(canvasPos, false);
+        var hitElement = HitTestElement(canvasPos, false);
 
-        var alreadySelected = _mSelectedElements.Contains(hitElement);
+        var alreadySelected = _selectedElements.Contains(hitElement);
         if (!alreadySelected && (ModifierKeys & (Keys.Control | Keys.Shift)) == Keys.None)
-          _mSelectedElements.Clear();
-        else if (hitElement != null) _mSelectedElements.Remove(hitElement);
+          _selectedElements.Clear();
+        else if (hitElement != null) _selectedElements.Remove(hitElement);
         if ((ModifierKeys & Keys.Shift) == Keys.Shift) {
-          if (!alreadySelected && hitElement != null) _mSelectedElements.Add(hitElement);
+          if (!alreadySelected && hitElement != null) _selectedElements.Add(hitElement);
         } else if (hitElement != null) {
           // if we're not holding shift, ensure the current element is selected.
           // we're safe to re-add it since it will definitely have been removed already
           // if it was selected, by the above logic.
-          _mSelectedElements.Add(hitElement);
+          _selectedElements.Add(hitElement);
         }
 
         // now we've finished messing with the set of selected elements,
         // update handles, ports, and take defaults for new elements from the most recently selected element.
-        updateSelection();
+        UpdateSelection();
 
-        if (hitElement != null && _mSelectedElements.Contains(hitElement)) {
+        if (hitElement != null && _selectedElements.Contains(hitElement)) {
           // if we ended up with the hit element being selected, initiate a drag move.
           DragMode = DragModes.MoveElement;
           canvasPos = Settings.Snap(canvasPos);
-          _mDragOffsetCanvas = canvasPos;
+          _dragOffsetCanvas = canvasPos;
           Capture = true;
         } else if (hitElement == null) {
           // if we didn't hit anything at all, begin a new marquee selection.
           DragMode = DragModes.Marquee;
-          _mDragOffsetCanvas = canvasPos;
-          _mDragMarqueeLastPosition = canvasPos;
+          _dragOffsetCanvas = canvasPos;
+          _dragMarqueeLastPosition = canvasPos;
           Capture = true;
         }
       }
@@ -1530,16 +1530,16 @@ namespace Trizbort.UI.Controls {
     }
 
 
-    private void beginDragPan(PointF clientPos) {
+    private void BeginDragPan(PointF clientPos) {
       DragMode = DragModes.Pan;
-      _mPanPosition = clientPos;
+      _panPosition = clientPos;
       Cursor = Cursors.NoMove2D;
       Capture = true;
     }
 
-    private void beginDrawConnection(Vector canvasPos) {
+    private void BeginDrawConnection(Vector canvasPos) {
       Connection connection;
-      HoverPort = hitTestPort(canvasPos);
+      HoverPort = HitTestPort(canvasPos);
       if (HoverPort != null && !(HoverPort is MoveablePort)) {
         // Only from non-moveable ports, until we fix docking.
         // See also DoDragMovePort().
@@ -1555,32 +1555,32 @@ namespace Trizbort.UI.Controls {
       connection.SetText(NewConnectionLabel);
       Project.Current.Elements.Add(connection);
       SelectedElement = connection;
-      _mDragMovePort = (MoveablePort) connection.PortList[1];
-      _mDragOffsetCanvas = Settings.Snap(canvasPos - connection.VertexList[0].Position);
+      _dragMovePort = (MoveablePort) connection.PortList[1];
+      _dragOffsetCanvas = Settings.Snap(canvasPos - connection.VertexList[0].Position);
       HoverPort = null;
       DragMode = DragModes.MovePort;
       Capture = true;
     }
 
-    private void bringToFrontToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void BringToFrontToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.BringToFront();
     }
 
-    private void ctrlArrowHandler(Keys keyCode) {
-      var direction = indicatedDirection(keyCode);
+    private void CtrlArrowHandler(Keys keyCode) {
+      var direction = IndicatedDirection(keyCode);
 
-      if (!selectRoomRelativeToSelectedRoom(direction) && !selectRoomRelativeToSelectedConnection(direction))
-        addOrConnectRoomRelativeToSelectedRoom(direction);
+      if (!SelectRoomRelativeToSelectedRoom(direction) && !SelectRoomRelativeToSelectedConnection(direction))
+        AddOrConnectRoomRelativeToSelectedRoom(direction);
     }
 
-    private void ctxCanvasMenu_Opening(object sender, CancelEventArgs e) {
-      if ((m_minimap.Visible && m_minimap.IsMouseOverMe()) || DragMode == DragModes.Pan)
+    private void CtxCanvasMenuOpening(object sender, CancelEventArgs e) {
+      if ((_minimap.Visible && _minimap.IsMouseOverMe()) || DragMode == DragModes.Pan)
         e.Cancel = true;
 
-      var clientPos = new PointF(_mLastMouseDownPosition.X, _mLastMouseDownPosition.Y);
+      var clientPos = new PointF(_lastMouseDownPosition.X, _lastMouseDownPosition.Y);
       var canvasPos = ClientToCanvas(clientPos);
-      var hitElement = hitTestElement(canvasPos, false);
-      var regionMenu = regionToolStripMenuItem;
+      var hitElement = HitTestElement(canvasPos, false);
+      var regionMenu = _regionToolStripMenuItem;
 
       if (hitElement != null) {
         if (hitElement is Room) {
@@ -1589,188 +1589,188 @@ namespace Trizbort.UI.Controls {
           regionMenu.DropDownItems.Clear();
 
           foreach (var region in Settings.Regions.OrderBy(p => p.RegionName != Domain.Misc.Region.DefaultRegion).ThenBy(p => p.RegionName)) {
-            var item = regionMenu.DropDownItems.Add(region.RegionName, null, regionContextClick);
-            item.Image = generateRegionImage(region);
+            var item = regionMenu.DropDownItems.Add(region.RegionName, null, RegionContextClick);
+            item.Image = GenerateRegionImage(region);
             if (region.RegionName == _lastSelectedRoom.Region)
               ((ToolStripMenuItem) item).Checked = true;
           }
 
-          addRoomToolStripMenuItem.Visible = true;
-          renameToolStripMenuItem.Visible = true;
-          darkToolStripMenuItem.Visible = true;
-          regionToolStripMenuItem.Visible = true;
-          roomShapeToolStripMenuItem.Visible = true;
-          joinRoomsToolStripMenuItem.Visible = true;
-          swapObjectsToolStripMenuItem.Visible = true;
-          roomPropertiesToolStripMenuItem.Visible = true;
+          _addRoomToolStripMenuItem.Visible = true;
+          _renameToolStripMenuItem.Visible = true;
+          _darkToolStripMenuItem.Visible = true;
+          _regionToolStripMenuItem.Visible = true;
+          _roomShapeToolStripMenuItem.Visible = true;
+          _joinRoomsToolStripMenuItem.Visible = true;
+          _swapObjectsToolStripMenuItem.Visible = true;
+          _roomPropertiesToolStripMenuItem.Visible = true;
 
-          toolStripSeparator6.Visible = true;
-          startRoomToolStripMenuItem.Visible = true;
-          endRoomToolStripMenuItem.Visible = true;
+          _toolStripSeparator6.Visible = true;
+          _startRoomToolStripMenuItem.Visible = true;
+          _endRoomToolStripMenuItem.Visible = true;
 
-          startRoomToolStripMenuItem.Enabled = SelectedRooms.Count == 1;
-          endRoomToolStripMenuItem.Enabled = HasSelectedRooms;
+          _startRoomToolStripMenuItem.Enabled = SelectedRooms.Count == 1;
+          _endRoomToolStripMenuItem.Enabled = HasSelectedRooms;
 
-          startRoomToolStripMenuItem.Checked = _lastSelectedRoom.IsStartRoom && HasSingleSelectedElement;
-          endRoomToolStripMenuItem.Checked = HasSelectedRooms && _lastSelectedRoom.IsEndRoom;
+          _startRoomToolStripMenuItem.Checked = _lastSelectedRoom.IsStartRoom && HasSingleSelectedElement;
+          _endRoomToolStripMenuItem.Checked = HasSelectedRooms && _lastSelectedRoom.IsEndRoom;
 
-          sendToBackToolStripMenuItem.Visible = true;
-          bringToFrontToolStripMenuItem.Visible = true;
-          toolStripSeparator7.Visible = true;
+          _sendToBackToolStripMenuItem.Visible = true;
+          _bringToFrontToolStripMenuItem.Visible = true;
+          _toolStripSeparator7.Visible = true;
 
-          toolStripMenuItem1.Visible = true;
-          toolStripMenuItem2.Visible = true;
-          toolStripSeparator1.Visible = true;
-          toolStripSeparator2.Visible = true;
+          _toolStripMenuItem1.Visible = true;
+          _toolStripMenuItem2.Visible = true;
+          _toolStripSeparator1.Visible = true;
+          _toolStripSeparator2.Visible = true;
 
-          m_lineStylesMenuItem.Visible = false;
-          m_reverseLineMenuItem.Visible = false;
+          _lineStylesMenuItem.Visible = false;
+          _reverseLineMenuItem.Visible = false;
 
-          swapObjectsToolStripMenuItem.Enabled = SelectedRooms.Count == 2;
-          joinRoomsToolStripMenuItem.Enabled = SelectedRooms.Count == 2 && !Project.Current.AreRoomsConnected(SelectedRooms);
+          _swapObjectsToolStripMenuItem.Enabled = SelectedRooms.Count == 2;
+          _joinRoomsToolStripMenuItem.Enabled = SelectedRooms.Count == 2 && !Project.Current.AreRoomsConnected(SelectedRooms);
 
 
-          darkToolStripMenuItem.Checked = _lastSelectedRoom.IsDark;
+          _darkToolStripMenuItem.Checked = _lastSelectedRoom.IsDark;
         }
 
         if (hitElement is Connection || hitElement is MapLabel) {
-          addRoomToolStripMenuItem.Visible = true;
+          _addRoomToolStripMenuItem.Visible = true;
 
-          renameToolStripMenuItem.Visible = false;
-          darkToolStripMenuItem.Visible = false;
-          regionToolStripMenuItem.Visible = false;
-          roomShapeToolStripMenuItem.Visible = false;
-          joinRoomsToolStripMenuItem.Visible = false;
-          swapObjectsToolStripMenuItem.Visible = false;
-          roomPropertiesToolStripMenuItem.Visible = true;
+          _renameToolStripMenuItem.Visible = false;
+          _darkToolStripMenuItem.Visible = false;
+          _regionToolStripMenuItem.Visible = false;
+          _roomShapeToolStripMenuItem.Visible = false;
+          _joinRoomsToolStripMenuItem.Visible = false;
+          _swapObjectsToolStripMenuItem.Visible = false;
+          _roomPropertiesToolStripMenuItem.Visible = true;
 
-          sendToBackToolStripMenuItem.Visible = false;
-          bringToFrontToolStripMenuItem.Visible = false;
-          toolStripSeparator7.Visible = false;
+          _sendToBackToolStripMenuItem.Visible = false;
+          _bringToFrontToolStripMenuItem.Visible = false;
+          _toolStripSeparator7.Visible = false;
 
-          startRoomToolStripMenuItem.Visible = false;
-          endRoomToolStripMenuItem.Visible = false;
-          toolStripSeparator6.Visible = false;
+          _startRoomToolStripMenuItem.Visible = false;
+          _endRoomToolStripMenuItem.Visible = false;
+          _toolStripSeparator6.Visible = false;
 
-          m_lineStylesMenuItem.Visible = true;
-          m_reverseLineMenuItem.Visible = true;
+          _lineStylesMenuItem.Visible = true;
+          _reverseLineMenuItem.Visible = true;
 
-          toolStripMenuItem1.Visible = false;
-          toolStripMenuItem2.Visible = false;
-          toolStripSeparator1.Visible = true;
-          toolStripSeparator2.Visible = true;
+          _toolStripMenuItem1.Visible = false;
+          _toolStripMenuItem2.Visible = false;
+          _toolStripSeparator1.Visible = true;
+          _toolStripSeparator2.Visible = true;
 
-          roomPropertiesToolStripMenuItem.Enabled = true;
-          sendToBackToolStripMenuItem.Visible = hitElement is MapLabel;
-          bringToFrontToolStripMenuItem.Visible = hitElement is MapLabel;
-          toolStripSeparator7.Visible = hitElement is MapLabel;
-          m_lineStylesMenuItem.Visible = hitElement is Connection;
-          m_reverseLineMenuItem.Visible = hitElement is Connection;
+          _roomPropertiesToolStripMenuItem.Enabled = true;
+          _sendToBackToolStripMenuItem.Visible = hitElement is MapLabel;
+          _bringToFrontToolStripMenuItem.Visible = hitElement is MapLabel;
+          _toolStripSeparator7.Visible = hitElement is MapLabel;
+          _lineStylesMenuItem.Visible = hitElement is Connection;
+          _reverseLineMenuItem.Visible = hitElement is Connection;
         }
       } else {
-        renameToolStripMenuItem.Visible = false;
-        darkToolStripMenuItem.Visible = false;
-        regionToolStripMenuItem.Visible = false;
-        roomShapeToolStripMenuItem.Visible = false;
-        joinRoomsToolStripMenuItem.Visible = false;
-        swapObjectsToolStripMenuItem.Visible = false;
-        roomPropertiesToolStripMenuItem.Visible = false;
+        _renameToolStripMenuItem.Visible = false;
+        _darkToolStripMenuItem.Visible = false;
+        _regionToolStripMenuItem.Visible = false;
+        _roomShapeToolStripMenuItem.Visible = false;
+        _joinRoomsToolStripMenuItem.Visible = false;
+        _swapObjectsToolStripMenuItem.Visible = false;
+        _roomPropertiesToolStripMenuItem.Visible = false;
 
-        startRoomToolStripMenuItem.Visible = false;
-        endRoomToolStripMenuItem.Visible = false;
-        toolStripSeparator6.Visible = false;
+        _startRoomToolStripMenuItem.Visible = false;
+        _endRoomToolStripMenuItem.Visible = false;
+        _toolStripSeparator6.Visible = false;
 
-        sendToBackToolStripMenuItem.Visible = false;
-        bringToFrontToolStripMenuItem.Visible = false;
-        toolStripSeparator7.Visible = false;
+        _sendToBackToolStripMenuItem.Visible = false;
+        _bringToFrontToolStripMenuItem.Visible = false;
+        _toolStripSeparator7.Visible = false;
 
-        m_lineStylesMenuItem.Visible = false;
-        m_reverseLineMenuItem.Visible = false;
+        _lineStylesMenuItem.Visible = false;
+        _reverseLineMenuItem.Visible = false;
 
-        addRoomToolStripMenuItem.Visible = true;
+        _addRoomToolStripMenuItem.Visible = true;
 
-        toolStripMenuItem1.Visible = false;
-        toolStripMenuItem2.Visible = false;
-        toolStripSeparator1.Visible = false;
-        toolStripSeparator2.Visible = false;
+        _toolStripMenuItem1.Visible = false;
+        _toolStripMenuItem2.Visible = false;
+        _toolStripSeparator1.Visible = false;
+        _toolStripSeparator2.Visible = false;
       }
     }
 
-    private void darkToolStripMenuItem_Click_1(object sender, EventArgs e) {
+    private void DarkToolStripMenuItemClick1(object sender, EventArgs e) {
       foreach (var room in SelectedRooms) room.IsDark = !room.IsDark;
     }
 
-    private List<Element> depthSortElements() {
+    private List<Element> DepthSortElements() {
       var elements = new List<Element>();
       elements.AddRange(Project.Current.Elements);
       elements.Sort();
       return elements;
     }
 
-    private void doDragMoveElement(Vector canvasPos) {
+    private void DoDragMoveElement(Vector canvasPos) {
       canvasPos = Settings.Snap(canvasPos);
-      var delta = canvasPos - _mDragOffsetCanvas;
-      moveSelectedElements(delta);
-      _mDragOffsetCanvas = canvasPos;
+      var delta = canvasPos - _dragOffsetCanvas;
+      MoveSelectedElements(delta);
+      _dragOffsetCanvas = canvasPos;
     }
 
-    private void moveSelectedElements(Vector delta) {
-      MapEditing.Move(Project.Current.Elements, _mSelectedElements, delta);
-      hideElementToolTip();
+    private void MoveSelectedElements(Vector delta) {
+      MapEditing.Move(Project.Current.Elements, _selectedElements, delta);
+      HideElementToolTip();
     }
 
-    private void hideElementToolTip() {
-      trizbortToolTip1.SetToolTip(this, null);
-      trizbortToolTip1.Hide(this);
+    private void HideElementToolTip() {
+      _trizbortToolTip1.SetToolTip(this, null);
+      _trizbortToolTip1.Hide(this);
     }
 
-    private void doDragMoveWaypoint(Point mousePosition, Vector canvasPos) {
+    private void DoDragMoveWaypoint(Point mousePosition, Vector canvasPos) {
       var connection = WaypointConnection;
       if (connection == null) return;
 
-      if (!connection.GetCurveWaypoint(_mDragWaypoint).HasValue) {
-        if (new Vector(_mLastMouseDownPosition).Distance(new Vector(mousePosition)) <= Settings.DragDistanceToInitiateNewConnection) return;
-        if (!connection.CanAddCurveWaypoint(_mDragWaypoint)) return;
+      if (!connection.GetCurveWaypoint(_dragWaypoint).HasValue) {
+        if (new Vector(_lastMouseDownPosition).Distance(new Vector(mousePosition)) <= Settings.DragDistanceToInitiateNewConnection) return;
+        if (!connection.CanAddCurveWaypoint(_dragWaypoint)) return;
       }
 
-      connection.SetCurveWaypoint(_mDragWaypoint, Settings.Snap(canvasPos + _mDragWaypointOffset));
-      _mSelectedWaypoint = _mDragWaypoint;
+      connection.SetCurveWaypoint(_dragWaypoint, Settings.Snap(canvasPos + _dragWaypointOffset));
+      _selectedWaypoint = _dragWaypoint;
     }
 
-    private void doDragMovePort(Vector canvasPos) {
-      if (HoverPort != null && HoverPort != _mDragMovePort) {
-        if (_mDragMovePort.DockedAt != HoverPort && (!(HoverPort is MoveablePort) || ((MoveablePort) HoverPort).DockedAt != _mDragMovePort))
+    private void DoDragMovePort(Vector canvasPos) {
+      if (HoverPort != null && HoverPort != _dragMovePort) {
+        if (_dragMovePort.DockedAt != HoverPort && (!(HoverPort is MoveablePort) || ((MoveablePort) HoverPort).DockedAt != _dragMovePort))
           if (!(HoverPort is MoveablePort)) {
-            _mDragMovePort.DockAt(HoverPort);
+            _dragMovePort.DockAt(HoverPort);
           } else {
             canvasPos = Settings.Snap(canvasPos);
-            _mDragMovePort.SetPosition(canvasPos - _mDragOffsetCanvas);
+            _dragMovePort.SetPosition(canvasPos - _dragOffsetCanvas);
           }
       } else {
         canvasPos = Settings.Snap(canvasPos);
-        _mDragMovePort.SetPosition(canvasPos - _mDragOffsetCanvas);
+        _dragMovePort.SetPosition(canvasPos - _dragOffsetCanvas);
       }
     }
 
-    private void doDragMoveResizeHandle(Vector canvasPos) {
+    private void DoDragMoveResizeHandle(Vector canvasPos) {
       if (HoverHandle != null)
-        _mDragResizeHandleLastPosition = MapEditing.Resize(HoverHandle, _mDragResizeHandleLastPosition, canvasPos);
+        _dragResizeHandleLastPosition = MapEditing.Resize(HoverHandle, _dragResizeHandleLastPosition, canvasPos);
     }
 
-    private void doDragPan(PointF clientPos) {
-      var delta = Drawing.Subtract(_mPanPosition, clientPos);
+    private void DoDragPan(PointF clientPos) {
+      var delta = Drawing.Subtract(_panPosition, clientPos);
       delta = Drawing.Divide(delta, ZoomFactor);
       Origin = new Vector(Origin.X + delta.X, Origin.Y + delta.Y);
-      _mPanPosition = clientPos;
-      hideElementToolTip();
+      _panPosition = clientPos;
+      HideElementToolTip();
     }
 
-    private void drawElements(XGraphics graphics, Palette palette, bool finalRender) {
+    private void DrawElements(XGraphics graphics, Palette palette, bool finalRender) {
       if (ApplicationSettingsController.AppSettings.DebugDisableElementRendering)
         return;
 
-      var context = new DrawingContext(ZoomFactor) {UseSmartLineSegments = sMSmartLineSegmentsUpToDate};
-      var elements = depthSortElements();
+      var context = new DrawingContext(ZoomFactor) {UseSmartLineSegments = _smartLineSegmentsUpToDate};
+      var elements = DepthSortElements();
 
       if (!context.UseSmartLineSegments)
         foreach (var element in elements) {
@@ -1781,7 +1781,7 @@ namespace Trizbort.UI.Controls {
         foreach (var element in elements)
           element.Flagged = false;
 
-      foreach (var element in _mSelectedElements) element.Flagged = true;
+      foreach (var element in _selectedElements) element.Flagged = true;
 
       var clipToScreen = new RectangleF(Origin.X - Width / 2 / ZoomFactor, Origin.Y - Height / 2 / ZoomFactor, Width / ZoomFactor, Height / ZoomFactor);
 
@@ -1800,7 +1800,7 @@ namespace Trizbort.UI.Controls {
       }
     }
 
-    private void drawGrid(XGraphics graphics, Palette palette) {
+    private void DrawGrid(XGraphics graphics, Palette palette) {
       if (Settings.IsGridVisible && Settings.GridSize * ZoomFactor > 10) {
         var topLeft = Settings.Snap(ClientToCanvas(new PointF(-Settings.GridSize * ZoomFactor, -Settings.GridSize * ZoomFactor)));
         var bottomRight = Settings.Snap(ClientToCanvas(new PointF(Width + Settings.GridSize * ZoomFactor, Height + Settings.GridSize * ZoomFactor)));
@@ -1842,27 +1842,27 @@ namespace Trizbort.UI.Controls {
       }
     }
 
-    private void drawHandles(XGraphics graphics, Palette palette) {
-      drawWaypointHandles(graphics, palette);
-      if (_mHandles.Count == 0) return;
+    private void DrawHandles(XGraphics graphics, Palette palette) {
+      DrawWaypointHandles(graphics, palette);
+      if (_handles.Count == 0) return;
 
       var context = new DrawingContext(ZoomFactor);
 
-      if (_mHandles.Count > 1) {
-        var bounds = _mHandles.Aggregate(Rect.Empty, (current, handle) => current == Rect.Empty ? new Rect(handle.Position, Vector.Zero) : current.Union(handle.Position));
+      if (_handles.Count > 1) {
+        var bounds = _handles.Aggregate(Rect.Empty, (current, handle) => current == Rect.Empty ? new Rect(handle.Position, Vector.Zero) : current.Union(handle.Position));
 
         bounds.X += Settings.HandleSize / 2f;
         bounds.Y += Settings.HandleSize / 2f;
       }
 
 
-      foreach (var handle in _mHandles) {
+      foreach (var handle in _handles) {
         context.Selected = handle == HoverHandle;
         handle.Draw(this, graphics, palette, context);
       }
     }
 
-    private IEnumerable<CurveWaypoint> visibleWaypoints(Connection connection) {
+    private IEnumerable<CurveWaypoint> VisibleWaypoints(Connection connection) {
       if (connection == null) yield break;
       // the middle handle is listed last so it is drawn on top and wins hit tests
       foreach (var waypoint in new[] {CurveWaypoint.Quarter, CurveWaypoint.ThreeQuarter, CurveWaypoint.Middle})
@@ -1873,31 +1873,31 @@ namespace Trizbort.UI.Controls {
     // Handle size in canvas units; never shrinks below Settings.HandleSize on screen when zoomed out.
     private float WaypointHandleScale => Settings.HandleSize * Math.Max(1f, 1f / ZoomFactor);
 
-    private Rect waypointHandleBounds(Connection connection, CurveWaypoint waypoint) {
+    private Rect WaypointHandleBounds(Connection connection, CurveWaypoint waypoint) {
       var size = WaypointHandleScale * (connection.GetCurveWaypoint(waypoint).HasValue ? 2f : 1.5f);
       var position = connection.GetCurveWaypointHandlePosition(waypoint);
       return new Rect(position.X - size / 2, position.Y - size / 2, size, size);
     }
 
-    private void drawWaypointHandles(XGraphics graphics, Palette palette) {
+    private void DrawWaypointHandles(XGraphics graphics, Palette palette) {
       var connection = WaypointConnection;
       if (connection == null) return;
 
       var context = new DrawingContext(ZoomFactor);
-      foreach (var waypoint in visibleWaypoints(connection)) {
+      foreach (var waypoint in VisibleWaypoints(connection)) {
         var isSet = connection.GetCurveWaypoint(waypoint).HasValue;
-        context.Selected = waypoint == HoverWaypoint || waypoint == _mSelectedWaypoint && isSet;
-        Drawing.DrawHandle(this, graphics, palette, waypointHandleBounds(connection, waypoint), context, !isSet, true);
+        context.Selected = waypoint == HoverWaypoint || waypoint == _selectedWaypoint && isSet;
+        Drawing.DrawHandle(this, graphics, palette, WaypointHandleBounds(connection, waypoint), context, !isSet, true);
       }
     }
 
-    private CurveWaypoint? hitTestWaypoint(Vector canvasPos) {
+    private CurveWaypoint? HitTestWaypoint(Vector canvasPos) {
       var connection = WaypointConnection;
       if (connection == null) return null;
 
       CurveWaypoint? hit = null;
-      foreach (var waypoint in visibleWaypoints(connection)) {
-        var bounds = waypointHandleBounds(connection, waypoint);
+      foreach (var waypoint in VisibleWaypoints(connection)) {
+        var bounds = WaypointHandleBounds(connection, waypoint);
         // be generous so the handles are easy to grab
         bounds.Inflate(WaypointHandleScale / 2);
         if (bounds.Contains(canvasPos)) hit = waypoint;
@@ -1906,8 +1906,8 @@ namespace Trizbort.UI.Controls {
       return hit;
     }
 
-    private void drawMarquee(XGraphics graphics, Palette palette) {
-      var marqueeRect = getMarqueeCanvasBounds();
+    private void DrawMarquee(XGraphics graphics, Palette palette) {
+      var marqueeRect = GetMarqueeCanvasBounds();
       if (!(marqueeRect.Width > 0) || !(marqueeRect.Height > 0)) return;
 
       graphics.DrawRectangle(palette.MarqueeFillBrush, marqueeRect.ToRectangleF());
@@ -1921,11 +1921,11 @@ namespace Trizbort.UI.Controls {
       graphics.DrawLine(palette.MarqueeBorderPen, topLeft, bottomLeft);
     }
 
-    private void drawPorts(XGraphics graphics, Palette palette) {
+    private void DrawPorts(XGraphics graphics, Palette palette) {
       var context = new DrawingContext(ZoomFactor);
 
       // draw all non-selected ports
-      foreach (var port in _mPorts.Where(port => HoverPort != port)) {
+      foreach (var port in _ports.Where(port => HoverPort != port)) {
         context.Selected = false;
         port.Draw(this, graphics, palette, context);
       }
@@ -1937,18 +1937,18 @@ namespace Trizbort.UI.Controls {
       HoverPort.Draw(this, graphics, palette, context);
     }
 
-    private void ellipseToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void EllipseToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetRoomShape(RoomShape.Ellipse);
     }
 
-    private void endDrag() {
+    private void EndDrag() {
       if (DragMode == DragModes.MovePort) {
         // clear the selection now the line is drawn
         SelectedElement = null;
 
-        if (_mDragMovePort.Owner is Connection) {
+        if (_dragMovePort.Owner is Connection) {
           // remove dead connections
-          var connection = (Connection) _mDragMovePort.Owner;
+          var connection = (Connection) _dragMovePort.Owner;
           var same = true;
           if (connection.VertexList.Count > 0) {
             var pos = connection.VertexList[0].Position;
@@ -1964,15 +1964,15 @@ namespace Trizbort.UI.Controls {
           SelectedElement = connection;
         }
       } else if (DragMode == DragModes.Marquee) {
-        var marqueeRect = getMarqueeCanvasBounds();
-        if ((ModifierKeys & (Keys.Shift | Keys.Control)) == Keys.None) _mSelectedElements.Clear();
-        foreach (var element in hitTest(marqueeRect, false))
-          if (!_mSelectedElements.Contains(element))
-            _mSelectedElements.Add(element);
+        var marqueeRect = GetMarqueeCanvasBounds();
+        if ((ModifierKeys & (Keys.Shift | Keys.Control)) == Keys.None) _selectedElements.Clear();
+        foreach (var element in HitTest(marqueeRect, false))
+          if (!_selectedElements.Contains(element))
+            _selectedElements.Add(element);
           else if ((ModifierKeys & Keys.Shift) == Keys.Shift)
-            if (_mSelectedElements.Contains(element))
-              _mSelectedElements.Remove(element);
-        updateSelection();
+            if (_selectedElements.Contains(element))
+              _selectedElements.Remove(element);
+        UpdateSelection();
       }
 
       DragMode = DragModes.None;
@@ -1982,15 +1982,15 @@ namespace Trizbort.UI.Controls {
       Invalidate();
     }
 
-    private void endRoomToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void EndRoomToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetEndRoom();
     }
 
-    private void formatsFillsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void FormatsFillsToolStripMenuItemClick(object sender, EventArgs e) {
       SwapRoomFill();
     }
 
-    private Image generateRegionImage(Region region) {
+    private Image GenerateRegionImage(Region region) {
       var image = new Bitmap(24, 20);
       var g = Graphics.FromImage(image);
       using var palette = new Palette();
@@ -1999,9 +1999,9 @@ namespace Trizbort.UI.Controls {
       return image;
     }
 
-    private Rect getMarqueeCanvasBounds() {
+    private Rect GetMarqueeCanvasBounds() {
       if (DragMode != DragModes.Marquee) return Rect.Empty;
-      var topLeft = _mDragOffsetCanvas;
+      var topLeft = _dragOffsetCanvas;
       var bottomRight = ClientToCanvas(PointToClient(MousePosition));
       if (bottomRight.X < topLeft.X) Numeric.Swap(ref bottomRight.X, ref topLeft.X);
       if (bottomRight.Y < topLeft.Y) Numeric.Swap(ref bottomRight.Y, ref topLeft.Y);
@@ -2019,10 +2019,10 @@ namespace Trizbort.UI.Controls {
     ///   either side. For example, after checking east and finding nothing, check
     ///   east-north-east and east-south-east.
     /// </remarks>
-    private Room getRoomInApproximateDirectionFromRoom(Room room, CompassPoint compassPoint) {
-      var nextRoom = getRoomInExactDirectionFromRoom(room, compassPoint) ?? getRoomInExactDirectionFromRoom(room, CompassPointHelper.RotateAntiClockwise(compassPoint));
+    private Room GetRoomInApproximateDirectionFromRoom(Room room, CompassPoint compassPoint) {
+      var nextRoom = GetRoomInExactDirectionFromRoom(room, compassPoint) ?? GetRoomInExactDirectionFromRoom(room, CompassPointHelper.RotateAntiClockwise(compassPoint));
 
-      return nextRoom ?? getRoomInExactDirectionFromRoom(room, CompassPointHelper.RotateClockwise(compassPoint));
+      return nextRoom ?? GetRoomInExactDirectionFromRoom(room, CompassPointHelper.RotateClockwise(compassPoint));
     }
 
     /// <summary>
@@ -2031,7 +2031,7 @@ namespace Trizbort.UI.Controls {
     /// <param name="room">The initial room.</param>
     /// <param name="compassPoint">The direction to consider.</param>
     /// <returns>The room which can be found in that direction, or null if none.</returns>
-    private Room getRoomInExactDirectionFromRoom(Room room, CompassPoint compassPoint) {
+    private Room GetRoomInExactDirectionFromRoom(Room room, CompassPoint compassPoint) {
       var connections = room.GetConnections(compassPoint);
       foreach (var connection in connections)
       foreach (var vertex in connection.VertexList) {
@@ -2042,20 +2042,20 @@ namespace Trizbort.UI.Controls {
       return null;
     }
 
-    private void handDrawnToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void HandDrawnToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetRoomShape(RoomShape.SquareCorners);
     }
 
-    private List<Element> hitTest(Rect rect, bool roomsOnly) {
+    private List<Element> HitTest(Rect rect, bool roomsOnly) {
       return Project.Current.Elements.Where(element => (!roomsOnly || element is Room) && element.Intersects(rect)).ToList();
     }
 
-    private Element hitTestElement(Vector canvasPos, bool includeMargins) {
+    private Element HitTestElement(Vector canvasPos, bool includeMargins) {
       var closest = new List<Element>();
       var closestDistance = float.MaxValue;
-      foreach (var element in depthSortElements()) // sort into drawing order
+      foreach (var element in DepthSortElements()) // sort into drawing order
       {
-        if (DragMode == DragModes.MovePort && _mDragMovePort.Owner == element) continue;
+        if (DragMode == DragModes.MovePort && _dragMovePort.Owner == element) continue;
 
         var distance = element.Distance(canvasPos, includeMargins);
         if (distance <= SnapToElementSizeAtCurrentZoomFactor)
@@ -2072,22 +2072,22 @@ namespace Trizbort.UI.Controls {
       return closest[closest.Count - 1]; // choose the topmost element
     }
 
-    private ResizeHandle hitTestHandle(Vector canvasPos) {
+    private ResizeHandle HitTestHandle(Vector canvasPos) {
       // examine handles, topmost (drawn) to lowermost
-      for (var index = _mHandles.Count - 1; index >= 0; --index) {
-        var handle = _mHandles[index];
+      for (var index = _handles.Count - 1; index >= 0; --index) {
+        var handle = _handles[index];
         if (handle.HitTest(canvasPos)) return handle;
       }
 
       return null;
     }
 
-    private Port hitTestPort(Vector canvasPos) {
+    private Port HitTestPort(Vector canvasPos) {
       Port closest = null;
       var closestDistance = float.MaxValue;
 
-      foreach (var port in _mPorts) {
-        if (DragMode == DragModes.MovePort && port == _mDragMovePort) continue;
+      foreach (var port in _ports) {
+        if (DragMode == DragModes.MovePort && port == _dragMovePort) continue;
 
         var distance = port.Distance(canvasPos);
 
@@ -2105,7 +2105,7 @@ namespace Trizbort.UI.Controls {
       return closest;
     }
 
-    private CompassPoint indicatedDirection(Keys keyCode) {
+    private CompassPoint IndicatedDirection(Keys keyCode) {
       var returnDir = CompassPoint.North;
 
       switch (keyCode) {
@@ -2153,60 +2153,60 @@ namespace Trizbort.UI.Controls {
       return returnDir;
     }
 
-    private static bool isDragButton(MouseEventArgs e) {
+    private static bool IsDragButton(MouseEventArgs e) {
       return e.Button == MouseButtons.Middle || e.Button == MouseButtons.Right && ModifierKeys == Keys.Shift;
     }
 
-    private static bool isZoomIn(int delta) {
+    private static bool IsZoomIn(int delta) {
       return !ApplicationSettingsController.AppSettings.InvertMouseWheel && delta < 0 || ApplicationSettingsController.AppSettings.InvertMouseWheel && delta > 0;
     }
 
-    private static bool isZoomOut(int delta) {
+    private static bool IsZoomOut(int delta) {
       return !ApplicationSettingsController.AppSettings.InvertMouseWheel && delta > 0 || ApplicationSettingsController.AppSettings.InvertMouseWheel && delta < 0;
     }
 
-    private void joinRoomsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void JoinRoomsToolStripMenuItemClick(object sender, EventArgs e) {
       JoinSelectedRooms(SelectedRooms.First(), SelectedRooms.Last());
     }
 
-    private void m_downLinesMenuItem_Click(object sender, EventArgs e) {
+    private void DownLinesMenuItemClick(object sender, EventArgs e) {
       _commandController.SetConnectionLabel(ConnectionLabel.Down);
     }
 
-    private void m_inLinesMenuItem_Click(object sender, EventArgs e) {
+    private void InLinesMenuItemClick(object sender, EventArgs e) {
       _commandController.SetConnectionLabel(ConnectionLabel.In);
     }
 
-    private void m_outLinesMenuItem_Click(object sender, EventArgs e) {
+    private void OutLinesMenuItemClick(object sender, EventArgs e) {
       _commandController.SetConnectionLabel(ConnectionLabel.Out);
     }
 
-    private void m_plainLinesMenuItem_Click(object sender, EventArgs e) {
+    private void PlainLinesMenuItemClick(object sender, EventArgs e) {
       ApplyNewPlainConnectionSettings();
     }
 
-    private void m_reverseLineMenuItem_Click(object sender, EventArgs e) {
+    private void ReverseLineMenuItemClick(object sender, EventArgs e) {
       ReverseLineDirection();
     }
 
-    private void m_toggleDirectionalLinesMenuItem_Click(object sender, EventArgs e) {
+    private void ToggleDirectionalLinesMenuItemClick(object sender, EventArgs e) {
       _commandController.ToggleConnectionFlow(NewConnectionFlow);
     }
 
-    private void m_toggleDottedLinesMenuItem_Click(object sender, EventArgs e) {
+    private void ToggleDottedLinesMenuItemClick(object sender, EventArgs e) {
       _commandController.ToggleConnectionStyle(NewConnectionStyle);
     }
 
-    private void m_upLinesMenuItem_Click(object sender, EventArgs e) {
+    private void UpLinesMenuItemClick(object sender, EventArgs e) {
       _commandController.SetConnectionLabel(ConnectionLabel.Up);
     }
 
-    private void mapSettingsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void MapSettingsToolStripMenuItemClick(object sender, EventArgs e) {
       Settings.ShowMapDialog();
       Refresh();
     }
 
-    private static void moveActiveSelected(bool moveForward = true) {
+    private static void MoveActiveSelected(bool moveForward = true) {
       var list = Project.Current.GetSelectedElements();
       var element = list.Find(p => p.Id == Project.Current.ActiveSelectedElement?.Id);
       if (element == null) return;
@@ -2231,7 +2231,7 @@ namespace Trizbort.UI.Controls {
       Project.Current.ActiveSelectedElement = newElement;
     }
 
-    private void moveArrowKeyHandler(Keys keyCode, bool shift) {
+    private void MoveArrowKeyHandler(Keys keyCode, bool shift) {
       var bHorizontal = keyCode == Keys.Left || keyCode == Keys.Right;
       var bNegative = keyCode == Keys.Right || keyCode == Keys.Down;
 
@@ -2240,99 +2240,99 @@ namespace Trizbort.UI.Controls {
           Origin += new Vector((bNegative ? -1 : 1) * Viewport.Width / (shift ? 5 : 10), 0);
         else
           Origin += new Vector(0, (bNegative ? -1 : 1) * Viewport.Width / (shift ? 5 : 10));
-        hideElementToolTip();
+        HideElementToolTip();
       } else {
         var delta = Settings.SnapToGrid ? Settings.GridSize : 2.0f;
         var offset = bHorizontal ? new Vector(bNegative ? delta : -delta, 0) : new Vector(0, bNegative ? delta : -delta);
-        moveSelectedElements(offset);
+        MoveSelectedElements(offset);
       }
     }
 
-    private void namesToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void NamesToolStripMenuItemClick(object sender, EventArgs e) {
       SwapRoomNames();
     }
 
-    private void objectsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void ObjectsToolStripMenuItemClick(object sender, EventArgs e) {
       SwapRooms();
     }
 
-    private void octagonalEdgesToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void OctagonalEdgesToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetRoomShape(RoomShape.Octagonal);
     }
 
-    private void onElementAdded(object sender, ItemEventArgs<Element> e) {
+    private void OnElementAdded(object sender, ItemEventArgs<Element> e) {
       if (e.Item is Room item) {
         var room = item;
-        room.Size = _mNewRoomSize;
-        room.IsDark = _mNewRoomIsDark;
-        room.ObjectsPosition = _mNewRoomObjectsPosition;
+        room.Size = _newRoomSize;
+        room.IsDark = _newRoomIsDark;
+        room.ObjectsPosition = _newRoomObjectsPosition;
       }
 
-      e.Item.Changed += onElementChanged;
+      e.Item.Changed += OnElementChanged;
       Project.Current.IsDirty = true;
-      requestRecomputeSmartSegments();
+      RequestRecomputeSmartSegments();
       Invalidate();
     }
 
-    private void onElementChanged(object sender, EventArgs e) {
-      if (sender is Room room) setRoomDefaultsFrom(room);
+    private void OnElementChanged(object sender, EventArgs e) {
+      if (sender is Room room) SetRoomDefaultsFrom(room);
 
-      if (sender is Connection connection) setConnectionDefaultsFrom(connection);
+      if (sender is Connection connection) SetConnectionDefaultsFrom(connection);
       Invalidate();
       Project.Current.IsDirty = true;
-      requestRecomputeSmartSegments();
+      RequestRecomputeSmartSegments();
     }
 
-    private void onElementRemoved(object sender, ItemEventArgs<Element> e) {
-      _mSelectedElements.Remove(e.Item);
-      updateSelection();
-      endDrag();
-      updateDragHover(PointToClient(MousePosition));
+    private void OnElementRemoved(object sender, ItemEventArgs<Element> e) {
+      _selectedElements.Remove(e.Item);
+      UpdateSelection();
+      EndDrag();
+      UpdateDragHover(PointToClient(MousePosition));
 
       Project.Current.IsDirty = true;
-      e.Item.Changed -= onElementChanged;
-      requestRecomputeSmartSegments();
+      e.Item.Changed -= OnElementChanged;
+      RequestRecomputeSmartSegments();
       Invalidate();
     }
 
-    private void onPreviewKeyDown(object sender, PreviewKeyDownEventArgs e) {
+    private void OnPreviewKeyDown(object sender, PreviewKeyDownEventArgs e) {
       if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down || e.KeyCode == Keys.Left || e.KeyCode == Keys.Right) e.IsInputKey = true;
     }
 
-    private void onProjectChanged(object sender, ProjectChangedEventArgs e) {
+    private void OnProjectChanged(object sender, ProjectChangedEventArgs e) {
       if (e.OldProject != null) {
-        e.OldProject.Elements.Added -= onElementAdded;
-        e.OldProject.Elements.Removed -= onElementRemoved;
+        e.OldProject.Elements.Added -= OnElementAdded;
+        e.OldProject.Elements.Removed -= OnElementRemoved;
 
-        foreach (var element in e.OldProject.Elements) element.Changed -= onElementChanged;
+        foreach (var element in e.OldProject.Elements) element.Changed -= OnElementChanged;
         e.OldProject.Dispose();
       }
 
       if (e.NewProject != null) {
-        e.NewProject.Elements.Added += onElementAdded;
-        e.NewProject.Elements.Removed += onElementRemoved;
+        e.NewProject.Elements.Added += OnElementAdded;
+        e.NewProject.Elements.Removed += OnElementRemoved;
 
-        foreach (var element in e.NewProject.Elements) element.Changed += onElementChanged;
+        foreach (var element in e.NewProject.Elements) element.Changed += OnElementChanged;
       }
 
-      reset();
+      Reset();
       ZoomToFit();
     }
 
-    private void onRecomputeTimerTick(object state) {
-      _mRecomputeTimer.Change(Timeout.Infinite, Timeout.Infinite);
+    private void OnRecomputeTimerTick(object state) {
+      _recomputeTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
       var context = new DrawingContext(ZoomFactor);
-      var elements = depthSortElements();
+      var elements = DepthSortElements();
 
       foreach (var element in elements) element.RecomputeSmartLineSegments(context);
 
-      sMSmartLineSegmentsUpToDate = true;
+      _smartLineSegmentsUpToDate = true;
       Invalidate();
     }
 
-    private void onSettingsChanged(object sender, EventArgs e) {
-      requestRecomputeSmartSegments();
+    private void OnSettingsChanged(object sender, EventArgs e) {
+      RequestRecomputeSmartSegments();
       if (Settings.WrappingChanged) {
         RedrawAllRoomsWithDashes();
         Settings.WrappingChanged = false; // might as well go at the end of the RedrawAllRoomsWithDashes method
@@ -2341,7 +2341,7 @@ namespace Trizbort.UI.Controls {
       Invalidate();
     }
 
-    private void pasteColors(CopyController.CopyColorsObj xx) {
+    private void PasteColors(CopyController.CopyColorsObj xx) {
       foreach (var element in SelectedElements.OfType<Room>()) {
         foreach (var obj in xx.Colors) {
           var propertyInfo = element.GetType().GetProperty(obj.Name);
@@ -2406,56 +2406,56 @@ namespace Trizbort.UI.Controls {
             ? reference.Id : -1;
         newConnections.AddRange(controller.PasteConnections(Project.Current, xx.Connections, copiedNodes, new Vector(offsetX, offsetY)));
 
-        _mSelectedElements.Clear();
-        _mSelectedElements.AddRange(newRooms);
-        _mSelectedElements.AddRange(newLabels);
-        _mSelectedElements.AddRange(newConnections);
-        updateSelection();
+        _selectedElements.Clear();
+        _selectedElements.AddRange(newRooms);
+        _selectedElements.AddRange(newLabels);
+        _selectedElements.AddRange(newConnections);
+        UpdateSelection();
       }
     }
 
-    private void raiseNewConnectionFlowChanged() {
+    private void RaiseNewConnectionFlowChanged() {
       var changed = NewConnectionFlowChanged;
       changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void raiseNewConnectionLabelChanged() {
+    private void RaiseNewConnectionLabelChanged() {
       var changed = NewConnectionLabelChanged;
       changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void raiseNewConnectionStyleChanged() {
+    private void RaiseNewConnectionStyleChanged() {
       var changed = NewConnectionStyleChanged;
       changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void recreateHandles() {
+    private void RecreateHandles() {
       HoverHandle = null;
-      _mHandles.Clear();
+      _handles.Clear();
       var element = SelectedElement;
       if (CanSelectElements && element is ISizeable && HasSingleSelectedElement) {
         var sizeable = (ISizeable) element;
-        _mHandles.Add(new ResizeHandle(CompassPoint.North, sizeable));
-        _mHandles.Add(new ResizeHandle(CompassPoint.South, sizeable));
-        _mHandles.Add(new ResizeHandle(CompassPoint.East, sizeable));
-        _mHandles.Add(new ResizeHandle(CompassPoint.West, sizeable));
-        _mHandles.Add(new ResizeHandle(CompassPoint.NorthWest, sizeable));
-        _mHandles.Add(new ResizeHandle(CompassPoint.NorthEast, sizeable));
-        _mHandles.Add(new ResizeHandle(CompassPoint.SouthWest, sizeable));
-        _mHandles.Add(new ResizeHandle(CompassPoint.SouthEast, sizeable));
+        _handles.Add(new ResizeHandle(CompassPoint.North, sizeable));
+        _handles.Add(new ResizeHandle(CompassPoint.South, sizeable));
+        _handles.Add(new ResizeHandle(CompassPoint.East, sizeable));
+        _handles.Add(new ResizeHandle(CompassPoint.West, sizeable));
+        _handles.Add(new ResizeHandle(CompassPoint.NorthWest, sizeable));
+        _handles.Add(new ResizeHandle(CompassPoint.NorthEast, sizeable));
+        _handles.Add(new ResizeHandle(CompassPoint.SouthWest, sizeable));
+        _handles.Add(new ResizeHandle(CompassPoint.SouthEast, sizeable));
       }
 
       Invalidate();
     }
 
-    private void recreatePorts() {
+    private void RecreatePorts() {
       HoverPort = null;
-      _mPorts.Clear();
+      _ports.Clear();
 
       // decide if we want ports on the element under the mouse cursor; if so, add them
-      if ((HoverElement is Room || HoverElement is MapLabel) && !_mSelectedElements.Contains(HoverElement))
+      if ((HoverElement is Room || HoverElement is MapLabel) && !_selectedElements.Contains(HoverElement))
         if (DragMode == DragModes.MovePort || CanDrawLine && SelectedElement == null)
-          _mPorts.AddRange(HoverElement.PortList);
+          _ports.AddRange(HoverElement.PortList);
 
       // decide if we want movable ports on the selected element; if so, add them
       // (currently movable ports only apply to connections, and if we want to be able
@@ -2464,14 +2464,14 @@ namespace Trizbort.UI.Controls {
       if (needMovablePortsOnSelectedElement && HasSingleSelectedElement)
         if (SelectedElement != null)
           foreach (var port in SelectedElement.PortList.OfType<MoveablePort>())
-            _mPorts.Add(port);
+            _ports.Add(port);
 
       Invalidate();
     }
 
     // context menu event to change region of room(s)
-    private void regionContextClick(object sender, EventArgs e) {
-      var selectedRooms = _mSelectedElements.Where(p => p is Room).ToList();
+    private void RegionContextClick(object sender, EventArgs e) {
+      var selectedRooms = _selectedElements.Where(p => p is Room).ToList();
 
       if (!selectedRooms.Any())
         selectedRooms.Add(_lastSelectedRoom);
@@ -2481,20 +2481,20 @@ namespace Trizbort.UI.Controls {
       foreach (var selectedRoom in selectedRooms.Cast<Room>()) selectedRoom.Region = regionSelected.Text;
     }
 
-    private void regionsToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void RegionsToolStripMenuItemClick(object sender, EventArgs e) {
       SwapRoomRegions();
     }
 
-    private void renameToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void RenameToolStripMenuItemClick(object sender, EventArgs e) {
       if (HasSingleSelectedElement) _commandController.ShowElementProperties(SelectedElement);
     }
 
-    private void requestRecomputeSmartSegments() {
-      sMSmartLineSegmentsUpToDate = false;
-      _mRecomputeTimer.Change(RECOMPUTE_N_MILLISECONDS_AFTER_CHANGE, RECOMPUTE_N_MILLISECONDS_AFTER_CHANGE);
+    private void RequestRecomputeSmartSegments() {
+      _smartLineSegmentsUpToDate = false;
+      _recomputeTimer.Change(RecomputeNMillisecondsAfterChange, RecomputeNMillisecondsAfterChange);
     }
 
-    private void reset() {
+    private void Reset() {
       ZoomFactor = 1;
       Origin = Vector.Zero;
       SelectedElement = null;
@@ -2505,16 +2505,16 @@ namespace Trizbort.UI.Controls {
       NewConnectionStyle = ConnectionStyle.Solid;
       NewConnectionFlow = ConnectionFlow.TwoWay;
       NewConnectionLabel = ConnectionLabel.None;
-      _mNewRoomSize = new Vector(Settings.GridSize * 3, Settings.GridSize * 2);
-      _mNewRoomIsDark = false;
-      _mNewRoomObjectsPosition = CompassPoint.South;
-      _mNewRoomStyleSource = null;
-      requestRecomputeSmartSegments();
+      _newRoomSize = new Vector(Settings.GridSize * 3, Settings.GridSize * 2);
+      _newRoomIsDark = false;
+      _newRoomObjectsPosition = CompassPoint.South;
+      _newRoomStyleSource = null;
+      RequestRecomputeSmartSegments();
       StopAutomapping();
       // roomTooltip.SetSuperTooltip(this, null);
     }
 
-    private void resizeRoom(Keys keyCode) {
+    private void ResizeRoom(Keys keyCode) {
       foreach (var element in SelectedElements.OfType<ISizeable>()) {
         var delta = 2.0f;
         if (Settings.SnapToGrid)
@@ -2546,32 +2546,32 @@ namespace Trizbort.UI.Controls {
       }
     }
 
-    private void roomPropertiesToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void RoomPropertiesToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.ShowElementProperties(SelectedElement);
     }
 
-    private void roundedEdgesToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void RoundedEdgesToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetRoomShape(RoomShape.RoundedCorners);
     }
 
     private void ScrollBar_Scroll(object sender, ScrollEventArgs e) {
-      if (_mUpdatingScrollBars) return;
+      if (_updatingScrollBars) return;
 
       // the scroll bar will Invalidate() and Update() us; avoid exceptions
-      _mDoNotUpdateScrollBarsNextPaint = true;
+      _doNotUpdateScrollBarsNextPaint = true;
 
       var clientDelta = e.NewValue - e.OldValue;
       if (ApplicationSettingsController.AppSettings.InfiniteScrollBounds && e.Type == ScrollEventType.SmallIncrement || e.Type == ScrollEventType.SmallDecrement)
-        if (Math.Abs(clientDelta) != m_vScrollBar.SmallChange)
-          clientDelta = m_vScrollBar.SmallChange * (e.Type == ScrollEventType.SmallIncrement ? 1 : -1);
+        if (Math.Abs(clientDelta) != _vScrollBar.SmallChange)
+          clientDelta = _vScrollBar.SmallChange * (e.Type == ScrollEventType.SmallIncrement ? 1 : -1);
       if (clientDelta != 0)
-        if (sender == m_vScrollBar)
+        if (sender == _vScrollBar)
           Origin += new Vector(ClientToCanvas(new SizeF(0, clientDelta)));
         else
           Origin += new Vector(ClientToCanvas(new SizeF(clientDelta, 0)));
     }
 
-    private bool selectRoomRelativeToSelectedConnection(CompassPoint compassPoint) {
+    private bool SelectRoomRelativeToSelectedConnection(CompassPoint compassPoint) {
       if (SelectedElement is Connection element) {
         var conn = element;
 
@@ -2632,10 +2632,10 @@ namespace Trizbort.UI.Controls {
     /// </summary>
     /// <param name="compassPoint">The direction to consider.</param>
     /// <returns>True if a new room was found and selected; false otherwise.</returns>
-    private bool selectRoomRelativeToSelectedRoom(CompassPoint compassPoint) {
+    private bool SelectRoomRelativeToSelectedRoom(CompassPoint compassPoint) {
       if (SelectedElement is Room element) {
         var room = element;
-        var nextRoom = getRoomInApproximateDirectionFromRoom(room, compassPoint);
+        var nextRoom = GetRoomInApproximateDirectionFromRoom(room, compassPoint);
         if (nextRoom != null) {
           SelectedElement = nextRoom;
           _commandController.MakeVisible(SelectedElement);
@@ -2646,33 +2646,33 @@ namespace Trizbort.UI.Controls {
       return false;
     }
 
-    private void sendToBackToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void SendToBackToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SendToBack();
     }
 
-    private void setConnectionDefaultsFrom(Connection connection) {
+    private void SetConnectionDefaultsFrom(Connection connection) {
       NewConnectionFlow = connection.Flow;
       NewConnectionStyle = connection.Style;
     }
 
-    private void setRoomDefaultsFrom(Room room) {
-      _mNewRoomSize = room.Size;
-      _mNewRoomIsDark = room.IsDark;
-      _mNewRoomObjectsPosition = room.ObjectsPosition;
-      _mNewRoomStyleSource = room;
+    private void SetRoomDefaultsFrom(Room room) {
+      _newRoomSize = room.Size;
+      _newRoomIsDark = room.IsDark;
+      _newRoomObjectsPosition = room.ObjectsPosition;
+      _newRoomStyleSource = room;
     }
 
-    private void shiftArrowHandler(Keys keyCode) {
+    private void ShiftArrowHandler(Keys keyCode) {
       if (!HasSingleSelectedElement) return;
       if (SelectedElement.GetType() == typeof(Connection)) {
-        ctrlArrowHandler(keyCode);
+        CtrlArrowHandler(keyCode);
         return;
       }
 
       if (SelectedElement.GetType() != typeof(Room)) return;
 
       var thisRoom = SelectedElement as Room;
-      var direction = indicatedDirection(keyCode);
+      var direction = IndicatedDirection(keyCode);
 
       //this seems prohibitively time consuming as Genstein pointed out elsewhere, and I don't like the code. It can probably be simpler.
       //But the basic idea is to try the main direction, then the direction clockwise, then the direction counterclockwise.
@@ -2703,77 +2703,77 @@ namespace Trizbort.UI.Controls {
         }
     }
 
-    private void startRoomToolStripMenuItem_Click(object sender, EventArgs e) {
+    private void StartRoomToolStripMenuItemClick(object sender, EventArgs e) {
       _commandController.SetStartRoom();
     }
 
-    private void updateDragHover(Point mousePosition) {
-      _mLastKnownMousePosition = mousePosition;
+    private void UpdateDragHover(Point mousePosition) {
+      _lastKnownMousePosition = mousePosition;
 
       var clientPos = new PointF(mousePosition.X, mousePosition.Y);
       var canvasPos = ClientToCanvas(clientPos);
 
       switch (DragMode) {
         case DragModes.Pan:
-          doDragPan(clientPos);
+          DoDragPan(clientPos);
           break;
         case DragModes.MoveElement:
-          doDragMoveElement(canvasPos);
+          DoDragMoveElement(canvasPos);
           break;
         case DragModes.MoveResizeHandle:
-          doDragMoveResizeHandle(canvasPos);
+          DoDragMoveResizeHandle(canvasPos);
           break;
         case DragModes.MoveWaypoint:
-          doDragMoveWaypoint(mousePosition, canvasPos);
+          DoDragMoveWaypoint(mousePosition, canvasPos);
           break;
         case DragModes.MovePort:
-          HoverElement = hitTestElement(canvasPos, true);
-          HoverPort = hitTestPort(canvasPos);
-          doDragMovePort(canvasPos);
+          HoverElement = HitTestElement(canvasPos, true);
+          HoverPort = HitTestPort(canvasPos);
+          DoDragMovePort(canvasPos);
           break;
         case DragModes.None:
-          HoverWaypoint = hitTestWaypoint(canvasPos);
-          HoverHandle = hitTestHandle(canvasPos); // set first; it will RecreatePorts() if the value changes
-          HoverPort = hitTestPort(canvasPos);
-          var hoverElement = hitTestElement(canvasPos, false);
+          HoverWaypoint = HitTestWaypoint(canvasPos);
+          HoverHandle = HitTestHandle(canvasPos); // set first; it will RecreatePorts() if the value changes
+          HoverPort = HitTestPort(canvasPos);
+          var hoverElement = HitTestElement(canvasPos, false);
           HoverElement = hoverElement;
 
           Cursor.Current = hoverElement is Room && ((Room) hoverElement).IsReference && ModifierKeys == Keys.Control ? Cursors.Hand : Cursors.Default;
 
           if (hoverElement == null || !ApplicationSettingsController.AppSettings.ShowTooltips ||
               !hoverElement.HasTooltip()) {
-            hideElementToolTip();
+            HideElementToolTip();
           } else {
-            if (trizbortToolTip1.HoverElement == hoverElement) return;
-            hideElementToolTip();
+            if (_trizbortToolTip1.HoverElement == hoverElement) return;
+            HideElementToolTip();
             if (hoverElement.GetToolTipHeader() == string.Empty && hoverElement.GetToolTipText() == string.Empty) return;
 
-            trizbortToolTip1.BodyText = hoverElement.GetToolTipText();
-            trizbortToolTip1.FooterText = hoverElement.GetToolTipFooter();
-            trizbortToolTip1.TitleText = hoverElement.GetToolTipHeader();
+            _trizbortToolTip1.BodyText = hoverElement.GetToolTipText();
+            _trizbortToolTip1.FooterText = hoverElement.GetToolTipFooter();
+            _trizbortToolTip1.TitleText = hoverElement.GetToolTipHeader();
 
             if (hoverElement is Room) {
-              trizbortToolTip1.BackColor = Color.LightBlue;
+              _trizbortToolTip1.BackColor = Color.LightBlue;
             } else if (hoverElement is Connection) {
-              trizbortToolTip1.BackColor = Color.LemonChiffon;
+              _trizbortToolTip1.BackColor = Color.LemonChiffon;
             }
 
-            trizbortToolTip1.HoverElement = hoverElement;
-            trizbortToolTip1.SetToolTip(this, string.IsNullOrEmpty(trizbortToolTip1.TitleText)
-              ? trizbortToolTip1.BodyText : trizbortToolTip1.TitleText);
+            _trizbortToolTip1.HoverElement = hoverElement;
+            _trizbortToolTip1.SetToolTip(this, string.IsNullOrEmpty(_trizbortToolTip1.TitleText)
+              ? _trizbortToolTip1.BodyText : _trizbortToolTip1.TitleText);
           }
 
           break;
         case DragModes.DrawLine:
-          if (new Vector(_mLastMouseDownPosition).Distance(new Vector(mousePosition)) > Settings.DragDistanceToInitiateNewConnection) {
-            var startPos = new PointF(_mLastMouseDownPosition.X, _mLastMouseDownPosition.Y);
-            beginDrawConnection(ClientToCanvas(startPos));
+          if (new Vector(_lastMouseDownPosition).Distance(new Vector(mousePosition)) > Settings.DragDistanceToInitiateNewConnection) {
+            var startPos = new PointF(_lastMouseDownPosition.X, _lastMouseDownPosition.Y);
+            BeginDrawConnection(ClientToCanvas(startPos));
           }
 
           break;
         case DragModes.Marquee:
-          if (_mDragMarqueeLastPosition != canvasPos) {
-            _mDragMarqueeLastPosition = canvasPos;
+          if (_dragMarqueeLastPosition != canvasPos) {
+            _dragMarqueeLastPosition = canvasPos;
             Invalidate();
           }
 
@@ -2781,17 +2781,17 @@ namespace Trizbort.UI.Controls {
       }
     }
 
-    private void updateSelection() {
-      _mSelectedWaypoint = null;
+    private void UpdateSelection() {
+      _selectedWaypoint = null;
       HoverWaypoint = null;
-      recreateHandles();
-      recreatePorts();
+      RecreateHandles();
+      RecreatePorts();
       // only if we have a single element selected;
       // otherwise selecting multiple items will cause one to override the others' settings!
       var selectedElement = SelectedElement;
       if (selectedElement is Connection)
-        setConnectionDefaultsFrom((Connection) selectedElement);
-      else if (selectedElement is Room) setRoomDefaultsFrom((Room) selectedElement);
+        SetConnectionDefaultsFrom((Connection) selectedElement);
+      else if (selectedElement is Room) SetRoomDefaultsFrom((Room) selectedElement);
       Invalidate();
     }
 

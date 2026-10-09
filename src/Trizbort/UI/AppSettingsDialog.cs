@@ -7,106 +7,106 @@ namespace Trizbort.UI {
       InitializeComponent();
     }
 
-    public string DefaultFontName { get => txtDefaultFontName.Text; set => txtDefaultFontName.Text = value; }
+    public string DefaultFontName { get => _txtDefaultFontName.Text; set => _txtDefaultFontName.Text = value; }
 
-    public int DefaultImageType { get => cboImageSaveType.SelectedIndex; set => cboImageSaveType.SelectedIndex = value; }
+    public int DefaultImageType { get => _cboImageSaveType.SelectedIndex; set => _cboImageSaveType.SelectedIndex = value; }
 
-    public float GenHorizontalMargin { get => (float) m_preferredHorizontalMargin.Value; set => m_preferredHorizontalMargin.Value = (decimal) value; }
+    public float GenHorizontalMargin { get => (float) _preferredHorizontalMargin.Value; set => _preferredHorizontalMargin.Value = (decimal) value; }
 
-    public float GenVerticalMargin { get => (float) m_preferredVerticalMargin.Value; set => m_preferredVerticalMargin.Value = (decimal) value; }
+    public float GenVerticalMargin { get => (float) _preferredVerticalMargin.Value; set => _preferredVerticalMargin.Value = (decimal) value; }
 
-    public bool ApplyStyleToNewRooms { get => chkApplyStyleToNewRooms.Checked; set => chkApplyStyleToNewRooms.Checked = value; }
+    public bool ApplyStyleToNewRooms { get => _chkApplyStyleToNewRooms.Checked; set => _chkApplyStyleToNewRooms.Checked = value; }
 
-    public bool DoubleClickToAddRoom { get => chkDoubleClickToAddRoom.Checked; set => chkDoubleClickToAddRoom.Checked = value; }
+    public bool DoubleClickToAddRoom { get => _chkDoubleClickToAddRoom.Checked; set => _chkDoubleClickToAddRoom.Checked = value; }
 
-    public bool InvertMouseWheel { get => m_invertWheelCheckBox.Checked; set => m_invertWheelCheckBox.Checked = value; }
+    public bool InvertMouseWheel { get => _invertWheelCheckBox.Checked; set => _invertWheelCheckBox.Checked = value; }
 
-    public bool LoadLastProjectOnStart { get => chkLoadLast.Checked; set => chkLoadLast.Checked = value; }
+    public bool LoadLastProjectOnStart { get => _chkLoadLast.Checked; set => _chkLoadLast.Checked = value; }
 
-    public int PortAdjustDetail { get => cboPortAdjustDetail.SelectedIndex; set => cboPortAdjustDetail.SelectedIndex = value; }
+    public int PortAdjustDetail { get => _cboPortAdjustDetail.SelectedIndex; set => _cboPortAdjustDetail.SelectedIndex = value; }
 
-    public bool SaveAt100 { get => chkSaveAtZoom.Checked; set => chkSaveAtZoom.Checked = value; }
+    public bool SaveAt100 { get => _chkSaveAtZoom.Checked; set => _chkSaveAtZoom.Checked = value; }
 
-    public bool SaveTadsToAdv3Lite { get => chkSaveTADSToADV3Lite.Checked; set => chkSaveTADSToADV3Lite.Checked = value; }
+    public bool SaveTadsToAdv3Lite { get => _chkSaveTADSToADV3Lite.Checked; set => _chkSaveTADSToADV3Lite.Checked = value; }
 
-    public bool SaveToImage { get => chkSaveToImage.Checked; set => chkSaveToImage.Checked = value; }
+    public bool SaveToImage { get => _chkSaveToImage.Checked; set => _chkSaveToImage.Checked = value; }
 
-    public bool SaveToPDF { get => chkSaveToPDF.Checked; set => chkSaveToPDF.Checked = value; }
+    public bool SaveToPDF { get => _chkSaveToPDF.Checked; set => _chkSaveToPDF.Checked = value; }
 
-    public bool ShowFullPathInTitleBar { get => chkFullPathTitleBar.Checked; set => chkFullPathTitleBar.Checked = value; }
+    public bool ShowFullPathInTitleBar { get => _chkFullPathTitleBar.Checked; set => _chkFullPathTitleBar.Checked = value; }
 
-    public bool ShowDescriptionsInTooltip { get => chkShowDescriptionsInTooltip.Checked; set => chkShowDescriptionsInTooltip.Checked = value; }
-    public bool ShowObjectsInTooltip { get => chkShowObjectsInTooltip.Checked; set => chkShowObjectsInTooltip.Checked = value; }
+    public bool ShowDescriptionsInTooltip { get => _chkShowDescriptionsInTooltip.Checked; set => _chkShowDescriptionsInTooltip.Checked = value; }
+    public bool ShowObjectsInTooltip { get => _chkShowObjectsInTooltip.Checked; set => _chkShowObjectsInTooltip.Checked = value; }
 
-    public bool SpecifyGenMargins { get => chkSpecifyMargins.Checked; set => chkSpecifyMargins.Checked = value; }
+    public bool SpecifyGenMargins { get => _chkSpecifyMargins.Checked; set => _chkSpecifyMargins.Checked = value; }
 
     public bool LimitConnectionDescriptionCharactersInTooltip
     {
-      get => chkLimitConnectionDescriptionTooltipChars.Checked;
-      set => chkLimitConnectionDescriptionTooltipChars.Checked = value;
+      get => _chkLimitConnectionDescriptionTooltipChars.Checked;
+      set => _chkLimitConnectionDescriptionTooltipChars.Checked = value;
     }
 
     public int ToolTipConnectionDescriptionCharactersToShow
     {
-      get => (int)txtNumOfConnectionDescriptionChars.Value;
-      set => txtNumOfConnectionDescriptionChars.Value = value;
+      get => (int)_txtNumOfConnectionDescriptionChars.Value;
+      set => _txtNumOfConnectionDescriptionChars.Value = value;
     }
 
     public bool LimitRoomDescriptionCharactersInTooltip
     {
-      get => chkLimitRoomDescriptionTooltipChars.Checked;
-      set => chkLimitRoomDescriptionTooltipChars.Checked = value;
+      get => _chkLimitRoomDescriptionTooltipChars.Checked;
+      set => _chkLimitRoomDescriptionTooltipChars.Checked = value;
     }
     public int ToolTipRoomDescriptionCharactersToShow
     {
-      get => (int)txtNumOfRoomDescriptionChars.Value;
-      set => txtNumOfRoomDescriptionChars.Value = value;
+      get => (int)_txtNumOfRoomDescriptionChars.Value;
+      set => _txtNumOfRoomDescriptionChars.Value = value;
     }
 
-		private void cboImageSaveType_Enter(object sender, EventArgs e) {
-      cboImageSaveType.DroppedDown = true;
+		private void CboImageSaveTypeEnter(object sender, EventArgs e) {
+      _cboImageSaveType.DroppedDown = true;
     }
 
-    private void cboPortAdjustDetail_Enter(object sender, EventArgs e) {
-      cboPortAdjustDetail.DroppedDown = true;
+    private void CboPortAdjustDetailEnter(object sender, EventArgs e) {
+      _cboPortAdjustDetail.DroppedDown = true;
     }
 
-		private void chkLimitDescriptionTooltipChars_CheckedChanged(object sender, EventArgs e)
+		private void ChkLimitDescriptionTooltipCharsCheckedChanged(object sender, EventArgs e)
     {
       var checkBox = (CheckBox)sender;
 
-      setTooltipRoomDesciptionLimitUI(checkBox.Checked);
+      SetTooltipRoomDesciptionLimitUI(checkBox.Checked);
     }
 
-    private void setTooltipRoomDesciptionLimitUI(bool areWeLimiting)
+    private void SetTooltipRoomDesciptionLimitUI(bool areWeLimiting)
     {
-      chkLimitRoomDescriptionTooltipChars.Enabled = areWeLimiting;
-      txtNumOfRoomDescriptionChars.Enabled = areWeLimiting;
+      _chkLimitRoomDescriptionTooltipChars.Enabled = areWeLimiting;
+      _txtNumOfRoomDescriptionChars.Enabled = areWeLimiting;
     }    
     
-    private void setTooltipConnectionDesciptionLimitUI(bool areWeLimiting)
+    private void SetTooltipConnectionDesciptionLimitUI(bool areWeLimiting)
     {
-      chkLimitConnectionDescriptionTooltipChars.Enabled = areWeLimiting;
-      txtNumOfConnectionDescriptionChars.Enabled = areWeLimiting;
+      _chkLimitConnectionDescriptionTooltipChars.Enabled = areWeLimiting;
+      _txtNumOfConnectionDescriptionChars.Enabled = areWeLimiting;
     }
 
     private void AppSettingsDialog_Load(object sender, EventArgs e)
     {
-      setTooltipRoomDesciptionLimitUI(chkShowDescriptionsInTooltip.Checked);
-      setTooltipConnectionDesciptionLimitUI(chkShowDescriptionsInTooltip.Checked);
+      SetTooltipRoomDesciptionLimitUI(_chkShowDescriptionsInTooltip.Checked);
+      SetTooltipConnectionDesciptionLimitUI(_chkShowDescriptionsInTooltip.Checked);
     }
 
-		private void chkLimitConnectionDescriptionTooltipChars_CheckedChanged(object sender, EventArgs e)
+		private void ChkLimitConnectionDescriptionTooltipCharsCheckedChanged(object sender, EventArgs e)
 		{
       var checkBox = (CheckBox)sender;
 
-      setTooltipConnectionDesciptionLimitUI(checkBox.Checked);
+      SetTooltipConnectionDesciptionLimitUI(checkBox.Checked);
 		}
 
-		private void chkShowDescriptionsInTooltip_CheckedChanged(object sender, EventArgs e)
+		private void ChkShowDescriptionsInTooltipCheckedChanged(object sender, EventArgs e)
     {
-      setTooltipRoomDesciptionLimitUI(chkShowDescriptionsInTooltip.Checked);
-      setTooltipConnectionDesciptionLimitUI(chkShowDescriptionsInTooltip.Checked);
+      SetTooltipRoomDesciptionLimitUI(_chkShowDescriptionsInTooltip.Checked);
+      SetTooltipConnectionDesciptionLimitUI(_chkShowDescriptionsInTooltip.Checked);
 		}
     }
 }

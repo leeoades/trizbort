@@ -11,9 +11,9 @@ namespace Trizbort.Domain.Misc {
   ///   to an element's port.
   /// </remarks>
   public class Vertex {
-    private Port _mPort;
+    private Port _port;
 
-    private Vector _mPosition;
+    private Vector _position;
 
     public Vertex() { }
 
@@ -28,33 +28,33 @@ namespace Trizbort.Domain.Misc {
     public Connection Connection { get; set; }
 
     public Port Port {
-      get => _mPort;
+      get => _port;
       set {
-        if (_mPort != value) {
-          _mPosition = Vector.Zero;
-          _mPort = value;
-          raiseChanged();
+        if (_port != value) {
+          _position = Vector.Zero;
+          _port = value;
+          RaiseChanged();
         }
       }
     }
 
     public Vector Position {
       get {
-        if (_mPort != null) return _mPort.Position;
-        return _mPosition;
+        if (_port != null) return _port.Position;
+        return _position;
       }
       set {
-        if (_mPosition != value) {
-          _mPosition = value;
-          _mPort = null;
-          raiseChanged();
+        if (_position != value) {
+          _position = value;
+          _port = null;
+          RaiseChanged();
         }
       }
     }
 
     public event EventHandler Changed;
 
-    private void raiseChanged() {
+    private void RaiseChanged() {
       var changed = Changed;
       if (changed != null) changed(this, EventArgs.Empty);
     }

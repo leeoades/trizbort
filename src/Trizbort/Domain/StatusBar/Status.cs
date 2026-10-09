@@ -24,11 +24,11 @@ namespace Trizbort.Domain.StatusBar {
   public class Status {
     public Status(StatusStrip statusBar) {
       this.StatusBar = statusBar;
-      this.StatusBar.MouseLeave += showDefaultInfoMessage;
+      this.StatusBar.MouseLeave += ShowDefaultInfoMessage;
     }
 
-    private void showDefaultInfoMessage(object sender, EventArgs e) {
-      updateInfoMessage(string.Empty);
+    private void ShowDefaultInfoMessage(object sender, EventArgs e) {
+      UpdateInfoMessage(string.Empty);
     }
 
     private StatusStrip StatusBar { get; set; }
@@ -37,8 +37,8 @@ namespace Trizbort.Domain.StatusBar {
 
     public void UpdateStatusBar() {
       if (Items == null) {
-        setDefaultItems();
-        addItemsToStatusBar();
+        SetDefaultItems();
+        AddItemsToStatusBar();
       }
 
       foreach (var statusItem in Items.Where(p=>p.Id != StatusItems.TsbInfo)) {
@@ -47,7 +47,7 @@ namespace Trizbort.Domain.StatusBar {
       }
     }
 
-    private void addItemsToStatusBar() {
+    private void AddItemsToStatusBar() {
       foreach (var statusItem in Items) {
         if (statusItem.Id == StatusItems.TsbInfo) {
           var infoLabel = new ToolStripStatusLabel(statusItem.Id.ToString()) {
@@ -59,8 +59,8 @@ namespace Trizbort.Domain.StatusBar {
           statusItem.Control = infoLabel;
         } else {
           var itemLabel = new ToolStripStatusLabel(statusItem.Id.ToString()) {Tag = statusItem.Id};
-          itemLabel.MouseEnter += showHelp;
-          itemLabel.Click += handleClick;
+          itemLabel.MouseEnter += ShowHelp;
+          itemLabel.Click += HandleClick;
           StatusBar.Items.Add(itemLabel);
           statusItem.Control = itemLabel;
         }
@@ -68,30 +68,30 @@ namespace Trizbort.Domain.StatusBar {
       
     }
 
-    private void handleClick(object sender, EventArgs e) {
+    private void HandleClick(object sender, EventArgs e) {
       var control = (ToolStripStatusLabel) sender;
       var widget = Items.Find(p => p.Id == (StatusItems) control.Tag);
       widget.Widget.ClickHandler();
     }
 
-    private void showHelp(object sender, EventArgs eventArgs) {
+    private void ShowHelp(object sender, EventArgs eventArgs) {
       var control = (ToolStripStatusLabel) sender;
 
       var helpItem = Items.Find(p => p.Id == (StatusItems) control.Tag);
       
-      updateInfoMessage(helpItem.Widget.HelpText);
+      UpdateInfoMessage(helpItem.Widget.HelpText);
     }
 
-    private void updateInfoMessage(string text) {
+    private void UpdateInfoMessage(string text) {
       var item = Items.Find(p => p.Id == StatusItems.TsbInfo);
       item.Control.Text = text;
     }
 
-    private void updateInfoMessage(IStatusWidget helpItem) {
-      updateInfoMessage(helpItem.HelpText);
+    private void UpdateInfoMessage(IStatusWidget helpItem) {
+      UpdateInfoMessage(helpItem.HelpText);
     }
 
-    private void setDefaultItems() {
+    private void SetDefaultItems() {
       Items = new List<StatusItem> {
         new StatusItem {Id = StatusItems.TsbInfo, Show = true},
         new StatusItem {Id = StatusItems.TsbCapsLock, Show = true, Widget = new CapsLockStatusWidget()},

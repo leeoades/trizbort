@@ -12,7 +12,7 @@ namespace Trizbort.Export.Languages
     internal class AdventuronExporter : CodeExporter
     {
         // Adventuron limits headers to 25 characters
-        private const int MAXIMUM_HEADER_LENGTH = 25;
+        private const int MaximumHeaderLength = 25;
 
         public override List<KeyValuePair<string, string>> FileDialogFilters => 
           new List<KeyValuePair<string, string>> {
@@ -42,7 +42,7 @@ namespace Trizbort.Export.Languages
             int maxLen = -1;
 
             foreach (var location in LocationsInExportOrder.Where(location => location.ExportName.Length > maxLen)) {
-              maxLen = escapeAdventuronId(location.ExportName).Length;
+              maxLen = EscapeAdventuronId(location.ExportName).Length;
             }
 
             foreach (var location in LocationsInExportOrder)
@@ -54,24 +54,24 @@ namespace Trizbort.Export.Languages
 
                 //String subtitle = string.IsNullOrEmpty(location.Room.SubTitle) ? null : location.Room.SubTitle;
 
-                string roomDescription = string.IsNullOrEmpty(location.Room.PrimaryDescription) ? "" : escapeAdventuronText(location.Room.PrimaryDescription);
+                string roomDescription = string.IsNullOrEmpty(location.Room.PrimaryDescription) ? "" : EscapeAdventuronText(location.Room.PrimaryDescription);
                 string locationRoomName = string.IsNullOrEmpty(location.Room.Name) ? "" : location.Room.Name;
 
-                if (locationRoomName.Length > MAXIMUM_HEADER_LENGTH)
+                if (locationRoomName.Length > MaximumHeaderLength)
                 {
                     // Limit to 'MaximumHeaderLength' characters before escaping !
-                    locationRoomName = locationRoomName.Substring(0, MAXIMUM_HEADER_LENGTH);
+                    locationRoomName = locationRoomName.Substring(0, MaximumHeaderLength);
                 }
 
-                string headerDescNormalized = escapeAdventuronText(locationRoomName);
+                string headerDescNormalized = EscapeAdventuronText(locationRoomName);
                 string headerDescription = (" header = \""+ headerDescNormalized + "\"");
-                locationsSb.Append("   " + padRight(escapeAdventuronId(location.ExportName), maxLen) + " : location \""+ roomDescription + "\"" + headerDescription + ";\n");
+                locationsSb.Append("   " + PadRight(EscapeAdventuronId(location.ExportName), maxLen) + " : location \""+ roomDescription + "\"" + headerDescription + ";\n");
                 foreach (var direction in Directions.AllDirections)
                 {
                     var exit = location.GetBestExit(direction);
                     if (exit != null)
                     {
-                        connectionsSb.Append("      " + escapeAdventuronId(location.ExportName) + ", " + toAdventuronDirectionName(direction) + ", " + escapeAdventuronId(exit.Target.ExportName) + ",\n");
+                        connectionsSb.Append("      " + EscapeAdventuronId(location.ExportName) + ", " + ToAdventuronDirectionName(direction) + ", " + EscapeAdventuronId(exit.Target.ExportName) + ",\n");
                     }
                 }
                 isFirst = false;
@@ -86,7 +86,7 @@ namespace Trizbort.Export.Languages
             writer.WriteLine(connectionsSb.ToString());
             writer.WriteLine(footerSb.ToString());
         }
-        private static string padRight (string inputString, int maxLen)
+        private static string PadRight (string inputString, int maxLen)
         {
             if (maxLen == inputString.Length) {
                 return inputString;
@@ -101,7 +101,7 @@ namespace Trizbort.Export.Languages
             return sb.ToString();
         }
 
-        private static string escapeAdventuronId(string input)
+        private static string EscapeAdventuronId(string input)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var c in input.ToCharArray()) {
@@ -137,7 +137,7 @@ namespace Trizbort.Export.Languages
             return sb.ToString();
         }
 
-        private static string escapeAdventuronText(string input) {
+        private static string EscapeAdventuronText(string input) {
             StringBuilder sb = new StringBuilder();
             foreach (var c in input.ToCharArray()) {
               switch (c) {
@@ -190,15 +190,15 @@ namespace Trizbort.Export.Languages
 
         protected override string GetExportName(Room room, int? suffix)
         {
-            return getExportName(room.Name, suffix);
+            return CreateExportName(room.Name, suffix);
         }
 
         protected override string GetExportName(string displayName, int? suffix)
         {
-            return getExportName(displayName, suffix);
+            return CreateExportName(displayName, suffix);
         }
 
-        private static string getExportName(string displayName, int? suffix)
+        private static string CreateExportName(string displayName, int? suffix)
         {
             var name = displayName;
             name = name.ToLower().Replace(" ", "_").Replace(".", "_").Replace("$", "_");
@@ -208,7 +208,7 @@ namespace Trizbort.Export.Languages
         }
 
 
-        private static string toAdventuronDirectionName(MappableDirection direction)
+        private static string ToAdventuronDirectionName(MappableDirection direction)
         {
             switch (direction)
             {
