@@ -2766,7 +2766,7 @@ namespace Trizbort.UI.Controls {
 
             var newPoint = GetTooltipPositionFromElement(hoverElement);
 
-            this.trizbortToolTip1.Show(trizbortToolTip1.TitleText, FromHandle(Handle), newPoint);
+            this.trizbortToolTip1.Show(trizbortToolTip1.TitleText, this, newPoint);
             this.trizbortToolTip1.HoverElement = hoverElement;
           }
 
@@ -2798,7 +2798,8 @@ namespace Trizbort.UI.Controls {
       }
 
       var xxttPoint = CanvasToClient(tPoint);
-      return PointToScreen(new Point((int)xxttPoint.X, (int)xxttPoint.Y));
+      // ToolTip.Show expects coordinates relative to its owner, not the screen.
+      return new Point((int)xxttPoint.X, (int)xxttPoint.Y);
     } //
 
     private void updateSelection() {

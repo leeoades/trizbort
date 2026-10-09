@@ -146,6 +146,40 @@ namespace Trizbort.Tests {
 
   [TestFixture, Category("Integration")]
   public class CanvasInteractionTests : IsolatedProjectTests {
+    private static IEnumerable<TestCaseData> TooltipPositionCases() {
+      foreach (var connection in new[] {false, true})
+      foreach (var zoom in new[] {.5f, 1f, 1.41f, 3f})
+      foreach (var location in new[] {new Point(80, 120), new Point(900, 400), new Point(-1400, -300)})
+        yield return new TestCaseData(connection, zoom, location);
+    }
+
+    [TestCaseSource(nameof(TooltipPositionCases))]
+    public void TooltipPosition_UsesCanvasClientCoordinatesIndependentOfWindowLocation(bool connection, float zoom, Point location) {
+      using (var form = new Form {StartPosition = FormStartPosition.Manual, Location = location,
+        ClientSize = new Size(800, 600), ShowInTaskbar = false, Opacity = 0})
+      using (var canvas = new Canvas {Location = new Point(35, 55), Size = new Size(600, 400)}) {
+        form.Controls.Add(canvas);
+        // Create handles without showing the form or a tooltip.
+        _ = form.Handle;
+        _ = canvas.Handle;
+        canvas.ZoomFactor = zoom;
+        canvas.Origin = new Vector(-40, 25);
+        var anchor = new Vector(-85.5f, 60.25f);
+        Element element = connection
+          ? new Connection(Project.Current, new Vertex(anchor), new Vertex(anchor + new Vector(150, 0)))
+          : new Room(Project.Current) {Position = anchor};
+        var method = typeof(Canvas).GetMethod("GetTooltipPositionFromElement", BindingFlags.Instance | BindingFlags.NonPublic);
+        var expected = canvas.CanvasToClient(anchor);
+        var clientPoint = new Point((int) expected.X, (int) expected.Y);
+        ((Point) method.Invoke(canvas, new object[] {element})).ShouldBe(clientPoint);
+        form.Location = new Point(location.X + 250, location.Y - 150);
+        ((Point) method.Invoke(canvas, new object[] {element})).ShouldBe(clientPoint);
+        canvas.Origin = new Vector(30, -55);
+        expected = canvas.CanvasToClient(anchor);
+        ((Point) method.Invoke(canvas, new object[] {element})).ShouldBe(new Point((int) expected.X, (int) expected.Y));
+      }
+    }
+
     private static IEnumerable<TestCaseData> TooltipMovementCases() {
       foreach (var kind in new[] {"room", "label", "connection"})
       foreach (var key in new[] {Keys.Left, Keys.Right, Keys.Up, Keys.Down, Keys.None})

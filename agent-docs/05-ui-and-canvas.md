@@ -96,6 +96,9 @@ two are independent concerns.
 Canvas shares selection movement and tooltip dismissal between mouse dragging and arrow keys;
 keyboard and mouse panning also dismiss the old tooltip. Regression tests seed tooltip lifecycle
 state without native popups and exercise movement of rooms, labels and free connections.
+Tooltip anchors use Canvas client coordinates with the Canvas as their owner; `ToolTip.Show`
+does the screen conversion itself. Regression cases cover room/connection anchors, zoom/pan,
+and moved parent windows at positive and negative screen coordinates without showing popups.
 `MapEditing.Move` is shared by mouse dragging and arrow-key movement. It moves free vertices
 and explicit connection waypoints, keeps docked endpoints attached, and translates unselected
 curve waypoints exactly once when both owners move. `MapEditing.Resize` tracks applied
