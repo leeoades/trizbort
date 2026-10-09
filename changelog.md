@@ -1,6 +1,29 @@
 ﻿# Change Log
 All notable changes to this project will be documented in this file.  Version numbers will conform to the semver style versioning (https://semver.org/)
 
+## [2.3.0-beta.1] - 2026-10-09
+
+This is a **beta prerelease for testing**, based on the regression-coverage changes in #17.
+The stable release remains v2.2.0. Extract the beta into a separate writable folder and test
+with copies of your maps; keep backups of maps and `appsettings.json`.
+
+### Change
+- Expanded regression coverage across editing, persistence, Automap, exporters and rendering, including round-trip checks for all 112 manual map fixtures.
+- Refactored editing, dialog/clipboard interactions and PDF export orchestration to make production behavior testable.
+
+### Fix
+- Corrected defects exposed by regression tests in map loading and metadata preservation, empty-map statistics, editing geometry, pasted room references, exporter reuse and zero-extent PDF export.
+- Improved Automap end-of-file, cancellation and replacement-session handling.
+- Corrected Canvas tooltip positioning and backup message text.
+
+### Beta testing
+- Open, edit, save and reopen copies of existing maps; check names, descriptions, regions, labels, curves and nested objects.
+- Exercise selection, dragging, zoom, copy/paste and dialogs, including Cancel and error paths.
+- Test Automap transcripts and stopping/restarting Automap.
+- Check image/PDF exports and compile generated source in your IF engine.
+- Check font/layout appearance at your usual DPI and with multiple monitors, plus minimap and desktop clipboard behavior.
+- Report problems at https://github.com/leeoades/trizbort/issues with the beta version, reproduction steps and a minimal map or transcript where possible.
+
 ## [2.2.0] - 2026-10-08
 
 ### Add

@@ -157,14 +157,20 @@ The legacy ClickOnce distribution (`Trizbort.application` pointing at `trizbort.
 and is **not** produced any more. Releases are built by `.github/workflows/release.yml`:
 
 1. Push the workflow/app changes, then an increasing tag `vMAJOR.MINOR.PATCH[.REVISION]`
-   (e.g. `git tag v1.8.0`, then `git push leeoades v1.8.0`). Prerelease suffixes are rejected.
+   (e.g. `git tag v1.8.0`, then `git push leeoades v1.8.0`). Beta tags append `-beta.N`
+   with a positive integer, for example `v2.3.0-beta.1`. Other prerelease suffixes are rejected.
 2. The workflow (windows-latest) stamps `AssemblyVersion`/`AssemblyFileVersion` in
    `src/Trizbort/Properties/AssemblyInfo.cs` from the tag (padded to 4 parts) — the committed
    version remains the version used for local builds; release stamping is not committed.
+   `AssemblyInformationalVersion` records the full tag version, including the beta suffix.
 3. Runs `dotnet test`, then `dotnet publish` as a self-contained, compressed single-file
    `win-x64` `Trizbort.exe` (no .NET install required).
 4. Zips it (plus `Trizbort.dll.config` and licence files) as `Trizbort-<version>-win-x64.zip`
    and creates a GitHub Release with the zip asset and generated notes.
+   Beta ZIP names retain the suffix (e.g. `Trizbort-2.3.0-beta.1-win-x64.zip`); beta releases
+   are marked prerelease, never replace the latest stable release, and include their matching
+   changelog section as testing guidance. A beta can be tagged from an unmerged branch for
+   testing without promoting those changes to `master`.
 
 There is no in-app update checker or update manifest. Help → Online Help (F1) links to the
 v2 user guide (`Docs/index.md` on GitHub) and the original v1 help; users download releases
@@ -201,7 +207,8 @@ dotnet test Trizbort.sln -c Debug --collect:"XPlat Code Coverage" --settings cov
 includes only application code and excludes generated designer/compiler code. Coverage is a
 guide to missing behavior, not a promise of completeness; there is no percentage gate.
 `.github\workflows\tests.yml` runs Release tests on Windows for PRs and branch pushes and uploads
-TRX/coverage artifacts even on failure (14-day retention). The release workflow is unchanged.
+TRX/coverage artifacts even on failure (14-day retention). The release workflow also supports
+beta prereleases as described above.
 
 GitHub branch protection on `master` requires the `tests` status check and an up-to-date branch
 before merging, including for administrators. Force pushes and branch deletion are disabled.
