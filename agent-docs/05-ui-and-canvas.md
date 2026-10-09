@@ -47,6 +47,13 @@ See the theme format and preservation rules in the storage reference.
 | `TrizbortTextBox.cs` | Customized text box used in property/settings dialogs. |
 | `TrizbortToolTip.cs` | Customized tooltip behavior. |
 
+Canvas element tooltips use native `ToolTip.SetToolTip` registration rather than immediate
+`Show` calls: Windows handles cursor-relative placement and hit testing. Initial and reshow
+delays are 500 ms and auto-dismiss is 5 seconds. Hovering another element updates the content;
+clicking, leaving the canvas, moving elements or panning dismisses both pending and visible
+tips. Tooltip content retains the application description/object preferences and owner-drawn
+layout, and hovering connections must not mutate their labels.
+
 ### Rendering loop
 
 `Canvas.OnPaint()` wraps the native `Graphics` with `XGraphics.FromGraphics(...)` (PDFsharp's

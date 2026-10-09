@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -7,6 +8,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Domain.Application;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Controllers;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
@@ -146,39 +148,85 @@ namespace Trizbort.Tests {
 
   [TestFixture, Category("Integration")]
   public class CanvasInteractionTests : IsolatedProjectTests {
-    private static IEnumerable<TestCaseData> TooltipPositionCases() {
-      foreach (var connection in new[] {false, true})
-      foreach (var zoom in new[] {.5f, 1f, 1.41f, 3f})
-      foreach (var location in new[] {new Point(80, 120), new Point(900, 400), new Point(-1400, -300)})
-        yield return new TestCaseData(connection, zoom, location);
-    }
-
-    [TestCaseSource(nameof(TooltipPositionCases))]
-    public void TooltipPosition_UsesCanvasClientCoordinatesIndependentOfWindowLocation(bool connection, float zoom, Point location) {
-      using (var form = new Form {StartPosition = FormStartPosition.Manual, Location = location,
-        ClientSize = new Size(800, 600), ShowInTaskbar = false, Opacity = 0})
-      using (var canvas = new Canvas {Location = new Point(35, 55), Size = new Size(600, 400)}) {
-        form.Controls.Add(canvas);
-        // Create handles without showing the form or a tooltip.
-        _ = form.Handle;
-        _ = canvas.Handle;
-        canvas.ZoomFactor = zoom;
-        canvas.Origin = new Vector(-40, 25);
-        var anchor = new Vector(-85.5f, 60.25f);
-        Element element = connection
-          ? new Connection(Project.Current, new Vertex(anchor), new Vertex(anchor + new Vector(150, 0)))
-          : new Room(Project.Current) {Position = anchor};
-        var method = typeof(Canvas).GetMethod("GetTooltipPositionFromElement", BindingFlags.Instance | BindingFlags.NonPublic);
-        var expected = canvas.CanvasToClient(anchor);
-        var clientPoint = new Point((int) expected.X, (int) expected.Y);
-        ((Point) method.Invoke(canvas, new object[] {element})).ShouldBe(clientPoint);
-        form.Location = new Point(location.X + 250, location.Y - 150);
-        ((Point) method.Invoke(canvas, new object[] {element})).ShouldBe(clientPoint);
-        canvas.Origin = new Vector(30, -55);
-        expected = canvas.CanvasToClient(anchor);
-        ((Point) method.Invoke(canvas, new object[] {element})).ShouldBe(new Point((int) expected.X, (int) expected.Y));
+    [Test]
+    public void TooltipHover_RegistersNativeDelayedCursorPositionedTooltipWithoutShowingImmediately() {
+      ApplicationSettingsController.AppSettings.ShowObjectsInTooltips = true;
+      using (var canvas = new Canvas {Size = new Size(600, 400)}) {
+        var room = ProjectRegressionTests.AddRoom("Room");
+        room.Objects = "lamp\nkey\nbag";
+        canvas.MoveMouse(room.InnerBounds.Center);
+        var tooltip = GetTooltip(canvas);
+        tooltip.GetToolTip(canvas).ShouldBe(room.GetToolTipHeader());
+        tooltip.FooterText.ShouldBe(room.GetToolTipFooter());
+        tooltip.HoverElement.ShouldBeSameAs(room);
+        tooltip.InitialDelay.ShouldBe(500);
+        tooltip.ReshowDelay.ShouldBe(500);
+        tooltip.AutoPopDelay.ShouldBe(5000);
+        tooltip.IsShown.ShouldBeFalse();
+        tooltip.LastOwner.ShouldBeNull();
+        tooltip.LastPosition.ShouldBe(Point.Empty);
+        canvas.MoveMouse(room.InnerBounds.Center + new Vector(1, 1));
+        tooltip.GetToolTip(canvas).ShouldBe(room.GetToolTipHeader());
       }
     }
+
+    [TestCase("leave")]
+    [TestCase("click")]
+    [TestCase("empty")]
+    [TestCase("disabled")]
+    public void TooltipHover_DismissesVisibleAndPendingTooltip(string action) {
+      ApplicationSettingsController.AppSettings.ShowObjectsInTooltips = true;
+      using (var canvas = new Canvas {Size = new Size(600, 400)}) {
+        var room = ProjectRegressionTests.AddRoom("Room");
+        canvas.MoveMouse(room.InnerBounds.Center);
+        var tooltip = GetTooltip(canvas);
+        tooltip.GetToolTip(canvas).ShouldNotBeNullOrEmpty();
+        tooltip.IsShown = true;
+        tooltip.LastOwner = canvas;
+        if (action == "leave") {
+          typeof(Canvas).GetMethod("OnMouseLeave", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(canvas, new object[] {EventArgs.Empty});
+        } else if (action == "click") {
+          canvas.PressMouse(room.InnerBounds.Center);
+          canvas.SelectedElement.ShouldBeSameAs(room);
+        } else if (action == "disabled") {
+          ApplicationSettingsController.AppSettings.ShowObjectsInTooltips = false;
+          canvas.MoveMouse(room.InnerBounds.Center + new Vector(1, 1));
+        } else {
+          canvas.MoveMouse(new Vector(250, 150));
+        }
+        tooltip.GetToolTip(canvas).ShouldBeNullOrEmpty();
+        tooltip.IsShown.ShouldBeFalse();
+        tooltip.LastOwner.ShouldBeNull();
+        tooltip.HoverElement.ShouldBeNull();
+      }
+    }
+
+    [Test]
+    public void TooltipHover_SwitchesRoomsAndDoesNotChangeConnectionText() {
+      ApplicationSettingsController.AppSettings.ShowObjectsInTooltips = true;
+      using (var canvas = new Canvas {Size = new Size(600, 400)}) {
+        var first = ProjectRegressionTests.AddRoom("First");
+        var second = ProjectRegressionTests.AddRoom("Second");
+        second.Position = new Vector(100, 50);
+        canvas.MoveMouse(first.InnerBounds.Center);
+        canvas.MoveMouse(second.InnerBounds.Center);
+        GetTooltip(canvas).GetToolTip(canvas).ShouldBe(second.GetToolTipHeader());
+
+        var connection = new Connection(Project.Current,
+          new Vertex(new Vector(-200, -150)), new Vertex(new Vector(200, -150))) {Name = "Connection", MidText = "path"};
+        Project.Current.Elements.Add(connection);
+        Project.Current.IsDirty = false;
+        canvas.MoveMouse(new Vector(0, -150));
+        GetTooltip(canvas).HoverElement.ShouldBeSameAs(connection);
+        connection.MidText.ShouldBe("path");
+        Project.Current.IsDirty.ShouldBeFalse();
+      }
+    }
+
+    private static TrizbortToolTip GetTooltip(Canvas canvas) =>
+      (TrizbortToolTip)typeof(Canvas)
+        .GetField("trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
 
     private static IEnumerable<TestCaseData> TooltipMovementCases() {
       foreach (var kind in new[] {"room", "label", "connection"})
@@ -478,7 +526,7 @@ namespace Trizbort.Tests {
 
     [Test]
     public void WheelZoom_AcceptsTallViewport_AndKeepsWorldPointUnderCursor() {
-      Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.InvertMouseWheel = true;
+      ApplicationSettingsController.AppSettings.InvertMouseWheel = true;
       using (var canvas = new Canvas {Size = new Size(200, 600)}) {
         canvas.ZoomFactor = 1;
         var point = new Point(100, 450);

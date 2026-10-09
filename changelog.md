@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.  Version nu
 
 ## [Unreleased]
 
+### Fix
+- Canvas tooltips now use a standard hover delay and cursor-relative placement instead of appearing immediately over rooms. Clicking, leaving the canvas or editing dismisses them, so object lists no longer obstruct room selection. Hovering a connection no longer clears its label.
+
 ### Change
 - Room Properties now remembers the tab selected when the last dialog closed, including OK and Cancel, across rooms and maps until Trizbort exits. The initial tab is Objects with its text box focused; new rooms no longer automatically focus Name. The region shortcut still opens Regions and also updates the remembered tab when closed. (#5)
 

@@ -355,7 +355,7 @@ If you click the button showing a box in the middle of the arrow buttons, the ob
 
 If you click the "Description" tab, you can edit the description of the room. Click the "Objects" tab again to see the list of objects. Trizbort doesn't use this description itself, but if you export your map to an IF development system, the description may be used to describe the room when playing the game. When automapping, Trizbort will fill out the description for you if it can.
 
-Descriptions will appear in tooltips if you hover over a room. If the tooltip is rather large, it may block your room out, and you may need to use arrows to refocus and click on it.
+Descriptions will appear in tooltips if you hover over a room. Tooltips pause briefly before appearing near the mouse pointer, rather than covering the room's top-left corner. They disappear when you click, leave the map, or start editing, and automatically close after five seconds.
 
 <a name="help_rooms_edit_colors"></a>
 

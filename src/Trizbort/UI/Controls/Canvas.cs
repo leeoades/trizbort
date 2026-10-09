@@ -909,6 +909,7 @@ namespace Trizbort.UI.Controls {
         Project.Current.Elements.Removed -= onElementRemoved;
         foreach (var element in Project.Current.Elements) element.Changed -= onElementChanged;
         mRecomputeTimer?.Dispose();
+        trizbortToolTip1?.Dispose();
         components?.Dispose();
       }
 
@@ -1275,6 +1276,7 @@ namespace Trizbort.UI.Controls {
     }
 
     protected override void OnMouseDown(MouseEventArgs e) {
+      hideElementToolTip();
       var clientPos = new PointF(e.X, e.Y);
       var canvasPos = ClientToCanvas(clientPos);
       mLastMouseDownPosition = e.Location;
@@ -1312,7 +1314,13 @@ namespace Trizbort.UI.Controls {
       base.OnMouseUp(e);
     }
 
+    protected override void OnMouseLeave(EventArgs e) {
+      hideElementToolTip();
+      base.OnMouseLeave(e);
+    }
+
     protected override void OnMouseWheel(MouseEventArgs e) {
+      hideElementToolTip();
       if (e.X < 0 || e.X > Width || e.Y < 0 || e.Y > Height)
         return;
 
@@ -1718,7 +1726,8 @@ namespace Trizbort.UI.Controls {
     }
 
     private void hideElementToolTip() {
-      if (trizbortToolTip1.IsShown) trizbortToolTip1.Hide(trizbortToolTip1.LastOwner);
+      trizbortToolTip1.SetToolTip(this, null);
+      trizbortToolTip1.Hide(this);
     }
 
     private void doDragMoveWaypoint(Point mousePosition, Vector canvasPos) {
@@ -1760,13 +1769,6 @@ namespace Trizbort.UI.Controls {
       Origin = new Vector(Origin.X + delta.X, Origin.Y + delta.Y);
       mPanPosition = clientPos;
       hideElementToolTip();
-      //// if tooltip is already shown, move it with the element
-      //// the below code causes tooltip to flicker when panning
-      //if (trizbortToolTip1.IsShown && trizbortToolTip1.HoverElement is Element element) {
-      //  var newPoint = GetTooltipPositionFromElement(element);
-      //  if (trizbortToolTip1.IsPositionChanged(newPoint)) // not really necessary as panning always changes the position
-      //    trizbortToolTip1.Show(trizbortToolTip1.TitleText, trizbortToolTip1.LastOwner, newPoint);
-      //}
     }
 
     private void drawElements(XGraphics graphics, Palette palette, bool finalRender) {
@@ -2741,33 +2743,31 @@ namespace Trizbort.UI.Controls {
           hoverHandle = hitTestHandle(canvasPos); // set first; it will RecreatePorts() if the value changes
           hoverPort = hitTestPort(canvasPos);
           var hoverElement = hitTestElement(canvasPos, false);
-          var sameElement = HoverElement == hoverElement;
           HoverElement = hoverElement;
 
           Cursor.Current = hoverElement is Room && ((Room) hoverElement).IsReference && ModifierKeys == Keys.Control ? Cursors.Hand : Cursors.Default;
 
-          if (HoverElement == null) {
-            trizbortToolTip1.Hide(FromHandle(Handle));
-          } else if (ApplicationSettingsController.AppSettings.ShowTooltips && HoverElement.HasTooltip()) {
-
-            if (trizbortToolTip1.Active && sameElement) return;
+          if (hoverElement == null || !ApplicationSettingsController.AppSettings.ShowTooltips ||
+              !hoverElement.HasTooltip()) {
+            hideElementToolTip();
+          } else {
+            if (trizbortToolTip1.HoverElement == hoverElement) return;
+            hideElementToolTip();
             if (hoverElement.GetToolTipHeader() == string.Empty && hoverElement.GetToolTipText() == string.Empty) return;
 
             trizbortToolTip1.BodyText = hoverElement.GetToolTipText();
             trizbortToolTip1.FooterText = hoverElement.GetToolTipFooter();
             trizbortToolTip1.TitleText = hoverElement.GetToolTipHeader();
 
-            if (hoverElement is Room tRoom) {
+            if (hoverElement is Room) {
               trizbortToolTip1.BackColor = Color.LightBlue;
-            } else if (hoverElement is Connection tConnection) {
+            } else if (hoverElement is Connection) {
               trizbortToolTip1.BackColor = Color.LemonChiffon;
-              tConnection.MidText = "";
             }
 
-            var newPoint = GetTooltipPositionFromElement(hoverElement);
-
-            this.trizbortToolTip1.Show(trizbortToolTip1.TitleText, this, newPoint);
-            this.trizbortToolTip1.HoverElement = hoverElement;
+            trizbortToolTip1.HoverElement = hoverElement;
+            trizbortToolTip1.SetToolTip(this, string.IsNullOrEmpty(trizbortToolTip1.TitleText)
+              ? trizbortToolTip1.BodyText : trizbortToolTip1.TitleText);
           }
 
           break;
@@ -2787,20 +2787,6 @@ namespace Trizbort.UI.Controls {
           break;
       }
     }
-
-    private Point GetTooltipPositionFromElement(Element element) {
-      var tPoint = new Vector();
-      if (element is Room tRoom) {
-        tPoint = tRoom.Position;
-      }
-      else if (element is Connection tConnection) {
-        tPoint = tConnection.VertexList[0].Position;
-      }
-
-      var xxttPoint = CanvasToClient(tPoint);
-      // ToolTip.Show expects coordinates relative to its owner, not the screen.
-      return new Point((int)xxttPoint.X, (int)xxttPoint.Y);
-    } //
 
     private void updateSelection() {
       mSelectedWaypoint = null;

@@ -29,6 +29,9 @@ namespace Trizbort.UI.Controls {
 
     
     public TrizbortToolTip() {
+      InitialDelay = 500;
+      ReshowDelay = 500;
+      AutoPopDelay = 5000;
       OwnerDraw = true;
       Popup += OnPopup;
       Draw += OnDraw;
@@ -40,12 +43,14 @@ namespace Trizbort.UI.Controls {
     }
 
     private void OnPopup(object sender, PopupEventArgs e) {
+      LastOwner = e.AssociatedControl;
+      IsShown = true;
       headerHeight = 0;
       footerHeight = 0;
       bodyHeight = 0;
 
-      Image fakeImage = new Bitmap(1,1);
-      Graphics graphics = Graphics.FromImage(fakeImage);
+      using Image fakeImage = new Bitmap(1,1);
+      using Graphics graphics = Graphics.FromImage(fakeImage);
 
       //calc header size
       SizeF headerStringSize = graphics.MeasureString(TitleText, headerFont);
@@ -80,7 +85,7 @@ namespace Trizbort.UI.Controls {
         b = new SolidBrush(BackColor);
       }
 
-      var textBrush = new SolidBrush(ForeColor);
+      using var textBrush = new SolidBrush(ForeColor);
       g.FillRectangle(b, e.Bounds);
 
       // draw header
@@ -100,11 +105,21 @@ namespace Trizbort.UI.Controls {
       // draw footer
       if (FooterText != string.Empty) {
         var footerBounds = new RectangleF(new PointF(e.Bounds.X + LINE_BUFFER, e.Bounds.Y + headerHeight + bodyHeight + LINE_BUFFER), new SizeF(TIP_WIDTH-20,footerHeight));
-        g.DrawLine(new Pen(Color.Gray), new PointF(0f, footerBounds.Y), new PointF(TIP_WIDTH, footerBounds.Y));
+        using (var pen = new Pen(Color.Gray))
+          g.DrawLine(pen, new PointF(0f, footerBounds.Y), new PointF(TIP_WIDTH, footerBounds.Y));
         g.DrawString(FooterText, footerFont, textBrush, new RectangleF(new PointF(footerBounds.Location.X, footerBounds.Location.Y+2), footerBounds.Size)); 
       }
 
       b.Dispose();
+    }
+
+    protected override void Dispose(bool disposing) {
+      if (disposing) {
+        bodyFont.Dispose();
+        headerFont.Dispose();
+        footerFont.Dispose();
+      }
+      base.Dispose(disposing);
     }
 
     public bool IsPositionChanged(Point position) {
