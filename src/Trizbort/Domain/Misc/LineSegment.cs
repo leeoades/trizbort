@@ -45,29 +45,29 @@ namespace Trizbort.Domain.Misc {
       var ub = (a.End.X - a.Start.X) * (a.Start.Y - b.Start.Y) - (a.End.Y - a.Start.Y) * (a.Start.X - b.Start.X);
       var denominator = (b.End.Y - b.Start.Y) * (a.End.X - a.Start.X) - (b.End.X - b.Start.X) * (a.End.Y - a.Start.Y);
       intersects = null;
-      const float SMALL = 0.01f;
+      const float small = 0.01f;
 
-      if (Math.Abs(denominator) <= SMALL) {
-        if (Math.Abs(ua) <= SMALL && Math.Abs(ub) <= SMALL) {
+      if (Math.Abs(denominator) <= small) {
+        if (Math.Abs(ua) <= small && Math.Abs(ub) <= small) {
           // lines are coincident:
           // lacking other algorithms which actually work,
           // roll some expensive distance tests to find intersection points
-          if (a.Start.DistanceFromLineSegment(b) <= SMALL) {
+          if (a.Start.DistanceFromLineSegment(b) <= small) {
             intersects = new List<LineSegmentIntersect>();
             intersects.Add(new LineSegmentIntersect(LineSegmentIntersectType.StartA, a.Start));
           }
 
-          if (a.End.DistanceFromLineSegment(b) <= SMALL) {
+          if (a.End.DistanceFromLineSegment(b) <= small) {
             if (intersects == null) intersects = new List<LineSegmentIntersect>();
             intersects.Add(new LineSegmentIntersect(LineSegmentIntersectType.EndA, a.End));
           }
 
-          if (b.Start.DistanceFromLineSegment(a) <= SMALL) {
+          if (b.Start.DistanceFromLineSegment(a) <= small) {
             if (intersects == null) intersects = new List<LineSegmentIntersect>();
             intersects.Add(new LineSegmentIntersect(LineSegmentIntersectType.MidPointA, b.Start));
           }
 
-          if (b.End.DistanceFromLineSegment(a) <= SMALL) {
+          if (b.End.DistanceFromLineSegment(a) <= small) {
             if (intersects == null) intersects = new List<LineSegmentIntersect>();
             intersects.Add(new LineSegmentIntersect(LineSegmentIntersectType.MidPointA, b.End));
           }
@@ -78,9 +78,9 @@ namespace Trizbort.Domain.Misc {
 
         if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
           var type = LineSegmentIntersectType.MidPointA;
-          if (ua <= SMALL)
+          if (ua <= small)
             type = LineSegmentIntersectType.StartA;
-          else if (1 - ua <= SMALL) type = LineSegmentIntersectType.EndA;
+          else if (1 - ua <= small) type = LineSegmentIntersectType.EndA;
           intersects = new List<LineSegmentIntersect>();
           intersects.Add(new LineSegmentIntersect(type, a.Start + new Vector(ua * (a.End.X - a.Start.X), ua * (a.End.Y - a.Start.Y))));
         }
@@ -89,10 +89,10 @@ namespace Trizbort.Domain.Misc {
       if (intersects != null && ignoreEndPointIntersects)
         for (var index = 0; index < intersects.Count; ++index) {
           var intersect = intersects[index];
-          if (intersect.Position.Distance(a.Start) <= SMALL ||
-              intersect.Position.Distance(b.Start) <= SMALL ||
-              intersect.Position.Distance(a.End) <= SMALL ||
-              intersect.Position.Distance(b.End) <= SMALL) {
+          if (intersect.Position.Distance(a.Start) <= small ||
+              intersect.Position.Distance(b.Start) <= small ||
+              intersect.Position.Distance(a.End) <= small ||
+              intersect.Position.Distance(b.End) <= small) {
             intersects.RemoveAt(index);
             --index;
           }

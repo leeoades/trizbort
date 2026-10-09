@@ -6,39 +6,39 @@ using Trizbort.Domain.Application;
 
 namespace Trizbort.Domain.Watchers {
   public class TrizbortFileWatcher : IDisposable {
-    private readonly FileSystemWatcher watcher = new FileSystemWatcher();
+    private readonly FileSystemWatcher _watcher = new FileSystemWatcher();
 
     public TrizbortFileWatcher() {
-      watcher.NotifyFilter = NotifyFilters.LastWrite;
-      watcher.Changed += Changed;
+      _watcher.NotifyFilter = NotifyFilters.LastWrite;
+      _watcher.Changed += changed;
     }
 
     public void Dispose() {
-      watcher?.Dispose();
+      _watcher?.Dispose();
     }
 
     public void InitializeWatcher(string fileToWatch) {
       StopWatcher();
-      watcher.Path = Path.GetDirectoryName(fileToWatch);
-      watcher.Filter = Path.GetFileName(fileToWatch);
+      _watcher.Path = Path.GetDirectoryName(fileToWatch);
+      _watcher.Filter = Path.GetFileName(fileToWatch);
       StartWatcher();
     }
 
     public event EventHandler ReloadMap;
 
     public void StartWatcher() {
-      watcher.EnableRaisingEvents = true;
+      _watcher.EnableRaisingEvents = true;
     }
 
     public void StopWatcher() {
-      watcher.EnableRaisingEvents = false;
+      _watcher.EnableRaisingEvents = false;
     }
 
     protected virtual void OnReloadMap() {
       ReloadMap?.Invoke(this, EventArgs.Empty);
     }
 
-    private void Changed(object sender, FileSystemEventArgs e) {
+    private void changed(object sender, FileSystemEventArgs e) {
       StopWatcher();
       Project.Current.Canvas.BeginInvoke(new Action(() => {
         if (UserInteraction.ShowMessage(TrizbortApplication.MainForm?.Canvas, $"This map has been modified by another program.{Environment.NewLine}Do you want to reload it{dirtyMessage()}?", "Reload", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)

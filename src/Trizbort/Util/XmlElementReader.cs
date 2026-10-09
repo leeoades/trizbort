@@ -48,9 +48,9 @@ namespace Trizbort.Util
         {
             get
             {
-                if (m_children == null)
+                if (_mChildren == null)
                 {
-                    m_children = new List<XmlElementReader>();
+                    _mChildren = new List<XmlElementReader>();
                     if (Element != null)
                     {
                         foreach (var node in Element.ChildNodes)
@@ -59,11 +59,11 @@ namespace Trizbort.Util
                                 continue;
 
                             var element = (XmlElement)node;
-                            m_children.Add(new XmlElementReader(element));
+                            _mChildren.Add(new XmlElementReader(element));
                         }
                     }
                 }
-                return m_children;
+                return _mChildren;
             }
         }
 
@@ -197,6 +197,6 @@ namespace Trizbort.Util
             private set;
         }
 
-        private List<XmlElementReader> m_children;
+        private List<XmlElementReader> _mChildren;
     }
 }

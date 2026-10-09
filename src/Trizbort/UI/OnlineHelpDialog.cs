@@ -5,8 +5,8 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI {
   public class OnlineHelpDialog : Form {
-    public const string UserGuideUrl = "https://github.com/leeoades/trizbort/blob/master/Docs/index.md";
-    public const string OriginalHelpUrl = "https://trizbort.genstein.net/help/";
+    public const string USER_GUIDE_URL = "https://github.com/leeoades/trizbort/blob/master/Docs/index.md";
+    public const string ORIGINAL_HELP_URL = "https://trizbort.genstein.net/help/";
 
     public OnlineHelpDialog() {
       Text = "Online Help";
@@ -32,14 +32,14 @@ namespace Trizbort.UI {
         Text = "The Trizbort v2 user guide is available online:",
         Margin = new Padding(3, 3, 3, 8)
       });
-      layout.Controls.Add(createLink(UserGuideUrl));
+      layout.Controls.Add(createLink(USER_GUIDE_URL));
       layout.Controls.Add(new Label {
         AutoSize = true,
         MaximumSize = new Size(440, 0),
         Text = "The original Trizbort v1 help, on which the guide is based, can be found here:",
         Margin = new Padding(3, 16, 3, 8)
       });
-      layout.Controls.Add(createLink(OriginalHelpUrl));
+      layout.Controls.Add(createLink(ORIGINAL_HELP_URL));
 
       var closeButton = new Button {
         AutoSize = true,

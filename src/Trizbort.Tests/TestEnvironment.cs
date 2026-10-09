@@ -13,28 +13,28 @@ using System.Windows.Forms;
 namespace Trizbort.Tests {
   [SetUpFixture]
   public class TestEnvironment {
-    private string previousDirectory;
-    private TemporaryDirectory directory;
-    private IUserInteraction previousInteraction;
+    private string _previousDirectory;
+    private TemporaryDirectory _directory;
+    private IUserInteraction _previousInteraction;
 
     [OneTimeSetUp]
     public void Start() {
-      previousDirectory = Environment.CurrentDirectory;
-      directory = new TemporaryDirectory();
-      previousInteraction = UserInteraction.Current;
+      _previousDirectory = Environment.CurrentDirectory;
+      _directory = new TemporaryDirectory();
+      _previousInteraction = UserInteraction.Current;
       UserInteraction.Current = new UnexpectedUserInteraction();
-      Environment.CurrentDirectory = directory.Path;
+      Environment.CurrentDirectory = _directory.Path;
       // Prevent legacy user-settings migration when the controller initializes.
-      File.WriteAllText(Path.Combine(directory.Path, "appsettings.json"), "{}");
+      File.WriteAllText(Path.Combine(_directory.Path, "appsettings.json"), "{}");
       ApplicationSettingsController.ResetSettings();
     }
 
     [OneTimeTearDown]
     public void Stop() {
       Project.FileWatcher.StopWatcher();
-      UserInteraction.Current = previousInteraction;
-      Environment.CurrentDirectory = previousDirectory;
-      directory.Dispose();
+      UserInteraction.Current = _previousInteraction;
+      Environment.CurrentDirectory = _previousDirectory;
+      _directory.Dispose();
     }
   }
 
@@ -76,25 +76,25 @@ namespace Trizbort.Tests {
   [Apartment(ApartmentState.STA)]
   [NonParallelizable]
   public abstract class IsolatedProjectTests {
-    private Project previousProject;
-    private string previousAppSettings;
-    private IUserInteraction previousInteraction;
-    private string defaultRoomName;
-    private bool startLoaded, endLoaded, wrappingChanged;
-    private float dragDistance;
+    private Project _previousProject;
+    private string _previousAppSettings;
+    private IUserInteraction _previousInteraction;
+    private string _defaultRoomName;
+    private bool _startLoaded, _endLoaded, _wrappingChanged;
+    private float _dragDistance;
     private protected TemporaryDirectory Files { get; private set; }
 
     [SetUp]
     public void Isolate() {
       Files = new TemporaryDirectory();
-      previousInteraction = UserInteraction.Current;
-      previousProject = Project.Current;
-      previousAppSettings = JsonConvert.SerializeObject(ApplicationSettingsController.AppSettings);
-      defaultRoomName = Settings.DefaultRoomName;
-      startLoaded = Settings.StartRoomLoaded;
-      endLoaded = Settings.EndRoomLoaded;
-      wrappingChanged = Settings.WrappingChanged;
-      dragDistance = Settings.DragDistanceToInitiateNewConnection;
+      _previousInteraction = UserInteraction.Current;
+      _previousProject = Project.Current;
+      _previousAppSettings = JsonConvert.SerializeObject(ApplicationSettingsController.AppSettings);
+      _defaultRoomName = Settings.DefaultRoomName;
+      _startLoaded = Settings.StartRoomLoaded;
+      _endLoaded = Settings.EndRoomLoaded;
+      _wrappingChanged = Settings.WrappingChanged;
+      _dragDistance = Settings.DragDistanceToInitiateNewConnection;
       using (var scribe = XmlScribe.Create(Files.File("settings.xml"))) {
         scribe.StartElement("settings");
         Settings.Save(scribe);
@@ -110,20 +110,20 @@ namespace Trizbort.Tests {
     [TearDown]
     public void Restore() {
       Project.FileWatcher.StopWatcher();
-      UserInteraction.Current = previousInteraction;
+      UserInteraction.Current = _previousInteraction;
       Project.Current.Dispose();
-      Project.Current = previousProject;
+      Project.Current = _previousProject;
       var document = new System.Xml.XmlDocument();
       document.Load(Files.File("settings.xml"));
       Settings.Reset(false);
       Settings.Load(new XmlElementReader(document.DocumentElement));
-      Settings.DefaultRoomName = defaultRoomName;
-      Settings.StartRoomLoaded = startLoaded;
-      Settings.EndRoomLoaded = endLoaded;
-      Settings.WrappingChanged = wrappingChanged;
-      Settings.DragDistanceToInitiateNewConnection = dragDistance;
+      Settings.DefaultRoomName = _defaultRoomName;
+      Settings.StartRoomLoaded = _startLoaded;
+      Settings.EndRoomLoaded = _endLoaded;
+      Settings.WrappingChanged = _wrappingChanged;
+      Settings.DragDistanceToInitiateNewConnection = _dragDistance;
       ApplicationSettingsController.AppSettings.RecentProjects.Clear();
-      JsonConvert.PopulateObject(previousAppSettings, ApplicationSettingsController.AppSettings,
+      JsonConvert.PopulateObject(_previousAppSettings, ApplicationSettingsController.AppSettings,
         new JsonSerializerSettings {ObjectCreationHandling = ObjectCreationHandling.Replace});
       Files.Dispose();
     }

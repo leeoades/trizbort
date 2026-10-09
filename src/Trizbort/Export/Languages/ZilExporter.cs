@@ -32,23 +32,23 @@ namespace Trizbort.Export.Languages {
       foreach (var location in LocationsInExportOrder) {
         writer.WriteLine();
         writer.WriteLine($"<ROOM {location.ExportName}");
-        writer.WriteLine($"    (DESC {toZILString(location.Room.Name)})");
+        writer.WriteLine($"    (DESC {toZilString(location.Room.Name)})");
         writer.Write($"    (IN ROOMS)");
 
         if (!String.IsNullOrWhiteSpace(location.Room.PrimaryDescription)) {
           writer.WriteLine();
-          writer.Write($"    (LDESC {toZILString(location.Room.PrimaryDescription)})");
+          writer.Write($"    (LDESC {toZilString(location.Room.PrimaryDescription)})");
         }
 
         foreach (var direction in Directions.AllDirections) {
           var exit = location.GetBestExit(direction);
           if (exit != null && exit.Conditional) {
             writer.WriteLine();
-            writer.Write($"    ({toZILPropertyName(direction)} PER TRIZBORT-CONDITIONAL-EXIT)");
+            writer.Write($"    ({toZilPropertyName(direction)} PER TRIZBORT-CONDITIONAL-EXIT)");
             needConditionalFunction = true;
           } else if (exit != null) {
             writer.WriteLine();
-            writer.Write($"    ({toZILPropertyName(direction)} TO {exit.Target.ExportName})");
+            writer.Write($"    ({toZilPropertyName(direction)} TO {exit.Target.ExportName})");
             var oppositeDirection = CompassPointHelper.GetOpposite(direction);
             if (Exit.IsReciprocated(location, direction, exit.Target)) {
               var reciprocal = exit.Target.GetBestExit(oppositeDirection);
@@ -81,7 +81,7 @@ namespace Trizbort.Export.Languages {
 
     protected override void ExportHeader(TextWriter writer, string title, string author, string description, string history) {
       var list = Project.Current.Elements.OfType<Room>().Where(p => p.IsStartRoom).ToList();
-      var startingRoom = list.Count == 0 ? LocationsInExportOrder.First() : LocationsInExportOrder.Find(p => p.Room.ID == list.First().ID);
+      var startingRoom = list.Count == 0 ? LocationsInExportOrder.First() : LocationsInExportOrder.Find(p => p.Room.Id == list.First().Id);
 
       writer.WriteLine($"{DOUBLE_QUOTE}{title} main file{DOUBLE_QUOTE}");
       writer.WriteLine();
@@ -94,7 +94,7 @@ namespace Trizbort.Export.Languages {
       writer.WriteLine();
       writer.WriteLine($"<ROUTINE GO ()");
       writer.WriteLine($"    <CRLF> <CRLF>");
-      writer.WriteLine($"    <TELL {toZILString(description)} CR CR>");
+      writer.WriteLine($"    <TELL {toZilString(description)} CR CR>");
       writer.WriteLine($"    <V-VERSION> <CRLF>");
       writer.WriteLine($"    <SETG HERE ,{startingRoom.ExportName}>");
       writer.WriteLine($"    <MOVE ,PLAYER ,HERE>");
@@ -152,7 +152,7 @@ namespace Trizbort.Export.Languages {
       writer.WriteLine("<SYNTAX ABOUT = V-ABOUT>");
       writer.WriteLine();
       writer.WriteLine("<ROUTINE V-ABOUT ()");
-      writer.WriteLine($"    <TELL {toZILString(history)} CR>>");
+      writer.WriteLine($"    <TELL {toZilString(history)} CR>>");
       writer.WriteLine();
     }
 
@@ -166,7 +166,7 @@ namespace Trizbort.Export.Languages {
         else
           writer.WriteLine($"    (IN {thing.Container.ExportName})");
 
-        writer.WriteLine($"    (DESC {toZILString(thing.DisplayName)})");
+        writer.WriteLine($"    (DESC {toZilString(thing.DisplayName)})");
 
         var words = getObjectWords(thing);
         if (words.Count > 0) writer.WriteLine($"    (SYNONYM {words[words.Count - 1]})");
@@ -207,7 +207,7 @@ namespace Trizbort.Export.Languages {
       return String.IsNullOrEmpty(newText) ? "object" : newText;
     }
 
-    private static string toZILPropertyName(MappableDirection direction) {
+    private static string toZilPropertyName(MappableDirection direction) {
       switch (direction) {
         case MappableDirection.North:
           return "NORTH";
@@ -238,7 +238,7 @@ namespace Trizbort.Export.Languages {
       }
     }
 
-    private static string toZILString(string str) {
+    private static string toZilString(string str) {
       if (str == null) str = String.Empty;
       return DOUBLE_QUOTE + str.Replace('\n', '|').Replace($"{DOUBLE_QUOTE}", $"\\{DOUBLE_QUOTE}") + DOUBLE_QUOTE;
     }

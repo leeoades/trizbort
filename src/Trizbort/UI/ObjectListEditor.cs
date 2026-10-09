@@ -114,7 +114,7 @@ namespace Trizbort.UI {
       }
 
       var spaces = 0;
-      while (spaces < Math.Min(ObjectList.TabIndent, whitespace) && lineText[spaces] == ' ') ++spaces;
+      while (spaces < Math.Min(ObjectList.TAB_INDENT, whitespace) && lineText[spaces] == ' ') ++spaces;
       builder.Remove(lineStart, spaces);
       return new Change {Position = lineStart, Length = -spaces};
     }

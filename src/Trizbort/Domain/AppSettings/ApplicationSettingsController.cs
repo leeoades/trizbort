@@ -11,22 +11,22 @@ using Formatting = Newtonsoft.Json.Formatting;
 namespace Trizbort.Domain.AppSettings {
   public static class ApplicationSettingsController {
     public const int RECENT_PROJECTS_MAX_COUNT = 4;
-    private const string AppSettingsFileName = @".\appsettings.json";
-    private static readonly string legacyAppSettingsPath = Path.Combine(Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Genstein"), "Trizbort"), "Settings.xml");
+    private const string APP_SETTINGS_FILE_NAME = @".\appsettings.json";
+    private static readonly string LegacyAppSettingsPath = Path.Combine(Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Genstein"), "Trizbort"), "Settings.xml");
 
-    private static ApplicationSettings settings;
+    private static ApplicationSettings sEttings;
 
-    public static ApplicationSettings AppSettings => settings;
+    public static ApplicationSettings AppSettings => sEttings;
 
     static ApplicationSettingsController() {
-      settings = new ApplicationSettings();
+      sEttings = new ApplicationSettings();
       LoadSettings();
     }
 
     public static void LoadSettings() {
       // if app settings don't exist, create a default one
-      if (!File.Exists(AppSettingsFileName)) {
-        if (File.Exists(legacyAppSettingsPath)) {
+      if (!File.Exists(APP_SETTINGS_FILE_NAME)) {
+        if (File.Exists(LegacyAppSettingsPath)) {
           loadLegacyAppSettings();
         } else {
           ResetSettings();
@@ -34,77 +34,77 @@ namespace Trizbort.Domain.AppSettings {
         SaveSettings();
       }
       else {
-        settings = JsonConvert.DeserializeObject<ApplicationSettings>(File.ReadAllText(AppSettingsFileName));
+        sEttings = JsonConvert.DeserializeObject<ApplicationSettings>(File.ReadAllText(APP_SETTINGS_FILE_NAME));
       }
     }
 
     public static void ResetSettings() {
-      settings.DontCareAboutVersion = new Version(0, 0, 0, 0);
-      settings.Automap = AutomapSettings.Default;
-      settings.InfiniteScrollBounds = false;
-      settings.ShowMiniMap = true;
-      settings.SaveAt100 = true;
-      settings.SaveToImage = true;
-      settings.SaveToPDF = true;
-      settings.SaveTadstoAdv3Lite = true;
-      settings.RecentProjects.Clear();
-      settings.ShowObjectsInTooltips = true;
-      settings.ShowDescriptionsInTooltips = true;
-      settings.ApplyStyleToNewRooms = false;
-      settings.DoubleClickToAddRoom = false;
+      sEttings.DontCareAboutVersion = new Version(0, 0, 0, 0);
+      sEttings.Automap = AutomapSettings.Default;
+      sEttings.InfiniteScrollBounds = false;
+      sEttings.ShowMiniMap = true;
+      sEttings.SaveAt100 = true;
+      sEttings.SaveToImage = true;
+      sEttings.SaveToPDF = true;
+      sEttings.SaveTadstoAdv3Lite = true;
+      sEttings.RecentProjects.Clear();
+      sEttings.ShowObjectsInTooltips = true;
+      sEttings.ShowDescriptionsInTooltips = true;
+      sEttings.ApplyStyleToNewRooms = false;
+      sEttings.DoubleClickToAddRoom = false;
     }
 
     public static void SaveSettings() {
-      var serializeObject = JsonConvert.SerializeObject(settings,Formatting.Indented);
-      File.WriteAllText(AppSettingsFileName, serializeObject);
+      var serializeObject = JsonConvert.SerializeObject(sEttings,Formatting.Indented);
+      File.WriteAllText(APP_SETTINGS_FILE_NAME, serializeObject);
     }
 
     public static void ShowAppDialog() {
       using var dialog = new AppSettingsDialog();
-      dialog.InvertMouseWheel = settings.InvertMouseWheel;
-      dialog.ShowFullPathInTitleBar = settings.ShowFullPathInTitleBar;
-      dialog.DefaultFontName = settings.DefaultFontName;
-      dialog.DefaultImageType = settings.DefaultImageType;
-      dialog.PortAdjustDetail = settings.PortAdjustDetail;
-      dialog.SaveToImage = settings.SaveToImage;
-      dialog.SaveToPDF = settings.SaveToPDF;
-      dialog.SaveTADSToADV3Lite = settings.SaveTadstoAdv3Lite;
-      dialog.SaveAt100 = settings.SaveAt100;
-      dialog.SpecifyGenMargins = settings.SpecifyGenMargins;
-      dialog.GenHorizontalMargin = settings.GenHorizontalMargin;
-      dialog.GenVerticalMargin = settings.GenVerticalMargin;
-      dialog.LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
-      dialog.ApplyStyleToNewRooms = settings.ApplyStyleToNewRooms;
-      dialog.DoubleClickToAddRoom = settings.DoubleClickToAddRoom;
-      dialog.ShowDescriptionsInTooltip = settings.ShowDescriptionsInTooltips;
-      dialog.ShowObjectsInTooltip = settings.ShowObjectsInTooltips;
-      dialog.LimitConnectionDescriptionCharactersInTooltip = settings.LimitConnectionDescriptionCharactersInTooltip;
-      dialog.ToolTipConnectionDescriptionCharactersToShow = settings.ToolTipConnectionDescriptionCharactersToShow;        
-      dialog.LimitRoomDescriptionCharactersInTooltip = settings.LimitRoomDescriptionCharactersInTooltip;
-      dialog.ToolTipRoomDescriptionCharactersToShow = settings.ToolTipRoomDescriptionCharactersToShow;
+      dialog.InvertMouseWheel = sEttings.InvertMouseWheel;
+      dialog.ShowFullPathInTitleBar = sEttings.ShowFullPathInTitleBar;
+      dialog.DefaultFontName = sEttings.DefaultFontName;
+      dialog.DefaultImageType = sEttings.DefaultImageType;
+      dialog.PortAdjustDetail = sEttings.PortAdjustDetail;
+      dialog.SaveToImage = sEttings.SaveToImage;
+      dialog.SaveToPDF = sEttings.SaveToPDF;
+      dialog.SaveTadsToAdv3Lite = sEttings.SaveTadstoAdv3Lite;
+      dialog.SaveAt100 = sEttings.SaveAt100;
+      dialog.SpecifyGenMargins = sEttings.SpecifyGenMargins;
+      dialog.GenHorizontalMargin = sEttings.GenHorizontalMargin;
+      dialog.GenVerticalMargin = sEttings.GenVerticalMargin;
+      dialog.LoadLastProjectOnStart = sEttings.LoadLastProjectOnStart;
+      dialog.ApplyStyleToNewRooms = sEttings.ApplyStyleToNewRooms;
+      dialog.DoubleClickToAddRoom = sEttings.DoubleClickToAddRoom;
+      dialog.ShowDescriptionsInTooltip = sEttings.ShowDescriptionsInTooltips;
+      dialog.ShowObjectsInTooltip = sEttings.ShowObjectsInTooltips;
+      dialog.LimitConnectionDescriptionCharactersInTooltip = sEttings.LimitConnectionDescriptionCharactersInTooltip;
+      dialog.ToolTipConnectionDescriptionCharactersToShow = sEttings.ToolTipConnectionDescriptionCharactersToShow;        
+      dialog.LimitRoomDescriptionCharactersInTooltip = sEttings.LimitRoomDescriptionCharactersInTooltip;
+      dialog.ToolTipRoomDescriptionCharactersToShow = sEttings.ToolTipRoomDescriptionCharactersToShow;
 
       if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) {
-        settings.InvertMouseWheel = dialog.InvertMouseWheel;
-        settings.ShowFullPathInTitleBar = dialog.ShowFullPathInTitleBar;
-        settings.DefaultFontName = dialog.DefaultFontName;
-        settings.DefaultImageType = dialog.DefaultImageType;
-        settings.PortAdjustDetail = dialog.PortAdjustDetail;
-        settings.SaveAt100 = dialog.SaveAt100;
-        settings.SaveToImage = dialog.SaveToImage;
-        settings.SaveToPDF = dialog.SaveToPDF;
-        settings.SaveTadstoAdv3Lite = dialog.SaveTADSToADV3Lite;
-        settings.SpecifyGenMargins = dialog.SpecifyGenMargins;
-        settings.GenHorizontalMargin = (int) dialog.GenHorizontalMargin;
-        settings.GenVerticalMargin = (int) dialog.GenVerticalMargin;
-        settings.LoadLastProjectOnStart = dialog.LoadLastProjectOnStart;
-        settings.ApplyStyleToNewRooms = dialog.ApplyStyleToNewRooms;
-        settings.DoubleClickToAddRoom = dialog.DoubleClickToAddRoom;
-        settings.ShowDescriptionsInTooltips = dialog.ShowDescriptionsInTooltip;
-        settings.ShowObjectsInTooltips = dialog.ShowObjectsInTooltip;
-        settings.ToolTipConnectionDescriptionCharactersToShow = dialog.ToolTipConnectionDescriptionCharactersToShow;
-        settings.LimitConnectionDescriptionCharactersInTooltip = dialog.LimitConnectionDescriptionCharactersInTooltip;  
-        settings.ToolTipRoomDescriptionCharactersToShow = dialog.ToolTipRoomDescriptionCharactersToShow;
-        settings.LimitRoomDescriptionCharactersInTooltip = dialog.LimitRoomDescriptionCharactersInTooltip;
+        sEttings.InvertMouseWheel = dialog.InvertMouseWheel;
+        sEttings.ShowFullPathInTitleBar = dialog.ShowFullPathInTitleBar;
+        sEttings.DefaultFontName = dialog.DefaultFontName;
+        sEttings.DefaultImageType = dialog.DefaultImageType;
+        sEttings.PortAdjustDetail = dialog.PortAdjustDetail;
+        sEttings.SaveAt100 = dialog.SaveAt100;
+        sEttings.SaveToImage = dialog.SaveToImage;
+        sEttings.SaveToPDF = dialog.SaveToPDF;
+        sEttings.SaveTadstoAdv3Lite = dialog.SaveTadsToAdv3Lite;
+        sEttings.SpecifyGenMargins = dialog.SpecifyGenMargins;
+        sEttings.GenHorizontalMargin = (int) dialog.GenHorizontalMargin;
+        sEttings.GenVerticalMargin = (int) dialog.GenVerticalMargin;
+        sEttings.LoadLastProjectOnStart = dialog.LoadLastProjectOnStart;
+        sEttings.ApplyStyleToNewRooms = dialog.ApplyStyleToNewRooms;
+        sEttings.DoubleClickToAddRoom = dialog.DoubleClickToAddRoom;
+        sEttings.ShowDescriptionsInTooltips = dialog.ShowDescriptionsInTooltip;
+        sEttings.ShowObjectsInTooltips = dialog.ShowObjectsInTooltip;
+        sEttings.ToolTipConnectionDescriptionCharactersToShow = dialog.ToolTipConnectionDescriptionCharactersToShow;
+        sEttings.LimitConnectionDescriptionCharactersInTooltip = dialog.LimitConnectionDescriptionCharactersInTooltip;  
+        sEttings.ToolTipRoomDescriptionCharactersToShow = dialog.ToolTipRoomDescriptionCharactersToShow;
+        sEttings.LimitRoomDescriptionCharactersInTooltip = dialog.LimitRoomDescriptionCharactersInTooltip;
         SaveSettings();
       }
     }
@@ -112,52 +112,52 @@ namespace Trizbort.Domain.AppSettings {
     private static void loadLegacyAppSettings() {
         try
         {
-          if (File.Exists(legacyAppSettingsPath))
+          if (File.Exists(LegacyAppSettingsPath))
           {
             var doc = new XmlDocument();
-            doc.Load(legacyAppSettingsPath);
+            doc.Load(LegacyAppSettingsPath);
             var root = new XmlElementReader(doc.DocumentElement);
             if (root.Name == "settings")
             {
               var versionText = root["dontCareAboutVersion"].Text;
               if (!string.IsNullOrEmpty(versionText))
               {
-                settings.DontCareAboutVersion = new Version(versionText);
+                sEttings.DontCareAboutVersion = new Version(versionText);
               }
-              settings.InfiniteScrollBounds = root["infiniteScrollBounds"].ToBool(settings.InfiniteScrollBounds);
-              settings.ShowMiniMap = root["showMiniMap"].ToBool(settings.ShowMiniMap);
+              sEttings.InfiniteScrollBounds = root["infiniteScrollBounds"].ToBool(sEttings.InfiniteScrollBounds);
+              sEttings.ShowMiniMap = root["showMiniMap"].ToBool(sEttings.ShowMiniMap);
 
-             settings.LoadLastProjectOnStart = root["loadLastProjectOnStart"].ToBool(settings.LoadLastProjectOnStart);
-             settings.LastProjectFileName = root["lastProjectFileName"].Text;
-             settings.LastExportImageFileName = root["lastExportedImageFileName"].Text;
-             settings.LastExportInform7FileName = root["lastExportedInform7FileName"].Text;
-             settings.LastExportInform6FileName = root["lastExportedInform6FileName"].Text;
-             settings.LastExportTadsFileName = root["lastExportedTadsFileName"].Text;
-             settings.LastExportHugoFileName = root["lastExportedHugoFileName"].Text;
-             settings.LastExportZilFileName = root["lastExportedZilFileName"].Text;
-             settings.LastExportQuestFileName = root["lastExportedQuestFileName"].Text;
+             sEttings.LoadLastProjectOnStart = root["loadLastProjectOnStart"].ToBool(sEttings.LoadLastProjectOnStart);
+             sEttings.LastProjectFileName = root["lastProjectFileName"].Text;
+             sEttings.LastExportImageFileName = root["lastExportedImageFileName"].Text;
+             sEttings.LastExportInform7FileName = root["lastExportedInform7FileName"].Text;
+             sEttings.LastExportInform6FileName = root["lastExportedInform6FileName"].Text;
+             sEttings.LastExportTadsFileName = root["lastExportedTadsFileName"].Text;
+             sEttings.LastExportHugoFileName = root["lastExportedHugoFileName"].Text;
+             sEttings.LastExportZilFileName = root["lastExportedZilFileName"].Text;
+             sEttings.LastExportQuestFileName = root["lastExportedQuestFileName"].Text;
 
-              settings.InvertMouseWheel = root["invertMouseWheel"].ToBool(settings.InvertMouseWheel);
-              settings.PortAdjustDetail = root["portAdjustDetail"].ToInt(settings.PortAdjustDetail);
-              settings.DefaultFontName = root["defaultFontName"].Text;
+              sEttings.InvertMouseWheel = root["invertMouseWheel"].ToBool(sEttings.InvertMouseWheel);
+              sEttings.PortAdjustDetail = root["portAdjustDetail"].ToInt(sEttings.PortAdjustDetail);
+              sEttings.DefaultFontName = root["defaultFontName"].Text;
 
-              if (settings.DefaultFontName.Length == 0) settings.DefaultFontName = "Arial"; // important for compatibility with 1.5.9.3 and before. Otherwise it's set to MS Sans Serif
+              if (sEttings.DefaultFontName.Length == 0) sEttings.DefaultFontName = "Arial"; // important for compatibility with 1.5.9.3 and before. Otherwise it's set to MS Sans Serif
 
-              settings.DefaultImageType = root["defaultImageType"].ToInt(settings.DefaultImageType);
-              settings.SaveToImage = root["saveToImage"].ToBool(settings.SaveToImage);
-              settings.SaveToPDF = root["saveToPDF"].ToBool(settings.SaveToPDF);
-              settings.SaveTadstoAdv3Lite = root["saveTADSToADV3Lite"].ToBool(settings.SaveTadstoAdv3Lite);
-              settings.SaveAt100 = root["saveAt100"].ToBool(settings.SaveAt100);
-              settings.SpecifyGenMargins = root["specifyMargins"].ToBool(settings.SpecifyGenMargins);
-              settings.GenHorizontalMargin = root["horizontalMargin"].ToInt(settings.GenHorizontalMargin);
-              settings.GenVerticalMargin = root["verticalMargin"].ToInt(settings.GenVerticalMargin);
-              settings.ShowObjectsInTooltips = root["showObjectsInTooltips"].ToBool(true);
-              settings.ShowDescriptionsInTooltips = root["showDescriptionsInTooltips"].ToBool(true);
+              sEttings.DefaultImageType = root["defaultImageType"].ToInt(sEttings.DefaultImageType);
+              sEttings.SaveToImage = root["saveToImage"].ToBool(sEttings.SaveToImage);
+              sEttings.SaveToPDF = root["saveToPDF"].ToBool(sEttings.SaveToPDF);
+              sEttings.SaveTadstoAdv3Lite = root["saveTADSToADV3Lite"].ToBool(sEttings.SaveTadstoAdv3Lite);
+              sEttings.SaveAt100 = root["saveAt100"].ToBool(sEttings.SaveAt100);
+              sEttings.SpecifyGenMargins = root["specifyMargins"].ToBool(sEttings.SpecifyGenMargins);
+              sEttings.GenHorizontalMargin = root["horizontalMargin"].ToInt(sEttings.GenHorizontalMargin);
+              sEttings.GenVerticalMargin = root["verticalMargin"].ToInt(sEttings.GenVerticalMargin);
+              sEttings.ShowObjectsInTooltips = root["showObjectsInTooltips"].ToBool(true);
+              sEttings.ShowDescriptionsInTooltips = root["showDescriptionsInTooltips"].ToBool(true);
 
-              settings.CanvasWidth = root["canvasWidth"].ToInt(settings.CanvasWidth);
-              settings.CanvasHeight = root["canvasHeight"].ToInt(settings.CanvasHeight);
-              if (settings.CanvasWidth == 0) { settings.CanvasWidth = 624; }
-              if (settings.CanvasHeight == 0) { settings.CanvasHeight = 450; }
+              sEttings.CanvasWidth = root["canvasWidth"].ToInt(sEttings.CanvasWidth);
+              sEttings.CanvasHeight = root["canvasHeight"].ToInt(sEttings.CanvasHeight);
+              if (sEttings.CanvasWidth == 0) { sEttings.CanvasWidth = 624; }
+              if (sEttings.CanvasHeight == 0) { sEttings.CanvasHeight = 450; }
 
               var recentProjects = root["recentProjects"];
               string fileName;
@@ -167,19 +167,19 @@ namespace Trizbort.Domain.AppSettings {
                 fileName = recentProjects[$"fileName{index++}"].Text;
                 if (!string.IsNullOrEmpty(fileName))
                 {
-                  settings.RecentProjects.Add(fileName);
+                  sEttings.RecentProjects.Add(fileName);
                 }
               } while (!string.IsNullOrEmpty(fileName));
 
               var automap = root["automap"];
-              var settingsAutomap = settings.Automap;
-              settingsAutomap.FileName = automap["transcriptFileName"].ToText(settings.Automap.FileName);
-              settingsAutomap.VerboseTranscript = automap["verboseTranscript"].ToBool(settings.Automap.VerboseTranscript);
-              settingsAutomap.AssumeRoomsWithSameNameAreSameRoom = automap["assumeRoomsWithSameNameAreSameRoom"].ToBool(settings.Automap.AssumeRoomsWithSameNameAreSameRoom);
-              settingsAutomap.GuessExits = automap["guessExits"].ToBool(settings.Automap.GuessExits);
-              settingsAutomap.AddObjectCommand = automap["addObjectCommand"].ToText(settings.Automap.AddObjectCommand);
-              settingsAutomap.AddRegionCommand = automap["addRegionCommand"].ToText(settings.Automap.AddRegionCommand);
-              settings.Automap = settingsAutomap;
+              var settingsAutomap = sEttings.Automap;
+              settingsAutomap.FileName = automap["transcriptFileName"].ToText(sEttings.Automap.FileName);
+              settingsAutomap.VerboseTranscript = automap["verboseTranscript"].ToBool(sEttings.Automap.VerboseTranscript);
+              settingsAutomap.AssumeRoomsWithSameNameAreSameRoom = automap["assumeRoomsWithSameNameAreSameRoom"].ToBool(sEttings.Automap.AssumeRoomsWithSameNameAreSameRoom);
+              settingsAutomap.GuessExits = automap["guessExits"].ToBool(sEttings.Automap.GuessExits);
+              settingsAutomap.AddObjectCommand = automap["addObjectCommand"].ToText(sEttings.Automap.AddObjectCommand);
+              settingsAutomap.AddRegionCommand = automap["addRegionCommand"].ToText(sEttings.Automap.AddRegionCommand);
+              sEttings.Automap = settingsAutomap;
             }
           }
         }

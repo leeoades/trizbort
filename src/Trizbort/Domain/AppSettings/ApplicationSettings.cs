@@ -6,7 +6,7 @@ namespace Trizbort.Domain.AppSettings
 {
   public class ApplicationSettings
   {
-    private const string AppSettingsFileName = @".\appsettings.json";
+    private const string APP_SETTINGS_FILE_NAME = @".\appsettings.json";
 
     public bool ApplyStyleToNewRooms { get; set; }
     public bool DoubleClickToAddRoom { get; set; }
@@ -17,7 +17,7 @@ namespace Trizbort.Domain.AppSettings
     public bool DebugDisableGridPolyline { get; set; }
     public bool DebugDisableLineRendering { get; set; }
     public bool DebugDisableTextRendering { get; set; }
-    public bool DebugShowFPS { get; set; }
+    public bool DebugShowFps { get; set; }
     public bool DebugShowMouseCoordinates { get; set; }
     public string DefaultFontName { get; set; } = "Arial";
     public int DefaultImageType { get; set; }

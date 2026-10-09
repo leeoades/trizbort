@@ -16,7 +16,7 @@ namespace Trizbort.Domain.Application {
 
     public static readonly TrizbortFileWatcher FileWatcher = new TrizbortFileWatcher();
 
-    private static Project mCurrent = new Project();
+    private static Project sMCurrent = new Project();
 
     public Project() {
       Elements.Removed += onElementRemoved;
@@ -30,12 +30,12 @@ namespace Trizbort.Domain.Application {
 
 
     public static Project Current {
-      get => mCurrent;
+      get => sMCurrent;
       set {
-        if (mCurrent == value) return;
-        var oldProject = mCurrent;
-        mCurrent = value;
-        raiseProjectChanged(oldProject, mCurrent);
+        if (sMCurrent == value) return;
+        var oldProject = sMCurrent;
+        sMCurrent = value;
+        raiseProjectChanged(oldProject, sMCurrent);
       }
     }
 
@@ -128,7 +128,7 @@ namespace Trizbort.Domain.Application {
     }
 
     public bool FindElement(int id, out Element element) {
-      foreach (var existing in Elements.Where(existing => existing.ID == id)) {
+      foreach (var existing in Elements.Where(existing => existing.Id == id)) {
         element = existing;
         return true;
       }
@@ -146,7 +146,7 @@ namespace Trizbort.Domain.Application {
       FileWatcher.InitializeWatcher(fileName);
     }
 
-    public bool IsElementIDInUse(int id) {
+    public bool IsElementIdInUse(int id) {
       Element element;
       return FindElement(id, out element);
     }

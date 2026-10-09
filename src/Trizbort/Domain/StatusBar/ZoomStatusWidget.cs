@@ -4,9 +4,9 @@ using Trizbort.Domain.Application;
 
 namespace Trizbort.Domain.StatusBar {
   public class ZoomStatusWidget : IStatusWidget {
-    ContextMenuStrip menu;
+    ContextMenuStrip _menu;
 
-    public StatusItems Id => StatusItems.tsb_CapsLock;
+    public StatusItems Id => StatusItems.TsbCapsLock;
     public string Name => "Zoom";
     public string MenuName => "Map Zoom";
     public string HelpText => "Mousewheel Up/Down to change zoom, Ctrl Mousewheel gives finer control.";
@@ -18,20 +18,20 @@ namespace Trizbort.Domain.StatusBar {
     }
 
     public void ClickHandler() {
-      menu.Show(Project.Current.Canvas, Cursor.Position);
+      _menu.Show(Project.Current.Canvas, Cursor.Position);
     }
 
     public ZoomStatusWidget() {
-      menu = new ContextMenuStrip();
-      menu.Items.Add("Zoom 300%", null, (o, args) => setZoom(o, 3.00f));
-      menu.Items.Add("Zoom 250%", null, (o, args) => setZoom(o, 2.50f));
-      menu.Items.Add("Zoom 200%", null, (o, args) => setZoom(o, 2.00f));
-      menu.Items.Add("Zoom 175%", null, (o, args) => setZoom(o, 1.75f));
-      menu.Items.Add("Zoom 150%", null, (o, args) => setZoom(o, 1.50f));
-      menu.Items.Add("Zoom 125%", null, (o, args) => setZoom(o, 1.25f));
-      menu.Items.Add("Zoom 100%", null, (o, args) => setZoom(o, 1.00f));
-      menu.Items.Add("Zoom 75%", null, (o, args) => setZoom(o, 0.75f));
-      menu.Items.Add("Zoom 50%", null, (o, args) => setZoom(o, 0.50f));
+      _menu = new ContextMenuStrip();
+      _menu.Items.Add("Zoom 300%", null, (o, args) => setZoom(o, 3.00f));
+      _menu.Items.Add("Zoom 250%", null, (o, args) => setZoom(o, 2.50f));
+      _menu.Items.Add("Zoom 200%", null, (o, args) => setZoom(o, 2.00f));
+      _menu.Items.Add("Zoom 175%", null, (o, args) => setZoom(o, 1.75f));
+      _menu.Items.Add("Zoom 150%", null, (o, args) => setZoom(o, 1.50f));
+      _menu.Items.Add("Zoom 125%", null, (o, args) => setZoom(o, 1.25f));
+      _menu.Items.Add("Zoom 100%", null, (o, args) => setZoom(o, 1.00f));
+      _menu.Items.Add("Zoom 75%", null, (o, args) => setZoom(o, 0.75f));
+      _menu.Items.Add("Zoom 50%", null, (o, args) => setZoom(o, 0.50f));
     }
 
     private void setZoom(object sender, float zoomFactor) {

@@ -13,15 +13,15 @@ using Trizbort.Util;
 
 namespace Trizbort.Domain.Elements {
   public class MapLabel : Element, ISizeable {
-    private readonly TextBlock text = new TextBlock();
-    private Vector position;
-    private Vector size = new Vector(3 * Settings.GridSize, 2 * Settings.GridSize);
-    private RoomShape shape;
-    private BorderDashStyle borderStyle = BorderDashStyle.None;
-    private bool hasBackground;
-    private Color textColor = Color.Black;
-    private Color borderColor = Color.Black;
-    private Color backgroundColor = Color.White;
+    private readonly TextBlock _text = new TextBlock();
+    private Vector _position;
+    private Vector _size = new Vector(3 * Settings.GridSize, 2 * Settings.GridSize);
+    private RoomShape _shape;
+    private BorderDashStyle _borderStyle = BorderDashStyle.None;
+    private bool _hasBackground;
+    private Color _textColor = Color.Black;
+    private Color _borderColor = Color.Black;
+    private Color _backgroundColor = Color.White;
 
     public MapLabel(Project project) : base(project) {
       initialize();
@@ -41,28 +41,28 @@ namespace Trizbort.Domain.Elements {
     public override bool HasDialog => true;
     public override string Name { get => Text; set => Text = value; }
     public string Text {
-      get => text.Text;
+      get => _text.Text;
       set {
         value = value ?? string.Empty;
-        if (text.Text == value) return;
-        text.Text = value;
+        if (_text.Text == value) return;
+        _text.Text = value;
         RaiseChanged();
       }
     }
 
-    public override Vector Position { get => position; set => setField(ref position, value); }
-    public Vector Size { get => size; set => setField(ref size, value); }
+    public override Vector Position { get => _position; set => setField(ref _position, value); }
+    public Vector Size { get => _size; set => setField(ref _size, value); }
     public float X => Position.X;
     public float Y => Position.Y;
     public float Width => Size.X;
     public float Height => Size.Y;
     public Rect InnerBounds => new Rect(Position, Size);
-    public RoomShape Shape { get => shape; set => setField(ref shape, value); }
-    public BorderDashStyle BorderStyle { get => borderStyle; set => setField(ref borderStyle, value); }
-    public bool HasBackground { get => hasBackground; set => setField(ref hasBackground, value); }
-    public Color TextColor { get => textColor; set => setField(ref textColor, value); }
-    public Color BorderColor { get => borderColor; set => setField(ref borderColor, value); }
-    public Color BackgroundColor { get => backgroundColor; set => setField(ref backgroundColor, value); }
+    public RoomShape Shape { get => _shape; set => setField(ref _shape, value); }
+    public BorderDashStyle BorderStyle { get => _borderStyle; set => setField(ref _borderStyle, value); }
+    public bool HasBackground { get => _hasBackground; set => setField(ref _hasBackground, value); }
+    public Color TextColor { get => _textColor; set => setField(ref _textColor, value); }
+    public Color BorderColor { get => _borderColor; set => setField(ref _borderColor, value); }
+    public Color BackgroundColor { get => _backgroundColor; set => setField(ref _backgroundColor, value); }
 
     private void setField<T>(ref T field, T value) {
       if (EqualityComparer<T>.Default.Equals(field, value)) return;
@@ -113,7 +113,7 @@ namespace Trizbort.Domain.Elements {
       var bounds = InnerBounds;
       bounds.Inflate(Shape == RoomShape.Ellipse ? -11.5f : -5);
       if (bounds.Width > 0 && bounds.Height > 0)
-        text.Draw(graphics, Settings.RoomNameFont, palette.Brush(TextColor), bounds.Position, bounds.Size, XStringFormats.Center);
+        _text.Draw(graphics, Settings.RoomNameFont, palette.Brush(TextColor), bounds.Position, bounds.Size, XStringFormats.Center);
     }
 
     private XGraphicsPath createPath(Palette palette) {
@@ -147,7 +147,7 @@ namespace Trizbort.Domain.Elements {
 
     private PointF[] createSketchOutline() {
       var rect = InnerBounds.ToRectangleF();
-      var random = Sketch.Seeded(ID);
+      var random = Sketch.Seeded(Id);
       if (Shape == RoomShape.Ellipse)
         return Sketch.ClosedCurve(Sketch.Ellipse(rect), random);
       if (Shape == RoomShape.RoundedCorners) {

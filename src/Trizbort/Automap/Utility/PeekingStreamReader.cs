@@ -6,10 +6,10 @@ namespace Trizbort.Automap.Utility
 {
   public class PeekingStreamReader : StreamReader
   {
-    private readonly Queue<string> peeks;
+    private readonly Queue<string> _peeks;
     public PeekingStreamReader(Stream stream) : base(stream)
     {
-      peeks = new Queue<string>();
+      _peeks = new Queue<string>();
     }
 
     public override Task<string> ReadLineAsync()
@@ -19,16 +19,16 @@ namespace Trizbort.Automap.Utility
 
     public override string ReadLine()
     {
-      if (peeks.Count <= 0) return base.ReadLine();
+      if (_peeks.Count <= 0) return base.ReadLine();
 
-      var nextLine = peeks.Dequeue();
+      var nextLine = _peeks.Dequeue();
       return nextLine;
     }
 
     public string PeekReadLine()
     {
       var nextLine = base.ReadLine();
-      peeks.Enqueue(nextLine);
+      _peeks.Enqueue(nextLine);
       return nextLine;
     }
   }

@@ -40,9 +40,9 @@ namespace Trizbort.Domain.Misc {
   ///   </code>
   /// </summary>
   public static class ObjectList {
-    public const int TabIndent = 4;
-    public const int BulletIndent = 4;
-    public const string DisplayBullet = "\u2022 ";
+    public const int TAB_INDENT = 4;
+    public const int BULLET_INDENT = 4;
+    public const string DISPLAY_BULLET = "\u2022 ";
 
     private static readonly Regex PropertiesRegex = new Regex(@"\[[^\]\[]*\]");
     private static readonly char[] Bullets = {'-', '*', '\u2022'};
@@ -100,7 +100,7 @@ namespace Trizbort.Domain.Misc {
           indent += 1;
           ++position;
         } else if (c == '\t') {
-          indent += TabIndent;
+          indent += TAB_INDENT;
           ++position;
         } else if (Array.IndexOf(Bullets, c) >= 0) {
           // a run of bullet characters only counts as indentation if followed by whitespace,
@@ -108,7 +108,7 @@ namespace Trizbort.Domain.Misc {
           var end = position;
           while (end < line.Length && Array.IndexOf(Bullets, line[end]) >= 0) ++end;
           if (end >= line.Length || !char.IsWhiteSpace(line[end])) break;
-          indent += (end - position) * BulletIndent;
+          indent += (end - position) * BULLET_INDENT;
           position = end;
         } else {
           break;
@@ -146,7 +146,7 @@ namespace Trizbort.Domain.Misc {
         if (builder.Length > 0) builder.Append("\r\n");
         if (item.Depth > 0) {
           builder.Append(' ', (item.Depth - 1) * 4 + 2);
-          builder.Append(DisplayBullet);
+          builder.Append(DISPLAY_BULLET);
         }
 
         builder.Append(item.Name);

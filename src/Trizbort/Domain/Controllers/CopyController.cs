@@ -55,7 +55,7 @@ namespace Trizbort.Domain.Controllers {
           xx.Rooms.Add(copy);
         } else if (element is MapLabel label) {
           xx.Labels.Add(new CopyLabelObj {
-            OldID = label.ID, Text = label.Text, Position = label.Position, Size = label.Size,
+            OldId = label.Id, Text = label.Text, Position = label.Position, Size = label.Size,
             Shape = label.Shape, BorderStyle = label.BorderStyle, HasBackground = label.HasBackground,
             TextColor = label.TextColor, BorderColor = label.BorderColor, BackgroundColor = label.BackgroundColor,
             ZOrder = label.ZOrder
@@ -120,7 +120,7 @@ namespace Trizbort.Domain.Controllers {
     }
 
     public void SetRoom(Room newRoom, CopyRoomObj room) {
-      newRoom.OldID = room.ID;
+      newRoom.OldId = room.Id;
       newRoom.AddDescription(room.PrimaryDescription);
       newRoom.Shape = room.Shape;
       newRoom.Name = room.Name;
@@ -148,7 +148,7 @@ namespace Trizbort.Domain.Controllers {
       newRoom.RoomNameColor = room.RoomNameColor;
       newRoom.RoomSubtitleColor = room.RoomSubtitleColor;
       newRoom.RoomObjectTextColor = room.RoomObjectColor;
-      newRoom.OldID = room.OldID;
+      newRoom.OldId = room.OldId;
       newRoom.ObjectsCustomPositionDown = room.ObjectsCustomPositionDown;
       newRoom.ObjectsCustomPositionRight = room.ObjectsCustomPositionRight;
       newRoom.ObjectsCustomPosition = room.ObjectsCustomPosition;
@@ -184,7 +184,7 @@ namespace Trizbort.Domain.Controllers {
         RoomNameColor = room.RoomNameColor,
         RoomSubtitleColor = room.RoomSubtitleColor,
         RoomObjectColor = room.RoomObjectTextColor,
-        OldID = room.ID,
+        OldId = room.Id,
         ObjectsCustomPositionDown = room.ObjectsCustomPositionDown,
         ObjectsCustomPositionRight = room.ObjectsCustomPositionRight,
         ObjectsCustomPosition = room.ObjectsCustomPosition,
@@ -217,8 +217,8 @@ namespace Trizbort.Domain.Controllers {
         var yy = new CopyVertexObj {Index = ii, Position = vertex.Position};
         if (vertex.Port != null) {
           yy.Type = VertexType.Dock;
-          yy.OwnerId = vertex.Port.Owner.ID;
-          yy.PortId = vertex.Port.ID;
+          yy.OwnerId = vertex.Port.Owner.Id;
+          yy.PortId = vertex.Port.Id;
         } else {
           yy.Type = VertexType.Point;
           yy.Position = vertex.Position;
@@ -241,7 +241,7 @@ namespace Trizbort.Domain.Controllers {
         SetConnection(connection, copy);
         foreach (var vertex in copy.VertextList) {
           if (vertex.Type == VertexType.Dock && copiedNodes.TryGetValue(vertex.OwnerId, out var node))
-            connection.VertexList.Add(new Vertex(node.PortList.First(port => port.ID == vertex.PortId)));
+            connection.VertexList.Add(new Vertex(node.PortList.First(port => port.Id == vertex.PortId)));
           else
             connection.VertexList.Add(new Vertex(vertex.Position - offset));
         }
@@ -258,7 +258,7 @@ namespace Trizbort.Domain.Controllers {
     }
 
     public class CopyLabelObj {
-      public int OldID { get; set; }
+      public int OldId { get; set; }
       public string Text { get; set; }
       public Vector Position { get; set; }
       public Vector Size { get; set; }
@@ -299,7 +299,7 @@ namespace Trizbort.Domain.Controllers {
       public BorderDashStyle BorderStyle { get; set; }
       public CornerRadii Corners { get; set; }
       public bool Ellipse { get; set; }
-      public int ID { get; set; }
+      public int Id { get; set; }
       public bool IsDark { get; set; }
       public bool IsEndRoom { get; set; }
       public bool IsStartRoom { get; set; }
@@ -310,7 +310,7 @@ namespace Trizbort.Domain.Controllers {
       public int ObjectsCustomPositionRight { get; set; }
       public CompassPoint ObjectsPosition { get; set; }
       public bool Octagonal { get; set; }
-      public int OldID { get; set; }
+      public int OldId { get; set; }
       public Vector Position { get; set; }
       public string PrimaryDescription { get; set; }
       public string Region { get; set; }

@@ -22,11 +22,11 @@ using Parser = Trizbort.Automap.Automap;
 namespace Trizbort.Tests {
   [TestFixture, Category("Integration")]
   public class AutomapRegressionTests : IsolatedProjectTests {
-    private static Parser CreateParser() => new Parser(
+    private static Parser createParser() => new Parser(
       (message, title) => throw new AssertionException(title + ": " + message),
       (_, __) => throw new AssertionException("Unexpected ambiguity"));
 
-    private AutomapSettings SettingsFor(string text, bool twoWay = true, bool guess = false) {
+    private AutomapSettings settingsFor(string text, bool twoWay = true, bool guess = false) {
       var settings = AutomapSettings.Default;
       settings.FileName = Files.File("transcript.txt");
       File.WriteAllText(settings.FileName, text);
@@ -41,7 +41,7 @@ namespace Trizbort.Tests {
     [TestCase("> ", "")]
     [TestCase(">> west", "west")]
     public void Prompt_ExtractsTypedCommand(string line, string expected) {
-      CreateParser().IsPrompt(line, out var command).ShouldBeTrue();
+      createParser().IsPrompt(line, out var command).ShouldBeTrue();
       command.ShouldBe(expected);
     }
 
@@ -50,7 +50,7 @@ namespace Trizbort.Tests {
     [TestCase("There is no prompt")]
     [TestCase("                                          >n")]
     public void Prompt_RejectsNonPromptsAndLateMarkers(string line) {
-      CreateParser().IsPrompt(line, out var command).ShouldBeFalse();
+      createParser().IsPrompt(line, out var command).ShouldBeFalse();
       command.ShouldBeNull();
     }
 
@@ -61,7 +61,7 @@ namespace Trizbort.Tests {
     [TestCase("Bedroom - on the bed", "Bedroom")]
     [TestCase("Room 12", "Room 12")]
     public void RoomTitle_StripsDecorationsButKeepsRoomIdentity(string line, string expected) {
-      CreateParser().ExtractRoomName(line, "", out var name).ShouldBeTrue();
+      createParser().ExtractRoomName(line, "", out var name).ShouldBeTrue();
       name.ShouldBe(expected);
     }
 
@@ -72,13 +72,13 @@ namespace Trizbort.Tests {
     [TestCase("")]
     [TestCase(null)]
     public void RoomTitle_RejectsWhitespaceProseAndBanners(string line) {
-      CreateParser().ExtractRoomName(line, "", out _).ShouldBeFalse();
+      createParser().ExtractRoomName(line, "", out _).ShouldBeFalse();
     }
 
     [Test]
     public void Description_ContinuesWrappedLines_AndStopsAtBlankOrPrompt() {
       var first = "you are standing in a large hallway with polished floors and several doors opening onto it.";
-      var parser = CreateParser();
+      var parser = createParser();
       parser.ExtractParagraph(new List<string> {first, "the light is dim.", ">east"}, 0, out var paragraph).ShouldBeTrue();
       paragraph.ShouldBe(first + " the light is dim.");
       parser.ExtractParagraph(new List<string> {"[Previous turn undone.]", ""}, 0, out paragraph).ShouldBeFalse();
@@ -103,8 +103,8 @@ namespace Trizbort.Tests {
     [TestCase("outside", MappableDirection.Out)]
     public async Task MovementAliases_CreateRealDockedGraph_AndProcessFinalRoomAtEOF(string command, MappableDirection direction) {
       using var canvas = new Canvas();
-      var parser = CreateParser();
-      await parser.StartCL(canvas, SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>" + command + "\n\nSecond Room\nAnother room.\n"));
+      var parser = createParser();
+      await parser.StartCl(canvas, settingsFor("Example Game\n\nFirst Room\nA small room.\n\n>" + command + "\n\nSecond Room\nAnother room.\n"));
       var rooms = Project.Current.Elements.OfType<Room>().ToArray();
       rooms.Length.ShouldBe(2);
       rooms.Single(room => room.Name == "First Room").IsStartRoom.ShouldBeTrue();
@@ -120,8 +120,8 @@ namespace Trizbort.Tests {
     [TestCase(true)]
     public async Task RevisitingRooms_DoesNotDuplicateGraph_AndReturnTravelMakesConnectionTwoWay(bool twoWay) {
       using var canvas = new Canvas();
-      var parser = CreateParser();
-      await parser.StartCL(canvas, SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n\nSecond Room\nAnother room.\n\n>w\n\nFirst Room\nA small room.\n", twoWay));
+      var parser = createParser();
+      await parser.StartCl(canvas, settingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n\nSecond Room\nAnother room.\n\n>w\n\nFirst Room\nA small room.\n", twoWay));
       Project.Current.Elements.OfType<Room>().Count().ShouldBe(2);
       Project.Current.Elements.OfType<Connection>().Single().Flow.ShouldBe(ConnectionFlow.TwoWay);
     }
@@ -129,7 +129,7 @@ namespace Trizbort.Tests {
     [Test]
     public async Task OneWaySettings_ArePreservedThroughSaveLoadAndExport() {
       using var canvas = new Canvas();
-      await CreateParser().StartCL(canvas, SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n\nSecond Room\nAnother room.\n", false));
+      await createParser().StartCl(canvas, settingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n\nSecond Room\nAnother room.\n", false));
       Project.Current.Elements.OfType<Connection>().Single().Flow.ShouldBe(ConnectionFlow.OneWay);
       new LegacyMapFileEngine(Project.Current).Save(Files.File("automap.trizbort")).ShouldBeTrue();
       var loaded = new Project();
@@ -147,7 +147,7 @@ namespace Trizbort.Tests {
     [Test]
     public async Task ObjectRegionAndExitCommands_ModifyCurrentRoomWithoutCreatingRooms() {
       using var canvas = new Canvas();
-      await CreateParser().StartCL(canvas, SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>tb see Key\n>tb see key\n>tb region Forest\n>tb exit north\n>tb noexit north\n"));
+      await createParser().StartCl(canvas, settingsFor("Example Game\n\nFirst Room\nA small room.\n\n>tb see Key\n>tb see key\n>tb region Forest\n>tb exit north\n>tb noexit north\n"));
       var room = Project.Current.Elements.OfType<Room>().Single();
       room.Objects.ShouldBe("Key");
       room.Region.ShouldBe("Forest");
@@ -158,7 +158,7 @@ namespace Trizbort.Tests {
     [Test]
     public async Task FailedMoveAndDisconnectedTravel_DoNotInventConnections() {
       using var canvas = new Canvas();
-      await CreateParser().StartCL(canvas, SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\nYou cannot go that way.\n\n>look\n\nFirst Room\nA small room.\n\n>teleport\n\nDistant Room\nFar away.\n"));
+      await createParser().StartCl(canvas, settingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\nYou cannot go that way.\n\n>look\n\nFirst Room\nA small room.\n\n>teleport\n\nDistant Room\nFar away.\n"));
       Project.Current.Elements.OfType<Room>().Select(room => room.Name).ShouldBe(new[] {"First Room", "Distant Room"});
       Project.Current.Elements.OfType<Connection>().ShouldBeEmpty();
     }
@@ -166,7 +166,7 @@ namespace Trizbort.Tests {
     [Test]
     public async Task GuessExits_CreatesDirectionalStubsOnlyWhenEnabled() {
       using var canvas = new Canvas();
-      await CreateParser().StartCL(canvas, SettingsFor("Example Game\n\nFirst Room\nExits lead north and east.\n", guess: true));
+      await createParser().StartCl(canvas, settingsFor("Example Game\n\nFirst Room\nExits lead north and east.\n", guess: true));
       var lines = Project.Current.Elements.OfType<Connection>().ToArray();
       lines.Length.ShouldBe(2);
       lines.All(line => line.GetSourceRoom() == line.GetTargetRoom()).ShouldBeTrue();
@@ -175,10 +175,10 @@ namespace Trizbort.Tests {
     [Test]
     public async Task ConsecutiveRuns_DoNotReusePreviousRoomDirectionOrGameTitle() {
       using var canvas = new Canvas();
-      var parser = CreateParser();
-      await parser.StartCL(canvas, SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n"));
+      var parser = createParser();
+      await parser.StartCl(canvas, settingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n"));
       Project.Current = new Project();
-      await parser.StartCL(canvas, SettingsFor("Different Game\n\nNew Room\nA different room.\n"));
+      await parser.StartCl(canvas, settingsFor("Different Game\n\nNew Room\nA different room.\n"));
       Project.Current.Elements.OfType<Room>().Single().Name.ShouldBe("New Room");
       Project.Current.Elements.OfType<Room>().Single().IsStartRoom.ShouldBeTrue();
       Project.Current.Elements.OfType<Connection>().ShouldBeEmpty();
@@ -191,7 +191,7 @@ namespace Trizbort.Tests {
       using var canvas = new Canvas();
       var settings = AutomapSettings.Default;
       settings.FileName = Files.File("missing.txt");
-      await parser.StartCL(canvas, settings);
+      await parser.StartCl(canvas, settings);
       failure.ShouldContain("Error opening transcript");
       parser.Status.ShouldBe("Automapping halted.");
       Project.Current.Elements.ShouldBeEmpty();
@@ -215,7 +215,7 @@ namespace Trizbort.Tests {
           decisions++;
           return decision;
         });
-      await parser.StartCL(canvas, SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n\nReplacement Room\nAnother room.\n\n>n\n\nThird Room\nThird description.\n"));
+      await parser.StartCl(canvas, settingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n\nReplacement Room\nAnother room.\n\n>n\n\nThird Room\nThird description.\n"));
       decisions.ShouldBe(1);
       var third = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "Third Room");
       var next = Project.Current.Elements.OfType<Connection>().Single(line => line.GetTargetRoom() == third);
@@ -226,8 +226,8 @@ namespace Trizbort.Tests {
     [Test]
     public async Task LiveReader_CanBeStoppedWhileWaitingForText() {
       using var canvas = new Canvas();
-      var parser = CreateParser();
-      var run = parser.Start(canvas, SettingsFor(""));
+      var parser = createParser();
+      var run = parser.Start(canvas, settingsFor(""));
       parser.Running.ShouldBeTrue();
       parser.Stop();
       await run.WaitAsync(TimeSpan.FromSeconds(5));
@@ -239,8 +239,8 @@ namespace Trizbort.Tests {
     public async Task LiveReader_CanBeStoppedWhileSingleStepping() {
       using var canvas = new Canvas();
       using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-      var parser = CreateParser();
-      var settings = SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n");
+      var parser = createParser();
+      var settings = settingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n");
       settings.SingleStep = true;
       var run = parser.Start(canvas, settings);
       try {
@@ -266,19 +266,19 @@ namespace Trizbort.Tests {
     public async Task StopDuringSingleStep_PreservesBufferedGraphAndSkipsFollowingCommands(bool oneShot, int roomCount) {
       using var canvas = new Canvas();
       using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-      var parser = CreateParser();
-      var settings = SettingsFor(
+      var parser = createParser();
+      var settings = settingsFor(
         "Example Game\n\nFirst Room\nExits lead north and east.\n\nLater Room\nA later description.\n\n" +
         ">tb see Key\n>e\n\nFinal Room\nA final description.\n\n>look\n", guess: true);
       settings.SingleStep = true;
-      var run = oneShot ? parser.StartCL(canvas, settings) : parser.Start(canvas, settings);
+      var run = oneShot ? parser.StartCl(canvas, settings) : parser.Start(canvas, settings);
       try {
         while (Project.Current.Elements.OfType<Room>().Count() < roomCount) {
-          await WaitForSingleStep(parser, run, deadline.Token);
+          await waitForSingleStep(parser, run, deadline.Token);
           parser.Step();
           await Task.Delay(10, deadline.Token);
         }
-        await WaitForSingleStep(parser, run, deadline.Token);
+        await waitForSingleStep(parser, run, deadline.Token);
         var engine = new LegacyMapFileEngine(Project.Current);
         var before = Files.File("before-stop.trizbort");
         var after = Files.File("after-stop.trizbort");
@@ -298,7 +298,7 @@ namespace Trizbort.Tests {
       }
     }
 
-    private static async Task WaitForSingleStep(Parser parser, Task run, CancellationToken token) {
+    private static async Task waitForSingleStep(Parser parser, Task run, CancellationToken token) {
       while (!parser.Status.Contains("waiting for you to step")) {
         token.ThrowIfCancellationRequested();
         run.IsCompleted.ShouldBeFalse();
@@ -328,10 +328,10 @@ namespace Trizbort.Tests {
         parser.Stop();
         return decision;
       });
-      var settings = SettingsFor(
+      var settings = settingsFor(
         "Example Game\n\nFirst Room\nA small room.\n\n>e\n\nReplacement Room\nAnother room.\n\n" +
         ">tb see Key\n>n\n\nFinal Room\nA final description.\n\n>look\n");
-      var run = oneShot ? parser.StartCL(canvas, settings) : parser.Start(canvas, settings);
+      var run = oneShot ? parser.StartCl(canvas, settings) : parser.Start(canvas, settings);
       try {
         await run.WaitAsync(TimeSpan.FromSeconds(5));
         decisions.ShouldBe(1);
@@ -349,12 +349,12 @@ namespace Trizbort.Tests {
     public async Task SingleStep_RunToCompletionStillProcessesWholeFileAndClearsRunningState() {
       using var canvas = new Canvas();
       using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-      var parser = CreateParser();
-      var settings = SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n\nSecond Room\nAnother room.\n");
+      var parser = createParser();
+      var settings = settingsFor("Example Game\n\nFirst Room\nA small room.\n\n>e\n\nSecond Room\nAnother room.\n");
       settings.SingleStep = true;
-      var run = parser.StartCL(canvas, settings);
+      var run = parser.StartCl(canvas, settings);
       try {
-        await WaitForSingleStep(parser, run, deadline.Token);
+        await waitForSingleStep(parser, run, deadline.Token);
         parser.Running.ShouldBeTrue();
         parser.RunToCompletion();
         await run.WaitAsync(TimeSpan.FromSeconds(5));
@@ -382,32 +382,32 @@ namespace Trizbort.Tests {
       reader.ReadLine().ShouldBeNull();
     }
 
-    private static IEnumerable<TestCaseData> ReplacementCases() {
+    private static IEnumerable<TestCaseData> replacementCases() {
       foreach (var oldOneShot in new[] {false, true})
       foreach (var explicitStop in new[] {false, true})
       for (var mode = 0; mode < 5; mode++)
         yield return new TestCaseData(oldOneShot, explicitStop, mode);
     }
 
-    [TestCaseSource(nameof(ReplacementCases))]
+    [TestCaseSource(nameof(replacementCases))]
     public async Task ReplacingCanceledRun_OldCleanupPreservesReplacementStatusAndToken(bool oldOneShot, bool explicitStop, int replacementMode) {
       using var canvas = new Canvas();
       using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
       var errors = new List<string>();
       var parser = new Parser((message, _) => errors.Add(message),
         (_, __) => throw new AssertionException("Unexpected ambiguity"));
-      var settings = SettingsFor("Old Game\n\nOld Room\nAn old description.\n\n>look\n");
+      var settings = settingsFor("Old Game\n\nOld Room\nAn old description.\n\n>look\n");
       settings.SingleStep = true;
-      var oldRun = oldOneShot ? parser.StartCL(canvas, settings) : parser.Start(canvas, settings);
+      var oldRun = oldOneShot ? parser.StartCl(canvas, settings) : parser.Start(canvas, settings);
       Task replacement = Task.CompletedTask;
       try {
-        await WaitForSingleStep(parser, oldRun, deadline.Token);
+        await waitForSingleStep(parser, oldRun, deadline.Token);
         if (explicitStop) parser.Stop();
-        var next = SettingsFor(replacementMode == 4 ? "New Game\n\nNew Room\nA new description.\n" : "");
+        var next = settingsFor(replacementMode == 4 ? "New Game\n\nNew Room\nA new description.\n" : "");
         if (replacementMode == 2 || replacementMode == 3) next.FileName = Files.File("missing.txt");
         next.SingleStep = replacementMode == 4;
         replacement = replacementMode == 0 || replacementMode == 2
-          ? parser.Start(canvas, next) : parser.StartCL(canvas, next);
+          ? parser.Start(canvas, next) : parser.StartCl(canvas, next);
         var status = parser.Status;
         var running = parser.Running;
         await oldRun.WaitAsync(TimeSpan.FromSeconds(5));

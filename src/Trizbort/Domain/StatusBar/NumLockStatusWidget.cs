@@ -4,7 +4,7 @@ using Trizbort.Util;
 
 namespace Trizbort.Domain.StatusBar {
   public class NumLockStatusWidget : IStatusWidget {
-    public StatusItems Id => StatusItems.tsb_CapsLock;
+    public StatusItems Id => StatusItems.TsbCapsLock;
     public string Name => "NUM Lock";
     public string MenuName => "NUM Lock State";
     public string HelpText => "NUM Lock State, Left click to change.";

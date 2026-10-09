@@ -12,20 +12,20 @@ using Trizbort.Util;
 namespace Trizbort.Domain.Application {
   public class LegacyMapFileEngine : MapFileEngine
   {
-    private Project project;
-    private readonly Action<Exception> reportError;
-    private readonly Action<Project> checkVersion;
-    private readonly Action<string, string> reportWarning;
+    private Project _project;
+    private readonly Action<Exception> _reportError;
+    private readonly Action<Project> _checkVersion;
+    private readonly Action<string, string> _reportWarning;
 
     public LegacyMapFileEngine(Project project) : this(project, showError, loaded => loaded.CheckDocVersion()) { }
 
     internal LegacyMapFileEngine(Project project, Action<Exception> reportError, Action<Project> checkVersion,
       Action<string, string> reportWarning = null)
     {
-      this.project = project;
-      this.reportError = reportError;
-      this.checkVersion = checkVersion;
-      this.reportWarning = reportWarning ?? ((message, title) => UserInteraction.ShowMessage(message, title));
+      this._project = project;
+      this._reportError = reportError;
+      this._checkVersion = checkVersion;
+      this._reportWarning = reportWarning ?? ((message, title) => UserInteraction.ShowMessage(message, title));
     }
 
     public override bool Load(string fileName)
@@ -37,8 +37,8 @@ namespace Trizbort.Domain.Application {
         {
           // this is an empty file, probably thanks to our Explorer New->Trizbort Map menu option.
           Settings.Reset(false);
-          project.Title = project.Author = project.History = project.Description = "";
-          project.InitFileWWatcher(Path.GetFullPath(fileName));
+          _project.Title = _project.Author = _project.History = _project.Description = "";
+          _project.InitFileWWatcher(Path.GetFullPath(fileName));
           return true;
         }
 
@@ -55,14 +55,14 @@ namespace Trizbort.Domain.Application {
 
         // file version
         var versionNumber = root.Attribute("version").Text;
-        project.SetVersion(versionNumber);
-        checkVersion(project);
+        _project.SetVersion(versionNumber);
+        _checkVersion(_project);
 
         // load info
-        project.Title = root["info"]["title"].Text;
-        project.Author = root["info"]["author"].Text;
-        project.Description = root["info"]["description"].Text;
-        project.History = root["info"]["history"].Text;
+        _project.Title = root["info"]["title"].Text;
+        _project.Author = root["info"]["author"].Text;
+        _project.Description = root["info"]["description"].Text;
+        _project.History = root["info"]["history"].Text;
 
         // load all elements
         var map = root["map"];
@@ -71,27 +71,27 @@ namespace Trizbort.Domain.Application {
           if (element.HasName("room"))
           {
             // Changed the constructor used for elements when loading a file for a significant speed increase
-            var room = new Room(project, project.Elements.Count + 1);
-            room.ID = element.Attribute("id").ToInt(room.ID);
-            room.Load(element, reportWarning);
-            project.Elements.Add(room);
+            var room = new Room(_project, _project.Elements.Count + 1);
+            room.Id = element.Attribute("id").ToInt(room.Id);
+            room.Load(element, _reportWarning);
+            _project.Elements.Add(room);
           }
           else if (element.HasName("label"))
           {
-            var label = new MapLabel(project, project.Elements.Count + 1);
-            label.ID = element.Attribute("id").ToInt(label.ID);
+            var label = new MapLabel(_project, _project.Elements.Count + 1);
+            label.Id = element.Attribute("id").ToInt(label.Id);
             label.Load(element);
-            project.Elements.Add(label);
+            _project.Elements.Add(label);
           }
           else if (element.HasName("line") || element.HasName("labelLine"))
           {
             // Changed the constructor used for elements when loading a file for a significant speed increase
-            var connection = new Connection(project, project.Elements.Count + 1);
-            connection.ID = element.Attribute("id").ToInt(connection.ID);
+            var connection = new Connection(_project, _project.Elements.Count + 1);
+            connection.Id = element.Attribute("id").ToInt(connection.Id);
             var loadState = connection.BeginLoad(element);
             if (loadState != null)
               mapConnectionToLoadState.Add(connection, loadState);
-            project.Elements.Add(connection);
+            _project.Elements.Add(connection);
           }
 
         // connect them together
@@ -108,13 +108,13 @@ namespace Trizbort.Domain.Application {
 
         // setup filewatcher.
         if (isLocalFile)
-          project.InitFileWWatcher(Path.GetFullPath(fileName));
+          _project.InitFileWWatcher(Path.GetFullPath(fileName));
 
         return true;
       }
       catch (Exception ex)
       {
-        reportError(ex);
+        _reportError(ex);
         return false;
       }
 
@@ -130,17 +130,17 @@ namespace Trizbort.Domain.Application {
         scribe.StartElement("trizbort");
         scribe.Attribute("version", typeof(Project).Assembly.GetName().Version.ToString());
         scribe.StartElement("info");
-        if (!string.IsNullOrEmpty(project.Title))
-          scribe.Element("title", project.Title);
-        if (!string.IsNullOrEmpty(project.Author))
-          scribe.Element("author", project.Author);
-        if (!string.IsNullOrEmpty(project.Description))
-          scribe.Element("description", project.Description);
-        if (!string.IsNullOrEmpty(project.History))
-          scribe.Element("history", project.History);
+        if (!string.IsNullOrEmpty(_project.Title))
+          scribe.Element("title", _project.Title);
+        if (!string.IsNullOrEmpty(_project.Author))
+          scribe.Element("author", _project.Author);
+        if (!string.IsNullOrEmpty(_project.Description))
+          scribe.Element("description", _project.Description);
+        if (!string.IsNullOrEmpty(_project.History))
+          scribe.Element("history", _project.History);
         scribe.EndElement();
         scribe.StartElement("map");
-        foreach (var element in project.Elements)
+        foreach (var element in _project.Elements)
           saveElement(scribe, element);
         scribe.EndElement();
         scribe.StartElement("settings");
@@ -158,14 +158,14 @@ namespace Trizbort.Domain.Application {
       if (element.GetType() == typeof(Room))
       {
         scribe.StartElement("room");
-        scribe.Attribute("id", element.ID);
+        scribe.Attribute("id", element.Id);
         ((Room)element).Save(scribe);
         scribe.EndElement();
       }
       else if (element is MapLabel label)
       {
         scribe.StartElement("label");
-        scribe.Attribute("id", label.ID);
+        scribe.Attribute("id", label.Id);
         label.Save(scribe);
         scribe.EndElement();
       }
@@ -174,7 +174,7 @@ namespace Trizbort.Domain.Application {
         var connection = (Connection) element;
         // Older readers must ignore label connectors as well as the labels themselves.
         scribe.StartElement(connection.VertexList.Any(vertex => vertex.Port?.Owner is MapLabel) ? "labelLine" : "line");
-        scribe.Attribute("id", element.ID);
+        scribe.Attribute("id", element.Id);
         ((Connection)element).Save(scribe);
         scribe.EndElement();
       }

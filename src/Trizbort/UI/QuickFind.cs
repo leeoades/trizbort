@@ -9,16 +9,16 @@ using Trizbort.Domain.Elements;
 
 namespace Trizbort.UI {
   public partial class QuickFind : Form {
-    private readonly List<findAutofindCacheItem> cache;
+    private readonly List<FindAutofindCacheItem> _cache;
 
     public QuickFind() {
       InitializeComponent();
 
-      cache = buildFindCache();
-      cache = cache.OrderBy(p => p.Text).ToList();
+      _cache = buildFindCache();
+      _cache = _cache.OrderBy(p => p.Text).ToList();
 
       var source = new AutoCompleteStringCollection();
-      source.AddRange(cache.Select(p => p.ToString()).ToArray());
+      source.AddRange(_cache.Select(p => p.ToString()).ToArray());
       txtFind.AutoCompleteCustomSource = source;
     }
 
@@ -30,17 +30,17 @@ namespace Trizbort.UI {
       doFind();
     }
 
-    private List<findAutofindCacheItem> buildFindCache() {
+    private List<FindAutofindCacheItem> buildFindCache() {
       var indexer = new Indexer();
       var findCacheItems = indexer.Index();
 
-      var list = new List<findAutofindCacheItem>();
+      var list = new List<FindAutofindCacheItem>();
 
       foreach (var item in findCacheItems) {
-        var x1 = new findAutofindCacheItem {Room = item.Element, Text = item.Name?.Trim()};
-        var x2 = new findAutofindCacheItem {Room = item.Element, Text = item.Description?.Trim()};
-        var x3 = new findAutofindCacheItem {Room = item.Element, Text = item.Objects?.Trim()};
-        var x4 = new findAutofindCacheItem {Room = item.Element, Text = item.Subtitle?.Trim()};
+        var x1 = new FindAutofindCacheItem {Room = item.Element, Text = item.Name?.Trim()};
+        var x2 = new FindAutofindCacheItem {Room = item.Element, Text = item.Description?.Trim()};
+        var x3 = new FindAutofindCacheItem {Room = item.Element, Text = item.Objects?.Trim()};
+        var x4 = new FindAutofindCacheItem {Room = item.Element, Text = item.Subtitle?.Trim()};
 
         list.Add(x1);
         if (!string.IsNullOrEmpty(x2.Text)) list.Add(x2);
@@ -69,7 +69,7 @@ namespace Trizbort.UI {
     }
 
     private List<Element> getResults(string s) {
-      var list = cache.Where(xx => xx.Text?.IndexOf(s, StringComparison.CurrentCultureIgnoreCase) > -1).Select(p => p.Room).ToList();
+      var list = _cache.Where(xx => xx.Text?.IndexOf(s, StringComparison.CurrentCultureIgnoreCase) > -1).Select(p => p.Room).ToList();
       return list;
     }
 
@@ -86,7 +86,7 @@ namespace Trizbort.UI {
         Close();
     }
 
-    private class findAutofindCacheItem {
+    private class FindAutofindCacheItem {
       public Element Room { get; set; }
       public string Text { get; set; }
 

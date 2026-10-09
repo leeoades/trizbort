@@ -26,25 +26,25 @@ namespace Trizbort.Domain.Elements {
   /// </remarks>
   [SuppressMessage("ReSharper", "CanBeReplacedWithTryCastAndCheckForNull")]
   public class Connection : Element {
-    public const string Up = "up";
-    public const string Down = "down";
-    public const string In = "in";
-    public const string Out = "out";
+    public const string UP = "up";
+    public const string DOWN = "down";
+    public const string IN = "in";
+    public const string OUT = "out";
     private const ConnectionStyle DEFAULT_STYLE = ConnectionStyle.Solid;
     private const ConnectionFlow DEFAULT_FLOW = ConnectionFlow.TwoWay;
     private const int CURVE_SUBDIVISIONS = 16;
     private static readonly string[] CurveWaypointAttributeNames = {"curveQuarter", "curveMiddle", "curveThreeQuarter"};
-    private readonly Vector?[] mCurveWaypoints = new Vector?[3];
-    private readonly TextBlock mEndText = new TextBlock();
-    private readonly TextBlock mMidText = new TextBlock();
-    private readonly List<LineSegment> mSmartSegments = new List<LineSegment>();
-    private readonly TextBlock mStartText = new TextBlock();
-    private string description = string.Empty;
-    private Door door;
-    private Color mConnectionColor = Color.Transparent;
-    private ConnectionFlow mFlow = DEFAULT_FLOW;
-    private ConnectionStyle mStyle = DEFAULT_STYLE;
-    private string name = string.Empty;
+    private readonly Vector?[] _mCurveWaypoints = new Vector?[3];
+    private readonly TextBlock _mEndText = new TextBlock();
+    private readonly TextBlock _mMidText = new TextBlock();
+    private readonly List<LineSegment> _mSmartSegments = new List<LineSegment>();
+    private readonly TextBlock _mStartText = new TextBlock();
+    private string _description = string.Empty;
+    private Door _door;
+    private Color _mConnectionColor = Color.Transparent;
+    private ConnectionFlow _mFlow = DEFAULT_FLOW;
+    private ConnectionStyle _mStyle = DEFAULT_STYLE;
+    private string _name = string.Empty;
 
     public Connection() { }
 
@@ -85,10 +85,10 @@ namespace Trizbort.Domain.Elements {
     }
 
     public Color ConnectionColor {
-      get => mConnectionColor;
+      get => _mConnectionColor;
       set {
-        if (mConnectionColor != value) {
-          mConnectionColor = value;
+        if (_mConnectionColor != value) {
+          _mConnectionColor = value;
           RaiseChanged();
         }
       }
@@ -97,40 +97,40 @@ namespace Trizbort.Domain.Elements {
     public override Depth Depth => Depth.High;
 
     public string Description {
-      get => description;
+      get => _description;
       set {
-        if (description != value) {
-          description = value;
+        if (_description != value) {
+          _description = value;
           RaiseChanged();
         }
       }
     }
 
     public Door Door {
-      get => door;
+      get => _door;
       set {
-        if (door != value) {
-          door = value;
+        if (_door != value) {
+          _door = value;
           RaiseChanged();
         }
       }
     }
 
     public string EndText {
-      get => mEndText.Text;
+      get => _mEndText.Text;
       set {
-        if (mEndText.Text != value) {
-          mEndText.Text = value;
+        if (_mEndText.Text != value) {
+          _mEndText.Text = value;
           RaiseChanged();
         }
       }
     }
 
     public ConnectionFlow Flow {
-      get => mFlow;
+      get => _mFlow;
       set {
-        if (mFlow != value) {
-          mFlow = value;
+        if (_mFlow != value) {
+          _mFlow = value;
           RaiseChanged();
         }
       }
@@ -139,40 +139,40 @@ namespace Trizbort.Domain.Elements {
     public override bool HasDialog => true;
 
     public string MidText {
-      get => mMidText.Text;
+      get => _mMidText.Text;
       set {
-        if (mMidText.Text != value) {
-          mMidText.Text = value;
+        if (_mMidText.Text != value) {
+          _mMidText.Text = value;
           RaiseChanged();
         }
       }
     }
 
     public override string Name {
-      get => name;
+      get => _name;
       set {
-        if (name != value) {
-          name = value;
+        if (_name != value) {
+          _name = value;
           RaiseChanged();
         }
       }
     }
 
     public string StartText {
-      get => mStartText.Text;
+      get => _mStartText.Text;
       set {
-        if (mStartText.Text != value) {
-          mStartText.Text = value;
+        if (_mStartText.Text != value) {
+          _mStartText.Text = value;
           RaiseChanged();
         }
       }
     }
 
     public ConnectionStyle Style {
-      get => mStyle;
+      get => _mStyle;
       set {
-        if (mStyle != value) {
-          mStyle = value;
+        if (_mStyle != value) {
+          _mStyle = value;
           RaiseChanged();
         }
       }
@@ -188,35 +188,35 @@ namespace Trizbort.Domain.Elements {
 
     public bool IsDangling => VertexList.Count < 2 || VertexList[0].Port == null || VertexList[VertexList.Count - 1].Port == null;
 
-    public bool HasCurveWaypoints => SupportsCurveWaypoints && mCurveWaypoints.Any(w => w.HasValue);
+    public bool HasCurveWaypoints => SupportsCurveWaypoints && _mCurveWaypoints.Any(w => w.HasValue);
 
     public Vector? GetCurveWaypoint(CurveWaypoint waypoint) {
-      return mCurveWaypoints[(int) waypoint];
+      return _mCurveWaypoints[(int) waypoint];
     }
 
     public void SetCurveWaypoint(CurveWaypoint waypoint, Vector? position) {
-      if (mCurveWaypoints[(int) waypoint] == position) return;
-      mCurveWaypoints[(int) waypoint] = position;
+      if (_mCurveWaypoints[(int) waypoint] == position) return;
+      _mCurveWaypoints[(int) waypoint] = position;
       RaiseChanged();
     }
 
     public bool RemoveCurveWaypoint(CurveWaypoint waypoint) {
-      if (!mCurveWaypoints[(int) waypoint].HasValue) return false;
+      if (!_mCurveWaypoints[(int) waypoint].HasValue) return false;
       SetCurveWaypoint(waypoint, null);
       return true;
     }
 
     public void ClearCurveWaypoints() {
-      if (!mCurveWaypoints.Any(w => w.HasValue)) return;
-      for (var i = 0; i < mCurveWaypoints.Length; ++i) mCurveWaypoints[i] = null;
+      if (!_mCurveWaypoints.Any(w => w.HasValue)) return;
+      for (var i = 0; i < _mCurveWaypoints.Length; ++i) _mCurveWaypoints[i] = null;
       RaiseChanged();
     }
 
     public void MoveCurveWaypointsBy(Vector delta) {
-      if (delta == Vector.Zero || !mCurveWaypoints.Any(w => w.HasValue)) return;
-      for (var i = 0; i < mCurveWaypoints.Length; ++i)
-        if (mCurveWaypoints[i].HasValue)
-          mCurveWaypoints[i] = mCurveWaypoints[i].Value + delta;
+      if (delta == Vector.Zero || !_mCurveWaypoints.Any(w => w.HasValue)) return;
+      for (var i = 0; i < _mCurveWaypoints.Length; ++i)
+        if (_mCurveWaypoints[i].HasValue)
+          _mCurveWaypoints[i] = _mCurveWaypoints[i].Value + delta;
       RaiseChanged();
     }
 
@@ -225,7 +225,7 @@ namespace Trizbort.Domain.Elements {
     ///   once the connection has been bent.
     /// </summary>
     public bool CanAddCurveWaypoint(CurveWaypoint waypoint) {
-      if (!SupportsCurveWaypoints || mCurveWaypoints[(int) waypoint].HasValue) return false;
+      if (!SupportsCurveWaypoints || _mCurveWaypoints[(int) waypoint].HasValue) return false;
       return waypoint == CurveWaypoint.Middle || HasCurveWaypoints;
     }
 
@@ -234,7 +234,7 @@ namespace Trizbort.Domain.Elements {
     ///   current line/curve at which a new waypoint would be inserted.
     /// </summary>
     public Vector GetCurveWaypointHandlePosition(CurveWaypoint waypoint) {
-      var existing = mCurveWaypoints[(int) waypoint];
+      var existing = _mCurveWaypoints[(int) waypoint];
       if (existing.HasValue) return existing.Value;
 
       getCurveControlPoints(out var points, out var slots, out var before, out var after);
@@ -283,7 +283,7 @@ namespace Trizbort.Domain.Elements {
       if (element.Attribute("color").Text != "") ConnectionColor = ColorTranslator.FromHtml(element.Attribute("color").Text);
 
       for (var i = 0; i < CurveWaypointAttributeNames.Length; ++i)
-        mCurveWaypoints[i] = parseCurveWaypoint(element.Attribute(CurveWaypointAttributeNames[i]).Text);
+        _mCurveWaypoints[i] = parseCurveWaypoint(element.Attribute(CurveWaypointAttributeNames[i]).Text);
 
       var vertexElementList = new List<XmlElementReader>();
       vertexElementList.AddRange(element.Children);
@@ -336,10 +336,10 @@ namespace Trizbort.Domain.Elements {
     }
 
     public override void Draw(XGraphics graphics, Palette palette, DrawingContext context) {
-      var lineSegments = context.UseSmartLineSegments ? mSmartSegments : getSegments();
+      var lineSegments = context.UseSmartLineSegments ? _mSmartSegments : getSegments();
       var curved = HasCurveWaypoints;
       var handDrawn = Settings.HandDrawn;
-      var random = Sketch.Seeded(ID);
+      var random = Sketch.Seeded(Id);
       var chain = new List<PointF>();
       var sketched = new List<PointF[]>();
       var chevrons = new List<(Vector position, Vector direction)>();
@@ -412,7 +412,7 @@ namespace Trizbort.Domain.Elements {
 
       if (chevrons.Count > 0) {
         // place each arrow on the wobbly stroke it belongs to, rather than on the ideal straight line
-        var arrowRandom = Sketch.Seeded(ID + 5000);
+        var arrowRandom = Sketch.Seeded(Id + 5000);
         foreach (var (position, direction) in chevrons) {
           var target = position.ToPointF();
           var bestPoint = target;
@@ -433,7 +433,7 @@ namespace Trizbort.Domain.Elements {
         }
       }
 
-      if (door != null && lineSegments.Count > 0)
+      if (_door != null && lineSegments.Count > 0)
         showDoorIcons(graphics, lineSegments[0]);
 
       annotate(graphics, palette, lineSegments);
@@ -458,9 +458,9 @@ namespace Trizbort.Domain.Elements {
         var element = elements[index];
         if (element.HasName("dock"))
           if (Project.FindElement(element.Attribute("id").ToInt(), out var target)) {
-            var portID = element.Attribute("port").Text;
+            var portId = element.Attribute("port").Text;
             foreach (var port in target.PortList)
-              if (StringComparer.InvariantCultureIgnoreCase.Compare(portID, port.ID) == 0) {
+              if (StringComparer.InvariantCultureIgnoreCase.Compare(portId, port.Id) == 0) {
                 var vertex = VertexList[index];
                 vertex.Port = port;
                 break;
@@ -524,20 +524,20 @@ namespace Trizbort.Domain.Elements {
           end = string.Empty;
           break;
         case ConnectionLabel.Up:
-          start = Up;
-          end = Down;
+          start = UP;
+          end = DOWN;
           break;
         case ConnectionLabel.Down:
-          start = Down;
-          end = Up;
+          start = DOWN;
+          end = UP;
           break;
         case ConnectionLabel.In:
-          start = In;
-          end = Out;
+          start = IN;
+          end = OUT;
           break;
         case ConnectionLabel.Out:
-          start = Out;
-          end = In;
+          start = OUT;
+          end = IN;
           break;
       }
     }
@@ -581,25 +581,25 @@ namespace Trizbort.Domain.Elements {
     }
 
     public override void RecomputeSmartLineSegments(DrawingContext context) {
-      mSmartSegments.Clear();
+      _mSmartSegments.Clear();
       foreach (var lineSegment in getSegments()) {
         List<LineSegment> newSegments = null;
         if (split(lineSegment, context, ref newSegments))
           foreach (var newSegment in newSegments)
-            mSmartSegments.Add(newSegment);
+            _mSmartSegments.Add(newSegment);
         else
-          mSmartSegments.Add(lineSegment);
+          _mSmartSegments.Add(lineSegment);
       }
 
-      foreach (var segment in mSmartSegments)
+      foreach (var segment in _mSmartSegments)
         context.LinesDrawn.Add(segment);
     }
 
     public void Reverse() {
       VertexList.Reverse();
-      var quarter = mCurveWaypoints[(int) CurveWaypoint.Quarter];
-      mCurveWaypoints[(int) CurveWaypoint.Quarter] = mCurveWaypoints[(int) CurveWaypoint.ThreeQuarter];
-      mCurveWaypoints[(int) CurveWaypoint.ThreeQuarter] = quarter;
+      var quarter = _mCurveWaypoints[(int) CurveWaypoint.Quarter];
+      _mCurveWaypoints[(int) CurveWaypoint.Quarter] = _mCurveWaypoints[(int) CurveWaypoint.ThreeQuarter];
+      _mCurveWaypoints[(int) CurveWaypoint.ThreeQuarter] = quarter;
       RaiseChanged();
     }
 
@@ -636,10 +636,10 @@ namespace Trizbort.Domain.Elements {
       scribe.Attribute("description", Description);
       if (Door != null) {
         scribe.Attribute("door", true);
-        scribe.Attribute("lockable", door.Lockable);
-        scribe.Attribute("openable", door.Openable);
-        scribe.Attribute("locked", door.Locked);
-        scribe.Attribute("open", door.Open);
+        scribe.Attribute("lockable", _door.Lockable);
+        scribe.Attribute("openable", _door.Openable);
+        scribe.Attribute("locked", _door.Locked);
+        scribe.Attribute("open", _door.Open);
       }
 
       if (ConnectionColor != Color.Transparent)
@@ -674,16 +674,16 @@ namespace Trizbort.Domain.Elements {
 
       if (HasCurveWaypoints)
         for (var i = 0; i < CurveWaypointAttributeNames.Length; ++i)
-          if (mCurveWaypoints[i].HasValue)
-            scribe.Attribute(CurveWaypointAttributeNames[i], formatCurveWaypoint(mCurveWaypoints[i].Value));
+          if (_mCurveWaypoints[i].HasValue)
+            scribe.Attribute(CurveWaypointAttributeNames[i], formatCurveWaypoint(_mCurveWaypoints[i].Value));
 
       var index = 0;
       foreach (var vertex in VertexList) {
         if (vertex.Port != null) {
           scribe.StartElement("dock");
           scribe.Attribute("index", index);
-          scribe.Attribute("id", vertex.Port.Owner.ID);
-          scribe.Attribute("port", vertex.Port.ID);
+          scribe.Attribute("id", vertex.Port.Owner.Id);
+          scribe.Attribute("port", vertex.Port.Id);
           scribe.EndElement();
         } else {
           scribe.StartElement("point");
@@ -751,10 +751,10 @@ namespace Trizbort.Domain.Elements {
         return;
 
       if (!string.IsNullOrEmpty(StartText))
-        annotate(graphics, palette, lineSegments[0], mStartText, StringAlignment.Near);
+        annotate(graphics, palette, lineSegments[0], _mStartText, StringAlignment.Near);
 
       if (!string.IsNullOrEmpty(EndText))
-        annotate(graphics, palette, lineSegments[lineSegments.Count - 1], mEndText, StringAlignment.Far);
+        annotate(graphics, palette, lineSegments[lineSegments.Count - 1], _mEndText, StringAlignment.Far);
 
       if (!string.IsNullOrEmpty(MidText)) {
         var totalLength = lineSegments.Sum(lineSegment => lineSegment.Length);
@@ -767,7 +767,7 @@ namespace Trizbort.Domain.Elements {
             middle /= length;
             var pos = lineSegment.Start + lineSegment.Delta * middle;
             var fakeSegment = new LineSegment(pos - lineSegment.Delta * Numeric.Small, pos + lineSegment.Delta * Numeric.Small);
-            annotate(graphics, palette, fakeSegment, mMidText, StringAlignment.Center);
+            annotate(graphics, palette, fakeSegment, _mMidText, StringAlignment.Center);
             break;
           }
         }
@@ -886,9 +886,9 @@ namespace Trizbort.Domain.Elements {
 
       points = new List<Vector> {start};
       slots = new List<int>();
-      for (var i = 0; i < mCurveWaypoints.Length; ++i)
-        if (mCurveWaypoints[i].HasValue) {
-          points.Add(mCurveWaypoints[i].Value);
+      for (var i = 0; i < _mCurveWaypoints.Length; ++i)
+        if (_mCurveWaypoints[i].HasValue) {
+          points.Add(_mCurveWaypoints[i].Value);
           slots.Add(i);
         }
 
@@ -961,7 +961,7 @@ namespace Trizbort.Domain.Elements {
 
     private Vector roomTypeAdjustments(Vertex vertex) {
       var roomTypeAdjustments = Vector.Zero;
-      CompassPointHelper.FromName(vertex.Port.ID, out var dir);
+      CompassPointHelper.FromName(vertex.Port.Id, out var dir);
       switch (dir) {
         case CompassPoint.SouthEast:
           roomTypeAdjustments = new Vector(8, 6);
@@ -993,8 +993,8 @@ namespace Trizbort.Domain.Elements {
     }
 
     private void showDoorIcons(XGraphics graphics, LineSegment lineSegment) {
-      var doorIcon = door.Open ? new Bitmap(Resources.Door_Open) : new Bitmap(Resources.Door);
-      var doorLock = door.Locked ? new Bitmap(Resources.Lock) : new Bitmap(Resources.Unlocked);
+      var doorIcon = _door.Open ? new Bitmap(Resources.Door_Open) : new Bitmap(Resources.Door);
+      var doorLock = _door.Locked ? new Bitmap(Resources.Lock) : new Bitmap(Resources.Unlocked);
       lineSegment.IconBlock1.Image = doorIcon;
       lineSegment.IconBlock2.Image = doorLock;
 
@@ -1076,7 +1076,7 @@ namespace Trizbort.Domain.Elements {
 
       public override Port DockedAt => Vertex.Port;
 
-      public override string ID => Connection.VertexList.IndexOf(Vertex).ToString(CultureInfo.InvariantCulture);
+      public override string Id => Connection.VertexList.IndexOf(Vertex).ToString(CultureInfo.InvariantCulture);
 
       public Vertex Vertex { get; }
 

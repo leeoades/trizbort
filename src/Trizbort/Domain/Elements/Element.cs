@@ -8,9 +8,9 @@ using Trizbort.Domain.Misc;
 
 namespace Trizbort.Domain.Elements {
   public class Element : IComparable<Element> {
-    private int mID;
+    private int _mId;
 
-    private int zOrder;
+    private int _zOrder;
 
     public Element() {
       initElement(null);
@@ -18,15 +18,15 @@ namespace Trizbort.Domain.Elements {
 
     public Element(Project project) {
       initElement(project);
-      var id = GetNextID();
-      ID = id;
+      var id = GetNextId();
+      Id = id;
     }
 
     // Added this second constructor to be used when loading a room
     // This constructor is significantly faster as it doesn't look for gap in the element IDs
-    public Element(Project project, int TotalIDs) {
+    public Element(Project project, int totalIDs) {
       initElement(project);
-      ID = TotalIDs;
+      Id = totalIDs;
     }
 
     /// <summary>
@@ -50,12 +50,12 @@ namespace Trizbort.Domain.Elements {
     /// <summary>
     ///   Get the unique identifier of this element.
     /// </summary>
-    public int ID {
-      get => mID;
+    public int Id {
+      get => _mId;
       set {
         if (Project != null)
-          if (!Project.IsElementIDInUse(value))
-            mID = value;
+          if (!Project.IsElementIdInUse(value))
+            _mId = value;
       }
     }
 
@@ -73,9 +73,9 @@ namespace Trizbort.Domain.Elements {
     public Project Project { get; set; }
 
     public virtual int ZOrder {
-      get => zOrder;
+      get => _zOrder;
       set {
-        zOrder = value;
+        _zOrder = value;
         RaiseChanged();
       }
     }
@@ -100,7 +100,7 @@ namespace Trizbort.Domain.Elements {
       if (delta == 0) {
         delta = ZOrder.CompareTo(element.ZOrder);
         if (delta == 0)
-          delta = ID.CompareTo(element.ID);
+          delta = Id.CompareTo(element.Id);
       }
 
       return delta;
@@ -134,9 +134,9 @@ namespace Trizbort.Domain.Elements {
     /// <param name="context">The context in which drawing is taking place.</param>
     public virtual void Draw(XGraphics graphics, Palette palette, DrawingContext context) { }
 
-    public int GetNextID() {
+    public int GetNextId() {
       var id = 1;
-      while (Project.IsElementIDInUse(id))
+      while (Project.IsElementIdInUse(id))
         ++id;
       return id;
     }

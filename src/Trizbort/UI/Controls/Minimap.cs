@@ -15,9 +15,9 @@ namespace Trizbort.UI.Controls {
     private const int INNER_BORDER_SIZE = 2;
     private const int INNER_PADDING = 3;
     private const int TOTAL_PADDING = OUTER_BORDER_SIZE + OUTER_PADDING + INNER_BORDER_SIZE + INNER_PADDING;
-    private bool mDraggingViewport;
+    private bool _mDraggingViewport;
 
-    private Point mLastMousePosition;
+    private Point _mLastMousePosition;
 
     public Minimap() {
       InitializeComponent();
@@ -39,9 +39,9 @@ namespace Trizbort.UI.Controls {
     protected override void OnMouseDown(MouseEventArgs e) {
       if (e.Button == MouseButtons.Left) {
         setCanvasOrigin(e.Location);
-        mLastMousePosition = e.Location;
+        _mLastMousePosition = e.Location;
         Capture = true;
-        mDraggingViewport = true;
+        _mDraggingViewport = true;
         Invalidate();
       }
 
@@ -49,19 +49,19 @@ namespace Trizbort.UI.Controls {
     }
 
     protected override void OnMouseMove(MouseEventArgs e) {
-      if (mDraggingViewport && e.Location != mLastMousePosition) {
+      if (_mDraggingViewport && e.Location != _mLastMousePosition) {
         setCanvasOrigin(e.Location);
         Invalidate();
       }
 
-      mLastMousePosition = e.Location;
+      _mLastMousePosition = e.Location;
 
       base.OnMouseMove(e);
     }
 
     protected override void OnMouseUp(MouseEventArgs e) {
-      if (mDraggingViewport) {
-        mDraggingViewport = false;
+      if (_mDraggingViewport) {
+        _mDraggingViewport = false;
         Capture = false;
         Invalidate();
       }
@@ -113,7 +113,7 @@ namespace Trizbort.UI.Controls {
               var viewportBounds = canvasToClient(Canvas.Viewport.ToRectangleF(), canvasBounds, clientArea);
               viewportBounds.Intersect(clientArea);
               if (Project.Current.Elements.Count > 0) {
-                var context = new DrawingContext(1f) {Selected = mDraggingViewport};
+                var context = new DrawingContext(1f) {Selected = _mDraggingViewport};
                 Drawing.DrawHandle(Canvas, graphics, palette, new Rect(viewportBounds), context, true, false);
               }
             }

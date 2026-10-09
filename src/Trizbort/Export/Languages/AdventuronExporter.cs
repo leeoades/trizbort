@@ -12,7 +12,7 @@ namespace Trizbort.Export.Languages
     internal class AdventuronExporter : CodeExporter
     {
         // Adventuron limits headers to 25 characters
-        private const int MaximumHeaderLength = 25;
+        private const int MAXIMUM_HEADER_LENGTH = 25;
 
         public override List<KeyValuePair<string, string>> FileDialogFilters => 
           new List<KeyValuePair<string, string>> {
@@ -27,15 +27,15 @@ namespace Trizbort.Export.Languages
         protected override void ExportContent(TextWriter writer)
         {
 
-            StringBuilder headerSB = new StringBuilder();
-            StringBuilder locationsSB = new StringBuilder();
-            StringBuilder connectionsSB = new StringBuilder();
+            StringBuilder headerSb = new StringBuilder();
+            StringBuilder locationsSb = new StringBuilder();
+            StringBuilder connectionsSb = new StringBuilder();
 
-            locationsSB.Append("\nlocations {\n");
-            connectionsSB.Append("\nconnections {\n");
-            connectionsSB.Append("   from, direction, to = [\n");
+            locationsSb.Append("\nlocations {\n");
+            connectionsSb.Append("\nconnections {\n");
+            connectionsSb.Append("   from, direction, to = [\n");
 
-            StringBuilder footerSB = new StringBuilder();
+            StringBuilder footerSb = new StringBuilder();
             string startRoom = null;
             bool isFirst = true;
 
@@ -57,34 +57,34 @@ namespace Trizbort.Export.Languages
                 string roomDescription = string.IsNullOrEmpty(location.Room.PrimaryDescription) ? "" : escapeAdventuronText(location.Room.PrimaryDescription);
                 string locationRoomName = string.IsNullOrEmpty(location.Room.Name) ? "" : location.Room.Name;
 
-                if (locationRoomName.Length > MaximumHeaderLength)
+                if (locationRoomName.Length > MAXIMUM_HEADER_LENGTH)
                 {
                     // Limit to 'MaximumHeaderLength' characters before escaping !
-                    locationRoomName = locationRoomName.Substring(0, MaximumHeaderLength);
+                    locationRoomName = locationRoomName.Substring(0, MAXIMUM_HEADER_LENGTH);
                 }
 
                 string headerDescNormalized = escapeAdventuronText(locationRoomName);
                 string headerDescription = (" header = \""+ headerDescNormalized + "\"");
-                locationsSB.Append("   " + padRight(escapeAdventuronId(location.ExportName), maxLen) + " : location \""+ roomDescription + "\"" + headerDescription + ";\n");
+                locationsSb.Append("   " + padRight(escapeAdventuronId(location.ExportName), maxLen) + " : location \""+ roomDescription + "\"" + headerDescription + ";\n");
                 foreach (var direction in Directions.AllDirections)
                 {
                     var exit = location.GetBestExit(direction);
                     if (exit != null)
                     {
-                        connectionsSB.Append("      " + escapeAdventuronId(location.ExportName) + ", " + toAdventuronDirectionName(direction) + ", " + escapeAdventuronId(exit.Target.ExportName) + ",\n");
+                        connectionsSb.Append("      " + escapeAdventuronId(location.ExportName) + ", " + toAdventuronDirectionName(direction) + ", " + escapeAdventuronId(exit.Target.ExportName) + ",\n");
                     }
                 }
                 isFirst = false;
             }
             writer.WriteLine();
-            headerSB.Append("start_at = " + startRoom);
-            connectionsSB.Append("   ]\n");
-            connectionsSB.Append("}\n");
-            locationsSB.Append("}\n");
-            writer.WriteLine(headerSB.ToString());
-            writer.WriteLine(locationsSB.ToString());
-            writer.WriteLine(connectionsSB.ToString());
-            writer.WriteLine(footerSB.ToString());
+            headerSb.Append("start_at = " + startRoom);
+            connectionsSb.Append("   ]\n");
+            connectionsSb.Append("}\n");
+            locationsSb.Append("}\n");
+            writer.WriteLine(headerSb.ToString());
+            writer.WriteLine(locationsSb.ToString());
+            writer.WriteLine(connectionsSb.ToString());
+            writer.WriteLine(footerSb.ToString());
         }
         private static string padRight (string inputString, int maxLen)
         {

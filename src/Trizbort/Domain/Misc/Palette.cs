@@ -15,117 +15,117 @@ namespace Trizbort.Domain.Misc {
   ///   and then only once.
   /// </remarks>
   public class Palette : IDisposable {
-    private readonly List<IDisposable> m_items = new List<IDisposable>();
-    private Brush m_borderBrush;
-    private Pen m_borderPen;
-    private Brush m_canvasBrush;
-    private Pen m_dashedLinePen;
-    private Brush m_fillBrush;
+    private readonly List<IDisposable> _mItems = new List<IDisposable>();
+    private Brush _mBorderBrush;
+    private Pen _mBorderPen;
+    private Brush _mCanvasBrush;
+    private Pen _mDashedLinePen;
+    private Brush _mFillBrush;
     // TODO: private Pen m_fillPen;
-    private Pen m_gridPen;
-    private Pen m_hoverDashedLinePen;
-    private Brush m_hoverLineBrush;
-    private Pen m_hoverLinePen;
+    private Pen _mGridPen;
+    private Pen _mHoverDashedLinePen;
+    private Brush _mHoverLineBrush;
+    private Pen _mHoverLinePen;
 
-    private Brush m_lineBrush;
+    private Brush _mLineBrush;
 
-    private Pen m_linePen;
-    private Brush m_lineTextBrush;
-    private Pen m_marqueeBorderPen;
-    private Brush m_marqueeFillBrush;
-    private Pen m_resizeBorderPen;
-    private Pen m_selectedDashedLinePen;
-    private Brush m_selectedLineBrush;
-    private Pen m_selectedLinePen;
-    private Brush m_smallTextBrush;
-    private Brush m_subTitleTextBrush;
+    private Pen _mLinePen;
+    private Brush _mLineTextBrush;
+    private Pen _mMarqueeBorderPen;
+    private Brush _mMarqueeFillBrush;
+    private Pen _mResizeBorderPen;
+    private Pen _mSelectedDashedLinePen;
+    private Brush _mSelectedLineBrush;
+    private Pen _mSelectedLinePen;
+    private Brush _mSmallTextBrush;
+    private Brush _mSubTitleTextBrush;
     // TODO: private Pen m_subTitleTextPen;
 
-    public Brush BorderBrush => m_borderBrush ?? (m_borderBrush = Brush(Settings.Color[Colors.Border]));
+    public Brush BorderBrush => _mBorderBrush ?? (_mBorderBrush = Brush(Settings.Color[Colors.Border]));
 
-    public Pen BorderPen => m_borderPen ?? (m_borderPen = Pen(Settings.Color[Colors.Border]));
+    public Pen BorderPen => _mBorderPen ?? (_mBorderPen = Pen(Settings.Color[Colors.Border]));
 
-    public Brush CanvasBrush => m_canvasBrush ?? (m_canvasBrush = Brush(Settings.Color[Colors.Canvas]));
+    public Brush CanvasBrush => _mCanvasBrush ?? (_mCanvasBrush = Brush(Settings.Color[Colors.Canvas]));
 
     public Pen DashedLinePen {
       get {
-        if (m_dashedLinePen == null) {
-          m_dashedLinePen = Pen(Settings.Color[Colors.Line]);
-          m_dashedLinePen.DashStyle = DashStyle.Dot;
+        if (_mDashedLinePen == null) {
+          _mDashedLinePen = Pen(Settings.Color[Colors.Line]);
+          _mDashedLinePen.DashStyle = DashStyle.Dot;
         }
 
-        return m_dashedLinePen;
+        return _mDashedLinePen;
       }
     }
 
-    public Brush FillBrush => m_fillBrush ?? (m_fillBrush = Brush(Color.White));
+    public Brush FillBrush => _mFillBrush ?? (_mFillBrush = Brush(Color.White));
 
     //public Pen FillPen
     //{
     //    get { return m_fillPen ?? (m_fillPen = Pen(Settings.Color[Colors.Fill])); }
     //}
 
-    public Pen GridPen => m_gridPen ?? (m_gridPen = Pen(Settings.Color[Colors.Grid], 0));
+    public Pen GridPen => _mGridPen ?? (_mGridPen = Pen(Settings.Color[Colors.Grid], 0));
 
     public Pen HoverDashedLinePen {
       get {
-        if (m_hoverDashedLinePen == null) {
-          m_hoverDashedLinePen = Pen(Settings.Color[Colors.HoverLine]);
-          m_hoverDashedLinePen.DashStyle = DashStyle.Dot;
+        if (_mHoverDashedLinePen == null) {
+          _mHoverDashedLinePen = Pen(Settings.Color[Colors.HoverLine]);
+          _mHoverDashedLinePen.DashStyle = DashStyle.Dot;
         }
 
-        return m_hoverDashedLinePen;
+        return _mHoverDashedLinePen;
       }
     }
 
-    public Brush HoverLineBrush => m_hoverLineBrush ?? (m_hoverLineBrush = Brush(Settings.Color[Colors.HoverLine]));
-    public Pen HoverLinePen => m_hoverLinePen ?? (m_hoverLinePen = Pen(Settings.Color[Colors.HoverLine]));
+    public Brush HoverLineBrush => _mHoverLineBrush ?? (_mHoverLineBrush = Brush(Settings.Color[Colors.HoverLine]));
+    public Pen HoverLinePen => _mHoverLinePen ?? (_mHoverLinePen = Pen(Settings.Color[Colors.HoverLine]));
 
-    public Brush LineBrush => m_lineBrush ?? (m_lineBrush = Brush(Settings.Color[Colors.Line]));
-    public Pen LinePen => m_linePen ?? (m_linePen = Pen(Settings.Color[Colors.Line]));
-    public Brush LineTextBrush => m_lineTextBrush ?? (m_lineTextBrush = Brush(Settings.Color[Colors.LineText]));
+    public Brush LineBrush => _mLineBrush ?? (_mLineBrush = Brush(Settings.Color[Colors.Line]));
+    public Pen LinePen => _mLinePen ?? (_mLinePen = Pen(Settings.Color[Colors.Line]));
+    public Brush LineTextBrush => _mLineTextBrush ?? (_mLineTextBrush = Brush(Settings.Color[Colors.LineText]));
 
-    public Pen MarqueeBorderPen => m_marqueeBorderPen ?? (m_marqueeBorderPen = Pen(Color.FromArgb(120, Settings.Color[Colors.Border]), 0));
-    public Brush MarqueeFillBrush => m_marqueeFillBrush ?? (m_marqueeFillBrush = Brush(Color.FromArgb(80, Settings.Color[Colors.Border])));
+    public Pen MarqueeBorderPen => _mMarqueeBorderPen ?? (_mMarqueeBorderPen = Pen(Color.FromArgb(120, Settings.Color[Colors.Border]), 0));
+    public Brush MarqueeFillBrush => _mMarqueeFillBrush ?? (_mMarqueeFillBrush = Brush(Color.FromArgb(80, Settings.Color[Colors.Border])));
 
-    public Pen ResizeBorderPen => m_resizeBorderPen ?? (m_resizeBorderPen = Pen(Color.FromArgb(64, Color.SteelBlue), 6));
+    public Pen ResizeBorderPen => _mResizeBorderPen ?? (_mResizeBorderPen = Pen(Color.FromArgb(64, Color.SteelBlue), 6));
 
     public Pen SelectedDashedLinePen {
       get {
-        if (m_selectedDashedLinePen == null) {
-          m_selectedDashedLinePen = Pen(Settings.Color[Colors.SelectedLine]);
-          m_selectedDashedLinePen.DashStyle = DashStyle.Dot;
+        if (_mSelectedDashedLinePen == null) {
+          _mSelectedDashedLinePen = Pen(Settings.Color[Colors.SelectedLine]);
+          _mSelectedDashedLinePen.DashStyle = DashStyle.Dot;
         }
 
-        return m_selectedDashedLinePen;
+        return _mSelectedDashedLinePen;
       }
     }
 
-    public Brush SelectedLineBrush => m_selectedLineBrush ?? (m_selectedLineBrush = Brush(Settings.Color[Colors.SelectedLine]));
-    public Pen SelectedLinePen => m_selectedLinePen ?? (m_selectedLinePen = Pen(Settings.Color[Colors.SelectedLine]));
+    public Brush SelectedLineBrush => _mSelectedLineBrush ?? (_mSelectedLineBrush = Brush(Settings.Color[Colors.SelectedLine]));
+    public Pen SelectedLinePen => _mSelectedLinePen ?? (_mSelectedLinePen = Pen(Settings.Color[Colors.SelectedLine]));
 
-    public Brush SmallTextBrush => m_smallTextBrush ?? (m_smallTextBrush = Brush(Settings.Color[Colors.SmallText]));
-    public Brush SubtitleTextBrush => m_subTitleTextBrush ?? (m_subTitleTextBrush = Brush(Settings.Color[Colors.Subtitle]));
+    public Brush SmallTextBrush => _mSmallTextBrush ?? (_mSmallTextBrush = Brush(Settings.Color[Colors.SmallText]));
+    public Brush SubtitleTextBrush => _mSubTitleTextBrush ?? (_mSubTitleTextBrush = Brush(Settings.Color[Colors.Subtitle]));
 
     public void Dispose() {
-      foreach (var item in m_items) item.Dispose();
+      foreach (var item in _mItems) item.Dispose();
     }
 
     public Brush Brush(Color color) {
       var brush = new SolidBrush(color);
-      m_items.Add(brush);
+      _mItems.Add(brush);
       return brush;
     }
 
     public Font Font(string familyName, float emSize) {
       var font = new Font(familyName, emSize, FontStyle.Regular, GraphicsUnit.World);
-      m_items.Add(font);
+      _mItems.Add(font);
       return font;
     }
 
     public Font Font(Font prototype, FontStyle newStyle) {
       var font = new Font(prototype, newStyle);
-      m_items.Add(font);
+      _mItems.Add(font);
       return font;
     }
 
@@ -160,7 +160,7 @@ namespace Trizbort.Domain.Misc {
 
     public Pen Pen(Color color, float width) {
       var pen = new Pen(color, width) {StartCap = LineCap.Round, EndCap = LineCap.Round};
-      m_items.Add(pen);
+      _mItems.Add(pen);
       return pen;
     }
   }

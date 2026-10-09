@@ -12,25 +12,25 @@ namespace Trizbort.Extensions {
       return r * r + g * g + b * b <= threshold * threshold;
     }
 
-    public static Color GetContrast(this Color Source, bool PreserveOpacity) {
-      var inputColor = Source;
+    public static Color GetContrast(this Color source, bool preserveOpacity) {
+      var inputColor = source;
       //if RGB values are close to each other by a diff less than 10%, then if RGB values are lighter side, decrease the blue by 50% (eventually it will increase in conversion below), if RBB values are on darker side, decrease yellow by about 50% (it will increase in conversion)
-      var avgColorValue = (byte) ((Source.R + Source.G + Source.B) / 3);
-      var diff_r = Math.Abs(Source.R - avgColorValue);
-      var diff_g = Math.Abs(Source.G - avgColorValue);
-      var diff_b = Math.Abs(Source.B - avgColorValue);
-      if (diff_r < 20 && diff_g < 20 && diff_b < 20) //The color is a shade of gray
+      var avgColorValue = (byte) ((source.R + source.G + source.B) / 3);
+      var diffR = Math.Abs(source.R - avgColorValue);
+      var diffG = Math.Abs(source.G - avgColorValue);
+      var diffB = Math.Abs(source.B - avgColorValue);
+      if (diffR < 20 && diffG < 20 && diffB < 20) //The color is a shade of gray
         if (avgColorValue < 123) //color is dark
-          inputColor = Color.FromArgb(Source.A, 220, 230, 50);
+          inputColor = Color.FromArgb(source.A, 220, 230, 50);
         else
-          inputColor = Color.FromArgb(Source.A, 255, 255, 50);
-      var sourceAlphaValue = Source.A;
-      if (!PreserveOpacity) sourceAlphaValue = Math.Max(Source.A, (byte) 127); //We don't want contrast color to be more than 50% transparent ever.
-      var rgb = new RGB {R = inputColor.R, G = inputColor.G, B = inputColor.B};
-      var hsb = ConvertToHSB(rgb);
+          inputColor = Color.FromArgb(source.A, 255, 255, 50);
+      var sourceAlphaValue = source.A;
+      if (!preserveOpacity) sourceAlphaValue = Math.Max(source.A, (byte) 127); //We don't want contrast color to be more than 50% transparent ever.
+      var rgb = new Rgb {R = inputColor.R, G = inputColor.G, B = inputColor.B};
+      var hsb = ConvertToHsb(rgb);
       hsb.H = hsb.H < 180 ? hsb.H + 180 : hsb.H - 180;
       //_hsb.B = _isColorDark ? 240 : 50; //Added to create dark on light, and light on dark
-      rgb = ConvertToRGB(hsb);
+      rgb = ConvertToRgb(hsb);
       return Color.FromArgb(sourceAlphaValue, (int) rgb.R, (int) rgb.G, (int) rgb.B);
     }
 
@@ -40,7 +40,7 @@ namespace Trizbort.Extensions {
 
     #region Code from MSDN
 
-    internal static RGB ConvertToRGB(HSB hsb) {
+    internal static Rgb ConvertToRgb(Hsb hsb) {
       // Following code is taken as it is from MSDN. See link below.
       // By: <a href="http://blogs.msdn.com/b/codefx/archive/2012/02/09/create-a-color-picker-for-windows-phone.aspx" title="MSDN" target="_blank">Yi-Lun Luo</a>
       var chroma = hsb.S * hsb.B;
@@ -70,22 +70,22 @@ namespace Trizbort.Extensions {
       }
 
       var m = hsb.B - chroma;
-      return new RGB {
+      return new Rgb {
         R = r1 + m,
         G = g1 + m,
         B = b1 + m
       };
     }
 
-    internal static HSB ConvertToHSB(RGB rgb) {
+    internal static Hsb ConvertToHsb(Rgb rgb) {
       // Following code is taken as it is from MSDN. See link below.
       // By: <a href="http://blogs.msdn.com/b/codefx/archive/2012/02/09/create-a-color-picker-for-windows-phone.aspx" title="MSDN" target="_blank">Yi-Lun Luo</a>
       var r = rgb.R;
       var g = rgb.G;
       var b = rgb.B;
 
-      var max = Max(r, g, b);
-      var min = Min(r, g, b);
+      var max = ColorExtensions.max(r, g, b);
+      var min = ColorExtensions.min(r, g, b);
       var chroma = max - min;
       var hue2 = 0d;
       if (chroma != 0)
@@ -100,30 +100,30 @@ namespace Trizbort.Extensions {
       var brightness = max;
       double saturation = 0;
       if (chroma != 0) saturation = chroma / brightness;
-      return new HSB {
+      return new Hsb {
         H = hue,
         S = saturation,
         B = brightness
       };
     }
 
-    private static double Max(double d1, double d2, double d3) {
+    private static double max(double d1, double d2, double d3) {
       if (d1 > d2) return Math.Max(d1, d3);
       return Math.Max(d2, d3);
     }
 
-    private static double Min(double d1, double d2, double d3) {
+    private static double min(double d1, double d2, double d3) {
       if (d1 < d2) return Math.Min(d1, d3);
       return Math.Min(d2, d3);
     }
 
-    internal struct RGB {
+    internal struct Rgb {
       internal double B;
       internal double G;
       internal double R;
     }
 
-    internal struct HSB {
+    internal struct Hsb {
       internal double B;
       internal double H;
       internal double S;

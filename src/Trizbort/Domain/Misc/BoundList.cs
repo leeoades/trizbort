@@ -5,13 +5,13 @@ namespace Trizbort.Domain.Misc {
   public class BoundList<T> : Collection<T> {
     public event ItemEventHandler<T> Added;
 
-    public void AddRange<U>(IEnumerable<U> list) where U : T {
+    public void AddRange<TU>(IEnumerable<TU> list) where TU : T {
       foreach (var item in list) Add(item);
     }
 
     public event ItemEventHandler<T> Removed;
 
-    public void RemoveRange<U>(IEnumerable<U> list) where U : T {
+    public void RemoveRange<TU>(IEnumerable<TU> list) where TU : T {
       foreach (var item in list) Remove(item);
     }
 
@@ -24,21 +24,21 @@ namespace Trizbort.Domain.Misc {
 
     protected override void InsertItem(int index, T item) {
       base.InsertItem(index, item);
-      RaiseAdded(item);
+      raiseAdded(item);
     }
 
     protected override void RemoveItem(int index) {
       var element = Items[index];
       base.RemoveItem(index);
-      RaiseRemoved(element);
+      raiseRemoved(element);
     }
 
-    private void RaiseAdded(T item) {
+    private void raiseAdded(T item) {
       var added = Added;
       if (added != null) added(this, new ItemEventArgs<T>(item));
     }
 
-    private void RaiseRemoved(T item) {
+    private void raiseRemoved(T item) {
       var removed = Removed;
       if (removed != null) removed(this, new ItemEventArgs<T>(item));
     }

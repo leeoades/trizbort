@@ -16,7 +16,7 @@ namespace Trizbort.Export.Domain
       // For example, a northerly exit which is docked to the N compass point and which
       // does not go up, down, in or out is a higher priority than a northerly exit
       // docked to the NNE compass point and which also goes up.
-      private int mPrimaryPriority;
+      private int _mPrimaryPriority;
 
       public Exit(Location source, Location target, CompassPoint visualCompassPoint, string connectionText, Connection connection) {
         Source = source;
@@ -66,7 +66,7 @@ namespace Trizbort.Export.Domain
       //   Get the priority of the exit, in the given direction, with respect to other exits.
       //   Higher priorities indicate more suitable exits.
       public int GetPriority(MappableDirection direction) {
-        if (direction == PrimaryDirection) return mPrimaryPriority;
+        if (direction == PrimaryDirection) return _mPrimaryPriority;
         if (direction == SecondaryDirection) return 1;
         return -1;
       }
@@ -125,7 +125,7 @@ namespace Trizbort.Export.Domain
       }
 
       private void assignPrimaryPriority() {
-        mPrimaryPriority = 0;
+        _mPrimaryPriority = 0;
 
         switch (VisualCompassPoint) {
           case CompassPoint.North:
@@ -137,31 +137,31 @@ namespace Trizbort.Export.Domain
           case CompassPoint.SouthWest:
           case CompassPoint.NorthWest:
             if (SecondaryDirection == null)
-              mPrimaryPriority += 4;
+              _mPrimaryPriority += 4;
             else
-              mPrimaryPriority -= 2;
+              _mPrimaryPriority -= 2;
             break;
           default:
             if (SecondaryDirection == null)
-              mPrimaryPriority += 3;
+              _mPrimaryPriority += 3;
             else
-              mPrimaryPriority -= 1;
+              _mPrimaryPriority -= 1;
             break;
         }
       }
 
       private void assignSecondaryDirection(string connectionText) {
         switch (connectionText) {
-          case Connection.Up:
+          case Connection.UP:
             SecondaryDirection = MappableDirection.Up;
             break;
-          case Connection.Down:
+          case Connection.DOWN:
             SecondaryDirection = MappableDirection.Down;
             break;
-          case Connection.In:
+          case Connection.IN:
             SecondaryDirection = MappableDirection.In;
             break;
-          case Connection.Out:
+          case Connection.OUT:
             SecondaryDirection = MappableDirection.Out;
             break;
           default:

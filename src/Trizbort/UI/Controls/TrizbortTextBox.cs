@@ -4,16 +4,16 @@ using System.Windows.Forms;
 
 namespace Trizbort.UI.Controls {
   public class TrizbortTextBox : TextBox {
-    private string mCue;
+    private string _mCue;
 
     public string Watermark {
-      get => mCue;
-      set { mCue = value; updateCue(); }
+      get => _mCue;
+      set { _mCue = value; updateCue(); }
     }
 
     private void updateCue() {
-      if (IsHandleCreated && mCue != null) {
-        SendMessage(Handle, EM_SETCUEBANNER, (IntPtr) 1, mCue);
+      if (IsHandleCreated && _mCue != null) {
+        SendMessage(Handle, EM_SETCUEBANNER, (IntPtr) 1, _mCue);
       }
     }
 

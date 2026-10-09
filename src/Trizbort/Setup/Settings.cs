@@ -16,12 +16,12 @@ using Region = Trizbort.Domain.Misc.Region;
 namespace Trizbort.Setup {
   [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
   public static class Settings {
-    private const float MinFontSize = 2;
+    private const float MIN_FONT_SIZE = 2;
 
-    private const float MaxFontSize = 256;
+    private const float MAX_FONT_SIZE = 256;
 
     // per-map settings, saved with the map
-    private static readonly Color[] sColor = new Color[Colors.Count];
+    private static readonly Color[] SColor = new Color[Colors.Count];
     private static Font sRoomNameFont;
     private static Font sObjectFont;
     private static Font sSubtitleFont;
@@ -373,12 +373,12 @@ namespace Trizbort.Setup {
         if (font.Attribute("underline").ToBool()) style |= FontStyle.Underline;
         if (font.Attribute("strikeout").ToBool()) style |= FontStyle.Strikeout;
         if (font.Name == "room")
-          RoomNameFont = new Font(font.ToText(RoomNameFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(RoomNameFont.Size), MinFontSize, MaxFontSize), style, GraphicsUnit.World);
+          RoomNameFont = new Font(font.ToText(RoomNameFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(RoomNameFont.Size), MIN_FONT_SIZE, MAX_FONT_SIZE), style, GraphicsUnit.World);
         else if (font.Name == "object")
-          ObjectFont = new Font(font.ToText(ObjectFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(ObjectFont.Size), MinFontSize, MaxFontSize), style, GraphicsUnit.World);
+          ObjectFont = new Font(font.ToText(ObjectFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(ObjectFont.Size), MIN_FONT_SIZE, MAX_FONT_SIZE), style, GraphicsUnit.World);
         else if (font.Name == "subTitle")
-          SubtitleFont = new Font(font.ToText(SubtitleFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(SubtitleFont.Size), MinFontSize, MaxFontSize), style, GraphicsUnit.World);
-        else if (font.Name == "line") LineFont = new Font(font.ToText(LineFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(LineFont.Size), MinFontSize, MaxFontSize), style, GraphicsUnit.World);
+          SubtitleFont = new Font(font.ToText(SubtitleFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(SubtitleFont.Size), MIN_FONT_SIZE, MAX_FONT_SIZE), style, GraphicsUnit.World);
+        else if (font.Name == "line") LineFont = new Font(font.ToText(LineFont.Name), Numeric.Clamp(font.Attribute("size").ToFloat(LineFont.Size), MIN_FONT_SIZE, MAX_FONT_SIZE), style, GraphicsUnit.World);
       }
 
       SnapToGrid = element["grid"]["snapTo"].ToBool(sSnapToGrid);
@@ -755,10 +755,10 @@ namespace Trizbort.Setup {
 
     public class ColorSettings {
       public Color this[int index] {
-        get => sColor[index];
+        get => SColor[index];
         set {
-          if (sColor[index] != value) {
-            sColor[index] = value;
+          if (SColor[index] != value) {
+            SColor[index] = value;
             raiseChanged();
           }
         }

@@ -28,32 +28,32 @@ using Trizbort.Extensions;
 
 namespace Trizbort.UI {
   public partial class MainForm : Form {
-    private static readonly TimeSpan idleProcessingEveryNSeconds = TimeSpan.FromSeconds(0.2);
-    private readonly CommandController commandController;
-    private readonly string mCaption;
+    private static readonly TimeSpan IdleProcessingEveryNSeconds = TimeSpan.FromSeconds(0.2);
+    private readonly CommandController _commandController;
+    private readonly string _mCaption;
     public Canvas Canvas;
 
     // TODO: private ToolStripStatusLabel statusLabel;
-    private Status trizStatusBar;
+    private Status _trizStatusBar;
 
-    private DateTime mLastUpdateUITime;
-    private SynchronizationContext synchronizationContext;
+    private DateTime _mLastUpdateUITime;
+    private SynchronizationContext _synchronizationContext;
 
     public MainForm() {
       InitializeComponent();
-      InitializeThemeMenu();
+      initializeThemeMenu();
       m_editMenu.DropDownItems.Add(new ToolStripMenuItem("Add &Label", null, (_, __) => Canvas.AddLabel(false)) {
         ShortcutKeyDisplayString = "L"
       });
-      synchronizationContext = SynchronizationContext.Current;
+      _synchronizationContext = SynchronizationContext.Current;
       TrizbortApplication.MainForm = this;
 
-      commandController = new CommandController(Canvas);
+      _commandController = new CommandController(Canvas);
 
-      mCaption = Text;
+      _mCaption = Text;
 
       Application.Idle += onIdle;
-      mLastUpdateUITime = DateTime.MinValue;
+      _mLastUpdateUITime = DateTime.MinValue;
 
       m_automapBar.StopClick += onMAutomapBarOnStopClick;
     }
@@ -221,7 +221,7 @@ namespace Trizbort.UI {
     private static extern int DeleteEnhMetaFile(IntPtr hemf);
 
     private void DownLinesMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetConnectionLabel(ConnectionLabel.Down);
+      _commandController.SetConnectionLabel(ConnectionLabel.Down);
     }
 
     private void EditAddRoomMenuItem_Click(object sender, EventArgs e) {
@@ -233,23 +233,23 @@ namespace Trizbort.UI {
     }
 
     private void EditIsDarkMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetRoomLighting(LightingActionType.Toggle);
+      _commandController.SetRoomLighting(LightingActionType.Toggle);
     }
 
     private void EditPropertiesMenuItem_Click(object sender, EventArgs e) {
-      if (Canvas.HasSingleSelectedElement && Canvas.SelectedElement.HasDialog) commandController.ShowElementProperties(Canvas.SelectedElement);
+      if (Canvas.HasSingleSelectedElement && Canvas.SelectedElement.HasDialog) _commandController.ShowElementProperties(Canvas.SelectedElement);
     }
 
     private void EditRenameMenuItem_Click(object sender, EventArgs e) {
-      if (Canvas.HasSingleSelectedElement && Canvas.SelectedElement.HasDialog) commandController.ShowElementProperties(Canvas.SelectedElement);
+      if (Canvas.HasSingleSelectedElement && Canvas.SelectedElement.HasDialog) _commandController.ShowElementProperties(Canvas.SelectedElement);
     }
 
     private void EditSelectAllMenuItem_Click(object sender, EventArgs e) {
-      commandController.Select(SelectTypes.All);
+      _commandController.Select(SelectTypes.All);
     }
 
     private void EditSelectNoneMenuItem_Click(object sender, EventArgs e) {
-      commandController.Select(SelectTypes.None);
+      _commandController.Select(SelectTypes.None);
     }
 
     private void ellipseToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -258,7 +258,7 @@ namespace Trizbort.UI {
     }
 
     private void endRoomToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetEndRoom();
+      _commandController.SetEndRoom();
     }
 
     private void exportCode<T>() where T : CodeExporter, new() {
@@ -413,7 +413,7 @@ namespace Trizbort.UI {
 
 
         private void FileMenu_DropDownOpening(object sender, EventArgs e) {
-      setupMRUMenu();
+      setupMruMenu();
 
       setupExportMenu();
     }
@@ -496,7 +496,7 @@ namespace Trizbort.UI {
     }
 
     private void InLinesMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetConnectionLabel(ConnectionLabel.In);
+      _commandController.SetConnectionLabel(ConnectionLabel.In);
     }
 
     private void joinRoomsToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -548,16 +548,16 @@ namespace Trizbort.UI {
     }
 
     private void setupStatusBar() {
-      trizStatusBar = new Status(statusBar);
-      trizStatusBar.UpdateStatusBar();
+      _trizStatusBar = new Status(statusBar);
+      _trizStatusBar.UpdateStatusBar();
     }
 
     private void makeRoomDarkToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetRoomLighting(LightingActionType.ForceDark);
+      _commandController.SetRoomLighting(LightingActionType.ForceDark);
     }
 
     private void makeRoomLightToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetRoomLighting(LightingActionType.ForceLight);
+      _commandController.SetRoomLighting(LightingActionType.ForceLight);
     }
 
     private void mapStatisticsExportToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -577,8 +577,8 @@ namespace Trizbort.UI {
 
     private void onIdle(object sender, EventArgs e) {
       var now = DateTime.Now;
-      if (now - mLastUpdateUITime > idleProcessingEveryNSeconds) {
-        mLastUpdateUITime = now;
+      if (now - _mLastUpdateUITime > IdleProcessingEveryNSeconds) {
+        _mLastUpdateUITime = now;
         Task.Run(updateCommandUI);
       }
     }
@@ -588,7 +588,7 @@ namespace Trizbort.UI {
     }
 
     private void OutLinesMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetConnectionLabel(ConnectionLabel.Out);
+      _commandController.SetConnectionLabel(ConnectionLabel.Out);
     }
 
     private void PlainLinesMenuItem_Click(object sender, EventArgs e) {
@@ -617,22 +617,22 @@ namespace Trizbort.UI {
     }
 
     private void roomsMustHaveADescriptionToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetValidation(ValidationType.RoomDescription);
+      _commandController.SetValidation(ValidationType.RoomDescription);
       Project.Current.Canvas.Invalidate();
     }
 
     private void roomsMustHaveASubtitleToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetValidation(ValidationType.RoomSubTitle);
+      _commandController.SetValidation(ValidationType.RoomSubTitle);
       Project.Current.Canvas.Invalidate();
     }
 
     private void roomsMustHaveUniqueNamesToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetValidation(ValidationType.RoomUniqueName);
+      _commandController.SetValidation(ValidationType.RoomUniqueName);
       Project.Current.Canvas.Invalidate();
     }
 
     private void roomsMustNotHaveADanglingConnectionToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetValidation(ValidationType.RoomDanglingConnection);
+      _commandController.SetValidation(ValidationType.RoomDanglingConnection);
       Project.Current.Canvas.Invalidate();
     }
 
@@ -776,31 +776,31 @@ namespace Trizbort.UI {
     }
 
     private void selectAllConnectionsToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.Select(SelectTypes.Connections);
+      _commandController.Select(SelectTypes.Connections);
     }
 
     private void selectAllRoomsToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.Select(SelectTypes.Rooms);
+      _commandController.Select(SelectTypes.Rooms);
     }
 
     private void selectDanglingConnectionsToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.Select(SelectTypes.DanglingConnections);
+      _commandController.Select(SelectTypes.DanglingConnections);
     }
 
     private void selectedUnconnectedRoomsToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.Select(SelectTypes.UnconnectedRooms);
+      _commandController.Select(SelectTypes.UnconnectedRooms);
     }
 
     private void selectRoomsWObjectsToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.Select(SelectTypes.RoomsWithObjects);
+      _commandController.Select(SelectTypes.RoomsWithObjects);
     }
 
     private void selectRoomsWoObjectsToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.Select(SelectTypes.RoomsWithOutObjects);
+      _commandController.Select(SelectTypes.RoomsWithOutObjects);
     }
 
     private void selectSelfLoopingConnectionsToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.Select(SelectTypes.SelfLoopingConnections);
+      _commandController.Select(SelectTypes.SelfLoopingConnections);
     }
 
     private void setupExportMenu() {
@@ -821,7 +821,7 @@ namespace Trizbort.UI {
       }
     }
 
-    private void setupMRUMenu() {
+    private void setupMruMenu() {
       var existingItems = m_fileRecentMapsMenuItem.DropDownItems.Cast<ToolStripItem>().ToList();
       foreach (var existingItem in existingItems) {
         existingItem.Click -= FileRecentProject_Click;
@@ -908,7 +908,7 @@ namespace Trizbort.UI {
     }
 
     private void startRoomToolStripMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetStartRoom();
+      _commandController.SetStartRoom();
     }
 
     private void swapFormatsFillsToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -932,11 +932,11 @@ namespace Trizbort.UI {
     }
 
     private void ToggleDirectionalLines_Click(object sender, EventArgs e) {
-      commandController.ToggleConnectionFlow(Canvas.NewConnectionFlow);
+      _commandController.ToggleConnectionFlow(Canvas.NewConnectionFlow);
     }
 
     private void ToggleDottedLines_Click(object sender, EventArgs e) {
-      commandController.ToggleConnectionStyle(Canvas.NewConnectionStyle);
+      _commandController.ToggleConnectionStyle(Canvas.NewConnectionStyle);
     }
 
     private void toggleTextToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -945,10 +945,10 @@ namespace Trizbort.UI {
 
     private void updateCommandUI() {
 
-      synchronizationContext.Post(o => {
+      _synchronizationContext.Post(o => {
         // caption
-        Text = $"{(ApplicationSettingsController.AppSettings.ShowFullPathInTitleBar && !string.IsNullOrEmpty(Project.Current.FileName) ? Project.Current.FileName : Project.Current.Name)}{(Project.Current.IsDirty ? "*" : string.Empty)} - {mCaption} - {Application.ProductVersion}";
-        trizStatusBar.UpdateStatusBar();
+        Text = $"{(ApplicationSettingsController.AppSettings.ShowFullPathInTitleBar && !string.IsNullOrEmpty(Project.Current.FileName) ? Project.Current.FileName : Project.Current.Name)}{(Project.Current.IsDirty ? "*" : string.Empty)} - {_mCaption} - {Application.ProductVersion}";
+        _trizStatusBar.UpdateStatusBar();
 
         // line drawing options
         m_toggleDottedLinesButton.Checked = Canvas.NewConnectionStyle == ConnectionStyle.Dashed;
@@ -1030,7 +1030,7 @@ namespace Trizbort.UI {
     }
 
     private void UpLinesMenuItem_Click(object sender, EventArgs e) {
-      commandController.SetConnectionLabel(ConnectionLabel.Up);
+      _commandController.SetConnectionLabel(ConnectionLabel.Up);
     }
 
     private void ViewEntireMapMenuItem_Click(object sender, EventArgs e) {
@@ -1095,19 +1095,19 @@ namespace Trizbort.UI {
         new InputDialogItem("URL", url)
       };
 
-      InputDialog input = InputDialog.Show("Load from Web", items, InputBoxButtons.OKCancel);
-      if (input.Result == InputBoxResult.OK) {
-        openURL(input.Items["URL"]);
+      InputDialog input = InputDialog.Show("Load from Web", items, InputBoxButtons.OkCancel);
+      if (input.Result == InputBoxResult.Ok) {
+        openUrl(input.Items["URL"]);
       }
     }
 
-    private void openURL(string url) {
+    private void openUrl(string url) {
       if (!checkLoseProject())
         return;
 
       var uri = new Uri(url);
 
-      OpenProjectFromUrl(uri);
+      openProjectFromUrl(uri);
     }
 
     public void OpenProject(string fileName) {
@@ -1118,7 +1118,7 @@ namespace Trizbort.UI {
       }
     }
 
-    private void OpenProjectFromUrl(Uri uri) {
+    private void openProjectFromUrl(Uri uri) {
       var project = new Project { FileName = Path.GetFileName(uri.AbsoluteUri) };
       if (project.Load(uri))
       {

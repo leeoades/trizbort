@@ -105,12 +105,12 @@ namespace Trizbort.Setup {
 
       var fill = Settings.Regions.FirstOrDefault(region => region.RegionName == Region.DefaultRegion)?.RColor ?? Color.White;
       return project.Elements.OfType<MapLabel>().Any(label =>
-        !IsDefaultLabelColor(label.TextColor, Color.Black, Settings.Color[Domain.Misc.Colors.LineText]) ||
-        !IsDefaultLabelColor(label.BorderColor, Color.Black, Settings.Color[Domain.Misc.Colors.Border]) ||
-        !IsDefaultLabelColor(label.BackgroundColor, Color.White, fill));
+        !isDefaultLabelColor(label.TextColor, Color.Black, Settings.Color[Domain.Misc.Colors.LineText]) ||
+        !isDefaultLabelColor(label.BorderColor, Color.Black, Settings.Color[Domain.Misc.Colors.Border]) ||
+        !isDefaultLabelColor(label.BackgroundColor, Color.White, fill));
     }
 
-    private static bool IsDefaultLabelColor(Color color, Color initial, Color themed) {
+    private static bool isDefaultLabelColor(Color color, Color initial, Color themed) {
       return color.ToArgb() == initial.ToArgb() || color.ToArgb() == themed.ToArgb();
     }
 
@@ -147,10 +147,10 @@ namespace Trizbort.Setup {
         }
       }
 
-      Settings.RoomNameFont = ReuseFont(fonts[0], Settings.RoomNameFont);
-      Settings.ObjectFont = ReuseFont(fonts[1], Settings.ObjectFont);
-      Settings.SubtitleFont = ReuseFont(fonts[2], Settings.SubtitleFont);
-      Settings.LineFont = ReuseFont(fonts[3], Settings.LineFont);
+      Settings.RoomNameFont = reuseFont(fonts[0], Settings.RoomNameFont);
+      Settings.ObjectFont = reuseFont(fonts[1], Settings.ObjectFont);
+      Settings.SubtitleFont = reuseFont(fonts[2], Settings.SubtitleFont);
+      Settings.LineFont = reuseFont(fonts[3], Settings.LineFont);
       Settings.LineWidth = LineWidth;
       Settings.ConnectionArrowSize = ArrowSize;
       Settings.TextOffsetFromConnection = TextOffset;
@@ -240,7 +240,7 @@ namespace Trizbort.Setup {
       }
     }
 
-    private static Font ReuseFont(Font candidate, Font current) {
+    private static Font reuseFont(Font candidate, Font current) {
       if (!Equals(candidate, current)) return candidate;
       candidate.Dispose();
       return current;
@@ -253,17 +253,17 @@ namespace Trizbort.Setup {
 
     public static IReadOnlyList<MapTheme> BuiltInThemes() {
       return new[] {
-        CreateBuiltIn("Classic", Color.White, Color.White, Color.MidnightBlue, Color.LightGray, RoomShape.SquareCorners, "Arial"),
-        CreateBuiltIn("Parchment", Color.FromArgb(245, 233, 205), Color.FromArgb(255, 248, 226),
+        createBuiltIn("Classic", Color.White, Color.White, Color.MidnightBlue, Color.LightGray, RoomShape.SquareCorners, "Arial"),
+        createBuiltIn("Parchment", Color.FromArgb(245, 233, 205), Color.FromArgb(255, 248, 226),
           Color.FromArgb(83, 57, 35), Color.FromArgb(221, 205, 174), RoomShape.RoundedCorners, "Georgia"),
-        CreateBuiltIn("Dark", Color.FromArgb(30, 33, 39), Color.FromArgb(48, 53, 62),
+        createBuiltIn("Dark", Color.FromArgb(30, 33, 39), Color.FromArgb(48, 53, 62),
           Color.FromArgb(225, 230, 238), Color.FromArgb(65, 70, 80), RoomShape.RoundedCorners, "Segoe UI"),
-        CreateBuiltIn("High contrast", Color.White, Color.White, Color.Black, Color.LightGray, RoomShape.SquareCorners, "Arial"),
-        CreateBuiltIn("Sketch", Color.White, Color.White, Color.FromArgb(60, 60, 60), Color.FromArgb(232, 232, 232), RoomShape.SquareCorners, "Segoe Print", true)
+        createBuiltIn("High contrast", Color.White, Color.White, Color.Black, Color.LightGray, RoomShape.SquareCorners, "Arial"),
+        createBuiltIn("Sketch", Color.White, Color.White, Color.FromArgb(60, 60, 60), Color.FromArgb(232, 232, 232), RoomShape.SquareCorners, "Segoe Print", true)
       };
     }
 
-    private static MapTheme CreateBuiltIn(string name, Color canvas, Color fill, Color ink, Color grid, RoomShape shape, string fontName, bool handDrawn = false) {
+    private static MapTheme createBuiltIn(string name, Color canvas, Color fill, Color ink, Color grid, RoomShape shape, string fontName, bool handDrawn = false) {
       var colors = new Dictionary<string, string>();
       for (var index = 0; index < Domain.Misc.Colors.Count; index++) {
         Domain.Misc.Colors.ToName(index, out var colorName);

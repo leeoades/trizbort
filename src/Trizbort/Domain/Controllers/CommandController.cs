@@ -8,82 +8,82 @@ using Trizbort.UI.Controls;
 
 namespace Trizbort.Domain.Controllers {
   public class CommandController {
-    private readonly Canvas canvas;
+    private readonly Canvas _canvas;
 
     public CommandController(Canvas canvas) {
-      this.canvas = canvas;
+      this._canvas = canvas;
     }
 
     public void BringToFront() {
-      var newIndex = canvas.GetHighestZOrderIndex();
-      foreach (var element in canvas.SelectedElements) element.ZOrder = newIndex;
+      var newIndex = _canvas.GetHighestZOrderIndex();
+      foreach (var element in _canvas.SelectedElements) element.ZOrder = newIndex;
     }
 
     public void MakeVisible(Element element) {
-      var controller = new CanvasController(canvas);
+      var controller = new CanvasController(_canvas);
       controller.EnsureVisible(element);
     }
 
     public void Select(SelectTypes type) {
       var cmd = new SelectCommand();
-      cmd.Execute(canvas, type);
+      cmd.Execute(_canvas, type);
     }
 
     public void SelectRegions() {
-      var regions = canvas.SelectedRooms.Select(p => p.Region).Distinct().ToList();
+      var regions = _canvas.SelectedRooms.Select(p => p.Region).Distinct().ToList();
       var cmd = new SelectCommand();
-      cmd.Execute(canvas, SelectTypes.Region, regions);
+      cmd.Execute(_canvas, SelectTypes.Region, regions);
     }
 
     public void SelectRoomClosestToCenterOfViewport() {
-      var controller = new CanvasController(canvas);
+      var controller = new CanvasController(_canvas);
       controller.SelectRoomClosestToCenterOfViewport();
     }
 
     public void SelectStartRoom() {
-      var controller = new CanvasController(canvas);
+      var controller = new CanvasController(_canvas);
       controller.SelectStartRoom();
     }
 
     public void SendToBack() {
-      var newIndex = canvas.GetLowestZOrderIndex();
-      foreach (var element in canvas.SelectedElements) element.ZOrder = newIndex;
+      var newIndex = _canvas.GetLowestZOrderIndex();
+      foreach (var element in _canvas.SelectedElements) element.ZOrder = newIndex;
     }
 
 
     public void SetConnectionFlow(ConnectionFlow flow) {
-      var controller = new CanvasController(canvas);
+      var controller = new CanvasController(_canvas);
 
       controller.SetConnectionFlow(flow);
     }
 
     public void SetConnectionLabel(ConnectionLabel label) {
-      var controller = new CanvasController(canvas);
+      var controller = new CanvasController(_canvas);
 
       controller.SetConnectionLabel(label);
     }
 
     public void SetConnectionStyle(ConnectionStyle style) {
-      var controller = new CanvasController(canvas);
+      var controller = new CanvasController(_canvas);
 
       controller.SetConnectionStyle(style);
     }
 
     public void SetEndRoom() {
-      foreach (var selectedRoom in canvas.SelectedRooms) selectedRoom.IsEndRoom = !selectedRoom.IsEndRoom;
+      foreach (var selectedRoom in _canvas.SelectedRooms) selectedRoom.IsEndRoom = !selectedRoom.IsEndRoom;
     }
 
     public void SetRoomLighting(LightingActionType type) {
       var controller = new RoomController();
       switch (type) {
         case LightingActionType.Toggle:
-          controller.ToggleDarkness(canvas.SelectedRooms);
+          controller.ToggleDarkness(_canvas.SelectedRooms);
           break;
         case LightingActionType.ForceLight:
-          controller.ForceLighted(canvas.SelectedRooms);
+          controller.ForceLighted(_canvas.SelectedRooms);
           break;
         case LightingActionType.ForceDark:
-          controller.ForceDarkness(canvas.SelectedRooms);
+          controller.ForceDarkness(_canvas.SelectedRooms);
           break;
         default:
           throw new ArgumentOutOfRangeException(nameof(type), type, null);
@@ -92,16 +92,16 @@ namespace Trizbort.Domain.Controllers {
 
     public void SetRoomShape(RoomShape shape) {
       var controller = new RoomController();
-      controller.SetRoomShape(canvas.SelectedRooms, shape);
+      controller.SetRoomShape(_canvas.SelectedRooms, shape);
     }
 
     public void SetStartRoom() {
-      if (canvas.SelectedRooms.Count == 1)
-        if (canvas.SelectedRooms.First().IsStartRoom) {
-          canvas.SelectedRooms.First().IsStartRoom = false;
+      if (_canvas.SelectedRooms.Count == 1)
+        if (_canvas.SelectedRooms.First().IsStartRoom) {
+          _canvas.SelectedRooms.First().IsStartRoom = false;
         } else {
           Project.Current.Elements.OfType<Room>().Where(p => p.IsStartRoom).ToList().ForEach(p => p.IsStartRoom = false);
-          canvas.SelectedRooms.First().IsStartRoom = true;
+          _canvas.SelectedRooms.First().IsStartRoom = true;
         }
     }
 
@@ -131,14 +131,14 @@ namespace Trizbort.Domain.Controllers {
 
     public void ToggleConnectionFlow(ConnectionFlow flow) {
       var f = flow == ConnectionFlow.OneWay ? ConnectionFlow.TwoWay : ConnectionFlow.OneWay;
-      var controller = new CanvasController(canvas);
+      var controller = new CanvasController(_canvas);
 
       controller.SetConnectionFlow(f);
     }
 
     public void ToggleConnectionStyle(ConnectionStyle style) {
       var f = style == ConnectionStyle.Dashed ? ConnectionStyle.Solid : ConnectionStyle.Dashed;
-      var controller = new CanvasController(canvas);
+      var controller = new CanvasController(_canvas);
 
       controller.SetConnectionStyle(f);
     }

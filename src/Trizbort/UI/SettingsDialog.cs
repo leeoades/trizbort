@@ -15,31 +15,31 @@ namespace Trizbort.UI {
     private const int HORIZONTAL_MARGIN = 2;
     private const int VERTICAL_MARGIN = 2;
     private const int WIDTH = 24;
-    private readonly TextBox editBox;
-    private bool bUpdatingRegionText;
-    private int itemSelected;
-    private Region mCurrentRegion;
-    private Font mLargeFont;
-    private Font mLineFont;
-    private Font mSmallFont;
-    private Font mSubtitleFont;
+    private readonly TextBox _editBox;
+    private bool _bUpdatingRegionText;
+    private int _itemSelected;
+    private Region _mCurrentRegion;
+    private Font _mLargeFont;
+    private Font _mLineFont;
+    private Font _mSmallFont;
+    private Font _mSubtitleFont;
 
     public SettingsDialog() {
       ElementColors = new Color[Colors.Count];
       Regions = Settings.Regions;
       InitializeComponent();
 
-      editBox = new TextBox {Location = new Point(0, 0), Size = new Size(0, 0), Font = new Font("Tahoma", 8.25f), AcceptsReturn = true};
-      editBox.Hide();
+      _editBox = new TextBox {Location = new Point(0, 0), Size = new Size(0, 0), Font = new Font("Tahoma", 8.25f), AcceptsReturn = true};
+      _editBox.Hide();
 
-      m_RegionListing.Controls.AddRange(new Control[] {editBox});
-      editBox.Text = string.Empty;
-      editBox.BorderStyle = BorderStyle.FixedSingle;
+      m_RegionListing.Controls.AddRange(new Control[] {_editBox});
+      _editBox.Text = string.Empty;
+      _editBox.BorderStyle = BorderStyle.FixedSingle;
 
-      editBox.KeyPress += editBoxKeyPress;
-      editBox.LostFocus += focusOver;
-      editBox.Enter += editBoxEnter;
-      editBox.Leave += editBoxLeave;
+      _editBox.KeyPress += editBoxKeyPress;
+      _editBox.LostFocus += focusOver;
+      _editBox.Enter += editBoxEnter;
+      _editBox.Leave += editBoxLeave;
 
       m_colorListBox.DrawMode = DrawMode.OwnerDrawFixed;
       m_colorListBox.DrawItem += ColorListBox_DrawItem;
@@ -87,20 +87,20 @@ namespace Trizbort.UI {
     public bool IsGridVisible { get => m_showGridCheckBox.Checked; set => m_showGridCheckBox.Checked = value; }
 
     public Font LargeFont {
-      get => mLargeFont;
+      get => _mLargeFont;
       set {
-        mLargeFont = value;
-        m_largeFontNameTextBox.Text = Drawing.FontName(mLargeFont);
-        m_largeFontSizeTextBox.Text = ((int) Math.Round(mLargeFont.Size)).ToString();
+        _mLargeFont = value;
+        m_largeFontNameTextBox.Text = Drawing.FontName(_mLargeFont);
+        m_largeFontSizeTextBox.Text = ((int) Math.Round(_mLargeFont.Size)).ToString();
       }
     }
 
     public Font LineFont {
-      get => mLineFont;
+      get => _mLineFont;
       set {
-        mLineFont = value;
-        m_lineFontNameTextBox.Text = Drawing.FontName(mLineFont);
-        m_lineFontSizeTextBox.Text = ((int) Math.Round(mLineFont.Size)).ToString();
+        _mLineFont = value;
+        m_lineFontNameTextBox.Text = Drawing.FontName(_mLineFont);
+        m_lineFontSizeTextBox.Text = ((int) Math.Round(_mLineFont.Size)).ToString();
       }
     }
 
@@ -116,11 +116,11 @@ namespace Trizbort.UI {
     public bool ShowOrigin { get => m_showOriginCheckBox.Checked; set => m_showOriginCheckBox.Checked = value; }
 
     public Font SmallFont {
-      get => mSmallFont;
+      get => _mSmallFont;
       set {
-        mSmallFont = value;
-        m_smallFontNameTextBox.Text = Drawing.FontName(mSmallFont);
-        m_smallFontSizeTextBox.Text = ((int) Math.Round(mSmallFont.Size)).ToString();
+        _mSmallFont = value;
+        m_smallFontNameTextBox.Text = Drawing.FontName(_mSmallFont);
+        m_smallFontSizeTextBox.Text = ((int) Math.Round(_mSmallFont.Size)).ToString();
       }
     }
 
@@ -129,11 +129,11 @@ namespace Trizbort.UI {
     public bool SnapToGrid { get => m_snapToGridCheckBox.Checked; set => m_snapToGridCheckBox.Checked = value; }
 
     public Font SubtitleFont {
-      get => mSubtitleFont;
+      get => _mSubtitleFont;
       set {
-        mSubtitleFont = value;
-        m_subtitleFontNameTextBox.Text = Drawing.FontName(mSubtitleFont);
-        m_subtitleFontSizeTextBox.Text = ((int) Math.Round(mSubtitleFont.Size)).ToString();
+        _mSubtitleFont = value;
+        m_subtitleFontNameTextBox.Text = Drawing.FontName(_mSubtitleFont);
+        m_subtitleFontSizeTextBox.Text = ((int) Math.Round(_mSubtitleFont.Size)).ToString();
       }
     }
 
@@ -206,11 +206,11 @@ namespace Trizbort.UI {
       using var palette = new Palette();
       e.DrawBackground();
 
-      const int COLOR_HORIZONTAL_MARGIN = 2;
-      const int COLOR_VERTICAL_MARGIN = 2;
-      const int COLOR_WIDTH = 24;
-      var colorBounds = new Rectangle(e.Bounds.Left + COLOR_HORIZONTAL_MARGIN, e.Bounds.Top + COLOR_VERTICAL_MARGIN, COLOR_WIDTH, e.Bounds.Height - COLOR_VERTICAL_MARGIN * 2);
-      var textBounds = new Rectangle(colorBounds.Right + COLOR_HORIZONTAL_MARGIN, e.Bounds.Top, e.Bounds.Width - colorBounds.Width - COLOR_HORIZONTAL_MARGIN * 2, e.Bounds.Height);
+      const int colorHorizontalMargin = 2;
+      const int colorVerticalMargin = 2;
+      const int colorWidth = 24;
+      var colorBounds = new Rectangle(e.Bounds.Left + colorHorizontalMargin, e.Bounds.Top + colorVerticalMargin, colorWidth, e.Bounds.Height - colorVerticalMargin * 2);
+      var textBounds = new Rectangle(colorBounds.Right + colorHorizontalMargin, e.Bounds.Top, e.Bounds.Width - colorBounds.Width - colorHorizontalMargin * 2, e.Bounds.Height);
       e.Graphics.FillRectangle(palette.Brush(ElementColors[e.Index]), colorBounds);
       e.Graphics.DrawRectangle(palette.Pen(e.ForeColor, 0), colorBounds);
       var format = new StringFormat {Trimming = StringTrimming.EllipsisCharacter};
@@ -218,33 +218,33 @@ namespace Trizbort.UI {
     }
 
     private void createEditBox() {
-      itemSelected = m_RegionListing.SelectedIndex;
+      _itemSelected = m_RegionListing.SelectedIndex;
 
-      if (m_RegionListing.Items[itemSelected].ToString() == Domain.Misc.Region.DefaultRegion) return;
+      if (m_RegionListing.Items[_itemSelected].ToString() == Domain.Misc.Region.DefaultRegion) return;
 
-      var r = m_RegionListing.GetItemRectangle(itemSelected);
-      var itemText = m_RegionListing.Items[itemSelected].ToString();
+      var r = m_RegionListing.GetItemRectangle(_itemSelected);
+      var itemText = m_RegionListing.Items[_itemSelected].ToString();
 
       var colorBounds = new Rectangle(r.Left + HORIZONTAL_MARGIN, r.Top + VERTICAL_MARGIN, WIDTH, r.Height - VERTICAL_MARGIN * 2);
       var textBounds = new Rectangle(colorBounds.Right + HORIZONTAL_MARGIN, r.Top, r.Width - colorBounds.Width - HORIZONTAL_MARGIN * 2, r.Height);
 
-      editBox.Location = new Point(textBounds.X + 1, textBounds.Y + 1);
-      editBox.AutoSize = false;
-      editBox.Size = new Size(textBounds.Width, r.Height + 2);
-      editBox.Show();
-      editBox.Text = itemText;
-      editBox.Focus();
-      editBox.SelectAll();
+      _editBox.Location = new Point(textBounds.X + 1, textBounds.Y + 1);
+      _editBox.AutoSize = false;
+      _editBox.Size = new Size(textBounds.Width, r.Height + 2);
+      _editBox.Show();
+      _editBox.Text = itemText;
+      _editBox.Focus();
+      _editBox.SelectAll();
     }
 
     private void deleteRegion() {
-      itemSelected = m_RegionListing.SelectedIndex;
-      if (m_RegionListing.Items[itemSelected].ToString() == Domain.Misc.Region.DefaultRegion) return;
-      foreach (var tRoom in Project.Current.Elements.OfType<Room>().Where(tRoom => tRoom.Region == m_RegionListing.Items[itemSelected].ToString())) tRoom.Region = Domain.Misc.Region.DefaultRegion;
-      Regions.RemoveAll(p => p.RegionName == m_RegionListing.Items[itemSelected].ToString());
+      _itemSelected = m_RegionListing.SelectedIndex;
+      if (m_RegionListing.Items[_itemSelected].ToString() == Domain.Misc.Region.DefaultRegion) return;
+      foreach (var tRoom in Project.Current.Elements.OfType<Room>().Where(tRoom => tRoom.Region == m_RegionListing.Items[_itemSelected].ToString())) tRoom.Region = Domain.Misc.Region.DefaultRegion;
+      Regions.RemoveAll(p => p.RegionName == m_RegionListing.Items[_itemSelected].ToString());
       addRegionsToListbox();
 
-      m_RegionListing.SelectedIndex = itemSelected == 0 ? 0 : itemSelected + 1 >= m_RegionListing.Items.Count ? m_RegionListing.Items.Count - 1 : itemSelected;
+      m_RegionListing.SelectedIndex = _itemSelected == 0 ? 0 : _itemSelected + 1 >= m_RegionListing.Items.Count ? m_RegionListing.Items.Count - 1 : _itemSelected;
       m_RegionListing.Focus();
     }
 
@@ -262,9 +262,9 @@ namespace Trizbort.UI {
       if (e.KeyChar == (char) Keys.Enter || e.KeyChar == (char) Keys.Return) updateHideRegionTextBox();
 
       if (e.KeyChar == (char) Keys.Escape) {
-        bUpdatingRegionText = true;
-        editBox.Hide();
-        bUpdatingRegionText = false;
+        _bUpdatingRegionText = true;
+        _editBox.Hide();
+        _bUpdatingRegionText = false;
       }
     }
 
@@ -274,7 +274,7 @@ namespace Trizbort.UI {
     }
 
     private void focusOver(object sender, EventArgs e) {
-      if (editBox.Visible) {
+      if (_editBox.Visible) {
         updateHideRegionTextBox();
         m_RegionListing.Focus();
       }
@@ -307,7 +307,7 @@ namespace Trizbort.UI {
     }
 
     private void m_RegionListing_SelectedIndexChanged(object sender, EventArgs e) {
-      mCurrentRegion = m_RegionListing.SelectedItem == null ? null : Regions.Find(p => p.RegionName == m_RegionListing.SelectedItem.ToString());
+      _mCurrentRegion = m_RegionListing.SelectedItem == null ? null : Regions.Find(p => p.RegionName == m_RegionListing.SelectedItem.ToString());
 
       if (m_RegionListing.SelectedItem == null || m_RegionListing.SelectedItem.ToString() == Domain.Misc.Region.DefaultRegion)
         btnDeleteRegion.Enabled = false;
@@ -347,7 +347,7 @@ namespace Trizbort.UI {
     }
 
     private bool regionAlreadyExists(string pNew) {
-      if (Regions.Any(p => p != mCurrentRegion && p.RegionName.Equals(pNew, StringComparison.OrdinalIgnoreCase))) {
+      if (Regions.Any(p => p != _mCurrentRegion && p.RegionName.Equals(pNew, StringComparison.OrdinalIgnoreCase))) {
         UserInteraction.ShowMessage($"A Region already exists with the name '{pNew}'");
         return true;
       }
@@ -413,23 +413,23 @@ namespace Trizbort.UI {
     }
 
     private void updateHideRegionTextBox() {
-      if (!bUpdatingRegionText) {
-        bUpdatingRegionText = true;
-        editBox.Text = editBox.Text.Trim().Replace("\"", "'");
-        if (Domain.Misc.Region.ValidRegionName(editBox.Text))
-          if (updateRegionName(editBox.Text, m_RegionListing.Items[itemSelected].ToString())) {
-            editBox.Hide();
+      if (!_bUpdatingRegionText) {
+        _bUpdatingRegionText = true;
+        _editBox.Text = _editBox.Text.Trim().Replace("\"", "'");
+        if (Domain.Misc.Region.ValidRegionName(_editBox.Text))
+          if (updateRegionName(_editBox.Text, m_RegionListing.Items[_itemSelected].ToString())) {
+            _editBox.Hide();
             addRegionsToListbox();
-            m_RegionListing.SelectedIndex = itemSelected == 0 ? 0 : itemSelected + 1 >= m_RegionListing.Items.Count ? m_RegionListing.Items.Count - 1 : itemSelected;
+            m_RegionListing.SelectedIndex = _itemSelected == 0 ? 0 : _itemSelected + 1 >= m_RegionListing.Items.Count ? m_RegionListing.Items.Count - 1 : _itemSelected;
             m_RegionListing.Focus();
           } else {
-            editBox.Focus();
-            editBox.SelectAll();
+            _editBox.Focus();
+            _editBox.SelectAll();
           }
         else
-          editBox.Hide();
+          _editBox.Hide();
 
-        bUpdatingRegionText = false;
+        _bUpdatingRegionText = false;
       }
     }
 
@@ -440,8 +440,8 @@ namespace Trizbort.UI {
 
       updateExistingRoomRegions(pNew, pOld);
 
-      Regions.First(p => p.RegionName == m_RegionListing.Items[itemSelected].ToString()).RegionName = pNew;
-      m_RegionListing.Items[itemSelected] = pNew;
+      Regions.First(p => p.RegionName == m_RegionListing.Items[_itemSelected].ToString()).RegionName = pNew;
+      m_RegionListing.Items[_itemSelected] = pNew;
       return true;
     }
     }

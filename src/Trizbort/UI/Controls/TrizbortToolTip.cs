@@ -16,16 +16,16 @@ namespace Trizbort.UI.Controls {
 
     public Color GradientColor { get; set; } = Color.Empty;
 
-    private readonly Font bodyFont;
-    private readonly Font headerFont;
-    private readonly Font footerFont;
+    private readonly Font _bodyFont;
+    private readonly Font _headerFont;
+    private readonly Font _footerFont;
     private const int TIP_WIDTH = 200;
     private const int LINE_BUFFER = 5;
-    private int tipHeight;
-    private int headerHeight = 0;
-    private int footerHeight = 0;
-    private int bodyHeight = 0;
-    double headerBottom;
+    private int _tipHeight;
+    private int _headerHeight = 0;
+    private int _footerHeight = 0;
+    private int _bodyHeight = 0;
+    double _headerBottom;
 
     
     public TrizbortToolTip() {
@@ -37,42 +37,42 @@ namespace Trizbort.UI.Controls {
       Draw += OnDraw;
       ForeColor = Color.Black;
       BackColor = Color.LightBlue;
-      bodyFont = new Font("Arial", 8.0f, FontStyle.Regular);
-      headerFont = new Font("Arial", 8.0f, FontStyle.Bold);
-      footerFont = new Font("Arial", 8.0f, FontStyle.Bold);
+      _bodyFont = new Font("Arial", 8.0f, FontStyle.Regular);
+      _headerFont = new Font("Arial", 8.0f, FontStyle.Bold);
+      _footerFont = new Font("Arial", 8.0f, FontStyle.Bold);
     }
 
     private void OnPopup(object sender, PopupEventArgs e) {
       LastOwner = e.AssociatedControl;
       IsShown = true;
-      headerHeight = 0;
-      footerHeight = 0;
-      bodyHeight = 0;
+      _headerHeight = 0;
+      _footerHeight = 0;
+      _bodyHeight = 0;
 
       using Image fakeImage = new Bitmap(1,1);
       using Graphics graphics = Graphics.FromImage(fakeImage);
 
       //calc header size
-      SizeF headerStringSize = graphics.MeasureString(TitleText, headerFont);
+      SizeF headerStringSize = graphics.MeasureString(TitleText, _headerFont);
       
       //calc body size
-      SizeF bodyStringSize = graphics.MeasureString(BodyText, bodyFont);
+      SizeF bodyStringSize = graphics.MeasureString(BodyText, _bodyFont);
 
       //calc footer size
-      SizeF footerStringSize = graphics.MeasureString(FooterText, footerFont);
+      SizeF footerStringSize = graphics.MeasureString(FooterText, _footerFont);
 
-      headerBottom = Math.Ceiling(headerStringSize.Width/TIP_WIDTH * (headerFont.Height + LINE_BUFFER));
-      headerHeight = Convert.ToInt32(headerBottom) + (int)headerStringSize.Height + LINE_BUFFER;
+      _headerBottom = Math.Ceiling(headerStringSize.Width/TIP_WIDTH * (_headerFont.Height + LINE_BUFFER));
+      _headerHeight = Convert.ToInt32(_headerBottom) + (int)headerStringSize.Height + LINE_BUFFER;
       if (FooterText != string.Empty)
-        footerHeight = Convert.ToInt32(Math.Ceiling(footerStringSize.Width/TIP_WIDTH * (footerFont.Height + LINE_BUFFER))) + (int)footerStringSize.Height + LINE_BUFFER;
+        _footerHeight = Convert.ToInt32(Math.Ceiling(footerStringSize.Width/TIP_WIDTH * (_footerFont.Height + LINE_BUFFER))) + (int)footerStringSize.Height + LINE_BUFFER;
 
       if (BodyText != string.Empty)
-        bodyHeight = Convert.ToInt32(Math.Ceiling(bodyStringSize.Width/TIP_WIDTH * (bodyFont.Height + LINE_BUFFER))) + (int)bodyStringSize.Height + LINE_BUFFER;
+        _bodyHeight = Convert.ToInt32(Math.Ceiling(bodyStringSize.Width/TIP_WIDTH * (_bodyFont.Height + LINE_BUFFER))) + (int)bodyStringSize.Height + LINE_BUFFER;
 
 
-      tipHeight = headerHeight + bodyHeight + footerHeight;
+      _tipHeight = _headerHeight + _bodyHeight + _footerHeight;
        
-      e.ToolTipSize = new Size(TIP_WIDTH, tipHeight);
+      e.ToolTipSize = new Size(TIP_WIDTH, _tipHeight);
     }
 
     private void OnDraw(object sender, DrawToolTipEventArgs e) {
@@ -91,23 +91,23 @@ namespace Trizbort.UI.Controls {
       // draw header
       float titleBoundsY = 0;
       if (TitleText != string.Empty) {
-        var titleBounds = new RectangleF(new PointF(e.Bounds.X + LINE_BUFFER, e.Bounds.Y + LINE_BUFFER), new SizeF(TIP_WIDTH-20,headerHeight));
-        g.DrawString(TitleText, headerFont, textBrush, titleBounds); // top layer
+        var titleBounds = new RectangleF(new PointF(e.Bounds.X + LINE_BUFFER, e.Bounds.Y + LINE_BUFFER), new SizeF(TIP_WIDTH-20,_headerHeight));
+        g.DrawString(TitleText, _headerFont, textBrush, titleBounds); // top layer
         titleBoundsY = titleBounds.Y;
       }
       
       // draw body
       if (BodyText != string.Empty) {
-        var bodyBounds = new RectangleF(new PointF(e.Bounds.X + LINE_BUFFER + 10, titleBoundsY + headerFont.Height + 6), new SizeF(TIP_WIDTH-20,bodyHeight));
-        g.DrawString(BodyText, bodyFont, textBrush, bodyBounds); // top layer
+        var bodyBounds = new RectangleF(new PointF(e.Bounds.X + LINE_BUFFER + 10, titleBoundsY + _headerFont.Height + 6), new SizeF(TIP_WIDTH-20,_bodyHeight));
+        g.DrawString(BodyText, _bodyFont, textBrush, bodyBounds); // top layer
       }
 
       // draw footer
       if (FooterText != string.Empty) {
-        var footerBounds = new RectangleF(new PointF(e.Bounds.X + LINE_BUFFER, e.Bounds.Y + headerHeight + bodyHeight + LINE_BUFFER), new SizeF(TIP_WIDTH-20,footerHeight));
+        var footerBounds = new RectangleF(new PointF(e.Bounds.X + LINE_BUFFER, e.Bounds.Y + _headerHeight + _bodyHeight + LINE_BUFFER), new SizeF(TIP_WIDTH-20,_footerHeight));
         using (var pen = new Pen(Color.Gray))
           g.DrawLine(pen, new PointF(0f, footerBounds.Y), new PointF(TIP_WIDTH, footerBounds.Y));
-        g.DrawString(FooterText, footerFont, textBrush, new RectangleF(new PointF(footerBounds.Location.X, footerBounds.Location.Y+2), footerBounds.Size)); 
+        g.DrawString(FooterText, _footerFont, textBrush, new RectangleF(new PointF(footerBounds.Location.X, footerBounds.Location.Y+2), footerBounds.Size)); 
       }
 
       b.Dispose();
@@ -115,9 +115,9 @@ namespace Trizbort.UI.Controls {
 
     protected override void Dispose(bool disposing) {
       if (disposing) {
-        bodyFont.Dispose();
-        headerFont.Dispose();
-        footerFont.Dispose();
+        _bodyFont.Dispose();
+        _headerFont.Dispose();
+        _footerFont.Dispose();
       }
       base.Dispose(disposing);
     }

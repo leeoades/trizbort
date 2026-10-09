@@ -107,14 +107,14 @@ namespace Trizbort.Tests {
         document.SelectNodes("/trizbort/map/line").Count.ShouldBe(1);
         document.SelectNodes("/trizbort/map/label").Count.ShouldBe(1);
         document.SelectNodes("/trizbort/map/labelLine").Count.ShouldBe(1);
-        document.SelectSingleNode("/trizbort/map/line/dock").Attributes["id"].Value.ShouldBe(room.ID.ToString());
+        document.SelectSingleNode("/trizbort/map/line/dock").Attributes["id"].Value.ShouldBe(room.Id.ToString());
 
         new LegacyMapFileEngine(loaded).Load(path).ShouldBeTrue();
         var loadedLabel = loaded.Elements.OfType<MapLabel>().Single();
         assertLabelEqual(loadedLabel, label);
         loadedLabel.Position.ShouldBe(label.Position);
-        loadedLabel.ID.ShouldBe(label.ID);
-        var loadedLine = loaded.Elements.OfType<Connection>().Single(line => line.ID == labelLine.ID);
+        loadedLabel.Id.ShouldBe(label.Id);
+        var loadedLine = loaded.Elements.OfType<Connection>().Single(line => line.Id == labelLine.Id);
         loadedLine.VertexList[1].Port.Owner.ShouldBeSameAs(loadedLabel);
         loadedLine.GetCurveWaypoint(CurveWaypoint.Middle).ShouldBe(new Vector(180, 90));
         loadedLine.IsDangling.ShouldBeFalse();
@@ -143,7 +143,7 @@ namespace Trizbort.Tests {
       controller.SetLabel(pasted, loaded.Labels.Single());
 
       assertLabelEqual(pasted, label);
-      loaded.Connections.Single().VertextList[0].OwnerId.ShouldBe(label.ID);
+      loaded.Connections.Single().VertextList[0].OwnerId.ShouldBe(label.Id);
       loaded.Connections.Single().VertextList[0].Position.ShouldBe(connection.VertexList[0].Position);
       JsonConvert.DeserializeObject<CopyController.CopyObject>("{\"Rooms\":[],\"Connections\":[]}").Labels.ShouldBeEmpty();
     }

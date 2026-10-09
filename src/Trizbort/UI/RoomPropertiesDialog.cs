@@ -16,9 +16,9 @@ namespace Trizbort.UI {
     private const int VERTICAL_MARGIN = 2;
     private const int WIDTH = 24;
     private const string NO_COLOR_SET = "No Color Set";
-    private static Tab mLastClosedTab = Tab.Objects;
-    private readonly int roomID;
-    private bool mAdjustingPosition;
+    private static Tab sMLastClosedTab = Tab.Objects;
+    private readonly int _roomId;
+    private bool _mAdjustingPosition;
 
     public RoomPropertiesDialog(PropertiesStartType start, int id) {
       InitializeComponent();
@@ -30,7 +30,7 @@ namespace Trizbort.UI {
       });
       cboHandDrawn.SelectedIndex = 0;
 
-      roomID = id;
+      _roomId = id;
 
       // load regions control
       cboRegion.Items.Clear();
@@ -41,7 +41,7 @@ namespace Trizbort.UI {
       cboRegion.DrawItem += RegionListBox_DrawItem;
 
       cboReference.Items.Add("");
-      foreach (var room in Project.Current.Elements.OfType<Room>().Where(p => p.ID != roomID).OrderBy(p => p.Name))
+      foreach (var room in Project.Current.Elements.OfType<Room>().Where(p => p.Id != _roomId).OrderBy(p => p.Name))
         cboReference.Items.Add(room);
 
       if (Settings.Regions.Count > 0)
@@ -51,8 +51,8 @@ namespace Trizbort.UI {
         m_tabControl.SelectedTab = tabRegions;
         ActiveControl = cboRegion;
       } else {
-        m_tabControl.SelectedIndex = (int)mLastClosedTab;
-        switch (mLastClosedTab) {
+        m_tabControl.SelectedIndex = (int)sMLastClosedTab;
+        switch (sMLastClosedTab) {
           case Tab.Description:
             ActiveControl = m_descriptionTextBox;
             break;
@@ -73,7 +73,7 @@ namespace Trizbort.UI {
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e) {
-      mLastClosedTab = (Tab)m_tabControl.SelectedIndex;
+      sMLastClosedTab = (Tab)m_tabControl.SelectedIndex;
       base.OnFormClosed(e);
     }
 
@@ -131,7 +131,7 @@ namespace Trizbort.UI {
       }
     }
 
-    private bool isPreviewHandDrawn => cboHandDrawn.SelectedIndex == 1 ||
+    private bool IsPreviewHandDrawn => cboHandDrawn.SelectedIndex == 1 ||
                                        cboHandDrawn.SelectedIndex <= 0 && Settings.HandDrawn;
 
     public bool IsDark {
@@ -476,7 +476,7 @@ namespace Trizbort.UI {
 
     private void chkStartRoom_CheckedChanged(object sender, EventArgs e) {
       if (chkStartRoom.Checked) {
-        var list = Project.Current.Elements.OfType<Room>().Where(p => p.IsStartRoom && p.ID != roomID).ToList();
+        var list = Project.Current.Elements.OfType<Room>().Where(p => p.IsStartRoom && p.Id != _roomId).ToList();
 
         if (list.Count <= 0) return;
 
@@ -507,7 +507,7 @@ namespace Trizbort.UI {
     }
 
     private void m_descriptionTextBox_KeyDown(object sender, KeyEventArgs e) {
-      SelectAllHandler(sender, e);
+      selectAllHandler(sender, e);
     }
 
     private void m_objectTextTextBox_ButtonCustomClick(object sender, EventArgs e) {
@@ -628,7 +628,7 @@ namespace Trizbort.UI {
       var pen = new Pen(Color.Black, 2.0f) {LineJoin = LineJoin.Round};
 
       var rect = new RectangleF(10, 10, 3 * Settings.GridSize, 2 * Settings.GridSize);
-      var handDrawn = isPreviewHandDrawn;
+      var handDrawn = IsPreviewHandDrawn;
       var random = Sketch.Seeded(0);
       var shape = cboDrawType.SelectedItem?.ToString();
 
@@ -664,10 +664,10 @@ namespace Trizbort.UI {
     }
 
     private void PositionCheckBox_CheckedChanged(object sender, EventArgs e) {
-      if (mAdjustingPosition)
+      if (_mAdjustingPosition)
         return;
 
-      mAdjustingPosition = true;
+      _mAdjustingPosition = true;
       try {
         var checkBox = (CheckBox) sender;
         if (checkBox.Checked)
@@ -679,7 +679,7 @@ namespace Trizbort.UI {
           m_sCheckBox.Checked = true;
       }
       finally {
-        mAdjustingPosition = false;
+        _mAdjustingPosition = false;
       }
     }
 
@@ -758,7 +758,7 @@ namespace Trizbort.UI {
         }
     }
 
-    private static void SelectAllHandler(object sender, KeyEventArgs e) {
+    private static void selectAllHandler(object sender, KeyEventArgs e) {
       if (e.Control && e.KeyCode == Keys.A) {
         ((TextBox) sender).SelectAll();
         e.Handled = true;
@@ -783,7 +783,7 @@ namespace Trizbort.UI {
     }
 
     private void txtObjects_KeyDown(object sender, KeyEventArgs e) {
-      SelectAllHandler(sender, e);
+      selectAllHandler(sender, e);
       if (e.Handled) return;
 
       ObjectListEditor.EditResult? result = null;

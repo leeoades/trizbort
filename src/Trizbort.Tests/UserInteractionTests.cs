@@ -53,12 +53,12 @@ namespace Trizbort.Tests {
 
   [TestFixture, Category("Integration")]
   public class UserInteractionTests : IsolatedProjectTests {
-    private RecordingUserInteraction interaction;
+    private RecordingUserInteraction _interaction;
 
     [SetUp]
     public void SubstituteUI() {
-      interaction = new RecordingUserInteraction();
-      UserInteraction.Current = interaction;
+      _interaction = new RecordingUserInteraction();
+      UserInteraction.Current = _interaction;
     }
 
     [Test]
@@ -72,7 +72,7 @@ namespace Trizbort.Tests {
         loaded.Elements.Count.ShouldBe(1);
         loaded.Version.ShouldBe(typeof(Project).Assembly.GetName().Version);
       }
-      interaction.Messages.ShouldBeEmpty();
+      _interaction.Messages.ShouldBeEmpty();
     }
 
     [Test]
@@ -80,7 +80,7 @@ namespace Trizbort.Tests {
       var current = typeof(Project).Assembly.GetName().Version;
       Project.Current.SetVersion(new Version(current.Major + 1, 0, 0, 0).ToString());
       Project.Current.CheckDocVersion();
-      interaction.Messages.ShouldHaveSingleItem().ShouldContain("ahead a major version");
+      _interaction.Messages.ShouldHaveSingleItem().ShouldContain("ahead a major version");
     }
 
     [Test]
@@ -92,9 +92,9 @@ namespace Trizbort.Tests {
         Project.Current.Backup();
         var backup = Files.File("backup-backup-" + index + ".trizbort");
         File.ReadAllText(backup).ShouldBe("Saved map contents");
-        interaction.Messages[index - 1].ShouldBe("Project backed up.: Your project has been backed up to " + backup + ".");
+        _interaction.Messages[index - 1].ShouldBe("Project backed up.: Your project has been backed up to " + backup + ".");
       }
-      interaction.Messages.Count.ShouldBe(2);
+      _interaction.Messages.Count.ShouldBe(2);
       File.ReadAllText(path).ShouldBe("Saved map contents");
     }
 
@@ -103,7 +103,7 @@ namespace Trizbort.Tests {
       var files = Directory.GetFiles(Files.Path);
       Project.Current.Backup();
       Directory.GetFiles(Files.Path).ShouldBe(files);
-      interaction.Messages.ShouldHaveSingleItem().ShouldBe(
+      _interaction.Messages.ShouldHaveSingleItem().ShouldBe(
         "Nothing to backup.: Your project has not yet been saved to a file. There is nothing to backup.");
     }
 
@@ -112,15 +112,15 @@ namespace Trizbort.Tests {
       var path = Files.File("invalid.trizbort");
       File.WriteAllText(path, "<wrong/>");
       new MapLoader(Project.Current).LoadMap(path).ShouldBeFalse();
-      interaction.Messages.ShouldHaveSingleItem().ShouldContain("problem loading");
+      _interaction.Messages.ShouldHaveSingleItem().ShouldContain("problem loading");
       Project.Current.InitFileWWatcher(path);
       Project.Current.FileName = Files.File(@"missing\map.trizbort");
       Project.Current.Save().ShouldBeFalse();
-      interaction.Messages.Count.ShouldBe(2);
-      interaction.Messages[1].ShouldContain("problem saving");
+      _interaction.Messages.Count.ShouldBe(2);
+      _interaction.Messages[1].ShouldContain("problem saving");
     }
 
-    private Room PrepareExistingMap() {
+    private Room prepareExistingMap() {
       var room = ProjectRegressionTests.AddRoom("Existing Room");
       Project.Current.Title = "Existing title";
       Project.Current.Author = "Existing author";
@@ -131,7 +131,7 @@ namespace Trizbort.Tests {
       return room;
     }
 
-    private static void AssertExistingMap(Project existing, Room room) {
+    private static void assertExistingMap(Project existing, Room room) {
       Project.Current.ShouldBeSameAs(existing);
       existing.Elements.ShouldHaveSingleItem().ShouldBeSameAs(room);
       existing.Title.ShouldBe("Existing title");
@@ -141,7 +141,7 @@ namespace Trizbort.Tests {
       existing.IsDirty.ShouldBeTrue();
     }
 
-    private static void AssertWatching(string path) {
+    private static void assertWatching(string path) {
       var watcher = (FileSystemWatcher) typeof(TrizbortFileWatcher)
         .GetField("watcher", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Project.FileWatcher);
       watcher.Path.ShouldBe(Path.GetDirectoryName(path));
@@ -152,7 +152,7 @@ namespace Trizbort.Tests {
     [TestCase(false)]
     [TestCase(true)]
     public void EmptyLocalMap_PublicLoadSucceedsWithoutClearingCurrentMetadata(bool throughProject) {
-      var room = PrepareExistingMap();
+      var room = prepareExistingMap();
       var existing = Project.Current;
       var path = Files.File("empty.trizbort");
       File.WriteAllText(path, "");
@@ -167,15 +167,15 @@ namespace Trizbort.Tests {
         loaded.History.ShouldBeEmpty();
         loaded.IsDirty.ShouldBeFalse();
         Settings.GridSize.ShouldBe(32);
-        AssertExistingMap(existing, room);
-        AssertWatching(path);
+        assertExistingMap(existing, room);
+        assertWatching(path);
       }
-      interaction.Messages.ShouldBeEmpty();
+      _interaction.Messages.ShouldBeEmpty();
     }
 
     [Test]
     public void OpenEmptyLocalMap_ReplacesCurrentProjectWithBlankMap() {
-      var room = PrepareExistingMap();
+      var room = prepareExistingMap();
       var existing = Project.Current;
       var previousForm = TrizbortApplication.MainForm;
       var path = Files.File("explorer-new.trizbort");
@@ -194,8 +194,8 @@ namespace Trizbort.Tests {
         existing.Elements.ShouldHaveSingleItem().ShouldBeSameAs(room);
         existing.Title.ShouldBe("Existing title");
         Settings.GridSize.ShouldBe(32);
-        AssertWatching(path);
-        interaction.Messages.ShouldBeEmpty();
+        assertWatching(path);
+        _interaction.Messages.ShouldBeEmpty();
       } finally {
         TrizbortApplication.MainForm = previousForm;
         existing.Dispose();
@@ -208,15 +208,15 @@ namespace Trizbort.Tests {
     [TestCase("malformed.trizbort", "<trizbort>")]
     [TestCase("whitespace.trizbort", " \r\n\t")]
     public void FailedPublicLoad_PreservesCurrentMapAndReportsError(string name, string contents) {
-      var room = PrepareExistingMap();
+      var room = prepareExistingMap();
       var existing = Project.Current;
       var path = Files.File(name);
       if (contents != null) File.WriteAllText(path, contents);
       using var loaded = new Project {FileName = path};
       loaded.Load().ShouldBeFalse();
-      AssertExistingMap(existing, room);
+      assertExistingMap(existing, room);
       Settings.GridSize.ShouldBe(90);
-      interaction.Messages.ShouldHaveSingleItem().ShouldContain(
+      _interaction.Messages.ShouldHaveSingleItem().ShouldContain(
         Path.GetExtension(path) == ".trizbort" ? "problem loading" : "not a known Trizbort file");
     }
 
@@ -231,8 +231,8 @@ namespace Trizbort.Tests {
         using var loaded = new Project {FileName = Path.GetFileName(path)};
         loaded.Load().ShouldBeTrue();
         loaded.Elements.Count.ShouldBe(empty ? 0 : 1);
-        AssertWatching(path);
-        interaction.Messages.ShouldBeEmpty();
+        assertWatching(path);
+        _interaction.Messages.ShouldBeEmpty();
       } finally {
         Environment.CurrentDirectory = previousDirectory;
       }
@@ -244,15 +244,15 @@ namespace Trizbort.Tests {
       File.WriteAllText(path, "<trizbort version=\"1.0\"><map><room id=\"1\" name=\"First\" isStartRoom=\"yes\"/>" +
         "<room id=\"2\" name=\"Second\" isStartRoom=\"yes\"/></map></trizbort>");
       new MapLoader(Project.Current).LoadMap(path).ShouldBeTrue();
-      interaction.Messages.ShouldHaveSingleItem().ShouldContain("duplicate start room");
+      _interaction.Messages.ShouldHaveSingleItem().ShouldContain("duplicate start room");
     }
 
     [TestCase(DialogResult.OK)]
     [TestCase(DialogResult.Cancel)]
     public void RoomProperties_AreAbstractableAndApplyOnlyOnOK(DialogResult result) {
       var room = ProjectRegressionTests.AddRoom("Original");
-      interaction.Result = result;
-      interaction.EditForm = form => {
+      _interaction.Result = result;
+      _interaction.EditForm = form => {
         var dialog = form.ShouldBeOfType<RoomPropertiesDialog>();
         dialog.RoomName.ShouldBe("Original");
         dialog.RoomName = "Updated";
@@ -267,8 +267,8 @@ namespace Trizbort.Tests {
     [TestCase(DialogResult.Cancel)]
     public void ConnectionProperties_AreAbstractableAndApplyOnlyOnOK(DialogResult result) {
       var line = new Connection(Project.Current) {Name = "Original"};
-      interaction.Result = result;
-      interaction.EditForm = form => {
+      _interaction.Result = result;
+      _interaction.EditForm = form => {
         var dialog = form.ShouldBeOfType<ConnectionPropertiesDialog>();
         dialog.ConnectionName.ShouldBe("Original");
         dialog.ConnectionName = "Updated";
@@ -284,20 +284,20 @@ namespace Trizbort.Tests {
     [TestCase(DialogResult.OK)]
     [TestCase(DialogResult.Cancel)]
     public void ColorPicker_AppliesOnlyAcceptedColorWithoutNativeDialog(DialogResult result) {
-      interaction.Result = result;
-      interaction.EditCommonDialog = dialog => dialog.ShouldBeOfType<ColorDialog>().Color = Color.Blue;
+      _interaction.Result = result;
+      _interaction.EditCommonDialog = dialog => dialog.ShouldBeOfType<ColorDialog>().Color = Color.Blue;
       Colors.ShowColorDialog(Color.Red, null).ShouldBe(result == DialogResult.OK ? Color.Blue : Color.Red);
     }
 
     [Test]
     public void MessageBoundary_PreservesChoiceButtonsOwnerAndDefaultButton() {
       using var owner = new Form();
-      interaction.Result = DialogResult.No;
+      _interaction.Result = DialogResult.No;
       UserInteraction.ShowMessage(owner, "Question", "Caption", MessageBoxButtons.YesNoCancel,
         MessageBoxIcon.Question, MessageBoxDefaultButton.Button2).ShouldBe(DialogResult.No);
-      interaction.Owner.ShouldBeSameAs(owner);
-      interaction.Buttons.ShouldBe(MessageBoxButtons.YesNoCancel);
-      interaction.DefaultButton.ShouldBe(MessageBoxDefaultButton.Button2);
+      _interaction.Owner.ShouldBeSameAs(owner);
+      _interaction.Buttons.ShouldBe(MessageBoxButtons.YesNoCancel);
+      _interaction.DefaultButton.ShouldBe(MessageBoxDefaultButton.Button2);
     }
 
     [Test]
@@ -305,7 +305,7 @@ namespace Trizbort.Tests {
       var room = ProjectRegressionTests.AddRoom("Copied");
       var controller = new CopyController();
       controller.CopyElements(new List<Element> {room});
-      interaction.ClipboardText.ShouldContain("Copied");
+      _interaction.ClipboardText.ShouldContain("Copied");
       var copy = controller.PasteElements().ShouldBeOfType<CopyController.CopyObject>();
       copy.Rooms.ShouldHaveSingleItem().Name.ShouldBe("Copied");
     }

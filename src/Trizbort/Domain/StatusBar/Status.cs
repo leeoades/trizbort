@@ -6,10 +6,10 @@ using System.Windows.Forms;
 
 namespace Trizbort.Domain.StatusBar {
   public enum StatusItems {
-    tsb_Info = 0,
-    tsb_CapsLock,
-    tsb_NumLock,
-    tsb_Zoom
+    TsbInfo = 0,
+    TsbCapsLock,
+    TsbNumLock,
+    TsbZoom
   }
 
   public class StatusItem {
@@ -23,15 +23,15 @@ namespace Trizbort.Domain.StatusBar {
 
   public class Status {
     public Status(StatusStrip statusBar) {
-      this.statusBar = statusBar;
-      this.statusBar.MouseLeave += showDefaultInfoMessage;
+      this.StatusBar = statusBar;
+      this.StatusBar.MouseLeave += showDefaultInfoMessage;
     }
 
     private void showDefaultInfoMessage(object sender, EventArgs e) {
       updateInfoMessage(string.Empty);
     }
 
-    private StatusStrip statusBar { get; set; }
+    private StatusStrip StatusBar { get; set; }
     public List<StatusItem> Items { get; set; } = null;
     public string LastStatus { get; set; }
 
@@ -41,7 +41,7 @@ namespace Trizbort.Domain.StatusBar {
         addItemsToStatusBar();
       }
 
-      foreach (var statusItem in Items.Where(p=>p.Id != StatusItems.tsb_Info)) {
+      foreach (var statusItem in Items.Where(p=>p.Id != StatusItems.TsbInfo)) {
         statusItem.Control.Text =  statusItem.Widget.DisplayText();
         statusItem.Control.ForeColor = statusItem.Widget.DisplayColor;
       }
@@ -49,19 +49,19 @@ namespace Trizbort.Domain.StatusBar {
 
     private void addItemsToStatusBar() {
       foreach (var statusItem in Items) {
-        if (statusItem.Id == StatusItems.tsb_Info) {
+        if (statusItem.Id == StatusItems.TsbInfo) {
           var infoLabel = new ToolStripStatusLabel(statusItem.Id.ToString()) {
             Spring = true,
             Alignment = ToolStripItemAlignment.Left,
             TextAlign = ContentAlignment.MiddleLeft
           };
-          statusBar.Items.Add(infoLabel);
+          StatusBar.Items.Add(infoLabel);
           statusItem.Control = infoLabel;
         } else {
           var itemLabel = new ToolStripStatusLabel(statusItem.Id.ToString()) {Tag = statusItem.Id};
           itemLabel.MouseEnter += showHelp;
           itemLabel.Click += handleClick;
-          statusBar.Items.Add(itemLabel);
+          StatusBar.Items.Add(itemLabel);
           statusItem.Control = itemLabel;
         }
       }
@@ -83,7 +83,7 @@ namespace Trizbort.Domain.StatusBar {
     }
 
     private void updateInfoMessage(string text) {
-      var item = Items.Find(p => p.Id == StatusItems.tsb_Info);
+      var item = Items.Find(p => p.Id == StatusItems.TsbInfo);
       item.Control.Text = text;
     }
 
@@ -93,10 +93,10 @@ namespace Trizbort.Domain.StatusBar {
 
     private void setDefaultItems() {
       Items = new List<StatusItem> {
-        new StatusItem {Id = StatusItems.tsb_Info, Show = true},
-        new StatusItem {Id = StatusItems.tsb_CapsLock, Show = true, Widget = new CapsLockStatusWidget()},
-        new StatusItem {Id = StatusItems.tsb_NumLock, Show = true, Widget = new NumLockStatusWidget()}, 
-        new StatusItem {Id = StatusItems.tsb_Zoom, Show = true, Widget = new ZoomStatusWidget()}
+        new StatusItem {Id = StatusItems.TsbInfo, Show = true},
+        new StatusItem {Id = StatusItems.TsbCapsLock, Show = true, Widget = new CapsLockStatusWidget()},
+        new StatusItem {Id = StatusItems.TsbNumLock, Show = true, Widget = new NumLockStatusWidget()}, 
+        new StatusItem {Id = StatusItems.TsbZoom, Show = true, Widget = new ZoomStatusWidget()}
       };
     }
   }

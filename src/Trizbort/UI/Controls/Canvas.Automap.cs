@@ -12,13 +12,13 @@ using Trizbort.Setup;
 
 namespace Trizbort.UI.Controls {
   public sealed partial class Canvas {
-    private readonly Automap.Automap mAutomap = Automap.Automap.Instance;
-    private readonly multithreadedAutomapCanvas mThreadSafeAutomapCanvas;
-    private bool mDontAskAboutAmbiguities;
-    public string AutomappingStatus => mAutomap.Status;
+    private readonly Automap.Automap _mAutomap = Automap.Automap.Instance;
+    private readonly MultithreadedAutomapCanvas _mThreadSafeAutomapCanvas;
+    private bool _mDontAskAboutAmbiguities;
+    public string AutomappingStatus => _mAutomap.Status;
 
 
-    public bool IsAutomapping => mAutomap.Running;
+    public bool IsAutomapping => _mAutomap.Running;
 
     void IAutomapCanvas.AddExitStub(Room room, MappableDirection direction) {
       if (!Project.Current.Elements.Contains(room)) return;
@@ -27,10 +27,10 @@ namespace Trizbort.UI.Controls {
       var connection = addConnection(room, sourceCompassPoint, room, sourceCompassPoint);
       switch (direction) {
         case MappableDirection.Up:
-          connection.StartText = Connection.Up;
+          connection.StartText = Connection.UP;
           break;
         case MappableDirection.Down:
-          connection.StartText = Connection.Down;
+          connection.StartText = Connection.DOWN;
           break;
       }
     }
@@ -72,9 +72,9 @@ namespace Trizbort.UI.Controls {
         // add a new connection
         connection = addConnection(source, sourceCompassPoint, target, targetCompassPoint);
 
-        if (mAutomap.UseDottedConnection) {
+        if (_mAutomap.UseDottedConnection) {
           connection.Style = ConnectionStyle.Dashed;
-          mAutomap.UseDottedConnection = false;
+          _mAutomap.UseDottedConnection = false;
         } else {
           connection.Style = ConnectionStyle.Solid;
         }
@@ -179,7 +179,7 @@ namespace Trizbort.UI.Controls {
       }
 
       if (list.Count == 0) return null;
-      if (mDontAskAboutAmbiguities) return list[0];
+      if (_mDontAskAboutAmbiguities) return list[0];
       if ((string.IsNullOrEmpty(roomDescription) || !list[0].HasDescription) && list.Count == 1) return list[0];
 
       using var dialog = new DisambiguateRoomsDialog();
@@ -189,7 +189,7 @@ namespace Trizbort.UI.Controls {
       if (dialog.UserDoesntCareAnyMore) {
         // The user has given up on this process! Can't say I blame them.
         // Use the first ambiguous room on the list, as above.
-        mDontAskAboutAmbiguities = true;
+        _mDontAskAboutAmbiguities = true;
         return list[0];
       }
 
@@ -212,21 +212,21 @@ namespace Trizbort.UI.Controls {
       if (!Project.Current.Elements.Contains(room)) return;
 
       SelectedElement = room;
-      commandController.MakeVisible(room);
+      _commandController.MakeVisible(room);
     }
 
     public Task StartAutomapping(AutomapSettings settings, bool justParseFile = false) {
       StopAutomapping();
 
-      var task = justParseFile ? mAutomap.StartCL(mThreadSafeAutomapCanvas, settings) : mAutomap.Start(mThreadSafeAutomapCanvas, settings);
+      var task = justParseFile ? _mAutomap.StartCl(_mThreadSafeAutomapCanvas, settings) : _mAutomap.Start(_mThreadSafeAutomapCanvas, settings);
 
-      mDontAskAboutAmbiguities = false;
+      _mDontAskAboutAmbiguities = false;
 
       return task;
     }
 
     public void StopAutomapping() {
-      mAutomap.Stop();
+      _mAutomap.Stop();
     }
 
     private static bool anyRoomsIntersect(Room room) {
@@ -349,24 +349,24 @@ namespace Trizbort.UI.Controls {
     /// <summary>
     ///   A proxy class which implements IAutomapCanvas, marshalling calls to the real canvas on the main thread.
     /// </summary>
-    private class multithreadedAutomapCanvas : IAutomapCanvas {
-      private readonly IAutomapCanvas mCanvas;
-      private readonly Control mControl;
+    private class MultithreadedAutomapCanvas : IAutomapCanvas {
+      private readonly IAutomapCanvas _mCanvas;
+      private readonly Control _mControl;
 
-      public multithreadedAutomapCanvas(Canvas canvas) {
-        mControl = canvas;
-        mCanvas = canvas;
+      public MultithreadedAutomapCanvas(Canvas canvas) {
+        _mControl = canvas;
+        _mCanvas = canvas;
       }
 
       public void AddExitStub(Room room, MappableDirection direction) {
-        try { mControl.Invoke((MethodInvoker) delegate { mCanvas.AddExitStub(room, direction); }); }
+        try { _mControl.Invoke((MethodInvoker) delegate { _mCanvas.AddExitStub(room, direction); }); }
         catch (Exception) {
           // ignored
         }
       }
 
       public void Connect(Room source, MappableDirection directionFromSource, Room target, bool assumeTwoWayConnections) {
-        try { mControl.Invoke((MethodInvoker) delegate { mCanvas.Connect(source, directionFromSource, target, assumeTwoWayConnections); }); }
+        try { _mControl.Invoke((MethodInvoker) delegate { _mCanvas.Connect(source, directionFromSource, target, assumeTwoWayConnections); }); }
         catch (Exception) {
           // ignored
         }
@@ -374,7 +374,7 @@ namespace Trizbort.UI.Controls {
 
       public Room CreateRoom(Room existing, string name) {
         Room room = null;
-        try { mControl.Invoke((MethodInvoker) delegate { room = mCanvas.CreateRoom(existing, name); }); }
+        try { _mControl.Invoke((MethodInvoker) delegate { room = _mCanvas.CreateRoom(existing, name); }); }
         catch (Exception) {
           // ignored
         }
@@ -384,7 +384,7 @@ namespace Trizbort.UI.Controls {
 
       public Room CreateRoom(Room existing, MappableDirection directionFromExisting, string roomName, string line) {
         Room room = null;
-        try { mControl.Invoke((MethodInvoker) delegate { room = mCanvas.CreateRoom(existing, directionFromExisting, roomName, line); }); }
+        try { _mControl.Invoke((MethodInvoker) delegate { room = _mCanvas.CreateRoom(existing, directionFromExisting, roomName, line); }); }
         catch (Exception) {
           // ignored
         }
@@ -394,7 +394,7 @@ namespace Trizbort.UI.Controls {
 
       public Room FindRoom(string roomName, string roomDescription, string line, RoomMatcher matcher) {
         Room room = null;
-        try { mControl.Invoke((MethodInvoker) delegate { room = mCanvas.FindRoom(roomName, roomDescription, line, matcher); }); }
+        try { _mControl.Invoke((MethodInvoker) delegate { room = _mCanvas.FindRoom(roomName, roomDescription, line, matcher); }); }
         catch (Exception) {
           // ignored
         }
@@ -403,21 +403,21 @@ namespace Trizbort.UI.Controls {
       }
 
       public void RemoveExitStub(Room room, MappableDirection direction) {
-        try { mControl.Invoke((MethodInvoker) delegate { mCanvas.RemoveExitStub(room, direction); }); }
+        try { _mControl.Invoke((MethodInvoker) delegate { _mCanvas.RemoveExitStub(room, direction); }); }
         catch (Exception) {
           // ignored
         }
       }
 
       public void RemoveRoom(Room mOtherRoom) {
-        try { mControl.Invoke((MethodInvoker) delegate { mCanvas.RemoveRoom(mOtherRoom); }); }
+        try { _mControl.Invoke((MethodInvoker) delegate { _mCanvas.RemoveRoom(mOtherRoom); }); }
         catch (Exception) {
           // ignored
         }
       }
 
       public void SelectRoom(Room room) {
-        try { mControl.Invoke((MethodInvoker) delegate { mCanvas.SelectRoom(room); }); }
+        try { _mControl.Invoke((MethodInvoker) delegate { _mCanvas.SelectRoom(room); }); }
         catch (Exception) {
           // ignored
         }

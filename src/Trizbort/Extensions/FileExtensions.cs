@@ -3,16 +3,16 @@ using System.IO;
 
 namespace Trizbort.Extensions {
   public static class FileExtensions {
-    private static readonly string numberPattern = "-backup-{0}";
+    private static readonly string NumberPattern = "-backup-{0}";
 
     public static string NextAvailableFilename(this string path) {
       if (!File.Exists(path))
         return path;
 
       if (Path.HasExtension(path))
-        return getNextFilename(path.Insert(path.LastIndexOf(Path.GetExtension(path), StringComparison.CurrentCultureIgnoreCase), numberPattern));
+        return getNextFilename(path.Insert(path.LastIndexOf(Path.GetExtension(path), StringComparison.CurrentCultureIgnoreCase), NumberPattern));
 
-      return getNextFilename(path + numberPattern);
+      return getNextFilename(path + NumberPattern);
     }
 
     private static string getNextFilename(string pattern) {

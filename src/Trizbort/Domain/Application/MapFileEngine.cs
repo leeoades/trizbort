@@ -1,14 +1,14 @@
 ﻿namespace Trizbort.Domain.Application {
   public abstract class MapFileEngine {
-    private string fileName;
+    private string _fileName;
     protected MapFileEngine() { }
 
     protected MapFileEngine(string fileName) {
-      this.fileName = fileName;
+      this._fileName = fileName;
     }
 
     public virtual bool Load() {
-      return Load(fileName);
+      return Load(_fileName);
     }
 
     public virtual bool Load(string fileName) {
@@ -16,7 +16,7 @@
     }
 
     public virtual bool Save() {
-      return Save(fileName);
+      return Save(_fileName);
     }
 
     public virtual bool Save(string fileName) {

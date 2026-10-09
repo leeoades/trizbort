@@ -21,43 +21,43 @@ namespace Trizbort.Domain.Elements {
   /// </summary>
   public class Room : Element, ISizeable {
     private const CompassPoint DEFAULT_OBJECTS_POSITION = CompassPoint.South;
-    private readonly List<string> mDescriptions = new List<string>();
-    private readonly TextBlock mName = new TextBlock();
-    private readonly TextBlock mObjects = new TextBlock();
-    private readonly TextBlock mObjectsDisplay = new TextBlock();
-    private readonly TextBlock mSubTitle = new TextBlock();
-    private bool mAllCornersEqual = true;
-    private BorderDashStyle mBorderStyle = BorderDashStyle.Solid;
-    private CornerRadii mCorners;
-    private bool mEllipse;
-    private HandDrawnStyle mHandDrawnStyle;
-    private bool mIsDark;
-    private bool mIsEndRoom;
-    private bool mIsStartRoom;
-    private CompassPoint mObjectsPosition = DEFAULT_OBJECTS_POSITION;
+    private readonly List<string> _mDescriptions = new List<string>();
+    private readonly TextBlock _mName = new TextBlock();
+    private readonly TextBlock _mObjects = new TextBlock();
+    private readonly TextBlock _mObjectsDisplay = new TextBlock();
+    private readonly TextBlock _mSubTitle = new TextBlock();
+    private bool _mAllCornersEqual = true;
+    private BorderDashStyle _mBorderStyle = BorderDashStyle.Solid;
+    private CornerRadii _mCorners;
+    private bool _mEllipse;
+    private HandDrawnStyle _mHandDrawnStyle;
+    private bool _mIsDark;
+    private bool _mIsEndRoom;
+    private bool _mIsStartRoom;
+    private CompassPoint _mObjectsPosition = DEFAULT_OBJECTS_POSITION;
 
-    private bool mOctagonal;
+    private bool _mOctagonal;
 
     // Added for linking connections when pasting
 
-    private Vector mPosition;
+    private Vector _mPosition;
 
     // Added for Room specific colors (White shows global color)
-    private Color mRoomborder = Color.Transparent;
+    private Color _mRoomborder = Color.Transparent;
 
-    private Color mRoomfill = Color.Transparent;
-    private Color mRoomlargetext = Color.Transparent;
-    private string mRoomRegion;
-    private Color mRoomsmalltext = Color.Transparent;
-    private Color mRoomSubtitleColor = Color.Transparent;
-    private bool mRoundedCorners;
-    private Color mSecondfill = Color.Transparent;
-    private string mSecondfilllocation = "Bottom";
-    private Vector mSize;
-    private bool mStraightEdges;
+    private Color _mRoomfill = Color.Transparent;
+    private Color _mRoomlargetext = Color.Transparent;
+    private string _mRoomRegion;
+    private Color _mRoomsmalltext = Color.Transparent;
+    private Color _mRoomSubtitleColor = Color.Transparent;
+    private bool _mRoundedCorners;
+    private Color _mSecondfill = Color.Transparent;
+    private string _mSecondfilllocation = "Bottom";
+    private Vector _mSize;
+    private bool _mStraightEdges;
 
 
-    private RoomShape shape;
+    private RoomShape _shape;
 
     public Room() {
       addPortsToRoom();
@@ -90,10 +90,10 @@ namespace Trizbort.Domain.Elements {
     }
 
     public bool AllCornersEqual {
-      get => mAllCornersEqual;
+      get => _mAllCornersEqual;
       set {
-        if (mAllCornersEqual != value) {
-          mAllCornersEqual = value;
+        if (_mAllCornersEqual != value) {
+          _mAllCornersEqual = value;
           RaiseChanged();
         }
       }
@@ -102,39 +102,39 @@ namespace Trizbort.Domain.Elements {
     public bool ArbitraryAutomappedPosition { get; set; }
 
     public BorderDashStyle BorderStyle {
-      get => mBorderStyle;
+      get => _mBorderStyle;
       set {
-        if (mBorderStyle == value) return;
-        mBorderStyle = value;
+        if (_mBorderStyle == value) return;
+        _mBorderStyle = value;
         RaiseChanged();
       }
     }
 
     public CornerRadii Corners {
-      get => mCorners;
+      get => _mCorners;
       set {
-        if (mCorners == null) {
-          mCorners = value;
+        if (_mCorners == null) {
+          _mCorners = value;
           return;
         }
 
-        if (mCorners.BottomLeft != value.BottomLeft) {
-          mCorners.BottomLeft = value.BottomLeft;
+        if (_mCorners.BottomLeft != value.BottomLeft) {
+          _mCorners.BottomLeft = value.BottomLeft;
           RaiseChanged();
         } //mCorners never equals value...
 
-        if (mCorners.BottomRight != value.BottomRight) {
-          mCorners.BottomRight = value.BottomRight;
+        if (_mCorners.BottomRight != value.BottomRight) {
+          _mCorners.BottomRight = value.BottomRight;
           RaiseChanged();
         }
 
-        if (mCorners.TopLeft != value.TopLeft) {
-          mCorners.TopLeft = value.TopLeft;
+        if (_mCorners.TopLeft != value.TopLeft) {
+          _mCorners.TopLeft = value.TopLeft;
           RaiseChanged();
         }
 
-        if (mCorners.TopRight != value.TopRight) {
-          mCorners.TopRight = value.TopRight;
+        if (_mCorners.TopRight != value.TopRight) {
+          _mCorners.TopRight = value.TopRight;
           RaiseChanged();
         }
       }
@@ -143,10 +143,10 @@ namespace Trizbort.Domain.Elements {
     public override Depth Depth => Depth.Medium;
 
     public bool Ellipse {
-      get => mEllipse;
+      get => _mEllipse;
       set {
-        if (mEllipse != value) {
-          mEllipse = value;
+        if (_mEllipse != value) {
+          _mEllipse = value;
           RaiseChanged();
         }
       }
@@ -154,20 +154,20 @@ namespace Trizbort.Domain.Elements {
 
     /// <summary>Per-room override of the map's hand-drawn setting.</summary>
     public HandDrawnStyle HandDrawnStyle {
-      get => mHandDrawnStyle;
+      get => _mHandDrawnStyle;
       set {
-        if (mHandDrawnStyle != value) {
-          mHandDrawnStyle = value;
+        if (_mHandDrawnStyle != value) {
+          _mHandDrawnStyle = value;
           RaiseChanged();
         }
       }
     }
 
     /// <summary>Whether this room is actually drawn hand-drawn, taking the map setting into account.</summary>
-    public bool IsHandDrawn => mHandDrawnStyle == HandDrawnStyle.HandDrawn ||
-                               mHandDrawnStyle == HandDrawnStyle.MapDefault && Settings.HandDrawn;
+    public bool IsHandDrawn => _mHandDrawnStyle == HandDrawnStyle.HandDrawn ||
+                               _mHandDrawnStyle == HandDrawnStyle.MapDefault && Settings.HandDrawn;
 
-    public bool HasDescription => mDescriptions.Count > 0;
+    public bool HasDescription => _mDescriptions.Count > 0;
     public override bool HasDialog => true;
 
     [JsonIgnore]
@@ -184,19 +184,19 @@ namespace Trizbort.Domain.Elements {
     ///   Get/set whether the room is dark or lit.
     /// </summary>
     public bool IsDark {
-      get => mIsDark;
+      get => _mIsDark;
       set {
-        if (mIsDark == value) return;
-        mIsDark = value;
+        if (_mIsDark == value) return;
+        _mIsDark = value;
         RaiseChanged();
       }
     }
 
     public bool IsEndRoom {
-      get => mIsEndRoom;
+      get => _mIsEndRoom;
       set {
-        if (mIsEndRoom != value) {
-          mIsEndRoom = value;
+        if (_mIsEndRoom != value) {
+          _mIsEndRoom = value;
           RaiseChanged();
         }
       }
@@ -205,10 +205,10 @@ namespace Trizbort.Domain.Elements {
     public bool IsReference => ReferenceRoom != null;
 
     public bool IsStartRoom {
-      get => mIsStartRoom;
+      get => _mIsStartRoom;
       set {
-        if (mIsStartRoom != value) {
-          mIsStartRoom = value;
+        if (_mIsStartRoom != value) {
+          _mIsStartRoom = value;
           RaiseChanged();
         }
       }
@@ -218,11 +218,11 @@ namespace Trizbort.Domain.Elements {
     ///   Get/set the name of the room.
     /// </summary>
     public override string Name {
-      get => mName.Text;
+      get => _mName.Text;
       set {
         value = value ?? string.Empty;
-        if (mName.Text == value) return;
-        mName.Text = value;
+        if (_mName.Text == value) return;
+        _mName.Text = value;
         RaiseChanged();
       }
     }
@@ -231,11 +231,11 @@ namespace Trizbort.Domain.Elements {
     ///   Get/set the list of objects in the room.
     /// </summary>
     public string Objects {
-      get => mObjects.Text;
+      get => _mObjects.Text;
       set {
         value = value ?? string.Empty;
-        if (mObjects.Text == value) return;
-        mObjects.Text = value;
+        if (_mObjects.Text == value) return;
+        _mObjects.Text = value;
         RaiseChanged();
       }
     }
@@ -250,43 +250,43 @@ namespace Trizbort.Domain.Elements {
     ///   at which the object list is drawn on the map.
     /// </summary>
     public CompassPoint ObjectsPosition {
-      get => mObjectsPosition;
+      get => _mObjectsPosition;
       set {
-        if (mObjectsPosition == value) return;
-        mObjectsPosition = value;
+        if (_mObjectsPosition == value) return;
+        _mObjectsPosition = value;
         RaiseChanged();
       }
     }
 
     public bool Octagonal {
-      get => mOctagonal;
+      get => _mOctagonal;
       set {
-        if (mOctagonal != value) {
-          mOctagonal = value;
+        if (_mOctagonal != value) {
+          _mOctagonal = value;
           RaiseChanged();
         }
       }
     }
 
     // Added for linking connections when pasting
-    public int OldID { get; set; }
+    public int OldId { get; set; }
 
     public string PrimaryDescription {
       get {
-        if (mDescriptions.Count > 0)
-          return mDescriptions[0];
+        if (_mDescriptions.Count > 0)
+          return _mDescriptions[0];
         return null;
       }
     }
 
-    public Room ReferenceRoom => Project.Current.Elements.OfType<Room>().FirstOrDefault(p => p.ID == ReferenceRoomId);
+    public Room ReferenceRoom => Project.Current.Elements.OfType<Room>().FirstOrDefault(p => p.Id == ReferenceRoomId);
     public int ReferenceRoomId { get; set; } = -1;
 
     public string Region {
-      get => mRoomRegion;
+      get => _mRoomRegion;
       set {
-        if (mRoomRegion != value) {
-          mRoomRegion = value;
+        if (_mRoomRegion != value) {
+          _mRoomRegion = value;
           RaiseChanged();
         }
       }
@@ -294,10 +294,10 @@ namespace Trizbort.Domain.Elements {
 
     // Added for Room specific colors
     public Color RoomBorderColor {
-      get => mRoomborder;
+      get => _mRoomborder;
       set {
-        if (mRoomborder != value) {
-          mRoomborder = value;
+        if (_mRoomborder != value) {
+          _mRoomborder = value;
           RaiseChanged();
         }
       }
@@ -305,10 +305,10 @@ namespace Trizbort.Domain.Elements {
 
     // Added for Room specific colors
     public Color RoomFillColor {
-      get => mRoomfill;
+      get => _mRoomfill;
       set {
-        if (mRoomfill != value) {
-          mRoomfill = value;
+        if (_mRoomfill != value) {
+          _mRoomfill = value;
           RaiseChanged();
         }
       }
@@ -316,10 +316,10 @@ namespace Trizbort.Domain.Elements {
 
     // Added for Room specific colors
     public Color RoomNameColor {
-      get => mRoomlargetext;
+      get => _mRoomlargetext;
       set {
-        if (mRoomlargetext != value) {
-          mRoomlargetext = value;
+        if (_mRoomlargetext != value) {
+          _mRoomlargetext = value;
           RaiseChanged();
         }
       }
@@ -327,30 +327,30 @@ namespace Trizbort.Domain.Elements {
 
     // Added for Room specific colors
     public Color RoomObjectTextColor {
-      get => mRoomsmalltext;
+      get => _mRoomsmalltext;
       set {
-        if (mRoomsmalltext != value) {
-          mRoomsmalltext = value;
+        if (_mRoomsmalltext != value) {
+          _mRoomsmalltext = value;
           RaiseChanged();
         }
       }
     }
 
     public Color RoomSubtitleColor {
-      get => mRoomSubtitleColor;
+      get => _mRoomSubtitleColor;
       set {
-        if (mRoomSubtitleColor != value) {
-          mRoomSubtitleColor = value;
+        if (_mRoomSubtitleColor != value) {
+          _mRoomSubtitleColor = value;
           RaiseChanged();
         }
       }
     }
 
     public bool RoundedCorners {
-      get => mRoundedCorners;
+      get => _mRoundedCorners;
       set {
-        if (mRoundedCorners != value) {
-          mRoundedCorners = value;
+        if (_mRoundedCorners != value) {
+          _mRoundedCorners = value;
           RaiseChanged();
         }
       }
@@ -358,10 +358,10 @@ namespace Trizbort.Domain.Elements {
 
     // Added for Room specific colors
     public Color SecondFillColor {
-      get => mSecondfill;
+      get => _mSecondfill;
       set {
-        if (mSecondfill != value) {
-          mSecondfill = value;
+        if (_mSecondfill != value) {
+          _mSecondfill = value;
           RaiseChanged();
         }
       }
@@ -369,20 +369,20 @@ namespace Trizbort.Domain.Elements {
 
     // Added for Room specific colors
     public string SecondFillLocation {
-      get => mSecondfilllocation;
+      get => _mSecondfilllocation;
       set {
-        if (mSecondfilllocation != value) {
-          mSecondfilllocation = value;
+        if (_mSecondfilllocation != value) {
+          _mSecondfilllocation = value;
           RaiseChanged();
         }
       }
     }
 
     public RoomShape Shape {
-      get => shape;
+      get => _shape;
       set {
-        if (shape != value) {
-          shape = value;
+        if (_shape != value) {
+          _shape = value;
           setRoomShape(value);
           RaiseChanged();
         }
@@ -390,9 +390,9 @@ namespace Trizbort.Domain.Elements {
     }
 
     public bool StraightEdges {
-      get => mStraightEdges;
+      get => _mStraightEdges;
       set {
-        if (mStraightEdges != value) mStraightEdges = value; //RaiseChanged(); This is disabled because it gives false positives
+        if (_mStraightEdges != value) _mStraightEdges = value; //RaiseChanged(); This is disabled because it gives false positives
       }
     }
 
@@ -400,11 +400,11 @@ namespace Trizbort.Domain.Elements {
     ///   Get/set the subtitle of the room.
     /// </summary>
     public string SubTitle {
-      get => mSubTitle.Text;
+      get => _mSubTitle.Text;
       set {
         value = value ?? string.Empty;
-        if (mSubTitle.Text == value) return;
-        mSubTitle.Text = value;
+        if (_mSubTitle.Text == value) return;
+        _mSubTitle.Text = value;
 
         RaiseChanged();
       }
@@ -413,43 +413,43 @@ namespace Trizbort.Domain.Elements {
     public List<RoomValidationState> ValidationState { get; set; } = new List<RoomValidationState>();
 
     public sealed override Vector Position {
-      get => mPosition;
+      get => _mPosition;
       set {
-        if (mPosition != value) {
-          mPosition = value;
+        if (_mPosition != value) {
+          _mPosition = value;
           ArbitraryAutomappedPosition = false;
           RaiseChanged();
         }
       }
     }
 
-    public float X => mPosition.X;
-    public float Y => mPosition.Y;
-    public float Height => mSize.Y;
+    public float X => _mPosition.X;
+    public float Y => _mPosition.Y;
+    public float Height => _mSize.Y;
 
     public Rect InnerBounds => new Rect(Position, Size);
 
     public Vector Size {
-      get => mSize;
+      get => _mSize;
       set {
-        if (mSize != value) {
-          mSize = value;
+        if (_mSize != value) {
+          _mSize = value;
           RaiseChanged();
         }
       }
     }
 
-    public float Width => mSize.X;
+    public float Width => _mSize.X;
 
     public void AddDescription(string description) {
       if (string.IsNullOrEmpty(description))
         return;
 
-      if (mDescriptions.Any(existing => existing == description))
+      if (_mDescriptions.Any(existing => existing == description))
         return;
 
       // we don't have this (non-empty) description already; add it
-      mDescriptions.Add(description);
+      _mDescriptions.Add(description);
       RaiseChanged();
     }
 
@@ -574,8 +574,8 @@ namespace Trizbort.Domain.Elements {
     }
 
     public void ClearDescriptions() {
-      if (mDescriptions.Count > 0) {
-        mDescriptions.Clear();
+      if (_mDescriptions.Count > 0) {
+        _mDescriptions.Clear();
         RaiseChanged();
       }
     }
@@ -613,7 +613,7 @@ namespace Trizbort.Domain.Elements {
       var handDrawn = IsHandDrawn;
       StraightEdges = !handDrawn;
 
-      var random = Sketch.Seeded(ID + 1000);
+      var random = Sketch.Seeded(Id + 1000);
 
       var topLeft = InnerBounds.GetCorner(CompassPoint.NorthWest);
       var topRight = InnerBounds.GetCorner(CompassPoint.NorthEast);
@@ -681,7 +681,7 @@ namespace Trizbort.Domain.Elements {
       //this is the code to draw the yellow boundary around a selected room
       if (context.Selected) {
         var tBounds = InnerBounds;
-        tBounds.Inflate(Project.Current.ActiveSelectedElement?.ID == ID ? 10 : 5);
+        tBounds.Inflate(Project.Current.ActiveSelectedElement?.Id == Id ? 10 : 5);
 
         var topLeftSelect = tBounds.GetCorner(CompassPoint.NorthWest);
         var topRightSelect = tBounds.GetCorner(CompassPoint.NorthEast);
@@ -696,7 +696,7 @@ namespace Trizbort.Domain.Elements {
         var pathSelected = palette.Path();
         addOutline(pathSelected, tBounds, handDrawn);
 
-        var brushSelected = Project.Current.ActiveSelectedElement?.ID == ID ? new SolidBrush(Color.Gold) : new SolidBrush(Color.Gold);
+        var brushSelected = Project.Current.ActiveSelectedElement?.Id == Id ? new SolidBrush(Color.Gold) : new SolidBrush(Color.Gold);
         graphics.DrawPath(brushSelected, pathSelected);
       }
 
@@ -823,14 +823,14 @@ namespace Trizbort.Domain.Elements {
 
       if (textBounds.Width > 0 && textBounds.Height > 0)
         if (!ApplicationSettingsController.AppSettings.DebugDisableTextRendering) {
-          var tName = IsReference ? new TextBlock {Text = "To"} : mName;
-          var tSubtitle = IsReference ? new TextBlock {Text = ReferenceRoom.Name} : mSubTitle;
-          var RoomTextRect = tName.Draw(graphics, font, roombrush, textBounds.Position, textBounds.Size, XStringFormats.Center);
+          var tName = IsReference ? new TextBlock {Text = "To"} : _mName;
+          var tSubtitle = IsReference ? new TextBlock {Text = ReferenceRoom.Name} : _mSubTitle;
+          var roomTextRect = tName.Draw(graphics, font, roombrush, textBounds.Position, textBounds.Size, XStringFormats.Center);
 
           // draw subtitle text
           var subTitleBrush = IsReference ? roombrush : (RoomSubtitleColor != Color.Transparent ? new SolidBrush(RoomSubtitleColor) : palette.SubtitleTextBrush);
-          var SubtitleTextRect = new Rect(RoomTextRect.Left, RoomTextRect.Bottom, RoomTextRect.Right - RoomTextRect.Left, textBounds.Bottom - RoomTextRect.Bottom);
-          tSubtitle.Draw(graphics, Settings.SubtitleFont, subTitleBrush, SubtitleTextRect.Position, SubtitleTextRect.Size, XStringFormats.Center);
+          var subtitleTextRect = new Rect(roomTextRect.Left, roomTextRect.Bottom, roomTextRect.Right - roomTextRect.Left, textBounds.Bottom - roomTextRect.Bottom);
+          tSubtitle.Draw(graphics, Settings.SubtitleFont, subTitleBrush, subtitleTextRect.Position, subtitleTextRect.Size, XStringFormats.Center);
         }
 
       var expandedBounds = InnerBounds;
@@ -848,12 +848,12 @@ namespace Trizbort.Domain.Elements {
 
       if (!string.IsNullOrEmpty(Objects)) {
         var format = new XStringFormat();
-        var pos = expandedBounds.GetCorner(mObjectsPosition);
+        var pos = expandedBounds.GetCorner(_mObjectsPosition);
 
-        var displayText = ObjectList.FormatForDisplay(mObjects.Text);
-        if (mObjectsDisplay.Text != displayText) mObjectsDisplay.Text = displayText;
+        var displayText = ObjectList.FormatForDisplay(_mObjects.Text);
+        if (_mObjectsDisplay.Text != displayText) _mObjectsDisplay.Text = displayText;
 
-        if (!Drawing.SetAlignmentFromCardinalOrOrdinalDirection(format, mObjectsPosition)) {
+        if (!Drawing.SetAlignmentFromCardinalOrOrdinalDirection(format, _mObjectsPosition)) {
           // object list appears inside the room below its name
           format.LineAlignment = XLineAlignment.Far;
           format.Alignment = XStringAlignment.Near;
@@ -865,9 +865,9 @@ namespace Trizbort.Domain.Elements {
           pos.X += ObjectsCustomPosition ? ObjectsCustomPositionRight : 0;
           pos.Y += ObjectsCustomPosition ? ObjectsCustomPositionDown : 0;
           if (bounds.Width > 0 && bounds.Height > 0)
-            mObjectsDisplay.Draw(graphics, font, brush, pos, bounds.Size, format);
+            _mObjectsDisplay.Draw(graphics, font, brush, pos, bounds.Size, format);
           drawnObjectList = true;
-        } else if (mObjectsPosition == CompassPoint.North || mObjectsPosition == CompassPoint.South) {
+        } else if (_mObjectsPosition == CompassPoint.North || _mObjectsPosition == CompassPoint.South) {
           pos.X += Settings.ObjectListOffsetFromRoom + (ObjectsCustomPosition ? ObjectsCustomPositionRight : 0);
           pos.Y += ObjectsCustomPosition ? ObjectsCustomPositionDown : 0;
         } else {
@@ -877,7 +877,7 @@ namespace Trizbort.Domain.Elements {
 
         if (!drawnObjectList)
           if (!ApplicationSettingsController.AppSettings.DebugDisableTextRendering) {
-            if (format.Alignment != XStringAlignment.Near && displayText.Contains(ObjectList.DisplayBullet)) {
+            if (format.Alignment != XStringAlignment.Near && displayText.Contains(ObjectList.DISPLAY_BULLET)) {
               // right-aligning each line would lose the indentation of contained objects,
               // so instead left-align the lines within a block whose right edge is at pos
               var width = displayText.Replace("\r", string.Empty).Split('\n').Max(line => graphics.MeasureString(line, font).Width);
@@ -885,7 +885,7 @@ namespace Trizbort.Domain.Elements {
               format.Alignment = XStringAlignment.Near;
             }
 
-            mObjectsDisplay.Draw(graphics, font, brush, pos, Vector.Zero, format);
+            _mObjectsDisplay.Draw(graphics, font, brush, pos, Vector.Zero, format);
           }
       }
 
@@ -1114,17 +1114,17 @@ namespace Trizbort.Domain.Elements {
 
     public bool MatchDescription(string description) {
       if (string.IsNullOrEmpty(description))
-        return mDescriptions.Count == 0;
+        return _mDescriptions.Count == 0;
 
-      return mDescriptions.Any(existing => existing == description);
+      return _mDescriptions.Any(existing => existing == description);
 
       // no match
     }
 
     public void MarkNameInvalid() {
       // it might be a better idea to make that change via public method
-      System.Reflection.FieldInfo fi = mName.GetType().GetField("m_invalidLayout", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-      fi.SetValue(mName, true);
+      System.Reflection.FieldInfo fi = _mName.GetType().GetField("m_invalidLayout", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+      fi.SetValue(_mName, true);
     }
 
     public Port PortAt(CompassPoint compassPoint) {
@@ -1164,7 +1164,7 @@ namespace Trizbort.Domain.Elements {
       context.LinesDrawn.Add(left);
     }
 
-    public Vector quarterPoint(Vector frompoint, Vector topoint) {
+    public Vector QuarterPoint(Vector frompoint, Vector topoint) {
       var retVector = new Vector();
       retVector.X = (frompoint.X * 3 + topoint.X) / 4;
       retVector.Y = (frompoint.Y * 3 + topoint.Y) / 4;
@@ -1180,7 +1180,7 @@ namespace Trizbort.Domain.Elements {
       scribe.Attribute("h", Size.Y);
       scribe.Attribute("region", string.IsNullOrEmpty(Region) ? Misc.Region.DefaultRegion : Region);
       if (ReferenceRoom != null)
-        scribe.Attribute("referenceRoom", ReferenceRoom.ID);
+        scribe.Attribute("referenceRoom", ReferenceRoom.Id);
 
       scribe.Attribute("handDrawn", IsHandDrawn);
       scribe.Attribute("handDrawnStyle", HandDrawnStyle.ToString());
@@ -1301,7 +1301,7 @@ namespace Trizbort.Domain.Elements {
     /// </summary>
     private void addOutline(XGraphicsPath path, Rect bounds, bool handDrawn) {
       var rect = new RectangleF(bounds.X, bounds.Y, bounds.Width, bounds.Height);
-      var random = Sketch.Seeded(ID);
+      var random = Sketch.Seeded(Id);
       if (RoundedCorners) {
         if (handDrawn)
           path.AddPolygon(Sketch.ClosedCurve(Sketch.RoundedRectangle(rect, (float) Corners.TopLeft, (float) Corners.TopRight, (float) Corners.BottomRight, (float) Corners.BottomLeft), random));
@@ -1411,7 +1411,7 @@ namespace Trizbort.Domain.Elements {
     }
 
     private void showRoomDialog(PropertiesStartType start) {
-      using var dialog = new RoomPropertiesDialog(start, ID);
+      using var dialog = new RoomPropertiesDialog(start, Id);
       dialog.RoomName = Name;
       dialog.Description = PrimaryDescription;
       dialog.RoomSubTitle = SubTitle;
@@ -1473,7 +1473,7 @@ namespace Trizbort.Domain.Elements {
 
         Region = dialog.RoomRegion;
 
-        ReferenceRoomId = dialog.ReferenceRoom?.ID ?? -1;
+        ReferenceRoomId = dialog.ReferenceRoom?.Id ?? -1;
         Corners = dialog.Corners;
         RoundedCorners = dialog.RoundedCorners;
         Shape = dialog.Shape;
@@ -1496,7 +1496,7 @@ namespace Trizbort.Domain.Elements {
 
       public CompassPoint CompassPoint { get; set; }
 
-      public override string ID {
+      public override string Id {
         get {
           string name;
           return CompassPointHelper.ToName(CompassPoint, out name) ? name : string.Empty;
@@ -1508,44 +1508,44 @@ namespace Trizbort.Domain.Elements {
   }
 
   public class CornerRadii {
-    private double bottomLeft = 15.0;
-    private double bottomRight = 15.0;
-    private double topLeft = 15.0;
-    private double topRight = 15.0;
+    private double _bottomLeft = 15.0;
+    private double _bottomRight = 15.0;
+    private double _topLeft = 15.0;
+    private double _topRight = 15.0;
 
     public double BottomLeft {
-      get => bottomLeft;
+      get => _bottomLeft;
       set {
-        if (value < 1) bottomLeft = 1;
-        else if (value > 30) bottomLeft = 30;
-        else bottomLeft = value;
+        if (value < 1) _bottomLeft = 1;
+        else if (value > 30) _bottomLeft = 30;
+        else _bottomLeft = value;
       }
     }
 
     public double BottomRight {
-      get => bottomRight;
+      get => _bottomRight;
       set {
-        if (value < 1) bottomRight = 1;
-        else if (value > 30) bottomRight = 30;
-        else bottomRight = value;
+        if (value < 1) _bottomRight = 1;
+        else if (value > 30) _bottomRight = 30;
+        else _bottomRight = value;
       }
     }
 
     public double TopLeft {
-      get => topLeft;
+      get => _topLeft;
       set {
-        if (value < 1) topLeft = 1;
-        else if (value > 30) topLeft = 30;
-        else topLeft = value;
+        if (value < 1) _topLeft = 1;
+        else if (value > 30) _topLeft = 30;
+        else _topLeft = value;
       }
     }
 
     public double TopRight {
-      get => topRight;
+      get => _topRight;
       set {
-        if (value < 1) topRight = 1;
-        else if (value > 30) topRight = 30;
-        else topRight = value;
+        if (value < 1) _topRight = 1;
+        else if (value > 30) _topRight = 30;
+        else _topRight = value;
       }
     }
   }

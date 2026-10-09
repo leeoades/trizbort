@@ -12,7 +12,7 @@ using Trizbort.Util;
 
 namespace Trizbort.Export {
   public abstract partial class CodeExporter : IDisposable {
-    private readonly Dictionary<Room, Location> mMapRoomToLocation = new Dictionary<Room, Location>();
+    private readonly Dictionary<Room, Location> _mMapRoomToLocation = new Dictionary<Room, Location>();
 
     protected CodeExporter() {
       LocationsInExportOrder = new List<Location>();
@@ -122,8 +122,8 @@ namespace Trizbort.Export {
 
         if (sourceRoom == targetRoom && sourceCompassPoint == targetCompassPoint) continue;
 
-        if (mMapRoomToLocation.TryGetValue(sourceRoom, out var sourceLocation) &&
-            mMapRoomToLocation.TryGetValue(targetRoom, out var targetLocation)) {
+        if (_mMapRoomToLocation.TryGetValue(sourceRoom, out var sourceLocation) &&
+            _mMapRoomToLocation.TryGetValue(targetRoom, out var targetLocation)) {
           sourceLocation.AddExit(new Exit(sourceLocation, targetLocation, sourceCompassPoint, connection.StartText,
             connection));
 
@@ -175,7 +175,7 @@ namespace Trizbort.Export {
         mapExportNameToRoom[exportName] = room;
         var location = new Location(room, exportName);
         LocationsInExportOrder.Add(location);
-        mMapRoomToLocation[room] = location;
+        _mMapRoomToLocation[room] = location;
       }
     }
 
@@ -218,7 +218,7 @@ namespace Trizbort.Export {
     }
 
     private void prepareContent() {
-      mMapRoomToLocation.Clear();
+      _mMapRoomToLocation.Clear();
       LocationsInExportOrder.Clear();
       RegionsInExportOrder.Clear();
       findRegions();

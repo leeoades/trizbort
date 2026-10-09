@@ -1,8 +1,8 @@
 ﻿namespace Trizbort.Domain.Commands
 {
-  public interface IParameterizedCommand<T,  Value>
+  public interface IParameterizedCommand<T,  TValue>
   {
-    T Execute(Value value);
+    T Execute(TValue value);
   }
 
   public interface ICommand<T>
@@ -10,19 +10,19 @@
     T Execute();
   }
 
-  public interface IParameterizedCommand<V>
+  public interface IParameterizedCommand<TV>
   {
-    void Execute(V value);
+    void Execute(TV value);
   }
 
-  public interface ICanvasCommand<T, V>
+  public interface ICanvasCommand<T, TV>
   {
-    T Execute(UI.Controls.Canvas canvas, V value);
+    T Execute(UI.Controls.Canvas canvas, TV value);
   }
 
-  public interface ICanvasCommand<V>
+  public interface ICanvasCommand<TV>
   {
-    void Execute(UI.Controls.Canvas canvas, V value);
-    void Execute(UI.Controls.Canvas canvas, V value, object other);
+    void Execute(UI.Controls.Canvas canvas, TV value);
+    void Execute(UI.Controls.Canvas canvas, TV value, object other);
   }
 }

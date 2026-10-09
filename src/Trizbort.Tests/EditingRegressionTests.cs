@@ -17,32 +17,32 @@ using Trizbort.UI.Controls;
 
 namespace Trizbort.Tests {
   internal static class CanvasInput {
-    private static void Send(Canvas canvas, string method, object args) =>
+    private static void send(Canvas canvas, string method, object args) =>
       typeof(Canvas).GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic).Invoke(canvas, new[] {args});
 
     public static void MoveMouse(this Canvas canvas, Vector world) {
       var point = Point.Round(canvas.CanvasToClient(world));
-      Send(canvas, "OnMouseMove", new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 0));
+      send(canvas, "OnMouseMove", new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 0));
     }
     public static void PressMouse(this Canvas canvas, Vector world) {
       var point = Point.Round(canvas.CanvasToClient(world));
-      Send(canvas, "OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, point.X, point.Y, 0));
+      send(canvas, "OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, point.X, point.Y, 0));
     }
-    public static void ReleaseMouse(this Canvas canvas) => Send(canvas, "OnMouseUp", new MouseEventArgs(MouseButtons.Left, 1, 0, 0, 0));
-    public static void Key(this Canvas canvas, Keys key) => Send(canvas, "OnKeyDown", new KeyEventArgs(key));
-    public static void Wheel(this Canvas canvas, Point point) => Send(canvas, "OnMouseWheel", new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 120));
+    public static void ReleaseMouse(this Canvas canvas) => send(canvas, "OnMouseUp", new MouseEventArgs(MouseButtons.Left, 1, 0, 0, 0));
+    public static void Key(this Canvas canvas, Keys key) => send(canvas, "OnKeyDown", new KeyEventArgs(key));
+    public static void Wheel(this Canvas canvas, Point point) => send(canvas, "OnMouseWheel", new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 120));
   }
 
   [TestFixture, Category("Unit")]
   public class EditingRegressionTests : IsolatedProjectTests {
-    private static IEnumerable<TestCaseData> ResizeCases() {
+    private static IEnumerable<TestCaseData> resizeCases() {
       foreach (var label in new[] {false, true})
       foreach (var point in new[] {CompassPoint.North, CompassPoint.NorthEast, CompassPoint.East, CompassPoint.SouthEast,
         CompassPoint.South, CompassPoint.SouthWest, CompassPoint.West, CompassPoint.NorthWest})
         yield return new TestCaseData(label, point);
     }
 
-    [TestCaseSource(nameof(ResizeCases))]
+    [TestCaseSource(nameof(resizeCases))]
     public void Resize_AllHandlesChangeOnlyTheirEdges(bool label, CompassPoint point) {
       ISizeable node = label ? (ISizeable) new MapLabel(Project.Current) : new Room(Project.Current);
       node.Position = new Vector(10, 20);
@@ -62,7 +62,7 @@ namespace Trizbort.Tests {
       node.InnerBounds.Bottom.ShouldBe(movesBottom ? 110 : 100);
     }
 
-    [TestCaseSource(nameof(ResizeCases))]
+    [TestCaseSource(nameof(resizeCases))]
     public void Resize_RejectsInversionAndAllowsOneUnitMinimum(bool label, CompassPoint point) {
       ISizeable node = label ? (ISizeable) new MapLabel(Project.Current) : new Room(Project.Current);
       node.Position = Vector.Zero;
@@ -133,8 +133,8 @@ namespace Trizbort.Tests {
       var copy = JsonConvert.DeserializeObject<CopyController.CopyObject>(JsonConvert.SerializeObject(controller.CreateCopyObject(new[] {connection})));
       var copied = ProjectRegressionTests.AddRoom("Copy");
       var pasted = controller.PasteConnections(Project.Current, copy.Connections,
-        new Dictionary<int, Element> {{first.ID, copied}}, new Vector(20, 10)).Single();
-      pasted.ID.ShouldNotBe(connection.ID);
+        new Dictionary<int, Element> {{first.Id, copied}}, new Vector(20, 10)).Single();
+      pasted.Id.ShouldNotBe(connection.Id);
       pasted.GetSourceRoom().ShouldBeSameAs(copied);
       pasted.VertexList[1].Port.ShouldBeNull();
       pasted.VertexList[1].Position.ShouldBe(connection.VertexList[1].Position - new Vector(20, 10));
@@ -155,7 +155,7 @@ namespace Trizbort.Tests {
       var room = ProjectRegressionTests.AddRoom("Room");
       room.Objects = "lamp\nkey\nbag";
       canvas.MoveMouse(room.InnerBounds.Center);
-      var tooltip = GetTooltip(canvas);
+      var tooltip = getTooltip(canvas);
       tooltip.GetToolTip(canvas).ShouldBe(room.GetToolTipHeader());
       tooltip.FooterText.ShouldBe(room.GetToolTipFooter());
       tooltip.HoverElement.ShouldBeSameAs(room);
@@ -178,7 +178,7 @@ namespace Trizbort.Tests {
       using var canvas = new Canvas {Size = new Size(600, 400)};
       var room = ProjectRegressionTests.AddRoom("Room");
       canvas.MoveMouse(room.InnerBounds.Center);
-      var tooltip = GetTooltip(canvas);
+      var tooltip = getTooltip(canvas);
       tooltip.GetToolTip(canvas).ShouldNotBeNullOrEmpty();
       tooltip.IsShown = true;
       tooltip.LastOwner = canvas;
@@ -209,29 +209,29 @@ namespace Trizbort.Tests {
       second.Position = new Vector(100, 50);
       canvas.MoveMouse(first.InnerBounds.Center);
       canvas.MoveMouse(second.InnerBounds.Center);
-      GetTooltip(canvas).GetToolTip(canvas).ShouldBe(second.GetToolTipHeader());
+      getTooltip(canvas).GetToolTip(canvas).ShouldBe(second.GetToolTipHeader());
 
       var connection = new Connection(Project.Current,
         new Vertex(new Vector(-200, -150)), new Vertex(new Vector(200, -150))) {Name = "Connection", MidText = "path"};
       Project.Current.Elements.Add(connection);
       Project.Current.IsDirty = false;
       canvas.MoveMouse(new Vector(0, -150));
-      GetTooltip(canvas).HoverElement.ShouldBeSameAs(connection);
+      getTooltip(canvas).HoverElement.ShouldBeSameAs(connection);
       connection.MidText.ShouldBe("path");
       Project.Current.IsDirty.ShouldBeFalse();
     }
 
-    private static TrizbortToolTip GetTooltip(Canvas canvas) =>
+    private static TrizbortToolTip getTooltip(Canvas canvas) =>
       (TrizbortToolTip)typeof(Canvas)
         .GetField("trizbortToolTip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(canvas);
 
-    private static IEnumerable<TestCaseData> TooltipMovementCases() {
+    private static IEnumerable<TestCaseData> tooltipMovementCases() {
       foreach (var kind in new[] {"room", "label", "connection"})
       foreach (var key in new[] {Keys.Left, Keys.Right, Keys.Up, Keys.Down, Keys.None})
         yield return new TestCaseData(kind, key);
     }
 
-    [TestCaseSource(nameof(TooltipMovementCases))]
+    [TestCaseSource(nameof(tooltipMovementCases))]
     public void MovingSelection_DismissesExistingTooltip(string kind, Keys key) {
       Settings.SnapToGrid = false;
       using var canvas = new Canvas {Size = new Size(600, 400)};
@@ -370,15 +370,15 @@ namespace Trizbort.Tests {
       var first = canvas.AddRoom(false, false, false);
       first.Name = "First";
       var alias = canvas.AddRoom(false, false, false);
-      alias.ReferenceRoomId = first.ID;
+      alias.ReferenceRoomId = first.Id;
       var line = ProjectRegressionTests.Connect(first, alias);
       var controller = new CopyController();
       var copy = controller.CreateCopyObject(new Element[] {first, alias, line});
-      canvas.pasteRooms(false, copy, controller);
+      canvas.PasteRooms(false, copy, controller);
       var pasted = canvas.SelectedRooms;
       pasted.Count.ShouldBe(2);
       pasted.Single(room => room.ReferenceRoomId != -1).ReferenceRoom.ShouldBeSameAs(pasted.Single(room => room.Name == "First"));
-      pasted.Select(room => room.ID).Intersect(new[] {first.ID, alias.ID}).ShouldBeEmpty();
+      pasted.Select(room => room.Id).Intersect(new[] {first.Id, alias.Id}).ShouldBeEmpty();
       var pastedLine = canvas.SelectedConnections.Single();
       pasted.ShouldContain(pastedLine.GetSourceRoom());
       pasted.ShouldContain(pastedLine.GetTargetRoom());
@@ -399,7 +399,7 @@ namespace Trizbort.Tests {
       var source = Project.Current;
       var target = ProjectRegressionTests.AddRoom("Source target");
       var alias = ProjectRegressionTests.AddRoom("Alias");
-      alias.ReferenceRoomId = target.ID;
+      alias.ReferenceRoomId = target.Id;
       var controller = new CopyController();
       var selected = new List<Element> {alias};
       if (includeTarget) selected.Insert(aliasFirst ? 1 : 0, target);
@@ -408,11 +408,11 @@ namespace Trizbort.Tests {
       try {
         if (crossMap) {
           Project.Current = new Project();
-          ProjectRegressionTests.AddRoom("Unrelated target").ID.ShouldBe(target.ID);
+          ProjectRegressionTests.AddRoom("Unrelated target").Id.ShouldBe(target.Id);
         }
 
         using var canvas = new Canvas();
-        canvas.pasteRooms(false, copy, controller);
+        canvas.PasteRooms(false, copy, controller);
         var pastedAlias = canvas.SelectedRooms.Single(room => room.Name == "Alias");
         if (includeTarget) {
           var pastedTarget = canvas.SelectedRooms.Single(room => room.Name == "Source target");
@@ -423,7 +423,7 @@ namespace Trizbort.Tests {
           pastedAlias.ReferenceRoom.ShouldBeNull();
           pastedAlias.IsReference.ShouldBeFalse();
         }
-        alias.ReferenceRoomId.ShouldBe(target.ID);
+        alias.ReferenceRoomId.ShouldBe(target.Id);
       } finally {
         if (crossMap) {
           Project.Current.Dispose();
@@ -437,15 +437,15 @@ namespace Trizbort.Tests {
       var alias = ProjectRegressionTests.AddRoom("Alias");
       var label = new MapLabel(Project.Current);
       Project.Current.Elements.Add(label);
-      alias.ReferenceRoomId = label.ID;
+      alias.ReferenceRoomId = label.Id;
       var controller = new CopyController();
       var copy = controller.CreateCopyObject(new Element[] {alias, label});
       using var canvas = new Canvas();
-      canvas.pasteRooms(false, copy, controller);
+      canvas.PasteRooms(false, copy, controller);
       canvas.SelectedRooms.Single().ReferenceRoomId.ShouldBe(-1);
       // The next pasted room receives this ID; it must not become its own target.
-      copy.Rooms.Single().ReferenceRoomId = Project.Current.Elements.Max(element => element.ID) + 1;
-      canvas.pasteRooms(false, copy, controller);
+      copy.Rooms.Single().ReferenceRoomId = Project.Current.Elements.Max(element => element.Id) + 1;
+      canvas.PasteRooms(false, copy, controller);
       canvas.SelectedRooms.Single().ReferenceRoomId.ShouldBe(-1);
       canvas.SelectedRooms.Single().ReferenceRoom.ShouldBeNull();
     }

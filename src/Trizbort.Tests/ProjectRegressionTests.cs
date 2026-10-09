@@ -13,13 +13,13 @@ namespace Trizbort.Tests {
     public void IDs_UseFirstPositiveGap_AndRejectExistingIDs() {
       var first = AddRoom("First");
       var second = AddRoom("Second");
-      first.ID.ShouldBe(1);
-      second.ID.ShouldBe(2);
-      second.ID = first.ID;
-      second.ID.ShouldBe(2);
+      first.Id.ShouldBe(1);
+      second.Id.ShouldBe(2);
+      second.Id = first.Id;
+      second.Id.ShouldBe(2);
       Project.Current.Elements.Remove(first);
       var replacement = AddRoom("Replacement");
-      replacement.ID.ShouldBe(1);
+      replacement.Id.ShouldBe(1);
       Project.Current.FindElement(1, out var found).ShouldBeTrue();
       found.ShouldBeSameAs(replacement);
       Project.Current.FindElement(99, out found).ShouldBeFalse();
@@ -83,7 +83,7 @@ namespace Trizbort.Tests {
     public void ReferenceRoom_ResolvesLiveGraph_AndStopsResolvingAfterDeletion() {
       var original = AddRoom("Original");
       var reference = AddRoom("Alias");
-      reference.ReferenceRoomId = original.ID;
+      reference.ReferenceRoomId = original.Id;
       reference.ReferenceRoom.ShouldBeSameAs(original);
       reference.IsReference.ShouldBeTrue();
       Project.Current.Elements.Remove(original);

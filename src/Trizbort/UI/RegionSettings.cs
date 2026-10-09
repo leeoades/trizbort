@@ -6,15 +6,15 @@ using Trizbort.Domain.Misc;
 
 namespace Trizbort.UI {
   public partial class RegionSettings : Form {
-    private readonly string originalName;
-    private readonly List<Region> regions;
+    private readonly string _originalName;
+    private readonly List<Region> _regions;
 
     public RegionSettings(Region region, List<Region> regions) {
       InitializeComponent();
       RegionToChange = new Region {RColor = region.RColor, RegionName = region.RegionName, TextColor = region.TextColor};
 
-      this.regions = regions;
-      originalName = RegionToChange.RegionName;
+      this._regions = regions;
+      _originalName = RegionToChange.RegionName;
       txtRegionName.Text = RegionToChange.RegionName;
       if (RegionToChange.RegionName == Domain.Misc.Region.DefaultRegion)
         txtRegionName.Enabled = false;
@@ -37,7 +37,7 @@ namespace Trizbort.UI {
     private void m_okButton_Click(object sender, EventArgs e) {
       txtRegionName.Text = txtRegionName.Text.Trim().Replace("\"", "'");
       if (Domain.Misc.Region.ValidRegionName(txtRegionName.Text)) {
-        if (!txtRegionName.Text.Equals(originalName, StringComparison.OrdinalIgnoreCase) && regions.Any(p => p.RegionName.Equals(txtRegionName.Text, StringComparison.OrdinalIgnoreCase))) {
+        if (!txtRegionName.Text.Equals(_originalName, StringComparison.OrdinalIgnoreCase) && _regions.Any(p => p.RegionName.Equals(txtRegionName.Text, StringComparison.OrdinalIgnoreCase))) {
           UserInteraction.ShowMessage($"A Region already exists with the name '{txtRegionName.Text}'");
         } else {
           RegionToChange.RegionName = txtRegionName.Text;

@@ -8,14 +8,14 @@ namespace Trizbort.Domain.Misc {
       RColor = Color.White;
       TextColor = Color.Blue;
       RegionName = DefaultRegion;
-      RegionID = new Guid();
+      RegionId = new Guid();
     }
 
     public static string DefaultRegion => "NoRegion";
 
     public Color RColor { get; set; }
 
-    public Guid RegionID { get; set; }
+    public Guid RegionId { get; set; }
     public string RegionName { get; set; }
     public Color TextColor { get; set; }
 
