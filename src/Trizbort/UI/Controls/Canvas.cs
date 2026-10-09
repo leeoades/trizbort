@@ -277,10 +277,10 @@ namespace Trizbort.UI.Controls {
 
       // this is the only way I know of to redraw the room
       // if some other way is easier, best to implement Redraw method in the Room object
-      var size = this.ComputeCanvasBounds(true).Size * (ApplicationSettingsController.AppSettings.SaveAt100 ? 1.0f : this.ZoomFactor);
+      var size = ComputeCanvasBounds(true).Size * (ApplicationSettingsController.AppSettings.SaveAt100 ? 1.0f : ZoomFactor);
       size.X = Numeric.Clamp(size.X, 16, 8192);
       size.Y = Numeric.Clamp(size.Y, 16, 8192);
-      using (var nativeGraphics = Graphics.FromHwnd(this.Handle)) {
+      using (var nativeGraphics = Graphics.FromHwnd(Handle)) {
         using (var stream = new System.IO.MemoryStream()) {
           try {
             var dc = nativeGraphics.GetHdc();

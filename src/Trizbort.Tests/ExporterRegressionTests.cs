@@ -93,7 +93,7 @@ namespace Trizbort.Tests {
 
     [Test]
     public void Preparation_UsesUniqueNamesAcrossReservedWordsRegionsRoomsAndNestedObjects() {
-      Settings.Regions.Add(new Trizbort.Domain.Misc.Region {RegionName = "Forest"});
+      Settings.Regions.Add(new Region {RegionName = "Forest"});
       var room = ProjectRegressionTests.AddRoom("reserved");
       room.Region = "Forest";
       room.Objects = "Chest [c]\n  Key\nreserved\nForest";

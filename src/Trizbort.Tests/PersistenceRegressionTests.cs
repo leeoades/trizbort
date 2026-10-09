@@ -102,7 +102,7 @@ namespace Trizbort.Tests {
         Project.Current.History = "History\nsecond line";
         Project.Current.Description = "Description";
         Settings.GridSize = 17.5f;
-        Settings.Regions.Add(new Trizbort.Domain.Misc.Region {RegionName = "Ice & Snow", RColor = Color.LightBlue, TextColor = Color.Navy});
+        Settings.Regions.Add(new Domain.Misc.Region {RegionName = "Ice & Snow", RColor = Color.LightBlue, TextColor = Color.Navy});
         var first = ProjectRegressionTests.AddRoom("First <&> \u03a9");
         first.Position = new Vector(-12.5f, 31.25f);
         first.Size = new Vector(123.5f, 61.25f);

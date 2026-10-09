@@ -25,7 +25,7 @@ namespace Trizbort.Tests {
       UserInteraction.Current = new UnexpectedUserInteraction();
       Environment.CurrentDirectory = directory.Path;
       // Prevent legacy user-settings migration when the controller initializes.
-      File.WriteAllText(System.IO.Path.Combine(directory.Path, "appsettings.json"), "{}");
+      File.WriteAllText(Path.Combine(directory.Path, "appsettings.json"), "{}");
       ApplicationSettingsController.ResetSettings();
     }
 

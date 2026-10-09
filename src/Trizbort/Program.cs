@@ -21,7 +21,7 @@ namespace Trizbort
       using (var form = new MainForm())
       {
         MainForm = form;
-        System.Windows.Forms.Application.Run(form);
+        Application.Run(form);
         MainForm = null;
       }
     }

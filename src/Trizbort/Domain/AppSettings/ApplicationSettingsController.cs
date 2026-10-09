@@ -198,8 +198,8 @@ namespace Trizbort.Domain.AppSettings {
       }
       AppSettings.RecentProjects.Insert(0, fileName);
 
-      if (AppSettings.RecentProjects.Count > ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT) {
-        AppSettings.RecentProjects.RemoveRange(ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT, AppSettings.RecentProjects.Count - ApplicationSettingsController.RECENT_PROJECTS_MAX_COUNT);
+      if (AppSettings.RecentProjects.Count > RECENT_PROJECTS_MAX_COUNT) {
+        AppSettings.RecentProjects.RemoveRange(RECENT_PROJECTS_MAX_COUNT, AppSettings.RecentProjects.Count - RECENT_PROJECTS_MAX_COUNT);
       }
       SaveSettings();
     }

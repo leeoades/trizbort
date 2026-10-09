@@ -99,7 +99,7 @@ namespace Trizbort.UI {
 
     private void adventuronToTextToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        exportCode<Trizbort.Export.Languages.AdventuronExporter>();
+        exportCode<AdventuronExporter>();
     }
 
 
@@ -362,7 +362,7 @@ namespace Trizbort.UI {
     private void FileExportAdventuronMenuItem_Click(object sender, EventArgs e)
     {
         var fileName = ApplicationSettingsController.AppSettings.LastExportAdventuronFileName;
-        if (exportCode<Trizbort.Export.Languages.AdventuronExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportAdventuronFileName = fileName;
+        if (exportCode<AdventuronExporter>(ref fileName)) ApplicationSettingsController.AppSettings.LastExportAdventuronFileName = fileName;
     }
 
     private void FileExportHugoMenuItem_Click(object sender, EventArgs e) {

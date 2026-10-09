@@ -12,8 +12,8 @@ namespace Trizbort.UI.Controls {
     }
 
     private void updateCue() {
-      if (this.IsHandleCreated && mCue != null) {
-        SendMessage(this.Handle, EM_SETCUEBANNER, (IntPtr) 1, mCue);
+      if (IsHandleCreated && mCue != null) {
+        SendMessage(Handle, EM_SETCUEBANNER, (IntPtr) 1, mCue);
       }
     }
 

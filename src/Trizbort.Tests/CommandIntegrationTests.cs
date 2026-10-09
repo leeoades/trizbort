@@ -186,8 +186,8 @@ namespace Trizbort.Tests {
     public void Statistics_RegionsAndDuplicateExitsIgnoreDanglingTargets() {
       var forest = new Region {RegionName = "Forest"};
       var town = new Region {RegionName = "Town"};
-      Trizbort.Setup.Settings.Regions.Add(forest);
-      Trizbort.Setup.Settings.Regions.Add(town);
+      Setup.Settings.Regions.Add(forest);
+      Setup.Settings.Regions.Add(town);
       var first = ProjectRegressionTests.AddRoom("First");
       first.Region = forest.RegionName;
       first.Objects = "Key\nChest\n  Coin";

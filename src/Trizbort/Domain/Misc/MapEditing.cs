@@ -30,7 +30,7 @@ namespace Trizbort.Domain.Misc {
     public static Vector Resize(ResizeHandle handle, Vector lastPosition, Vector position) {
       if (position == lastPosition) return lastPosition;
       var oldPosition = handle.OwnerPosition;
-      handle.OwnerPosition = Trizbort.Setup.Settings.Snap(oldPosition + position - lastPosition);
+      handle.OwnerPosition = Setup.Settings.Snap(oldPosition + position - lastPosition);
       // Track applied movement, not cursor movement: snapping and minimum size may reject it.
       var applied = handle.OwnerPosition - oldPosition;
       if (applied.X != 0) lastPosition.X += applied.X;
