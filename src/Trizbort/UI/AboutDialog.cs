@@ -11,7 +11,7 @@ public partial class AboutDialog : Form
     InitializeComponent();
     try
     {
-      _versionLabel.Text = $"Version {typeof(AboutDialog).Assembly.GetName().Version.ToString().Trim('.', '0')}";
+      _versionLabel.Text = $"Version {System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(typeof(AboutDialog).Assembly)?.InformationalVersion ?? typeof(AboutDialog).Assembly.GetName().Version.ToString().Trim('.', '0')}";
     }
     catch (Exception)
     {
