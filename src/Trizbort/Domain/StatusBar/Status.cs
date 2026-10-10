@@ -4,100 +4,113 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace Trizbort.Domain.StatusBar {
-  public enum StatusItems {
-    tsb_Info = 0,
-    tsb_CapsLock,
-    tsb_NumLock,
-    tsb_Zoom
+namespace Trizbort.Domain.StatusBar;
+
+public enum StatusItems
+{
+  TsbInfo = 0,
+  TsbCapsLock,
+  TsbNumLock,
+  TsbZoom
+}
+
+public class StatusItem
+{
+  public StatusItems Id { get; set; }
+  public bool Show { get; set; }
+  public ToolStripStatusLabel Control { get; set; }
+  public IStatusWidget Widget { get; set; }
+}
+
+public class Status
+{
+  public Status(StatusStrip statusBar)
+  {
+    StatusBar = statusBar;
+    StatusBar.MouseLeave += ShowDefaultInfoMessage;
   }
 
-  public class StatusItem {
-    public StatusItems Id { get;set; }
-    public bool Show { get; set; }
-    public ToolStripStatusLabel Control { get; set; }
-    public IStatusWidget Widget { get; set; }
+  private StatusStrip StatusBar { get; }
+  public List<StatusItem> Items { get; set; }
+  public string LastStatus { get; set; }
+
+  private void ShowDefaultInfoMessage(object sender, EventArgs e)
+  {
+    UpdateInfoMessage(string.Empty);
   }
 
-
-
-  public class Status {
-    public Status(StatusStrip statusBar) {
-      this.statusBar = statusBar;
-      this.statusBar.MouseLeave += showDefaultInfoMessage;
+  public void UpdateStatusBar()
+  {
+    if (Items == null)
+    {
+      SetDefaultItems();
+      AddItemsToStatusBar();
     }
 
-    private void showDefaultInfoMessage(object sender, EventArgs e) {
-      updateInfoMessage(string.Empty);
+    foreach (var statusItem in Items.Where(p => p.Id != StatusItems.TsbInfo))
+    {
+      statusItem.Control.Text = statusItem.Widget.DisplayText();
+      statusItem.Control.ForeColor = statusItem.Widget.DisplayColor;
     }
+  }
 
-    private StatusStrip statusBar { get; set; }
-    public List<StatusItem> Items { get; set; } = null;
-    public string LastStatus { get; set; }
-
-    public void UpdateStatusBar() {
-      if (Items == null) {
-        setDefaultItems();
-        addItemsToStatusBar();
+  private void AddItemsToStatusBar()
+  {
+    foreach (var statusItem in Items)
+      if (statusItem.Id == StatusItems.TsbInfo)
+      {
+        var infoLabel = new ToolStripStatusLabel(statusItem.Id.ToString()) {
+          Spring = true,
+          Alignment = ToolStripItemAlignment.Left,
+          TextAlign = ContentAlignment.MiddleLeft
+        };
+        StatusBar.Items.Add(infoLabel);
+        statusItem.Control = infoLabel;
       }
-
-      foreach (var statusItem in Items.Where(p=>p.Id != StatusItems.tsb_Info)) {
-        statusItem.Control.Text =  statusItem.Widget.DisplayText();
-        statusItem.Control.ForeColor = statusItem.Widget.DisplayColor;
+      else
+      {
+        var itemLabel = new ToolStripStatusLabel(statusItem.Id.ToString()) { Tag = statusItem.Id };
+        itemLabel.MouseEnter += ShowHelp;
+        itemLabel.Click += HandleClick;
+        StatusBar.Items.Add(itemLabel);
+        statusItem.Control = itemLabel;
       }
-    }
+  }
 
-    private void addItemsToStatusBar() {
-      foreach (var statusItem in Items) {
-        if (statusItem.Id == StatusItems.tsb_Info) {
-          var infoLabel = new ToolStripStatusLabel(statusItem.Id.ToString()) {
-            Spring = true,
-            Alignment = ToolStripItemAlignment.Left,
-            TextAlign = ContentAlignment.MiddleLeft
-          };
-          statusBar.Items.Add(infoLabel);
-          statusItem.Control = infoLabel;
-        } else {
-          var itemLabel = new ToolStripStatusLabel(statusItem.Id.ToString()) {Tag = statusItem.Id};
-          itemLabel.MouseEnter += showHelp;
-          itemLabel.Click += handleClick;
-          statusBar.Items.Add(itemLabel);
-          statusItem.Control = itemLabel;
-        }
-      }
-      
-    }
+  private void HandleClick(object sender, EventArgs e)
+  {
+    var control = (ToolStripStatusLabel)sender;
+    var widget = Items.Find(p => p.Id == (StatusItems)control.Tag);
+    widget.Widget.ClickHandler();
+  }
 
-    private void handleClick(object sender, EventArgs e) {
-      var control = (ToolStripStatusLabel) sender;
-      var widget = Items.Find(p => p.Id == (StatusItems) control.Tag);
-      widget.Widget.ClickHandler();
-    }
+  private void ShowHelp(object sender, EventArgs eventArgs)
+  {
+    var control = (ToolStripStatusLabel)sender;
 
-    private void showHelp(object sender, EventArgs eventArgs) {
-      var control = (ToolStripStatusLabel) sender;
+    var helpItem = Items.Find(p => p.Id == (StatusItems)control.Tag);
 
-      var helpItem = Items.Find(p => p.Id == (StatusItems) control.Tag);
-      
-      updateInfoMessage(helpItem.Widget.HelpText);
-    }
+    UpdateInfoMessage(helpItem.Widget.HelpText);
+  }
 
-    private void updateInfoMessage(string text) {
-      var item = Items.Find(p => p.Id == StatusItems.tsb_Info);
-      item.Control.Text = text;
-    }
+  private void UpdateInfoMessage(string text)
+  {
+    var item = Items.Find(p => p.Id == StatusItems.TsbInfo);
+    item.Control.Text = text;
+  }
 
-    private void updateInfoMessage(IStatusWidget helpItem) {
-      updateInfoMessage(helpItem.HelpText);
-    }
+  private void UpdateInfoMessage(IStatusWidget helpItem)
+  {
+    UpdateInfoMessage(helpItem.HelpText);
+  }
 
-    private void setDefaultItems() {
-      Items = new List<StatusItem> {
-        new StatusItem {Id = StatusItems.tsb_Info, Show = true},
-        new StatusItem {Id = StatusItems.tsb_CapsLock, Show = true, Widget = new CapsLockStatusWidget()},
-        new StatusItem {Id = StatusItems.tsb_NumLock, Show = true, Widget = new NumLockStatusWidget()}, 
-        new StatusItem {Id = StatusItems.tsb_Zoom, Show = true, Widget = new ZoomStatusWidget()}
-      };
-    }
+  private void SetDefaultItems()
+  {
+    Items = new List<StatusItem> {
+      new() { Id = StatusItems.TsbInfo, Show = true },
+      new() { Id = StatusItems.TsbCapsLock, Show = true, Widget = new CapsLockStatusWidget() },
+      new() { Id = StatusItems.TsbNumLock, Show = true, Widget = new NumLockStatusWidget() },
+      new() { Id = StatusItems.TsbZoom, Show = true, Widget = new ZoomStatusWidget() }
+    };
   }
 }

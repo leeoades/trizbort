@@ -1,6 +1,46 @@
 ﻿# Change Log
 All notable changes to this project will be documented in this file.  Version numbers will conform to the semver style versioning (https://semver.org/)
 
+## [Unreleased]
+
+## [2.3.1-beta.1] - 2026-10-10
+
+This is a **beta prerelease for testing**. The stable release remains v2.2.0. Extract the beta
+into a separate writable folder and test with copies of your maps; keep backups of maps and
+`appsettings.json`.
+
+### Fix
+- Canvas tooltips now use a standard hover delay and cursor-relative placement instead of appearing immediately over rooms. Clicking, leaving the canvas or editing dismisses them, so object lists no longer obstruct room selection. Hovering a connection no longer clears its label.
+
+### Change
+- Tidied code formatting and bracing throughout the codebase; no intended behavior change.
+- Replaced reflective text-layout and colour copy/paste access with typed APIs, and replaced test-only reflection for dialog/exporter construction, input simulation and private state with typed constructors, subclasses and internal diagnostics. Clipboard colour keys remain compatible.
+- Modernized C# naming throughout the application and tests: PascalCase methods and constants, `_camelCase` private fields without `m`/`s` prefixes, and updated editor rules and technical references. Preserved control names, serialized keys and native entry points, and repaired reflection lookups.
+- Room Properties now remembers the tab selected when the last dialog closed, including OK and Cancel, across rooms and maps until Trizbort exits. The initial tab is Objects with its text box focused; new rooms no longer automatically focus Name. The region shortcut still opens Regions and also updates the remembered tab when closed. (#5)
+
+## [2.3.0-beta.1] - 2026-10-09
+
+This is a **beta prerelease for testing**, based on the regression-coverage changes in #17.
+The stable release remains v2.2.0. Extract the beta into a separate writable folder and test
+with copies of your maps; keep backups of maps and `appsettings.json`.
+
+### Change
+- Expanded regression coverage across editing, persistence, Automap, exporters and rendering, including round-trip checks for all 112 manual map fixtures.
+- Refactored editing, dialog/clipboard interactions and PDF export orchestration to make production behavior testable.
+
+### Fix
+- Corrected defects exposed by regression tests in map loading and metadata preservation, empty-map statistics, editing geometry, pasted room references, exporter reuse and zero-extent PDF export.
+- Improved Automap end-of-file, cancellation and replacement-session handling.
+- Corrected Canvas tooltip positioning and backup message text.
+
+### Beta testing
+- Open, edit, save and reopen copies of existing maps; check names, descriptions, regions, labels, curves and nested objects.
+- Exercise selection, dragging, zoom, copy/paste and dialogs, including Cancel and error paths.
+- Test Automap transcripts and stopping/restarting Automap.
+- Check image/PDF exports and compile generated source in your IF engine.
+- Check font/layout appearance at your usual DPI and with multiple monitors, plus minimap and desktop clipboard behavior.
+- Report problems at https://github.com/leeoades/trizbort/issues with the beta version, reproduction steps and a minimal map or transcript where possible.
+
 ## [2.2.0] - 2026-10-08
 
 ### Add

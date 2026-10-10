@@ -5,7 +5,7 @@ namespace Trizbort.UI
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        private System.ComponentModel.IContainer components = null;
+        private System.ComponentModel.IContainer _components = null;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -13,9 +13,9 @@ namespace Trizbort.UI
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (_components != null))
             {
-                components.Dispose();
+                _components.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -29,173 +29,173 @@ namespace Trizbort.UI
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SettingsDialog));
-            this.m_okButton = new System.Windows.Forms.Button();
-            this.m_cancelButton = new System.Windows.Forms.Button();
-            this.m_handDrawnCheckBox = new System.Windows.Forms.CheckBox();
-            this.m_lineWidthUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label5 = new System.Windows.Forms.Label();
-            this.m_linesGroupBox = new System.Windows.Forms.GroupBox();
-            this.label18 = new System.Windows.Forms.Label();
-            this.m_preferredDistanceBetweenRoomsUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label8 = new System.Windows.Forms.Label();
-            this.m_textOffsetFromLineUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label1 = new System.Windows.Forms.Label();
-            this.m_connectionStalkLengthUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label4 = new System.Windows.Forms.Label();
-            this.m_arrowSizeUpDown = new System.Windows.Forms.NumericUpDown();
-            this.m_gridGroupBox = new System.Windows.Forms.GroupBox();
-            this.m_showOriginCheckBox = new System.Windows.Forms.CheckBox();
-            this.m_showGridCheckBox = new System.Windows.Forms.CheckBox();
-            this.m_snapToGridCheckBox = new System.Windows.Forms.CheckBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.m_gridSizeUpDown = new System.Windows.Forms.NumericUpDown();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label21 = new System.Windows.Forms.Label();
-            this.cboRoomShape = new System.Windows.Forms.ComboBox();
-            this.txtDefaultRoomName = new System.Windows.Forms.TextBox();
-            this.label20 = new System.Windows.Forms.Label();
-            this.label34 = new System.Windows.Forms.Label();
-            this.m_objectListOffsetFromRoomNumericUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label13 = new System.Windows.Forms.Label();
-            this.m_darknessStripeSizeNumericUpDown = new System.Windows.Forms.NumericUpDown();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabPage4 = new System.Windows.Forms.TabPage();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.label17 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
-            this.m_historyTextBox = new System.Windows.Forms.TextBox();
-            this.label15 = new System.Windows.Forms.Label();
-            this.label14 = new System.Windows.Forms.Label();
-            this.m_descriptionTextBox = new System.Windows.Forms.TextBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.m_authorTextBox = new System.Windows.Forms.TextBox();
-            this.m_titleTextBox = new System.Windows.Forms.TextBox();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.m_colorsGroupBox = new System.Windows.Forms.GroupBox();
-            this.m_colorListBox = new System.Windows.Forms.ListBox();
-            this.m_changeColorButton = new System.Windows.Forms.Button();
-            this.m_fontsGroupBox = new System.Windows.Forms.GroupBox();
-            this.label22 = new System.Windows.Forms.Label();
-            this.m_subtitleFontSizeTextBox = new System.Windows.Forms.TextBox();
-            this.m_changeSubtitleFontButton = new System.Windows.Forms.Button();
-            this.m_subtitleFontNameTextBox = new System.Windows.Forms.TextBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.m_lineFontSizeTextBox = new System.Windows.Forms.TextBox();
-            this.m_changeLineFontButton = new System.Windows.Forms.Button();
-            this.m_lineFontNameTextBox = new System.Windows.Forms.TextBox();
-            this.label12 = new System.Windows.Forms.Label();
-            this.m_smallFontSizeTextBox = new System.Windows.Forms.TextBox();
-            this.m_changeSmallFontButton = new System.Windows.Forms.Button();
-            this.m_smallFontNameTextBox = new System.Windows.Forms.TextBox();
-            this.label11 = new System.Windows.Forms.Label();
-            this.m_largeFontSizeTextBox = new System.Windows.Forms.TextBox();
-            this.m_changeLargeFontButton = new System.Windows.Forms.Button();
-            this.m_largeFontNameTextBox = new System.Windows.Forms.TextBox();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.tabRegions = new System.Windows.Forms.TabPage();
-            this.label19 = new System.Windows.Forms.Label();
-            this.btnDeleteRegion = new System.Windows.Forms.Button();
-            this.btnAddRegion = new System.Windows.Forms.Button();
-            this.btnChange = new System.Windows.Forms.Button();
-            this.m_RegionListing = new System.Windows.Forms.ListBox();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.m_wrapTextAtDashes = new System.Windows.Forms.CheckBox();
-            this.label4b = new System.Windows.Forms.Label();
-            this.label4c = new System.Windows.Forms.Label();
-            this.m_documentSpecificMargins = new System.Windows.Forms.CheckBox();
-            this.m_documentHorizontalMargins = new System.Windows.Forms.NumericUpDown();
-            this.m_documentVerticalMargins = new System.Windows.Forms.NumericUpDown();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.m_snapToElementDistanceUpDown = new System.Windows.Forms.NumericUpDown();
-            this.label2 = new System.Windows.Forms.Label();
-            this.m_handleSizeUpDown = new System.Windows.Forms.NumericUpDown();
-            ((System.ComponentModel.ISupportInitialize)(this.m_lineWidthUpDown)).BeginInit();
-            this.m_linesGroupBox.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_preferredDistanceBetweenRoomsUpDown)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_textOffsetFromLineUpDown)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_connectionStalkLengthUpDown)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_arrowSizeUpDown)).BeginInit();
-            this.m_gridGroupBox.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_gridSizeUpDown)).BeginInit();
-            this.groupBox1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_objectListOffsetFromRoomNumericUpDown)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_darknessStripeSizeNumericUpDown)).BeginInit();
-            this.panel1.SuspendLayout();
-            this.tabControl1.SuspendLayout();
-            this.tabPage4.SuspendLayout();
-            this.groupBox3.SuspendLayout();
-            this.tabPage1.SuspendLayout();
-            this.m_colorsGroupBox.SuspendLayout();
-            this.m_fontsGroupBox.SuspendLayout();
-            this.tabPage2.SuspendLayout();
-            this.tabRegions.SuspendLayout();
-            this.tabPage3.SuspendLayout();
-            this.groupBox4.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_documentHorizontalMargins)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_documentVerticalMargins)).BeginInit();
-            this.groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_snapToElementDistanceUpDown)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_handleSizeUpDown)).BeginInit();
+            this._okButton = new System.Windows.Forms.Button();
+            this._cancelButton = new System.Windows.Forms.Button();
+            this._handDrawnCheckBox = new System.Windows.Forms.CheckBox();
+            this._lineWidthUpDown = new System.Windows.Forms.NumericUpDown();
+            this._label5 = new System.Windows.Forms.Label();
+            this._linesGroupBox = new System.Windows.Forms.GroupBox();
+            this._label18 = new System.Windows.Forms.Label();
+            this._preferredDistanceBetweenRoomsUpDown = new System.Windows.Forms.NumericUpDown();
+            this._label8 = new System.Windows.Forms.Label();
+            this._textOffsetFromLineUpDown = new System.Windows.Forms.NumericUpDown();
+            this._label1 = new System.Windows.Forms.Label();
+            this._connectionStalkLengthUpDown = new System.Windows.Forms.NumericUpDown();
+            this._label4 = new System.Windows.Forms.Label();
+            this._arrowSizeUpDown = new System.Windows.Forms.NumericUpDown();
+            this._gridGroupBox = new System.Windows.Forms.GroupBox();
+            this._showOriginCheckBox = new System.Windows.Forms.CheckBox();
+            this._showGridCheckBox = new System.Windows.Forms.CheckBox();
+            this._snapToGridCheckBox = new System.Windows.Forms.CheckBox();
+            this._label6 = new System.Windows.Forms.Label();
+            this._gridSizeUpDown = new System.Windows.Forms.NumericUpDown();
+            this._groupBox1 = new System.Windows.Forms.GroupBox();
+            this._label21 = new System.Windows.Forms.Label();
+            this._cboRoomShape = new System.Windows.Forms.ComboBox();
+            this._txtDefaultRoomName = new System.Windows.Forms.TextBox();
+            this._label20 = new System.Windows.Forms.Label();
+            this._label34 = new System.Windows.Forms.Label();
+            this._objectListOffsetFromRoomNumericUpDown = new System.Windows.Forms.NumericUpDown();
+            this._label13 = new System.Windows.Forms.Label();
+            this._darknessStripeSizeNumericUpDown = new System.Windows.Forms.NumericUpDown();
+            this._panel1 = new System.Windows.Forms.Panel();
+            this._tabControl1 = new System.Windows.Forms.TabControl();
+            this._tabPage4 = new System.Windows.Forms.TabPage();
+            this._groupBox3 = new System.Windows.Forms.GroupBox();
+            this._label17 = new System.Windows.Forms.Label();
+            this._label16 = new System.Windows.Forms.Label();
+            this._historyTextBox = new System.Windows.Forms.TextBox();
+            this._label15 = new System.Windows.Forms.Label();
+            this._label14 = new System.Windows.Forms.Label();
+            this._descriptionTextBox = new System.Windows.Forms.TextBox();
+            this._label10 = new System.Windows.Forms.Label();
+            this._authorTextBox = new System.Windows.Forms.TextBox();
+            this._titleTextBox = new System.Windows.Forms.TextBox();
+            this._tabPage1 = new System.Windows.Forms.TabPage();
+            this._colorsGroupBox = new System.Windows.Forms.GroupBox();
+            this._colorListBox = new System.Windows.Forms.ListBox();
+            this._changeColorButton = new System.Windows.Forms.Button();
+            this._fontsGroupBox = new System.Windows.Forms.GroupBox();
+            this._label22 = new System.Windows.Forms.Label();
+            this._subtitleFontSizeTextBox = new System.Windows.Forms.TextBox();
+            this._changeSubtitleFontButton = new System.Windows.Forms.Button();
+            this._subtitleFontNameTextBox = new System.Windows.Forms.TextBox();
+            this._label9 = new System.Windows.Forms.Label();
+            this._lineFontSizeTextBox = new System.Windows.Forms.TextBox();
+            this._changeLineFontButton = new System.Windows.Forms.Button();
+            this._lineFontNameTextBox = new System.Windows.Forms.TextBox();
+            this._label12 = new System.Windows.Forms.Label();
+            this._smallFontSizeTextBox = new System.Windows.Forms.TextBox();
+            this._changeSmallFontButton = new System.Windows.Forms.Button();
+            this._smallFontNameTextBox = new System.Windows.Forms.TextBox();
+            this._label11 = new System.Windows.Forms.Label();
+            this._largeFontSizeTextBox = new System.Windows.Forms.TextBox();
+            this._changeLargeFontButton = new System.Windows.Forms.Button();
+            this._largeFontNameTextBox = new System.Windows.Forms.TextBox();
+            this._tabPage2 = new System.Windows.Forms.TabPage();
+            this._tabRegions = new System.Windows.Forms.TabPage();
+            this._label19 = new System.Windows.Forms.Label();
+            this._btnDeleteRegion = new System.Windows.Forms.Button();
+            this._btnAddRegion = new System.Windows.Forms.Button();
+            this._btnChange = new System.Windows.Forms.Button();
+            this._regionListing = new System.Windows.Forms.ListBox();
+            this._tabPage3 = new System.Windows.Forms.TabPage();
+            this._groupBox4 = new System.Windows.Forms.GroupBox();
+            this._wrapTextAtDashes = new System.Windows.Forms.CheckBox();
+            this._label4b = new System.Windows.Forms.Label();
+            this._label4c = new System.Windows.Forms.Label();
+            this._documentSpecificMargins = new System.Windows.Forms.CheckBox();
+            this._documentHorizontalMargins = new System.Windows.Forms.NumericUpDown();
+            this._documentVerticalMargins = new System.Windows.Forms.NumericUpDown();
+            this._groupBox2 = new System.Windows.Forms.GroupBox();
+            this._label7 = new System.Windows.Forms.Label();
+            this._label3 = new System.Windows.Forms.Label();
+            this._snapToElementDistanceUpDown = new System.Windows.Forms.NumericUpDown();
+            this._label2 = new System.Windows.Forms.Label();
+            this._handleSizeUpDown = new System.Windows.Forms.NumericUpDown();
+            ((System.ComponentModel.ISupportInitialize)(this._lineWidthUpDown)).BeginInit();
+            this._linesGroupBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._preferredDistanceBetweenRoomsUpDown)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this._textOffsetFromLineUpDown)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this._connectionStalkLengthUpDown)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this._arrowSizeUpDown)).BeginInit();
+            this._gridGroupBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._gridSizeUpDown)).BeginInit();
+            this._groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._objectListOffsetFromRoomNumericUpDown)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this._darknessStripeSizeNumericUpDown)).BeginInit();
+            this._panel1.SuspendLayout();
+            this._tabControl1.SuspendLayout();
+            this._tabPage4.SuspendLayout();
+            this._groupBox3.SuspendLayout();
+            this._tabPage1.SuspendLayout();
+            this._colorsGroupBox.SuspendLayout();
+            this._fontsGroupBox.SuspendLayout();
+            this._tabPage2.SuspendLayout();
+            this._tabRegions.SuspendLayout();
+            this._tabPage3.SuspendLayout();
+            this._groupBox4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._documentHorizontalMargins)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this._documentVerticalMargins)).BeginInit();
+            this._groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._snapToElementDistanceUpDown)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this._handleSizeUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // m_okButton
             // 
-            this.m_okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.m_okButton.Location = new System.Drawing.Point(414, 24);
-            this.m_okButton.Margin = new System.Windows.Forms.Padding(6);
-            this.m_okButton.Name = "m_okButton";
-            this.m_okButton.Size = new System.Drawing.Size(150, 46);
-            this.m_okButton.TabIndex = 0;
-            this.m_okButton.Text = "OK";
-            this.m_okButton.UseVisualStyleBackColor = true;
-            this.m_okButton.Click += new System.EventHandler(this.m_okButton_Click);
+            this._okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this._okButton.Location = new System.Drawing.Point(414, 24);
+            this._okButton.Margin = new System.Windows.Forms.Padding(6);
+            this._okButton.Name = "m_okButton";
+            this._okButton.Size = new System.Drawing.Size(150, 46);
+            this._okButton.TabIndex = 0;
+            this._okButton.Text = "OK";
+            this._okButton.UseVisualStyleBackColor = true;
+            this._okButton.Click += new System.EventHandler(this.OkButtonClick);
             // 
             // m_cancelButton
             // 
-            this.m_cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_cancelButton.CausesValidation = false;
-            this.m_cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.m_cancelButton.Location = new System.Drawing.Point(576, 24);
-            this.m_cancelButton.Margin = new System.Windows.Forms.Padding(6);
-            this.m_cancelButton.Name = "m_cancelButton";
-            this.m_cancelButton.Size = new System.Drawing.Size(150, 46);
-            this.m_cancelButton.TabIndex = 1;
-            this.m_cancelButton.Text = "Cancel";
-            this.m_cancelButton.UseVisualStyleBackColor = true;
+            this._cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this._cancelButton.CausesValidation = false;
+            this._cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this._cancelButton.Location = new System.Drawing.Point(576, 24);
+            this._cancelButton.Margin = new System.Windows.Forms.Padding(6);
+            this._cancelButton.Name = "m_cancelButton";
+            this._cancelButton.Size = new System.Drawing.Size(150, 46);
+            this._cancelButton.TabIndex = 1;
+            this._cancelButton.Text = "Cancel";
+            this._cancelButton.UseVisualStyleBackColor = true;
             // 
             // m_handDrawnCheckBox
             // 
-            this.m_handDrawnCheckBox.AutoSize = true;
-            this.m_handDrawnCheckBox.Cursor = System.Windows.Forms.Cursors.Help;
-            this.m_handDrawnCheckBox.Location = new System.Drawing.Point(96, 40);
-            this.m_handDrawnCheckBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_handDrawnCheckBox.Name = "m_handDrawnCheckBox";
-            this.m_handDrawnCheckBox.Size = new System.Drawing.Size(197, 36);
-            this.m_handDrawnCheckBox.TabIndex = 0;
-            this.m_handDrawnCheckBox.Text = "&Hand-drawn style";
-            this.m_handDrawnCheckBox.UseVisualStyleBackColor = true;
+            this._handDrawnCheckBox.AutoSize = true;
+            this._handDrawnCheckBox.Cursor = System.Windows.Forms.Cursors.Help;
+            this._handDrawnCheckBox.Location = new System.Drawing.Point(96, 40);
+            this._handDrawnCheckBox.Margin = new System.Windows.Forms.Padding(6);
+            this._handDrawnCheckBox.Name = "m_handDrawnCheckBox";
+            this._handDrawnCheckBox.Size = new System.Drawing.Size(197, 36);
+            this._handDrawnCheckBox.TabIndex = 0;
+            this._handDrawnCheckBox.Text = "&Hand-drawn style";
+            this._handDrawnCheckBox.UseVisualStyleBackColor = true;
             // 
             // m_lineWidthUpDown
             // 
-            this.m_lineWidthUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_lineWidthUpDown.DecimalPlaces = 1;
-            this.m_lineWidthUpDown.Increment = new decimal(new int[] {
+            this._lineWidthUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._lineWidthUpDown.DecimalPlaces = 1;
+            this._lineWidthUpDown.Increment = new decimal(new int[] {
             5,
             0,
             0,
             65536});
-            this.m_lineWidthUpDown.Location = new System.Drawing.Point(484, 38);
-            this.m_lineWidthUpDown.Margin = new System.Windows.Forms.Padding(6);
-            this.m_lineWidthUpDown.Name = "m_lineWidthUpDown";
-            this.m_lineWidthUpDown.Size = new System.Drawing.Size(190, 39);
-            this.m_lineWidthUpDown.TabIndex = 2;
-            this.m_lineWidthUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_lineWidthUpDown.Value = new decimal(new int[] {
+            this._lineWidthUpDown.Location = new System.Drawing.Point(484, 38);
+            this._lineWidthUpDown.Margin = new System.Windows.Forms.Padding(6);
+            this._lineWidthUpDown.Name = "m_lineWidthUpDown";
+            this._lineWidthUpDown.Size = new System.Drawing.Size(190, 39);
+            this._lineWidthUpDown.TabIndex = 2;
+            this._lineWidthUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._lineWidthUpDown.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -203,68 +203,68 @@ namespace Trizbort.UI
             // 
             // label5
             // 
-            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label5.AutoSize = true;
-            this.label5.Cursor = System.Windows.Forms.Cursors.Help;
-            this.label5.Location = new System.Drawing.Point(402, 41);
-            this.label5.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(79, 32);
-            this.label5.TabIndex = 1;
-            this.label5.Text = "&Width";
+            this._label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label5.AutoSize = true;
+            this._label5.Cursor = System.Windows.Forms.Cursors.Help;
+            this._label5.Location = new System.Drawing.Point(402, 41);
+            this._label5.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label5.Name = "label5";
+            this._label5.Size = new System.Drawing.Size(79, 32);
+            this._label5.TabIndex = 1;
+            this._label5.Text = "&Width";
             // 
             // m_linesGroupBox
             // 
-            this.m_linesGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._linesGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_linesGroupBox.Controls.Add(this.label18);
-            this.m_linesGroupBox.Controls.Add(this.m_preferredDistanceBetweenRoomsUpDown);
-            this.m_linesGroupBox.Controls.Add(this.label8);
-            this.m_linesGroupBox.Controls.Add(this.m_textOffsetFromLineUpDown);
-            this.m_linesGroupBox.Controls.Add(this.label1);
-            this.m_linesGroupBox.Controls.Add(this.m_connectionStalkLengthUpDown);
-            this.m_linesGroupBox.Controls.Add(this.label4);
-            this.m_linesGroupBox.Controls.Add(this.m_arrowSizeUpDown);
-            this.m_linesGroupBox.Controls.Add(this.m_handDrawnCheckBox);
-            this.m_linesGroupBox.Controls.Add(this.label5);
-            this.m_linesGroupBox.Controls.Add(this.m_lineWidthUpDown);
-            this.m_linesGroupBox.Location = new System.Drawing.Point(10, 12);
-            this.m_linesGroupBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_linesGroupBox.Name = "m_linesGroupBox";
-            this.m_linesGroupBox.Padding = new System.Windows.Forms.Padding(6);
-            this.m_linesGroupBox.Size = new System.Drawing.Size(686, 326);
-            this.m_linesGroupBox.TabIndex = 0;
-            this.m_linesGroupBox.TabStop = false;
-            this.m_linesGroupBox.Text = "&Lines";
+            this._linesGroupBox.Controls.Add(this._label18);
+            this._linesGroupBox.Controls.Add(this._preferredDistanceBetweenRoomsUpDown);
+            this._linesGroupBox.Controls.Add(this._label8);
+            this._linesGroupBox.Controls.Add(this._textOffsetFromLineUpDown);
+            this._linesGroupBox.Controls.Add(this._label1);
+            this._linesGroupBox.Controls.Add(this._connectionStalkLengthUpDown);
+            this._linesGroupBox.Controls.Add(this._label4);
+            this._linesGroupBox.Controls.Add(this._arrowSizeUpDown);
+            this._linesGroupBox.Controls.Add(this._handDrawnCheckBox);
+            this._linesGroupBox.Controls.Add(this._label5);
+            this._linesGroupBox.Controls.Add(this._lineWidthUpDown);
+            this._linesGroupBox.Location = new System.Drawing.Point(10, 12);
+            this._linesGroupBox.Margin = new System.Windows.Forms.Padding(6);
+            this._linesGroupBox.Name = "m_linesGroupBox";
+            this._linesGroupBox.Padding = new System.Windows.Forms.Padding(6);
+            this._linesGroupBox.Size = new System.Drawing.Size(686, 326);
+            this._linesGroupBox.TabIndex = 0;
+            this._linesGroupBox.TabStop = false;
+            this._linesGroupBox.Text = "&Lines";
             // 
             // label18
             // 
-            this.label18.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label18.AutoSize = true;
-            this.label18.Cursor = System.Windows.Forms.Cursors.Help;
-            this.label18.Location = new System.Drawing.Point(92, 199);
-            this.label18.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(389, 32);
-            this.label18.TabIndex = 7;
-            this.label18.Text = "&Preferred Distance Between Rooms";
+            this._label18.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label18.AutoSize = true;
+            this._label18.Cursor = System.Windows.Forms.Cursors.Help;
+            this._label18.Location = new System.Drawing.Point(92, 199);
+            this._label18.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label18.Name = "label18";
+            this._label18.Size = new System.Drawing.Size(389, 32);
+            this._label18.TabIndex = 7;
+            this._label18.Text = "&Preferred Distance Between Rooms";
             // 
             // m_preferredDistanceBetweenRoomsUpDown
             // 
-            this.m_preferredDistanceBetweenRoomsUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_preferredDistanceBetweenRoomsUpDown.DecimalPlaces = 1;
-            this.m_preferredDistanceBetweenRoomsUpDown.Location = new System.Drawing.Point(484, 196);
-            this.m_preferredDistanceBetweenRoomsUpDown.Margin = new System.Windows.Forms.Padding(6);
-            this.m_preferredDistanceBetweenRoomsUpDown.Maximum = new decimal(new int[] {
+            this._preferredDistanceBetweenRoomsUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._preferredDistanceBetweenRoomsUpDown.DecimalPlaces = 1;
+            this._preferredDistanceBetweenRoomsUpDown.Location = new System.Drawing.Point(484, 196);
+            this._preferredDistanceBetweenRoomsUpDown.Margin = new System.Windows.Forms.Padding(6);
+            this._preferredDistanceBetweenRoomsUpDown.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_preferredDistanceBetweenRoomsUpDown.Name = "m_preferredDistanceBetweenRoomsUpDown";
-            this.m_preferredDistanceBetweenRoomsUpDown.Size = new System.Drawing.Size(190, 39);
-            this.m_preferredDistanceBetweenRoomsUpDown.TabIndex = 8;
-            this.m_preferredDistanceBetweenRoomsUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_preferredDistanceBetweenRoomsUpDown.Value = new decimal(new int[] {
+            this._preferredDistanceBetweenRoomsUpDown.Name = "m_preferredDistanceBetweenRoomsUpDown";
+            this._preferredDistanceBetweenRoomsUpDown.Size = new System.Drawing.Size(190, 39);
+            this._preferredDistanceBetweenRoomsUpDown.TabIndex = 8;
+            this._preferredDistanceBetweenRoomsUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._preferredDistanceBetweenRoomsUpDown.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -272,32 +272,32 @@ namespace Trizbort.UI
             // 
             // label8
             // 
-            this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label8.AutoSize = true;
-            this.label8.Cursor = System.Windows.Forms.Cursors.Help;
-            this.label8.Location = new System.Drawing.Point(238, 253);
-            this.label8.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(243, 32);
-            this.label8.TabIndex = 9;
-            this.label8.Text = "&Text Offset From Line";
+            this._label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label8.AutoSize = true;
+            this._label8.Cursor = System.Windows.Forms.Cursors.Help;
+            this._label8.Location = new System.Drawing.Point(238, 253);
+            this._label8.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label8.Name = "label8";
+            this._label8.Size = new System.Drawing.Size(243, 32);
+            this._label8.TabIndex = 9;
+            this._label8.Text = "&Text Offset From Line";
             // 
             // m_textOffsetFromLineUpDown
             // 
-            this.m_textOffsetFromLineUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_textOffsetFromLineUpDown.DecimalPlaces = 1;
-            this.m_textOffsetFromLineUpDown.Location = new System.Drawing.Point(484, 250);
-            this.m_textOffsetFromLineUpDown.Margin = new System.Windows.Forms.Padding(6);
-            this.m_textOffsetFromLineUpDown.Maximum = new decimal(new int[] {
+            this._textOffsetFromLineUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._textOffsetFromLineUpDown.DecimalPlaces = 1;
+            this._textOffsetFromLineUpDown.Location = new System.Drawing.Point(484, 250);
+            this._textOffsetFromLineUpDown.Margin = new System.Windows.Forms.Padding(6);
+            this._textOffsetFromLineUpDown.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_textOffsetFromLineUpDown.Name = "m_textOffsetFromLineUpDown";
-            this.m_textOffsetFromLineUpDown.Size = new System.Drawing.Size(190, 39);
-            this.m_textOffsetFromLineUpDown.TabIndex = 10;
-            this.m_textOffsetFromLineUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_textOffsetFromLineUpDown.Value = new decimal(new int[] {
+            this._textOffsetFromLineUpDown.Name = "m_textOffsetFromLineUpDown";
+            this._textOffsetFromLineUpDown.Size = new System.Drawing.Size(190, 39);
+            this._textOffsetFromLineUpDown.TabIndex = 10;
+            this._textOffsetFromLineUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._textOffsetFromLineUpDown.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -305,32 +305,32 @@ namespace Trizbort.UI
             // 
             // label1
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label1.AutoSize = true;
-            this.label1.Cursor = System.Windows.Forms.Cursors.Help;
-            this.label1.Location = new System.Drawing.Point(197, 145);
-            this.label1.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(284, 32);
-            this.label1.TabIndex = 5;
-            this.label1.Text = "&Room Arrow Stalk Length";
+            this._label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label1.AutoSize = true;
+            this._label1.Cursor = System.Windows.Forms.Cursors.Help;
+            this._label1.Location = new System.Drawing.Point(197, 145);
+            this._label1.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label1.Name = "label1";
+            this._label1.Size = new System.Drawing.Size(284, 32);
+            this._label1.TabIndex = 5;
+            this._label1.Text = "&Room Arrow Stalk Length";
             // 
             // m_connectionStalkLengthUpDown
             // 
-            this.m_connectionStalkLengthUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_connectionStalkLengthUpDown.DecimalPlaces = 1;
-            this.m_connectionStalkLengthUpDown.Location = new System.Drawing.Point(484, 142);
-            this.m_connectionStalkLengthUpDown.Margin = new System.Windows.Forms.Padding(6);
-            this.m_connectionStalkLengthUpDown.Maximum = new decimal(new int[] {
+            this._connectionStalkLengthUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._connectionStalkLengthUpDown.DecimalPlaces = 1;
+            this._connectionStalkLengthUpDown.Location = new System.Drawing.Point(484, 142);
+            this._connectionStalkLengthUpDown.Margin = new System.Windows.Forms.Padding(6);
+            this._connectionStalkLengthUpDown.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_connectionStalkLengthUpDown.Name = "m_connectionStalkLengthUpDown";
-            this.m_connectionStalkLengthUpDown.Size = new System.Drawing.Size(190, 39);
-            this.m_connectionStalkLengthUpDown.TabIndex = 6;
-            this.m_connectionStalkLengthUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_connectionStalkLengthUpDown.Value = new decimal(new int[] {
+            this._connectionStalkLengthUpDown.Name = "m_connectionStalkLengthUpDown";
+            this._connectionStalkLengthUpDown.Size = new System.Drawing.Size(190, 39);
+            this._connectionStalkLengthUpDown.TabIndex = 6;
+            this._connectionStalkLengthUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._connectionStalkLengthUpDown.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -338,32 +338,32 @@ namespace Trizbort.UI
             // 
             // label4
             // 
-            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label4.AutoSize = true;
-            this.label4.Cursor = System.Windows.Forms.Cursors.Help;
-            this.label4.Location = new System.Drawing.Point(354, 93);
-            this.label4.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(127, 32);
-            this.label4.TabIndex = 3;
-            this.label4.Text = "&Arrow Size";
+            this._label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label4.AutoSize = true;
+            this._label4.Cursor = System.Windows.Forms.Cursors.Help;
+            this._label4.Location = new System.Drawing.Point(354, 93);
+            this._label4.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label4.Name = "label4";
+            this._label4.Size = new System.Drawing.Size(127, 32);
+            this._label4.TabIndex = 3;
+            this._label4.Text = "&Arrow Size";
             // 
             // m_arrowSizeUpDown
             // 
-            this.m_arrowSizeUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_arrowSizeUpDown.DecimalPlaces = 1;
-            this.m_arrowSizeUpDown.Location = new System.Drawing.Point(484, 90);
-            this.m_arrowSizeUpDown.Margin = new System.Windows.Forms.Padding(6);
-            this.m_arrowSizeUpDown.Maximum = new decimal(new int[] {
+            this._arrowSizeUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._arrowSizeUpDown.DecimalPlaces = 1;
+            this._arrowSizeUpDown.Location = new System.Drawing.Point(484, 90);
+            this._arrowSizeUpDown.Margin = new System.Windows.Forms.Padding(6);
+            this._arrowSizeUpDown.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_arrowSizeUpDown.Name = "m_arrowSizeUpDown";
-            this.m_arrowSizeUpDown.Size = new System.Drawing.Size(190, 39);
-            this.m_arrowSizeUpDown.TabIndex = 4;
-            this.m_arrowSizeUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_arrowSizeUpDown.Value = new decimal(new int[] {
+            this._arrowSizeUpDown.Name = "m_arrowSizeUpDown";
+            this._arrowSizeUpDown.Size = new System.Drawing.Size(190, 39);
+            this._arrowSizeUpDown.TabIndex = 4;
+            this._arrowSizeUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._arrowSizeUpDown.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -371,87 +371,87 @@ namespace Trizbort.UI
             // 
             // m_gridGroupBox
             // 
-            this.m_gridGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._gridGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_gridGroupBox.Controls.Add(this.m_showOriginCheckBox);
-            this.m_gridGroupBox.Controls.Add(this.m_showGridCheckBox);
-            this.m_gridGroupBox.Controls.Add(this.m_snapToGridCheckBox);
-            this.m_gridGroupBox.Controls.Add(this.label6);
-            this.m_gridGroupBox.Controls.Add(this.m_gridSizeUpDown);
-            this.m_gridGroupBox.Location = new System.Drawing.Point(10, 350);
-            this.m_gridGroupBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_gridGroupBox.Name = "m_gridGroupBox";
-            this.m_gridGroupBox.Padding = new System.Windows.Forms.Padding(6);
-            this.m_gridGroupBox.Size = new System.Drawing.Size(686, 144);
-            this.m_gridGroupBox.TabIndex = 1;
-            this.m_gridGroupBox.TabStop = false;
-            this.m_gridGroupBox.Text = "&Grid";
+            this._gridGroupBox.Controls.Add(this._showOriginCheckBox);
+            this._gridGroupBox.Controls.Add(this._showGridCheckBox);
+            this._gridGroupBox.Controls.Add(this._snapToGridCheckBox);
+            this._gridGroupBox.Controls.Add(this._label6);
+            this._gridGroupBox.Controls.Add(this._gridSizeUpDown);
+            this._gridGroupBox.Location = new System.Drawing.Point(10, 350);
+            this._gridGroupBox.Margin = new System.Windows.Forms.Padding(6);
+            this._gridGroupBox.Name = "m_gridGroupBox";
+            this._gridGroupBox.Padding = new System.Windows.Forms.Padding(6);
+            this._gridGroupBox.Size = new System.Drawing.Size(686, 144);
+            this._gridGroupBox.TabIndex = 1;
+            this._gridGroupBox.TabStop = false;
+            this._gridGroupBox.Text = "&Grid";
             // 
             // m_showOriginCheckBox
             // 
-            this.m_showOriginCheckBox.AutoSize = true;
-            this.m_showOriginCheckBox.Location = new System.Drawing.Point(228, 33);
-            this.m_showOriginCheckBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_showOriginCheckBox.Name = "m_showOriginCheckBox";
-            this.m_showOriginCheckBox.Size = new System.Drawing.Size(178, 36);
-            this.m_showOriginCheckBox.TabIndex = 2;
-            this.m_showOriginCheckBox.Text = "Show &Origin";
-            this.m_showOriginCheckBox.UseVisualStyleBackColor = true;
+            this._showOriginCheckBox.AutoSize = true;
+            this._showOriginCheckBox.Location = new System.Drawing.Point(228, 33);
+            this._showOriginCheckBox.Margin = new System.Windows.Forms.Padding(6);
+            this._showOriginCheckBox.Name = "m_showOriginCheckBox";
+            this._showOriginCheckBox.Size = new System.Drawing.Size(178, 36);
+            this._showOriginCheckBox.TabIndex = 2;
+            this._showOriginCheckBox.Text = "Show &Origin";
+            this._showOriginCheckBox.UseVisualStyleBackColor = true;
             // 
             // m_showGridCheckBox
             // 
-            this.m_showGridCheckBox.AutoSize = true;
-            this.m_showGridCheckBox.Location = new System.Drawing.Point(90, 33);
-            this.m_showGridCheckBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_showGridCheckBox.Name = "m_showGridCheckBox";
-            this.m_showGridCheckBox.Size = new System.Drawing.Size(117, 36);
-            this.m_showGridCheckBox.TabIndex = 0;
-            this.m_showGridCheckBox.Text = "&Visible";
-            this.m_showGridCheckBox.UseVisualStyleBackColor = true;
+            this._showGridCheckBox.AutoSize = true;
+            this._showGridCheckBox.Location = new System.Drawing.Point(90, 33);
+            this._showGridCheckBox.Margin = new System.Windows.Forms.Padding(6);
+            this._showGridCheckBox.Name = "m_showGridCheckBox";
+            this._showGridCheckBox.Size = new System.Drawing.Size(117, 36);
+            this._showGridCheckBox.TabIndex = 0;
+            this._showGridCheckBox.Text = "&Visible";
+            this._showGridCheckBox.UseVisualStyleBackColor = true;
             // 
             // m_snapToGridCheckBox
             // 
-            this.m_snapToGridCheckBox.AutoSize = true;
-            this.m_snapToGridCheckBox.Location = new System.Drawing.Point(90, 86);
-            this.m_snapToGridCheckBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_snapToGridCheckBox.Name = "m_snapToGridCheckBox";
-            this.m_snapToGridCheckBox.Size = new System.Drawing.Size(132, 36);
-            this.m_snapToGridCheckBox.TabIndex = 1;
-            this.m_snapToGridCheckBox.Text = "S&nap To";
-            this.m_snapToGridCheckBox.UseVisualStyleBackColor = true;
+            this._snapToGridCheckBox.AutoSize = true;
+            this._snapToGridCheckBox.Location = new System.Drawing.Point(90, 86);
+            this._snapToGridCheckBox.Margin = new System.Windows.Forms.Padding(6);
+            this._snapToGridCheckBox.Name = "m_snapToGridCheckBox";
+            this._snapToGridCheckBox.Size = new System.Drawing.Size(132, 36);
+            this._snapToGridCheckBox.TabIndex = 1;
+            this._snapToGridCheckBox.Text = "S&nap To";
+            this._snapToGridCheckBox.UseVisualStyleBackColor = true;
             // 
             // label6
             // 
-            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(423, 35);
-            this.label6.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(58, 32);
-            this.label6.TabIndex = 3;
-            this.label6.Text = "&Size";
+            this._label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label6.AutoSize = true;
+            this._label6.Location = new System.Drawing.Point(423, 35);
+            this._label6.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label6.Name = "label6";
+            this._label6.Size = new System.Drawing.Size(58, 32);
+            this._label6.TabIndex = 3;
+            this._label6.Text = "&Size";
             // 
             // m_gridSizeUpDown
             // 
-            this.m_gridSizeUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_gridSizeUpDown.DecimalPlaces = 1;
-            this.m_gridSizeUpDown.Location = new System.Drawing.Point(484, 32);
-            this.m_gridSizeUpDown.Margin = new System.Windows.Forms.Padding(6);
-            this.m_gridSizeUpDown.Maximum = new decimal(new int[] {
+            this._gridSizeUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._gridSizeUpDown.DecimalPlaces = 1;
+            this._gridSizeUpDown.Location = new System.Drawing.Point(484, 32);
+            this._gridSizeUpDown.Margin = new System.Windows.Forms.Padding(6);
+            this._gridSizeUpDown.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_gridSizeUpDown.Minimum = new decimal(new int[] {
+            this._gridSizeUpDown.Minimum = new decimal(new int[] {
             2,
             0,
             0,
             0});
-            this.m_gridSizeUpDown.Name = "m_gridSizeUpDown";
-            this.m_gridSizeUpDown.Size = new System.Drawing.Size(190, 39);
-            this.m_gridSizeUpDown.TabIndex = 4;
-            this.m_gridSizeUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_gridSizeUpDown.Value = new decimal(new int[] {
+            this._gridSizeUpDown.Name = "m_gridSizeUpDown";
+            this._gridSizeUpDown.Size = new System.Drawing.Size(190, 39);
+            this._gridSizeUpDown.TabIndex = 4;
+            this._gridSizeUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._gridSizeUpDown.Value = new decimal(new int[] {
             4,
             0,
             0,
@@ -459,101 +459,101 @@ namespace Trizbort.UI
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.label21);
-            this.groupBox1.Controls.Add(this.cboRoomShape);
-            this.groupBox1.Controls.Add(this.txtDefaultRoomName);
-            this.groupBox1.Controls.Add(this.label20);
-            this.groupBox1.Controls.Add(this.label34);
-            this.groupBox1.Controls.Add(this.m_objectListOffsetFromRoomNumericUpDown);
-            this.groupBox1.Controls.Add(this.label13);
-            this.groupBox1.Controls.Add(this.m_darknessStripeSizeNumericUpDown);
-            this.groupBox1.Location = new System.Drawing.Point(10, 6);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(6);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(6);
-            this.groupBox1.Size = new System.Drawing.Size(686, 234);
-            this.groupBox1.TabIndex = 0;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "&Room";
+            this._groupBox1.Controls.Add(this._label21);
+            this._groupBox1.Controls.Add(this._cboRoomShape);
+            this._groupBox1.Controls.Add(this._txtDefaultRoomName);
+            this._groupBox1.Controls.Add(this._label20);
+            this._groupBox1.Controls.Add(this._label34);
+            this._groupBox1.Controls.Add(this._objectListOffsetFromRoomNumericUpDown);
+            this._groupBox1.Controls.Add(this._label13);
+            this._groupBox1.Controls.Add(this._darknessStripeSizeNumericUpDown);
+            this._groupBox1.Location = new System.Drawing.Point(10, 6);
+            this._groupBox1.Margin = new System.Windows.Forms.Padding(6);
+            this._groupBox1.Name = "groupBox1";
+            this._groupBox1.Padding = new System.Windows.Forms.Padding(6);
+            this._groupBox1.Size = new System.Drawing.Size(686, 234);
+            this._groupBox1.TabIndex = 0;
+            this._groupBox1.TabStop = false;
+            this._groupBox1.Text = "&Room";
             // 
             // label21
             // 
-            this.label21.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(169, 27);
-            this.label21.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(235, 32);
-            this.label21.TabIndex = 9;
-            this.label21.Text = "Default Room Shape";
+            this._label21.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label21.AutoSize = true;
+            this._label21.Location = new System.Drawing.Point(169, 27);
+            this._label21.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label21.Name = "label21";
+            this._label21.Size = new System.Drawing.Size(235, 32);
+            this._label21.TabIndex = 9;
+            this._label21.Text = "Default Room Shape";
             // 
             // cboRoomShape
             // 
-            this.cboRoomShape.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboRoomShape.FormattingEnabled = true;
-            this.cboRoomShape.Items.AddRange(new object[] {
+            this._cboRoomShape.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._cboRoomShape.FormattingEnabled = true;
+            this._cboRoomShape.Items.AddRange(new object[] {
             "Straight Edges",
             "Rounded Corners",
             "Ellipse",
             "Octagonal"});
-            this.cboRoomShape.Location = new System.Drawing.Point(416, 24);
-            this.cboRoomShape.Margin = new System.Windows.Forms.Padding(6);
-            this.cboRoomShape.Name = "cboRoomShape";
-            this.cboRoomShape.Size = new System.Drawing.Size(258, 40);
-            this.cboRoomShape.TabIndex = 8;
+            this._cboRoomShape.Location = new System.Drawing.Point(416, 24);
+            this._cboRoomShape.Margin = new System.Windows.Forms.Padding(6);
+            this._cboRoomShape.Name = "cboRoomShape";
+            this._cboRoomShape.Size = new System.Drawing.Size(258, 40);
+            this._cboRoomShape.TabIndex = 8;
             // 
             // txtDefaultRoomName
             // 
-            this.txtDefaultRoomName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._txtDefaultRoomName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtDefaultRoomName.BackColor = System.Drawing.SystemColors.Window;
-            this.txtDefaultRoomName.CausesValidation = false;
-            this.txtDefaultRoomName.Location = new System.Drawing.Point(416, 178);
-            this.txtDefaultRoomName.Margin = new System.Windows.Forms.Padding(6);
-            this.txtDefaultRoomName.Name = "txtDefaultRoomName";
-            this.txtDefaultRoomName.Size = new System.Drawing.Size(258, 39);
-            this.txtDefaultRoomName.TabIndex = 5;
+            this._txtDefaultRoomName.BackColor = System.Drawing.SystemColors.Window;
+            this._txtDefaultRoomName.CausesValidation = false;
+            this._txtDefaultRoomName.Location = new System.Drawing.Point(416, 178);
+            this._txtDefaultRoomName.Margin = new System.Windows.Forms.Padding(6);
+            this._txtDefaultRoomName.Name = "txtDefaultRoomName";
+            this._txtDefaultRoomName.Size = new System.Drawing.Size(258, 39);
+            this._txtDefaultRoomName.TabIndex = 5;
             // 
             // label20
             // 
-            this.label20.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(192, 181);
-            this.label20.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(212, 32);
-            this.label20.TabIndex = 4;
-            this.label20.Text = "Default Room &Text";
+            this._label20.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label20.AutoSize = true;
+            this._label20.Location = new System.Drawing.Point(192, 181);
+            this._label20.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label20.Name = "label20";
+            this._label20.Size = new System.Drawing.Size(212, 32);
+            this._label20.TabIndex = 4;
+            this._label20.Text = "Default Room &Text";
             // 
             // label34
             // 
-            this.label34.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label34.AutoSize = true;
-            this.label34.Location = new System.Drawing.Point(205, 131);
-            this.label34.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label34.Name = "label34";
-            this.label34.Size = new System.Drawing.Size(199, 32);
-            this.label34.TabIndex = 2;
-            this.label34.Text = "&Object List Offset";
+            this._label34.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label34.AutoSize = true;
+            this._label34.Location = new System.Drawing.Point(205, 131);
+            this._label34.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label34.Name = "label34";
+            this._label34.Size = new System.Drawing.Size(199, 32);
+            this._label34.TabIndex = 2;
+            this._label34.Text = "&Object List Offset";
             // 
             // m_objectListOffsetFromRoomNumericUpDown
             // 
-            this.m_objectListOffsetFromRoomNumericUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_objectListOffsetFromRoomNumericUpDown.DecimalPlaces = 1;
-            this.m_objectListOffsetFromRoomNumericUpDown.Location = new System.Drawing.Point(416, 127);
-            this.m_objectListOffsetFromRoomNumericUpDown.Margin = new System.Windows.Forms.Padding(6);
-            this.m_objectListOffsetFromRoomNumericUpDown.Maximum = new decimal(new int[] {
+            this._objectListOffsetFromRoomNumericUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._objectListOffsetFromRoomNumericUpDown.DecimalPlaces = 1;
+            this._objectListOffsetFromRoomNumericUpDown.Location = new System.Drawing.Point(416, 127);
+            this._objectListOffsetFromRoomNumericUpDown.Margin = new System.Windows.Forms.Padding(6);
+            this._objectListOffsetFromRoomNumericUpDown.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_objectListOffsetFromRoomNumericUpDown.Name = "m_objectListOffsetFromRoomNumericUpDown";
-            this.m_objectListOffsetFromRoomNumericUpDown.Size = new System.Drawing.Size(258, 39);
-            this.m_objectListOffsetFromRoomNumericUpDown.TabIndex = 3;
-            this.m_objectListOffsetFromRoomNumericUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_objectListOffsetFromRoomNumericUpDown.Value = new decimal(new int[] {
+            this._objectListOffsetFromRoomNumericUpDown.Name = "m_objectListOffsetFromRoomNumericUpDown";
+            this._objectListOffsetFromRoomNumericUpDown.Size = new System.Drawing.Size(258, 39);
+            this._objectListOffsetFromRoomNumericUpDown.TabIndex = 3;
+            this._objectListOffsetFromRoomNumericUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._objectListOffsetFromRoomNumericUpDown.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -561,31 +561,31 @@ namespace Trizbort.UI
             // 
             // label13
             // 
-            this.label13.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(175, 79);
-            this.label13.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(229, 32);
-            this.label13.TabIndex = 0;
-            this.label13.Text = "&Darkness Stripe Size";
+            this._label13.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label13.AutoSize = true;
+            this._label13.Location = new System.Drawing.Point(175, 79);
+            this._label13.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label13.Name = "label13";
+            this._label13.Size = new System.Drawing.Size(229, 32);
+            this._label13.TabIndex = 0;
+            this._label13.Text = "&Darkness Stripe Size";
             // 
             // m_darknessStripeSizeNumericUpDown
             // 
-            this.m_darknessStripeSizeNumericUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_darknessStripeSizeNumericUpDown.DecimalPlaces = 1;
-            this.m_darknessStripeSizeNumericUpDown.Location = new System.Drawing.Point(416, 76);
-            this.m_darknessStripeSizeNumericUpDown.Margin = new System.Windows.Forms.Padding(6);
-            this.m_darknessStripeSizeNumericUpDown.Maximum = new decimal(new int[] {
+            this._darknessStripeSizeNumericUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._darknessStripeSizeNumericUpDown.DecimalPlaces = 1;
+            this._darknessStripeSizeNumericUpDown.Location = new System.Drawing.Point(416, 76);
+            this._darknessStripeSizeNumericUpDown.Margin = new System.Windows.Forms.Padding(6);
+            this._darknessStripeSizeNumericUpDown.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_darknessStripeSizeNumericUpDown.Name = "m_darknessStripeSizeNumericUpDown";
-            this.m_darknessStripeSizeNumericUpDown.Size = new System.Drawing.Size(258, 39);
-            this.m_darknessStripeSizeNumericUpDown.TabIndex = 1;
-            this.m_darknessStripeSizeNumericUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_darknessStripeSizeNumericUpDown.Value = new decimal(new int[] {
+            this._darknessStripeSizeNumericUpDown.Name = "m_darknessStripeSizeNumericUpDown";
+            this._darknessStripeSizeNumericUpDown.Size = new System.Drawing.Size(258, 39);
+            this._darknessStripeSizeNumericUpDown.TabIndex = 1;
+            this._darknessStripeSizeNumericUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._darknessStripeSizeNumericUpDown.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -593,199 +593,199 @@ namespace Trizbort.UI
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.m_okButton);
-            this.panel1.Controls.Add(this.m_cancelButton);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel1.Location = new System.Drawing.Point(20, 754);
-            this.panel1.Margin = new System.Windows.Forms.Padding(6);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(726, 70);
-            this.panel1.TabIndex = 1;
+            this._panel1.Controls.Add(this._okButton);
+            this._panel1.Controls.Add(this._cancelButton);
+            this._panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this._panel1.Location = new System.Drawing.Point(20, 754);
+            this._panel1.Margin = new System.Windows.Forms.Padding(6);
+            this._panel1.Name = "panel1";
+            this._panel1.Size = new System.Drawing.Size(726, 70);
+            this._panel1.TabIndex = 1;
             // 
             // tabControl1
             // 
-            this.tabControl1.Controls.Add(this.tabPage4);
-            this.tabControl1.Controls.Add(this.tabPage1);
-            this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Controls.Add(this.tabRegions);
-            this.tabControl1.Controls.Add(this.tabPage3);
-            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tabControl1.Location = new System.Drawing.Point(20, 20);
-            this.tabControl1.Margin = new System.Windows.Forms.Padding(6);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(726, 722);
-            this.tabControl1.TabIndex = 0;
-            this.tabControl1.Selected += new System.Windows.Forms.TabControlEventHandler(this.tabControl1_Selected);
+            this._tabControl1.Controls.Add(this._tabPage4);
+            this._tabControl1.Controls.Add(this._tabPage1);
+            this._tabControl1.Controls.Add(this._tabPage2);
+            this._tabControl1.Controls.Add(this._tabRegions);
+            this._tabControl1.Controls.Add(this._tabPage3);
+            this._tabControl1.Dock = System.Windows.Forms.DockStyle.Top;
+            this._tabControl1.Location = new System.Drawing.Point(20, 20);
+            this._tabControl1.Margin = new System.Windows.Forms.Padding(6);
+            this._tabControl1.Name = "tabControl1";
+            this._tabControl1.SelectedIndex = 0;
+            this._tabControl1.Size = new System.Drawing.Size(726, 722);
+            this._tabControl1.TabIndex = 0;
+            this._tabControl1.Selected += new System.Windows.Forms.TabControlEventHandler(this.TabControl1Selected);
             // 
             // tabPage4
             // 
-            this.tabPage4.Controls.Add(this.groupBox3);
-            this.tabPage4.Location = new System.Drawing.Point(8, 46);
-            this.tabPage4.Margin = new System.Windows.Forms.Padding(6);
-            this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Size = new System.Drawing.Size(710, 668);
-            this.tabPage4.TabIndex = 3;
-            this.tabPage4.Text = "About";
-            this.tabPage4.UseVisualStyleBackColor = true;
+            this._tabPage4.Controls.Add(this._groupBox3);
+            this._tabPage4.Location = new System.Drawing.Point(8, 46);
+            this._tabPage4.Margin = new System.Windows.Forms.Padding(6);
+            this._tabPage4.Name = "tabPage4";
+            this._tabPage4.Size = new System.Drawing.Size(710, 668);
+            this._tabPage4.TabIndex = 3;
+            this._tabPage4.Text = "About";
+            this._tabPage4.UseVisualStyleBackColor = true;
             // 
             // groupBox3
             // 
-            this.groupBox3.AutoSize = true;
-            this.groupBox3.Controls.Add(this.label17);
-            this.groupBox3.Controls.Add(this.label16);
-            this.groupBox3.Controls.Add(this.m_historyTextBox);
-            this.groupBox3.Controls.Add(this.label15);
-            this.groupBox3.Controls.Add(this.label14);
-            this.groupBox3.Controls.Add(this.m_descriptionTextBox);
-            this.groupBox3.Controls.Add(this.label10);
-            this.groupBox3.Controls.Add(this.m_authorTextBox);
-            this.groupBox3.Controls.Add(this.m_titleTextBox);
-            this.groupBox3.Location = new System.Drawing.Point(10, 12);
-            this.groupBox3.Margin = new System.Windows.Forms.Padding(6);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Padding = new System.Windows.Forms.Padding(6);
-            this.groupBox3.Size = new System.Drawing.Size(694, 651);
-            this.groupBox3.TabIndex = 0;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "&Map";
+            this._groupBox3.AutoSize = true;
+            this._groupBox3.Controls.Add(this._label17);
+            this._groupBox3.Controls.Add(this._label16);
+            this._groupBox3.Controls.Add(this._historyTextBox);
+            this._groupBox3.Controls.Add(this._label15);
+            this._groupBox3.Controls.Add(this._label14);
+            this._groupBox3.Controls.Add(this._descriptionTextBox);
+            this._groupBox3.Controls.Add(this._label10);
+            this._groupBox3.Controls.Add(this._authorTextBox);
+            this._groupBox3.Controls.Add(this._titleTextBox);
+            this._groupBox3.Location = new System.Drawing.Point(10, 12);
+            this._groupBox3.Margin = new System.Windows.Forms.Padding(6);
+            this._groupBox3.Name = "groupBox3";
+            this._groupBox3.Padding = new System.Windows.Forms.Padding(6);
+            this._groupBox3.Size = new System.Drawing.Size(694, 651);
+            this._groupBox3.TabIndex = 0;
+            this._groupBox3.TabStop = false;
+            this._groupBox3.Text = "&Map";
             // 
             // label17
             // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(48, 372);
-            this.label17.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(90, 32);
-            this.label17.TabIndex = 7;
-            this.label17.Text = "&History";
+            this._label17.AutoSize = true;
+            this._label17.Location = new System.Drawing.Point(48, 372);
+            this._label17.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label17.Name = "label17";
+            this._label17.Size = new System.Drawing.Size(90, 32);
+            this._label17.TabIndex = 7;
+            this._label17.Text = "&History";
             // 
             // label16
             // 
-            this.label16.AutoSize = true;
-            this.label16.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label16.Location = new System.Drawing.Point(100, 562);
-            this.label16.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(513, 32);
-            this.label16.TabIndex = 0;
-            this.label16.Text = "These details help identify your map to others.";
+            this._label16.AutoSize = true;
+            this._label16.ForeColor = System.Drawing.SystemColors.GrayText;
+            this._label16.Location = new System.Drawing.Point(100, 562);
+            this._label16.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label16.Name = "label16";
+            this._label16.Size = new System.Drawing.Size(513, 32);
+            this._label16.TabIndex = 0;
+            this._label16.Text = "These details help identify your map to others.";
             // 
             // m_historyTextBox
             // 
-            this.m_historyTextBox.AcceptsReturn = true;
-            this.m_historyTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._historyTextBox.AcceptsReturn = true;
+            this._historyTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_historyTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_historyTextBox.Location = new System.Drawing.Point(154, 366);
-            this.m_historyTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_historyTextBox.Multiline = true;
-            this.m_historyTextBox.Name = "m_historyTextBox";
-            this.m_historyTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.m_historyTextBox.Size = new System.Drawing.Size(502, 146);
-            this.m_historyTextBox.TabIndex = 8;
+            this._historyTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._historyTextBox.Location = new System.Drawing.Point(154, 366);
+            this._historyTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._historyTextBox.Multiline = true;
+            this._historyTextBox.Name = "m_historyTextBox";
+            this._historyTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this._historyTextBox.Size = new System.Drawing.Size(502, 146);
+            this._historyTextBox.TabIndex = 8;
             // 
             // label15
             // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(6, 204);
-            this.label15.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(136, 32);
-            this.label15.TabIndex = 5;
-            this.label15.Text = "&Description";
+            this._label15.AutoSize = true;
+            this._label15.Location = new System.Drawing.Point(6, 204);
+            this._label15.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label15.Name = "label15";
+            this._label15.Size = new System.Drawing.Size(136, 32);
+            this._label15.TabIndex = 5;
+            this._label15.Text = "&Description";
             // 
             // label14
             // 
-            this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(50, 148);
-            this.label14.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(88, 32);
-            this.label14.TabIndex = 3;
-            this.label14.Text = "&Author";
+            this._label14.AutoSize = true;
+            this._label14.Location = new System.Drawing.Point(50, 148);
+            this._label14.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label14.Name = "label14";
+            this._label14.Size = new System.Drawing.Size(88, 32);
+            this._label14.TabIndex = 3;
+            this._label14.Text = "&Author";
             // 
             // m_descriptionTextBox
             // 
-            this.m_descriptionTextBox.AcceptsReturn = true;
-            this.m_descriptionTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._descriptionTextBox.AcceptsReturn = true;
+            this._descriptionTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_descriptionTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_descriptionTextBox.Location = new System.Drawing.Point(154, 198);
-            this.m_descriptionTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_descriptionTextBox.Multiline = true;
-            this.m_descriptionTextBox.Name = "m_descriptionTextBox";
-            this.m_descriptionTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.m_descriptionTextBox.Size = new System.Drawing.Size(502, 146);
-            this.m_descriptionTextBox.TabIndex = 6;
+            this._descriptionTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._descriptionTextBox.Location = new System.Drawing.Point(154, 198);
+            this._descriptionTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._descriptionTextBox.Multiline = true;
+            this._descriptionTextBox.Name = "m_descriptionTextBox";
+            this._descriptionTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this._descriptionTextBox.Size = new System.Drawing.Size(502, 146);
+            this._descriptionTextBox.TabIndex = 6;
             // 
             // label10
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(72, 92);
-            this.label10.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(61, 32);
-            this.label10.TabIndex = 1;
-            this.label10.Text = "&Title";
+            this._label10.AutoSize = true;
+            this._label10.Location = new System.Drawing.Point(72, 92);
+            this._label10.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label10.Name = "label10";
+            this._label10.Size = new System.Drawing.Size(61, 32);
+            this._label10.TabIndex = 1;
+            this._label10.Text = "&Title";
             // 
             // m_authorTextBox
             // 
-            this.m_authorTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._authorTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_authorTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_authorTextBox.Location = new System.Drawing.Point(154, 142);
-            this.m_authorTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_authorTextBox.Name = "m_authorTextBox";
-            this.m_authorTextBox.Size = new System.Drawing.Size(502, 39);
-            this.m_authorTextBox.TabIndex = 4;
+            this._authorTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._authorTextBox.Location = new System.Drawing.Point(154, 142);
+            this._authorTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._authorTextBox.Name = "m_authorTextBox";
+            this._authorTextBox.Size = new System.Drawing.Size(502, 39);
+            this._authorTextBox.TabIndex = 4;
             // 
             // m_titleTextBox
             // 
-            this.m_titleTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._titleTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_titleTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_titleTextBox.Location = new System.Drawing.Point(154, 86);
-            this.m_titleTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_titleTextBox.Name = "m_titleTextBox";
-            this.m_titleTextBox.Size = new System.Drawing.Size(502, 39);
-            this.m_titleTextBox.TabIndex = 2;
+            this._titleTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._titleTextBox.Location = new System.Drawing.Point(154, 86);
+            this._titleTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._titleTextBox.Name = "m_titleTextBox";
+            this._titleTextBox.Size = new System.Drawing.Size(502, 39);
+            this._titleTextBox.TabIndex = 2;
             // 
             // tabPage1
             // 
-            this.tabPage1.Controls.Add(this.m_colorsGroupBox);
-            this.tabPage1.Controls.Add(this.m_fontsGroupBox);
-            this.tabPage1.Location = new System.Drawing.Point(8, 46);
-            this.tabPage1.Margin = new System.Windows.Forms.Padding(6);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(6);
-            this.tabPage1.Size = new System.Drawing.Size(710, 668);
-            this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Colors and Fonts";
-            this.tabPage1.UseVisualStyleBackColor = true;
+            this._tabPage1.Controls.Add(this._colorsGroupBox);
+            this._tabPage1.Controls.Add(this._fontsGroupBox);
+            this._tabPage1.Location = new System.Drawing.Point(8, 46);
+            this._tabPage1.Margin = new System.Windows.Forms.Padding(6);
+            this._tabPage1.Name = "tabPage1";
+            this._tabPage1.Padding = new System.Windows.Forms.Padding(6);
+            this._tabPage1.Size = new System.Drawing.Size(710, 668);
+            this._tabPage1.TabIndex = 0;
+            this._tabPage1.Text = "Colors and Fonts";
+            this._tabPage1.UseVisualStyleBackColor = true;
             // 
             // m_colorsGroupBox
             // 
-            this.m_colorsGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._colorsGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_colorsGroupBox.Controls.Add(this.m_colorListBox);
-            this.m_colorsGroupBox.Controls.Add(this.m_changeColorButton);
-            this.m_colorsGroupBox.Location = new System.Drawing.Point(10, 12);
-            this.m_colorsGroupBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_colorsGroupBox.Name = "m_colorsGroupBox";
-            this.m_colorsGroupBox.Padding = new System.Windows.Forms.Padding(6);
-            this.m_colorsGroupBox.Size = new System.Drawing.Size(686, 384);
-            this.m_colorsGroupBox.TabIndex = 0;
-            this.m_colorsGroupBox.TabStop = false;
-            this.m_colorsGroupBox.Text = "&Colors";
+            this._colorsGroupBox.Controls.Add(this._colorListBox);
+            this._colorsGroupBox.Controls.Add(this._changeColorButton);
+            this._colorsGroupBox.Location = new System.Drawing.Point(10, 12);
+            this._colorsGroupBox.Margin = new System.Windows.Forms.Padding(6);
+            this._colorsGroupBox.Name = "m_colorsGroupBox";
+            this._colorsGroupBox.Padding = new System.Windows.Forms.Padding(6);
+            this._colorsGroupBox.Size = new System.Drawing.Size(686, 384);
+            this._colorsGroupBox.TabIndex = 0;
+            this._colorsGroupBox.TabStop = false;
+            this._colorsGroupBox.Text = "&Colors";
             // 
             // m_colorListBox
             // 
-            this.m_colorListBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._colorListBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_colorListBox.FormattingEnabled = true;
-            this.m_colorListBox.ItemHeight = 32;
-            this.m_colorListBox.Items.AddRange(new object[] {
+            this._colorListBox.FormattingEnabled = true;
+            this._colorListBox.ItemHeight = 32;
+            this._colorListBox.Items.AddRange(new object[] {
             "Canvas",
             "Border",
             "Connection",
@@ -797,422 +797,422 @@ namespace Trizbort.UI
             "Grid",
             "Start Room",
             "End Room"});
-            this.m_colorListBox.Location = new System.Drawing.Point(164, 38);
-            this.m_colorListBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_colorListBox.Name = "m_colorListBox";
-            this.m_colorListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.m_colorListBox.Size = new System.Drawing.Size(344, 292);
-            this.m_colorListBox.TabIndex = 0;
-            this.m_colorListBox.DoubleClick += new System.EventHandler(this.onChangeColor);
+            this._colorListBox.Location = new System.Drawing.Point(164, 38);
+            this._colorListBox.Margin = new System.Windows.Forms.Padding(6);
+            this._colorListBox.Name = "m_colorListBox";
+            this._colorListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+            this._colorListBox.Size = new System.Drawing.Size(344, 292);
+            this._colorListBox.TabIndex = 0;
+            this._colorListBox.DoubleClick += new System.EventHandler(this.OnChangeColor);
             // 
             // m_changeColorButton
             // 
-            this.m_changeColorButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_changeColorButton.Location = new System.Drawing.Point(524, 38);
-            this.m_changeColorButton.Margin = new System.Windows.Forms.Padding(6);
-            this.m_changeColorButton.Name = "m_changeColorButton";
-            this.m_changeColorButton.Size = new System.Drawing.Size(150, 46);
-            this.m_changeColorButton.TabIndex = 1;
-            this.m_changeColorButton.Text = "C&hange...";
-            this.m_changeColorButton.UseVisualStyleBackColor = true;
-            this.m_changeColorButton.Click += new System.EventHandler(this.onChangeColor);
+            this._changeColorButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._changeColorButton.Location = new System.Drawing.Point(524, 38);
+            this._changeColorButton.Margin = new System.Windows.Forms.Padding(6);
+            this._changeColorButton.Name = "m_changeColorButton";
+            this._changeColorButton.Size = new System.Drawing.Size(150, 46);
+            this._changeColorButton.TabIndex = 1;
+            this._changeColorButton.Text = "C&hange...";
+            this._changeColorButton.UseVisualStyleBackColor = true;
+            this._changeColorButton.Click += new System.EventHandler(this.OnChangeColor);
             // 
             // m_fontsGroupBox
             // 
-            this.m_fontsGroupBox.Controls.Add(this.label22);
-            this.m_fontsGroupBox.Controls.Add(this.m_subtitleFontSizeTextBox);
-            this.m_fontsGroupBox.Controls.Add(this.m_changeSubtitleFontButton);
-            this.m_fontsGroupBox.Controls.Add(this.m_subtitleFontNameTextBox);
-            this.m_fontsGroupBox.Controls.Add(this.label9);
-            this.m_fontsGroupBox.Controls.Add(this.m_lineFontSizeTextBox);
-            this.m_fontsGroupBox.Controls.Add(this.m_changeLineFontButton);
-            this.m_fontsGroupBox.Controls.Add(this.m_lineFontNameTextBox);
-            this.m_fontsGroupBox.Controls.Add(this.label12);
-            this.m_fontsGroupBox.Controls.Add(this.m_smallFontSizeTextBox);
-            this.m_fontsGroupBox.Controls.Add(this.m_changeSmallFontButton);
-            this.m_fontsGroupBox.Controls.Add(this.m_smallFontNameTextBox);
-            this.m_fontsGroupBox.Controls.Add(this.label11);
-            this.m_fontsGroupBox.Controls.Add(this.m_largeFontSizeTextBox);
-            this.m_fontsGroupBox.Controls.Add(this.m_changeLargeFontButton);
-            this.m_fontsGroupBox.Controls.Add(this.m_largeFontNameTextBox);
-            this.m_fontsGroupBox.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.m_fontsGroupBox.Location = new System.Drawing.Point(6, 406);
-            this.m_fontsGroupBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_fontsGroupBox.Name = "m_fontsGroupBox";
-            this.m_fontsGroupBox.Padding = new System.Windows.Forms.Padding(6);
-            this.m_fontsGroupBox.Size = new System.Drawing.Size(698, 256);
-            this.m_fontsGroupBox.TabIndex = 1;
-            this.m_fontsGroupBox.TabStop = false;
-            this.m_fontsGroupBox.Text = "&Fonts";
+            this._fontsGroupBox.Controls.Add(this._label22);
+            this._fontsGroupBox.Controls.Add(this._subtitleFontSizeTextBox);
+            this._fontsGroupBox.Controls.Add(this._changeSubtitleFontButton);
+            this._fontsGroupBox.Controls.Add(this._subtitleFontNameTextBox);
+            this._fontsGroupBox.Controls.Add(this._label9);
+            this._fontsGroupBox.Controls.Add(this._lineFontSizeTextBox);
+            this._fontsGroupBox.Controls.Add(this._changeLineFontButton);
+            this._fontsGroupBox.Controls.Add(this._lineFontNameTextBox);
+            this._fontsGroupBox.Controls.Add(this._label12);
+            this._fontsGroupBox.Controls.Add(this._smallFontSizeTextBox);
+            this._fontsGroupBox.Controls.Add(this._changeSmallFontButton);
+            this._fontsGroupBox.Controls.Add(this._smallFontNameTextBox);
+            this._fontsGroupBox.Controls.Add(this._label11);
+            this._fontsGroupBox.Controls.Add(this._largeFontSizeTextBox);
+            this._fontsGroupBox.Controls.Add(this._changeLargeFontButton);
+            this._fontsGroupBox.Controls.Add(this._largeFontNameTextBox);
+            this._fontsGroupBox.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this._fontsGroupBox.Location = new System.Drawing.Point(6, 406);
+            this._fontsGroupBox.Margin = new System.Windows.Forms.Padding(6);
+            this._fontsGroupBox.Name = "m_fontsGroupBox";
+            this._fontsGroupBox.Padding = new System.Windows.Forms.Padding(6);
+            this._fontsGroupBox.Size = new System.Drawing.Size(698, 256);
+            this._fontsGroupBox.TabIndex = 1;
+            this._fontsGroupBox.TabStop = false;
+            this._fontsGroupBox.Text = "&Fonts";
             // 
             // label22
             // 
-            this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(54, 197);
-            this.label22.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(102, 32);
-            this.label22.TabIndex = 12;
-            this.label22.Text = "&Subtitle:";
+            this._label22.AutoSize = true;
+            this._label22.Location = new System.Drawing.Point(54, 197);
+            this._label22.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label22.Name = "label22";
+            this._label22.Size = new System.Drawing.Size(102, 32);
+            this._label22.TabIndex = 12;
+            this._label22.Text = "&Subtitle:";
             // 
             // m_subtitleFontSizeTextBox
             // 
-            this.m_subtitleFontSizeTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_subtitleFontSizeTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_subtitleFontSizeTextBox.Location = new System.Drawing.Point(462, 194);
-            this.m_subtitleFontSizeTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_subtitleFontSizeTextBox.Name = "m_subtitleFontSizeTextBox";
-            this.m_subtitleFontSizeTextBox.ReadOnly = true;
-            this.m_subtitleFontSizeTextBox.Size = new System.Drawing.Size(58, 39);
-            this.m_subtitleFontSizeTextBox.TabIndex = 14;
+            this._subtitleFontSizeTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._subtitleFontSizeTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._subtitleFontSizeTextBox.Location = new System.Drawing.Point(462, 194);
+            this._subtitleFontSizeTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._subtitleFontSizeTextBox.Name = "m_subtitleFontSizeTextBox";
+            this._subtitleFontSizeTextBox.ReadOnly = true;
+            this._subtitleFontSizeTextBox.Size = new System.Drawing.Size(58, 39);
+            this._subtitleFontSizeTextBox.TabIndex = 14;
             // 
             // m_changeSubtitleFontButton
             // 
-            this.m_changeSubtitleFontButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_changeSubtitleFontButton.Location = new System.Drawing.Point(536, 190);
-            this.m_changeSubtitleFontButton.Margin = new System.Windows.Forms.Padding(6);
-            this.m_changeSubtitleFontButton.Name = "m_changeSubtitleFontButton";
-            this.m_changeSubtitleFontButton.Size = new System.Drawing.Size(150, 46);
-            this.m_changeSubtitleFontButton.TabIndex = 15;
-            this.m_changeSubtitleFontButton.Text = "Cha&nge...";
-            this.m_changeSubtitleFontButton.UseVisualStyleBackColor = true;
-            this.m_changeSubtitleFontButton.Click += new System.EventHandler(this.ChangeSubtitleFontButton_Click);
+            this._changeSubtitleFontButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._changeSubtitleFontButton.Location = new System.Drawing.Point(536, 190);
+            this._changeSubtitleFontButton.Margin = new System.Windows.Forms.Padding(6);
+            this._changeSubtitleFontButton.Name = "m_changeSubtitleFontButton";
+            this._changeSubtitleFontButton.Size = new System.Drawing.Size(150, 46);
+            this._changeSubtitleFontButton.TabIndex = 15;
+            this._changeSubtitleFontButton.Text = "Cha&nge...";
+            this._changeSubtitleFontButton.UseVisualStyleBackColor = true;
+            this._changeSubtitleFontButton.Click += new System.EventHandler(this.ChangeSubtitleFontButton_Click);
             // 
             // m_subtitleFontNameTextBox
             // 
-            this.m_subtitleFontNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._subtitleFontNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_subtitleFontNameTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_subtitleFontNameTextBox.Location = new System.Drawing.Point(164, 194);
-            this.m_subtitleFontNameTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_subtitleFontNameTextBox.Name = "m_subtitleFontNameTextBox";
-            this.m_subtitleFontNameTextBox.ReadOnly = true;
-            this.m_subtitleFontNameTextBox.Size = new System.Drawing.Size(282, 39);
-            this.m_subtitleFontNameTextBox.TabIndex = 13;
+            this._subtitleFontNameTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._subtitleFontNameTextBox.Location = new System.Drawing.Point(164, 194);
+            this._subtitleFontNameTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._subtitleFontNameTextBox.Name = "m_subtitleFontNameTextBox";
+            this._subtitleFontNameTextBox.ReadOnly = true;
+            this._subtitleFontNameTextBox.Size = new System.Drawing.Size(282, 39);
+            this._subtitleFontNameTextBox.TabIndex = 13;
             // 
             // label9
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(92, 143);
-            this.label9.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(64, 32);
-            this.label9.TabIndex = 8;
-            this.label9.Text = "&Line:";
+            this._label9.AutoSize = true;
+            this._label9.Location = new System.Drawing.Point(92, 143);
+            this._label9.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label9.Name = "label9";
+            this._label9.Size = new System.Drawing.Size(64, 32);
+            this._label9.TabIndex = 8;
+            this._label9.Text = "&Line:";
             // 
             // m_lineFontSizeTextBox
             // 
-            this.m_lineFontSizeTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_lineFontSizeTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_lineFontSizeTextBox.Location = new System.Drawing.Point(462, 140);
-            this.m_lineFontSizeTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_lineFontSizeTextBox.Name = "m_lineFontSizeTextBox";
-            this.m_lineFontSizeTextBox.ReadOnly = true;
-            this.m_lineFontSizeTextBox.Size = new System.Drawing.Size(58, 39);
-            this.m_lineFontSizeTextBox.TabIndex = 10;
+            this._lineFontSizeTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._lineFontSizeTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._lineFontSizeTextBox.Location = new System.Drawing.Point(462, 140);
+            this._lineFontSizeTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._lineFontSizeTextBox.Name = "m_lineFontSizeTextBox";
+            this._lineFontSizeTextBox.ReadOnly = true;
+            this._lineFontSizeTextBox.Size = new System.Drawing.Size(58, 39);
+            this._lineFontSizeTextBox.TabIndex = 10;
             // 
             // m_changeLineFontButton
             // 
-            this.m_changeLineFontButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_changeLineFontButton.Location = new System.Drawing.Point(536, 136);
-            this.m_changeLineFontButton.Margin = new System.Windows.Forms.Padding(6);
-            this.m_changeLineFontButton.Name = "m_changeLineFontButton";
-            this.m_changeLineFontButton.Size = new System.Drawing.Size(150, 46);
-            this.m_changeLineFontButton.TabIndex = 11;
-            this.m_changeLineFontButton.Text = "Cha&nge...";
-            this.m_changeLineFontButton.UseVisualStyleBackColor = true;
-            this.m_changeLineFontButton.Click += new System.EventHandler(this.ChangeLineFontButton_Click);
+            this._changeLineFontButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._changeLineFontButton.Location = new System.Drawing.Point(536, 136);
+            this._changeLineFontButton.Margin = new System.Windows.Forms.Padding(6);
+            this._changeLineFontButton.Name = "m_changeLineFontButton";
+            this._changeLineFontButton.Size = new System.Drawing.Size(150, 46);
+            this._changeLineFontButton.TabIndex = 11;
+            this._changeLineFontButton.Text = "Cha&nge...";
+            this._changeLineFontButton.UseVisualStyleBackColor = true;
+            this._changeLineFontButton.Click += new System.EventHandler(this.ChangeLineFontButton_Click);
             // 
             // m_lineFontNameTextBox
             // 
-            this.m_lineFontNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._lineFontNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_lineFontNameTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_lineFontNameTextBox.Location = new System.Drawing.Point(164, 140);
-            this.m_lineFontNameTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_lineFontNameTextBox.Name = "m_lineFontNameTextBox";
-            this.m_lineFontNameTextBox.ReadOnly = true;
-            this.m_lineFontNameTextBox.Size = new System.Drawing.Size(282, 39);
-            this.m_lineFontNameTextBox.TabIndex = 9;
+            this._lineFontNameTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._lineFontNameTextBox.Location = new System.Drawing.Point(164, 140);
+            this._lineFontNameTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._lineFontNameTextBox.Name = "m_lineFontNameTextBox";
+            this._lineFontNameTextBox.ReadOnly = true;
+            this._lineFontNameTextBox.Size = new System.Drawing.Size(282, 39);
+            this._lineFontNameTextBox.TabIndex = 9;
             // 
             // label12
             // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(56, 91);
-            this.label12.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(100, 32);
-            this.label12.TabIndex = 4;
-            this.label12.Text = "&Objects:";
+            this._label12.AutoSize = true;
+            this._label12.Location = new System.Drawing.Point(56, 91);
+            this._label12.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label12.Name = "label12";
+            this._label12.Size = new System.Drawing.Size(100, 32);
+            this._label12.TabIndex = 4;
+            this._label12.Text = "&Objects:";
             // 
             // m_smallFontSizeTextBox
             // 
-            this.m_smallFontSizeTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_smallFontSizeTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_smallFontSizeTextBox.Location = new System.Drawing.Point(462, 88);
-            this.m_smallFontSizeTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_smallFontSizeTextBox.Name = "m_smallFontSizeTextBox";
-            this.m_smallFontSizeTextBox.ReadOnly = true;
-            this.m_smallFontSizeTextBox.Size = new System.Drawing.Size(58, 39);
-            this.m_smallFontSizeTextBox.TabIndex = 6;
+            this._smallFontSizeTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._smallFontSizeTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._smallFontSizeTextBox.Location = new System.Drawing.Point(462, 88);
+            this._smallFontSizeTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._smallFontSizeTextBox.Name = "m_smallFontSizeTextBox";
+            this._smallFontSizeTextBox.ReadOnly = true;
+            this._smallFontSizeTextBox.Size = new System.Drawing.Size(58, 39);
+            this._smallFontSizeTextBox.TabIndex = 6;
             // 
             // m_changeSmallFontButton
             // 
-            this.m_changeSmallFontButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_changeSmallFontButton.Location = new System.Drawing.Point(536, 84);
-            this.m_changeSmallFontButton.Margin = new System.Windows.Forms.Padding(6);
-            this.m_changeSmallFontButton.Name = "m_changeSmallFontButton";
-            this.m_changeSmallFontButton.Size = new System.Drawing.Size(150, 46);
-            this.m_changeSmallFontButton.TabIndex = 7;
-            this.m_changeSmallFontButton.Text = "Cha&nge...";
-            this.m_changeSmallFontButton.UseVisualStyleBackColor = true;
-            this.m_changeSmallFontButton.Click += new System.EventHandler(this.ChangeSmallFontButton_Click);
+            this._changeSmallFontButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._changeSmallFontButton.Location = new System.Drawing.Point(536, 84);
+            this._changeSmallFontButton.Margin = new System.Windows.Forms.Padding(6);
+            this._changeSmallFontButton.Name = "m_changeSmallFontButton";
+            this._changeSmallFontButton.Size = new System.Drawing.Size(150, 46);
+            this._changeSmallFontButton.TabIndex = 7;
+            this._changeSmallFontButton.Text = "Cha&nge...";
+            this._changeSmallFontButton.UseVisualStyleBackColor = true;
+            this._changeSmallFontButton.Click += new System.EventHandler(this.ChangeSmallFontButton_Click);
             // 
             // m_smallFontNameTextBox
             // 
-            this.m_smallFontNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._smallFontNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_smallFontNameTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_smallFontNameTextBox.Location = new System.Drawing.Point(164, 88);
-            this.m_smallFontNameTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_smallFontNameTextBox.Name = "m_smallFontNameTextBox";
-            this.m_smallFontNameTextBox.ReadOnly = true;
-            this.m_smallFontNameTextBox.Size = new System.Drawing.Size(282, 39);
-            this.m_smallFontNameTextBox.TabIndex = 5;
+            this._smallFontNameTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._smallFontNameTextBox.Location = new System.Drawing.Point(164, 88);
+            this._smallFontNameTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._smallFontNameTextBox.Name = "m_smallFontNameTextBox";
+            this._smallFontNameTextBox.ReadOnly = true;
+            this._smallFontNameTextBox.Size = new System.Drawing.Size(282, 39);
+            this._smallFontNameTextBox.TabIndex = 5;
             // 
             // label11
             // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(3, 39);
-            this.label11.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(153, 32);
-            this.label11.TabIndex = 0;
-            this.label11.Text = "&Room Name:";
+            this._label11.AutoSize = true;
+            this._label11.Location = new System.Drawing.Point(3, 39);
+            this._label11.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label11.Name = "label11";
+            this._label11.Size = new System.Drawing.Size(153, 32);
+            this._label11.TabIndex = 0;
+            this._label11.Text = "&Room Name:";
             // 
             // m_largeFontSizeTextBox
             // 
-            this.m_largeFontSizeTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_largeFontSizeTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_largeFontSizeTextBox.Location = new System.Drawing.Point(462, 36);
-            this.m_largeFontSizeTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_largeFontSizeTextBox.Name = "m_largeFontSizeTextBox";
-            this.m_largeFontSizeTextBox.ReadOnly = true;
-            this.m_largeFontSizeTextBox.Size = new System.Drawing.Size(58, 39);
-            this.m_largeFontSizeTextBox.TabIndex = 2;
+            this._largeFontSizeTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._largeFontSizeTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._largeFontSizeTextBox.Location = new System.Drawing.Point(462, 36);
+            this._largeFontSizeTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._largeFontSizeTextBox.Name = "m_largeFontSizeTextBox";
+            this._largeFontSizeTextBox.ReadOnly = true;
+            this._largeFontSizeTextBox.Size = new System.Drawing.Size(58, 39);
+            this._largeFontSizeTextBox.TabIndex = 2;
             // 
             // m_changeLargeFontButton
             // 
-            this.m_changeLargeFontButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_changeLargeFontButton.Location = new System.Drawing.Point(536, 32);
-            this.m_changeLargeFontButton.Margin = new System.Windows.Forms.Padding(6);
-            this.m_changeLargeFontButton.Name = "m_changeLargeFontButton";
-            this.m_changeLargeFontButton.Size = new System.Drawing.Size(150, 46);
-            this.m_changeLargeFontButton.TabIndex = 3;
-            this.m_changeLargeFontButton.Text = "Ch&ange...";
-            this.m_changeLargeFontButton.UseVisualStyleBackColor = true;
-            this.m_changeLargeFontButton.Click += new System.EventHandler(this.ChangeLargeFontButton_Click);
+            this._changeLargeFontButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._changeLargeFontButton.Location = new System.Drawing.Point(536, 32);
+            this._changeLargeFontButton.Margin = new System.Windows.Forms.Padding(6);
+            this._changeLargeFontButton.Name = "m_changeLargeFontButton";
+            this._changeLargeFontButton.Size = new System.Drawing.Size(150, 46);
+            this._changeLargeFontButton.TabIndex = 3;
+            this._changeLargeFontButton.Text = "Ch&ange...";
+            this._changeLargeFontButton.UseVisualStyleBackColor = true;
+            this._changeLargeFontButton.Click += new System.EventHandler(this.ChangeLargeFontButton_Click);
             // 
             // m_largeFontNameTextBox
             // 
-            this.m_largeFontNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._largeFontNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_largeFontNameTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.m_largeFontNameTextBox.Location = new System.Drawing.Point(164, 36);
-            this.m_largeFontNameTextBox.Margin = new System.Windows.Forms.Padding(6);
-            this.m_largeFontNameTextBox.Name = "m_largeFontNameTextBox";
-            this.m_largeFontNameTextBox.ReadOnly = true;
-            this.m_largeFontNameTextBox.Size = new System.Drawing.Size(282, 39);
-            this.m_largeFontNameTextBox.TabIndex = 1;
+            this._largeFontNameTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this._largeFontNameTextBox.Location = new System.Drawing.Point(164, 36);
+            this._largeFontNameTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this._largeFontNameTextBox.Name = "m_largeFontNameTextBox";
+            this._largeFontNameTextBox.ReadOnly = true;
+            this._largeFontNameTextBox.Size = new System.Drawing.Size(282, 39);
+            this._largeFontNameTextBox.TabIndex = 1;
             // 
             // tabPage2
             // 
-            this.tabPage2.Controls.Add(this.m_linesGroupBox);
-            this.tabPage2.Controls.Add(this.m_gridGroupBox);
-            this.tabPage2.Location = new System.Drawing.Point(8, 46);
-            this.tabPage2.Margin = new System.Windows.Forms.Padding(6);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(6);
-            this.tabPage2.Size = new System.Drawing.Size(710, 668);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Lines and Grid";
-            this.tabPage2.UseVisualStyleBackColor = true;
+            this._tabPage2.Controls.Add(this._linesGroupBox);
+            this._tabPage2.Controls.Add(this._gridGroupBox);
+            this._tabPage2.Location = new System.Drawing.Point(8, 46);
+            this._tabPage2.Margin = new System.Windows.Forms.Padding(6);
+            this._tabPage2.Name = "tabPage2";
+            this._tabPage2.Padding = new System.Windows.Forms.Padding(6);
+            this._tabPage2.Size = new System.Drawing.Size(710, 668);
+            this._tabPage2.TabIndex = 1;
+            this._tabPage2.Text = "Lines and Grid";
+            this._tabPage2.UseVisualStyleBackColor = true;
             // 
             // tabRegions
             // 
-            this.tabRegions.Controls.Add(this.label19);
-            this.tabRegions.Controls.Add(this.btnDeleteRegion);
-            this.tabRegions.Controls.Add(this.btnAddRegion);
-            this.tabRegions.Controls.Add(this.btnChange);
-            this.tabRegions.Controls.Add(this.m_RegionListing);
-            this.tabRegions.Location = new System.Drawing.Point(8, 46);
-            this.tabRegions.Margin = new System.Windows.Forms.Padding(6);
-            this.tabRegions.Name = "tabRegions";
-            this.tabRegions.Padding = new System.Windows.Forms.Padding(6);
-            this.tabRegions.Size = new System.Drawing.Size(710, 668);
-            this.tabRegions.TabIndex = 4;
-            this.tabRegions.Text = "Regions";
-            this.tabRegions.UseVisualStyleBackColor = true;
+            this._tabRegions.Controls.Add(this._label19);
+            this._tabRegions.Controls.Add(this._btnDeleteRegion);
+            this._tabRegions.Controls.Add(this._btnAddRegion);
+            this._tabRegions.Controls.Add(this._btnChange);
+            this._tabRegions.Controls.Add(this._regionListing);
+            this._tabRegions.Location = new System.Drawing.Point(8, 46);
+            this._tabRegions.Margin = new System.Windows.Forms.Padding(6);
+            this._tabRegions.Name = "tabRegions";
+            this._tabRegions.Padding = new System.Windows.Forms.Padding(6);
+            this._tabRegions.Size = new System.Drawing.Size(710, 668);
+            this._tabRegions.TabIndex = 4;
+            this._tabRegions.Text = "Regions";
+            this._tabRegions.UseVisualStyleBackColor = true;
             // 
             // label19
             // 
-            this.label19.AutoSize = true;
-            this.label19.ForeColor = System.Drawing.Color.Blue;
-            this.label19.Location = new System.Drawing.Point(12, 246);
-            this.label19.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(337, 32);
-            this.label19.TabIndex = 5;
-            this.label19.Text = "Note:  F2 to edit Region name";
+            this._label19.AutoSize = true;
+            this._label19.ForeColor = System.Drawing.Color.Blue;
+            this._label19.Location = new System.Drawing.Point(12, 246);
+            this._label19.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label19.Name = "label19";
+            this._label19.Size = new System.Drawing.Size(337, 32);
+            this._label19.TabIndex = 5;
+            this._label19.Text = "Note:  F2 to edit Region name";
             // 
             // btnDeleteRegion
             // 
-            this.btnDeleteRegion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDeleteRegion.Location = new System.Drawing.Point(514, 194);
-            this.btnDeleteRegion.Margin = new System.Windows.Forms.Padding(6);
-            this.btnDeleteRegion.Name = "btnDeleteRegion";
-            this.btnDeleteRegion.Size = new System.Drawing.Size(184, 46);
-            this.btnDeleteRegion.TabIndex = 4;
-            this.btnDeleteRegion.Text = "&Delete Region";
-            this.btnDeleteRegion.UseVisualStyleBackColor = true;
-            this.btnDeleteRegion.Click += new System.EventHandler(this.btnDeleteRegion_Click);
+            this._btnDeleteRegion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._btnDeleteRegion.Location = new System.Drawing.Point(514, 194);
+            this._btnDeleteRegion.Margin = new System.Windows.Forms.Padding(6);
+            this._btnDeleteRegion.Name = "btnDeleteRegion";
+            this._btnDeleteRegion.Size = new System.Drawing.Size(184, 46);
+            this._btnDeleteRegion.TabIndex = 4;
+            this._btnDeleteRegion.Text = "&Delete Region";
+            this._btnDeleteRegion.UseVisualStyleBackColor = true;
+            this._btnDeleteRegion.Click += new System.EventHandler(this.BtnDeleteRegionClick);
             // 
             // btnAddRegion
             // 
-            this.btnAddRegion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAddRegion.Location = new System.Drawing.Point(514, 12);
-            this.btnAddRegion.Margin = new System.Windows.Forms.Padding(6);
-            this.btnAddRegion.Name = "btnAddRegion";
-            this.btnAddRegion.Size = new System.Drawing.Size(184, 46);
-            this.btnAddRegion.TabIndex = 2;
-            this.btnAddRegion.Text = "&Add Region";
-            this.btnAddRegion.UseVisualStyleBackColor = true;
-            this.btnAddRegion.Click += new System.EventHandler(this.btnAddRegion_Click);
+            this._btnAddRegion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._btnAddRegion.Location = new System.Drawing.Point(514, 12);
+            this._btnAddRegion.Margin = new System.Windows.Forms.Padding(6);
+            this._btnAddRegion.Name = "btnAddRegion";
+            this._btnAddRegion.Size = new System.Drawing.Size(184, 46);
+            this._btnAddRegion.TabIndex = 2;
+            this._btnAddRegion.Text = "&Add Region";
+            this._btnAddRegion.UseVisualStyleBackColor = true;
+            this._btnAddRegion.Click += new System.EventHandler(this.BtnAddRegionClick);
             // 
             // btnChange
             // 
-            this.btnChange.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnChange.Location = new System.Drawing.Point(514, 68);
-            this.btnChange.Margin = new System.Windows.Forms.Padding(6);
-            this.btnChange.Name = "btnChange";
-            this.btnChange.Size = new System.Drawing.Size(184, 46);
-            this.btnChange.TabIndex = 3;
-            this.btnChange.Text = "C&hange...";
-            this.btnChange.UseVisualStyleBackColor = true;
-            this.btnChange.Click += new System.EventHandler(this.btnChange_Click);
+            this._btnChange.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._btnChange.Location = new System.Drawing.Point(514, 68);
+            this._btnChange.Margin = new System.Windows.Forms.Padding(6);
+            this._btnChange.Name = "btnChange";
+            this._btnChange.Size = new System.Drawing.Size(184, 46);
+            this._btnChange.TabIndex = 3;
+            this._btnChange.Text = "C&hange...";
+            this._btnChange.UseVisualStyleBackColor = true;
+            this._btnChange.Click += new System.EventHandler(this.BtnChangeClick);
             // 
             // m_RegionListing
             // 
-            this.m_RegionListing.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this._regionListing.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_RegionListing.FormattingEnabled = true;
-            this.m_RegionListing.HorizontalScrollbar = true;
-            this.m_RegionListing.ItemHeight = 32;
-            this.m_RegionListing.Location = new System.Drawing.Point(12, 12);
-            this.m_RegionListing.Margin = new System.Windows.Forms.Padding(6);
-            this.m_RegionListing.Name = "m_RegionListing";
-            this.m_RegionListing.Size = new System.Drawing.Size(486, 228);
-            this.m_RegionListing.TabIndex = 1;
-            this.m_RegionListing.SelectedIndexChanged += new System.EventHandler(this.m_RegionListing_SelectedIndexChanged);
-            this.m_RegionListing.DoubleClick += new System.EventHandler(this.onChangeRegionColor);
-            this.m_RegionListing.KeyDown += new System.Windows.Forms.KeyEventHandler(this.m_RegionListing_KeyDown);
-            this.m_RegionListing.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.m_RegionListing_KeyPress);
-            this.m_RegionListing.KeyUp += new System.Windows.Forms.KeyEventHandler(this.m_RegionListing_KeyUp);
+            this._regionListing.FormattingEnabled = true;
+            this._regionListing.HorizontalScrollbar = true;
+            this._regionListing.ItemHeight = 32;
+            this._regionListing.Location = new System.Drawing.Point(12, 12);
+            this._regionListing.Margin = new System.Windows.Forms.Padding(6);
+            this._regionListing.Name = "m_RegionListing";
+            this._regionListing.Size = new System.Drawing.Size(486, 228);
+            this._regionListing.TabIndex = 1;
+            this._regionListing.SelectedIndexChanged += new System.EventHandler(this.RegionListingSelectedIndexChanged);
+            this._regionListing.DoubleClick += new System.EventHandler(this.OnChangeRegionColor);
+            this._regionListing.KeyDown += new System.Windows.Forms.KeyEventHandler(this.RegionListingKeyDown);
+            this._regionListing.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.RegionListingKeyPress);
+            this._regionListing.KeyUp += new System.Windows.Forms.KeyEventHandler(this.RegionListingKeyUp);
             // 
             // tabPage3
             // 
-            this.tabPage3.Controls.Add(this.groupBox4);
-            this.tabPage3.Controls.Add(this.groupBox2);
-            this.tabPage3.Controls.Add(this.groupBox1);
-            this.tabPage3.Location = new System.Drawing.Point(8, 46);
-            this.tabPage3.Margin = new System.Windows.Forms.Padding(6);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(710, 668);
-            this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "Other";
-            this.tabPage3.UseVisualStyleBackColor = true;
+            this._tabPage3.Controls.Add(this._groupBox4);
+            this._tabPage3.Controls.Add(this._groupBox2);
+            this._tabPage3.Controls.Add(this._groupBox1);
+            this._tabPage3.Location = new System.Drawing.Point(8, 46);
+            this._tabPage3.Margin = new System.Windows.Forms.Padding(6);
+            this._tabPage3.Name = "tabPage3";
+            this._tabPage3.Size = new System.Drawing.Size(710, 668);
+            this._tabPage3.TabIndex = 2;
+            this._tabPage3.Text = "Other";
+            this._tabPage3.UseVisualStyleBackColor = true;
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.m_wrapTextAtDashes);
-            this.groupBox4.Controls.Add(this.label4b);
-            this.groupBox4.Controls.Add(this.label4c);
-            this.groupBox4.Controls.Add(this.m_documentSpecificMargins);
-            this.groupBox4.Controls.Add(this.m_documentHorizontalMargins);
-            this.groupBox4.Controls.Add(this.m_documentVerticalMargins);
-            this.groupBox4.Location = new System.Drawing.Point(10, 456);
-            this.groupBox4.Margin = new System.Windows.Forms.Padding(6);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Padding = new System.Windows.Forms.Padding(6);
-            this.groupBox4.Size = new System.Drawing.Size(686, 212);
-            this.groupBox4.TabIndex = 1;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "&Margins";
+            this._groupBox4.Controls.Add(this._wrapTextAtDashes);
+            this._groupBox4.Controls.Add(this._label4b);
+            this._groupBox4.Controls.Add(this._label4c);
+            this._groupBox4.Controls.Add(this._documentSpecificMargins);
+            this._groupBox4.Controls.Add(this._documentHorizontalMargins);
+            this._groupBox4.Controls.Add(this._documentVerticalMargins);
+            this._groupBox4.Location = new System.Drawing.Point(10, 456);
+            this._groupBox4.Margin = new System.Windows.Forms.Padding(6);
+            this._groupBox4.Name = "groupBox4";
+            this._groupBox4.Padding = new System.Windows.Forms.Padding(6);
+            this._groupBox4.Size = new System.Drawing.Size(686, 212);
+            this._groupBox4.TabIndex = 1;
+            this._groupBox4.TabStop = false;
+            this._groupBox4.Text = "&Margins";
             // 
             // m_wrapTextAtDashes
             // 
-            this.m_wrapTextAtDashes.AutoSize = true;
-            this.m_wrapTextAtDashes.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.m_wrapTextAtDashes.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.m_wrapTextAtDashes.Location = new System.Drawing.Point(22, 46);
-            this.m_wrapTextAtDashes.Margin = new System.Windows.Forms.Padding(6);
-            this.m_wrapTextAtDashes.Name = "m_wrapTextAtDashes";
-            this.m_wrapTextAtDashes.Size = new System.Drawing.Size(263, 36);
-            this.m_wrapTextAtDashes.TabIndex = 2;
-            this.m_wrapTextAtDashes.Text = "Wrap Text at Dashes";
-            this.m_wrapTextAtDashes.UseVisualStyleBackColor = true;
+            this._wrapTextAtDashes.AutoSize = true;
+            this._wrapTextAtDashes.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this._wrapTextAtDashes.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this._wrapTextAtDashes.Location = new System.Drawing.Point(22, 46);
+            this._wrapTextAtDashes.Margin = new System.Windows.Forms.Padding(6);
+            this._wrapTextAtDashes.Name = "m_wrapTextAtDashes";
+            this._wrapTextAtDashes.Size = new System.Drawing.Size(263, 36);
+            this._wrapTextAtDashes.TabIndex = 2;
+            this._wrapTextAtDashes.Text = "Wrap Text at Dashes";
+            this._wrapTextAtDashes.UseVisualStyleBackColor = true;
             // 
             // label4b
             // 
-            this.label4b.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label4b.AutoSize = true;
-            this.label4b.Location = new System.Drawing.Point(259, 107);
-            this.label4b.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label4b.Name = "label4b";
-            this.label4b.Size = new System.Drawing.Size(217, 32);
-            this.label4b.TabIndex = 1;
-            this.label4b.Text = "&Horizontal margins";
+            this._label4b.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label4b.AutoSize = true;
+            this._label4b.Location = new System.Drawing.Point(259, 107);
+            this._label4b.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label4b.Name = "label4b";
+            this._label4b.Size = new System.Drawing.Size(217, 32);
+            this._label4b.TabIndex = 1;
+            this._label4b.Text = "&Horizontal margins";
             // 
             // label4c
             // 
-            this.label4c.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label4c.AutoSize = true;
-            this.label4c.Location = new System.Drawing.Point(292, 154);
-            this.label4c.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label4c.Name = "label4c";
-            this.label4c.Size = new System.Drawing.Size(184, 32);
-            this.label4c.TabIndex = 1;
-            this.label4c.Text = "&Vertical margins";
+            this._label4c.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label4c.AutoSize = true;
+            this._label4c.Location = new System.Drawing.Point(292, 154);
+            this._label4c.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label4c.Name = "label4c";
+            this._label4c.Size = new System.Drawing.Size(184, 32);
+            this._label4c.TabIndex = 1;
+            this._label4c.Text = "&Vertical margins";
             // 
             // m_documentSpecificMargins
             // 
-            this.m_documentSpecificMargins.AutoSize = true;
-            this.m_documentSpecificMargins.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.m_documentSpecificMargins.Location = new System.Drawing.Point(330, 46);
-            this.m_documentSpecificMargins.Margin = new System.Windows.Forms.Padding(6);
-            this.m_documentSpecificMargins.Name = "m_documentSpecificMargins";
-            this.m_documentSpecificMargins.Size = new System.Drawing.Size(344, 36);
-            this.m_documentSpecificMargins.TabIndex = 0;
-            this.m_documentSpecificMargins.Text = "Document-Specific Margins";
-            this.m_documentSpecificMargins.UseVisualStyleBackColor = true;
-            this.m_documentSpecificMargins.CheckedChanged += new System.EventHandler(this.m_documentSpecificMargins_CheckedChanged);
+            this._documentSpecificMargins.AutoSize = true;
+            this._documentSpecificMargins.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this._documentSpecificMargins.Location = new System.Drawing.Point(330, 46);
+            this._documentSpecificMargins.Margin = new System.Windows.Forms.Padding(6);
+            this._documentSpecificMargins.Name = "m_documentSpecificMargins";
+            this._documentSpecificMargins.Size = new System.Drawing.Size(344, 36);
+            this._documentSpecificMargins.TabIndex = 0;
+            this._documentSpecificMargins.Text = "Document-Specific Margins";
+            this._documentSpecificMargins.UseVisualStyleBackColor = true;
+            this._documentSpecificMargins.CheckedChanged += new System.EventHandler(this.DocumentSpecificMarginsCheckedChanged);
             // 
             // m_documentHorizontalMargins
             // 
-            this.m_documentHorizontalMargins.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_documentHorizontalMargins.DecimalPlaces = 1;
-            this.m_documentHorizontalMargins.Location = new System.Drawing.Point(484, 103);
-            this.m_documentHorizontalMargins.Margin = new System.Windows.Forms.Padding(6);
-            this.m_documentHorizontalMargins.Maximum = new decimal(new int[] {
+            this._documentHorizontalMargins.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._documentHorizontalMargins.DecimalPlaces = 1;
+            this._documentHorizontalMargins.Location = new System.Drawing.Point(484, 103);
+            this._documentHorizontalMargins.Margin = new System.Windows.Forms.Padding(6);
+            this._documentHorizontalMargins.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_documentHorizontalMargins.Name = "m_documentHorizontalMargins";
-            this.m_documentHorizontalMargins.Size = new System.Drawing.Size(190, 39);
-            this.m_documentHorizontalMargins.TabIndex = 4;
-            this.m_documentHorizontalMargins.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_documentHorizontalMargins.Value = new decimal(new int[] {
+            this._documentHorizontalMargins.Name = "m_documentHorizontalMargins";
+            this._documentHorizontalMargins.Size = new System.Drawing.Size(190, 39);
+            this._documentHorizontalMargins.TabIndex = 4;
+            this._documentHorizontalMargins.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._documentHorizontalMargins.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -1220,20 +1220,20 @@ namespace Trizbort.UI
             // 
             // m_documentVerticalMargins
             // 
-            this.m_documentVerticalMargins.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_documentVerticalMargins.DecimalPlaces = 1;
-            this.m_documentVerticalMargins.Location = new System.Drawing.Point(484, 154);
-            this.m_documentVerticalMargins.Margin = new System.Windows.Forms.Padding(6);
-            this.m_documentVerticalMargins.Maximum = new decimal(new int[] {
+            this._documentVerticalMargins.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._documentVerticalMargins.DecimalPlaces = 1;
+            this._documentVerticalMargins.Location = new System.Drawing.Point(484, 154);
+            this._documentVerticalMargins.Margin = new System.Windows.Forms.Padding(6);
+            this._documentVerticalMargins.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_documentVerticalMargins.Name = "m_documentVerticalMargins";
-            this.m_documentVerticalMargins.Size = new System.Drawing.Size(190, 39);
-            this.m_documentVerticalMargins.TabIndex = 4;
-            this.m_documentVerticalMargins.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_documentVerticalMargins.Value = new decimal(new int[] {
+            this._documentVerticalMargins.Name = "m_documentVerticalMargins";
+            this._documentVerticalMargins.Size = new System.Drawing.Size(190, 39);
+            this._documentVerticalMargins.TabIndex = 4;
+            this._documentVerticalMargins.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._documentVerticalMargins.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -1241,58 +1241,58 @@ namespace Trizbort.UI
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.label7);
-            this.groupBox2.Controls.Add(this.label3);
-            this.groupBox2.Controls.Add(this.m_snapToElementDistanceUpDown);
-            this.groupBox2.Controls.Add(this.label2);
-            this.groupBox2.Controls.Add(this.m_handleSizeUpDown);
-            this.groupBox2.Location = new System.Drawing.Point(10, 247);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(6);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(6);
-            this.groupBox2.Size = new System.Drawing.Size(686, 202);
-            this.groupBox2.TabIndex = 1;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "&Advanced";
+            this._groupBox2.Controls.Add(this._label7);
+            this._groupBox2.Controls.Add(this._label3);
+            this._groupBox2.Controls.Add(this._snapToElementDistanceUpDown);
+            this._groupBox2.Controls.Add(this._label2);
+            this._groupBox2.Controls.Add(this._handleSizeUpDown);
+            this._groupBox2.Location = new System.Drawing.Point(10, 247);
+            this._groupBox2.Margin = new System.Windows.Forms.Padding(6);
+            this._groupBox2.Name = "groupBox2";
+            this._groupBox2.Padding = new System.Windows.Forms.Padding(6);
+            this._groupBox2.Size = new System.Drawing.Size(686, 202);
+            this._groupBox2.TabIndex = 1;
+            this._groupBox2.TabStop = false;
+            this._groupBox2.Text = "&Advanced";
             // 
             // label7
             // 
-            this.label7.AutoSize = true;
-            this.label7.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label7.Location = new System.Drawing.Point(50, 40);
-            this.label7.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(607, 32);
-            this.label7.TabIndex = 0;
-            this.label7.Text = "These settings adjust the ease of clicking and dragging.";
+            this._label7.AutoSize = true;
+            this._label7.ForeColor = System.Drawing.SystemColors.GrayText;
+            this._label7.Location = new System.Drawing.Point(50, 40);
+            this._label7.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label7.Name = "label7";
+            this._label7.Size = new System.Drawing.Size(607, 32);
+            this._label7.TabIndex = 0;
+            this._label7.Text = "These settings adjust the ease of clicking and dragging.";
             // 
             // label3
             // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(183, 146);
-            this.label3.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(289, 32);
-            this.label3.TabIndex = 3;
-            this.label3.Text = "&Snap to Element Distance";
+            this._label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label3.AutoSize = true;
+            this._label3.Location = new System.Drawing.Point(183, 146);
+            this._label3.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label3.Name = "label3";
+            this._label3.Size = new System.Drawing.Size(289, 32);
+            this._label3.TabIndex = 3;
+            this._label3.Text = "&Snap to Element Distance";
             // 
             // m_snapToElementDistanceUpDown
             // 
-            this.m_snapToElementDistanceUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_snapToElementDistanceUpDown.DecimalPlaces = 1;
-            this.m_snapToElementDistanceUpDown.Location = new System.Drawing.Point(484, 142);
-            this.m_snapToElementDistanceUpDown.Margin = new System.Windows.Forms.Padding(6);
-            this.m_snapToElementDistanceUpDown.Maximum = new decimal(new int[] {
+            this._snapToElementDistanceUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._snapToElementDistanceUpDown.DecimalPlaces = 1;
+            this._snapToElementDistanceUpDown.Location = new System.Drawing.Point(484, 142);
+            this._snapToElementDistanceUpDown.Margin = new System.Windows.Forms.Padding(6);
+            this._snapToElementDistanceUpDown.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_snapToElementDistanceUpDown.Name = "m_snapToElementDistanceUpDown";
-            this.m_snapToElementDistanceUpDown.Size = new System.Drawing.Size(190, 39);
-            this.m_snapToElementDistanceUpDown.TabIndex = 4;
-            this.m_snapToElementDistanceUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_snapToElementDistanceUpDown.Value = new decimal(new int[] {
+            this._snapToElementDistanceUpDown.Name = "m_snapToElementDistanceUpDown";
+            this._snapToElementDistanceUpDown.Size = new System.Drawing.Size(190, 39);
+            this._snapToElementDistanceUpDown.TabIndex = 4;
+            this._snapToElementDistanceUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._snapToElementDistanceUpDown.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -1300,31 +1300,31 @@ namespace Trizbort.UI
             // 
             // label2
             // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(198, 95);
-            this.label2.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(274, 32);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "Resize/Drag &Handle Size";
+            this._label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._label2.AutoSize = true;
+            this._label2.Location = new System.Drawing.Point(198, 95);
+            this._label2.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._label2.Name = "label2";
+            this._label2.Size = new System.Drawing.Size(274, 32);
+            this._label2.TabIndex = 1;
+            this._label2.Text = "Resize/Drag &Handle Size";
             // 
             // m_handleSizeUpDown
             // 
-            this.m_handleSizeUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_handleSizeUpDown.DecimalPlaces = 1;
-            this.m_handleSizeUpDown.Location = new System.Drawing.Point(484, 91);
-            this.m_handleSizeUpDown.Margin = new System.Windows.Forms.Padding(6);
-            this.m_handleSizeUpDown.Maximum = new decimal(new int[] {
+            this._handleSizeUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this._handleSizeUpDown.DecimalPlaces = 1;
+            this._handleSizeUpDown.Location = new System.Drawing.Point(484, 91);
+            this._handleSizeUpDown.Margin = new System.Windows.Forms.Padding(6);
+            this._handleSizeUpDown.Maximum = new decimal(new int[] {
             4096,
             0,
             0,
             0});
-            this.m_handleSizeUpDown.Name = "m_handleSizeUpDown";
-            this.m_handleSizeUpDown.Size = new System.Drawing.Size(190, 39);
-            this.m_handleSizeUpDown.TabIndex = 2;
-            this.m_handleSizeUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.m_handleSizeUpDown.Value = new decimal(new int[] {
+            this._handleSizeUpDown.Name = "m_handleSizeUpDown";
+            this._handleSizeUpDown.Size = new System.Drawing.Size(190, 39);
+            this._handleSizeUpDown.TabIndex = 2;
+            this._handleSizeUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this._handleSizeUpDown.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -1332,13 +1332,13 @@ namespace Trizbort.UI
             // 
             // SettingsDialog
             // 
-            this.AcceptButton = this.m_okButton;
+            this.AcceptButton = this._okButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(192F, 192F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.CancelButton = this.m_cancelButton;
+            this.CancelButton = this._cancelButton;
             this.ClientSize = new System.Drawing.Size(766, 844);
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.tabControl1);
+            this.Controls.Add(this._panel1);
+            this.Controls.Add(this._tabControl1);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -1353,131 +1353,131 @@ namespace Trizbort.UI
             this.Text = "Map Settings";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.SettingsDialog_FormClosing);
             this.Load += new System.EventHandler(this.SettingsDialog_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.m_lineWidthUpDown)).EndInit();
-            this.m_linesGroupBox.ResumeLayout(false);
-            this.m_linesGroupBox.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_preferredDistanceBetweenRoomsUpDown)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_textOffsetFromLineUpDown)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_connectionStalkLengthUpDown)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_arrowSizeUpDown)).EndInit();
-            this.m_gridGroupBox.ResumeLayout(false);
-            this.m_gridGroupBox.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_gridSizeUpDown)).EndInit();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_objectListOffsetFromRoomNumericUpDown)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_darknessStripeSizeNumericUpDown)).EndInit();
-            this.panel1.ResumeLayout(false);
-            this.tabControl1.ResumeLayout(false);
-            this.tabPage4.ResumeLayout(false);
-            this.tabPage4.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            this.tabPage1.ResumeLayout(false);
-            this.m_colorsGroupBox.ResumeLayout(false);
-            this.m_fontsGroupBox.ResumeLayout(false);
-            this.m_fontsGroupBox.PerformLayout();
-            this.tabPage2.ResumeLayout(false);
-            this.tabRegions.ResumeLayout(false);
-            this.tabRegions.PerformLayout();
-            this.tabPage3.ResumeLayout(false);
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_documentHorizontalMargins)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_documentVerticalMargins)).EndInit();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_snapToElementDistanceUpDown)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_handleSizeUpDown)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this._lineWidthUpDown)).EndInit();
+            this._linesGroupBox.ResumeLayout(false);
+            this._linesGroupBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._preferredDistanceBetweenRoomsUpDown)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this._textOffsetFromLineUpDown)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this._connectionStalkLengthUpDown)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this._arrowSizeUpDown)).EndInit();
+            this._gridGroupBox.ResumeLayout(false);
+            this._gridGroupBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._gridSizeUpDown)).EndInit();
+            this._groupBox1.ResumeLayout(false);
+            this._groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._objectListOffsetFromRoomNumericUpDown)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this._darknessStripeSizeNumericUpDown)).EndInit();
+            this._panel1.ResumeLayout(false);
+            this._tabControl1.ResumeLayout(false);
+            this._tabPage4.ResumeLayout(false);
+            this._tabPage4.PerformLayout();
+            this._groupBox3.ResumeLayout(false);
+            this._groupBox3.PerformLayout();
+            this._tabPage1.ResumeLayout(false);
+            this._colorsGroupBox.ResumeLayout(false);
+            this._fontsGroupBox.ResumeLayout(false);
+            this._fontsGroupBox.PerformLayout();
+            this._tabPage2.ResumeLayout(false);
+            this._tabRegions.ResumeLayout(false);
+            this._tabRegions.PerformLayout();
+            this._tabPage3.ResumeLayout(false);
+            this._groupBox4.ResumeLayout(false);
+            this._groupBox4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._documentHorizontalMargins)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this._documentVerticalMargins)).EndInit();
+            this._groupBox2.ResumeLayout(false);
+            this._groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this._snapToElementDistanceUpDown)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this._handleSizeUpDown)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Button m_okButton;
-        private System.Windows.Forms.Button m_cancelButton;
-        private System.Windows.Forms.CheckBox m_handDrawnCheckBox;
-        private System.Windows.Forms.NumericUpDown m_lineWidthUpDown;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.GroupBox m_linesGroupBox;
-        private System.Windows.Forms.GroupBox m_gridGroupBox;
-        private System.Windows.Forms.CheckBox m_snapToGridCheckBox;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.NumericUpDown m_gridSizeUpDown;
-        private System.Windows.Forms.CheckBox m_showGridCheckBox;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.NumericUpDown m_darknessStripeSizeNumericUpDown;
-        private System.Windows.Forms.Label label34;
-        private System.Windows.Forms.NumericUpDown m_objectListOffsetFromRoomNumericUpDown;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.TabControl tabControl1;
-        private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.GroupBox m_colorsGroupBox;
-        private System.Windows.Forms.ListBox m_colorListBox;
-        private System.Windows.Forms.Button m_changeColorButton;
-        private System.Windows.Forms.GroupBox m_fontsGroupBox;
-        private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.TextBox m_smallFontSizeTextBox;
-        private System.Windows.Forms.Button m_changeSmallFontButton;
-        private System.Windows.Forms.TextBox m_smallFontNameTextBox;
-        private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.TextBox m_largeFontSizeTextBox;
-        private System.Windows.Forms.Button m_changeLargeFontButton;
-        private System.Windows.Forms.TextBox m_largeFontNameTextBox;
-        private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.TabPage tabPage3;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.NumericUpDown m_arrowSizeUpDown;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.NumericUpDown m_connectionStalkLengthUpDown;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.NumericUpDown m_snapToElementDistanceUpDown;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.NumericUpDown m_handleSizeUpDown;
-        private System.Windows.Forms.GroupBox groupBox4;
-        private System.Windows.Forms.Label label4b;
-        private System.Windows.Forms.Label label4c;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.CheckBox m_documentSpecificMargins;
-        private System.Windows.Forms.NumericUpDown m_documentHorizontalMargins;
-        private System.Windows.Forms.NumericUpDown m_documentVerticalMargins;
-        private System.Windows.Forms.NumericUpDown m_textOffsetFromLineUpDown;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.TextBox m_lineFontSizeTextBox;
-        private System.Windows.Forms.Button m_changeLineFontButton;
-        private System.Windows.Forms.TextBox m_lineFontNameTextBox;
-        private System.Windows.Forms.TabPage tabPage4;
-        private System.Windows.Forms.Label label16;
-        private System.Windows.Forms.TextBox m_descriptionTextBox;
-        private System.Windows.Forms.Label label15;
-        private System.Windows.Forms.Label label14;
-        private System.Windows.Forms.TextBox m_authorTextBox;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.TextBox m_titleTextBox;
-        private System.Windows.Forms.TextBox m_historyTextBox;
-        private System.Windows.Forms.Label label17;
-        private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.CheckBox m_showOriginCheckBox;
-        private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.NumericUpDown m_preferredDistanceBetweenRoomsUpDown;
-        private System.Windows.Forms.TabPage tabRegions;
-        private System.Windows.Forms.ListBox m_RegionListing;
-        private System.Windows.Forms.Button btnAddRegion;
-        private System.Windows.Forms.Button btnChange;
-        private System.Windows.Forms.Button btnDeleteRegion;
-        private System.Windows.Forms.Label label19;
-    private System.Windows.Forms.TextBox txtDefaultRoomName;
-    private System.Windows.Forms.Label label20;
-    private System.Windows.Forms.Label label21;
-    private System.Windows.Forms.ComboBox cboRoomShape;
-    private System.Windows.Forms.Label label22;
-    private System.Windows.Forms.TextBox m_subtitleFontSizeTextBox;
-    private System.Windows.Forms.Button m_changeSubtitleFontButton;
-    private System.Windows.Forms.TextBox m_subtitleFontNameTextBox;
-        private System.Windows.Forms.CheckBox m_wrapTextAtDashes;
+        private System.Windows.Forms.Button _okButton;
+        private System.Windows.Forms.Button _cancelButton;
+        private System.Windows.Forms.CheckBox _handDrawnCheckBox;
+        private System.Windows.Forms.NumericUpDown _lineWidthUpDown;
+        private System.Windows.Forms.Label _label5;
+        private System.Windows.Forms.GroupBox _linesGroupBox;
+        private System.Windows.Forms.GroupBox _gridGroupBox;
+        private System.Windows.Forms.CheckBox _snapToGridCheckBox;
+        private System.Windows.Forms.Label _label6;
+        private System.Windows.Forms.NumericUpDown _gridSizeUpDown;
+        private System.Windows.Forms.CheckBox _showGridCheckBox;
+        private System.Windows.Forms.GroupBox _groupBox1;
+        private System.Windows.Forms.Label _label13;
+        private System.Windows.Forms.NumericUpDown _darknessStripeSizeNumericUpDown;
+        private System.Windows.Forms.Label _label34;
+        private System.Windows.Forms.NumericUpDown _objectListOffsetFromRoomNumericUpDown;
+        private System.Windows.Forms.Panel _panel1;
+        private System.Windows.Forms.TabControl _tabControl1;
+        private System.Windows.Forms.TabPage _tabPage1;
+        private System.Windows.Forms.GroupBox _colorsGroupBox;
+        private System.Windows.Forms.ListBox _colorListBox;
+        private System.Windows.Forms.Button _changeColorButton;
+        private System.Windows.Forms.GroupBox _fontsGroupBox;
+        private System.Windows.Forms.Label _label12;
+        private System.Windows.Forms.TextBox _smallFontSizeTextBox;
+        private System.Windows.Forms.Button _changeSmallFontButton;
+        private System.Windows.Forms.TextBox _smallFontNameTextBox;
+        private System.Windows.Forms.Label _label11;
+        private System.Windows.Forms.TextBox _largeFontSizeTextBox;
+        private System.Windows.Forms.Button _changeLargeFontButton;
+        private System.Windows.Forms.TextBox _largeFontNameTextBox;
+        private System.Windows.Forms.TabPage _tabPage2;
+        private System.Windows.Forms.TabPage _tabPage3;
+        private System.Windows.Forms.Label _label4;
+        private System.Windows.Forms.NumericUpDown _arrowSizeUpDown;
+        private System.Windows.Forms.Label _label1;
+        private System.Windows.Forms.NumericUpDown _connectionStalkLengthUpDown;
+        private System.Windows.Forms.GroupBox _groupBox2;
+        private System.Windows.Forms.Label _label7;
+        private System.Windows.Forms.Label _label3;
+        private System.Windows.Forms.NumericUpDown _snapToElementDistanceUpDown;
+        private System.Windows.Forms.Label _label2;
+        private System.Windows.Forms.NumericUpDown _handleSizeUpDown;
+        private System.Windows.Forms.GroupBox _groupBox4;
+        private System.Windows.Forms.Label _label4b;
+        private System.Windows.Forms.Label _label4c;
+        private System.Windows.Forms.Label _label8;
+        private System.Windows.Forms.CheckBox _documentSpecificMargins;
+        private System.Windows.Forms.NumericUpDown _documentHorizontalMargins;
+        private System.Windows.Forms.NumericUpDown _documentVerticalMargins;
+        private System.Windows.Forms.NumericUpDown _textOffsetFromLineUpDown;
+        private System.Windows.Forms.Label _label9;
+        private System.Windows.Forms.TextBox _lineFontSizeTextBox;
+        private System.Windows.Forms.Button _changeLineFontButton;
+        private System.Windows.Forms.TextBox _lineFontNameTextBox;
+        private System.Windows.Forms.TabPage _tabPage4;
+        private System.Windows.Forms.Label _label16;
+        private System.Windows.Forms.TextBox _descriptionTextBox;
+        private System.Windows.Forms.Label _label15;
+        private System.Windows.Forms.Label _label14;
+        private System.Windows.Forms.TextBox _authorTextBox;
+        private System.Windows.Forms.Label _label10;
+        private System.Windows.Forms.TextBox _titleTextBox;
+        private System.Windows.Forms.TextBox _historyTextBox;
+        private System.Windows.Forms.Label _label17;
+        private System.Windows.Forms.GroupBox _groupBox3;
+        private System.Windows.Forms.CheckBox _showOriginCheckBox;
+        private System.Windows.Forms.Label _label18;
+        private System.Windows.Forms.NumericUpDown _preferredDistanceBetweenRoomsUpDown;
+        private System.Windows.Forms.TabPage _tabRegions;
+        private System.Windows.Forms.ListBox _regionListing;
+        private System.Windows.Forms.Button _btnAddRegion;
+        private System.Windows.Forms.Button _btnChange;
+        private System.Windows.Forms.Button _btnDeleteRegion;
+        private System.Windows.Forms.Label _label19;
+    private System.Windows.Forms.TextBox _txtDefaultRoomName;
+    private System.Windows.Forms.Label _label20;
+    private System.Windows.Forms.Label _label21;
+    private System.Windows.Forms.ComboBox _cboRoomShape;
+    private System.Windows.Forms.Label _label22;
+    private System.Windows.Forms.TextBox _subtitleFontSizeTextBox;
+    private System.Windows.Forms.Button _changeSubtitleFontButton;
+    private System.Windows.Forms.TextBox _subtitleFontNameTextBox;
+        private System.Windows.Forms.CheckBox _wrapTextAtDashes;
   }
 }

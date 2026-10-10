@@ -15,9 +15,11 @@ commands) and infers rooms, descriptions, and connections between them, populati
 - `Automap\AutomapSettings.cs` — configuration (see table below).
 - `Automap\IAutomapCanvas.cs` — abstraction the parser uses to find/create/connect/select/
   remove rooms, implemented by `UI\Controls\Canvas.Automap.cs`. It keeps most map-mutation calls
-  independent of WinForms, but `Automap.cs` still depends on WinForms directly elsewhere — it
-  shows `AutomapRoomSameDirectionDialog` for ambiguity resolution and raises `MessageBox` errors
-  on transcript I/O failures (see below), so it is not a complete UI-independence boundary.
+  independent of WinForms. Production `Automap.cs` still shows
+  `AutomapRoomSameDirectionDialog` and transcript I/O error message boxes, through callbacks
+  supplied by its default constructor; an internal constructor accepts deterministic decisions/
+  error reporting for tests. Same-name disambiguation still belongs to Canvas, so this is not a
+  complete UI-independence boundary.
 - `Automap\Utility\PeekingStreamReader.cs` — stream reader with lookahead, used so the parser
   can process a transcript that's still growing (live/continuing transcript mode).
 
@@ -45,6 +47,22 @@ UI\AutomapDialog.cs
    previous room, connect to an existing room, or (if ambiguous) ask the user via a dialog.
 6. The current room (`m_lastKnownRoom`) and last movement direction (`m_lastMoveDirection`)
    are tracked across iterations to know what to connect to what.
+
+   Each run initializes room, direction, game-title and stepping state. One-shot parsing processes
+   the final chunk at EOF (a trailing prompt is not required). I/O/access errors report a halted
+   status rather than subsequently claiming completion. Both entry points own cancellation tokens;
+   cancellation propagates out of single-step waits and buffered transcript processing before any
+   following prompt command is applied. Stopping during ambiguity callbacks also aborts before
+   applying the returned decision. Cancellation leaves the status "Automap is not running." and
+   clears the owned cancellation source when finished. Keeping the
+   existing room in a same-direction conflict makes that room the current source for subsequent
+   travel. Regression tests exercise all three conflict decisions with real Canvas graph mutations,
+   sequential runs, reader lookahead, cancellation and save/load/export workflows. Replacement
+   runs cancel their predecessor in both entry points; canceled cleanup changes status and clears
+   the token only if it still owns the current run. Tokens are installed before opening files so
+   even a failed replacement cannot leave its predecessor owning the run. Regression tests cover
+   replacement waiting, completion and file-open failures, with and without an explicit Stop.
+   Arbitrary concurrent processing and native dialog interaction are not covered.
 
 ## Room/description detection heuristics (no regex — rule-based)
 
@@ -126,10 +144,10 @@ commands, **and** `SingleStep`/`ContinueTranscript`/`AssumeTwoWayConnections`) a
 `ApplicationSettings.Automap` is a plain `AutomapSettings` struct field, and
 `ApplicationSettingsController.SaveSettings()` serializes the whole `ApplicationSettings` object
 to `appsettings.json` with `JsonConvert.SerializeObject` — every public field of the struct goes
-in, not just the subset the legacy-XML migration path (`loadLegacyAppSettings()`) happens to map.
+in, not just the subset the legacy-XML migration path (`LoadLegacyAppSettings()`) happens to map.
 `UI\AutomapDialog.cs`'s `Data` property round-trips all nine fields to/from its controls
-(`SingleStep` ↔ `m_singleStepCheckBox`, `ContinueTranscript` ↔ `m_startFromEndCheckBox`,
-`AssumeTwoWayConnections` ↔ `chkAssumeTwoWayConnections`, etc.) — see
+(`SingleStep` ↔ `_singleStepCheckBox`, `ContinueTranscript` ↔ `_startFromEndCheckBox`,
+`AssumeTwoWayConnections` ↔ `_chkAssumeTwoWayConnections`, etc.) — see
 [`03-storage-and-persistence.md`](03-storage-and-persistence.md) for the broader settings picture.
 
 ## Debugging a bad automap result

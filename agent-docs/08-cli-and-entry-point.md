@@ -12,7 +12,7 @@ command-line arguments itself — all CLI handling happens inside `MainForm`.
 ```csharp
 Parser.Default.ParseArguments<CommandLineOptions>(args)
 ```
-and dispatches recognized options via `commandLineActions(...)`.
+and dispatches recognized options via `CommandLineActions(...)`.
 
 ## `Domain\Application\CommandLineOptions.cs` — all flags
 
@@ -54,7 +54,7 @@ See [`06-automap.md`](06-automap.md) for what `Automap.StartCL` actually does to
 Mapping: `I6→Inform6Exporter`, `I7→Inform7Exporter`, `Tads→TadsExporter`, `Alan→AlanExporter`,
 `Hugo→HugoExporter`, `Zil→ZilExporter`, `Quest→QuestExporter`,
 `QuestRooms→QuestRoomsExporter`. All export flags can combine with each other and with
-`--exit` in a single invocation (`MainForm.commandLineActions`, `UI\MainForm.cs:207-249`).
+`--exit` in a single invocation (`MainForm.CommandLineActions`, `UI\MainForm.cs:207-249`).
 
 ## CLI save flow
 
@@ -67,15 +67,15 @@ Mapping: `I6→Inform6Exporter`, `I7→Inform7Exporter`, `Tads→TadsExporter`, 
 
 `--smartsave` only takes effect when a positional `FileName` was opened and no `--automap`/
 `--loadlastproject` already loaded a project (`options.FileName != null && !projectLoaded` at
-`UI\MainForm.cs:221-229`); it then calls `smartSave(true)` after opening, which saves any
+`UI\MainForm.cs:221-229`); it then calls `SmartSave(true)` after opening, which saves any
 configured image/PDF outputs in addition to the map itself.
 
-`--exit` calls `Close()` as the very last step of `commandLineActions`, after all export/save
+`--exit` calls `Close()` as the very last step of `CommandLineActions`, after all export/save
 flags have already run (`UI\MainForm.cs:247`) — so it's safe to combine `--exit` with any
 combination of the other flags in one invocation.
 
 `-n`/`--name` (`options.Name`) is declared in `CommandLineOptions` but is **not read anywhere**
-in `MainForm.commandLineActions` or `clAutoMap` as of this writing — treat it as currently a
+in `MainForm.CommandLineActions` or `ClAutoMap` as of this writing — treat it as currently a
 no-op if you see it used, and double-check before relying on it.
 
 

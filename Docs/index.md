@@ -275,11 +275,12 @@ Since objects in a room are unique, you can only bring up the Properties dialog 
 
 However, one property that can be mass-changed is what region a group of rooms is in. This is done most easily via right-clicking or by selecting a rectangular area. You can even highlight the rooms, create the region and add them to the region.
 
-In Trizbort 2 the Properties dialog places the cursor where you are most likely to type next:
+In Trizbort 2 the Properties dialog remembers your last-used tab:
 
-- The first time you open a newly created room that still has its default name, the cursor is in the **Name** box. After that, the dialog opens on the **Objects** tab.
-- For rooms you have already named, and rooms in maps you have loaded, the dialog opens on the **Objects** tab.
-- Changing a room's region with its shortcut still takes you straight to the **Region** box.
+- Initially it opens on **Objects**, with the cursor in the objects box.
+- Later openings restore the tab selected when the last room Properties dialog closed, whether you chose **OK** or **Cancel**, even when editing a different room or map.
+- The remembered tab is not saved and resets to **Objects** when you restart Trizbort.
+- Changing a room's region with its shortcut still takes you straight to the **Region** box. Closing that dialog also updates the remembered tab.
 
 <a name="help_rooms_edit_name"></a>
 
@@ -287,7 +288,7 @@ In Trizbort 2 the Properties dialog places the cursor where you are most likely 
 
 There is no restriction on naming rooms. If you're planning on exporting your map to an IF development system such as Inform 7 or TADS, Trizbort should handle basic tricky cases like names beginning with A or The, or rooms with a direction in them, or even rooms with double-byte characters, though we can't guarantee we've found all the cases.
 
-When you first open a new room's Properties dialog, the cursor starts in the name box. You can press `Alt-N` to return to it at any time. The subtitle is text that appears below the room but is not exported to code. `Alt-S` can take you there.
+Press `Alt-N` in the Properties dialog to move to the name box at any time. The subtitle is text that appears below the room but is not exported to code. `Alt-S` can take you there.
 
 <a name="help_rooms_edit_dark"></a>
 
@@ -354,7 +355,7 @@ If you click the button showing a box in the middle of the arrow buttons, the ob
 
 If you click the "Description" tab, you can edit the description of the room. Click the "Objects" tab again to see the list of objects. Trizbort doesn't use this description itself, but if you export your map to an IF development system, the description may be used to describe the room when playing the game. When automapping, Trizbort will fill out the description for you if it can.
 
-Descriptions will appear in tooltips if you hover over a room. If the tooltip is rather large, it may block your room out, and you may need to use arrows to refocus and click on it.
+Descriptions will appear in tooltips if you hover over a room. Tooltips pause briefly before appearing near the mouse pointer, rather than covering the room's top-left corner. They disappear when you click, leave the map, or start editing, and automatically close after five seconds.
 
 <a name="help_rooms_edit_colors"></a>
 

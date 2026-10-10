@@ -4,160 +4,189 @@ using System.Windows.Forms;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 
-namespace Trizbort.UI {
-  public partial class ConnectionPropertiesDialog : Form {
-    private const string NO_COLOR_SET = "No Color Set";
+namespace Trizbort.UI;
+
+public partial class ConnectionPropertiesDialog : Form
+{
+  private const string NoColorSet = "No Color Set";
 
 
-    
-    public ConnectionPropertiesDialog() {
-      InitializeComponent();
-    }
+  public ConnectionPropertiesDialog()
+  {
+    InitializeComponent();
+  }
 
-    protected override void OnLoad(EventArgs e) {
-      base.OnLoad(e);
-      // WinForms DPI scaling shrinks auto-sized check boxes and radio buttons inside group boxes a second
-      // time, clipping their text; toggling AutoSize makes them measure themselves again.
-      foreach (Control group in new Control[] { groupBox1, groupBox2 })
-        foreach (Control control in group.Controls)
-          if (control is ButtonBase && control.AutoSize) {
-            control.AutoSize = false;
-            control.AutoSize = true;
-          }
-    }
-
-    public Color ConnectionColor {
-      get => connectionColorBox.Text == NO_COLOR_SET ? Color.Transparent : connectionColorBox.BackColor;
-      set {
-        if (value == Color.Transparent) {
-          connectionColorBox.BackColor = Color.White;
-          connectionColorBox.Text = NO_COLOR_SET;
-        } else {
-          connectionColorBox.BackColor = value;
-          connectionColorBox.Text = string.Empty;
-        }
+  public Color ConnectionColor {
+    get { return _connectionColorBox.Text == NoColorSet ? Color.Transparent : _connectionColorBox.BackColor; }
+    set {
+      if (value == Color.Transparent)
+      {
+        _connectionColorBox.BackColor = Color.White;
+        _connectionColorBox.Text = NoColorSet;
       }
-    }
-
-    public string ConnectionDescription {
-      get => txtDescription.Text;
-      set {
-        txtDescription.Text = value;
-        updateControls();
-      }
-    }
-
-    public string ConnectionName {
-      get => txtName.Text;
-      set {
-        txtName.Text = value;
-        updateControls();
-      }
-    }
-
-    public Door Door {
-      get => chkDoor.Checked ? new Door {Lockable = chkLockable.Checked, Locked = chkLocked.Checked, Open = chkOpen.Checked, Openable = chkOpenable.Checked} : null;
-      set {
-        if (value != null) {
-          chkDoor.Checked = true;
-          chkLockable.Checked = value.Lockable;
-          chkLocked.Checked = value.Locked;
-          chkOpen.Checked = value.Open;
-          chkOpenable.Checked = value.Openable;
-        }
-      }
-    }
-
-    public string EndText {
-      get => m_endTextBox.Text;
-      set {
-        m_endTextBox.Text = value;
-        updateControls();
-      }
-    }
-
-
-    public bool IsDirectional { get => m_oneWayCheckBox.Checked; set => m_oneWayCheckBox.Checked = value; }
-
-    public bool IsDotted { get => m_dottedCheckBox.Checked; set => m_dottedCheckBox.Checked = value; }
-
-    public string MidText {
-      get => m_middleTextBox.Text;
-      set {
-        m_middleTextBox.Text = value;
-        updateControls();
-      }
-    }
-
-    public string StartText {
-      get => m_startTextBox.Text;
-      set {
-        m_startTextBox.Text = value;
-        updateControls();
-      }
-    }
-
-    private void changeConnectionColor() {
-      ConnectionColor = Colors.ShowColorDialog(ConnectionColor, this);
-    }
-
-    private void chkDoor_CheckedChanged(object sender, EventArgs e) {
-      chkOpen.Enabled = chkDoor.Checked;
-      chkLockable.Enabled = chkDoor.Checked;
-      chkLocked.Enabled = chkDoor.Checked;
-      chkOpenable.Enabled = chkDoor.Checked;
-    }
-
-
-    private void connectionColorBox_DoubleClick(object sender, EventArgs e) {
-      changeConnectionColor();
-    }
-
-    private void connectionColorChange_Click(object sender, EventArgs e) {
-      changeConnectionColor();
-    }
-
-    private bool matchText(ConnectionLabel label) {
-      Connection.GetText(label, out var start, out var end);
-      return StartText == start && EndText == end && string.IsNullOrEmpty(MidText);
-    }
-
-    private void onRadioButtonCheckedChanged(object sender, EventArgs e) {
-      if (m_udRadioButton.Checked)
-        setText(ConnectionLabel.Up);
-      else if (m_duRadioButton.Checked)
-        setText(ConnectionLabel.Down);
-      else if (m_ioRadioButton.Checked)
-        setText(ConnectionLabel.In);
-      else if (m_oiRadioButton.Checked) setText(ConnectionLabel.Out);
-    }
-
-    private void setText(ConnectionLabel label) {
-      Connection.GetText(label, out var start, out var end);
-      StartText = start;
-      EndText = end;
-    }
-
-    private void updateControls() {
-      if (matchText(ConnectionLabel.Up))
-        m_udRadioButton.Checked = true;
-      else if (matchText(ConnectionLabel.Down))
-        m_duRadioButton.Checked = true;
-      else if (matchText(ConnectionLabel.In))
-        m_ioRadioButton.Checked = true;
-      else if (matchText(ConnectionLabel.Out))
-        m_oiRadioButton.Checked = true;
       else
-        m_customRadioButton.Checked = true;
+      {
+        _connectionColorBox.BackColor = value;
+        _connectionColorBox.Text = string.Empty;
+      }
     }
+  }
 
-    private void connectionColorClear_Click(object sender, EventArgs e)
-    {
-      ConnectionColor = Color.Transparent;
+  public string ConnectionDescription {
+    get { return _txtDescription.Text; }
+    set {
+      _txtDescription.Text = value;
+      UpdateControls();
     }
+  }
 
-    private void connectionColorBox_Enter(object sender, EventArgs e) {
-      connectionColorChange.Focus();
+  public string ConnectionName {
+    get { return _txtName.Text; }
+    set {
+      _txtName.Text = value;
+      UpdateControls();
     }
+  }
+
+  public Door Door {
+    get {
+      return _chkDoor.Checked
+        ? new Door {
+          Lockable = _chkLockable.Checked, Locked = _chkLocked.Checked, Open = _chkOpen.Checked,
+          Openable = _chkOpenable.Checked
+        }
+        : null;
+    }
+    set {
+      if (value != null)
+      {
+        _chkDoor.Checked = true;
+        _chkLockable.Checked = value.Lockable;
+        _chkLocked.Checked = value.Locked;
+        _chkOpen.Checked = value.Open;
+        _chkOpenable.Checked = value.Openable;
+      }
+    }
+  }
+
+  public string EndText {
+    get { return _endTextBox.Text; }
+    set {
+      _endTextBox.Text = value;
+      UpdateControls();
+    }
+  }
+
+
+  public bool IsDirectional {
+    get { return _oneWayCheckBox.Checked; }
+    set { _oneWayCheckBox.Checked = value; }
+  }
+
+  public bool IsDotted {
+    get { return _dottedCheckBox.Checked; }
+    set { _dottedCheckBox.Checked = value; }
+  }
+
+  public string MidText {
+    get { return _middleTextBox.Text; }
+    set {
+      _middleTextBox.Text = value;
+      UpdateControls();
+    }
+  }
+
+  public string StartText {
+    get { return _startTextBox.Text; }
+    set {
+      _startTextBox.Text = value;
+      UpdateControls();
+    }
+  }
+
+  protected override void OnLoad(EventArgs e)
+  {
+    base.OnLoad(e);
+    // WinForms DPI scaling shrinks auto-sized check boxes and radio buttons inside group boxes a second
+    // time, clipping their text; toggling AutoSize makes them measure themselves again.
+    foreach (var group in new Control[] { _groupBox1, _groupBox2 })
+      foreach (Control control in group.Controls)
+        if (control is ButtonBase && control.AutoSize)
+        {
+          control.AutoSize = false;
+          control.AutoSize = true;
+        }
+  }
+
+  private void ChangeConnectionColor()
+  {
+    ConnectionColor = Colors.ShowColorDialog(ConnectionColor, this);
+  }
+
+  private void ChkDoorCheckedChanged(object sender, EventArgs e)
+  {
+    _chkOpen.Enabled = _chkDoor.Checked;
+    _chkLockable.Enabled = _chkDoor.Checked;
+    _chkLocked.Enabled = _chkDoor.Checked;
+    _chkOpenable.Enabled = _chkDoor.Checked;
+  }
+
+
+  private void ConnectionColorBoxDoubleClick(object sender, EventArgs e)
+  {
+    ChangeConnectionColor();
+  }
+
+  private void ConnectionColorChangeClick(object sender, EventArgs e)
+  {
+    ChangeConnectionColor();
+  }
+
+  private bool MatchText(ConnectionLabel label)
+  {
+    Connection.GetText(label, out var start, out var end);
+    return StartText == start && EndText == end && string.IsNullOrEmpty(MidText);
+  }
+
+  private void OnRadioButtonCheckedChanged(object sender, EventArgs e)
+  {
+    if (_udRadioButton.Checked)
+      SetText(ConnectionLabel.Up);
+    else if (_duRadioButton.Checked)
+      SetText(ConnectionLabel.Down);
+    else if (_ioRadioButton.Checked)
+      SetText(ConnectionLabel.In);
+    else if (_oiRadioButton.Checked) SetText(ConnectionLabel.Out);
+  }
+
+  private void SetText(ConnectionLabel label)
+  {
+    Connection.GetText(label, out var start, out var end);
+    StartText = start;
+    EndText = end;
+  }
+
+  private void UpdateControls()
+  {
+    if (MatchText(ConnectionLabel.Up))
+      _udRadioButton.Checked = true;
+    else if (MatchText(ConnectionLabel.Down))
+      _duRadioButton.Checked = true;
+    else if (MatchText(ConnectionLabel.In))
+      _ioRadioButton.Checked = true;
+    else if (MatchText(ConnectionLabel.Out))
+      _oiRadioButton.Checked = true;
+    else
+      _customRadioButton.Checked = true;
+  }
+
+  private void ConnectionColorClearClick(object sender, EventArgs e)
+  {
+    ConnectionColor = Color.Transparent;
+  }
+
+  private void ConnectionColorBoxEnter(object sender, EventArgs e)
+  {
+    _connectionColorChange.Focus();
   }
 }

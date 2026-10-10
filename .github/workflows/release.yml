@@ -33,19 +33,22 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          if ($env:RELEASE_TAG -notmatch '^v(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$') {
-            throw "Release tag must be vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH.REVISION."
+          if ($env:RELEASE_TAG -notmatch '^v(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(-beta\.[1-9]\d*)?$') {
+            throw "Release tag must be vMAJOR.MINOR.PATCH[.REVISION], optionally followed by -beta.N (N >= 1)."
           }
+          $prerelease = [bool]$Matches[5]
           $parts = @($Matches[1], $Matches[2], $Matches[3], $(if ($Matches[4]) { $Matches[4] } else { '0' }))
           foreach ($part in $parts) {
             if ([long]$part -gt 65534) { throw "Version components must be between 0 and 65534." }
           }
           $version = ($parts | ForEach-Object { [int]$_ }) -join '.'
           "version=$version" >> $env:GITHUB_OUTPUT
+          "prerelease=$($prerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
 
       - name: Stamp assembly version
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           $file = 'src\Trizbort\Properties\AssemblyInfo.cs'
           $content = Get-Content $file -Raw
@@ -56,6 +59,7 @@ jobs:
             }
             $content = $content -replace $pattern, "[assembly: $attribute(`"$env:RELEASE_VERSION`")]"
           }
+          $content += "`n[assembly: AssemblyInformationalVersion(`"$($env:RELEASE_TAG.Substring(1))`")]`n"
           Set-Content $file $content -NoNewline -Encoding utf8
 
       - name: Test
@@ -88,6 +92,8 @@ jobs:
         id: package
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_PRERELEASE: ${{ steps.version.outputs.prerelease }}
         run: |
           $exe = 'publish\Trizbort.exe'
           if ((Get-Item $exe).VersionInfo.FileVersion -ne $env:RELEASE_VERSION) {
@@ -97,7 +103,8 @@ jobs:
             throw "User settings must not be included in the release package."
           }
           Copy-Item LICENSE.txt, PdfSharp.License.txt -Destination publish
-          $zipName = "Trizbort-$env:RELEASE_VERSION-win-x64.zip"
+          $packageVersion = if ($env:RELEASE_PRERELEASE -eq 'true') { $env:RELEASE_TAG.Substring(1) } else { $env:RELEASE_VERSION }
+          $zipName = "Trizbort-$packageVersion-win-x64.zip"
           Compress-Archive -Path publish\* -DestinationPath $zipName
           "zip=$zipName" >> $env:GITHUB_OUTPUT
 
@@ -107,7 +114,19 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_REPO: ${{ github.repository }}
           RELEASE_ZIP: ${{ steps.package.outputs.zip }}
-        run: >-
-          gh release create "$env:RELEASE_TAG" "$env:RELEASE_ZIP"
-          --repo "$env:RELEASE_REPO"
-          --verify-tag --title "Trizbort $env:RELEASE_TAG" --generate-notes
+          RELEASE_PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          $releaseArgs = @('release', 'create', $env:RELEASE_TAG, $env:RELEASE_ZIP,
+            '--repo', $env:RELEASE_REPO, '--verify-tag', '--title', "Trizbort $env:RELEASE_TAG",
+            '--generate-notes')
+          if ($env:RELEASE_PRERELEASE -eq 'true') {
+            $heading = "## [$($env:RELEASE_TAG.Substring(1))]"
+            $changelog = Get-Content 'changelog.md' -Raw
+            $pattern = '(?ms)^' + [regex]::Escape($heading) + '[^\r\n]*\r?\n(.*?)(?=^## |\z)'
+            $notes = [regex]::Match($changelog, $pattern)
+            if (-not $notes.Success) { throw "No changelog entry found for $env:RELEASE_TAG." }
+            Set-Content 'release-notes.md' $notes.Groups[1].Value.Trim() -Encoding utf8
+            $releaseArgs += @('--prerelease', '--latest=false', '--notes-file', 'release-notes.md')
+          }
+          & gh @releaseArgs
+          if ($LASTEXITCODE -ne 0) { throw "GitHub Release creation failed." }

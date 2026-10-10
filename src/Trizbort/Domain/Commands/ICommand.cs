@@ -1,28 +1,29 @@
-﻿namespace Trizbort.Domain.Commands
+﻿using Trizbort.UI.Controls;
+
+namespace Trizbort.Domain.Commands;
+
+public interface IParameterizedCommand<T, TValue>
 {
-  public interface IParameterizedCommand<T,  Value>
-  {
-    T Execute(Value value);
-  }
+  T Execute(TValue value);
+}
 
-  public interface ICommand<T>
-  {
-    T Execute();
-  }
+public interface ICommand<T>
+{
+  T Execute();
+}
 
-  public interface IParameterizedCommand<V>
-  {
-    void Execute(V value);
-  }
+public interface IParameterizedCommand<TV>
+{
+  void Execute(TV value);
+}
 
-  public interface ICanvasCommand<T, V>
-  {
-    T Execute(UI.Controls.Canvas canvas, V value);
-  }
+public interface ICanvasCommand<T, TV>
+{
+  T Execute(Canvas canvas, TV value);
+}
 
-  public interface ICanvasCommand<V>
-  {
-    void Execute(UI.Controls.Canvas canvas, V value);
-    void Execute(UI.Controls.Canvas canvas, V value, object other);
-  }
+public interface ICanvasCommand<TV>
+{
+  void Execute(Canvas canvas, TV value);
+  void Execute(Canvas canvas, TV value, object other);
 }
