@@ -874,6 +874,7 @@ public sealed class Automap
       "Must assume rooms with same name are same room unless transcript is verbose.");
     Status = "Automapping has started.";
     var lines = new List<string>();
+    var ownsRun = false;
     try
     {
       using (var stream = File.Open(_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -950,11 +951,12 @@ public sealed class Automap
     }
     finally
     {
-      if (ReferenceEquals(_tokenSource, tokenSource)) _tokenSource = null;
+      ownsRun = ReferenceEquals(_tokenSource, tokenSource);
+      if (ownsRun) _tokenSource = null;
     }
 
     Trace("Automap: Gentle thread exit.");
-    Status = "Automapping has completed.";
+    if (ownsRun) Status = "Automapping has completed.";
   }
 
   private List<string> GetTextToNextPrompt(PeekingStreamReader reader)
