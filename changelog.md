@@ -3,10 +3,17 @@ All notable changes to this project will be documented in this file.  Version nu
 
 ## [Unreleased]
 
+## [2.3.1-beta.1] - 2026-10-10
+
+This is a **beta prerelease for testing**. The stable release remains v2.2.0. Extract the beta
+into a separate writable folder and test with copies of your maps; keep backups of maps and
+`appsettings.json`.
+
 ### Fix
 - Canvas tooltips now use a standard hover delay and cursor-relative placement instead of appearing immediately over rooms. Clicking, leaving the canvas or editing dismisses them, so object lists no longer obstruct room selection. Hovering a connection no longer clears its label.
 
 ### Change
+- Tidied code formatting and bracing throughout the codebase; no intended behavior change.
 - Replaced reflective text-layout and colour copy/paste access with typed APIs, and replaced test-only reflection for dialog/exporter construction, input simulation and private state with typed constructors, subclasses and internal diagnostics. Clipboard colour keys remain compatible.
 - Modernized C# naming throughout the application and tests: PascalCase methods and constants, `_camelCase` private fields without `m`/`s` prefixes, and updated editor rules and technical references. Preserved control names, serialized keys and native entry points, and repaired reflection lookups.
 - Room Properties now remembers the tab selected when the last dialog closed, including OK and Cancel, across rooms and maps until Trizbort exits. The initial tab is Objects with its text box focused; new rooms no longer automatically focus Name. The region shortcut still opens Regions and also updates the remembered tab when closed. (#5)
