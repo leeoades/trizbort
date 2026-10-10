@@ -17,6 +17,7 @@ public class ApplicationSettings
   public bool DebugDisableGridPolyline { get; set; }
   public bool DebugDisableLineRendering { get; set; }
   public bool DebugDisableTextRendering { get; set; }
+  [Newtonsoft.Json.JsonProperty("DebugShowFPS")]
   public bool DebugShowFps { get; set; }
   public bool DebugShowMouseCoordinates { get; set; }
   public string DefaultFontName { get; set; } = "Arial";
