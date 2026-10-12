@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.  Version nu
 
 ## [Unreleased]
 
+## [2.3.1-beta.2] - 2026-10-12
+
+This is a **beta prerelease for testing**. The stable release remains v2.2.0. Extract the beta
+into a separate writable folder and test with copies of your maps; keep backups of maps and
+`appsettings.json`.
+
+### Fix
+- The About dialog now displays the full release version, including the beta suffix.
+- Preserved the existing `DebugShowFPS` settings key after the C# property naming cleanup.
+- Prevented an older one-shot Automap run from overwriting the status of a replacement run when it completes.
+
 ## [2.3.1-beta.1] - 2026-10-10
 
 This is a **beta prerelease for testing**. The stable release remains v2.2.0. Extract the beta
