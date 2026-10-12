@@ -1,9 +1,11 @@
-﻿using System.Windows.Forms;
+﻿using Trizbort.UI;
 
-namespace Trizbort.Util {
-  public static class ClipboardHelper {
-    public static bool HasSomethingToPaste() {
-      return !string.IsNullOrEmpty(Clipboard.GetText());
-    }
+namespace Trizbort.Util;
+
+public static class ClipboardHelper
+{
+  public static bool HasSomethingToPaste()
+  {
+    return !string.IsNullOrEmpty(UserInteraction.GetClipboardText());
   }
 }

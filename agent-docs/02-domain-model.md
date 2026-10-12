@@ -20,7 +20,7 @@ for the overall layering.
 - `GetSelectedElements()` delegates to the UI canvas.
 - `Save()`/`Load()` delegate to `MapSaver`/`MapLoader` — see
   [`03-storage-and-persistence.md`](03-storage-and-persistence.md).
-- `onElementRemoved` automatically deletes any `Connection` whose vertex referenced the removed
+- `OnElementRemoved` automatically deletes any `Connection` whose vertex referenced the removed
   element — i.e. deleting a room cleans up connections pointing at it. Don't try to duplicate
   this cleanup elsewhere.
 - **No undo/redo history lives here** — `History` is just a free-text document property (map
@@ -60,13 +60,15 @@ for the overall layering.
 - **Gotcha**: setting `Position` clears `ArbitraryAutomappedPosition` as a side effect — code
   that programmatically repositions rooms (e.g. automap layout) should be aware of this flag's
   semantics rather than assuming `Position` is a "dumb" setter.
-- Ports are created once per room in the constructor (`addPortsToRoom()`) for directional
+- Ports are created once per room in the constructor (`AddPortsToRoom()`) for directional
   connection attachment (N/S/E/W/NE/etc., up/down/in/out).
 - `ReferenceRoomId` + computed `ReferenceRoom`: rooms can alias another room by ID (resolved
   dynamically via `Project.Current.Elements`, not a direct object reference — don't cache the
   resolved reference across structural edits).
 - Validation: `ValidationState` (list of `RoomValidationState`, see
   `Domain\RoomValidationState.cs`) populated by `CheckValidation()`.
+- `MarkNameInvalid()` invalidates the cached name layout through `TextBlock.InvalidateLayout()`,
+  without reflective access to private fields.
 - Connection-related helpers: `IsConnected`, `GetConnections()`, `DeleteAllRoomConnections()`,
   `AdjustAllRoomConnections()` (re-anchors connector attachment points after the room moves —
   call this, or go through code paths that already call it, after any bulk room repositioning).
@@ -109,7 +111,7 @@ Deleting a label invokes the same project-level connection cleanup as deleting a
 - **Curve waypoints** (two-vertex connections only, `SupportsCurveWaypoints`): up to three
   optional slots `CurveWaypoint.Quarter`/`Middle`/`ThreeQuarter`, stored separately from
   `VertexList` (lots of code assumes `VertexList[0]`/`[1]` are the two ends, so waypoints are
-  *not* vertices). When any are set, `getSegments()` returns a flattened centripetal
+  *not* vertices). When any are set, `GetSegments()` returns a flattened centripetal
   Catmull-Rom spline (`Domain\Misc\CurveGeometry.cs`) through the stalk ends and waypoints, so
   hit-testing, bounds, smart-segment splitting, labels and drawing all follow the curve.
   One-way arrows are drawn once per curve span. `Middle` can always be added; the quarter slots

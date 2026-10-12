@@ -1,21 +1,25 @@
 ﻿using System.IO;
 
-namespace Trizbort.Domain.Application {
-  public class MapSaver {
-    private MapFileEngine engine;
-    private readonly Project project;
+namespace Trizbort.Domain.Application;
 
-    public MapSaver(Project project) {
-      this.project = project;
+public class MapSaver
+{
+  private readonly Project _project;
+  private MapFileEngine _engine;
+
+  public MapSaver(Project project)
+  {
+    _project = project;
+  }
+
+  public bool SaveMap(string fileName)
+  {
+    if (Path.GetExtension(fileName) == ".trizbort")
+    {
+      _engine = new LegacyMapFileEngine(_project);
+      return _engine.Save(fileName);
     }
 
-    public bool SaveMap(string fileName) {
-      if (Path.GetExtension(fileName) == ".trizbort")
-      {
-          engine = new LegacyMapFileEngine(project);
-          return engine.Save(fileName);
-      }
-      return false;
-    }
+    return false;
   }
 }

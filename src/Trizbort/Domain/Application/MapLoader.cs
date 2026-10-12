@@ -1,44 +1,41 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
-using Trizbort.Setup;
+using Trizbort.UI;
 
-namespace Trizbort.Domain.Application {
-  public class MapLoader {
-    private MapFileEngine loader;
-    private Project project;
+namespace Trizbort.Domain.Application;
 
-    public MapLoader(Project project) {
-      this.project = project;
-    }
+public class MapLoader
+{
+  private readonly MapFileEngine _loader;
+  private readonly Action<string> _reportUnknownFile;
 
-    public bool LoadMap(string fileName) {
-      
-      // empty file
-      if (isEmptyFile(fileName)) {
-        Settings.Reset();
-        return false;
-      }
+  public MapLoader(Project project) : this(
+    project,
+    message => UserInteraction.ShowMessage(
+      message,
+      "Not a valid file",
+      MessageBoxButtons.OK,
+      MessageBoxIcon.Exclamation))
+  {
+  }
 
-      if (Path.GetExtension(fileName) == ".trizbort") {
-        loader = new LegacyMapFileEngine(project);
-        return loader.Load(fileName);
-      }
+  internal MapLoader(Project project, Action<string> reportUnknownFile, MapFileEngine loader = null)
+  {
+    _loader = loader ?? new LegacyMapFileEngine(project);
+    _reportUnknownFile = reportUnknownFile;
+  }
 
-      MessageBox.Show($"'{fileName}' is not a known Trizbort file.", "Not a valid file", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-      return false;
-    }
+  public bool LoadMap(string fileName)
+  {
+    if (Path.GetExtension(fileName) == ".trizbort") return _loader.Load(fileName);
 
-    private bool isEmptyFile(string fileName) {
-      if (Uri.IsWellFormedUriString(fileName, UriKind.RelativeOrAbsolute))
-        return false;
+    _reportUnknownFile($"'{fileName}' is not a known Trizbort file.");
+    return false;
+  }
 
-      return new FileInfo(fileName).Length == 0;
-    }
-
-    public bool LoadMap(Uri url) {
-
-      return LoadMap(url.AbsoluteUri);
-    }
+  public bool LoadMap(Uri url)
+  {
+    return LoadMap(url.AbsoluteUri);
   }
 }

@@ -13,9 +13,9 @@ See [`README.md`](README.md) for the doc map. For what `Room`/`Connection`/`Proj
   [`04-commands-and-controllers.md`](04-commands-and-controllers.md)).
 - Owns project lifecycle: `OpenProject()` (file dialog → load), `OnClosing()` (prompt to save
   dirty work, persist window/canvas size + app settings, stop automapping, dispose the file
-  watcher). `checkLoseProject()` gates any destructive operation (new/open/exit) on unsaved
+  watcher). `CheckLoseProject()` gates any destructive operation (new/open/exit) on unsaved
   changes.
-- Handles command-line actions (`commandLineActions`) — see
+- Handles command-line actions (`CommandLineActions`) — see
   [`08-cli-and-entry-point.md`](08-cli-and-entry-point.md) for the full flag→action mapping.
 - Hosts every language/image/PDF export menu handler — see
   [`07-export-subsystem.md`](07-export-subsystem.md).
@@ -46,6 +46,13 @@ See the theme format and preservation rules in the storage reference.
 | `Minimap.cs`/`.Designer.cs` | Small overview/navigation map. |
 | `TrizbortTextBox.cs` | Customized text box used in property/settings dialogs. |
 | `TrizbortToolTip.cs` | Customized tooltip behavior. |
+
+Canvas element tooltips use native `ToolTip.SetToolTip` registration rather than immediate
+`Show` calls: Windows handles cursor-relative placement and hit testing. Initial and reshow
+delays are 500 ms and auto-dismiss is 5 seconds. Hovering another element updates the content;
+clicking, leaving the canvas, moving elements or panning dismisses both pending and visible
+tips. Tooltip content retains the application description/object preferences and owner-drawn
+layout, and hovering connections must not mutate their labels.
 
 ### Rendering loop
 
@@ -83,36 +90,81 @@ two are independent concerns.
   style/flow/label, toggle room lighting/shape, delete) are dispatched through
   `CommandController` from `Canvas.OnKeyDown()` and menu handlers.
 - **Continuous geometric interaction** (panning, dragging a room, drawing a new connection,
-  resizing) is handled directly inside `Canvas.cs` — it converts the mouse point to world space
-  via `ClientToCanvas()` and mutates `Room.Position`/`Size` or `Connection.VertexList` directly,
-  without going through a controller. This is intentional, not an inconsistency to "fix" —
+  resizing) is coordinated by `Canvas.cs`, converting mouse points with `ClientToCanvas()`.
+  Selected-element movement and accumulated resize deltas delegate to internal
+  `Domain\Misc\MapEditing`; connection drawing and event state remain in Canvas.
+  This does not go through a controller and is intentional, not an inconsistency to "fix" —
   controllers are a convenience façade, not a mandatory gate (see
   [`04-commands-and-controllers.md`](04-commands-and-controllers.md)).
 - **Automap** (`Canvas.Automap.cs`) similarly mutates `Project.Current.Elements` and
   `Room.Position` directly, driven by `Automap\Automap.cs` rather than user input — see
   [`06-automap.md`](06-automap.md).
 
+Canvas shares selection movement and tooltip dismissal between mouse dragging and arrow keys;
+keyboard and mouse panning also dismiss the old tooltip. Regression tests seed tooltip lifecycle
+state without native popups and exercise movement of rooms, labels and free connections.
+Tooltips are registered with the Canvas as their owner; Windows supplies cursor-relative
+placement. Tests check native delay configuration, content and dismissal without showing popups.
+`MapEditing.Move` is shared by mouse dragging and arrow-key movement. It moves free vertices
+and explicit connection waypoints, keeps docked endpoints attached, and translates unselected
+curve waypoints exactly once when both owners move. `MapEditing.Resize` tracks applied
+movement (not raw cursor displacement) to preserve grid snapping/minimum-size behavior.
+Approximate compass comparisons delegate to `CompassPointHelper.IsSameApproximateDirection`,
+also used by statistics without a main-form dependency.
+
+STA integration tests invoke Canvas's real protected mouse/key/wheel handlers through the
+`TestCanvas` subclass, without reflection. Canvas is intentionally inheritable for this;
+internal read-only tooltip/handle/port diagnostics avoid exposing mutable collections.
+They cover resize handles, drag thresholds, movement, selection,
+paste and zoom anchoring; off-screen rendering checks exercise the production drawing path.
+They do not establish OS capture/cursor behavior or full visual equivalence.
+
 ### Connection curve waypoint handles
 
 When exactly one two-vertex `Connection` is selected, `Canvas` draws round waypoint handles
-(`drawWaypointHandles`, hit-tested by `hitTestWaypoint` before resize handles/ports): 2×
+(`DrawWaypointHandles`, hit-tested by `HitTestWaypoint` before resize handles/ports): 2×
 `Settings.HandleSize` for set waypoints, 1.5× translucent "insert" handles for addable empty
 slots (the midpoint of a straight line; then the 25%/75% points on the curve), scaled so they
-never shrink on screen when zoomed out (`waypointHandleScale`). Dragging uses `DragModes.MoveWaypoint`;
+never shrink on screen when zoomed out (`WaypointHandleScale`). Dragging uses `DragModes.MoveWaypoint`;
 an insert handle only creates a waypoint once dragged past `Settings.DragDistanceToInitiateNewConnection`.
-The clicked/dragged waypoint becomes `mSelectedWaypoint`, and `DeleteSelection()` (Delete key)
+The clicked/dragged waypoint becomes `_selectedWaypoint`, and `DeleteSelection()` (Delete key)
 removes that waypoint instead of the connection. Any selection change clears it. Dragging a
 selected connection moves its waypoints; dragging/arrow-moving rooms also moves the waypoints of
 unselected connections whose *both* ends are docked to moved rooms.
 
 ### New-room defaults
 
-`Canvas` remembers the last selected/changed room (`setRoomDefaultsFrom`, `mNewRoomStyleSource`).
+`Canvas` remembers the last selected/changed room (`SetRoomDefaultsFrom`, `_newRoomStyleSource`).
 When the app setting `ApplyStyleToNewRooms` (*Application Settings → Map → Preferences → Apply style to new rooms*, default off) is enabled, `AddRoom()` (the `R` hotkey / *Add Room* menu) copies that room's styling onto the new room via
 `Room.CopyStyleFrom()` (shape, corners, border, colours, region, dark, objects position — not
-name/objects/descriptions), and uses its size. When `DoubleClickToAddRoom` (*Map → Preferences → Double click to add room*, default off) is enabled, `OnMouseDoubleClick` on empty canvas (no element/handle/port hit) calls `AddRoom(true)`. `Canvas.reset()` (new/open project) clears the source.
+name/objects/descriptions), and uses its size. When `DoubleClickToAddRoom` (*Map → Preferences → Double click to add room*, default off) is enabled, `OnMouseDoubleClick` on empty canvas (no element/handle/port hit) calls `AddRoom(true)`. `Canvas.Reset()` (new/open project) clears the source.
 
 ## Dialog catalogue (`UI\*.cs`)
+
+### Replaceable desktop interaction boundary
+
+`UI\UserInteraction.cs` routes application message boxes, modal forms, common dialogs
+(file/font/colour pickers) and clipboard text access through internal `IUserInteraction`.
+Its default Windows adapter retains owner, message, buttons, icon, default button and dialog
+result behavior. Call this boundary rather than directly using `MessageBox`, native
+`Form.ShowDialog`/`CommonDialog.ShowDialog`, or `Clipboard` at new application call sites.
+Domain `Element.ShowDialog` methods still prepare/apply properties, but their actual form
+presentation uses the boundary. Room/connection dialog owners permit no main form for tests.
+Canvas same-name Automap disambiguation and the file-watcher prompt also use this boundary.
+
+`TestEnvironment` installs a fail-fast implementation: unexpected UI/clipboard access raises an
+assertion instead of blocking the runner. `UserInteractionTests` substitutes recording/editing
+callbacks and covers public persistence errors/warnings, room/connection OK vs Cancel, colour
+selection, message choices and clipboard copy/paste without opening windows. Restore the
+provider after substitutions; this application still has process-global state and those
+tests are nonparallel. Existing layout/focus/keyboard tests explicitly use `TestDialog` to
+pump real forms at zero opacity with no taskbar entry; they do not show visible dialogs.
+Rendering/control layout stays in WinForms, not behind a synthetic widget abstraction.
+
+Tests access internal types via `InternalsVisibleTo("Trizbort.Tests")`, construct dialogs and
+exporters directly, and use typed `RoomPropertiesDialog.LastClosedTab` state and file-watcher
+diagnostics. Reflective enumeration remains appropriate for the naming-convention test;
+assembly metadata access remains the source of the app's version.
 
 ### Map labels
 
@@ -143,7 +195,7 @@ but not IF-language source export.
 | `MapStatisticsView` | Displays room counts, regions, bounds, etc. for the current project. |
 | `QuickFind` | Search UI over rooms, backed by `Domain\Cache\Indexer`. |
 | `RegionSettings` | Edits region data/colors; regions are just a string property on `Room`, grouped here for editing. |
-| `RoomPropertiesDialog` | Edits a room's name/description/objects/colors/shape/region/start-room/reference-room state. Opens on Objects, focusing Name on the first normal opening of a newly created room that still has its default name, then Objects on later openings. Named or loaded rooms focus Objects immediately. This per-room state is runtime-only. The region-editing shortcut opens on Regions with the region selector focused without consuming the first normal opening. |
+| `RoomPropertiesDialog` | Edits a room's name/description/objects/colors/shape/region/start-room/reference-room state. Initially opens on Objects with its text box focused, then restores the tab selected when the last room dialog closed (including OK or Cancel), across all rooms and maps in the current process. This state is memory-only and resets to Objects on restart. The region-editing shortcut still opens on Regions with the region selector focused; closing it also updates the remembered tab. |
 | `SettingsDialog` | Edits per-map drawing settings (fonts/colors/grid/room/connection defaults/regions) — these are the same settings persisted in the map file's `<settings>` block. Also owns the one `Properties.Settings` usage (`SettingsLastTabIndex`) — this dialog's `FormClosing` handler is the exact code path that was involved in the .NET 8 port's `ConfigurationErrorsException` bug, see [`09-build-test-and-dotnet8-port.md`](09-build-test-and-dotnet8-port.md). |
 
 ## `Util\` quick reference
@@ -154,6 +206,6 @@ but not IF-language source export.
 - `Smoothing.cs` — smoothing/interpolation helpers used by rendering.
 - `PathHelper.cs` — safe path/directory/filename handling (used by `MainForm`'s open/save
   dialogs).
-- `KeyboardHelper.cs` — the app's only P/Invoke surface (`user32.dll` `keybd_event`/
-  `GetKeyState`) for num-lock/caps-lock/scroll-lock indicators.
+- `KeyboardHelper.cs` — keyboard P/Invoke helpers (`user32.dll` `keybd_event`, exposed as
+  `KeybdEvent`, and `GetKeyState`) for num-lock/caps-lock/scroll-lock indicators.
 - `ClipboardHelper.cs` — clipboard read/write helpers backing `CopyController`.
