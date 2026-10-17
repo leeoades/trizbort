@@ -6,7 +6,7 @@ using Shouldly;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 
-namespace Trizbort.Tests;
+namespace Trizbort.Core.Tests;
 
 [TestFixture]
 [Category("Unit")]

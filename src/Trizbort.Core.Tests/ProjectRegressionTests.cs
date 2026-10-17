@@ -6,7 +6,7 @@ using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 
-namespace Trizbort.Tests;
+namespace Trizbort.Core.Tests;
 
 [TestFixture]
 [Category("Unit")]

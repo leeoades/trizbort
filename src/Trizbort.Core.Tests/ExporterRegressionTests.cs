@@ -14,7 +14,7 @@ using Trizbort.Export.Domain;
 using Trizbort.Export.Languages;
 using Trizbort.Setup;
 
-namespace Trizbort.Tests;
+namespace Trizbort.Core.Tests;
 
 internal class PreparationExporter : CodeExporter
 {

@@ -17,6 +17,7 @@ using Trizbort.Setup;
 using Trizbort.UI;
 using Trizbort.UI.Controls;
 using Trizbort.Util;
+using Settings = Trizbort.Setup.Settings;
 
 namespace Trizbort.Domain.Elements;
 
@@ -144,7 +145,7 @@ public static class RoomDrawingExtensions
     else
     {
       var region = Settings.Regions.FirstOrDefault(p => p.RegionName == room.Region);
-      if (region?.RegionName != Misc.Region.DefaultRegion)
+      if (region?.RegionName != Trizbort.Domain.Misc.Region.DefaultRegion)
       {
         if (region != null && region.RColor != Color.Transparent)
           graphics.DrawPath(palette.Brush(region.RColor), path);
@@ -164,32 +165,32 @@ public static class RoomDrawingExtensions
       {
         case "Bottom":
           pathSecondFill.AddPolygon(new[] {
-            leftCenter.Start.ToPointF(),
-            rightCenter.Start.ToPointF(),
-            bottomRight.Start.ToPointF(),
-            bottomLeft.Start.ToPointF()
+            leftCenter.ToPointF(),
+            rightCenter.ToPointF(),
+            bottomRight.ToPointF(),
+            bottomLeft.ToPointF()
           });
           break;
         case "BottomRight":
           pathSecondFill.AddPolygon(new[] {
-            topRight.Start.ToPointF(),
-            bottomLeft.Start.ToPointF(),
-            bottomRight.Start.ToPointF()
+            topRight.ToPointF(),
+            bottomLeft.ToPointF(),
+            bottomRight.ToPointF()
           });
           break;
         case "TopRight":
           pathSecondFill.AddPolygon(new[] {
-            topLeft.Start.ToPointF(),
-            topRight.Start.ToPointF(),
-            bottomRight.Start.ToPointF()
+            topLeft.ToPointF(),
+            topRight.ToPointF(),
+            bottomRight.ToPointF()
           });
           break;
         case "Right":
           pathSecondFill.AddPolygon(new[] {
-            topCenter.Start.ToPointF(),
-            topRight.Start.ToPointF(),
-            bottomRight.Start.ToPointF(),
-            bottomCenter.Start.ToPointF()
+            topCenter.ToPointF(),
+            topRight.ToPointF(),
+            bottomRight.ToPointF(),
+            bottomCenter.ToPointF()
           });
           break;
       }
@@ -209,7 +210,6 @@ public static class RoomDrawingExtensions
 
     var textBlocks = GetTextBlocks(room);
     room.DrawText(graphics, palette, textBlocks);
-    room.DrawObjects(graphics, palette, textBlocks);
   }
 
   public static void AddOutline(this Room room, XGraphicsPath path, Rect bounds, bool handDrawn)
@@ -223,10 +223,10 @@ public static class RoomDrawingExtensions
         path.AddPolygon(Sketch.ClosedCurve(
           Sketch.RoundedRectangle(
             bounds,
-            room.Corners.TopLeft,
-            room.Corners.TopRight,
-            room.Corners.BottomRight,
-            room.Corners.BottomLeft),
+            (float)room.Corners.TopLeft,
+            (float)room.Corners.TopRight,
+            (float)room.Corners.BottomRight,
+            (float)room.Corners.BottomLeft),
           random).ToPointFArray());
         return;
       }
@@ -306,92 +306,104 @@ public static class RoomDrawingExtensions
 
   private static void DrawText(this Room room, XGraphics graphics, Palette palette, RoomTextBlocks textBlocks)
   {
-    var name = room.Name;
-    if (string.IsNullOrEmpty(name)) return;
-
-    var font = Settings.RoomNameFont;
-    var brush = palette.Brush(room.RoomNameColor != Color.Transparent ? room.RoomNameColor : Settings.Color[Colors.SmallText]);
-
-    var bounds = room.InnerBounds;
-    bounds.Inflate(-Settings.TextPadding);
-
-    var textPosition = bounds.Position;
-    var textSize = bounds.Size;
-
-    if (!string.IsNullOrEmpty(room.SubTitle))
-    {
-      room.DrawSubTitle(graphics, palette, textBlocks, ref bounds);
-      textPosition = bounds.Position;
-      textSize = bounds.Size;
-    }
-
-    if (textSize.X > 0 && textSize.Y > 0)
-    {
-      textBlocks.Name.Draw(graphics, font, brush, textPosition, textSize, XStringFormats.Center);
-    }
-  }
-
-  private static void DrawSubTitle(this Room room, XGraphics graphics, Palette palette, RoomTextBlocks textBlocks, ref Rect bounds)
-  {
-    var font = Settings.SubtitleFont;
-    var brush = palette.Brush(room.RoomSubtitleColor != Color.Transparent ? room.RoomSubtitleColor : Settings.Color[Colors.Subtitle]);
-
-    var subTitleSize = textBlocks.SubTitle.Measure(graphics, font);
-    var subTitlePos = new Vector(bounds.X + (bounds.Width - subTitleSize.X) / 2, bounds.Bottom - subTitleSize.Y);
-
-    textBlocks.SubTitle.Draw(graphics, font, brush, subTitlePos, subTitleSize, XStringFormats.Center);
-    bounds.Height -= subTitleSize.Y;
-  }
-
-  private static void DrawObjects(this Room room, XGraphics graphics, Palette palette, RoomTextBlocks textBlocks)
-  {
-    var objects = room.Objects;
-    if (string.IsNullOrEmpty(objects)) return;
-
-    var font = Settings.ObjectFont;
-    var brush = palette.Brush(room.RoomObjectTextColor != Color.Transparent ? room.RoomObjectTextColor : Settings.Color[Colors.SmallText]);
-
-    var bounds = room.InnerBounds;
-    var objSize = textBlocks.ObjectsDisplay.Measure(graphics, font);
-    Vector objPos;
-
-    if (room.ObjectsCustomPosition)
-    {
-      objPos = new Vector(bounds.X + room.ObjectsCustomPositionRight, bounds.Y + room.ObjectsCustomPositionDown);
-    }
+    var textBounds = room.InnerBounds;
+    if (room.Ellipse)
+      textBounds.Inflate(-11.5f);
     else
+      textBounds.Inflate(-5, -5);
+
+    if (textBounds.Width > 0 && textBounds.Height > 0)
     {
-      switch (room.ObjectsPosition)
+      if (!ApplicationSettingsController.AppSettings.DebugDisableTextRendering)
       {
-        case CompassPoint.North:
-          objPos = new Vector(bounds.X + (bounds.Width - objSize.X) / 2, bounds.Top - objSize.Y - Settings.TextPadding);
-          break;
-        case CompassPoint.NorthEast:
-          objPos = new Vector(bounds.Right + Settings.TextPadding, bounds.Top - objSize.Y);
-          break;
-        case CompassPoint.East:
-          objPos = new Vector(bounds.Right + Settings.TextPadding, bounds.Y + (bounds.Height - objSize.Y) / 2);
-          break;
-        case CompassPoint.SouthEast:
-          objPos = new Vector(bounds.Right + Settings.TextPadding, bounds.Bottom);
-          break;
-        case CompassPoint.South:
-        default:
-          objPos = new Vector(bounds.X + (bounds.Width - objSize.X) / 2, bounds.Bottom + Settings.TextPadding);
-          break;
-        case CompassPoint.SouthWest:
-          objPos = new Vector(bounds.Left - objSize.X - Settings.TextPadding, bounds.Bottom);
-          break;
-        case CompassPoint.West:
-          objPos = new Vector(bounds.Left - objSize.X - Settings.TextPadding, bounds.Y + (bounds.Height - objSize.Y) / 2);
-          break;
-        case CompassPoint.NorthWest:
-          objPos = new Vector(bounds.Left - objSize.X - Settings.TextPadding, bounds.Top - objSize.Y);
-          break;
+        var font = Settings.RoomNameFont;
+        var roombrush = room.IsReference ? palette.Brush(Color.LightBlue) :
+          room.RoomNameColor != Color.Transparent ? palette.Brush(room.RoomNameColor) : palette.SmallTextBrush;
+        var tName = room.IsReference ? new TextBlock { Text = "To" } : textBlocks.Name;
+        var tSubtitle = room.IsReference ? new TextBlock { Text = room.ReferenceRoom?.Name ?? string.Empty } : textBlocks.SubTitle;
+        var roomTextRect = tName.Draw(
+          graphics,
+          font,
+          roombrush,
+          textBounds.Position,
+          textBounds.Size,
+          XStringFormats.Center);
+
+        // draw subtitle text
+        var subTitleBrush = room.IsReference ? roombrush :
+          room.RoomSubtitleColor != Color.Transparent ? palette.Brush(room.RoomSubtitleColor) : palette.SubtitleTextBrush;
+        var subtitleTextRect = new Rect(
+          roomTextRect.Left,
+          roomTextRect.Bottom,
+          roomTextRect.Right - roomTextRect.Left,
+          textBounds.Bottom - roomTextRect.Bottom);
+        tSubtitle.Draw(
+          graphics,
+          Settings.SubtitleFont,
+          subTitleBrush,
+          subtitleTextRect.Position,
+          subtitleTextRect.Size,
+          XStringFormats.Center);
       }
     }
 
-    textBlocks.ObjectsDisplay.Draw(graphics, font, brush, objPos, objSize, XStringFormats.Center);
+    var expandedBounds = room.InnerBounds;
+    expandedBounds.Inflate(Settings.ObjectListOffsetFromRoom, Settings.ObjectListOffsetFromRoom);
+    var drawnObjectList = false;
+
+    var objFont = Settings.ObjectFont;
+    var brush = palette.SmallTextBrush;
+    // Room specific fill brush (White shows global color)
+    var bUseObjectRoomBrush = false;
+    if (room.RoomObjectTextColor != Color.Transparent)
+    {
+      bUseObjectRoomBrush = true;
+      brush = palette.Brush(room.RoomObjectTextColor);
+    }
+
+    if (!string.IsNullOrEmpty(room.Objects))
+    {
+      var format = new XStringFormat();
+      var pos = expandedBounds.GetCorner(room.ObjectsPosition);
+
+      var displayText = ObjectList.FormatForDisplay(room.Objects);
+      if (textBlocks.ObjectsDisplay.Text != displayText) textBlocks.ObjectsDisplay.Text = displayText;
+
+      if (!Drawing.SetAlignmentFromCardinalOrOrdinalDirection(format, room.ObjectsPosition))
+      {
+        // object list appears inside the room below its name
+        format.LineAlignment = XLineAlignment.Far;
+        format.Alignment = XStringAlignment.Near;
+        var height = room.InnerBounds.Height / 2 - objFont.Height / 2;
+        var bounds = new Rect(
+          room.InnerBounds.Left + Settings.ObjectListOffsetFromRoom,
+          room.InnerBounds.Bottom - height,
+          room.InnerBounds.Width - Settings.ObjectListOffsetFromRoom,
+          height - Settings.ObjectListOffsetFromRoom);
+        if (bUseObjectRoomBrush)
+          brush = palette.Brush(room.RoomObjectTextColor);
+        pos = bounds.Position;
+        pos.X += room.ObjectsCustomPosition ? room.ObjectsCustomPositionRight : 0;
+        pos.Y += room.ObjectsCustomPosition ? room.ObjectsCustomPositionDown : 0;
+        if (bounds.Width > 0 && bounds.Height > 0)
+          textBlocks.ObjectsDisplay.Draw(graphics, objFont, brush, pos, bounds.Size, format);
+        drawnObjectList = true;
+      }
+      else if (room.ObjectsPosition == CompassPoint.North || room.ObjectsPosition == CompassPoint.South)
+      {
+        pos.X += Settings.ObjectListOffsetFromRoom + (room.ObjectsCustomPosition ? room.ObjectsCustomPositionRight : 0);
+        pos.Y += room.ObjectsCustomPosition ? room.ObjectsCustomPositionDown : 0;
+      }
+      else
+      {
+        pos.X += room.ObjectsCustomPosition ? room.ObjectsCustomPositionRight : 0;
+        pos.Y += room.ObjectsCustomPosition ? room.ObjectsCustomPositionDown : 0;
+      }
+
+      if (!drawnObjectList)
+        if (!ApplicationSettingsController.AppSettings.DebugDisableTextRendering)
+          textBlocks.ObjectsDisplay.Draw(graphics, objFont, brush, pos, Vector.Zero, format);
+    }
   }
 
   public static void ShowDialog(this Room room, PropertiesStartType startPoint)
@@ -437,13 +449,13 @@ public static class RoomDrawingExtensions
     dialog.RoomBorderColor = room.RoomBorderColor;
     dialog.RoomNameColor = room.RoomNameColor;
     dialog.RoomSubtitleColor = room.RoomSubtitleColor;
-    dialog.RoomObjectTextColor = room.RoomObjectTextColor;
+    dialog.ObjectTextColor = room.RoomObjectTextColor;
 
     dialog.Shape = room.Shape;
     dialog.Corners = room.Corners;
     dialog.AllCornersEqual = room.AllCornersEqual;
 
-    dialog.Region = room.Region;
+    dialog.RoomRegion = room.Region;
 
     result = UserInteraction.ShowDialog(dialog, TrizbortApplication.MainForm?.Canvas);
     if (result == DialogResult.OK)
@@ -475,12 +487,12 @@ public static class RoomDrawingExtensions
     room.RoomBorderColor = dialog.RoomBorderColor;
     room.RoomNameColor = dialog.RoomNameColor;
     room.RoomSubtitleColor = dialog.RoomSubtitleColor;
-    room.RoomObjectTextColor = dialog.RoomObjectTextColor;
+    room.RoomObjectTextColor = dialog.ObjectTextColor;
 
     room.ChangeRoomShape(dialog.Shape);
     room.Corners = dialog.Corners;
     room.AllCornersEqual = dialog.AllCornersEqual;
 
-    room.Region = dialog.Region;
+    room.Region = dialog.RoomRegion;
   }
 }

@@ -7,7 +7,7 @@ using NUnit.Framework;
 using Shouldly;
 using Trizbort.Domain.Application;
 
-namespace Trizbort.Tests;
+namespace Trizbort.Core.Tests;
 
 [TestFixture]
 [Category("Unit")]

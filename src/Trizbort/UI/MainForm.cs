@@ -756,25 +756,25 @@ public partial class MainForm : Form
   private void RoomsMustHaveADescriptionToolStripMenuItemClick(object sender, EventArgs e)
   {
     _commandController.SetValidation(ValidationType.RoomDescription);
-    Project.Current.Canvas.Invalidate();
+    Canvas.Invalidate();
   }
 
   private void RoomsMustHaveASubtitleToolStripMenuItemClick(object sender, EventArgs e)
   {
     _commandController.SetValidation(ValidationType.RoomSubTitle);
-    Project.Current.Canvas.Invalidate();
+    Canvas.Invalidate();
   }
 
   private void RoomsMustHaveUniqueNamesToolStripMenuItemClick(object sender, EventArgs e)
   {
     _commandController.SetValidation(ValidationType.RoomUniqueName);
-    Project.Current.Canvas.Invalidate();
+    Canvas.Invalidate();
   }
 
   private void RoomsMustNotHaveADanglingConnectionToolStripMenuItemClick(object sender, EventArgs e)
   {
     _commandController.SetValidation(ValidationType.RoomDanglingConnection);
-    Project.Current.Canvas.Invalidate();
+    Canvas.Invalidate();
   }
 
   private void RoundedEdgesToolStripMenuItemClick(object sender, EventArgs e)

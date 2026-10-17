@@ -17,7 +17,7 @@ using Trizbort.Export.Languages;
 using Trizbort.Setup;
 using Parser = Trizbort.Automap.Automap;
 
-namespace Trizbort.Tests;
+namespace Trizbort.Core.Tests;
 
 [TestFixture]
 [Category("Integration")]

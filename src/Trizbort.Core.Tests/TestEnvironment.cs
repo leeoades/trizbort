@@ -9,7 +9,7 @@ using Trizbort.Domain.AppSettings;
 using Trizbort.Setup;
 using Trizbort.Util;
 
-namespace Trizbort.Tests;
+namespace Trizbort.Core.Tests;
 
 [SetUpFixture]
 public class TestEnvironment

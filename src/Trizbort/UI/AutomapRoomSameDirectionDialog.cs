@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using Trizbort.Automap;
 using Trizbort.Domain.Elements;
 
 namespace Trizbort.UI;

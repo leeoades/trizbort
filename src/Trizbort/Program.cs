@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Controllers;
+using Trizbort.Domain.Elements;
 using Trizbort.Domain.Watchers;
 using Trizbort.UI;
 
@@ -52,6 +55,7 @@ internal static class Program
         UserInteraction.ShowMessage("Your project has not yet been saved to a file. There is nothing to backup.", "Nothing to backup.", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
     };
     Project.MapReloader = filename => MainForm?.OpenProject(filename);
+    Project.SelectedElementsProvider = () => (IEnumerable<Element>)MainForm?.Canvas.SelectedElements ?? Array.Empty<Element>();
     Project.DocVersionWarningReporter = (warning, appVers, docVers) => {
       var infoList = $"Executable Version = {appVers}{Environment.NewLine}Document Version = {docVers}{Environment.NewLine}{Environment.NewLine}";
       var newVersionText = "Visit https://github.com/leeoades/trizbort/releases to download the latest version.";

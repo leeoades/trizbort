@@ -17,7 +17,7 @@
 		<PackageReference Include="NUnit3TestAdapter" Version="4.6.0"/>
 		<PackageReference Include="NUnit.Analyzers" Version="4.3.0"/>
 		<PackageReference Include="Shouldly" Version="4.2.1"/>
-		<PackageReference Include="FluentAssertions" Version="6.12.1"/>
+		<PackageReference Include="FluentAssertions" Version="8.8.0"/>
 		<PackageReference Include="coverlet.collector" Version="6.0.4">
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
@@ -25,6 +25,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Trizbort.Core\Trizbort.Core.csproj"/>
+		<ProjectReference Include="..\Trizbort.Core.Tests\Trizbort.Core.Tests.csproj"/>
 		<ProjectReference Include="..\Trizbort\Trizbort.csproj"/>
 		<None Include="..\..\tests\manual\*.trizbort" Link="Fixtures\Manual\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"/>
 		<None Include="..\..\tests\manual\*.bat" Link="Fixtures\Manual\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"/>

@@ -21,6 +21,7 @@ public class Project : IDisposable
   public static Action<string, bool> BackupReporter { get; set; }
   public static Action<Exception> SaveErrorReporter { get; set; }
   public static Action<string> MapReloader { get; set; }
+  public static Func<IEnumerable<Element>> SelectedElementsProvider { get; set; }
 
   public Project()
   {
@@ -30,6 +31,11 @@ public class Project : IDisposable
   public Element ActiveSelectedElement { get; set; }
 
   public string Author { get; set; }
+
+  public List<Element> GetSelectedElements()
+  {
+    return SelectedElementsProvider?.Invoke().ToList() ?? new List<Element>();
+  }
 
   public static Project Current {
     get { return _current; }

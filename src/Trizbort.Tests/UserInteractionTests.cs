@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using NUnit.Framework;
 using Shouldly;
+using Trizbort.Core.Tests;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Controllers;
 using Trizbort.Domain.Elements;

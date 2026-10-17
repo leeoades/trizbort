@@ -1,17 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using PdfSharp.Drawing;
 using Trizbort.Domain.Application;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 using Trizbort.Properties;
 using Trizbort.Setup;
 using Trizbort.UI;
 using Trizbort.Util;
+using Settings = Trizbort.Setup.Settings;
 
 namespace Trizbort.Domain.Elements;
 
@@ -86,7 +89,7 @@ public static class ConnectionDrawingExtensions
       connection.ConnectionColor != Color.Transparent ? connection.ConnectionColor : Settings.Color[Colors.Line],
       Settings.LineWidth);
     if (connection.Style == ConnectionStyle.Dashed)
-      pen.DashStyle = XDashStyle.Custom;
+      pen.DashStyle = DashStyle.Custom;
     pen.DashPattern = new[] { 2.0f, 2.0f };
 
     var lineSegments = context.UseSmartLineSegments ? GetState(connection).SmartSegments : connection.GetSegments();
@@ -143,7 +146,7 @@ public static class ConnectionDrawingExtensions
           Settings.HandDrawn ? Sketch.Seeded(connection.Id) : null);
       }
 
-      if (connection.Door != null)
+      if (connection.Door != null && lineSegments.Count > 0)
       {
         var lineSegment = lineSegments[lineSegments.Count / 2];
         ShowDoorIcons(connection, graphics, lineSegment);
@@ -212,13 +215,13 @@ public static class ConnectionDrawingExtensions
         else
         {
           middle /= length;
+          var pos = lineSegment.Start + lineSegment.Delta * middle;
+          var fakeSegment = new LineSegment(
+            pos - lineSegment.Delta * Numeric.Small,
+            pos + lineSegment.Delta * Numeric.Small);
+          Annotate(connection, graphics, palette, fakeSegment, state.MidText, StringAlignment.Center);
+          break;
         }
-        var pos = lineSegment.Start + lineSegment.Delta * middle;
-        var fakeSegment = new LineSegment(
-          pos - lineSegment.Delta * Numeric.Small,
-          pos + lineSegment.Delta * Numeric.Small);
-        Annotate(connection, graphics, palette, fakeSegment, state.MidText, StringAlignment.Center);
-        break;
       }
     }
   }
@@ -231,131 +234,70 @@ public static class ConnectionDrawingExtensions
     TextBlock text,
     StringAlignment alignment)
   {
+    Vector point;
     var delta = lineSegment.Delta;
-    var lineAngle = (float)Math.Atan2(delta.Y, delta.X);
-
-    var radians = lineAngle;
-    if (radians > Math.PI / 2)
-      radians -= (float)Math.PI;
-    else if (radians < -Math.PI / 2)
-      radians += (float)Math.PI;
-    var degrees = radians * 180 / (float)Math.PI;
-
-    var center = (lineSegment.Start + lineSegment.End) / 2;
-    var size = text.Measure(graphics, Settings.LineFont);
-    var naturalSize = size;
-    size.X = Math.Max(lineSegment.Length, size.X);
-    size.Y = Math.Max(Settings.LineFont.Height, size.Y);
-
-    var pos = center;
-    var rotated = Math.Abs(degrees) > Numeric.Small;
-
     var roomTypeAdjustments = Vector.Zero;
 
-    if (alignment == StringAlignment.Near)
+    RoomShape roomType;
+    switch (alignment)
     {
-      if (connection.VertexList.Count > 0 &&
-          connection.VertexList[0].Port != null &&
-          connection.VertexList[0].Port.Owner is Room)
-        roomTypeAdjustments = RoomTypeAdjustments(connection.VertexList[0]);
+      default:
+        // detached vertex has no port, so need to check if it exists
+        if (connection.VertexList.Count > 0 && connection.VertexList[0].Port != null)
+        {
+          roomType = connection.VertexList[0].Port.Owner.GetRoomType();
+          if (roomType == RoomShape.Ellipse || roomType == RoomShape.Octagonal)
+            roomTypeAdjustments = RoomTypeAdjustments(connection.VertexList[0]);
+        }
+
+        point = lineSegment.Start + roomTypeAdjustments;
+        delta.Negate();
+        break;
+      case StringAlignment.Center:
+        point = lineSegment.Mid;
+        break;
+      case StringAlignment.Far:
+        // detached vertex has no port, so need to check if it exists
+        if (connection.VertexList.Count > 1 && connection.VertexList[connection.VertexList.Count - 1].Port != null)
+        {
+          roomType = connection.VertexList[connection.VertexList.Count - 1].Port.Owner.GetRoomType();
+          if (roomType == RoomShape.Ellipse || roomType == RoomShape.Octagonal)
+            roomTypeAdjustments = RoomTypeAdjustments(connection.VertexList[connection.VertexList.Count - 1]);
+        }
+
+        point = lineSegment.End + roomTypeAdjustments;
+        break;
     }
-    else if (alignment == StringAlignment.Far)
+
+    var bounds = new Rect(point, Vector.Zero);
+    bounds.Inflate(Settings.TextOffsetFromConnection);
+
+    var compassPoint = CompassPointHelper.DirectionFromAngle(out var angle, delta);
+
+    var pos = bounds.GetCorner(compassPoint);
+    var format = new XStringFormat();
+    Drawing.SetAlignmentFromCardinalOrOrdinalDirection(format, compassPoint);
+
+    if (alignment == StringAlignment.Center && Math.Abs(angle) == 90)
     {
-      if (connection.VertexList.Count > 1 &&
-          connection.VertexList[connection.VertexList.Count - 1].Port != null &&
-          connection.VertexList[connection.VertexList.Count - 1].Port.Owner is Room)
-        roomTypeAdjustments = RoomTypeAdjustments(connection.VertexList[connection.VertexList.Count - 1]);
+      // HACK: Adjust the anchoring for mid-line text for vertical lines to push
+      // the start of the label a bit off the connection line.
+      pos = bounds.GetCorner(CompassPoint.East);
+      format.LineAlignment = XLineAlignment.Center;
     }
 
-    if (!rotated)
+    if (alignment == StringAlignment.Center && Numeric.InRange(angle, -10, 10))
     {
-      var above = false;
-      var left = false;
-      if (Math.Abs(degrees) <= Numeric.Small)
-        above = true;
-      else if (Math.Abs(degrees - 90) <= Numeric.Small)
-        left = true;
-      else if (Math.Abs(degrees - -90) <= Numeric.Small)
-        left = true;
-
-      var offset = Vector.Zero;
-      if (above)
-        offset.Y = -(naturalSize.Y + Settings.LineWidth + Settings.TextPadding);
-      else if (left)
-        offset.X = -(naturalSize.X + Settings.LineWidth + Settings.TextPadding);
-
-      switch (alignment)
-      {
-        case StringAlignment.Near:
-          if (lineSegment.Start.X < lineSegment.End.X)
-            pos.X = lineSegment.Start.X + Settings.TextPadding;
-          else if (lineSegment.Start.X > lineSegment.End.X)
-            pos.X = lineSegment.Start.X - naturalSize.X - Settings.TextPadding;
-          else
-            pos.X = lineSegment.Start.X + offset.X;
-          if (lineSegment.Start.Y < lineSegment.End.Y)
-            pos.Y = lineSegment.Start.Y + Settings.TextPadding;
-          else if (lineSegment.Start.Y > lineSegment.End.Y)
-            pos.Y = lineSegment.Start.Y - naturalSize.Y - Settings.TextPadding;
-          else
-            pos.Y = lineSegment.Start.Y + offset.Y;
-          break;
-        case StringAlignment.Center:
-          pos.X = center.X - naturalSize.X / 2;
-          pos.Y = center.Y - naturalSize.Y / 2;
-          break;
-        case StringAlignment.Far:
-          if (lineSegment.End.X < lineSegment.Start.X)
-            pos.X = lineSegment.End.X + Settings.TextPadding;
-          else if (lineSegment.End.X > lineSegment.Start.X)
-            pos.X = lineSegment.End.X - naturalSize.X - Settings.TextPadding;
-          else
-            pos.X = lineSegment.End.X + offset.X;
-          if (lineSegment.End.Y < lineSegment.Start.Y)
-            pos.Y = lineSegment.End.Y + Settings.TextPadding;
-          else if (lineSegment.End.Y > lineSegment.Start.Y)
-            pos.Y = lineSegment.End.Y - naturalSize.Y - Settings.TextPadding;
-          else
-            pos.Y = lineSegment.End.Y + offset.Y;
-          break;
-      }
-
-      pos.X += roomTypeAdjustments.X;
-      pos.Y += roomTypeAdjustments.Y;
-      text.Draw(graphics, Settings.LineFont, palette.Brush(Settings.Color[Colors.LineText]), pos, naturalSize, StringAlignment.Near);
+      // HACK: if the line segment is pretty horizontal and we're drawing mid-line text,
+      // move text below the line to get it out of the way of any labels at the ends,
+      // and center the text so it fits onto a line between two proximal rooms.
+      pos = bounds.GetCorner(CompassPoint.South);
+      format.Alignment = XStringAlignment.Center;
+      format.LineAlignment = XLineAlignment.Near;
     }
-    else
-    {
-      switch (alignment)
-      {
-        case StringAlignment.Near:
-          var near = (float)Math.Min(size.X / 2, naturalSize.X * 0.75);
-          if (lineAngle > Math.PI / 2 || lineAngle < -Math.PI / 2)
-            pos -= lineSegment.Delta.Unit * near;
-          else
-            pos += lineSegment.Delta.Unit * near;
-          break;
-        case StringAlignment.Center:
-          break;
-        case StringAlignment.Far:
-          var far = (float)Math.Min(size.X / 2, naturalSize.X * 0.75);
-          if (lineAngle > Math.PI / 2 || lineAngle < -Math.PI / 2)
-            pos += lineSegment.Delta.Unit * far;
-          else
-            pos -= lineSegment.Delta.Unit * far;
-          break;
-      }
 
-      pos.X += roomTypeAdjustments.X;
-      pos.Y += roomTypeAdjustments.Y;
-
-      var state2 = graphics.Save();
-      graphics.TranslateTransform(pos.X, pos.Y);
-      graphics.RotateTransform(degrees);
-      graphics.TranslateTransform(-size.X / 2, -size.Y - Settings.LineWidth - Settings.TextPadding);
-      text.Draw(graphics, Settings.LineFont, palette.Brush(Settings.Color[Colors.LineText]), Vector.Zero, size, StringAlignment.Center);
-      graphics.Restore(state2);
-    }
+    if (!ApplicationSettingsController.AppSettings.DebugDisableTextRendering)
+      text.Draw(graphics, Settings.LineFont, palette.LineTextBrush, pos, Vector.Zero, format);
   }
 
   private static Vector RoomTypeAdjustments(Vertex vertex)

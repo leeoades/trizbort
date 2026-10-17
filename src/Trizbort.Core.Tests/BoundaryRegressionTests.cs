@@ -9,7 +9,7 @@ using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 using Trizbort.Util;
 
-namespace Trizbort.Tests;
+namespace Trizbort.Core.Tests;
 
 [TestFixture]
 [Category("Unit")]

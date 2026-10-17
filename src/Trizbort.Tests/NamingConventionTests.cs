@@ -11,7 +11,7 @@ namespace Trizbort.Tests;
 
 [TestFixture]
 [Category("Unit")]
-public class NamingConventionTests
+public class WinFormsNamingConventionTests
 {
   private const BindingFlags DeclaredMembers =
     BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
@@ -21,7 +21,7 @@ public class NamingConventionTests
   [TestCase(true)]
   public void Members_UseModernNamingConventions(bool testAssembly)
   {
-    var assembly = testAssembly ? typeof(NamingConventionTests).Assembly : typeof(MainForm).Assembly;
+    var assembly = testAssembly ? typeof(WinFormsNamingConventionTests).Assembly : typeof(MainForm).Assembly;
     var violations = new List<string>();
     foreach (var type in assembly.GetTypes().Where(type =>
                !type.IsDefined(typeof(CompilerGeneratedAttribute), false) &&

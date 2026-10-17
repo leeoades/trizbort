@@ -2,7 +2,7 @@ using NUnit.Framework;
 using Shouldly;
 using Trizbort.Domain.Misc;
 
-namespace Trizbort.Tests;
+namespace Trizbort.Core.Tests;
 
 [TestFixture]
 public class ObjectListTests

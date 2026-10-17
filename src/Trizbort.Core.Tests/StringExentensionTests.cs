@@ -2,7 +2,7 @@
 using Shouldly;
 using Trizbort.Extensions;
 
-namespace Trizbort.Tests;
+namespace Trizbort.Core.Tests;
 
 [TestFixture]
 public class StringExentensionTests

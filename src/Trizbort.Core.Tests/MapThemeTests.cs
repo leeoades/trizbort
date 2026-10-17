@@ -14,7 +14,7 @@ using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using Region = Trizbort.Domain.Misc.Region;
 
-namespace Trizbort.Tests;
+namespace Trizbort.Core.Tests;
 
 [TestFixture]
 [NonParallelizable]

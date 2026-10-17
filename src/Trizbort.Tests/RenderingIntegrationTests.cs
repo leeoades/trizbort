@@ -6,6 +6,7 @@ using NUnit.Framework;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf.IO;
 using Shouldly;
+using Trizbort.Core.Tests;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;

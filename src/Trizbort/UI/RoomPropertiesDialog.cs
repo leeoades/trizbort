@@ -12,7 +12,7 @@ using Trizbort.Util;
 
 namespace Trizbort.UI;
 
-internal partial class RoomPropertiesDialog : Form
+public partial class RoomPropertiesDialog : Form
 {
   private const int HorizontalMargin = 2;
   private const int VerticalMargin = 2;
