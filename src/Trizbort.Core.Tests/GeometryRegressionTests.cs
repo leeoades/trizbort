@@ -303,4 +303,44 @@ public class GeometryRegressionTests : IsolatedProjectTests
     // Available space: (800-80)=720, (600-80)=520. Scale: 720/400=1.8, 520/300=1.73 -> Clamped to min(1.0, 1.73) = 1.0
     transform.ZoomFactor.ShouldBe(1.0f, 0.001f);
   }
+
+  [Test]
+  public void CanvasTransform_FitToMap_ShrinksWhenMapExceedsViewport()
+  {
+    var transform = new CanvasTransform
+    {
+      Origin = Vector.Zero,
+      ZoomFactor = 1.0f,
+      ViewportWidth = 400.0,
+      ViewportHeight = 300.0
+    };
+
+    var project = new Trizbort.Domain.Application.Project();
+    var r1 = new Trizbort.Domain.Elements.Room(project) { Position = new Vector(0, 0), Size = new Vector(100, 100) };
+    var r2 = new Trizbort.Domain.Elements.Room(project) { Position = new Vector(1900, 1400), Size = new Vector(100, 100) };
+
+    transform.FitToMap(new[] { r1, r2 }, margin: 40.0);
+
+    transform.Origin.X.ShouldBe(1000f, 1.0f);
+    transform.Origin.Y.ShouldBe(750f, 1.0f);
+    transform.ZoomFactor.ShouldBe((float)(220.0 / 1500.0), 0.01f);
+    transform.ZoomFactor.ShouldBeLessThan(1.0f);
+  }
+
+  [Test]
+  public void CanvasTransform_FitToMap_EmptyMapResetsView()
+  {
+    var transform = new CanvasTransform
+    {
+      Origin = new Vector(50f, 60f),
+      ZoomFactor = 2.5f,
+      ViewportWidth = 800.0,
+      ViewportHeight = 600.0
+    };
+
+    transform.FitToMap(Array.Empty<Trizbort.Domain.Elements.Element>());
+
+    transform.Origin.ShouldBe(Vector.Zero);
+    transform.ZoomFactor.ShouldBe(1.0f);
+  }
 }

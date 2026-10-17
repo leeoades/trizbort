@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using Trizbort.Avalonia.Drawing;
 using Trizbort.Avalonia.Services;
 using Trizbort.Domain.Application;
@@ -36,12 +37,19 @@ public class MapCanvasControl : Control
     private CoreVector _origin = CoreVector.Zero;
     private float _zoomFactor = 1.0f;
     private readonly CanvasTransform _transform = new();
+    private ICommandService? _hookedService;
 
     public CoreVector Origin
     {
-        get => _origin;
+        get => CommandService?.Origin ?? _origin;
         set
         {
+            if (CommandService != null)
+            {
+                CommandService.SetView(value, CommandService.ZoomFactor);
+                return;
+            }
+
             if (_origin != value)
             {
                 _origin = value;
@@ -53,10 +61,16 @@ public class MapCanvasControl : Control
 
     public float ZoomFactor
     {
-        get => _zoomFactor;
+        get => CommandService?.ZoomFactor ?? _zoomFactor;
         set
         {
             var clamped = Math.Clamp(value, 0.1f, 10.0f);
+            if (CommandService != null)
+            {
+                CommandService.SetView(CommandService.Origin, clamped);
+                return;
+            }
+
             if (Math.Abs(_zoomFactor - clamped) > 0.0001f)
             {
                 _zoomFactor = clamped;
@@ -76,11 +90,7 @@ public class MapCanvasControl : Control
         base.OnAttachedToVisualTree(e);
         Project.ProjectChanged += OnProjectChanged;
         Settings.Changed += OnSettingsChanged;
-
-        if (CommandService != null)
-        {
-            HookCommandService(CommandService);
-        }
+        TryHookCommandService();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -88,11 +98,7 @@ public class MapCanvasControl : Control
         base.OnDetachedFromVisualTree(e);
         Project.ProjectChanged -= OnProjectChanged;
         Settings.Changed -= OnSettingsChanged;
-
-        if (CommandService != null)
-        {
-            UnhookCommandService(CommandService);
-        }
+        TryUnhookCommandService();
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -100,19 +106,18 @@ public class MapCanvasControl : Control
         base.OnPropertyChanged(change);
         if (change.Property == CommandServiceProperty)
         {
-            if (change.OldValue is ICommandService oldService)
-            {
-                UnhookCommandService(oldService);
-            }
+            TryUnhookCommandService();
             if (change.NewValue is ICommandService newService)
             {
-                HookCommandService(newService);
+                SyncViewFromService(newService);
                 if (Bounds.Width > 0 && Bounds.Height > 0)
                 {
                     newService.SetViewportSize(Bounds.Width, Bounds.Height);
                 }
-                Origin = newService.Origin;
-                ZoomFactor = newService.ZoomFactor;
+                if (this.IsAttachedToVisualTree())
+                {
+                    HookCommandService(newService);
+                }
             }
         }
     }
@@ -128,11 +133,34 @@ public class MapCanvasControl : Control
         }
     }
 
+    private void TryHookCommandService()
+    {
+        if (CommandService != null)
+        {
+            HookCommandService(CommandService);
+        }
+    }
+
+    private void TryUnhookCommandService()
+    {
+        if (_hookedService != null)
+        {
+            UnhookCommandService(_hookedService);
+        }
+    }
+
     private void HookCommandService(ICommandService service)
     {
+        if (ReferenceEquals(_hookedService, service))
+        {
+            return;
+        }
+
+        TryUnhookCommandService();
         service.CanvasInvalidated += OnCanvasInvalidated;
         service.ZoomChanged += OnServiceZoomChanged;
         service.SelectionChanged += OnCanvasInvalidated;
+        _hookedService = service;
     }
 
     private void UnhookCommandService(ICommandService service)
@@ -140,6 +168,18 @@ public class MapCanvasControl : Control
         service.CanvasInvalidated -= OnCanvasInvalidated;
         service.ZoomChanged -= OnServiceZoomChanged;
         service.SelectionChanged -= OnCanvasInvalidated;
+        if (ReferenceEquals(_hookedService, service))
+        {
+            _hookedService = null;
+        }
+    }
+
+    private void SyncViewFromService(ICommandService service)
+    {
+        _origin = service.Origin;
+        _zoomFactor = service.ZoomFactor;
+        _transform.Origin = _origin;
+        _transform.ZoomFactor = _zoomFactor;
     }
 
     private void OnProjectChanged(object? sender, ProjectChangedEventArgs e)
@@ -156,18 +196,22 @@ public class MapCanvasControl : Control
     {
         if (CommandService != null)
         {
-            _origin = CommandService.Origin;
-            _zoomFactor = CommandService.ZoomFactor;
-            _transform.Origin = _origin;
-            _transform.ZoomFactor = _zoomFactor;
+            SyncViewFromService(CommandService);
         }
         InvalidateVisual();
     }
 
     private void OnServiceZoomChanged(object? sender, float zoom)
     {
-        _zoomFactor = zoom;
-        _transform.ZoomFactor = zoom;
+        if (CommandService != null)
+        {
+            SyncViewFromService(CommandService);
+        }
+        else
+        {
+            _zoomFactor = zoom;
+            _transform.ZoomFactor = zoom;
+        }
         InvalidateVisual();
     }
 

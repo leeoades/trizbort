@@ -287,7 +287,7 @@ public static class RoomDrawingAdapter
         {
             TextAlignment = alignment
         };
-        formattedObj.MaxTextWidth = formattedObj.Width;
+        formattedObj.ConstrainToNaturalWidth();
 
         double drawX = pos.X;
         double drawY = pos.Y;

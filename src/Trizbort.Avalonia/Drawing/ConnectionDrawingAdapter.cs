@@ -360,7 +360,7 @@ public static class ConnectionDrawingAdapter
         {
             TextAlignment = alignment
         };
-        formattedText.MaxTextWidth = formattedText.Width;
+        formattedText.ConstrainToNaturalWidth();
 
         double drawX = pos.X;
         double drawY = pos.Y;

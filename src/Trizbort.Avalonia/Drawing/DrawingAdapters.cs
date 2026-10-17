@@ -255,4 +255,17 @@ public static class DrawingAdapters
 
         context.DrawGeometry(brush, null, geometry);
     }
+
+    /// <summary>
+    /// Constrains <see cref="FormattedText"/> to its natural width, including trailing
+    /// whitespace, so per-line alignment works without wrapping a trailing space onto a new line.
+    /// </summary>
+    public static void ConstrainToNaturalWidth(this FormattedText text)
+    {
+        var width = text.WidthIncludingTrailingWhitespace;
+        if (width > 0)
+        {
+            text.MaxTextWidth = width;
+        }
+    }
 }
