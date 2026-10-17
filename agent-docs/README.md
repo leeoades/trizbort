@@ -49,6 +49,7 @@ prefixed with `tests/`, `samples/`, `Docs/`, or `agent-docs/` are relative to th
 | [`07-export-subsystem.md`](07-export-subsystem.md) | Adding/fixing an IF-language exporter (Inform6/7, TADS, Alan, Hugo, ZIL, Quest, Adventuron) or the image/PDF export. |
 | [`08-cli-and-entry-point.md`](08-cli-and-entry-point.md) | Command-line options, `Program.cs`/`MainForm` startup sequence, how CLI flags map to save/load/automap/export actions. |
 | [`09-build-test-and-dotnet8-port.md`](09-build-test-and-dotnet8-port.md) | Build/test commands, project file structure, and hard-won gotchas from the .NET Framework 4.8 → .NET 8 port (read before touching `.csproj`, `app.config`, or `app.manifest`). |
+| [`plans/extract-trizbort-core-and-tests.md`](plans/extract-trizbort-core-and-tests.md) | Architectural roadmap and migration plan for extracting `Trizbort.Core` and `Trizbort.Core.Tests`. |
 
 ## Quick orientation (if you only read one paragraph)
 
