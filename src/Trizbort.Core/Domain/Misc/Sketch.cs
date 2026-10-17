@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace Trizbort.Domain.Misc;
 
@@ -19,7 +18,7 @@ public static class Sketch
   }
 
   /// <summary>A hand-drawn straight stroke. The end points are exact so strokes join up.</summary>
-  public static PointF[] Line(PointF start, PointF end, Random random)
+  public static Vector[] Line(Vector start, Vector end, Random random)
   {
     var dx = end.X - start.X;
     var dy = end.Y - start.Y;
@@ -34,12 +33,12 @@ public static class Sketch
     var ripple = amplitude * 0.15f * Signed(random);
 
     var count = Math.Max(4, (int)(length / SampleSpacing));
-    var points = new PointF[count + 1];
+    var points = new Vector[count + 1];
     for (var i = 0; i <= count; ++i)
     {
       var t = i / (float)count;
       var offset = bow * Sin(Math.PI * t) + wave * Sin(2 * Math.PI * t) + ripple * Sin(3 * Math.PI * t);
-      points[i] = new PointF(start.X + dx * t + nx * offset, start.Y + dy * t + ny * offset);
+      points[i] = new Vector(start.X + dx * t + nx * offset, start.Y + dy * t + ny * offset);
     }
 
     points[0] = start;
@@ -48,9 +47,9 @@ public static class Sketch
   }
 
   /// <summary>A hand-drawn closed polygon: each edge is drawn as its own stroke between exact corners.</summary>
-  public static PointF[] Polygon(IReadOnlyList<PointF> vertices, Random random)
+  public static Vector[] Polygon(IReadOnlyList<Vector> vertices, Random random)
   {
-    var result = new List<PointF>();
+    var result = new List<Vector>();
     for (var i = 0; i < vertices.Count; ++i)
     {
       var edge = Line(vertices[i], vertices[(i + 1) % vertices.Count], random);
@@ -61,7 +60,7 @@ public static class Sketch
   }
 
   /// <summary>A hand-drawn version of a smooth closed outline (ellipse, rounded rectangle).</summary>
-  public static PointF[] ClosedCurve(IReadOnlyList<PointF> outline, Random random)
+  public static Vector[] ClosedCurve(IReadOnlyList<Vector> outline, Random random)
   {
     var points = Densify(outline, true);
     var perimeter = Length(points, true);
@@ -78,7 +77,7 @@ public static class Sketch
       phases[k] = random.NextDouble() * Math.PI * 2;
     }
 
-    var result = new PointF[points.Count];
+    var result = new Vector[points.Count];
     var distance = 0f;
     for (var i = 0; i < points.Count; ++i)
     {
@@ -97,7 +96,7 @@ public static class Sketch
   ///   A hand-drawn open polyline such as a connection. End points are exact. Longer strokes get a
   ///   larger bow plus a few gentle waves, so a long connector reads as drawn freehand.
   /// </summary>
-  public static PointF[] Polyline(IReadOnlyList<PointF> polyline, Random random)
+  public static Vector[] Polyline(IReadOnlyList<Vector> polyline, Random random)
   {
     var points = Densify(polyline, false);
     var length = Length(points, false);
@@ -109,7 +108,7 @@ public static class Sketch
     var wave = Clamp(length * 0.006f, 0.3f, 1.6f) * (0.6f + 0.4f * (float)random.NextDouble());
     var phase = random.NextDouble() * Math.PI * 2;
 
-    var result = new PointF[points.Count];
+    var result = new Vector[points.Count];
     var distance = 0f;
     for (var i = 0; i < points.Count; ++i)
     {
@@ -126,7 +125,7 @@ public static class Sketch
   }
 
   /// <summary>The point on a polyline nearest to <paramref name="target" />, with the local direction there.</summary>
-  public static PointF Nearest(IReadOnlyList<PointF> points, PointF target, out PointF direction)
+  public static Vector Nearest(IReadOnlyList<Vector> points, Vector target, out Vector direction)
   {
     var best = 0;
     var bestDistance = float.MaxValue;
@@ -142,19 +141,19 @@ public static class Sketch
 
     var before = points[Math.Max(0, best - 2)];
     var after = points[Math.Min(points.Count - 1, best + 2)];
-    direction = new PointF(after.X - before.X, after.Y - before.Y);
+    direction = new Vector(after.X - before.X, after.Y - before.Y);
     return points[best];
   }
 
-  public static PointF[] Ellipse(RectangleF rect)
+  public static Vector[] Ellipse(Rect rect)
   {
     var perimeter = Math.PI * (rect.Width + rect.Height) / 2;
     var count = Math.Max(16, (int)(perimeter / SampleSpacing));
-    var points = new PointF[count];
+    var points = new Vector[count];
     for (var i = 0; i < count; ++i)
     {
       var angle = 2 * Math.PI * i / count;
-      points[i] = new PointF(
+      points[i] = new Vector(
         rect.X + rect.Width / 2 * (1 + (float)Math.Cos(angle)),
         rect.Y + rect.Height / 2 * (1 + (float)Math.Sin(angle)));
     }
@@ -162,15 +161,15 @@ public static class Sketch
     return points;
   }
 
-  public static PointF[] RoundedRectangle(
-    RectangleF rect,
+  public static Vector[] RoundedRectangle(
+    Rect rect,
     float topLeft,
     float topRight,
     float bottomRight,
     float bottomLeft)
   {
     var max = Math.Min(rect.Width, rect.Height) / 2;
-    var points = new List<PointF>();
+    var points = new List<Vector>();
     AddArc(points, rect.Left + Math.Min(topLeft, max), rect.Top + Math.Min(topLeft, max), Math.Min(topLeft, max), 180);
     AddArc(
       points,
@@ -193,19 +192,19 @@ public static class Sketch
     return points.ToArray();
   }
 
-  private static void AddArc(List<PointF> points, float cx, float cy, float radius, float startDegrees)
+  private static void AddArc(List<Vector> points, float cx, float cy, float radius, float startDegrees)
   {
     var steps = Math.Max(2, (int)(radius * Math.PI / 2 / SampleSpacing));
     for (var i = 0; i <= steps; ++i)
     {
       var angle = (startDegrees + 90.0 * i / steps) * Math.PI / 180;
-      points.Add(new PointF(cx + radius * (float)Math.Cos(angle), cy + radius * (float)Math.Sin(angle)));
+      points.Add(new Vector(cx + radius * (float)Math.Cos(angle), cy + radius * (float)Math.Sin(angle)));
     }
   }
 
-  private static List<PointF> Densify(IReadOnlyList<PointF> points, bool closed)
+  private static List<Vector> Densify(IReadOnlyList<Vector> points, bool closed)
   {
-    var result = new List<PointF>();
+    var result = new List<Vector>();
     var segments = closed ? points.Count : points.Count - 1;
     for (var i = 0; i < segments; ++i)
     {
@@ -213,14 +212,14 @@ public static class Sketch
       var b = points[(i + 1) % points.Count];
       var steps = Math.Max(1, (int)Math.Ceiling(Distance(a, b) / SampleSpacing));
       for (var j = 0; j < steps; ++j)
-        result.Add(new PointF(a.X + (b.X - a.X) * j / steps, a.Y + (b.Y - a.Y) * j / steps));
+        result.Add(new Vector(a.X + (b.X - a.X) * j / steps, a.Y + (b.Y - a.Y) * j / steps));
     }
 
     if (!closed && points.Count > 0) result.Add(points[points.Count - 1]);
     return result;
   }
 
-  private static PointF Offset(IReadOnlyList<PointF> points, int index, bool closed, float offset)
+  private static Vector Offset(IReadOnlyList<Vector> points, int index, bool closed, float offset)
   {
     var count = points.Count;
     var previous = closed ? points[(index - 1 + count) % count] : points[Math.Max(0, index - 1)];
@@ -229,10 +228,10 @@ public static class Sketch
     var ty = next.Y - previous.Y;
     var length = (float)Math.Sqrt(tx * tx + ty * ty);
     if (length < 0.0001f) return points[index];
-    return new PointF(points[index].X - ty / length * offset, points[index].Y + tx / length * offset);
+    return new Vector(points[index].X - ty / length * offset, points[index].Y + tx / length * offset);
   }
 
-  private static float Length(IReadOnlyList<PointF> points, bool closed)
+  private static float Length(IReadOnlyList<Vector> points, bool closed)
   {
     var total = 0f;
     for (var i = 1; i < points.Count; ++i) total += Distance(points[i - 1], points[i]);
@@ -240,7 +239,7 @@ public static class Sketch
     return total;
   }
 
-  private static float Distance(PointF a, PointF b)
+  private static float Distance(Vector a, Vector b)
   {
     return (float)Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
   }

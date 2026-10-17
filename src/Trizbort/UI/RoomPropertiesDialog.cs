@@ -719,7 +719,7 @@ internal partial class RoomPropertiesDialog : Form
     graph.SmoothingMode = SmoothingMode.AntiAlias;
     var pen = new Pen(Color.Black, 2.0f) { LineJoin = LineJoin.Round };
 
-    var rect = new RectangleF(10, 10, 3 * Settings.GridSize, 2 * Settings.GridSize);
+    var rect = new Rect(10, 10, 3 * Settings.GridSize, 2 * Settings.GridSize);
     var handDrawn = IsPreviewHandDrawn;
     var random = Sketch.Seeded(0);
     var shape = _cboDrawType.SelectedItem?.ToString();
@@ -733,36 +733,36 @@ internal partial class RoomPropertiesDialog : Form
         (float)_txtTopRight.Value,
         (float)_txtBottomRight.Value,
         (float)_txtBottomLeft.Value);
-      outline = handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints;
+      outline = (handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints).ToPointFArray();
     }
     else if (shape == "Ellipse")
     {
       var outlinePoints = Sketch.Ellipse(rect);
-      outline = handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints;
+      outline = (handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints).ToPointFArray();
     }
     else
     {
-      PointF[] vertices;
+      Vector[] vertices;
       if (shape == "Octagonal")
       {
         var qw = rect.Width / 4;
         var qh = rect.Height / 4;
         vertices = new[] {
-          new PointF(rect.Left, rect.Bottom - qh), new PointF(rect.Left, rect.Top + qh),
-          new PointF(rect.Left + qw, rect.Top), new PointF(rect.Right - qw, rect.Top),
-          new PointF(rect.Right, rect.Top + qh), new PointF(rect.Right, rect.Bottom - qh),
-          new PointF(rect.Right - qw, rect.Bottom), new PointF(rect.Left + qw, rect.Bottom)
+          new Vector(rect.Left, rect.Bottom - qh), new Vector(rect.Left, rect.Top + qh),
+          new Vector(rect.Left + qw, rect.Top), new Vector(rect.Right - qw, rect.Top),
+          new Vector(rect.Right, rect.Top + qh), new Vector(rect.Right, rect.Bottom - qh),
+          new Vector(rect.Right - qw, rect.Bottom), new Vector(rect.Left + qw, rect.Bottom)
         };
       }
       else
       {
         vertices = new[] {
-          new PointF(rect.Left, rect.Top), new PointF(rect.Right, rect.Top),
-          new PointF(rect.Right, rect.Bottom), new PointF(rect.Left, rect.Bottom)
+          new Vector(rect.Left, rect.Top), new Vector(rect.Right, rect.Top),
+          new Vector(rect.Right, rect.Bottom), new Vector(rect.Left, rect.Bottom)
         };
       }
 
-      outline = handDrawn ? Sketch.Polygon(vertices, random) : vertices;
+      outline = (handDrawn ? Sketch.Polygon(vertices, random) : vertices).ToPointFArray();
     }
 
     graph.DrawPolygon(pen, outline);

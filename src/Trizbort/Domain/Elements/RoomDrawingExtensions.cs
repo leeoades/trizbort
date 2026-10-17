@@ -214,7 +214,6 @@ public static class RoomDrawingExtensions
 
   public static void AddOutline(this Room room, XGraphicsPath path, Rect bounds, bool handDrawn)
   {
-    var rect = new RectangleF(bounds.X, bounds.Y, bounds.Width, bounds.Height);
     var random = Sketch.Seeded(room.Id);
 
     if (room.Shape == RoomShape.RoundedCorners)
@@ -223,12 +222,12 @@ public static class RoomDrawingExtensions
       {
         path.AddPolygon(Sketch.ClosedCurve(
           Sketch.RoundedRectangle(
-            rect,
+            bounds,
             room.Corners.TopLeft,
             room.Corners.TopRight,
             room.Corners.BottomRight,
             room.Corners.BottomLeft),
-          random));
+          random).ToPointFArray());
         return;
       }
 
@@ -247,35 +246,35 @@ public static class RoomDrawingExtensions
     {
       if (handDrawn)
       {
-        path.AddPolygon(Sketch.ClosedCurve(Sketch.Ellipse(rect), random));
+        path.AddPolygon(Sketch.ClosedCurve(Sketch.Ellipse(bounds), random).ToPointFArray());
         return;
       }
 
-      path.AddEllipse(rect);
+      path.AddEllipse(bounds.ToRectangleF());
       return;
     }
 
-    PointF[] vertices;
+    Vector[] vertices;
     if (room.Octagonal)
     {
-      var qw = rect.Width / 4;
-      var qh = rect.Height / 4;
+      var qw = bounds.Width / 4;
+      var qh = bounds.Height / 4;
       vertices = new[] {
-        new PointF(rect.Left, rect.Bottom - qh), new PointF(rect.Left, rect.Top + qh),
-        new PointF(rect.Left + qw, rect.Top), new PointF(rect.Right - qw, rect.Top),
-        new PointF(rect.Right, rect.Top + qh), new PointF(rect.Right, rect.Bottom - qh),
-        new PointF(rect.Right - qw, rect.Bottom), new PointF(rect.Left + qw, rect.Bottom)
+        new Vector(bounds.Left, bounds.Bottom - qh), new Vector(bounds.Left, bounds.Top + qh),
+        new Vector(bounds.Left + qw, bounds.Top), new Vector(bounds.Right - qw, bounds.Top),
+        new Vector(bounds.Right, bounds.Top + qh), new Vector(bounds.Right, bounds.Bottom - qh),
+        new Vector(bounds.Right - qw, bounds.Bottom), new Vector(bounds.Left + qw, bounds.Bottom)
       };
     }
     else
     {
       vertices = new[] {
-        new PointF(rect.Left, rect.Top), new PointF(rect.Right, rect.Top),
-        new PointF(rect.Right, rect.Bottom), new PointF(rect.Left, rect.Bottom)
+        new Vector(bounds.Left, bounds.Top), new Vector(bounds.Right, bounds.Top),
+        new Vector(bounds.Right, bounds.Bottom), new Vector(bounds.Left, bounds.Bottom)
       };
     }
 
-    path.AddPolygon(handDrawn ? Sketch.Polygon(vertices, random) : vertices);
+    path.AddPolygon(handDrawn ? Sketch.Polygon(vertices, random).ToPointFArray() : vertices.ToPointFArray());
   }
 
   private static void CreateRoomPath(this Room room, XGraphicsPath path, LineSegment top, LineSegment left)

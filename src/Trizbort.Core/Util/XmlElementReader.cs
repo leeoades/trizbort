@@ -126,6 +126,7 @@ public class XmlElementReader
 
   public Color ToColor(Color defaultValue)
   {
+    if (string.IsNullOrEmpty(Text)) return defaultValue;
     try
     {
       return ColorTranslator.FromHtml(Text);

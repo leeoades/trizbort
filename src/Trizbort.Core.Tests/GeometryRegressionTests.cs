@@ -142,6 +142,83 @@ public class GeometryRegressionTests : IsolatedProjectTests
   }
 
   [Test]
+  public void Vector_ArithmeticAndEquality_BehaveAsExpected()
+  {
+    var a = new Vector(3, 4);
+    var b = new Vector(1, 2);
+
+    (a + b).ShouldBe(new Vector(4, 6));
+    (a - b).ShouldBe(new Vector(2, 2));
+    (a * 2f).ShouldBe(new Vector(6, 8));
+    (2f * a).ShouldBe(new Vector(6, 8));
+    (a / 2f).ShouldBe(new Vector(1.5f, 2f));
+    (a + 1f).ShouldBe(new Vector(4, 5));
+    (a - 1f).ShouldBe(new Vector(2, 3));
+
+    a.LengthSquared.ShouldBe(25f);
+    a.Length.ShouldBe(5f);
+    a.Dot(b).ShouldBe(11f);
+    Vector.Dot(a, b).ShouldBe(11f);
+    Vector.Distance(a, b).ShouldBe((float)Math.Sqrt(4 + 4), 0.001f);
+    a.Distance(b).ShouldBe((float)Math.Sqrt(8), 0.001f);
+
+    var abs = new Vector(-5, -10).Abs();
+    abs.X.ShouldBe(5f);
+    abs.Y.ShouldBe(10f);
+
+    (new Vector(3, 4) == new Vector(3, 4)).ShouldBeTrue();
+    (new Vector(3, 4) != new Vector(3, 5)).ShouldBeTrue();
+    new Vector(3, 4).Equals(new Vector(3, 4)).ShouldBeTrue();
+    new Vector(3, 4).Equals("string").ShouldBeFalse();
+  }
+
+  [Test]
+  public void Vector_DistanceFromLineAndRect_CalculatesExactDistances()
+  {
+    var line = new LineSegment(new Vector(0, 0), new Vector(10, 0));
+    new Vector(5, 5).DistanceFromLineSegment(line).ShouldBe(5f, 0.001f);
+    new Vector(-5, 0).DistanceFromLineSegment(line).ShouldBe(5f, 0.001f);
+    new Vector(15, 0).DistanceFromLineSegment(line).ShouldBe(5f, 0.001f);
+
+    var rect = new Rect(0, 0, 10, 10);
+    new Vector(5, 5).DistanceFromRect(rect).ShouldBe(0f);
+    new Vector(-5, 5).DistanceFromRect(rect).ShouldBe(5f, 0.001f);
+    new Vector(15, 5).DistanceFromRect(rect).ShouldBe(5f, 0.001f);
+  }
+
+  [Test]
+  public void LineSegment_ForshortenAndReverse_ModifyEndpointsCorrectly()
+  {
+    var segment = new LineSegment(new Vector(0, 0), new Vector(10, 0));
+    segment.Delta.ShouldBe(new Vector(10, 0));
+    segment.Mid.ShouldBe(new Vector(5, 0));
+
+    segment.Reverse();
+    segment.Start.ShouldBe(new Vector(10, 0));
+    segment.End.ShouldBe(new Vector(0, 0));
+
+    segment.Reverse();
+    segment.Forshorten(2f).ShouldBeTrue();
+    segment.Start.ShouldBe(new Vector(2, 0));
+    segment.End.ShouldBe(new Vector(10, 0));
+    segment.Length.ShouldBe(8f, 0.001f);
+  }
+
+  [Test]
+  public void Sketch_PolylineAndNearest_CalculatePointsAccurately()
+  {
+    var polyline = new[] { new Vector(0, 0), new Vector(50, 0), new Vector(100, 0) };
+    var sketched = Sketch.Polyline(polyline, Sketch.Seeded(123));
+    sketched.Length.ShouldBeGreaterThan(polyline.Length);
+    sketched[0].ShouldBe(polyline[0]);
+    sketched[sketched.Length - 1].ShouldBe(polyline[polyline.Length - 1]);
+
+    var nearest = Sketch.Nearest(polyline, new Vector(48, 1), out var dir);
+    nearest.ShouldBe(new Vector(50, 0));
+    dir.X.ShouldBeGreaterThan(0);
+  }
+
+  [Test]
   public void BoundList_AddRemoveAndReversePublishNotificationsInOrder()
   {
     var list = new BoundList<int>();

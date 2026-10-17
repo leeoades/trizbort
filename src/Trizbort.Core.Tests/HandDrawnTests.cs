@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -138,8 +137,8 @@ public class HandDrawnTests
   [TestCase(400f)]
   public void SketchedLine_KeepsEndpoints_AndStaysCloseToTheStraightLine(float length)
   {
-    var start = new PointF(10, 20);
-    var end = new PointF(10 + length, 20);
+    var start = new Vector(10, 20);
+    var end = new Vector(10 + length, 20);
     var points = Sketch.Line(start, end, Sketch.Seeded(42));
 
     points.First().ShouldBe(start);
@@ -152,7 +151,7 @@ public class HandDrawnTests
   [Test]
   public void SketchedShapes_AreDeterministic_AndStayNearTheOutline()
   {
-    var rect = new RectangleF(0, 0, 96, 64);
+    var rect = new Rect(0, 0, 96, 64);
     var ellipse = Sketch.ClosedCurve(Sketch.Ellipse(rect), Sketch.Seeded(7));
     Sketch.ClosedCurve(Sketch.Ellipse(rect), Sketch.Seeded(7)).ShouldBe(ellipse);
 

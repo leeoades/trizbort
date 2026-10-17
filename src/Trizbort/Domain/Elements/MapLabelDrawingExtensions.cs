@@ -96,31 +96,31 @@ public static class MapLabelDrawingExtensions
 
   public static PointF[] CreateSketchOutline(this MapLabel label)
   {
-    var rect = label.InnerBounds.ToRectangleF();
+    var rect = label.InnerBounds;
     var random = Sketch.Seeded(label.Id);
     if (label.Shape == RoomShape.Ellipse)
-      return Sketch.ClosedCurve(Sketch.Ellipse(rect), random);
+      return Sketch.ClosedCurve(Sketch.Ellipse(rect), random).ToPointFArray();
     if (label.Shape == RoomShape.RoundedCorners)
     {
       var radius = Math.Min(30, Math.Min(label.Width, label.Height)) / 2;
-      return Sketch.ClosedCurve(Sketch.RoundedRectangle(rect, radius, radius, radius, radius), random);
+      return Sketch.ClosedCurve(Sketch.RoundedRectangle(rect, radius, radius, radius, radius), random).ToPointFArray();
     }
 
     if (label.Shape == RoomShape.Octagonal)
       return Sketch.Polygon(
         new[] {
-          new PointF(label.X + label.Width / 4, label.Y), new PointF(label.X + label.Width * 3 / 4, label.Y),
-          new PointF(label.X + label.Width, label.Y + label.Height / 4), new PointF(label.X + label.Width, label.Y + label.Height * 3 / 4),
-          new PointF(label.X + label.Width * 3 / 4, label.Y + label.Height), new PointF(label.X + label.Width / 4, label.Y + label.Height),
-          new PointF(label.X, label.Y + label.Height * 3 / 4), new PointF(label.X, label.Y + label.Height / 4)
+          new Vector(label.X + label.Width / 4, label.Y), new Vector(label.X + label.Width * 3 / 4, label.Y),
+          new Vector(label.X + label.Width, label.Y + label.Height / 4), new Vector(label.X + label.Width, label.Y + label.Height * 3 / 4),
+          new Vector(label.X + label.Width * 3 / 4, label.Y + label.Height), new Vector(label.X + label.Width / 4, label.Y + label.Height),
+          new Vector(label.X, label.Y + label.Height * 3 / 4), new Vector(label.X, label.Y + label.Height / 4)
         },
-        random);
+        random).ToPointFArray();
     return Sketch.Polygon(
       new[] {
-        new PointF(rect.Left, rect.Top), new PointF(rect.Right, rect.Top),
-        new PointF(rect.Right, rect.Bottom), new PointF(rect.Left, rect.Bottom)
+        new Vector(rect.Left, rect.Top), new Vector(rect.Right, rect.Top),
+        new Vector(rect.Right, rect.Bottom), new Vector(rect.Left, rect.Bottom)
       },
-      random);
+      random).ToPointFArray();
   }
 
   public static void ShowDialog(this MapLabel label)

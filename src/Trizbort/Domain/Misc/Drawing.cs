@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using PdfSharp.Drawing;
 using Trizbort.Domain.Elements;
@@ -36,9 +38,14 @@ internal static class Drawing
   public static void AddLine(XGraphicsPath path, LineSegment segment, Random random, bool straightEdges)
   {
     if (!straightEdges)
-      path.AddLines(Sketch.Line(segment.Start.ToPointF(), segment.End.ToPointF(), random));
+      path.AddLines(Sketch.Line(segment.Start, segment.End, random).ToPointFArray());
     else
       path.AddLine(segment.Start.ToPointF(), segment.End.ToPointF());
+  }
+
+  public static PointF[] ToPointFArray(this IEnumerable<Vector> vectors)
+  {
+    return vectors.Select(v => v.ToPointF()).ToArray();
   }
 
   public static PointF Divide(PointF pos, float scalar)
