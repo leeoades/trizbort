@@ -6,28 +6,35 @@ See [`README.md`](README.md) for the doc map. Read this before touching
 
 ## Current state
 
+- `src/Trizbort.Core/Trizbort.Core.csproj` — SDK-style, `net8.0`, pure class library without Windows Forms dependencies. Contains domain elements, automap logic, exporters, math/geometry primitives, and serialization engines. Cross-platform.
+- `src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj` — SDK-style, `net8.0`, headless test suite running on any OS.
 - `src/Trizbort/Trizbort.csproj` — SDK-style, `net8.0-windows`, `UseWindowsForms=true`, `PackageReference`s
   (no more `packages.config`). **No `PlatformTarget=x86`** (removed — see below); builds
   AnyCPU/x64 by default.
 - `src/Trizbort.Tests/Trizbort.Tests.csproj` — SDK-style, `net8.0-windows`, `Microsoft.NET.Test.Sdk`
   + NUnit 3.14.0 + NUnit3TestAdapter 4.6.0 + NUnit.Analyzers + Shouldly + FluentAssertions.
-- Automated tests are included in the root solution. Build and run the full solution with:
-  ```
-  dotnet build Trizbort.sln -c Debug
-  dotnet test Trizbort.sln -c Debug
-  ```
+- Automated tests:
+  - **Cross-Platform Core Tests**: Run `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`.
+  - **Full Solution**: On Windows, build and test the complete solution with:
+    ```
+    dotnet build Trizbort.sln -c Debug
+    dotnet test Trizbort.sln -c Debug
+    ```
 - To build or test one project directly:
   ```
-  dotnet build src\Trizbort\Trizbort.csproj -c Debug
-  dotnet test src\Trizbort.Tests\Trizbort.Tests.csproj -c Debug
+  dotnet build src/Trizbort.Core/Trizbort.Core.csproj -c Debug
+  dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj -c Debug
+  dotnet build src/Trizbort/Trizbort.csproj -c Debug
+  dotnet test src/Trizbort.Tests/Trizbort.Tests.csproj -c Debug
   ```
-- Manual map fixtures and runners are in `tests\manual`. Map files and batch runners are copied
+- Immediate Commit Rule:
+  - When making a change, once it is fixed up, building, and tests pass, **commit those changes immediately**.
+  - **Do NOT** accumulate a working directory of unrelated changes across different components or domains.
+  - Exclude `.junie/` and user-specific files (`*.DotSettings.user`) from git commits.
+- Manual map fixtures and runners are in `tests/manual/`. Map files and batch runners are copied
   into the test output for automated round-trip/reference checks; visual scenarios still need
   inspection. Sample maps/transcripts remain in the root `samples` directory.
-- This is still a **Windows Forms, Windows-only application**. Porting the runtime from .NET
-  Framework 4.8 to .NET 8 did **not** make it cross-platform — WinForms-on-.NET-Core remains
-  Windows-only by design. True cross-platform would require a separate UI rewrite (e.g. Avalonia
-  UI), not covered by this port.
+- The `Trizbort` GUI remains a **Windows Forms, Windows-only application**. The extracted `Trizbort.Core` library, however, is fully cross-platform and ready to be consumed by new non-Windows frontends (e.g., Avalonia, MAUI, CLI, Web/Blazor).
 
 ## Gotchas encountered during the port (read before repeating this work elsewhere)
 
@@ -58,11 +65,16 @@ downloaded manually from the repository.
 
 ### 4. Keep project boundaries explicit
 
-The application and automated tests now live in separate project roots:
-`src/Trizbort/` and `src/Trizbort.Tests/`. SDK-style implicit globs are relative to each
-project directory, so manual fixtures/scripts in `tests/manual/` and root-level assets are not
-compiled into the app project. Keep future project-specific source/resources under that
-project's directory and add intentional cross-project dependencies with `ProjectReference`.
+The codebase is split into four distinct project roots:
+- `src/Trizbort.Core/`: Portable domain, automap, geometry, settings, and exporters (`net8.0`).
+- `src/Trizbort.Core.Tests/`: Cross-platform unit tests (`net8.0`).
+- `src/Trizbort/`: Windows Forms UI host (`net8.0-windows`).
+- `src/Trizbort.Tests/`: WinForms UI and integration tests (`net8.0-windows`).
+
+SDK-style implicit globs are relative to each project directory, so manual fixtures/scripts in
+`tests/manual/` and root-level assets are not compiled into the projects. Keep future
+project-specific source/resources under that project's directory and add intentional
+cross-project dependencies with `ProjectReference`.
 
 ### 5. `GenerateAssemblyInfo` vs. a committed `AssemblyInfo.cs`
 

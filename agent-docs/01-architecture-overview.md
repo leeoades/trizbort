@@ -7,13 +7,10 @@ avoids deep detail — follow the links to the topic docs for specifics.
 
 | Folder | Role |
 |---|---|
-| `src/Trizbort/` | Application project root: `Trizbort.csproj`, entry point/configuration, and the source folders below. |
-| `src/Trizbort/Domain/` | Core application/document model: elements (rooms/labels/connections), project state, persistence engines, app-wide settings, controllers/commands, geometry/drawing primitives, enums. Some domain drawing code uses `System.Drawing`/`PdfSharp.Drawing` directly. |
-| `src/Trizbort/UI/` | WinForms forms/dialogs and the `Canvas` control (map drawing surface + input handling). Talks to `Domain` via controllers and direct `Project.Current` access. |
-| `src/Trizbort/Automap/` | Transcript parser that creates `Room`/`Connection` objects. Uses `IAutomapCanvas` for map mutations, but also directly depends on WinForms (`AutomapRoomSameDirectionDialog`, `MessageBox`). |
-| `src/Trizbort/Export/` | IF-language exporters via a shared `CodeExporter` base class. Image/PDF export live in `UI/MainForm.cs`. |
-| `src/Trizbort/Util/`, `Extensions/`, `Properties/`, `Setup/`, `Images/` | Shared helpers, extension methods, generated settings/resources, setup wizard, and UI assets. |
-| `src/Trizbort.Tests/` | NUnit automated-test project, included in the root `Trizbort.sln`. |
+| `src/Trizbort.Core/` | Standalone, platform-neutral domain class library (`net8.0`). Contains core domain models (`Room`, `Connection`, `Door`, `MapLabel`), `Project`, automap engine, exporters, geometry/math primitives (`Vector`, `Rect`, `LineSegment`), settings/themes metadata, commands, and XML persistence utilities. |
+| `src/Trizbort.Core.Tests/` | Standalone headless unit test suite (`net8.0`). Validates pure domain logic, automap parsing, exporters, math, and serialization cross-platform. |
+| `src/Trizbort/` | Windows desktop application project root (`net8.0-windows`): WinForms forms/dialogs, entry point/configuration, GDI+ rendering pipeline, drawing extension adapters, and the `Canvas` control. |
+| `src/Trizbort.Tests/` | WinForms-specific and UI integration test project (`net8.0-windows`), included in the root `Trizbort.sln`. |
 | `tests/manual/` | Manual `.trizbort` fixtures and batch/script runners; these are not automated tests. |
 | `samples/` | Sample maps/transcripts. |
 | `legacy/vendor/` | Preserved legacy DLLs not referenced by the current SDK-style project. |
@@ -23,11 +20,12 @@ avoids deep detail — follow the links to the topic docs for specifics.
 ## Layering / call direction
 
 ```
-UI (MainForm, dialogs, Canvas)
-   │  menu/keyboard/mouse events
+UI (MainForm, dialogs, Canvas in src/Trizbort/)
+   │  menu/keyboard/mouse events, GDI+ drawing extensions
    ▼
+Trizbort.Core:
 Domain.Controllers (CommandController, CanvasController, RoomController, CopyController, ElementController)
-   │  thin façade, some direct Project/Canvas mutation too
+   │  façade layer
    ▼
 Domain (Project, Element/Room/MapLabel/Connection, AppSettings, MapLoader/MapSaver)
    │
@@ -37,12 +35,10 @@ Util (XmlScribe/XmlElementReader for persistence; misc helpers)
 
 Two things cut across this layering rather than flowing through it:
 
-- **Automap** (`Automap\Automap.cs`) mutates `Project.Current.Elements` directly through the
-  `IAutomapCanvas` abstraction implemented by `Canvas.Automap.cs` — it does not go through
-  `Domain.Controllers`. It also depends on WinForms directly (`AutomapRoomSameDirectionDialog`,
-  `MessageBox`) rather than going through `IAutomapCanvas` for everything.
-- **Export** (`Export\CodeExporter` + `Export\Languages\*`) only *reads* `Project.Current.Elements`
-  — it never mutates the project.
+- **Automap** (`Automap\Automap.cs` in `Trizbort.Core`) mutates `Project.Current.Elements` through the
+  `IAutomapCanvas` abstraction implemented headlessly by `AutomapCanvas` and in WinForms by `Canvas.Automap.cs`.
+- **Export** (`Export\CodeExporter` + `Export\Languages\*` in `Trizbort.Core`) only *reads* `Project.Current.Elements`
+  — it never mutates the project. Image/PDF visual exports are hosted in the UI client (`UI/MainForm.cs`).
 
 ## The central data structure
 

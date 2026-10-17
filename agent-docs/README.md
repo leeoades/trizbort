@@ -11,10 +11,11 @@ codebase (or the whole doc set) into context.
 
 ## What Trizbort is
 
-Trizbort is a Windows desktop app (WinForms, **.NET 8**, Windows-only) for drawing maps of
-Interactive Fiction (text adventure) games, and exporting those maps either as images/PDF or
-as skeleton source code for IF authoring systems (Inform 6/7, TADS, Hugo, ZIL, Alan, Quest,
-Adventuron). It can also auto-generate a map by parsing a game transcript ("Automap").
+Trizbort consists of a standalone, cross-platform core library (`Trizbort.Core`, **.NET 8**) and a
+Windows desktop frontend (WinForms, `net8.0-windows`) for drawing maps of Interactive Fiction
+(text adventure) games, and exporting those maps either as images/PDF or as skeleton source code
+for IF authoring systems (Inform 6/7, TADS, Hugo, ZIL, Alan, Quest, Adventuron). It can also
+auto-generate a map by parsing a game transcript ("Automap").
 
 ## How to use this doc set
 
@@ -27,8 +28,12 @@ Adventuron). It can also auto-generate a map by parsing a game transcript ("Auto
 4. If you change architecture in a way that invalidates one of these docs (new file format,
    new exporter, new settings system, restructured controllers, etc.), **update the relevant
    sub-document in the same change**. Stale docs are worse than no docs.
+5. **Immediate Commit Rule**: When making a change, once it is fixed up, building, and tests pass,
+   **commit those changes immediately**. Do not build up a working directory of unrelated changes
+   across different components or domains.
 
-Source paths shown without a repository prefix are relative to `src/Trizbort/`. Paths explicitly
+Source paths for domain logic, exporters, automap, and persistence are relative to `src/Trizbort.Core/`.
+UI, Canvas, and WinForms adapter paths are relative to `src/Trizbort/`. Paths explicitly
 prefixed with `tests/`, `samples/`, `Docs/`, or `agent-docs/` are relative to the repository root.
 
 ## Map of sub-documents
@@ -69,11 +74,12 @@ convert `Project.Elements` into IF-language source code via a shared `CodeExport
 
 - **UI framework**: Windows Forms (not WPF/UWP). Confirmed Windows-only; porting the runtime
   to .NET 8 did **not** make it cross-platform (see `09-build-test-and-dotnet8-port.md`).
-- **Target framework**: `net8.0-windows`, SDK-style `src/Trizbort/Trizbort.csproj`, as of the .NET 8 port
-  spike. Previously `.NET Framework 4.8`, legacy `packages.config`-based project.
-- **Tests**: `src/Trizbort.Tests` (NUnit3 + Shouldly + FluentAssertions), included in
-  `Trizbort.sln`. Run with `dotnet test Trizbort.sln`; manual map fixtures and scripts are in
-  `tests/manual/`.
+- **Target frameworks & layout**:
+  - `src/Trizbort.Core/`: SDK-style `net8.0`, platform-neutral core class library.
+  - `src/Trizbort.Core.Tests/`: SDK-style `net8.0`, headless cross-platform test runner.
+  - `src/Trizbort/`: SDK-style `net8.0-windows`, Windows Forms UI client.
+  - `src/Trizbort.Tests/`: SDK-style `net8.0-windows`, UI-bound integration tests.
+- **Tests**: Run pure core unit tests cross-platform with `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`. Full solution tests require a Windows environment (`dotnet test Trizbort.sln`). Manual map fixtures and scripts are in `tests/manual/`.
 - **PDF export**: `PDFsharp-GDI` 6.2.4 NuGet package (not the older vendored/legacy
   `PDFsharp-gdi` 1.x).
 - **No undo/redo exists anywhere in the codebase.** Don't assume one when reasoning about
