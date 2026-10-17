@@ -480,33 +480,32 @@ internal partial class RoomPropertiesDialog : Form
 
   private void ChangeObjectTextColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) ObjectTextColor = Colors.ShowColorDialog(ObjectTextColor, this);
+    if (_tabControl.SelectedTab == _tabColors) ObjectTextColor = ColorDialogHelper.ShowColorDialog(ObjectTextColor, this);
   }
 
   private void ChangeRoomBorderColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) RoomBorderColor = Colors.ShowColorDialog(RoomBorderColor, this);
+    if (_tabControl.SelectedTab == _tabColors) RoomBorderColor = ColorDialogHelper.ShowColorDialog(RoomBorderColor, this);
   }
 
   private void ChangeRoomFillColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) RoomFillColor = Colors.ShowColorDialog(RoomFillColor, this);
+    if (_tabControl.SelectedTab == _tabColors) RoomFillColor = ColorDialogHelper.ShowColorDialog(RoomFillColor, this);
   }
 
   private void ChangeRoomTextColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) RoomNameColor = Colors.ShowColorDialog(RoomNameColor, this);
+    if (_tabControl.SelectedTab == _tabColors) RoomNameColor = ColorDialogHelper.ShowColorDialog(RoomNameColor, this);
   }
 
-  // Added for Room specific colors
   private void ChangeSecondFillColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) SecondFillColor = Colors.ShowColorDialog(SecondFillColor, this);
+    if (_tabControl.SelectedTab == _tabColors) SecondFillColor = ColorDialogHelper.ShowColorDialog(SecondFillColor, this);
   }
 
   private void ChangeSubtitleColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) RoomSubtitleColor = Colors.ShowColorDialog(RoomSubtitleColor, this);
+    if (_tabControl.SelectedTab == _tabColors) RoomSubtitleColor = ColorDialogHelper.ShowColorDialog(RoomSubtitleColor, this);
   }
 
   private void ChkCornersSameCheckedChanged(object sender, EventArgs e)

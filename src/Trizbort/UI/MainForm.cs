@@ -113,7 +113,7 @@ public partial class MainForm : Form
 
   private void AppSettingsToolStripMenuItemClick(object sender, EventArgs e)
   {
-    ApplicationSettingsController.ShowAppDialog();
+    AppSettingsDialog.ShowAppDialog();
   }
 
   private void AutomapStartMenuItem_Click(object sender, EventArgs e)
@@ -734,7 +734,7 @@ public partial class MainForm : Form
 
   private void ProjectSettingsMenuItem_Click(object sender, EventArgs e)
   {
-    Settings.ShowMapDialog();
+    SettingsDialog.ShowMapDialog();
     Canvas.Refresh();
   }
 

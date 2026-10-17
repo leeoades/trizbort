@@ -120,7 +120,7 @@ public partial class ConnectionPropertiesDialog : Form
 
   private void ChangeConnectionColor()
   {
-    ConnectionColor = Colors.ShowColorDialog(ConnectionColor, this);
+    ConnectionColor = ColorDialogHelper.ShowColorDialog(ConnectionColor, this);
   }
 
   private void ChkDoorCheckedChanged(object sender, EventArgs e)

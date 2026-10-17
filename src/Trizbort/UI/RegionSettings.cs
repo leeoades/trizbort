@@ -30,13 +30,13 @@ public partial class RegionSettings : Form
 
   private void BtnRegionColorClick(object sender, EventArgs e)
   {
-    RegionToChange.RColor = Colors.ShowColorDialog(RegionToChange.RColor, this);
+    RegionToChange.RColor = ColorDialogHelper.ShowColorDialog(RegionToChange.RColor, this);
     RefreshColorPanel();
   }
 
   private void BtnRegionTextColorClick(object sender, EventArgs e)
   {
-    RegionToChange.TextColor = Colors.ShowColorDialog(RegionToChange.TextColor, this);
+    RegionToChange.TextColor = ColorDialogHelper.ShowColorDialog(RegionToChange.TextColor, this);
     RefreshColorPanel();
   }
 

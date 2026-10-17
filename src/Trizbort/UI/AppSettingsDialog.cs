@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using Trizbort.Domain.AppSettings;
 
 namespace Trizbort.UI;
 
@@ -8,6 +9,59 @@ public partial class AppSettingsDialog : Form
   public AppSettingsDialog()
   {
     InitializeComponent();
+  }
+
+  public static void ShowAppDialog()
+  {
+    var appSettings = ApplicationSettingsController.AppSettings;
+    using var dialog = new AppSettingsDialog();
+    dialog.InvertMouseWheel = appSettings.InvertMouseWheel;
+    dialog.ShowFullPathInTitleBar = appSettings.ShowFullPathInTitleBar;
+    dialog.DefaultFontName = appSettings.DefaultFontName;
+    dialog.DefaultImageType = appSettings.DefaultImageType;
+    dialog.PortAdjustDetail = appSettings.PortAdjustDetail;
+    dialog.SaveToImage = appSettings.SaveToImage;
+    dialog.SaveToPDF = appSettings.SaveToPDF;
+    dialog.SaveTadsToAdv3Lite = appSettings.SaveTadstoAdv3Lite;
+    dialog.SaveAt100 = appSettings.SaveAt100;
+    dialog.SpecifyGenMargins = appSettings.SpecifyGenMargins;
+    dialog.GenHorizontalMargin = appSettings.GenHorizontalMargin;
+    dialog.GenVerticalMargin = appSettings.GenVerticalMargin;
+    dialog.LoadLastProjectOnStart = appSettings.LoadLastProjectOnStart;
+    dialog.ApplyStyleToNewRooms = appSettings.ApplyStyleToNewRooms;
+    dialog.DoubleClickToAddRoom = appSettings.DoubleClickToAddRoom;
+    dialog.ShowDescriptionsInTooltip = appSettings.ShowDescriptionsInTooltips;
+    dialog.ShowObjectsInTooltip = appSettings.ShowObjectsInTooltips;
+    dialog.LimitConnectionDescriptionCharactersInTooltip = appSettings.LimitConnectionDescriptionCharactersInTooltip;
+    dialog.ToolTipConnectionDescriptionCharactersToShow = appSettings.ToolTipConnectionDescriptionCharactersToShow;
+    dialog.LimitRoomDescriptionCharactersInTooltip = appSettings.LimitRoomDescriptionCharactersInTooltip;
+    dialog.ToolTipRoomDescriptionCharactersToShow = appSettings.ToolTipRoomDescriptionCharactersToShow;
+
+    if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
+    {
+      appSettings.InvertMouseWheel = dialog.InvertMouseWheel;
+      appSettings.ShowFullPathInTitleBar = dialog.ShowFullPathInTitleBar;
+      appSettings.DefaultFontName = dialog.DefaultFontName;
+      appSettings.DefaultImageType = dialog.DefaultImageType;
+      appSettings.PortAdjustDetail = dialog.PortAdjustDetail;
+      appSettings.SaveAt100 = dialog.SaveAt100;
+      appSettings.SaveToImage = dialog.SaveToImage;
+      appSettings.SaveToPDF = dialog.SaveToPDF;
+      appSettings.SaveTadstoAdv3Lite = dialog.SaveTadsToAdv3Lite;
+      appSettings.SpecifyGenMargins = dialog.SpecifyGenMargins;
+      appSettings.GenHorizontalMargin = (int)dialog.GenHorizontalMargin;
+      appSettings.GenVerticalMargin = (int)dialog.GenVerticalMargin;
+      appSettings.LoadLastProjectOnStart = dialog.LoadLastProjectOnStart;
+      appSettings.ApplyStyleToNewRooms = dialog.ApplyStyleToNewRooms;
+      appSettings.DoubleClickToAddRoom = dialog.DoubleClickToAddRoom;
+      appSettings.ShowDescriptionsInTooltips = dialog.ShowDescriptionsInTooltip;
+      appSettings.ShowObjectsInTooltips = dialog.ShowObjectsInTooltip;
+      appSettings.ToolTipConnectionDescriptionCharactersToShow = dialog.ToolTipConnectionDescriptionCharactersToShow;
+      appSettings.LimitConnectionDescriptionCharactersInTooltip = dialog.LimitConnectionDescriptionCharactersInTooltip;
+      appSettings.ToolTipRoomDescriptionCharactersToShow = dialog.ToolTipRoomDescriptionCharactersToShow;
+      appSettings.LimitRoomDescriptionCharactersInTooltip = dialog.LimitRoomDescriptionCharactersInTooltip;
+      ApplicationSettingsController.SaveSettings();
+    }
   }
 
   public string DefaultFontName {

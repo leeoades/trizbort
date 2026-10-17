@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Shouldly;
-using Trizbort.Domain.Application;
+using Trizbort.UI;
 
 namespace Trizbort.Tests;
 
@@ -21,7 +21,7 @@ public class NamingConventionTests
   [TestCase(true)]
   public void Members_UseModernNamingConventions(bool testAssembly)
   {
-    var assembly = testAssembly ? typeof(NamingConventionTests).Assembly : typeof(Project).Assembly;
+    var assembly = testAssembly ? typeof(NamingConventionTests).Assembly : typeof(MainForm).Assembly;
     var violations = new List<string>();
     foreach (var type in assembly.GetTypes().Where(type =>
                !type.IsDefined(typeof(CompilerGeneratedAttribute), false) &&

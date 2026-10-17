@@ -340,7 +340,7 @@ public class UserInteractionTests : IsolatedProjectTests
   {
     _interaction.Result = result;
     _interaction.EditCommonDialog = dialog => dialog.ShouldBeOfType<ColorDialog>().Color = Color.Blue;
-    Colors.ShowColorDialog(Color.Red, null).ShouldBe(result == DialogResult.OK ? Color.Blue : Color.Red);
+    ColorDialogHelper.ShowColorDialog(Color.Red, null).ShouldBe(result == DialogResult.OK ? Color.Blue : Color.Red);
   }
 
   [Test]

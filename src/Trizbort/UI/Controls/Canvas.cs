@@ -112,7 +112,7 @@ public partial class Canvas : UserControl, IAutomapCanvas
 
       if (HoverPort is MoveablePort) return Drawing.MoveLineCursor;
 
-      var cursor = HoverHandle?.Cursor;
+      var cursor = HoverHandle?.GetCursor();
       if (cursor != null) return cursor;
 
       if (HoverElement is IMoveable && _selectedElements.Contains(HoverElement)) return Cursors.SizeAll;
@@ -1664,12 +1664,12 @@ public partial class Canvas : UserControl, IAutomapCanvas
   private void AddOrSelectRooms(CompassPoint? compassPoint)
   {
     if (compassPoint != null && !SelectRoomRelativeToSelectedRoom(compassPoint.Value))
-      if (ModifierKeys == Settings.KeypadNavigationCreationModifier)
+      if (ModifierKeys.ToModifierKeys() == Settings.KeypadNavigationCreationModifier)
       {
         AddOrConnectRoomRelativeToSelectedRoom(compassPoint.Value);
         SelectRoomRelativeToSelectedConnection(compassPoint.Value);
       }
-      else if (ModifierKeys == Settings.KeypadNavigationUnexploredModifier)
+      else if (ModifierKeys.ToModifierKeys() == Settings.KeypadNavigationUnexploredModifier)
       {
         AddUnexploredConnectionToSelectedRoom(compassPoint.Value);
       }
@@ -1695,7 +1695,7 @@ public partial class Canvas : UserControl, IAutomapCanvas
 
   private void ApplicationSettingsToolStripMenuItemClick(object sender, EventArgs e)
   {
-    ApplicationSettingsController.ShowAppDialog();
+    AppSettingsDialog.ShowAppDialog();
   }
 
   private void BeginDragDrawLine()
@@ -2566,7 +2566,7 @@ public partial class Canvas : UserControl, IAutomapCanvas
 
   private void MapSettingsToolStripMenuItemClick(object sender, EventArgs e)
   {
-    Settings.ShowMapDialog();
+    SettingsDialog.ShowMapDialog();
     Refresh();
   }
 
