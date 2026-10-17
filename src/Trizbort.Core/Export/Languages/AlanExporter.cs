@@ -9,7 +9,7 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages;
 
-internal class AlanExporter : CodeExporter
+public class AlanExporter : CodeExporter
 {
   public override string FileDialogTitle => "Export Alan Source Code";
 

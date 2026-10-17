@@ -13,7 +13,7 @@ using Trizbort.Extensions;
 
 namespace Trizbort.Export.Languages;
 
-internal class Inform6Exporter : CodeExporter
+public class Inform6Exporter : CodeExporter
 {
   private const char SingleQuote = '\'';
   private const char DoubleQuote = '"';

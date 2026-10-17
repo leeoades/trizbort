@@ -10,7 +10,7 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages;
 
-internal class QuestRoomsExporter : CodeExporter
+public class QuestRoomsExporter : CodeExporter
 {
   public override List<KeyValuePair<string, string>> FileDialogFilters => new() {
     new KeyValuePair<string, string>("Quest Source Files", ".aslx"),
@@ -172,7 +172,7 @@ internal class QuestRoomsExporter : CodeExporter
   }
 }
 
-internal class QuestExporter : QuestRoomsExporter
+public class QuestExporter : QuestRoomsExporter
 {
   public override string FileDialogTitle => "Export Quest Source Code";
 

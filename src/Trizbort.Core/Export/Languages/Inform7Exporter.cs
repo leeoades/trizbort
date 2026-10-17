@@ -11,7 +11,7 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages;
 
-internal class Inform7Exporter : CodeExporter
+public class Inform7Exporter : CodeExporter
 {
   public override List<KeyValuePair<string, string>> FileDialogFilters => new() {
     new KeyValuePair<string, string>("Inform 7 Projects", ".inform"),

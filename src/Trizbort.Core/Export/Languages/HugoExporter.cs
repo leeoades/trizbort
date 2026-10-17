@@ -10,7 +10,7 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages;
 
-internal class HugoExporter : CodeExporter
+public class HugoExporter : CodeExporter
 {
   private const char SingleQuote = '\'';
   private const char DoubleQuote = '"';

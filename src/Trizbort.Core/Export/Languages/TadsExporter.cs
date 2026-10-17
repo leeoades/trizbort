@@ -11,7 +11,7 @@ using Trizbort.Export.Domain;
 
 namespace Trizbort.Export.Languages;
 
-internal class TadsExporter : CodeExporter
+public class TadsExporter : CodeExporter
 {
   private const char SingleQuote = '\'';
   private const char DoubleQuote = '"';
