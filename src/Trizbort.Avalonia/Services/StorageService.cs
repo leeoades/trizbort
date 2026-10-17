@@ -77,7 +77,8 @@ public class StorageService(IDialogService dialogService) : IStorageService
         if (topLevel == null) return false;
 
         var currentProject = Project.Current;
-        var filePath = currentProject.FileName;
+        var originalFileName = currentProject.FileName;
+        var filePath = originalFileName;
 
         if (saveAs || string.IsNullOrEmpty(filePath))
         {
@@ -97,9 +98,9 @@ public class StorageService(IDialogService dialogService) : IStorageService
             filePath = file.Path.LocalPath;
         }
 
-        if (!filePath.EndsWith(".trizbort", StringComparison.OrdinalIgnoreCase))
+        if (!Path.HasExtension(filePath) || !Path.GetExtension(filePath).Equals(".trizbort", StringComparison.OrdinalIgnoreCase))
         {
-            filePath += ".trizbort";
+            filePath = Path.ChangeExtension(filePath, ".trizbort");
         }
 
         try
@@ -110,6 +111,7 @@ public class StorageService(IDialogService dialogService) : IStorageService
                 return true;
             }
 
+            currentProject.FileName = originalFileName;
             await _dialogService.ShowMessageAsync(
                 GetWindow(topLevel),
                 "Save Map Failed",
@@ -118,6 +120,7 @@ public class StorageService(IDialogService dialogService) : IStorageService
         }
         catch (Exception ex)
         {
+            currentProject.FileName = originalFileName;
             await _dialogService.ShowMessageAsync(
                 GetWindow(topLevel),
                 "Save Map Error",

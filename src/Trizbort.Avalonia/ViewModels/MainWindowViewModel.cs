@@ -260,13 +260,9 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task ExitAsync()
+    public void ExitAsync()
     {
-        if (!await CanLoseProjectAsync()) return;
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            desktop.Shutdown();
-        }
+        GetActiveWindow()?.Close();
     }
 
     [RelayCommand]
@@ -280,9 +276,16 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     public void DeleteSelected()
     {
-        _commandService.DeleteSelected();
-        UpdateState();
-        StatusText = "Deleted selected elements";
+        var count = _commandService.DeleteSelected();
+        if (count > 0)
+        {
+            UpdateState();
+            StatusText = $"Deleted {count} element(s)";
+        }
+        else
+        {
+            StatusText = "Nothing selected to delete";
+        }
     }
 
     [RelayCommand]

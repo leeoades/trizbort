@@ -16,7 +16,7 @@ public interface ICommandService
     void NewMap();
     Room AddRoom(Vector? position = null);
     MapLabel AddMapLabel(Vector? position = null);
-    void DeleteSelected();
+    int DeleteSelected();
     void SelectAll();
     void ClearSelection();
 

@@ -119,7 +119,7 @@ public class CommandService : ICommandService
         return label;
     }
 
-    public void DeleteSelected()
+    public int DeleteSelected()
     {
         var selected = _selectedElements.Count > 0
             ? _selectedElements.ToList()
@@ -137,6 +137,7 @@ public class CommandService : ICommandService
             SelectionChanged?.Invoke(this, EventArgs.Empty);
             InvalidateCanvas();
         }
+        return selected.Count;
     }
 
     public void SelectAll()
