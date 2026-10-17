@@ -231,4 +231,55 @@ public class GeometryRegressionTests : IsolatedProjectTests
     list.ShouldBe(new[] { 3, 1 });
     events.ShouldBe(new[] { "+1", "+2", "+3", "-2", "+3", "+1" });
   }
+
+  [TestCase(0f, 0f, 1.0f, 800.0, 600.0, 100f, 50f)]
+  [TestCase(-250f, 150f, 0.5f, 1024.0, 768.0, 0f, 0f)]
+  [TestCase(500f, -300f, 2.5f, 1920.0, 1080.0, -120f, 340f)]
+  public void CanvasTransform_WorldToScreenAndScreenToWorld_RoundTripsIdentity(
+    float originX, float originY, float zoom, double viewWidth, double viewHeight, float worldX, float worldY)
+  {
+    var origin = new Vector(originX, originY);
+    var world = new Vector(worldX, worldY);
+
+    // Screen from world:
+    var screenX = (world.X - origin.X) * zoom + viewWidth / 2.0;
+    var screenY = (world.Y - origin.Y) * zoom + viewHeight / 2.0;
+
+    // World from screen:
+    var roundTripX = (float)((screenX - viewWidth / 2.0) / zoom + origin.X);
+    var roundTripY = (float)((screenY - viewHeight / 2.0) / zoom + origin.Y);
+
+    roundTripX.ShouldBe(world.X, 0.001f);
+    roundTripY.ShouldBe(world.Y, 0.001f);
+  }
+
+  [Test]
+  public void CanvasTransform_CursorCenteredZoom_MaintainsWorldPositionUnderCursor()
+  {
+    var origin = new Vector(100f, 200f);
+    var zoom = 1.0f;
+    var viewWidth = 800.0;
+    var viewHeight = 600.0;
+    var cursorScreenX = 350.0;
+    var cursorScreenY = 250.0;
+
+    // World under cursor before zoom
+    var worldBeforeX = (float)((cursorScreenX - viewWidth / 2.0) / zoom + origin.X);
+    var worldBeforeY = (float)((cursorScreenY - viewHeight / 2.0) / zoom + origin.Y);
+
+    // Zoom in to 1.5x
+    var newZoom = 1.5f;
+    var worldAfterX = (float)((cursorScreenX - viewWidth / 2.0) / newZoom + origin.X);
+    var worldAfterY = (float)((cursorScreenY - viewHeight / 2.0) / newZoom + origin.Y);
+
+    origin = new Vector(origin.X + (worldBeforeX - worldAfterX), origin.Y + (worldBeforeY - worldAfterY));
+    zoom = newZoom;
+
+    // World under cursor after origin adjustment
+    var worldUnderCursorX = (float)((cursorScreenX - viewWidth / 2.0) / zoom + origin.X);
+    var worldUnderCursorY = (float)((cursorScreenY - viewHeight / 2.0) / zoom + origin.Y);
+
+    worldUnderCursorX.ShouldBe(worldBeforeX, 0.001f);
+    worldUnderCursorY.ShouldBe(worldBeforeY, 0.001f);
+  }
 }

@@ -313,9 +313,8 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     public void ResetZoom() => _commandService.ResetZoom();
 
-    [RelayCommand(CanExecute = nameof(CanFitToMap))]
+    [RelayCommand]
     public void FitToMap() => _commandService.FitToMap();
-    private bool CanFitToMap => false; // Activated in Step 2 when MapCanvasControl viewport is available
 
     [RelayCommand]
     public void ToggleGrid() => _commandService.ToggleGrid();

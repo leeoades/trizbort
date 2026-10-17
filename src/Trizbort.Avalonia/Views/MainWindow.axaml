@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="700"
@@ -172,14 +173,10 @@
 
         <!-- Main Content Area / Canvas Container -->
         <Grid Background="{DynamicResource SystemControlBackgroundAltMediumBrush}">
-            <!-- Content placeholder for MapCanvasControl in Step 2 -->
-            <Panel x:Name="CanvasContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <TextBlock Text="Trizbort Canvas Viewport"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           FontSize="14"
-                           Opacity="0.4" />
-            </Panel>
+            <controls:MapCanvasControl x:Name="CanvasControl"
+                                       CommandService="{Binding CommandService}"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch" />
         </Grid>
     </DockPanel>
 </Window>
