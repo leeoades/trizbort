@@ -250,8 +250,6 @@ public static class Settings
     }
   }
 
-  public static bool MinMaxHanddrawn { get; set; }
-
   public static Font ObjectFont {
     get { return GetFont(ref _objectFont, _objectFontMeta); }
     set { SetFont(ref _objectFontMeta, ref _objectFont, value); }
@@ -351,8 +349,6 @@ public static class Settings
 
   public static bool WrappingChanged { get; set; }
 
-  public static bool DebugDisableLineRendering { get; set; }
-
   public static float TextPadding => 4;
 
   public static event EventHandler Changed;
@@ -448,14 +444,6 @@ public static class Settings
     KeypadNavigationUnexploredModifier = StringToModifierKeys(
       element["keypadNavigation"]["unexploredModifier"].Text,
       _keypadNavigationUnexploredModifier);
-  }
-
-  public static void MutateFonts(Func<Font, Font> mutator)
-  {
-    RoomNameFont = mutator(RoomNameFont);
-    ObjectFont = mutator(ObjectFont);
-    SubtitleFont = mutator(SubtitleFont);
-    LineFont = mutator(LineFont);
   }
 
   public static void Reset()
@@ -684,6 +672,10 @@ public static class Settings
     {
       cache = value;
       RaiseChanged();
+    }
+    else if (value != null && !ReferenceEquals(cache, value))
+    {
+      value.Dispose();
     }
   }
 

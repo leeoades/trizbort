@@ -93,7 +93,7 @@ public static class ConnectionDrawingExtensions
     var brush = palette.Brush(
       connection.ConnectionColor != Color.Transparent ? connection.ConnectionColor : Settings.Color[Colors.Line]);
 
-    if (!Settings.DebugDisableLineRendering)
+    if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering)
     {
       if (connection.HasCurveWaypoints)
       {

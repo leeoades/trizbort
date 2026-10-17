@@ -198,7 +198,7 @@ public static class RoomDrawingExtensions
       graphics.Restore(state);
     }
 
-    if (!Settings.DebugDisableLineRendering)
+    if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering)
     {
       var roomBorderPen = palette.Pen(
         room.RoomBorderColor != Color.Transparent ? room.RoomBorderColor : Settings.Color[Colors.Border],
