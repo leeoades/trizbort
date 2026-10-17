@@ -79,6 +79,7 @@ public class StorageService(IDialogService dialogService) : IStorageService
         var currentProject = Project.Current;
         var originalFileName = currentProject.FileName;
         var filePath = originalFileName;
+        var pickedPath = filePath;
 
         if (saveAs || string.IsNullOrEmpty(filePath))
         {
@@ -96,11 +97,21 @@ public class StorageService(IDialogService dialogService) : IStorageService
 
             if (file == null) return false;
             filePath = file.Path.LocalPath;
+            pickedPath = filePath;
         }
 
-        if (!Path.HasExtension(filePath) || !Path.GetExtension(filePath).Equals(".trizbort", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(Path.GetExtension(filePath), ".trizbort", StringComparison.Ordinal))
         {
             filePath = Path.ChangeExtension(filePath, ".trizbort");
+        }
+
+        if (!string.Equals(filePath, pickedPath, StringComparison.Ordinal) && File.Exists(filePath))
+        {
+            var replace = await _dialogService.ShowConfirmationAsync(
+                GetWindow(topLevel),
+                "Confirm Overwrite",
+                $"'{Path.GetFileName(filePath)}' already exists. Replace it?");
+            if (!replace) return false;
         }
 
         try
