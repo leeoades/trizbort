@@ -54,7 +54,7 @@
 
                 <MenuItem Header="_Edit">
                     <MenuItem Header="Select _All" Command="{Binding SelectAllCommand}" InputGesture="Ctrl+A" />
-                    <MenuItem Header="_Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Del" />
+                    <MenuItem Header="_Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Delete" />
                     <Separator />
                     <MenuItem Header="_Map Settings..." Command="{Binding ShowMapSettingsCommand}" />
                     <MenuItem Header="Map _Theme..." Command="{Binding ShowMapThemeCommand}" />
@@ -64,7 +64,7 @@
                 <MenuItem Header="_View">
                     <MenuItem Header="Zoom _In" Command="{Binding ZoomInCommand}" InputGesture="Ctrl++" />
                     <MenuItem Header="Zoom _Out" Command="{Binding ZoomOutCommand}" InputGesture="Ctrl+-" />
-                    <MenuItem Header="_Reset Zoom" Command="{Binding ResetZoomCommand}" InputGesture="Ctrl+0" />
+                    <MenuItem Header="_Reset Zoom" Command="{Binding ResetZoomCommand}" InputGesture="Ctrl+D0" />
                     <MenuItem Header="_Fit to Map" Command="{Binding FitToMapCommand}" />
                     <Separator />
                     <MenuItem Header="Toggle _Grid" Command="{Binding ToggleGridCommand}" />
@@ -98,7 +98,7 @@
                         <PathIcon Data="{StaticResource IconSave}" Width="16" Height="16" />
                     </Button>
 
-                    <Separator Margin="4,2" />
+                    <Rectangle Width="1" Margin="4,2" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" VerticalAlignment="Stretch" />
 
                     <Button Command="{Binding AddRoomCommand}" ToolTip.Tip="Add Room" Padding="6,4">
                         <PathIcon Data="{StaticResource IconAddRoom}" Width="16" Height="16" />
@@ -106,11 +106,11 @@
                     <Button Command="{Binding AddMapLabelCommand}" ToolTip.Tip="Add Map Label" Padding="6,4">
                         <PathIcon Data="{StaticResource IconAddLabel}" Width="16" Height="16" />
                     </Button>
-                    <Button Command="{Binding DeleteSelectedCommand}" ToolTip.Tip="Delete Selected (Del)" Padding="6,4">
+                    <Button Command="{Binding DeleteSelectedCommand}" ToolTip.Tip="Delete Selected (Delete)" Padding="6,4">
                         <PathIcon Data="{StaticResource IconDelete}" Width="16" Height="16" />
                     </Button>
 
-                    <Separator Margin="4,2" />
+                    <Rectangle Width="1" Margin="4,2" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" VerticalAlignment="Stretch" />
 
                     <Button Command="{Binding ZoomInCommand}" ToolTip.Tip="Zoom In (Ctrl++)" Padding="6,4">
                         <PathIcon Data="{StaticResource IconZoomIn}" Width="16" Height="16" />
@@ -125,7 +125,7 @@
                         <PathIcon Data="{StaticResource IconGrid}" Width="16" Height="16" />
                     </Button>
 
-                    <Separator Margin="4,2" />
+                    <Rectangle Width="1" Margin="4,2" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" VerticalAlignment="Stretch" />
 
                     <Button Command="{Binding ToggleAutomapCommand}" ToolTip.Tip="Toggle Automap" Padding="6,4">
                         <PathIcon Data="{StaticResource IconAutomap}" Width="16" Height="16" />
@@ -162,7 +162,7 @@
                 <!-- Zoom Controls -->
                 <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="4" Margin="4,0" VerticalAlignment="Center">
                     <Button Command="{Binding ZoomOutCommand}" Content="-" Padding="4,0" FontSize="12" MinWidth="20" Height="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
-                    <Slider Value="{Binding ZoomFactor}" Minimum="0.1" Maximum="4.0" Width="80" Height="20" VerticalAlignment="Center" />
+                    <Slider Value="{Binding ZoomFactor}" Minimum="0.1" Maximum="10.0" Width="80" Height="20" VerticalAlignment="Center" />
                     <Button Command="{Binding ZoomInCommand}" Content="+" Padding="4,0" FontSize="12" MinWidth="20" Height="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
                 </StackPanel>
 

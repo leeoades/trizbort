@@ -141,9 +141,28 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private static TopLevel? GetActiveTopLevel() => GetActiveWindow();
 
-    [RelayCommand]
-    public void NewMap()
+    public async Task<bool> CanLoseProjectAsync()
     {
+        if (!Project.Current.IsDirty) return true;
+
+        var result = await _dialogService.ShowSaveDiscardCancelAsync(
+            GetActiveWindow(),
+            "Trizbort",
+            "Save changes to current map before continuing?");
+
+        return result switch
+        {
+            ConfirmationResult.Save => await _storageService.SaveMapAsync(GetActiveTopLevel(), false),
+            ConfirmationResult.Discard => true,
+            ConfirmationResult.Cancel => false,
+            _ => false
+        };
+    }
+
+    [RelayCommand]
+    public async Task NewMapAsync()
+    {
+        if (!await CanLoseProjectAsync()) return;
         _commandService.NewMap();
         UpdateState();
         StatusText = "New map created";
@@ -152,12 +171,13 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     public async Task OpenMapAsync()
     {
+        if (!await CanLoseProjectAsync()) return;
         var success = await _storageService.OpenMapAsync(GetActiveTopLevel());
         if (success)
         {
             UpdateState();
             _commandService.ResetZoom();
-            StatusText = $"Opened map: {Project.Current.FileName}";
+            StatusText = $"Opened map: {Path.GetFileName(Project.Current.FileName)}";
         }
     }
 
@@ -168,7 +188,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (success)
         {
             UpdateState();
-            StatusText = $"Map saved: {Project.Current.FileName}";
+            StatusText = $"Map saved: {Path.GetFileName(Project.Current.FileName)}";
         }
     }
 
@@ -179,7 +199,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (success)
         {
             UpdateState();
-            StatusText = $"Map saved as: {Project.Current.FileName}";
+            StatusText = $"Map saved as: {Path.GetFileName(Project.Current.FileName)}";
         }
     }
 
@@ -240,8 +260,9 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void Exit()
+    public async Task ExitAsync()
     {
+        if (!await CanLoseProjectAsync()) return;
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.Shutdown();
@@ -252,7 +273,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public void SelectAll()
     {
         _commandService.SelectAll();
-        StatusText = "Selected all elements";
+        var count = Project.Current.GetSelectedElements().Count;
+        StatusText = count > 0 ? $"Selected all {count} elements" : "No elements to select";
     }
 
     [RelayCommand]
@@ -288,18 +310,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     public void ResetZoom() => _commandService.ResetZoom();
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanFitToMap))]
     public void FitToMap() => _commandService.FitToMap();
+    private bool CanFitToMap => false; // Activated in Step 2 when MapCanvasControl viewport is available
 
     [RelayCommand]
     public void ToggleGrid() => _commandService.ToggleGrid();
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanToggleAutomap))]
     public void ToggleAutomap()
     {
-        IsAutomapActive = !IsAutomapActive;
-        StatusText = IsAutomapActive ? "Automapping active" : "Automapping stopped";
     }
+    private bool CanToggleAutomap => false; // Activated in Step 5 when Automap integration is wired
 
     [RelayCommand]
     public async Task ShowAboutAsync()
@@ -307,21 +329,14 @@ public partial class MainWindowViewModel : ViewModelBase
         await _dialogService.ShowAboutDialogAsync(GetActiveWindow());
     }
 
-    [RelayCommand]
-    public async Task ShowMapSettingsAsync()
-    {
-        await _dialogService.ShowMapSettingsAsync(GetActiveWindow());
-    }
+    [RelayCommand(CanExecute = nameof(CanShowPropertyDialogs))]
+    public async Task ShowMapSettingsAsync() => await Task.CompletedTask;
 
-    [RelayCommand]
-    public async Task ShowMapThemeAsync()
-    {
-        await _dialogService.ShowMapThemeAsync(GetActiveWindow());
-    }
+    [RelayCommand(CanExecute = nameof(CanShowPropertyDialogs))]
+    public async Task ShowMapThemeAsync() => await Task.CompletedTask;
 
-    [RelayCommand]
-    public async Task ShowAppSettingsAsync()
-    {
-        await _dialogService.ShowAppSettingsAsync(GetActiveWindow());
-    }
+    [RelayCommand(CanExecute = nameof(CanShowPropertyDialogs))]
+    public async Task ShowAppSettingsAsync() => await Task.CompletedTask;
+
+    private bool CanShowPropertyDialogs => false; // Activated in Step 4 when property dialogs are implemented
 }

@@ -4,16 +4,12 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Avalonia.Views;
-using Trizbort.Domain.Elements;
 
 namespace Trizbort.Avalonia.Services;
 
-public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogService
+public class DialogService : IDialogService
 {
-    private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
-
     public async Task ShowAboutDialogAsync(Window? owner)
     {
         var dialog = new AboutDialog();
@@ -32,7 +28,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogSe
         var dialog = new Window
         {
             Title = title,
-            Width = 400,
+            Width = 420,
             Height = 180,
             CanResize = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -94,7 +90,8 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogSe
         grid.Children.Add(new TextBlock
         {
             Text = message,
-            TextWrapping = TextWrapping.Wrap
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Center
         });
 
         var buttonPanel = new StackPanel
@@ -145,39 +142,77 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogSe
         return result;
     }
 
-    public async Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room)
+    public async Task<ConfirmationResult> ShowSaveDiscardCancelAsync(Window? owner, string title, string message)
     {
-        using var scope = _serviceScopeFactory.CreateScope();
-        // In Step 4, we will instantiate RoomPropertiesViewModel from the scoped container
-        await ShowMessageAsync(owner, "Room Properties", $"Properties for room: {room.Name}");
-        return false;
-    }
+        var result = ConfirmationResult.Cancel;
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 440,
+            Height = 160,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            ShowInTaskbar = false
+        };
 
-    public async Task<bool> ShowConnectionPropertiesAsync(Window? owner, Connection connection)
-    {
-        using var scope = _serviceScopeFactory.CreateScope();
-        await ShowMessageAsync(owner, "Connection Properties", $"Properties for connection: {connection.Name}");
-        return false;
-    }
+        var grid = new Grid
+        {
+            Margin = new Thickness(20),
+            RowDefinitions = new RowDefinitions("*,Auto")
+        };
 
-    public async Task<bool> ShowMapSettingsAsync(Window? owner)
-    {
-        using var scope = _serviceScopeFactory.CreateScope();
-        await ShowMessageAsync(owner, "Map Settings", "Map Settings dialog");
-        return false;
-    }
+        grid.Children.Add(new TextBlock
+        {
+            Text = message,
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Center
+        });
 
-    public async Task<bool> ShowMapThemeAsync(Window? owner)
-    {
-        using var scope = _serviceScopeFactory.CreateScope();
-        await ShowMessageAsync(owner, "Map Theme", "Map Theme dialog");
-        return false;
-    }
+        var buttonPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Spacing = 8
+        };
+        Grid.SetRow(buttonPanel, 1);
 
-    public async Task<bool> ShowAppSettingsAsync(Window? owner)
-    {
-        using var scope = _serviceScopeFactory.CreateScope();
-        await ShowMessageAsync(owner, "App Settings", "App Settings dialog");
-        return false;
+        var saveButton = new Button { Content = "Save", Width = 80 };
+        saveButton.Click += (_, _) =>
+        {
+            result = ConfirmationResult.Save;
+            dialog.Close();
+        };
+
+        var discardButton = new Button { Content = "Don't Save", Width = 95 };
+        discardButton.Click += (_, _) =>
+        {
+            result = ConfirmationResult.Discard;
+            dialog.Close();
+        };
+
+        var cancelButton = new Button { Content = "Cancel", Width = 80 };
+        cancelButton.Click += (_, _) =>
+        {
+            result = ConfirmationResult.Cancel;
+            dialog.Close();
+        };
+
+        buttonPanel.Children.Add(saveButton);
+        buttonPanel.Children.Add(discardButton);
+        buttonPanel.Children.Add(cancelButton);
+        grid.Children.Add(buttonPanel);
+
+        dialog.Content = grid;
+
+        if (owner != null)
+        {
+            await dialog.ShowDialog(owner);
+        }
+        else
+        {
+            dialog.Show();
+        }
+
+        return result;
     }
 }

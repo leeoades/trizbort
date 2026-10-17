@@ -41,14 +41,11 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        // Core domain singletons
-        services.AddSingleton(p => Project.Current);
-        services.AddSingleton<IAutomapCanvas, AvaloniaAutomapCanvas>();
-
         // Application services
-        services.AddSingleton<ICommandService, CommandService>();
-        services.AddSingleton<IStorageService, StorageService>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<IStorageService, StorageService>();
+        services.AddSingleton<ICommandService, CommandService>();
+        services.AddSingleton<IAutomapCanvas>(_ => new AvaloniaAutomapCanvas());
 
         // ViewModels
         services.AddSingleton<MainWindowViewModel>();

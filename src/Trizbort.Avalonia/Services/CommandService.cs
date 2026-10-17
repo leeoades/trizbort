@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
@@ -12,6 +13,7 @@ public class CommandService : ICommandService
     private float _zoomFactor = 1.0f;
     private Vector _origin = Vector.Zero;
     private bool _showGrid = true;
+    private readonly HashSet<Element> _selectedElements = [];
 
     public Project Project => Project.Current;
 
@@ -63,20 +65,24 @@ public class CommandService : ICommandService
 
     public CommandService()
     {
+        Project.SelectedElementsProvider = () => _selectedElements;
         Project.ProjectChanged += OnCoreProjectChanged;
     }
 
     private void OnCoreProjectChanged(object? sender, ProjectChangedEventArgs e)
     {
+        _selectedElements.Clear();
         ProjectChanged?.Invoke(this, EventArgs.Empty);
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
         InvalidateCanvas();
     }
 
     public void NewMap()
     {
+        Settings.Reset();
+        _selectedElements.Clear();
         Project.Current = new Project();
-        ProjectChanged?.Invoke(this, EventArgs.Empty);
-        InvalidateCanvas();
+        // Project.Current setter fires Project.ProjectChanged which notifies listeners
     }
 
     public Room AddRoom(Vector? position = null)
@@ -88,6 +94,8 @@ public class CommandService : ICommandService
         };
         Project.Current.Elements.Add(room);
         Project.Current.IsDirty = true;
+        _selectedElements.Clear();
+        _selectedElements.Add(room);
         Project.Current.ActiveSelectedElement = room;
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         InvalidateCanvas();
@@ -103,6 +111,8 @@ public class CommandService : ICommandService
         };
         Project.Current.Elements.Add(label);
         Project.Current.IsDirty = true;
+        _selectedElements.Clear();
+        _selectedElements.Add(label);
         Project.Current.ActiveSelectedElement = label;
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         InvalidateCanvas();
@@ -111,11 +121,9 @@ public class CommandService : ICommandService
 
     public void DeleteSelected()
     {
-        var selected = Project.Current.GetSelectedElements();
-        if (selected.Count == 0 && Project.Current.ActiveSelectedElement != null)
-        {
-            selected.Add(Project.Current.ActiveSelectedElement);
-        }
+        var selected = _selectedElements.Count > 0
+            ? _selectedElements.ToList()
+            : (Project.Current.ActiveSelectedElement != null ? [Project.Current.ActiveSelectedElement] : new List<Element>());
 
         if (selected.Count > 0)
         {
@@ -123,6 +131,7 @@ public class CommandService : ICommandService
             {
                 Project.Current.Elements.Remove(element);
             }
+            _selectedElements.Clear();
             Project.Current.ActiveSelectedElement = null;
             Project.Current.IsDirty = true;
             SelectionChanged?.Invoke(this, EventArgs.Empty);
@@ -132,12 +141,22 @@ public class CommandService : ICommandService
 
     public void SelectAll()
     {
+        _selectedElements.Clear();
+        foreach (var element in Project.Current.Elements)
+        {
+            _selectedElements.Add(element);
+        }
+        if (Project.Current.Elements.Count > 0)
+        {
+            Project.Current.ActiveSelectedElement = Project.Current.Elements[^1];
+        }
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         InvalidateCanvas();
     }
 
     public void ClearSelection()
     {
+        _selectedElements.Clear();
         Project.Current.ActiveSelectedElement = null;
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         InvalidateCanvas();
