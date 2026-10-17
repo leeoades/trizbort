@@ -260,7 +260,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void ExitAsync()
+    public void Exit()
     {
         GetActiveWindow()?.Close();
     }
