@@ -28,7 +28,7 @@ public enum CompassPoint
   Max = NorthNorthWest
 }
 
-internal static class CompassPointHelper
+public static class CompassPointHelper
 {
   private static readonly string[] _names = {
     "n",

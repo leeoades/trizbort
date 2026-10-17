@@ -285,9 +285,9 @@ public static class RoomDrawingAdapter
             objFont.Size,
             objBrush)
         {
-            TextAlignment = alignment,
-            MaxTextWidth = 300
+            TextAlignment = alignment
         };
+        formattedObj.MaxTextWidth = formattedObj.Width;
 
         double drawX = pos.X;
         double drawY = pos.Y;

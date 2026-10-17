@@ -12,6 +12,11 @@ public interface ICommandService
     float ZoomFactor { get; set; }
     Vector Origin { get; set; }
     bool ShowGrid { get; set; }
+    double ViewportWidth { get; }
+    double ViewportHeight { get; }
+
+    void SetView(Vector origin, float zoomFactor);
+    void SetViewportSize(double width, double height);
 
     void NewMap();
     Room AddRoom(Vector? position = null);

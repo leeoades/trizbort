@@ -4,6 +4,5 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 [assembly: InternalsVisibleTo("Trizbort.Core.Tests")]
-[assembly: InternalsVisibleTo("Trizbort.Avalonia")]
 [assembly: InternalsVisibleTo("Trizbort")]
 [assembly: InternalsVisibleTo("Trizbort.Tests")]

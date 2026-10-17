@@ -35,6 +35,7 @@ public class MapCanvasControl : Control
 
     private CoreVector _origin = CoreVector.Zero;
     private float _zoomFactor = 1.0f;
+    private readonly CanvasTransform _transform = new();
 
     public CoreVector Origin
     {
@@ -44,6 +45,7 @@ public class MapCanvasControl : Control
             if (_origin != value)
             {
                 _origin = value;
+                _transform.Origin = value;
                 InvalidateVisual();
             }
         }
@@ -58,6 +60,7 @@ public class MapCanvasControl : Control
             if (Math.Abs(_zoomFactor - clamped) > 0.0001f)
             {
                 _zoomFactor = clamped;
+                _transform.ZoomFactor = clamped;
                 InvalidateVisual();
             }
         }
@@ -104,9 +107,24 @@ public class MapCanvasControl : Control
             if (change.NewValue is ICommandService newService)
             {
                 HookCommandService(newService);
+                if (Bounds.Width > 0 && Bounds.Height > 0)
+                {
+                    newService.SetViewportSize(Bounds.Width, Bounds.Height);
+                }
                 Origin = newService.Origin;
                 ZoomFactor = newService.ZoomFactor;
             }
+        }
+    }
+
+    protected override void OnSizeChanged(SizeChangedEventArgs e)
+    {
+        base.OnSizeChanged(e);
+        _transform.ViewportWidth = e.NewSize.Width;
+        _transform.ViewportHeight = e.NewSize.Height;
+        if (CommandService != null && e.NewSize.Width > 0 && e.NewSize.Height > 0)
+        {
+            CommandService.SetViewportSize(e.NewSize.Width, e.NewSize.Height);
         }
     }
 
@@ -138,94 +156,84 @@ public class MapCanvasControl : Control
     {
         if (CommandService != null)
         {
-            if (Origin != CommandService.Origin)
-            {
-                _origin = CommandService.Origin;
-            }
-            if (Math.Abs(_zoomFactor - CommandService.ZoomFactor) > 0.0001f)
-            {
-                _zoomFactor = CommandService.ZoomFactor;
-            }
+            _origin = CommandService.Origin;
+            _zoomFactor = CommandService.ZoomFactor;
+            _transform.Origin = _origin;
+            _transform.ZoomFactor = _zoomFactor;
         }
         InvalidateVisual();
     }
 
     private void OnServiceZoomChanged(object? sender, float zoom)
     {
-        ZoomFactor = zoom;
+        _zoomFactor = zoom;
+        _transform.ZoomFactor = zoom;
+        InvalidateVisual();
     }
 
     #region Coordinate Transformations
 
-    public Point CanvasToClient(CoreVector world) =>
-        new((world.X - Origin.X) * ZoomFactor + Bounds.Width / 2.0,
-            (world.Y - Origin.Y) * ZoomFactor + Bounds.Height / 2.0);
+    public Point CanvasToClient(CoreVector world)
+    {
+        _transform.ViewportWidth = Bounds.Width;
+        _transform.ViewportHeight = Bounds.Height;
+        _transform.Origin = Origin;
+        _transform.ZoomFactor = ZoomFactor;
+        var p = _transform.CanvasToClient(world);
+        return new Point(p.X, p.Y);
+    }
 
-    public CoreVector ClientToCanvas(Point screen) =>
-        new((float)((screen.X - Bounds.Width / 2.0) / ZoomFactor + Origin.X),
-            (float)((screen.Y - Bounds.Height / 2.0) / ZoomFactor + Origin.Y));
+    public CoreVector ClientToCanvas(Point screen)
+    {
+        _transform.ViewportWidth = Bounds.Width;
+        _transform.ViewportHeight = Bounds.Height;
+        _transform.Origin = Origin;
+        _transform.ZoomFactor = ZoomFactor;
+        return _transform.ClientToCanvas(new CoreVector((float)screen.X, (float)screen.Y));
+    }
 
     public CoreRect GetVisibleWorldBounds()
     {
-        var topLeft = ClientToCanvas(new Point(0, 0));
-        var bottomRight = ClientToCanvas(new Point(Bounds.Width, Bounds.Height));
-        return new CoreRect(topLeft.X, topLeft.Y, Math.Max(0, bottomRight.X - topLeft.X), Math.Max(0, bottomRight.Y - topLeft.Y));
+        _transform.ViewportWidth = Bounds.Width;
+        _transform.ViewportHeight = Bounds.Height;
+        _transform.Origin = Origin;
+        _transform.ZoomFactor = ZoomFactor;
+        return _transform.GetVisibleWorldBounds();
     }
 
     public void ZoomAt(Point cursorScreen, float newZoom)
     {
-        var worldBefore = ClientToCanvas(cursorScreen);
-        ZoomFactor = Math.Clamp(newZoom, 0.1f, 10.0f);
-        var worldAfter = ClientToCanvas(cursorScreen);
-        Origin += (worldBefore - worldAfter);
+        _transform.ViewportWidth = Bounds.Width;
+        _transform.ViewportHeight = Bounds.Height;
+        _transform.Origin = Origin;
+        _transform.ZoomFactor = ZoomFactor;
+        _transform.ZoomAt(new CoreVector((float)cursorScreen.X, (float)cursorScreen.Y), newZoom);
+
         if (CommandService != null)
         {
-            CommandService.ZoomFactor = ZoomFactor;
-            CommandService.Origin = Origin;
+            CommandService.SetView(_transform.Origin, _transform.ZoomFactor);
         }
-        InvalidateVisual();
+        else
+        {
+            _origin = _transform.Origin;
+            _zoomFactor = _transform.ZoomFactor;
+            InvalidateVisual();
+        }
     }
 
     public void FitToMap()
     {
-        var elements = Project.Current.Elements;
-        if (elements.Count == 0)
+        if (CommandService != null)
         {
-            Origin = CoreVector.Zero;
-            ZoomFactor = 1.0f;
-            if (CommandService != null)
-            {
-                CommandService.Origin = Origin;
-                CommandService.ZoomFactor = ZoomFactor;
-            }
-            InvalidateVisual();
-            return;
+            CommandService.FitToMap();
         }
-
-        var bounds = CoreRect.Empty;
-        foreach (var el in elements)
+        else
         {
-            bounds = el.UnionBoundsWith(bounds, true);
-        }
-
-        if (bounds.Width > 0 && bounds.Height > 0)
-        {
-            Origin = new CoreVector(bounds.X + bounds.Width / 2.0f, bounds.Y + bounds.Height / 2.0f);
-            
-            var margin = 40.0;
-            var availableWidth = Math.Max(100.0, Bounds.Width - margin * 2.0);
-            var availableHeight = Math.Max(100.0, Bounds.Height - margin * 2.0);
-
-            var zoomX = (float)(availableWidth / bounds.Width);
-            var zoomY = (float)(availableHeight / bounds.Height);
-            var bestZoom = Math.Min(1.0f, Math.Min(zoomX, zoomY));
-            ZoomFactor = Math.Clamp(bestZoom, 0.1f, 10.0f);
-
-            if (CommandService != null)
-            {
-                CommandService.Origin = Origin;
-                CommandService.ZoomFactor = ZoomFactor;
-            }
+            _transform.ViewportWidth = Bounds.Width;
+            _transform.ViewportHeight = Bounds.Height;
+            _transform.FitToMap(Project.Current.Elements);
+            _origin = _transform.Origin;
+            _zoomFactor = _transform.ZoomFactor;
             InvalidateVisual();
         }
     }
@@ -287,33 +295,28 @@ public class MapCanvasControl : Control
             }
 
             var visibleElements = allElements.Where(e => e.Intersects(culledWorld)).ToList();
+            visibleElements.Sort();
 
-            // 5. Render Connections
+            // 5. Render elements in Depth / ZOrder sequence (Rooms, Labels, Connections)
             var linesDrawn = new List<CoreLineSegment>();
-            var connections = visibleElements.OfType<Connection>().OrderBy(c => (int)c.Depth).ThenBy(c => c.ZOrder);
-            foreach (var conn in connections)
+            foreach (var element in visibleElements)
             {
-                var isSelected = selectedSet.Contains(conn);
-                conn.DrawConnection(context, isSelected, false, linesDrawn);
+                var isSelected = selectedSet.Contains(element);
+                if (element is Room room)
+                {
+                    room.DrawRoom(context, isSelected, false);
+                }
+                else if (element is MapLabel label)
+                {
+                    label.DrawMapLabel(context, isSelected, false);
+                }
+                else if (element is Connection conn)
+                {
+                    conn.DrawConnection(context, isSelected, false, linesDrawn);
+                }
             }
 
-            // 6. Render Rooms
-            var rooms = visibleElements.OfType<Room>().OrderBy(r => (int)r.Depth).ThenBy(r => r.ZOrder);
-            foreach (var room in rooms)
-            {
-                var isSelected = selectedSet.Contains(room);
-                room.DrawRoom(context, isSelected, false);
-            }
-
-            // 7. Render Map Labels
-            var labels = visibleElements.OfType<MapLabel>().OrderBy(l => (int)l.Depth).ThenBy(l => l.ZOrder);
-            foreach (var label in labels)
-            {
-                var isSelected = selectedSet.Contains(label);
-                label.DrawMapLabel(context, isSelected, false);
-            }
-
-            // 8. Render Selection Resize Handles
+            // 6. Render Selection Resize Handles
             if (selectedSet.Count == 1)
             {
                 var singleSelected = selectedSet.First();

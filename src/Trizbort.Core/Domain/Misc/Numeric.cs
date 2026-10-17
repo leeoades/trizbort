@@ -5,7 +5,7 @@ namespace Trizbort.Domain.Misc;
 /// <summary>
 ///   Numeric functions.
 /// </summary>
-internal static class Numeric
+public static class Numeric
 {
   /// <summary>
   ///   A "small" number.

@@ -358,9 +358,9 @@ public static class ConnectionDrawingAdapter
             font.Size,
             brush)
         {
-            TextAlignment = alignment,
-            MaxTextWidth = 200
+            TextAlignment = alignment
         };
+        formattedText.MaxTextWidth = formattedText.Width;
 
         double drawX = pos.X;
         double drawY = pos.Y;

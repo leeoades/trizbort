@@ -17,31 +17,45 @@ public class CommandService : ICommandService
 
     public Project Project => Project.Current;
 
+    public double ViewportWidth { get; private set; } = 800;
+    public double ViewportHeight { get; private set; } = 600;
+
     public float ZoomFactor
     {
         get => _zoomFactor;
-        set
-        {
-            var clamped = Math.Clamp(value, 0.1f, 10.0f);
-            if (Math.Abs(_zoomFactor - clamped) > 0.0001f)
-            {
-                _zoomFactor = clamped;
-                ZoomChanged?.Invoke(this, _zoomFactor);
-                InvalidateCanvas();
-            }
-        }
+        set => SetView(_origin, value);
     }
 
     public Vector Origin
     {
         get => _origin;
-        set
+        set => SetView(value, _zoomFactor);
+    }
+
+    public void SetViewportSize(double width, double height)
+    {
+        if (width > 0 && height > 0)
         {
-            if (_origin != value)
+            ViewportWidth = width;
+            ViewportHeight = height;
+        }
+    }
+
+    public void SetView(Vector origin, float zoomFactor)
+    {
+        var clampedZoom = Math.Clamp(zoomFactor, 0.1f, 10.0f);
+        var zoomChanged = Math.Abs(_zoomFactor - clampedZoom) > 0.0001f;
+        var originChanged = _origin != origin;
+
+        if (zoomChanged || originChanged)
+        {
+            _zoomFactor = clampedZoom;
+            _origin = origin;
+            if (zoomChanged)
             {
-                _origin = value;
-                InvalidateCanvas();
+                ZoomChanged?.Invoke(this, _zoomFactor);
             }
+            InvalidateCanvas();
         }
     }
 
@@ -165,39 +179,28 @@ public class CommandService : ICommandService
 
     public void ZoomIn()
     {
-        ZoomFactor = (float)Math.Round(ZoomFactor * 1.25f, 2);
+        SetView(Origin, (float)Math.Round(ZoomFactor * 1.25f, 2));
     }
 
     public void ZoomOut()
     {
-        ZoomFactor = (float)Math.Round(ZoomFactor / 1.25f, 2);
+        SetView(Origin, (float)Math.Round(ZoomFactor / 1.25f, 2));
     }
 
     public void ResetZoom()
     {
-        ZoomFactor = 1.0f;
-        Origin = Vector.Zero;
+        SetView(Vector.Zero, 1.0f);
     }
 
     public void FitToMap()
     {
-        if (Project.Current.Elements.Count == 0)
+        var transform = new CanvasTransform
         {
-            ResetZoom();
-            return;
-        }
-
-        var bounds = Rect.Empty;
-        foreach (var element in Project.Current.Elements)
-        {
-            bounds = element.UnionBoundsWith(bounds, true);
-        }
-
-        if (bounds.Width > 0 && bounds.Height > 0)
-        {
-            Origin = new Vector(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
-            ZoomFactor = 1.0f;
-        }
+            ViewportWidth = ViewportWidth > 0 ? ViewportWidth : 800,
+            ViewportHeight = ViewportHeight > 0 ? ViewportHeight : 600
+        };
+        transform.FitToMap(Project.Current.Elements);
+        SetView(transform.Origin, transform.ZoomFactor);
     }
 
     public void ToggleGrid()

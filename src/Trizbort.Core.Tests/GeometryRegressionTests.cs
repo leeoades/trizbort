@@ -238,48 +238,69 @@ public class GeometryRegressionTests : IsolatedProjectTests
   public void CanvasTransform_WorldToScreenAndScreenToWorld_RoundTripsIdentity(
     float originX, float originY, float zoom, double viewWidth, double viewHeight, float worldX, float worldY)
   {
-    var origin = new Vector(originX, originY);
+    var transform = new CanvasTransform
+    {
+      Origin = new Vector(originX, originY),
+      ZoomFactor = zoom,
+      ViewportWidth = viewWidth,
+      ViewportHeight = viewHeight
+    };
+
     var world = new Vector(worldX, worldY);
+    var screen = transform.CanvasToClient(world);
+    var roundTrip = transform.ClientToCanvas(screen);
 
-    // Screen from world:
-    var screenX = (world.X - origin.X) * zoom + viewWidth / 2.0;
-    var screenY = (world.Y - origin.Y) * zoom + viewHeight / 2.0;
+    roundTrip.X.ShouldBe(world.X, 0.001f);
+    roundTrip.Y.ShouldBe(world.Y, 0.001f);
+  }
 
-    // World from screen:
-    var roundTripX = (float)((screenX - viewWidth / 2.0) / zoom + origin.X);
-    var roundTripY = (float)((screenY - viewHeight / 2.0) / zoom + origin.Y);
+  [TestCase(1.5f)]
+  [TestCase(0.5f)]
+  [TestCase(3.0f)]
+  public void CanvasTransform_ZoomAt_PreservesWorldPositionUnderCursor(float targetZoom)
+  {
+    var transform = new CanvasTransform
+    {
+      Origin = new Vector(100f, 200f),
+      ZoomFactor = 1.0f,
+      ViewportWidth = 800.0,
+      ViewportHeight = 600.0
+    };
 
-    roundTripX.ShouldBe(world.X, 0.001f);
-    roundTripY.ShouldBe(world.Y, 0.001f);
+    var cursorScreen = new Vector(350f, 250f);
+    var worldBefore = transform.ClientToCanvas(cursorScreen);
+
+    transform.ZoomAt(cursorScreen, targetZoom);
+
+    transform.ZoomFactor.ShouldBe(targetZoom);
+    var worldAfter = transform.ClientToCanvas(cursorScreen);
+
+    worldAfter.X.ShouldBe(worldBefore.X, 0.001f);
+    worldAfter.Y.ShouldBe(worldBefore.Y, 0.001f);
   }
 
   [Test]
-  public void CanvasTransform_CursorCenteredZoom_MaintainsWorldPositionUnderCursor()
+  public void CanvasTransform_FitToMap_CentersAndScalesElements()
   {
-    var origin = new Vector(100f, 200f);
-    var zoom = 1.0f;
-    var viewWidth = 800.0;
-    var viewHeight = 600.0;
-    var cursorScreenX = 350.0;
-    var cursorScreenY = 250.0;
+    var transform = new CanvasTransform
+    {
+      Origin = new Vector(1000f, 1000f),
+      ZoomFactor = 2.0f,
+      ViewportWidth = 800.0,
+      ViewportHeight = 600.0
+    };
 
-    // World under cursor before zoom
-    var worldBeforeX = (float)((cursorScreenX - viewWidth / 2.0) / zoom + origin.X);
-    var worldBeforeY = (float)((cursorScreenY - viewHeight / 2.0) / zoom + origin.Y);
+    var project = new Trizbort.Domain.Application.Project();
+    var r1 = new Trizbort.Domain.Elements.Room(project) { Position = new Vector(0, 0), Size = new Vector(100, 100) };
+    var r2 = new Trizbort.Domain.Elements.Room(project) { Position = new Vector(300, 200), Size = new Vector(100, 100) };
 
-    // Zoom in to 1.5x
-    var newZoom = 1.5f;
-    var worldAfterX = (float)((cursorScreenX - viewWidth / 2.0) / newZoom + origin.X);
-    var worldAfterY = (float)((cursorScreenY - viewHeight / 2.0) / newZoom + origin.Y);
+    transform.FitToMap(new[] { r1, r2 }, margin: 40.0);
 
-    origin = new Vector(origin.X + (worldBeforeX - worldAfterX), origin.Y + (worldBeforeY - worldAfterY));
-    zoom = newZoom;
+    // Bounding box of elements is [X:0, Y:0, W:400, H:300], center is (200, 150)
+    transform.Origin.X.ShouldBe(200f, 1.0f);
+    transform.Origin.Y.ShouldBe(150f, 1.0f);
 
-    // World under cursor after origin adjustment
-    var worldUnderCursorX = (float)((cursorScreenX - viewWidth / 2.0) / zoom + origin.X);
-    var worldUnderCursorY = (float)((cursorScreenY - viewHeight / 2.0) / zoom + origin.Y);
-
-    worldUnderCursorX.ShouldBe(worldBeforeX, 0.001f);
-    worldUnderCursorY.ShouldBe(worldBeforeY, 0.001f);
+    // Available space: (800-80)=720, (600-80)=520. Scale: 720/400=1.8, 520/300=1.73 -> Clamped to min(1.0, 1.73) = 1.0
+    transform.ZoomFactor.ShouldBe(1.0f, 0.001f);
   }
 }
