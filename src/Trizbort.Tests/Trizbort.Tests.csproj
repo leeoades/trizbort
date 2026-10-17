@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows</TargetFramework>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
 		<RootNamespace>Trizbort.Tests</RootNamespace>
 		<AssemblyName>Trizbort.Tests</AssemblyName>
 		<IsPackable>false</IsPackable>
