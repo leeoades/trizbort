@@ -72,6 +72,7 @@ public class AutomapIntegrationTests
         public Task<bool> SaveMapAsync(TopLevel? topLevel, bool saveAs = false) => Task.FromResult(true);
         public Task<CodeExporter?> PickExporterAsync(TopLevel? topLevel) => Task.FromResult<CodeExporter?>(null);
         public Task<bool> ExportCodeAsync(TopLevel? topLevel, CodeExporter exporter) => Task.FromResult(true);
+        public Task<bool> ExportImageAsync(TopLevel? topLevel) => Task.FromResult(true);
         public Task<string?> OpenThemeFileAsync(TopLevel? topLevel) => Task.FromResult<string?>(null);
         public Task<string?> SaveThemeFileAsync(TopLevel? topLevel, string suggestedName) => Task.FromResult<string?>(null);
         public Task<string?> OpenTranscriptFileAsync(TopLevel? topLevel, string? initialPath = null) => Task.FromResult(pickedTranscript);

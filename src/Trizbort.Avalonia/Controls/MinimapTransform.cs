@@ -10,7 +10,7 @@ namespace Trizbort.Avalonia.Controls;
 /// </summary>
 public static class MinimapTransform
 {
-    public static Rect ComputeCanvasBounds(IEnumerable<Element>? elements)
+    public static Rect ComputeCanvasBounds(IEnumerable<Element>? elements, bool includePadding = false)
     {
         if (elements == null) return Rect.Empty;
 
@@ -22,7 +22,27 @@ public static class MinimapTransform
             hasElements = true;
         }
 
-        return hasElements ? bounds : Rect.Empty;
+        if (!hasElements) return Rect.Empty;
+
+        if (includePadding)
+        {
+            if (Trizbort.Setup.Settings.DocumentSpecificMargins)
+            {
+                bounds.Inflate(Trizbort.Setup.Settings.DocHorizontalMargin, Trizbort.Setup.Settings.DocVerticalMargin);
+            }
+            else if (Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.SpecifyGenMargins)
+            {
+                bounds.Inflate(
+                    Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.GenHorizontalMargin,
+                    Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.GenVerticalMargin);
+            }
+            else
+            {
+                bounds.Inflate(30f);
+            }
+        }
+
+        return bounds;
     }
 
     public static Rect WorldToMinimap(Rect worldRect, Rect canvasBounds, Rect clientArea)

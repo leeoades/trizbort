@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,7 @@ using CoreColor = System.Drawing.Color;
 using CoreColors = Trizbort.Domain.Misc.Colors;
 using CoreLineSegment = Trizbort.Domain.Misc.LineSegment;
 using AvaloniaRect = Avalonia.Rect;
+using AvaloniaVector = Avalonia.Vector;
 using AvaloniaColor = Avalonia.Media.Color;
 using AvaloniaDrawingContext = Avalonia.Media.DrawingContext;
 
@@ -1785,6 +1787,117 @@ public class MapCanvasControl : Control
             context.DrawLine(originPen, new Point(-25, 0), new Point(25, 0));
             context.DrawLine(originPen, new Point(0, -25), new Point(0, 25));
         }
+    }
+
+    /// <summary>
+    /// Computes the canvas bounds for all elements in the project, optionally with margins.
+    /// </summary>
+    public static CoreRect ComputeCanvasBounds(Project? project, bool includePadding = false)
+    {
+        return MinimapTransform.ComputeCanvasBounds(project?.Elements, includePadding);
+    }
+
+    /// <summary>
+    /// Renders the map to an Avalonia drawing context at the given origin and scale.
+    /// </summary>
+    public static void RenderMap(
+        AvaloniaDrawingContext context,
+        Project project,
+        CoreVector origin,
+        double zoomFactor,
+        double width,
+        double height,
+        bool isExport = false)
+    {
+        if (project == null || width <= 0 || height <= 0) return;
+
+        // 1. Fill Canvas Background
+        var canvasBrush = DrawingAdapters.ToBrush(CoreColors.Canvas);
+        context.DrawRectangle(canvasBrush, null, new AvaloniaRect(0, 0, width, height));
+
+        // 2. Setup Matrix Transform
+        var halfWidth = width / 2.0;
+        var halfHeight = height / 2.0;
+        var transformMatrix = Matrix.CreateTranslation(-origin.X, -origin.Y)
+                              * Matrix.CreateScale(zoomFactor, zoomFactor)
+                              * Matrix.CreateTranslation(halfWidth, halfHeight);
+
+        using (context.PushTransform(transformMatrix))
+        {
+            var elements = project.Elements.ToList();
+            elements.Sort();
+
+            var spatialLines = new SpatialLineIndex();
+            ConnectionDrawingAdapter.RebuildSpatialIndex(elements, spatialLines, 1);
+
+            foreach (var element in elements)
+            {
+                if (element is Room room)
+                {
+                    room.DrawRoom(context, false, false);
+                }
+                else if (element is MapLabel label)
+                {
+                    label.DrawMapLabel(context, false, false);
+                }
+                else if (element is Connection conn)
+                {
+                    conn.DrawConnection(context, false, false, spatialLines, 1);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Draws the map at a given scale and origin on a DrawingContext.
+    /// </summary>
+    public void Draw(
+        AvaloniaDrawingContext context,
+        CoreVector origin,
+        double zoomFactor,
+        double width,
+        double height,
+        bool isExport = false)
+    {
+        var project = CommandService?.Project ?? Project.Current;
+        if (project == null) return;
+        RenderMap(context, project, origin, zoomFactor, width, height, isExport);
+    }
+
+    /// <summary>
+    /// Renders the full map extent of the project to a RenderTargetBitmap.
+    /// Returns null if the map is empty or has zero extent.
+    /// </summary>
+    public static RenderTargetBitmap? RenderToBitmap(Project? project, double scale = 1.0)
+    {
+        if (project == null || project.Elements.Count == 0) return null;
+
+        var bounds = MinimapTransform.ComputeCanvasBounds(project.Elements, includePadding: true);
+        if (bounds == CoreRect.Empty || bounds.Width <= 0 || bounds.Height <= 0) return null;
+
+        var effectiveScale = scale > 0 ? scale : 1.0;
+        var width = (int)Math.Ceiling(bounds.Width * effectiveScale);
+        var height = (int)Math.Ceiling(bounds.Height * effectiveScale);
+
+        width = Math.Clamp(width, 16, 16384);
+        height = Math.Clamp(height, 16, 16384);
+
+        var bitmap = new RenderTargetBitmap(new PixelSize(width, height), new AvaloniaVector(96, 96));
+        using (var ctx = bitmap.CreateDrawingContext())
+        {
+            RenderMap(ctx, project, bounds.Center, effectiveScale, width, height, isExport: true);
+        }
+
+        return bitmap;
+    }
+
+    /// <summary>
+    /// Renders the current project map extent to a RenderTargetBitmap.
+    /// </summary>
+    public RenderTargetBitmap? ExportToBitmap(double scale = 1.0)
+    {
+        var project = CommandService?.Project ?? Project.Current;
+        return RenderToBitmap(project, scale);
     }
 
     #endregion

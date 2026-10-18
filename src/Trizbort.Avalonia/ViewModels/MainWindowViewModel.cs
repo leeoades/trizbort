@@ -223,6 +223,13 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public async Task ExportImageAsync()
+    {
+        var success = await _storageService.ExportImageAsync(GetActiveTopLevel());
+        if (success) StatusText = "Exported map image (PNG)";
+    }
+
+    [RelayCommand]
     public async Task ExportInform7Async()
     {
         var success = await _storageService.ExportCodeAsync(GetActiveTopLevel(), new Inform7Exporter());

@@ -44,6 +44,8 @@
                     <MenuItem Header="Save Map _As..." Command="{Binding SaveMapAsCommand}" InputGesture="Ctrl+Shift+S" />
                     <Separator />
                     <MenuItem Header="_Export">
+                        <MenuItem Header="_Image (PNG)..." Command="{Binding ExportImageCommand}" />
+                        <Separator />
                         <MenuItem Header="Inform _7 Source..." Command="{Binding ExportInform7Command}" />
                         <MenuItem Header="Inform _6 Source..." Command="{Binding ExportInform6Command}" />
                         <MenuItem Header="_TADS Source..." Command="{Binding ExportTadsCommand}" />

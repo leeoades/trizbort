@@ -6,7 +6,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
+using Trizbort.Avalonia.Controls;
 using Trizbort.Domain.Application;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Export;
 
 namespace Trizbort.Avalonia.Services;
@@ -28,6 +30,11 @@ public class StorageService(IDialogService dialogService) : IStorageService
     private static readonly FilePickerFileType TranscriptFileType = new("Text and Log Files (*.txt; *.log)")
     {
         Patterns = ["*.txt", "*.log"]
+    };
+
+    private static readonly FilePickerFileType PngFileType = new("PNG Image (*.png)")
+    {
+        Patterns = ["*.png"]
     };
 
     private static Window? GetWindow(TopLevel? topLevel)
@@ -192,6 +199,65 @@ public class StorageService(IDialogService dialogService) : IStorageService
                 GetWindow(topLevel),
                 "Export Error",
                 $"Error exporting code to '{Path.GetFileName(exportPath)}':\n{ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> ExportImageAsync(TopLevel? topLevel)
+    {
+        if (topLevel == null) return false;
+
+        var currentProject = Project.Current;
+        if (currentProject == null || currentProject.Elements.Count == 0)
+        {
+            await _dialogService.ShowMessageAsync(
+                GetWindow(topLevel),
+                "Export Image",
+                "Cannot export an empty map.");
+            return false;
+        }
+
+        var suggestedName = string.IsNullOrEmpty(currentProject.Title)
+            ? (string.IsNullOrEmpty(currentProject.FileName) ? "map" : Path.GetFileNameWithoutExtension(currentProject.FileName))
+            : currentProject.Title;
+
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Export Image",
+            DefaultExtension = "png",
+            SuggestedFileName = suggestedName,
+            FileTypeChoices = [PngFileType, FilePickerFileTypes.All]
+        });
+
+        if (file == null) return false;
+
+        var exportPath = file.Path.LocalPath;
+        try
+        {
+            using var bitmap = MapCanvasControl.RenderToBitmap(currentProject);
+            if (bitmap == null)
+            {
+                await _dialogService.ShowMessageAsync(
+                    GetWindow(topLevel),
+                    "Export Image",
+                    "Cannot export an empty map.");
+                return false;
+            }
+
+            await using (var stream = await file.OpenWriteAsync())
+            {
+                bitmap.Save(stream);
+            }
+
+            ApplicationSettingsController.AppSettings.LastExportImageFileName = exportPath;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await _dialogService.ShowMessageAsync(
+                GetWindow(topLevel),
+                "Export Error",
+                $"Error exporting image to '{Path.GetFileName(exportPath)}':\n{ex.Message}");
             return false;
         }
     }
