@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -347,7 +348,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var clipboard = GetActiveTopLevel()?.Clipboard;
         if (clipboard != null)
         {
-            var text = await clipboard.GetTextAsync();
+            var text = await clipboard.TryGetTextAsync();
             if (!string.IsNullOrEmpty(text))
             {
                 _commandService.Paste(text);

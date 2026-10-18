@@ -392,6 +392,7 @@ public class DrawingAdaptersParityTests
         {
             var room = new Room(project)
             {
+                Name = string.Empty,
                 Position = new CoreVector(100, 100),
                 Size = new CoreVector(60, 60),
                 RoomFillColor = DrawingColor.Red,

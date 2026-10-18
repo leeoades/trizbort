@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace Trizbort.UI.Controls;
@@ -10,6 +11,7 @@ public partial class AutomapBar : UserControl
     InitializeComponent();
   }
 
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public string Status {
     set { _statusLabel.Text = value; }
   }

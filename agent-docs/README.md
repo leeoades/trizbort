@@ -11,10 +11,11 @@ codebase (or the whole doc set) into context.
 
 ## What Trizbort is
 
-Trizbort consists of a standalone, cross-platform core library (`Trizbort.Core`, **.NET 8**) and a
-Windows desktop frontend (WinForms, `net8.0-windows`), plus a cross-platform Avalonia frontend
-(`Trizbort.Avalonia`, `net8.0`, in progress on branch `port-to-linux`), for drawing maps of Interactive Fiction
-(text adventure) games, and exporting those maps either as images/PDF or as skeleton source code
+Trizbort consists of a standalone, cross-platform core library (`Trizbort.Core`, **.NET 10 LTS**) and a
+Windows desktop frontend (WinForms, `net10.0-windows`), plus a cross-platform Avalonia frontend
+(`Trizbort.Avalonia`, `net10.0`, in active development on branch `port-to-linux`), for drawing
+maps of Interactive Fiction (text adventure) games, and exporting those maps either as images/PDF
+or as skeleton source code
 for IF authoring systems (Inform 6/7, TADS, Hugo, ZIL, Alan, Quest, Adventuron). It can also
 auto-generate a map by parsing a game transcript ("Automap").
 
@@ -50,7 +51,7 @@ prefixed with `tests/`, `samples/`, `Docs/`, or `agent-docs/` are relative to th
 | [`06-automap.md`](06-automap.md) | The transcript-parsing automapper: how rooms/exits are inferred from game text, ambiguity resolution, settings. |
 | [`07-export-subsystem.md`](07-export-subsystem.md) | Adding/fixing an IF-language exporter (Inform6/7, TADS, Alan, Hugo, ZIL, Quest, Adventuron) or the image/PDF export. |
 | [`08-cli-and-entry-point.md`](08-cli-and-entry-point.md) | Command-line options, `Program.cs`/`MainForm` startup sequence, how CLI flags map to save/load/automap/export actions. |
-| [`09-build-test-and-dotnet8-port.md`](09-build-test-and-dotnet8-port.md) | Build/test commands, project file structure, and hard-won gotchas from the .NET Framework 4.8 → .NET 8 port (read before touching `.csproj`, `app.config`, or `app.manifest`). |
+| [`09-build-test-and-dotnet8-port.md`](09-build-test-and-dotnet8-port.md) | Build/test commands, project file structure, and hard-won gotchas from the .NET Framework 4.8 → .NET 8 port & .NET 10 LTS retargeting (read before touching `.csproj`, `app.config`, or `app.manifest`). |
 | [`plans/extract-trizbort-core-and-tests.md`](plans/extract-trizbort-core-and-tests.md) | Architectural roadmap and migration plan for extracting `Trizbort.Core` and `Trizbort.Core.Tests`. |
 
 ## Quick orientation (if you only read one paragraph)
@@ -75,18 +76,18 @@ convert `Project.Elements` into IF-language source code via a shared `CodeExport
   for assembly metadata and the naming-convention test's member enumeration; application
   logic and UI tests use typed APIs instead of private-member lookups.
 
-- **UI framework**: `src/Trizbort/` is Windows Forms (Windows-only; porting to .NET 8 did **not**
+- **UI framework**: `src/Trizbort/` is Windows Forms (Windows-only; porting to .NET Core / .NET 10 did **not**
   make it cross-platform, see `09-build-test-and-dotnet8-port.md`). `src/Trizbort.Avalonia/` is the
   cross-platform Avalonia frontend built on `Trizbort.Core`.
 - **Target frameworks & layout**:
-  - `src/Trizbort.Core/`: SDK-style `net8.0`, platform-neutral core class library.
-  - `src/Trizbort.Core.Tests/`: SDK-style `net8.0`, headless cross-platform test runner.
-  - `src/Trizbort/`: SDK-style `net8.0-windows`, Windows Forms UI client.
-  - `src/Trizbort.Tests/`: SDK-style `net8.0-windows`, UI-bound integration tests.
-  - `src/Trizbort.Avalonia/`: SDK-style `net8.0`, Avalonia UI client (Linux/Windows/macOS).
-  - `src/Trizbort.Avalonia.Tests/`: SDK-style `net8.0`, Avalonia.Headless NUnit tests
-    (`dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`, ~107 tests).
-- **Tests**: Run pure core unit tests cross-platform with `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`. Full solution tests require a Windows environment (`dotnet test Trizbort.sln`). Manual map fixtures and scripts are in `tests/manual/`.
+  - `src/Trizbort.Core/`: SDK-style `net10.0`, platform-neutral core class library.
+  - `src/Trizbort.Core.Tests/`: SDK-style `net10.0`, headless cross-platform test runner.
+  - `src/Trizbort/`: SDK-style `net10.0-windows`, Windows Forms UI client.
+  - `src/Trizbort.Tests/`: SDK-style `net10.0-windows`, UI-bound integration tests.
+  - `src/Trizbort.Avalonia/`: SDK-style `net10.0`, Avalonia UI client (Linux/Windows/macOS).
+  - `src/Trizbort.Avalonia.Tests/`: SDK-style `net10.0`, Avalonia.Headless NUnit tests
+    (`dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`, ~119 tests).
+- **Tests**: Run pure core unit tests cross-platform with `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`. Run Avalonia headless tests with `dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`. Full solution tests require a Windows environment (`dotnet test Trizbort.sln`). Manual map fixtures and scripts are in `tests/manual/`.
 - **PDF export**: `PDFsharp-GDI` 6.2.4 NuGet package (not the older vendored/legacy
   `PDFsharp-gdi` 1.x).
 - **No undo/redo exists anywhere in the codebase.** Don't assume one when reasoning about

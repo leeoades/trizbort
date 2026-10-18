@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -9,6 +10,8 @@ public class TrizbortTextBox : TextBox
   private const int EmSetCueBanner = 0x1501;
   private string _cue;
 
+  [DefaultValue(null)]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
   public string Watermark {
     get { return _cue; }
     set {

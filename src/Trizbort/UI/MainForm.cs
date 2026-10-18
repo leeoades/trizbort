@@ -82,7 +82,7 @@ public partial class MainForm : Form
     if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) OpenProject(dialog.FileName);
   }
 
-  protected override void OnClosing(CancelEventArgs e)
+  protected override void OnFormClosing(FormClosingEventArgs e)
   {
     if (!CheckLoseProject())
     {
@@ -97,7 +97,7 @@ public partial class MainForm : Form
 
     Project.FileWatcher.Dispose();
 
-    base.OnClosing(e);
+    base.OnFormClosing(e);
   }
 
   private void AlanToTextToolStripMenuItemClick(object sender, EventArgs e)

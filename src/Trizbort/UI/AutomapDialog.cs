@@ -50,11 +50,11 @@ internal partial class AutomapDialog : Form
     }
   }
 
-  protected override void OnClosed(EventArgs e)
+  protected override void OnFormClosed(FormClosedEventArgs e)
   {
     if (DialogResult == DialogResult.OK)
       ApplicationSettingsController.AppSettings.Automap = Data;
-    base.OnClosed(e);
+    base.OnFormClosed(e);
   }
 
   private void BrowseButton_Click(object sender, EventArgs e)

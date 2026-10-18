@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using NUnit.Framework;
@@ -1398,7 +1399,7 @@ public class MapCanvasControlGestureTests
     {
         Dispatcher.UIThread.RunJobs();
         var clipboard = TopLevel.GetTopLevel(canvas)!.Clipboard!;
-        return clipboard.GetTextAsync().GetAwaiter().GetResult();
+        return clipboard.TryGetTextAsync().GetAwaiter().GetResult();
     }
 
     [AvaloniaTest]

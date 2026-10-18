@@ -13,15 +13,18 @@ the same change.
 
 ## Quick facts
 - Projects:
-  - `src/Trizbort.Core/` (`net8.0`): Portable domain logic, automap, geometry, exporters, settings, and persistence without WinForms or GDI+ dependencies. Cross-platform.
-  - `src/Trizbort.Core.Tests/` (`net8.0`): Headless cross-platform unit tests. Run with `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`.
-  - `src/Trizbort/` (`net8.0-windows`): Windows Forms UI application, GDI+ rendering pipeline, dialogs, and controls. Windows-only.
-  - `src/Trizbort.Tests/` (`net8.0-windows`): WinForms and UI-bound integration tests.
+  - `src/Trizbort.Core/` (`net10.0`): Portable domain logic, automap, geometry, exporters, settings, and persistence without WinForms or GDI+ dependencies. Cross-platform.
+  - `src/Trizbort.Core.Tests/` (`net10.0`): Headless cross-platform unit tests. Run with `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`.
+  - `src/Trizbort/` (`net10.0-windows`): Windows Forms UI application, GDI+ rendering pipeline, dialogs, and controls. Windows-only.
+  - `src/Trizbort.Tests/` (`net10.0-windows`): WinForms and UI-bound integration tests.
+  - `src/Trizbort.Avalonia/` (`net10.0`): Cross-platform Avalonia UI client (Linux/macOS/Windows).
+  - `src/Trizbort.Avalonia.Tests/` (`net10.0`): Headless Avalonia unit tests. Run with `dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`.
 - Build:
   - Core only (cross-platform): `dotnet build src/Trizbort.Core/Trizbort.Core.csproj`
-  - Full solution (Windows): `dotnet build Trizbort.sln -c Debug`
+  - Full solution (Windows or Linux via `EnableWindowsTargeting=true`): `dotnet build Trizbort.sln -c Debug`
 - Test:
   - Core tests (cross-platform): `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`
+  - Avalonia tests (cross-platform): `dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`
   - Full solution tests (Windows): `dotnet test Trizbort.sln -c Debug`
 - Immediate Commit Rule:
   - When making a change, once it is fixed up, building, and tests pass, **commit those changes immediately**.

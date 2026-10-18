@@ -18,13 +18,40 @@ Contributions and bug reports are welcome. [Open an issue](https://github.com/le
 Trizbort follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Repository layout
-- `Trizbort.sln` — solution at the repository root.
-- `src/Trizbort/` — WinForms application source and project.
-- `src/Trizbort.Tests/` — automated NUnit tests.
+- `Trizbort.sln` — solution at the repository root targeting **.NET 10 LTS**.
+- `src/Trizbort.Core/` — portable domain model, automap engine, exporters, geometry, and persistence (`net10.0`).
+- `src/Trizbort.Core.Tests/` — cross-platform headless unit tests (`net10.0`).
+- `src/Trizbort/` — WinForms desktop application source and project (`net10.0-windows`).
+- `src/Trizbort.Tests/` — WinForms integration and UI-bound tests (`net10.0-windows`).
+- `src/Trizbort.Avalonia/` — cross-platform Avalonia UI client (`net10.0`).
+- `src/Trizbort.Avalonia.Tests/` — headless Avalonia tests (`net10.0`).
 - `tests/manual/` — manual map fixtures and test scripts (not run by `dotnet test`).
 - `samples/` — sample maps and transcripts.
 - `Docs/` — user documentation and related assets.
 - `agent-docs/` — technical reference for contributors and coding agents.
+
+## Building and Testing
+
+Prerequisites: **.NET 10 SDK** (10.0.x or later).
+
+### Linux and macOS
+The full solution compiles on non-Windows platforms (using `EnableWindowsTargeting=true` for Windows-targeted projects):
+```bash
+# Build all solution projects
+dotnet build Trizbort.sln -c Debug
+
+# Run cross-platform headless test suites
+dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj -c Debug
+dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj -c Debug
+```
+*Note*: `Trizbort.Tests` contains WinForms STA and GDI+ integration tests that require a Windows runtime environment. On Linux/macOS, verify compilation via `dotnet build`.
+
+### Windows
+```bash
+# Build and test full solution
+dotnet build Trizbort.sln -c Debug
+dotnet test Trizbort.sln -c Debug
+```
 
 ## Download & releases
 Download the latest `Trizbort-<version>-win-x64.zip` from the [GitHub Releases page](https://github.com/leeoades/trizbort/releases), extract it into a writable folder (not Program Files), and run `Trizbort.exe`. These are Windows x64, self-contained builds, so no separate .NET install is required. Keep the accompanying configuration and licence files. The downloads are unsigned, so Windows may display a SmartScreen warning.

@@ -95,12 +95,14 @@ public partial class Canvas : UserControl, IAutomapCanvas
     _minimap.Canvas = this;
   }
 
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool CanDrawLine => true;
 
   internal int ResizeHandleCount => _handles.Count;
   internal int PortCount => _ports.Count;
   internal TrizbortToolTip ElementToolTip => _trizbortToolTip1;
 
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool CanSelectElements => true;
 
   public override Cursor Cursor {
@@ -122,8 +124,11 @@ public partial class Canvas : UserControl, IAutomapCanvas
     set { base.Cursor = value; }
   }
 
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool HasSelectedRooms => _selectedElements.OfType<Room>().Any();
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool HasSingleSelectedElement => SelectedElementCount == 1;
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool HasSingleSelectedRoom => _selectedElements.OfType<Room>().Count() == 1;
 
   [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -136,6 +141,8 @@ public partial class Canvas : UserControl, IAutomapCanvas
     }
   }
 
+  [DefaultValue(true)]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
   public bool MinimapVisible {
     get { return _minimap.Visible; }
     set {
@@ -193,6 +200,7 @@ public partial class Canvas : UserControl, IAutomapCanvas
     }
   }
 
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public List<Connection> SelectedConnections {
     get { return _selectedElements.Where(p => p is Connection).ToList().Cast<Connection>().ToList(); }
   }
@@ -211,10 +219,13 @@ public partial class Canvas : UserControl, IAutomapCanvas
     }
   }
 
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public int SelectedElementCount => _selectedElements.Count;
 
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public IList<Element> SelectedElements => _selectedElements;
 
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public List<Room> SelectedRooms {
     get { return _selectedElements.Where(p => p is Room).ToList().Cast<Room>().ToList(); }
   }

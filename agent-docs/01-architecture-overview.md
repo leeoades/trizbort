@@ -7,12 +7,12 @@ avoids deep detail — follow the links to the topic docs for specifics.
 
 | Folder | Role |
 |---|---|
-| `src/Trizbort.Core/` | Standalone, platform-neutral domain class library (`net8.0`). Contains core domain models (`Room`, `Connection`, `Door`, `MapLabel`), `Project`, automap engine, exporters, geometry/math primitives (`Vector`, `Rect`, `LineSegment`), settings/themes metadata, commands, and XML persistence utilities. |
-| `src/Trizbort.Core.Tests/` | Standalone headless unit test suite (`net8.0`). Validates pure domain logic, automap parsing, exporters, math, and serialization cross-platform. |
-| `src/Trizbort/` | Windows desktop application project root (`net8.0-windows`): WinForms forms/dialogs, entry point/configuration, GDI+ rendering pipeline, drawing extension adapters, and the `Canvas` control. |
-| `src/Trizbort.Tests/` | WinForms-specific and UI integration test project (`net8.0-windows`), included in the root `Trizbort.sln`. |
-| `src/Trizbort.Avalonia/` | Cross-platform Avalonia UI client (`net8.0`) built on `Trizbort.Core` only (no WinForms/GDI+). See the Avalonia section of [`05-ui-and-canvas.md`](05-ui-and-canvas.md). |
-| `src/Trizbort.Avalonia.Tests/` | Headless Avalonia tests (`Avalonia.Headless.NUnit`, Skia): gestures, sync, drawing parity, dialogs VMs, minimap transform, Automap, image export. |
+| `src/Trizbort.Core/` | Standalone, platform-neutral domain class library (`net10.0`). Contains core domain models (`Room`, `Connection`, `Door`, `MapLabel`), `Project`, automap engine, exporters, geometry/math primitives (`Vector`, `Rect`, `LineSegment`), settings/themes metadata, commands, and XML persistence utilities. |
+| `src/Trizbort.Core.Tests/` | Standalone headless unit test suite (`net10.0`). Validates pure domain logic, automap parsing, exporters, math, and serialization cross-platform. |
+| `src/Trizbort/` | Windows desktop application project root (`net10.0-windows`): WinForms forms/dialogs, entry point/configuration, GDI+ rendering pipeline, drawing extension adapters, and the `Canvas` control. |
+| `src/Trizbort.Tests/` | WinForms-specific and UI integration test project (`net10.0-windows`), included in the root `Trizbort.sln`. |
+| `src/Trizbort.Avalonia/` | Cross-platform Avalonia UI client (`net10.0`) built on `Trizbort.Core` only (no WinForms/GDI+). See the Avalonia section of [`05-ui-and-canvas.md`](05-ui-and-canvas.md). |
+| `src/Trizbort.Avalonia.Tests/` | Headless Avalonia tests (`net10.0`, `Avalonia.Headless.NUnit`, Skia): gestures, sync, drawing parity, dialogs VMs, minimap transform, Automap, image export. |
 | `tests/manual/` | Manual `.trizbort` fixtures and batch/script runners; these are not automated tests. |
 | `samples/` | Sample maps/transcripts. |
 | `legacy/vendor/` | Preserved legacy DLLs not referenced by the current SDK-style project. |
@@ -74,4 +74,4 @@ include regions unused by any room. See [`02-domain-model.md`](02-domain-model.m
 | Fix/extend transcript-based automapping (room/exit detection) | [`06-automap.md`](06-automap.md) |
 | Fix/extend an IF-language exporter or image/PDF export | [`07-export-subsystem.md`](07-export-subsystem.md) |
 | Add/change a command-line flag or startup behavior | [`08-cli-and-entry-point.md`](08-cli-and-entry-point.md) |
-| Change `.csproj`/`app.config`/`app.manifest`, run tests, understand .NET 8 port history | [`09-build-test-and-dotnet8-port.md`](09-build-test-and-dotnet8-port.md) |
+| Change `.csproj`/`app.config`/`app.manifest`, run tests, understand .NET 10 / .NET 8 port history | [`09-build-test-and-dotnet8-port.md`](09-build-test-and-dotnet8-port.md) |

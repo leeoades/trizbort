@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.  Version nu
 
 ## [Unreleased]
 
+### Change
+- Retargeted solution projects to .NET 10 LTS (`net10.0` / `net10.0-windows`).
+- Upgraded Avalonia to 11.3.22 and migrated clipboard calls to `TryGetTextAsync`.
+- Added explicit designer serialization attributes across custom WinForms controls (`Canvas`, `Minimap`, `TrizbortTextBox`, `TrizbortToolTip`, `AutomapBar`) and modernized form lifecycle overrides (`OnFormClosing`/`OnFormClosed`).
+
 ## [2.3.1-beta.2] - 2026-10-12
 
 This is a **beta prerelease for testing**. The stable release remains v2.2.0. Extract the beta

@@ -1,32 +1,61 @@
-# Build, Test, and .NET Framework 4.8 → .NET 8 Port Notes
+# Build, Test, and Modernization (.NET 10 LTS & .NET 8 Port Notes)
 
 See [`README.md`](README.md) for the doc map. Read this before touching
 `src/Trizbort/Trizbort.csproj`, `src/Trizbort.Tests/Trizbort.Tests.csproj`,
+`src/Trizbort.Avalonia/Trizbort.Avalonia.csproj`,
 `src/Trizbort/app.config`, or `src/Trizbort/app.manifest`.
 
-## Current state
+## Current state (.NET 10 LTS)
 
-- `src/Trizbort.Core/Trizbort.Core.csproj` — SDK-style, `net8.0`, pure class library without Windows Forms dependencies. Contains domain elements, automap logic, exporters, math/geometry primitives, and serialization engines. Cross-platform.
-- `src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj` — SDK-style, `net8.0`, headless test suite running on any OS.
-- `src/Trizbort/Trizbort.csproj` — SDK-style, `net8.0-windows`, `UseWindowsForms=true`, `PackageReference`s
+The entire solution targets **.NET 10 LTS** (active LTS, supported through November 2028). Building the solution requires the **.NET 10 SDK** (10.0.x).
+
+- `src/Trizbort.Core/Trizbort.Core.csproj` — SDK-style, `net10.0`, pure class library without Windows Forms dependencies. Contains domain elements, automap logic, exporters, math/geometry primitives, and serialization engines. Cross-platform.
+- `src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj` — SDK-style, `net10.0`, headless test suite running on any OS.
+- `src/Trizbort/Trizbort.csproj` — SDK-style, `net10.0-windows`, `UseWindowsForms=true`, `PackageReference`s
   (no more `packages.config`). **No `PlatformTarget=x86`** (removed — see below); builds
   AnyCPU/x64 by default.
-- `src/Trizbort.Tests/Trizbort.Tests.csproj` — SDK-style, `net8.0-windows`, `Microsoft.NET.Test.Sdk`
+- `src/Trizbort.Tests/Trizbort.Tests.csproj` — SDK-style, `net10.0-windows`, `Microsoft.NET.Test.Sdk`
   + NUnit 3.14.0 + NUnit3TestAdapter 4.6.0 + NUnit.Analyzers + Shouldly + FluentAssertions.
-- Automated tests:
-  - **Cross-Platform Core Tests**: Run `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`.
-  - **Full Solution**: On Windows, build and test the complete solution with:
-    ```
-    dotnet build Trizbort.sln -c Debug
-    dotnet test Trizbort.sln -c Debug
-    ```
-- To build or test one project directly:
-  ```
-  dotnet build src/Trizbort.Core/Trizbort.Core.csproj -c Debug
-  dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj -c Debug
-  dotnet build src/Trizbort/Trizbort.csproj -c Debug
-  dotnet test src/Trizbort.Tests/Trizbort.Tests.csproj -c Debug
-  ```
+- `src/Trizbort.Avalonia/Trizbort.Avalonia.csproj` — SDK-style, `net10.0`, Avalonia 11.3.x cross-platform UI client (Linux/macOS/Windows).
+- `src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj` — SDK-style, `net10.0`, headless Avalonia NUnit tests (`Avalonia.Headless.NUnit`).
+
+## Building and Testing
+
+### Cross-Platform / Linux
+On Linux/macOS, all projects (including Windows Forms targets) compile with
+`EnableWindowsTargeting=true`; the current build has 0 errors and 5 CA2024 warnings in
+`Automap.cs` (see Gotcha #13):
+```bash
+# Build the entire solution
+dotnet build Trizbort.sln -c Debug
+
+# Run headless cross-platform test suites
+dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj -c Debug
+dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj -c Debug
+
+# Or run the core test script (generates TRX under TestResults/)
+./scripts/run-core-tests.sh
+```
+*Note on Linux testing*: `Trizbort.Tests` contains WinForms STA and GDI+ integration tests that require a Windows runtime host. On Linux, validate that `Trizbort.Tests` compiles without errors during `dotnet build`, but do not execute its runtime test runner. Additionally, note that Windows-style path literals (such as `@".\appsettings.json"`) resolve literally on Linux file systems rather than as relative subpaths.
+
+### Windows
+On Windows, build and test the complete solution with:
+```bash
+dotnet build Trizbort.sln -c Debug
+dotnet test Trizbort.sln -c Debug
+```
+
+### Individual project commands
+```bash
+dotnet build src/Trizbort.Core/Trizbort.Core.csproj -c Debug
+dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj -c Debug
+dotnet build src/Trizbort.Avalonia/Trizbort.Avalonia.csproj -c Debug
+dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj -c Debug
+dotnet build src/Trizbort/Trizbort.csproj -c Debug
+# Windows only: this runs WinForms runtime tests
+dotnet test src/Trizbort.Tests/Trizbort.Tests.csproj -c Debug
+```
+
 - Immediate Commit Rule:
   - When making a change, once it is fixed up, building, and tests pass, **commit those changes immediately**.
   - **Do NOT** accumulate a working directory of unrelated changes across different components or domains.
@@ -34,11 +63,11 @@ See [`README.md`](README.md) for the doc map. Read this before touching
 - Manual map fixtures and runners are in `tests/manual/`. Map files and batch runners are copied
   into the test output for automated round-trip/reference checks; visual scenarios still need
   inspection. Sample maps/transcripts remain in the root `samples` directory.
-- The `Trizbort` GUI remains a **Windows Forms, Windows-only application**. The extracted `Trizbort.Core` library, however, is fully cross-platform and ready to be consumed by new non-Windows frontends (e.g., Avalonia, MAUI, CLI, Web/Blazor).
+- The `Trizbort` WinForms GUI remains a **Windows Forms, Windows-only application**. The extracted `Trizbort.Core` library and `Trizbort.Avalonia` client, however, are fully cross-platform (Linux/macOS/Windows).
 
-## Gotchas encountered during the port (read before repeating this work elsewhere)
+## Historical Gotchas: .NET Framework 4.8 → .NET 8 Port & .NET 10 Modernization
 
-These are generic lessons for porting any legacy WinForms app to modern .NET, not just
+These are generic lessons for porting and modernizing any legacy WinForms app to modern .NET, not just
 Trizbort-specific trivia — useful if a future task touches another legacy project, or if more
 latent issues surface here.
 
@@ -51,8 +80,8 @@ Only `ContextMenuStrip`/`ToolStripMenuItem`/`MenuStrip` remain. Fixed in
 
 ### 2. PDFsharp package rename
 
-`PDFsharp-gdi` 1.50.5147 (old) has **no .NET 8 support**. Replaced with **`PDFsharp-GDI` 6.2.4**
-(note the capitalized "GDI" in the new package ID) which does support `net8.0-windows`. API is
+`PDFsharp-gdi` 1.50.5147 (old) had no modern .NET support. Replaced with **`PDFsharp-GDI` 6.2.4**
+(note the capitalized "GDI" in the new package ID) which supports modern .NET (`net8.0-windows` and `net10.0-windows`). API is
 compatible — `XGraphics`/`PdfDocument`/etc. usage in `UI\MainForm.cs`, `Domain\Elements\Room.cs`,
 `Domain\Elements\Connection.cs`, `Domain\Misc\Drawing.cs` did not need code changes, only the
 package reference.
@@ -65,11 +94,13 @@ downloaded manually from the repository.
 
 ### 4. Keep project boundaries explicit
 
-The codebase is split into four distinct project roots:
-- `src/Trizbort.Core/`: Portable domain, automap, geometry, settings, and exporters (`net8.0`).
-- `src/Trizbort.Core.Tests/`: Cross-platform unit tests (`net8.0`).
-- `src/Trizbort/`: Windows Forms UI host (`net8.0-windows`).
-- `src/Trizbort.Tests/`: WinForms UI and integration tests (`net8.0-windows`).
+The codebase is split into distinct project roots:
+- `src/Trizbort.Core/`: Portable domain, automap, geometry, settings, and exporters (`net10.0`).
+- `src/Trizbort.Core.Tests/`: Cross-platform unit tests (`net10.0`).
+- `src/Trizbort/`: Windows Forms UI host (`net10.0-windows`).
+- `src/Trizbort.Tests/`: WinForms UI and integration tests (`net10.0-windows`).
+- `src/Trizbort.Avalonia/`: Cross-platform Avalonia UI client (`net10.0`).
+- `src/Trizbort.Avalonia.Tests/`: Avalonia headless tests (`net10.0`).
 
 SDK-style implicit globs are relative to each project directory, so manual fixtures/scripts in
 `tests/manual/` and root-level assets are not compiled into the projects. Keep future
@@ -93,16 +124,13 @@ style does not for files that already exist on disk. Explicit `<Compile Update>`
 - `Resources.resx` → `Resources.Designer.cs` (`ResXFileCodeGenerator`, kept non-public to match
   the original `internal sealed` `Resources` class visibility)
 
-### 7. `CA1416` platform-compatibility analyzer noise
+### 7. `CA1416` and `WFO1000` analyzer suppressions in `Trizbort.csproj`
 
-Targeting plain `net8.0-windows` produced ~2100 `CA1416` warnings for Windows-only API calls.
-Trying the `net8.0-windows7.0` TFM did not reduce the count. Since this app is intentionally
-Windows-only, warnings were suppressed via:
+Targeting Windows TFMs (`net8.0-windows` / `net10.0-windows`) produced ~2100 `CA1416` warnings for Windows-only API calls. In the historical .NET 8 port, trying the `net8.0-windows7.0` TFM did not reduce the count. Modern .NET Windows Forms SDK analyzers also emit `WFO1000` warnings for custom properties not explicitly configured for designer serialization. Since this app is intentionally Windows-only and runtime Form dialog properties do not require designer serialization, warnings are suppressed via:
 ```xml
-<NoWarn>$(NoWarn);CA1416</NoWarn>
+<NoWarn>$(NoWarn);CA1416;WFO1000</NoWarn>
 ```
-in `Trizbort.csproj`. This is a deliberate, justified suppression — don't "fix" it by removing
-the `NoWarn` without expecting ~2100 warnings to reappear.
+in `Trizbort.csproj`. This is a deliberate, justified suppression — don't "fix" it by removing the `NoWarn` without expecting ~2100 CA1416 warnings and WFO1000 warnings on dialog forms to reappear. Custom controls under `UI/Controls/` configure explicit `DesignerSerializationVisibility` attributes (see Gotcha #10 below).
 
 ### 8. `PlatformTarget=x86` bitness mismatch broke `dotnet test`
 
@@ -156,6 +184,40 @@ fix. This pattern (a tiny throwaway console app loading the real generated `.con
 template for verifying any future `app.config`-related fix without needing to drive the WinForms
 UI.
 
+### 10. `WFO1000` WinForms designer serialization attributes
+
+Modern .NET Windows Forms analyzers emit `WFO1000` ("Property does not configure code serialization for its property content") on control properties that lack explicit serialization attributes. To support the WinForms designer cleanly:
+- Custom controls (`UI/Controls/`: `Canvas`, `Minimap`, `TrizbortTextBox`, `TrizbortToolTip`, `AutomapBar`) have explicit `[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]` for internal runtime properties and `[DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]` / `[DefaultValue(...)]` for configurable designer properties.
+- Top-level dialog and form classes with runtime-only helper properties rely on the project-level `WFO1000` suppression.
+
+### 11. Modern Form lifecycle overrides (`OnFormClosing` / `OnFormClosed`)
+
+The legacy `Form.OnClosing(CancelEventArgs)` and `Form.OnClosed(EventArgs)` methods are obsolete in modern .NET Windows Forms. Overrides in `MainForm` and `AutomapDialog` were migrated to `protected override void OnFormClosing(FormClosingEventArgs e)` and `protected override void OnFormClosed(FormClosedEventArgs e)` to adhere to modern lifecycle patterns.
+
+### 12. Avalonia 11.3 clipboard API migration (`CS0618`)
+
+Avalonia 11.3 deprecated `IClipboard.GetTextAsync()` (`CS0618`). Its replacement,
+`ClipboardExtensions.TryGetTextAsync`, is an extension method on `IClipboard` in
+`Avalonia.Input.Platform`; import that namespace to use it. Both methods return
+`Task<string?>` with equivalent null-fallback semantics when clipboard text is unavailable or
+format conversions fail. Call sites in `MainWindowViewModel`, `MapCanvasControl`, and Avalonia
+gesture tests were updated.
+
+### 13. Modern compiler analyzers (`CA2024`)
+
+The .NET 10 analyzer reports 5 `CA2024` warnings ("Do not use 'reader.EndOfStream' in an async method") in `src/Trizbort.Core/Automap/Automap.cs` (lines 41, 42, 875, 987, 1010) where synchronous `StreamReader.EndOfStream` property checks are used inside asynchronous Automap parsing methods. These are pre-existing logic patterns that compile with 0 errors across the solution.
+
+### 14. Avalonia headless text rendering pixel probes
+
+In headless UI testing (`DrawingAdaptersParityTests`), when probing canvas pixel colors rendered via the Avalonia headless drawing adapter against expected colors, Room elements require `Name = string.Empty` to prevent default text label rendering from conflicting with fill pixel probes at central coordinates.
+
+### 15. Intermittent Automap stop/single-step test
+
+`AutomapRegressionTests.StopDuringSingleStep_PreservesBufferedGraphAndSkipsFollowingCommands`
+can intermittently fail with `Collection was modified` when `LegacyMapFileEngine.Save`
+enumerates `Project.Elements` while Automap is changing it. This race was reproduced on the
+unchanged .NET 8 baseline as well, so it is pre-existing and outside the .NET 10 migration.
+
 ## Safety note for anyone testing this app interactively in a shared/non-sandboxed environment
 
 **Do not take full-screen/desktop screenshots to verify UI changes in a shared environment** —
@@ -206,9 +268,9 @@ for selected statistics, graph, version, font and extent scenarios. See `tests\m
 for script equivalents and the remaining visual matrix.
 
 New fixtures use `Unit`, `Integration`, or `Rendering` categories (older tests may be
-uncategorized). Examples:
+uncategorized). Examples on Windows (or see Building and Testing for Linux headless test commands):
 
-```
+```bash
 dotnet test Trizbort.sln -c Debug
 dotnet test Trizbort.sln -c Release
 dotnet test Trizbort.sln -c Debug --filter "TestCategory=Integration|TestCategory=Rendering"

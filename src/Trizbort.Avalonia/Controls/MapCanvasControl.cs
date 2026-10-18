@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -1410,7 +1411,7 @@ public class MapCanvasControl : Control
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel?.Clipboard != null)
             {
-                text = await topLevel.Clipboard.GetTextAsync();
+                text = await topLevel.Clipboard.TryGetTextAsync();
             }
             CommandService?.Paste(text);
         }

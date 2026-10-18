@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -35,14 +36,31 @@ public class TrizbortToolTip : ToolTip
     _footerFont = new Font("Arial", 8.0f, FontStyle.Bold);
   }
 
+  [DefaultValue(null)]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public string TitleText { get; set; }
+
+  [DefaultValue(null)]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public string BodyText { get; set; }
+
+  [DefaultValue(null)]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public string FooterText { get; set; }
+
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool IsShown { get; set; }
+
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public IWin32Window LastOwner { get; set; }
+
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public Point LastPosition { get; private set; }
+
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public object HoverElement { get; set; }
 
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public Color GradientColor { get; set; } = Color.Empty;
 
   private void OnPopup(object sender, PopupEventArgs e)

@@ -131,7 +131,7 @@ Trizbort 2 is a modernised fork of Trizbort 1.7. Your existing maps open as befo
 - **Double click to add room** - an optional preference which creates a room when you double-click empty canvas. See [Map Preferences](#map_preferences).
 - **Apply style to new rooms** - an optional preference which makes new rooms copy the shape, borders, colours, region and lighting of the last selected room. See [Styling New Rooms](#help_rooms_stylenew).
 - **Smarter Room Properties focus** - the dialog opens where you are most likely to type next. See [Editing Rooms](#help_rooms_edit).
-- **.NET 8** - Trizbort now runs on .NET 8 and is distributed as a self-contained download.
+- **.NET 10** - Trizbort now runs on .NET 10 (LTS) and is distributed as a self-contained download.
 
 The full list of changes is in the [changelog](../changelog.md).
 
@@ -1367,14 +1367,22 @@ Another use for manual replacement in a text editor is changing RGB or labeled c
 
 ### Building Trizbort
 
-Trizbort 2 targets .NET 8 (`net8.0-windows`) and builds on Windows with the .NET 8 SDK. From the repository root, run:
+Trizbort 2 targets .NET 10 LTS (`net10.0` / `net10.0-windows`) and builds with the .NET 10 SDK.
 
-```
+On Windows (builds and runs all test suites):
+```bash
 dotnet build Trizbort.sln -c Debug
 dotnet test Trizbort.sln -c Debug
 ```
 
-You can also open `Trizbort.sln` in Visual Studio 2022. The DotNetBar and pdfsharp references required by 1.5.x builds are no longer needed. See [the developer reference](../agent-docs/09-build-test-and-dotnet8-port.md) for more detail.
+On Linux / macOS (builds solution, runs headless cross-platform test suites):
+```bash
+dotnet build Trizbort.sln -c Debug
+dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj -c Debug
+dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj -c Debug
+```
+
+You can also open `Trizbort.sln` in Visual Studio or JetBrains Rider. The DotNetBar and pdfsharp references required by 1.5.x builds are no longer needed. See [the developer reference](../agent-docs/09-build-test-and-dotnet8-port.md) for more detail.
 
 <a name="about"></a>
 

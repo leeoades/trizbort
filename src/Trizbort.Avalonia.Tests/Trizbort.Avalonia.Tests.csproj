@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Trizbort.Avalonia.Tests</RootNamespace>
 		<AssemblyName>Trizbort.Avalonia.Tests</AssemblyName>
@@ -11,7 +11,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Avalonia.Headless.NUnit" Version="11.1.3" />
+		<PackageReference Include="Avalonia.Headless.NUnit" Version="11.3.22" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
 		<PackageReference Include="NUnit" Version="3.14.0" />
 		<PackageReference Include="NUnit.Analyzers" Version="4.3.0">
