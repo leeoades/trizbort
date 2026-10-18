@@ -1,6 +1,7 @@
 #pragma warning disable CA1416
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using Avalonia;
@@ -23,6 +24,10 @@ namespace Trizbort.Avalonia.Drawing;
 
 public static class DrawingAdapters
 {
+    private static readonly ConcurrentDictionary<uint, IBrush> _brushCache = new();
+    private static readonly ConcurrentDictionary<(uint, int, int), IPen> _penCache = new();
+    private static readonly ConcurrentDictionary<(string, int), Typeface> _typefaceCache = new();
+
     public static AvaloniaPoint ToAvaloniaPoint(this CoreVector v) => new(v.X, v.Y);
 
     public static CoreVector ToVector(this AvaloniaPoint p) => new((float)p.X, (float)p.Y);
@@ -33,36 +38,67 @@ public static class DrawingAdapters
 
     public static AvaloniaColor ToColor(this CoreColor c) => AvaloniaColor.FromArgb(c.A, c.R, c.G, c.B);
 
-    public static IBrush ToBrush(this CoreColor c) => new SolidColorBrush(c.ToColor());
+    public static IBrush ToBrush(this CoreColor c)
+    {
+        var argb = (uint)c.ToArgb();
+        return _brushCache.GetOrAdd(argb, _ => new SolidColorBrush(c.ToColor()));
+    }
 
-    public static IBrush ToBrush(int colorKey) => new SolidColorBrush(Settings.Color[colorKey].ToColor());
+    public static IBrush ToBrush(int colorKey) => Settings.Color[colorKey].ToBrush();
+
+    private static readonly DashStyle _dashStyle = new(new double[] { 4, 2 }, 0);
+    private static readonly DashStyle _dotStyle = new(new double[] { 1, 2 }, 0);
+    private static readonly DashStyle _dashDotStyle = new(new double[] { 4, 2, 1, 2 }, 0);
+    private static readonly DashStyle _dashDotDotStyle = new(new double[] { 4, 2, 1, 2, 1, 2 }, 0);
+    private static readonly DashStyle _connectionDashedStyle = new(new double[] { 2, 2 }, 0);
 
     public static DashStyle? ToDashStyle(this BorderDashStyle style) => style switch
     {
-        BorderDashStyle.Dash => new DashStyle(new double[] { 4, 2 }, 0),
-        BorderDashStyle.Dot => new DashStyle(new double[] { 1, 2 }, 0),
-        BorderDashStyle.DashDot => new DashStyle(new double[] { 4, 2, 1, 2 }, 0),
-        BorderDashStyle.DashDotDot => new DashStyle(new double[] { 4, 2, 1, 2, 1, 2 }, 0),
+        BorderDashStyle.Dash => _dashStyle,
+        BorderDashStyle.Dot => _dotStyle,
+        BorderDashStyle.DashDot => _dashDotStyle,
+        BorderDashStyle.DashDotDot => _dashDotDotStyle,
         _ => null
     };
 
     public static DashStyle? ToDashStyle(this ConnectionStyle style) => style switch
     {
-        ConnectionStyle.Dashed => new DashStyle(new double[] { 2, 2 }, 0),
+        ConnectionStyle.Dashed => _connectionDashedStyle,
         _ => null
     };
 
+    private static int GetDashStyleKey(DashStyle? dashStyle)
+    {
+        if (dashStyle == null || dashStyle.Dashes == null || dashStyle.Dashes.Count == 0) return 0;
+        var hash = new HashCode();
+        foreach (var d in dashStyle.Dashes)
+        {
+            hash.Add(d);
+        }
+        hash.Add(dashStyle.Offset);
+        return hash.ToHashCode();
+    }
+
     public static IPen ToPen(this CoreColor c, double thickness = 1.0, DashStyle? dashStyle = null)
     {
-        return new Pen(c.ToBrush(), Math.Max(0.5, thickness), dashStyle, PenLineCap.Round, PenLineJoin.Round);
+        var clampedThickness = Math.Max(0.5, thickness);
+        var thicknessKey = (int)(clampedThickness * 100);
+        var dashKey = GetDashStyleKey(dashStyle);
+        var key = ((uint)c.ToArgb(), thicknessKey, dashKey);
+
+        return _penCache.GetOrAdd(key, _ => new Pen(c.ToBrush(), clampedThickness, dashStyle, PenLineCap.Round, PenLineJoin.Round));
     }
 
     public static Typeface ToTypeface(this ThemeFont font)
     {
-        var style = ((int)font.Style & (int)System.Drawing.FontStyle.Italic) != 0 ? global::Avalonia.Media.FontStyle.Italic : global::Avalonia.Media.FontStyle.Normal;
-        var weight = ((int)font.Style & (int)System.Drawing.FontStyle.Bold) != 0 ? FontWeight.Bold : FontWeight.Normal;
         var familyName = string.IsNullOrWhiteSpace(font.Name) ? "Segoe UI, Inter, Sans-Serif" : font.Name;
-        return new Typeface(new FontFamily(familyName), style, weight);
+        var styleInt = (int)font.Style;
+        return _typefaceCache.GetOrAdd((familyName, styleInt), _ =>
+        {
+            var style = (styleInt & (int)System.Drawing.FontStyle.Italic) != 0 ? global::Avalonia.Media.FontStyle.Italic : global::Avalonia.Media.FontStyle.Normal;
+            var weight = (styleInt & (int)System.Drawing.FontStyle.Bold) != 0 ? FontWeight.Bold : FontWeight.Normal;
+            return new Typeface(new FontFamily(familyName), style, weight);
+        });
     }
 
     public static StreamGeometry ToPolygonGeometry(IReadOnlyList<CoreVector> vertices, bool isClosed = true)
@@ -128,18 +164,8 @@ public static class DrawingAdapters
 
         if (handDrawn)
         {
-            var approx = new List<CoreVector>
-            {
-                new(bounds.Left + tl, bounds.Top),
-                new(bounds.Right - tr, bounds.Top),
-                new(bounds.Right, bounds.Top + tr),
-                new(bounds.Right, bounds.Bottom - br),
-                new(bounds.Right - br, bounds.Bottom),
-                new(bounds.Left + bl, bounds.Bottom),
-                new(bounds.Left, bounds.Bottom - bl),
-                new(bounds.Left, bounds.Top + tl)
-            };
-            var sketched = Sketch.ClosedCurve(approx, Sketch.Seeded(seed));
+            var outline = Sketch.RoundedRectangle(bounds, tl, tr, br, bl);
+            var sketched = Sketch.ClosedCurve(outline, Sketch.Seeded(seed));
             return ToPolygonGeometry(sketched, true);
         }
 
@@ -167,24 +193,21 @@ public static class DrawingAdapters
         return geometry;
     }
 
-    public static StreamGeometry CreateOctagonalGeometry(CoreRect bounds, CornerRadii corners, bool handDrawn = false, int seed = 0)
+    public static StreamGeometry CreateOctagonalGeometry(CoreRect bounds, CornerRadii? corners = null, bool handDrawn = false, int seed = 0)
     {
-        var defaultChamfer = Math.Min(bounds.Width, bounds.Height) * 0.25f;
-        var tl = corners.TopLeft > 0 ? (float)Math.Min(corners.TopLeft, Math.Min(bounds.Width, bounds.Height) / 2) : defaultChamfer;
-        var tr = corners.TopRight > 0 ? (float)Math.Min(corners.TopRight, Math.Min(bounds.Width, bounds.Height) / 2) : defaultChamfer;
-        var br = corners.BottomRight > 0 ? (float)Math.Min(corners.BottomRight, Math.Min(bounds.Width, bounds.Height) / 2) : defaultChamfer;
-        var bl = corners.BottomLeft > 0 ? (float)Math.Min(corners.BottomLeft, Math.Min(bounds.Width, bounds.Height) / 2) : defaultChamfer;
+        var qw = bounds.Width * 0.25f;
+        var qh = bounds.Height * 0.25f;
 
         var vertices = new[]
         {
-            new CoreVector(bounds.Left + tl, bounds.Top),
-            new CoreVector(bounds.Right - tr, bounds.Top),
-            new CoreVector(bounds.Right, bounds.Top + tr),
-            new CoreVector(bounds.Right, bounds.Bottom - br),
-            new CoreVector(bounds.Right - br, bounds.Bottom),
-            new CoreVector(bounds.Left + bl, bounds.Bottom),
-            new CoreVector(bounds.Left, bounds.Bottom - bl),
-            new CoreVector(bounds.Left, bounds.Top + tl)
+            new CoreVector(bounds.Left + qw, bounds.Top),
+            new CoreVector(bounds.Right - qw, bounds.Top),
+            new CoreVector(bounds.Right, bounds.Top + qh),
+            new CoreVector(bounds.Right, bounds.Bottom - qh),
+            new CoreVector(bounds.Right - qw, bounds.Bottom),
+            new CoreVector(bounds.Left + qw, bounds.Bottom),
+            new CoreVector(bounds.Left, bounds.Bottom - qh),
+            new CoreVector(bounds.Left, bounds.Top + qh)
         };
 
         if (handDrawn)
@@ -200,40 +223,34 @@ public static class DrawingAdapters
     {
         if (handDrawn)
         {
-            var cx = bounds.Left + bounds.Width / 2f;
-            var cy = bounds.Top + bounds.Height / 2f;
-            var rx = bounds.Width / 2f;
-            var ry = bounds.Height / 2f;
-            const int sampleCount = 24;
-            var samples = new List<CoreVector>(sampleCount);
-            for (var i = 0; i < sampleCount; i++)
-            {
-                var theta = i * 2 * Math.PI / sampleCount;
-                samples.Add(new CoreVector(cx + rx * (float)Math.Cos(theta), cy + ry * (float)Math.Sin(theta)));
-            }
-            var sketched = Sketch.ClosedCurve(samples, Sketch.Seeded(seed));
+            var outline = Sketch.Ellipse(bounds);
+            var sketched = Sketch.ClosedCurve(outline, Sketch.Seeded(seed));
             return ToPolygonGeometry(sketched, true);
         }
 
         var geometry = new StreamGeometry();
         using var ctx = geometry.Open();
-        var center = new AvaloniaPoint(bounds.Left + bounds.Width / 2.0, bounds.Top + bounds.Height / 2.0);
-        var rxD = bounds.Width / 2.0;
-        var ryD = bounds.Height / 2.0;
+        var cx = bounds.Left + bounds.Width / 2.0;
+        var cy = bounds.Top + bounds.Height / 2.0;
+        var rx = bounds.Width / 2.0;
+        var ry = bounds.Height / 2.0;
+        const double kappa = 0.5522847498307935;
+        var ox = rx * kappa;
+        var oy = ry * kappa;
 
-        ctx.BeginFigure(new AvaloniaPoint(center.X, center.Y - ryD), true);
-        ctx.ArcTo(new AvaloniaPoint(center.X, center.Y + ryD), new Size(rxD, ryD), 0, false, SweepDirection.Clockwise);
-        ctx.ArcTo(new AvaloniaPoint(center.X, center.Y - ryD), new Size(rxD, ryD), 0, false, SweepDirection.Clockwise);
+        ctx.BeginFigure(new AvaloniaPoint(cx, bounds.Top), true);
+        ctx.CubicBezierTo(new AvaloniaPoint(cx + ox, bounds.Top), new AvaloniaPoint(bounds.Right, cy - oy), new AvaloniaPoint(bounds.Right, cy));
+        ctx.CubicBezierTo(new AvaloniaPoint(bounds.Right, cy + oy), new AvaloniaPoint(cx + ox, bounds.Bottom), new AvaloniaPoint(cx, bounds.Bottom));
+        ctx.CubicBezierTo(new AvaloniaPoint(cx - ox, bounds.Bottom), new AvaloniaPoint(bounds.Left, cy + oy), new AvaloniaPoint(bounds.Left, cy));
+        ctx.CubicBezierTo(new AvaloniaPoint(bounds.Left, cy - oy), new AvaloniaPoint(cx - ox, bounds.Top), new AvaloniaPoint(cx, bounds.Top));
         ctx.EndFigure(true);
         return geometry;
     }
 
-    public static void DrawChevron(
-        AvaloniaDrawingContext context,
-        AvaloniaPoint tip,
+    public static StreamGeometry CreateChevronGeometry(
+        AvaloniaPoint pos,
         double angleDeg,
-        double arrowSize,
-        IBrush brush,
+        double size,
         int seed = 0,
         bool handDrawn = false)
     {
@@ -241,18 +258,54 @@ public static class DrawingAdapters
         var cos = Math.Cos(rad);
         var sin = Math.Sin(rad);
 
-        var pLeft = new AvaloniaPoint(tip.X - arrowSize * (sin + cos * 0.5), tip.Y + arrowSize * (cos - sin * 0.5));
-        var pRight = new AvaloniaPoint(tip.X - arrowSize * (sin - cos * 0.5), tip.Y + arrowSize * (cos + sin * 0.5));
+        AvaloniaPoint Transform(double lx, double ly) =>
+            new(pos.X + (lx * cos - ly * sin) * size,
+                pos.Y + (lx * sin + ly * cos) * size);
 
         var geometry = new StreamGeometry();
-        using (var ctx = geometry.Open())
+        using var ctx = geometry.Open();
+
+        if (handDrawn)
         {
-            ctx.BeginFigure(tip, true);
-            ctx.LineTo(pLeft);
-            ctx.LineTo(pRight);
+            var sketch = Sketch.Seeded(seed);
+            double Jitter() => (sketch.NextDouble() - 0.5) * 0.14;
+
+            var p1 = Transform(0.5 + Jitter(), Jitter());
+            var p2 = Transform(-0.5 + Jitter(), -0.5 + Jitter());
+            var p3 = Transform(-0.38 + Jitter(), Jitter() * 0.5);
+            var p4 = Transform(-0.5 + Jitter(), 0.5 + Jitter());
+
+            ctx.BeginFigure(p1, true);
+            ctx.LineTo(p2);
+            ctx.LineTo(p3);
+            ctx.LineTo(p4);
+            ctx.EndFigure(true);
+        }
+        else
+        {
+            var apex = Transform(0.5, 0.0);
+            var rightCorner = Transform(-0.5, -0.5);
+            var leftCorner = Transform(-0.5, 0.5);
+
+            ctx.BeginFigure(apex, true);
+            ctx.LineTo(rightCorner);
+            ctx.LineTo(leftCorner);
             ctx.EndFigure(true);
         }
 
+        return geometry;
+    }
+
+    public static void DrawChevron(
+        AvaloniaDrawingContext context,
+        AvaloniaPoint pos,
+        double angleDeg,
+        double arrowSize,
+        IBrush brush,
+        int seed = 0,
+        bool handDrawn = false)
+    {
+        var geometry = CreateChevronGeometry(pos, angleDeg, arrowSize, seed, handDrawn);
         context.DrawGeometry(brush, null, geometry);
     }
 

@@ -38,6 +38,10 @@ public class MapCanvasControl : Control
     private float _zoomFactor = 1.0f;
     private readonly CanvasTransform _transform = new();
     private ICommandService? _hookedService;
+    private readonly List<Element> _visibleElements = new();
+    private readonly SpatialLineIndex _spatialLines = new();
+    private readonly HashSet<Element> _selectedSet = new();
+    private int _spatialVersion = 1;
 
     public CoreVector Origin
     {
@@ -184,11 +188,13 @@ public class MapCanvasControl : Control
 
     private void OnProjectChanged(object? sender, ProjectChangedEventArgs e)
     {
+        _spatialVersion++;
         InvalidateVisual();
     }
 
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
+        _spatialVersion++;
         InvalidateVisual();
     }
 
@@ -198,6 +204,7 @@ public class MapCanvasControl : Control
         {
             SyncViewFromService(CommandService);
         }
+        _spatialVersion++;
         InvalidateVisual();
     }
 
@@ -330,22 +337,43 @@ public class MapCanvasControl : Control
             }
 
             // 4. Viewport Culling & Element Collection
-            var allElements = Project.Current.Elements;
+            _selectedSet.Clear();
             var selectedList = Project.Current.GetSelectedElements();
-            var selectedSet = new HashSet<Element>(selectedList);
-            if (selectedSet.Count == 0 && Project.Current.ActiveSelectedElement != null)
+            foreach (var sel in selectedList) _selectedSet.Add(sel);
+            if (_selectedSet.Count == 0 && Project.Current.ActiveSelectedElement != null)
             {
-                selectedSet.Add(Project.Current.ActiveSelectedElement);
+                _selectedSet.Add(Project.Current.ActiveSelectedElement);
             }
 
-            var visibleElements = allElements.Where(e => e.Intersects(culledWorld)).ToList();
-            visibleElements.Sort();
+            _visibleElements.Clear();
+            foreach (var elem in Project.Current.Elements)
+            {
+                if (elem.Intersects(culledWorld))
+                    _visibleElements.Add(elem);
+            }
+            _visibleElements.Sort();
 
             // 5. Render elements in Depth / ZOrder sequence (Rooms, Labels, Connections)
-            var linesDrawn = new List<CoreLineSegment>();
-            foreach (var element in visibleElements)
+            // Pre-populate room boundary segments for smart line segment crossing calculation
+            _spatialLines.Clear();
+            foreach (var element in _visibleElements)
             {
-                var isSelected = selectedSet.Contains(element);
+                if (element is Room room)
+                {
+                    var tl = room.InnerBounds.GetCorner(CompassPoint.NorthWest);
+                    var tr = room.InnerBounds.GetCorner(CompassPoint.NorthEast);
+                    var bl = room.InnerBounds.GetCorner(CompassPoint.SouthWest);
+                    var br = room.InnerBounds.GetCorner(CompassPoint.SouthEast);
+                    _spatialLines.Add(new CoreLineSegment(tl, tr));
+                    _spatialLines.Add(new CoreLineSegment(tr, br));
+                    _spatialLines.Add(new CoreLineSegment(br, bl));
+                    _spatialLines.Add(new CoreLineSegment(bl, tl));
+                }
+            }
+
+            foreach (var element in _visibleElements)
+            {
+                var isSelected = _selectedSet.Contains(element);
                 if (element is Room room)
                 {
                     room.DrawRoom(context, isSelected, false);
@@ -356,14 +384,14 @@ public class MapCanvasControl : Control
                 }
                 else if (element is Connection conn)
                 {
-                    conn.DrawConnection(context, isSelected, false, linesDrawn);
+                    conn.DrawConnection(context, isSelected, false, _spatialLines, _spatialVersion);
                 }
             }
 
             // 6. Render Selection Resize Handles
-            if (selectedSet.Count == 1)
+            if (_selectedSet.Count == 1)
             {
-                var singleSelected = selectedSet.First();
+                var singleSelected = _selectedSet.First();
                 if (singleSelected is ISizeable sizeable)
                 {
                     DrawSelectionHandles(context, sizeable);
@@ -372,9 +400,16 @@ public class MapCanvasControl : Control
         }
     }
 
+    private StreamGeometry? _cachedGridGeometry;
+    private CoreRect _cachedGridBounds;
+    private float _cachedGridSize;
+    private float _cachedGridZoom;
+
     private void DrawGrid(AvaloniaDrawingContext context, CoreRect visibleWorld)
     {
         var gridSize = Settings.GridSize;
+        if (gridSize <= 0) return;
+
         var minX = (float)(Math.Floor(visibleWorld.Left / gridSize) * gridSize);
         var maxX = (float)(Math.Ceiling(visibleWorld.Right / gridSize) * gridSize);
         var minY = (float)(Math.Floor(visibleWorld.Top / gridSize) * gridSize);
@@ -384,12 +419,37 @@ public class MapCanvasControl : Control
 
         if (gridSize * ZoomFactor >= 4)
         {
-            for (var x = minX; x <= maxX; x += gridSize)
+            var boundsRounded = new CoreRect(minX, minY, maxX - minX, maxY - minY);
+            if (_cachedGridGeometry == null
+                || Math.Abs(_cachedGridSize - gridSize) > 0.01f
+                || Math.Abs(_cachedGridZoom - ZoomFactor) > 0.1f
+                || !_cachedGridBounds.Equals(boundsRounded))
             {
-                for (var y = minY; y <= maxY; y += gridSize)
+                var geometry = new StreamGeometry();
+                using (var ctx = geometry.Open())
                 {
-                    context.DrawRectangle(gridBrush, null, new AvaloniaRect(x - 0.75, y - 0.75, 1.5, 1.5));
+                    const double halfDot = 0.75;
+                    for (var x = minX; x <= maxX; x += gridSize)
+                    {
+                        for (var y = minY; y <= maxY; y += gridSize)
+                        {
+                            ctx.BeginFigure(new Point(x - halfDot, y - halfDot), true);
+                            ctx.LineTo(new Point(x + halfDot, y - halfDot));
+                            ctx.LineTo(new Point(x + halfDot, y + halfDot));
+                            ctx.LineTo(new Point(x - halfDot, y + halfDot));
+                            ctx.EndFigure(true);
+                        }
+                    }
                 }
+                _cachedGridGeometry = geometry;
+                _cachedGridBounds = boundsRounded;
+                _cachedGridSize = gridSize;
+                _cachedGridZoom = ZoomFactor;
+            }
+
+            if (_cachedGridGeometry != null)
+            {
+                context.DrawGeometry(gridBrush, null, _cachedGridGeometry);
             }
         }
 

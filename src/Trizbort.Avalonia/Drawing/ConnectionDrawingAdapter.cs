@@ -20,14 +20,104 @@ using AvaloniaDrawingContext = Avalonia.Media.DrawingContext;
 
 namespace Trizbort.Avalonia.Drawing;
 
+public class SpatialLineIndex
+{
+    private const float CellSize = 128f;
+    private readonly Dictionary<long, List<CoreLineSegment>> _cells = new();
+    private readonly List<CoreLineSegment> _allLines = new();
+
+    public int Count => _allLines.Count;
+    public IReadOnlyList<CoreLineSegment> AllLines => _allLines;
+
+    public void Clear()
+    {
+        _cells.Clear();
+        _allLines.Clear();
+    }
+
+    public void Add(CoreLineSegment line)
+    {
+        _allLines.Add(line);
+        var minX = (int)Math.Floor(Math.Min(line.Start.X, line.End.X) / CellSize);
+        var maxX = (int)Math.Floor(Math.Max(line.Start.X, line.End.X) / CellSize);
+        var minY = (int)Math.Floor(Math.Min(line.Start.Y, line.End.Y) / CellSize);
+        var maxY = (int)Math.Floor(Math.Max(line.Start.Y, line.End.Y) / CellSize);
+
+        for (var x = minX; x <= maxX; x++)
+        {
+            for (var y = minY; y <= maxY; y++)
+            {
+                var key = ((long)x << 32) | (uint)y;
+                if (!_cells.TryGetValue(key, out var list))
+                {
+                    list = new List<CoreLineSegment>();
+                    _cells[key] = list;
+                }
+                list.Add(line);
+            }
+        }
+    }
+
+    public void Query(float minX, float maxX, float minY, float maxY, List<CoreLineSegment> results)
+    {
+        var startCellX = (int)Math.Floor(minX / CellSize);
+        var endCellX = (int)Math.Floor(maxX / CellSize);
+        var startCellY = (int)Math.Floor(minY / CellSize);
+        var endCellY = (int)Math.Floor(maxY / CellSize);
+
+        for (var x = startCellX; x <= endCellX; x++)
+        {
+            for (var y = startCellY; y <= endCellY; y++)
+            {
+                var key = ((long)x << 32) | (uint)y;
+                if (_cells.TryGetValue(key, out var list))
+                {
+                    for (var i = 0; i < list.Count; i++)
+                    {
+                        var item = list[i];
+                        if (!results.Contains(item))
+                        {
+                            results.Add(item);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 public static class ConnectionDrawingAdapter
 {
+    private class ConnectionCache
+    {
+        public List<CoreLineSegment> SmartSegments = new();
+        public float LastLineWidth;
+        public int VerticesHash;
+        public int LinesDrawnVersion;
+    }
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Connection, ConnectionCache> _connectionCaches = new();
+
+    private static int ComputeSegmentsHash(List<CoreLineSegment> segments)
+    {
+        var hash = new HashCode();
+        foreach (var s in segments)
+        {
+            hash.Add(s.Start.X);
+            hash.Add(s.Start.Y);
+            hash.Add(s.End.X);
+            hash.Add(s.End.Y);
+        }
+        return hash.ToHashCode();
+    }
+
     public static void DrawConnection(
         this Connection connection,
         AvaloniaDrawingContext context,
         bool isSelected,
         bool isHover,
-        List<CoreLineSegment>? linesDrawn = null)
+        SpatialLineIndex? spatialIndex,
+        int spatialVersion = 0)
     {
         var segments = connection.GetSegments();
         if (segments == null || segments.Count == 0) return;
@@ -42,9 +132,11 @@ public static class ConnectionDrawingAdapter
         var seed = connection.Id;
 
         // 1. Draw Connection Line / Path
+        var activeSegments = new List<CoreLineSegment>();
         if (connection.HasCurveWaypoints)
         {
-            var points = new List<CoreVector>();
+            activeSegments.AddRange(segments);
+            var points = new List<CoreVector>(segments.Count + 1);
             foreach (var seg in segments)
             {
                 points.Add(seg.Start);
@@ -70,14 +162,31 @@ public static class ConnectionDrawingAdapter
         }
         else
         {
-            // Calculate smart line segments (smart jump-overs across existing lines)
-            var activeSegments = new List<CoreLineSegment>();
-            if (linesDrawn != null && linesDrawn.Count > 0)
+            // Calculate / retrieve cached smart line segments
+            if (spatialIndex != null && spatialIndex.Count > 0)
             {
-                foreach (var seg in segments)
+                var cache = _connectionCaches.GetOrCreateValue(connection);
+                var segsHash = ComputeSegmentsHash(segments);
+
+                if (cache.SmartSegments.Count > 0
+                    && cache.VerticesHash == segsHash
+                    && Math.Abs(cache.LastLineWidth - Settings.LineWidth) < 0.01f
+                    && cache.LinesDrawnVersion == spatialVersion)
                 {
-                    var splitSegs = SplitSegment(seg, linesDrawn);
-                    activeSegments.AddRange(splitSegs);
+                    activeSegments.AddRange(cache.SmartSegments);
+                }
+                else
+                {
+                    foreach (var seg in segments)
+                    {
+                        var splitSegs = SplitSegment(seg, spatialIndex);
+                        activeSegments.AddRange(splitSegs);
+                    }
+                    cache.SmartSegments.Clear();
+                    cache.SmartSegments.AddRange(activeSegments);
+                    cache.VerticesHash = segsHash;
+                    cache.LastLineWidth = (float)Settings.LineWidth;
+                    cache.LinesDrawnVersion = spatialVersion;
                 }
             }
             else
@@ -122,14 +231,14 @@ public static class ConnectionDrawingAdapter
                     }
                 }
 
-                linesDrawn?.Add(seg);
+                spatialIndex?.Add(seg);
             }
         }
 
         // 2. Draw Directional Chevron (One-Way Flow)
-        if (connection.Flow == ConnectionFlow.OneWay && segments.Count > 0)
+        if (connection.Flow == ConnectionFlow.OneWay && activeSegments.Count > 0)
         {
-            var lastSegment = segments[^1];
+            var lastSegment = activeSegments[^1];
             var angleRad = Math.Atan2(lastSegment.Delta.Y, lastSegment.Delta.X);
             var angleDeg = angleRad * 180.0 / Math.PI + 90.0;
             var arrowSize = Math.Max(8.0, 2.0 * Settings.LineWidth);
@@ -137,23 +246,66 @@ public static class ConnectionDrawingAdapter
         }
 
         // 3. Draw Door / Lock Icons
-        if (connection.Door != null && segments.Count > 0)
+        if (connection.Door != null && activeSegments.Count > 0)
         {
-            var midSegment = segments[segments.Count / 2];
+            var midSegment = activeSegments[activeSegments.Count / 2];
             DrawDoorIcons(context, connection.Door, midSegment);
         }
 
         // 4. Draw Annotations (StartText, MidText, EndText)
-        DrawAnnotations(connection, context, segments);
+        DrawAnnotations(connection, context, activeSegments);
     }
 
-    private static List<CoreLineSegment> SplitSegment(CoreLineSegment lineSegment, List<CoreLineSegment> linesDrawn)
+    public static void DrawConnection(
+        this Connection connection,
+        AvaloniaDrawingContext context,
+        bool isSelected,
+        bool isHover,
+        List<CoreLineSegment>? linesDrawn)
+    {
+        SpatialLineIndex? spatial = null;
+        if (linesDrawn != null && linesDrawn.Count > 0)
+        {
+            spatial = new SpatialLineIndex();
+            foreach (var line in linesDrawn)
+            {
+                spatial.Add(line);
+            }
+        }
+        DrawConnection(connection, context, isSelected, isHover, spatial, 0);
+    }
+
+    public static List<CoreLineSegment> SplitSegment(CoreLineSegment lineSegment, SpatialLineIndex spatialIndex, int depth = 0)
     {
         var result = new List<CoreLineSegment>();
-        var gap = Math.Max(1.0f, Settings.LineWidth) * 3.0f;
-
-        foreach (var previous in linesDrawn)
+        if (depth > 10)
         {
+            result.Add(lineSegment);
+            return result;
+        }
+
+        var gap = Math.Max(1.0f, Settings.LineWidth) * 3.0f;
+        var segMinX = Math.Min(lineSegment.Start.X, lineSegment.End.X) - gap;
+        var segMaxX = Math.Max(lineSegment.Start.X, lineSegment.End.X) + gap;
+        var segMinY = Math.Min(lineSegment.Start.Y, lineSegment.End.Y) - gap;
+        var segMaxY = Math.Max(lineSegment.Start.Y, lineSegment.End.Y) + gap;
+
+        var candidates = new List<CoreLineSegment>();
+        spatialIndex.Query(segMinX, segMaxX, segMinY, segMaxY, candidates);
+
+        for (var i = 0; i < candidates.Count; i++)
+        {
+            var previous = candidates[i];
+            var prevMinX = Math.Min(previous.Start.X, previous.End.X);
+            var prevMaxX = Math.Max(previous.Start.X, previous.End.X);
+            var prevMinY = Math.Min(previous.Start.Y, previous.End.Y);
+            var prevMaxY = Math.Max(previous.Start.Y, previous.End.Y);
+
+            if (segMaxX < prevMinX || segMinX > prevMaxX || segMaxY < prevMinY || segMinY > prevMaxY)
+            {
+                continue;
+            }
+
             if (lineSegment.Intersect(previous, true, out var intersects))
             {
                 foreach (var intersect in intersects)
@@ -164,7 +316,7 @@ public static class ConnectionDrawingAdapter
                         var seg2 = new CoreLineSegment(intersect.Position, lineSegment.End);
                         if (seg1.Shorten(gap))
                         {
-                            result.AddRange(SplitSegment(seg1, linesDrawn));
+                            result.AddRange(SplitSegment(seg1, spatialIndex, depth + 1));
                         }
                         else
                         {
@@ -173,12 +325,110 @@ public static class ConnectionDrawingAdapter
 
                         if (seg2.Forshorten(gap))
                         {
-                            result.AddRange(SplitSegment(seg2, linesDrawn));
+                            result.AddRange(SplitSegment(seg2, spatialIndex, depth + 1));
                         }
                         else
                         {
                             result.Add(seg2);
                         }
+                        return result;
+                    }
+                    else if (intersect.Type == LineSegmentIntersectType.StartA)
+                    {
+                        if (lineSegment.Forshorten(gap))
+                        {
+                            return SplitSegment(lineSegment, spatialIndex, depth + 1);
+                        }
+                        result.Add(lineSegment);
+                        return result;
+                    }
+                    else if (intersect.Type == LineSegmentIntersectType.EndA)
+                    {
+                        if (lineSegment.Shorten(gap))
+                        {
+                            return SplitSegment(lineSegment, spatialIndex, depth + 1);
+                        }
+                        result.Add(lineSegment);
+                        return result;
+                    }
+                }
+            }
+        }
+
+        result.Add(lineSegment);
+        return result;
+    }
+
+    public static List<CoreLineSegment> SplitSegment(CoreLineSegment lineSegment, List<CoreLineSegment> linesDrawn, int depth = 0)
+    {
+        var result = new List<CoreLineSegment>();
+        if (depth > 10)
+        {
+            result.Add(lineSegment);
+            return result;
+        }
+
+        var gap = Math.Max(1.0f, Settings.LineWidth) * 3.0f;
+        var segMinX = Math.Min(lineSegment.Start.X, lineSegment.End.X) - gap;
+        var segMaxX = Math.Max(lineSegment.Start.X, lineSegment.End.X) + gap;
+        var segMinY = Math.Min(lineSegment.Start.Y, lineSegment.End.Y) - gap;
+        var segMaxY = Math.Max(lineSegment.Start.Y, lineSegment.End.Y) + gap;
+
+        foreach (var previous in linesDrawn)
+        {
+            var prevMinX = Math.Min(previous.Start.X, previous.End.X);
+            var prevMaxX = Math.Max(previous.Start.X, previous.End.X);
+            var prevMinY = Math.Min(previous.Start.Y, previous.End.Y);
+            var prevMaxY = Math.Max(previous.Start.Y, previous.End.Y);
+
+            if (segMaxX < prevMinX || segMinX > prevMaxX || segMaxY < prevMinY || segMinY > prevMaxY)
+            {
+                continue;
+            }
+
+            if (lineSegment.Intersect(previous, true, out var intersects))
+            {
+                foreach (var intersect in intersects)
+                {
+                    if (intersect.Type == LineSegmentIntersectType.MidPointA)
+                    {
+                        var seg1 = new CoreLineSegment(lineSegment.Start, intersect.Position);
+                        var seg2 = new CoreLineSegment(intersect.Position, lineSegment.End);
+                        if (seg1.Shorten(gap))
+                        {
+                            result.AddRange(SplitSegment(seg1, linesDrawn, depth + 1));
+                        }
+                        else
+                        {
+                            result.Add(seg1);
+                        }
+
+                        if (seg2.Forshorten(gap))
+                        {
+                            result.AddRange(SplitSegment(seg2, linesDrawn, depth + 1));
+                        }
+                        else
+                        {
+                            result.Add(seg2);
+                        }
+                        return result;
+                    }
+                    else if (intersect.Type == LineSegmentIntersectType.StartA)
+                    {
+                        if (lineSegment.Forshorten(gap))
+                        {
+                            return SplitSegment(lineSegment, linesDrawn, depth + 1);
+                        }
+                        result.Add(lineSegment);
+                        return result;
+                    }
+                    else if (intersect.Type == LineSegmentIntersectType.EndA)
+                    {
+                        if (lineSegment.Shorten(gap))
+                        {
+                            return SplitSegment(lineSegment, linesDrawn, depth + 1);
+                        }
+                        result.Add(lineSegment);
                         return result;
                     }
                 }
@@ -260,6 +510,23 @@ public static class ConnectionDrawingAdapter
         context.DrawEllipse(pen.Brush, null, new AvaloniaPoint(pos.X, pos.Y + 3), 1, 1);
     }
 
+    public static CoreVector GetRoomTypeAdjustments(Vertex vertex)
+    {
+        if (vertex.Port == null) return CoreVector.Zero;
+        CompassPointHelper.FromName(vertex.Port.Id, out var dir);
+        return dir switch
+        {
+            CompassPoint.SouthEast => new CoreVector(8, 6),
+            CompassPoint.NorthEast => new CoreVector(10, -6),
+            CompassPoint.EastNorthEast or CompassPoint.EastSouthEast => new CoreVector(4, 0),
+            CompassPoint.SouthWest => new CoreVector(-10, 4),
+            CompassPoint.NorthWest => new CoreVector(-10, -4),
+            CompassPoint.WestSouthWest => new CoreVector(-10, 0),
+            CompassPoint.WestNorthWest => new CoreVector(-10, -4),
+            _ => CoreVector.Zero
+        };
+    }
+
     private static void DrawAnnotations(Connection connection, AvaloniaDrawingContext context, List<CoreLineSegment> segments)
     {
         if (segments.Count == 0) return;
@@ -270,12 +537,14 @@ public static class ConnectionDrawingAdapter
 
         if (!string.IsNullOrEmpty(connection.StartText))
         {
-            DrawSingleAnnotation(context, connection.StartText, segments[0], font, typeface, brush, true);
+            var startVertex = connection.VertexList.Count > 0 ? connection.VertexList[0] : null;
+            DrawSingleAnnotation(context, connection.StartText, segments[0], font, typeface, brush, true, startVertex);
         }
 
         if (!string.IsNullOrEmpty(connection.EndText))
         {
-            DrawSingleAnnotation(context, connection.EndText, segments[^1], font, typeface, brush, false);
+            var endVertex = connection.VertexList.Count > 1 ? connection.VertexList[^1] : null;
+            DrawSingleAnnotation(context, connection.EndText, segments[^1], font, typeface, brush, false, endVertex);
         }
 
         if (!string.IsNullOrEmpty(connection.MidText))
@@ -293,7 +562,7 @@ public static class ConnectionDrawingAdapter
                     var ratio = seg.Length > 0.001f ? middle / seg.Length : 0.5f;
                     var midPoint = seg.Start + seg.Delta * ratio;
                     var dummySeg = new CoreLineSegment(midPoint - seg.Delta * 0.01f, midPoint + seg.Delta * 0.01f);
-                    DrawSingleAnnotation(context, connection.MidText, dummySeg, font, typeface, brush, null);
+                    DrawSingleAnnotation(context, connection.MidText, dummySeg, font, typeface, brush, null, null);
                     break;
                 }
             }
@@ -307,18 +576,33 @@ public static class ConnectionDrawingAdapter
         ThemeFont font,
         Typeface typeface,
         IBrush brush,
-        bool? isStart)
+        bool? isStart,
+        Vertex? vertex)
     {
         var delta = segment.Delta;
         CoreVector anchor;
+        var roomTypeAdjustments = CoreVector.Zero;
+
         if (isStart == true)
         {
-            anchor = segment.Start;
+            if (vertex?.Port != null)
+            {
+                var roomType = vertex.Port.Owner.GetRoomType();
+                if (roomType == RoomShape.Ellipse || roomType == RoomShape.Octagonal)
+                    roomTypeAdjustments = GetRoomTypeAdjustments(vertex);
+            }
+            anchor = segment.Start + roomTypeAdjustments;
             delta.Negate();
         }
         else if (isStart == false)
         {
-            anchor = segment.End;
+            if (vertex?.Port != null)
+            {
+                var roomType = vertex.Port.Owner.GetRoomType();
+                if (roomType == RoomShape.Ellipse || roomType == RoomShape.Octagonal)
+                    roomTypeAdjustments = GetRoomTypeAdjustments(vertex);
+            }
+            anchor = segment.End + roomTypeAdjustments;
         }
         else
         {
