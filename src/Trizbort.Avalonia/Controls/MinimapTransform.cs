@@ -118,18 +118,4 @@ public static class MinimapTransform
 
         return restrictedBounds.Clamp(targetWorld);
     }
-
-    public static Vector CalculateOriginDelta(Vector minimapDelta, Rect canvasBounds, Rect clientArea)
-    {
-        if (canvasBounds == Rect.Empty || canvasBounds.Width <= 0 || canvasBounds.Height <= 0 ||
-            clientArea.Width <= 0 || clientArea.Height <= 0)
-        {
-            return Vector.Zero;
-        }
-
-        var scaleX = canvasBounds.Width / clientArea.Width;
-        var scaleY = canvasBounds.Height / clientArea.Height;
-
-        return new Vector(minimapDelta.X * scaleX, minimapDelta.Y * scaleY);
-    }
 }

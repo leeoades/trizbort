@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
 using Avalonia.Input;
 using NUnit.Framework;
@@ -63,6 +64,29 @@ public class MinimapTransformTests
         roundTripped.Y.ShouldBe(worldY, 0.01f);
     }
 
+    [TestCase(-500f, -300f)]
+    [TestCase(-200f, 100f)]
+    [TestCase(0f, 0f)]
+    [TestCase(500f, 500f)]
+    public void MinimapTransform_NonZeroBoundsOffsetAndZoom_RoundTripsAccurately(float worldX, float worldY)
+    {
+        var canvasBounds = new CoreRect(-500, -300, 1000, 800);
+        var clientArea = new CoreRect(10, 20, 180, 120);
+
+        var worldPoint = new CoreVector(worldX, worldY);
+        var minimapPoint = MinimapTransform.WorldToMinimap(worldPoint, canvasBounds, clientArea);
+
+        minimapPoint.X.ShouldBeGreaterThanOrEqualTo(clientArea.Left - 0.01f);
+        minimapPoint.X.ShouldBeLessThanOrEqualTo(clientArea.Right + 0.01f);
+        minimapPoint.Y.ShouldBeGreaterThanOrEqualTo(clientArea.Top - 0.01f);
+        minimapPoint.Y.ShouldBeLessThanOrEqualTo(clientArea.Bottom + 0.01f);
+
+        var roundTripped = MinimapTransform.MinimapToWorld(minimapPoint, canvasBounds, clientArea);
+
+        roundTripped.X.ShouldBe(worldX, 0.01f);
+        roundTripped.Y.ShouldBe(worldY, 0.01f);
+    }
+
     [Test]
     public void MinimapTransform_EmptyMap_HandlesSafelyWithoutException()
     {
@@ -79,14 +103,12 @@ public class MinimapTransformTests
         MinimapTransform.WorldToMinimap(new CoreVector(10, 10), emptyBounds, clientArea).ShouldBe(new CoreVector(6, 6));
         MinimapTransform.MinimapToWorld(new CoreVector(50, 50), emptyBounds, clientArea).ShouldBe(CoreVector.Zero);
         MinimapTransform.CalculateOriginFromMinimapPoint(new CoreVector(50, 50), emptyBounds, clientArea, new CoreVector(800, 600)).ShouldBe(CoreVector.Zero);
-        MinimapTransform.CalculateOriginDelta(new CoreVector(10, 10), emptyBounds, clientArea).ShouldBe(CoreVector.Zero);
 
         // Zero client area
         var validBounds = new CoreRect(0, 0, 500, 400);
         MinimapTransform.WorldToMinimap(new CoreRect(10, 10, 50, 50), validBounds, zeroClient).ShouldBe(CoreRect.Empty);
         MinimapTransform.MinimapToWorld(new CoreVector(50, 50), validBounds, zeroClient).ShouldBe(validBounds.Center);
         MinimapTransform.CalculateOriginFromMinimapPoint(new CoreVector(50, 50), validBounds, zeroClient, new CoreVector(800, 600)).ShouldBe(validBounds.Center);
-        MinimapTransform.CalculateOriginDelta(new CoreVector(10, 10), validBounds, zeroClient).ShouldBe(CoreVector.Zero);
     }
 
     [Test]
@@ -125,6 +147,41 @@ public class MinimapTransformTests
     }
 
     [Test]
+    public void MinimapTransform_OriginCalculation_WithNonZeroBoundsOffsetAndZoom()
+    {
+        var canvasBounds = new CoreRect(-500, -300, 1000, 800); // Center is (0, 100)
+        var clientArea = new CoreRect(0, 0, 200, 200);
+        var viewportWorldSize = new CoreVector(400, 300); // half width = 200, half height = 150
+
+        // Center of minimap (100, 100) -> target world (0, 100)
+        var originCenter = MinimapTransform.CalculateOriginFromMinimapPoint(
+            new CoreVector(100, 100),
+            canvasBounds,
+            clientArea,
+            viewportWorldSize);
+        originCenter.X.ShouldBe(0f, 0.1f);
+        originCenter.Y.ShouldBe(100f, 0.1f);
+
+        // Top-left of minimap (0, 0) -> target (-500, -300), clamped to (-500 + 200, -300 + 150) = (-300, -150)
+        var originTopLeft = MinimapTransform.CalculateOriginFromMinimapPoint(
+            new CoreVector(0, 0),
+            canvasBounds,
+            clientArea,
+            viewportWorldSize);
+        originTopLeft.X.ShouldBe(-300f, 0.1f);
+        originTopLeft.Y.ShouldBe(-150f, 0.1f);
+
+        // Bottom-right of minimap (200, 200) -> target (500, 500), clamped to (500 - 200, 500 - 150) = (300, 350)
+        var originBottomRight = MinimapTransform.CalculateOriginFromMinimapPoint(
+            new CoreVector(200, 200),
+            canvasBounds,
+            clientArea,
+            viewportWorldSize);
+        originBottomRight.X.ShouldBe(300f, 0.1f);
+        originBottomRight.Y.ShouldBe(350f, 0.1f);
+    }
+
+    [Test]
     public void MinimapTransform_SmallMapInLargeViewport_CentersOriginOnMap()
     {
         var canvasBounds = new CoreRect(100, 100, 200, 100); // Center is (200, 150)
@@ -140,19 +197,6 @@ public class MinimapTransformTests
         // When viewport is larger than map, origin must be fixed at map center
         origin.X.ShouldBe(200f, 0.1f);
         origin.Y.ShouldBe(150f, 0.1f);
-    }
-
-    [Test]
-    public void MinimapTransform_CalculateOriginDelta_ScalesProportionally()
-    {
-        var canvasBounds = new CoreRect(0, 0, 1000, 500);
-        var clientArea = new CoreRect(0, 0, 100, 50);
-
-        var deltaMinimap = new CoreVector(10, 5);
-        var deltaWorld = MinimapTransform.CalculateOriginDelta(deltaMinimap, canvasBounds, clientArea);
-
-        deltaWorld.X.ShouldBe(100f, 0.01f);
-        deltaWorld.Y.ShouldBe(50f, 0.01f);
     }
 
     [AvaloniaTest]
@@ -197,42 +241,60 @@ public class MinimapTransformTests
 
         try
         {
-            // Initial origin
-            var initialOrigin = canvas.Origin;
+            root.Measure(new Size(800, 600));
+            root.Arrange(new global::Avalonia.Rect(0, 0, 800, 600));
 
-            // Click minimap at center (100, 65)
+            var canvasBounds = MinimapTransform.ComputeCanvasBounds(Project.Current.Elements);
+            var clientArea = new CoreRect(6, 6, 200 - 12, 130 - 12);
+            var viewportWorldSize = new CoreVector(800, 600);
+
+            // Click minimap at (100, 65)
+            var clickPoint = new CoreVector(100, 65);
+            var expectedOriginClick = MinimapTransform.CalculateOriginFromMinimapPoint(
+                clickPoint,
+                canvasBounds,
+                clientArea,
+                viewportWorldSize);
+
             minimap.RaiseEvent(new PointerPressedEventArgs(
                 minimap,
                 new Pointer(1, PointerType.Mouse, true),
                 minimap,
-                new AvaloniaPoint(100, 65),
+                new AvaloniaPoint(clickPoint.X, clickPoint.Y),
                 0,
                 new PointerPointProperties(RawInputModifiers.LeftMouseButton, PointerUpdateKind.LeftButtonPressed),
                 KeyModifiers.None));
 
-            var originAfterClick = canvas.Origin;
-            originAfterClick.ShouldNotBe(initialOrigin);
+            canvas.Origin.X.ShouldBe(expectedOriginClick.X, 0.5f);
+            canvas.Origin.Y.ShouldBe(expectedOriginClick.Y, 0.5f);
 
             // Drag minimap to (150, 100)
+            var dragPoint = new CoreVector(150, 100);
+            var expectedOriginDrag = MinimapTransform.CalculateOriginFromMinimapPoint(
+                dragPoint,
+                canvasBounds,
+                clientArea,
+                viewportWorldSize);
+
             minimap.RaiseEvent(new PointerEventArgs(
                 InputElement.PointerMovedEvent,
                 minimap,
                 new Pointer(1, PointerType.Mouse, true),
                 minimap,
-                new AvaloniaPoint(150, 100),
+                new AvaloniaPoint(dragPoint.X, dragPoint.Y),
                 0,
                 new PointerPointProperties(RawInputModifiers.LeftMouseButton, PointerUpdateKind.Other),
                 KeyModifiers.None));
 
-            var originAfterDrag = canvas.Origin;
-            originAfterDrag.ShouldNotBe(originAfterClick);
+            canvas.Origin.X.ShouldBe(expectedOriginDrag.X, 0.5f);
+            canvas.Origin.Y.ShouldBe(expectedOriginDrag.Y, 0.5f);
 
             // Release pointer
             minimap.RaiseEvent(new PointerReleasedEventArgs(
                 minimap,
                 new Pointer(1, PointerType.Mouse, true),
                 minimap,
-                new AvaloniaPoint(150, 100),
+                new AvaloniaPoint(dragPoint.X, dragPoint.Y),
                 0,
                 new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.LeftButtonReleased),
                 KeyModifiers.None,
@@ -245,13 +307,13 @@ public class MinimapTransformTests
     }
 
     [AvaloniaTest]
-    public void MinimapControl_RedrawsOnModelChangePanAndZoom()
+    public void MinimapControl_RedrawsOnModelChangePanZoomAndResize()
     {
         var service = new CommandService();
         var canvas = new MapCanvasControl { CommandService = service, Width = 800, Height = 600 };
         var minimap = new MinimapControl { CommandService = service, CanvasControl = canvas, Width = 200, Height = 130 };
 
-        var panel = new Panel();
+        var panel = new Panel { Width = 800, Height = 600 };
         panel.Children.Add(canvas);
         panel.Children.Add(minimap);
 
@@ -260,15 +322,24 @@ public class MinimapTransformTests
 
         try
         {
+            panel.Measure(new Size(800, 600));
+            panel.Arrange(new global::Avalonia.Rect(0, 0, 800, 600));
+
+            var initialInvalidations = minimap.InvalidationCount;
+
             // Pan moves service origin and updates view
             service.Origin = new CoreVector(300, 400);
             canvas.Origin.ShouldBe(new CoreVector(300, 400));
+            minimap.InvalidationCount.ShouldBeGreaterThan(initialInvalidations);
+            var count = minimap.InvalidationCount;
 
             // Zoom changes
             service.ZoomFactor = 2.5f;
             canvas.ZoomFactor.ShouldBe(2.5f);
+            minimap.InvalidationCount.ShouldBeGreaterThan(count);
+            count = minimap.InvalidationCount;
 
-            // Model element added
+            // Model element added (Room)
             var room = new Room(Project.Current)
             {
                 Name = "Test Room",
@@ -276,16 +347,54 @@ public class MinimapTransformTests
                 Size = new CoreVector(80, 50)
             };
             Project.Current.Elements.Add(room);
+            minimap.InvalidationCount.ShouldBeGreaterThan(count);
+            count = minimap.InvalidationCount;
 
+            // Model element added (MapLabel)
+            var label = new MapLabel(Project.Current)
+            {
+                Text = "Test Label",
+                Position = new CoreVector(300, 300),
+                Size = new CoreVector(120, 40)
+            };
+            Project.Current.Elements.Add(label);
+            minimap.InvalidationCount.ShouldBeGreaterThan(count);
+            count = minimap.InvalidationCount;
+
+            // Model element added (Connection)
             var conn = new Connection(Project.Current, new Vertex(room.PortList[0]), new Vertex(room.PortList[1]));
             Project.Current.Elements.Add(conn);
+            minimap.InvalidationCount.ShouldBeGreaterThan(count);
+            count = minimap.InvalidationCount;
 
-            // Mutating element
+            // Mutating elements
             room.Position = new CoreVector(200, 200);
+            minimap.InvalidationCount.ShouldBeGreaterThan(count);
+            count = minimap.InvalidationCount;
 
-            // Removing element
+            label.Text = "Updated Label";
+            minimap.InvalidationCount.ShouldBeGreaterThan(count);
+            count = minimap.InvalidationCount;
+
+            // Removing elements
             Project.Current.Elements.Remove(conn);
+            Project.Current.Elements.Remove(label);
             Project.Current.Elements.Remove(room);
+            minimap.InvalidationCount.ShouldBeGreaterThan(count);
+            count = minimap.InvalidationCount;
+
+            // Project replaced
+            var newProject = new Project();
+            Project.Current = newProject;
+            minimap.InvalidationCount.ShouldBeGreaterThan(count);
+            count = minimap.InvalidationCount;
+
+            // Canvas bounds resize
+            canvas.Width = 1024;
+            canvas.Height = 768;
+            panel.Measure(new Size(1024, 768));
+            panel.Arrange(new global::Avalonia.Rect(0, 0, 1024, 768));
+            minimap.InvalidationCount.ShouldBeGreaterThan(count);
         }
         finally
         {
@@ -309,24 +418,86 @@ public class MinimapTransformTests
 
         try
         {
-            // Empty map measure/arrange
+            // Empty map measure/arrange and render frame capture
             panel.Measure(new Size(800, 600));
             panel.Arrange(new global::Avalonia.Rect(0, 0, 800, 600));
-            minimap.InvalidateVisual();
+
+            using var emptyFrame = window.CaptureRenderedFrame();
+            emptyFrame.ShouldNotBeNull();
+            emptyFrame.PixelSize.Width.ShouldBeGreaterThan(0);
+            emptyFrame.PixelSize.Height.ShouldBeGreaterThan(0);
 
             // Populate map
             var roomA = new Room(Project.Current) { Name = "A", Position = new CoreVector(0, 0), Size = new CoreVector(100, 60) };
             var roomB = new Room(Project.Current) { Name = "B", Position = new CoreVector(200, 200), Size = new CoreVector(100, 60) };
+            var label = new MapLabel(Project.Current) { Text = "Forest", Position = new CoreVector(100, 50), Size = new CoreVector(80, 30) };
             Project.Current.Elements.Add(roomA);
             Project.Current.Elements.Add(roomB);
+            Project.Current.Elements.Add(label);
             var conn = new Connection(Project.Current, new Vertex(roomA.PortList[0]), new Vertex(roomB.PortList[0]));
             Project.Current.Elements.Add(conn);
 
             service.Select(roomA);
-            minimap.InvalidateVisual();
 
-            service.ClearSelection();
-            minimap.InvalidateVisual();
+            using var populatedFrame = window.CaptureRenderedFrame();
+            populatedFrame.ShouldNotBeNull();
+            populatedFrame.PixelSize.Width.ShouldBeGreaterThan(0);
+            populatedFrame.PixelSize.Height.ShouldBeGreaterThan(0);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void MinimapControl_Lifecycle_NoLeakOnDetachAndNoDoubleSubscription()
+    {
+        var service = new CommandService();
+        var canvas = new MapCanvasControl { CommandService = service, Width = 800, Height = 600 };
+
+        // Set properties before attaching
+        var minimap = new MinimapControl
+        {
+            CommandService = service,
+            CanvasControl = canvas,
+            Width = 200,
+            Height = 130
+        };
+
+        var panel = new Panel { Width = 800, Height = 600 };
+        panel.Children.Add(canvas);
+        panel.Children.Add(minimap);
+
+        var window = new Window { Content = panel, Width = 800, Height = 600 };
+        window.Show();
+
+        try
+        {
+            panel.Measure(new Size(800, 600));
+            panel.Arrange(new global::Avalonia.Rect(0, 0, 800, 600));
+
+            var countAfterAttach = minimap.InvalidationCount;
+
+            // Invalidation when attached
+            service.InvalidateCanvas();
+            minimap.InvalidationCount.ShouldBe(countAfterAttach + 1);
+
+            // Detach minimap from visual tree
+            panel.Children.Remove(minimap);
+            var countAfterDetach = minimap.InvalidationCount;
+
+            // Invalidation while detached should not affect minimap
+            service.InvalidateCanvas();
+            minimap.InvalidationCount.ShouldBe(countAfterDetach);
+
+            // Re-attach minimap to visual tree
+            panel.Children.Add(minimap);
+            var countAfterReattach = minimap.InvalidationCount;
+
+            // Invalidation when re-attached should increment by exactly 1 (no double subscription)
+            service.InvalidateCanvas();
+            minimap.InvalidationCount.ShouldBe(countAfterReattach + 1);
         }
         finally
         {

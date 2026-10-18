@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using Trizbort.Avalonia.Drawing;
 using Trizbort.Avalonia.Services;
 using Trizbort.Domain.Application;
@@ -39,6 +40,14 @@ public class MinimapControl : Control
         set => SetValue(CanvasControlProperty, value);
     }
 
+    internal int InvalidationCount { get; private set; }
+
+    public new void InvalidateVisual()
+    {
+        InvalidationCount++;
+        base.InvalidateVisual();
+    }
+
     private bool _isDragging;
     private Project? _hookedProject;
     private ICommandService? _hookedService;
@@ -54,9 +63,9 @@ public class MinimapControl : Control
         base.OnAttachedToVisualTree(e);
         Project.ProjectChanged += OnProjectChanged;
         Settings.Changed += OnSettingsChanged;
-        HookProject(Project.Current);
-        HookService(CommandService);
-        HookCanvas(CanvasControl);
+        TryHookCanvas();
+        TryHookProject(Project.Current);
+        TryHookService();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -64,9 +73,9 @@ public class MinimapControl : Control
         base.OnDetachedFromVisualTree(e);
         Project.ProjectChanged -= OnProjectChanged;
         Settings.Changed -= OnSettingsChanged;
-        UnhookProject(_hookedProject);
-        UnhookService(_hookedService);
-        UnhookCanvas(_hookedCanvas);
+        TryUnhookCanvas();
+        TryUnhookProject();
+        TryUnhookService();
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -75,99 +84,140 @@ public class MinimapControl : Control
 
         if (change.Property == CommandServiceProperty)
         {
-            UnhookService(_hookedService);
-            HookService(change.GetNewValue<ICommandService?>());
+            TryUnhookService();
+            TryHookService();
             InvalidateVisual();
         }
         else if (change.Property == CanvasControlProperty)
         {
-            UnhookCanvas(_hookedCanvas);
-            HookCanvas(change.GetNewValue<MapCanvasControl?>());
+            TryUnhookCanvas();
+            TryHookCanvas();
+            TryUnhookService();
+            TryHookService();
+            TryUnhookProject();
+            TryHookProject(Project.Current);
             InvalidateVisual();
         }
     }
 
-    private void HookService(ICommandService? service)
+    private void TryHookService()
     {
-        if (service == null) return;
+        if (CanvasControl != null)
+        {
+            TryUnhookService();
+            return;
+        }
+
+        var service = CommandService;
+        if (!this.IsAttachedToVisualTree() || service == null || ReferenceEquals(_hookedService, service))
+        {
+            return;
+        }
+
         _hookedService = service;
-        service.CanvasInvalidated += OnServiceCanvasInvalidated;
-        service.ZoomChanged += OnServiceZoomChanged;
-        service.SelectionChanged += OnServiceSelectionChanged;
-        service.ProjectChanged += OnServiceProjectChanged;
+        _hookedService.CanvasInvalidated += OnServiceCanvasInvalidated;
+        _hookedService.ZoomChanged += OnServiceZoomChanged;
+        _hookedService.SelectionChanged += OnServiceSelectionChanged;
+        _hookedService.ProjectChanged += OnServiceProjectChanged;
     }
 
-    private void UnhookService(ICommandService? service)
+    private void TryUnhookService()
     {
-        if (service == null) return;
-        service.CanvasInvalidated -= OnServiceCanvasInvalidated;
-        service.ZoomChanged -= OnServiceZoomChanged;
-        service.SelectionChanged -= OnServiceSelectionChanged;
-        service.ProjectChanged -= OnServiceProjectChanged;
-        if (ReferenceEquals(_hookedService, service))
+        if (_hookedService == null)
         {
-            _hookedService = null;
+            return;
         }
+
+        _hookedService.CanvasInvalidated -= OnServiceCanvasInvalidated;
+        _hookedService.ZoomChanged -= OnServiceZoomChanged;
+        _hookedService.SelectionChanged -= OnServiceSelectionChanged;
+        _hookedService.ProjectChanged -= OnServiceProjectChanged;
+        _hookedService = null;
     }
 
-    private void HookCanvas(MapCanvasControl? canvas)
+    private void TryHookCanvas()
     {
-        if (canvas == null) return;
+        var canvas = CanvasControl;
+        if (!this.IsAttachedToVisualTree() || canvas == null || ReferenceEquals(_hookedCanvas, canvas))
+        {
+            return;
+        }
+
         _hookedCanvas = canvas;
-        canvas.ViewChanged += OnCanvasViewChanged;
+        _hookedCanvas.ViewChanged += OnCanvasViewChanged;
     }
 
-    private void UnhookCanvas(MapCanvasControl? canvas)
+    private void TryUnhookCanvas()
     {
-        if (canvas == null) return;
-        canvas.ViewChanged -= OnCanvasViewChanged;
-        if (ReferenceEquals(_hookedCanvas, canvas))
+        if (_hookedCanvas == null)
         {
-            _hookedCanvas = null;
+            return;
         }
+
+        _hookedCanvas.ViewChanged -= OnCanvasViewChanged;
+        _hookedCanvas = null;
     }
 
-    private void HookProject(Project? project)
+    private void TryHookProject(Project? project)
     {
-        if (project == null || ReferenceEquals(_hookedProject, project)) return;
+        if (CanvasControl != null)
+        {
+            TryUnhookProject();
+            return;
+        }
 
-        UnhookProject(_hookedProject);
-        _hookedProject = project;
-        project.Elements.Added += OnElementAdded;
-        project.Elements.Removed += OnElementRemoved;
+        var proj = project ?? Project.Current;
+        if (!this.IsAttachedToVisualTree() || proj == null || ReferenceEquals(_hookedProject, proj))
+        {
+            return;
+        }
 
-        foreach (var element in project.Elements)
+        TryUnhookProject();
+        _hookedProject = proj;
+        _hookedProject.Elements.Added += OnElementAdded;
+        _hookedProject.Elements.Removed += OnElementRemoved;
+
+        foreach (var element in _hookedProject.Elements)
         {
             element.Changed += OnElementChanged;
         }
     }
 
-    private void UnhookProject(Project? project)
+    private void TryUnhookProject()
     {
-        if (project == null) return;
+        if (_hookedProject == null)
+        {
+            return;
+        }
 
-        project.Elements.Added -= OnElementAdded;
-        project.Elements.Removed -= OnElementRemoved;
+        _hookedProject.Elements.Added -= OnElementAdded;
+        _hookedProject.Elements.Removed -= OnElementRemoved;
 
-        foreach (var element in project.Elements)
+        foreach (var element in _hookedProject.Elements)
         {
             element.Changed -= OnElementChanged;
         }
 
-        if (ReferenceEquals(_hookedProject, project))
-        {
-            _hookedProject = null;
-        }
+        _hookedProject = null;
     }
 
     private void OnProjectChanged(object? sender, ProjectChangedEventArgs e)
     {
-        if (e.OldProject != null) UnhookProject(e.OldProject);
-        if (e.NewProject != null) HookProject(e.NewProject);
-        InvalidateVisual();
+        if (CanvasControl == null)
+        {
+            TryUnhookProject();
+            TryHookProject(e.NewProject ?? Project.Current);
+            InvalidateVisual();
+        }
     }
 
-    private void OnSettingsChanged(object? sender, EventArgs e) => InvalidateVisual();
+    private void OnSettingsChanged(object? sender, EventArgs e)
+    {
+        if (CanvasControl == null)
+        {
+            InvalidateVisual();
+        }
+    }
     private void OnServiceCanvasInvalidated(object? sender, EventArgs e) => InvalidateVisual();
     private void OnServiceZoomChanged(object? sender, float e) => InvalidateVisual();
     private void OnServiceSelectionChanged(object? sender, EventArgs e) => InvalidateVisual();
@@ -331,28 +381,48 @@ public class MinimapControl : Control
                     }
                 }
 
-                // Draw rooms
-                var roomDefaultBorderPen = Settings.Color[CoreColors.Border].ToPen(1.0);
-                var roomDefaultFill = Settings.Color[CoreColors.Canvas].ToBrush();
+                // Draw sizeable elements (rooms and map labels)
+                var defaultBorderPen = Settings.Color[CoreColors.Border].ToPen(1.0);
+                var defaultRoomFill = Settings.Color[CoreColors.Canvas].ToBrush();
 
-                foreach (var room in elements.OfType<Room>())
+                foreach (var element in elements)
                 {
-                    var isSelected = selectedSet != null && selectedSet.Contains(room);
-                    var roomMinimap = MinimapTransform.WorldToMinimap(room.InnerBounds, canvasBounds, clientArea);
-                    if (roomMinimap.Width < 1) roomMinimap.Width = 1;
-                    if (roomMinimap.Height < 1) roomMinimap.Height = 1;
-
-                    var fillBrush = isSelected
-                        ? selPen.Brush
-                        : (room.RoomFillColor != System.Drawing.Color.Transparent ? room.RoomFillColor.ToBrush() : roomDefaultFill);
-
-                    var pen = isSelected
-                        ? selPen
-                        : (room.RoomBorderColor != System.Drawing.Color.Transparent ? room.RoomBorderColor.ToPen(1.0) : roomDefaultBorderPen);
-
-                    if (fillBrush != null)
+                    if (element is Room room)
                     {
-                        context.DrawRectangle(fillBrush, pen, roomMinimap.ToRect());
+                        var isSelected = selectedSet != null && selectedSet.Contains(room);
+                        var roomMinimap = MinimapTransform.WorldToMinimap(room.InnerBounds, canvasBounds, clientArea);
+                        if (roomMinimap.Width < 1) roomMinimap.Width = 1;
+                        if (roomMinimap.Height < 1) roomMinimap.Height = 1;
+
+                        var fillBrush = isSelected
+                            ? selPen.Brush
+                            : (room.RoomFillColor != System.Drawing.Color.Transparent ? room.RoomFillColor.ToBrush() : defaultRoomFill);
+
+                        var pen = isSelected
+                            ? selPen
+                            : (room.RoomBorderColor != System.Drawing.Color.Transparent ? room.RoomBorderColor.ToPen(1.0) : defaultBorderPen);
+
+                        if (fillBrush != null)
+                        {
+                            context.DrawRectangle(fillBrush, pen, roomMinimap.ToRect());
+                        }
+                    }
+                    else if (element is MapLabel label)
+                    {
+                        var isSelected = selectedSet != null && selectedSet.Contains(label);
+                        var labelMinimap = MinimapTransform.WorldToMinimap(label.InnerBounds, canvasBounds, clientArea);
+                        if (labelMinimap.Width < 1) labelMinimap.Width = 1;
+                        if (labelMinimap.Height < 1) labelMinimap.Height = 1;
+
+                        var fillBrush = isSelected
+                            ? selPen.Brush
+                            : (label.HasBackground && label.BackgroundColor != System.Drawing.Color.Transparent ? label.BackgroundColor.ToBrush() : null);
+
+                        var pen = isSelected
+                            ? selPen
+                            : (label.BorderColor != System.Drawing.Color.Transparent ? label.BorderColor.ToPen(1.0) : defaultBorderPen);
+
+                        context.DrawRectangle(fillBrush, pen, labelMinimap.ToRect());
                     }
                 }
 

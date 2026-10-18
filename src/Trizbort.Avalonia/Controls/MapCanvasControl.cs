@@ -302,6 +302,7 @@ public class MapCanvasControl : Control
             _transform.ViewportWidth = bounds.Width;
             _transform.ViewportHeight = bounds.Height;
             CommandService?.SetViewportSize(bounds.Width, bounds.Height);
+            InvalidateVisual();
         }
     }
 
