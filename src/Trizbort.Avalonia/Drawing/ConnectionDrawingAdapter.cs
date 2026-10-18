@@ -367,7 +367,6 @@ public static class ConnectionDrawingAdapter
             var arrowSize = (double)Settings.ConnectionArrowSize;
             if (handDrawn && sketched.Count > 0)
             {
-                var arrowRandom = Sketch.Seeded(seed + 5000);
                 foreach (var (position, direction) in chevrons)
                 {
                     var target = position;

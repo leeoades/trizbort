@@ -622,40 +622,183 @@ public class DrawingAdaptersParityTests
     }
 
     [AvaloniaTest]
-    public void ConnectionDrawing_OneWayChevron_HandDrawnAndCustomColor()
+    public void ConnectionDrawing_OneWayChevron_HandDrawn_SnapsToStrokeAndFollowsTangent()
     {
         var prevHandDrawn = Setup.Settings.HandDrawn;
         Setup.Settings.HandDrawn = true;
         try
         {
             var project = new Project();
-            var conn = new Connection(project, new Vertex(new CoreVector(10, 20)), new Vertex(new CoreVector(110, 20)))
+            // Straight connection
+            var connStraight = new Connection(project, new Vertex(new CoreVector(10, 20)), new Vertex(new CoreVector(110, 20)))
             {
                 Flow = ConnectionFlow.OneWay,
                 ConnectionColor = DrawingColor.DarkRed
             };
 
-            var group = new global::Avalonia.Media.DrawingGroup();
-            using (var ctx = group.Open())
+            var groupStraight = new global::Avalonia.Media.DrawingGroup();
+            using (var ctx = groupStraight.Open())
             {
-                conn.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
+                connStraight.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
             }
 
-            var chevronDrawings = group.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
-            Assert.That(chevronDrawings.Count, Is.GreaterThanOrEqualTo(1));
+            var straightChevrons = groupStraight.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
+            Assert.That(straightChevrons.Count, Is.EqualTo(1));
 
-            var chevronDrawing = chevronDrawings.Last();
-            Assert.That(chevronDrawing.Brush, Is.Not.Null);
-
-            var solidBrush = chevronDrawing.Brush as global::Avalonia.Media.ISolidColorBrush;
+            var straightChevron = straightChevrons.Single();
+            var solidBrush = straightChevron.Brush as global::Avalonia.Media.ISolidColorBrush;
             Assert.That(solidBrush, Is.Not.Null);
             Assert.That(solidBrush!.Color.R, Is.EqualTo(DrawingColor.DarkRed.R));
             Assert.That(solidBrush!.Color.G, Is.EqualTo(DrawingColor.DarkRed.G));
             Assert.That(solidBrush!.Color.B, Is.EqualTo(DrawingColor.DarkRed.B));
+
+            // Verify snapping onto the sketched stroke
+            var stroke = Sketch.Line(new CoreVector(10, 20), new CoreVector(110, 20), Sketch.Seeded(connStraight.Id));
+            var snappedPoint = Sketch.Nearest(stroke, new CoreVector(60, 20), out var strokeDir);
+
+            var bounds = straightChevron.Geometry!.Bounds;
+            var chevronCenter = bounds.Center;
+            Assert.That(chevronCenter.X, Is.EqualTo(snappedPoint.X).Within(2.0));
+            Assert.That(chevronCenter.Y, Is.EqualTo(snappedPoint.Y).Within(2.0));
+
+            // Apex should point in positive X direction along +strokeDir (flow goes East)
+            var sign = strokeDir.X >= 0 ? 1 : -1;
+            var effectiveDir = new CoreVector(strokeDir.X * sign, strokeDir.Y * sign);
+            Assert.That(effectiveDir.X, Is.GreaterThan(0));
+
+            // Curved hand-drawn connection
+            var connCurved = new Connection(project, new Vertex(new CoreVector(0, 0)), new Vertex(new CoreVector(200, 0)))
+            {
+                Flow = ConnectionFlow.OneWay
+            };
+            connCurved.SetCurveWaypoint(0, new CoreVector(100, 50));
+
+            var groupCurved = new global::Avalonia.Media.DrawingGroup();
+            using (var ctx = groupCurved.Open())
+            {
+                connCurved.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
+            }
+
+            var curvedChevrons = groupCurved.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
+            connCurved.GetCurvedSegments(out var spans);
+            Assert.That(curvedChevrons.Count, Is.EqualTo(spans.Count));
+
+            for (var i = 0; i < spans.Count; i++)
+            {
+                var mid = CurveGeometry.PolylineMidpoint(spans[i], out var spanDir);
+                Assert.That(curvedChevrons[i].Geometry, Is.Not.Null);
+                var cBounds = curvedChevrons[i].Geometry!.Bounds;
+                Assert.That(cBounds.Center.X, Is.EqualTo(mid.X).Within(6.0));
+                Assert.That(cBounds.Center.Y, Is.EqualTo(mid.Y).Within(6.0));
+            }
         }
         finally
         {
             Setup.Settings.HandDrawn = prevHandDrawn;
+        }
+    }
+
+    [AvaloniaTest]
+    public void ConnectionDrawing_DockedRooms_MultiSegments_PositionsDirectionsAndReversal()
+    {
+        var project = new Project();
+
+        // Room A at (0, 0, 96, 64) and Room B at (240, 0, 96, 64)
+        var roomA = new Room(project)
+        {
+            Position = new CoreVector(0, 0),
+            Size = new CoreVector(96, 64),
+            Name = "Room A"
+        };
+        project.Elements.Add(roomA);
+
+        var roomB = new Room(project)
+        {
+            Position = new CoreVector(240, 0),
+            Size = new CoreVector(96, 64),
+            Name = "Room B"
+        };
+        project.Elements.Add(roomB);
+
+        var portAEast = roomA.PortAt(CompassPoint.East);
+        var portBWest = roomB.PortAt(CompassPoint.West);
+
+        // 1. Forward direction: A(East) -> B(West)
+        var connForward = new Connection(project, new Vertex(portAEast), new Vertex(portBWest))
+        {
+            Flow = ConnectionFlow.OneWay
+        };
+
+        var groupForward = new global::Avalonia.Media.DrawingGroup();
+        using (var ctx = groupForward.Open())
+        {
+            connForward.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
+        }
+
+        var chevronsForward = groupForward.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
+        // 4 segments of lengths 16, 56, 56, 16 > arrowSize(12) -> 4 chevrons
+        Assert.That(chevronsForward.Count, Is.EqualTo(4));
+
+        var expectedForwardX = new[] { 104.0, 140.0, 196.0, 232.0 };
+        for (var i = 0; i < 4; i++)
+        {
+            var bounds = chevronsForward[i].Geometry!.Bounds;
+            Assert.That(bounds.Center.X, Is.EqualTo(expectedForwardX[i]).Within(0.5));
+            Assert.That(bounds.Center.Y, Is.EqualTo(32.0).Within(0.5));
+            // Points East -> right bound is further from center than left bound
+            var apexX = bounds.Right;
+            var baseX = bounds.Left;
+            Assert.That(apexX - bounds.Center.X, Is.GreaterThan(0));
+            Assert.That(apexX, Is.EqualTo(expectedForwardX[i] + 6.0).Within(0.1));
+            Assert.That(baseX, Is.EqualTo(expectedForwardX[i] - 6.0).Within(0.1));
+        }
+
+        // 2. Reversed direction: B(West) -> A(East)
+        var connReverse = new Connection(project, new Vertex(portBWest), new Vertex(portAEast))
+        {
+            Flow = ConnectionFlow.OneWay
+        };
+
+        var groupReverse = new global::Avalonia.Media.DrawingGroup();
+        using (var ctx = groupReverse.Open())
+        {
+            connReverse.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
+        }
+
+        var chevronsReverse = groupReverse.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
+        Assert.That(chevronsReverse.Count, Is.EqualTo(4));
+
+        var expectedReverseX = new[] { 232.0, 196.0, 140.0, 104.0 };
+        for (var i = 0; i < 4; i++)
+        {
+            var bounds = chevronsReverse[i].Geometry!.Bounds;
+            Assert.That(bounds.Center.X, Is.EqualTo(expectedReverseX[i]).Within(0.5));
+            Assert.That(bounds.Center.Y, Is.EqualTo(32.0).Within(0.5));
+            // Points West -> apex is at Left (base is at Right)
+            var apexX = bounds.Left;
+            var baseX = bounds.Right;
+            Assert.That(bounds.Center.X - apexX, Is.GreaterThan(0));
+            Assert.That(apexX, Is.EqualTo(expectedReverseX[i] - 6.0).Within(0.1));
+            Assert.That(baseX, Is.EqualTo(expectedReverseX[i] + 6.0).Within(0.1));
+        }
+
+        // 3. With spatial line index (crossing lines)
+        var crossingLine = new CoreLineSegment(new CoreVector(140, 0), new CoreVector(140, 100));
+        var linesDrawn = new List<CoreLineSegment> { crossingLine };
+
+        var groupSpatial = new global::Avalonia.Media.DrawingGroup();
+        using (var ctx = groupSpatial.Open())
+        {
+            connForward.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: linesDrawn);
+        }
+
+        var chevronsSpatial = groupSpatial.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
+        Assert.That(chevronsSpatial.Count, Is.GreaterThanOrEqualTo(3));
+        foreach (var chev in chevronsSpatial)
+        {
+            Assert.That(chev.Geometry!.Bounds.Center.Y, Is.EqualTo(32.0).Within(0.5));
+            // All remain pointing East
+            Assert.That(chev.Geometry!.Bounds.Right - chev.Geometry!.Bounds.Center.X, Is.GreaterThan(0));
         }
     }
 
@@ -726,27 +869,78 @@ public class DrawingAdaptersParityTests
                 Assert.That(centerScreen.X, Is.EqualTo(200).Within(0.01));
                 Assert.That(centerScreen.Y, Is.EqualTo(150).Within(0.01));
 
-                // The mid segment (112->168 and 168->224) has arrows at (140, 32) and (196, 32).
-                // Let's probe the arrow at world (140, 32) -> screen (172, 150)
-                var arrowScreen1 = canvas.CanvasToClient(new CoreVector(140, 32));
-                var (b1, g1, r1, a1) = ReadPixel(bmp, (int)arrowScreen1.X, (int)arrowScreen1.Y);
-                Assert.That(r1, Is.GreaterThan(180), "Arrow pixel at world (140, 32) should be drawn with red color");
-                Assert.That(g1, Is.LessThan(60));
-                Assert.That(b1, Is.LessThan(60));
+                // 1. OneWay at Zoom 1.0:
+                // Chevron at (140, 32) spans world X [134..146], Y [26..38].
+                // Centerline is at Y=32 (line width 2px -> Y [31..33]).
+                // Off-center points at world (136, 29) and (136, 35) are exclusively inside the chevron wing.
+                var wingTopScreen1 = canvas.CanvasToClient(new CoreVector(136, 29));
+                var (bTop1, gTop1, rTop1, aTop1) = ReadPixel(bmp, (int)wingTopScreen1.X, (int)wingTopScreen1.Y);
+                Assert.That(rTop1, Is.GreaterThan(180), "Upper chevron wing at world (136, 29) should be red in OneWay");
+                Assert.That(gTop1, Is.LessThan(100));
+                Assert.That(bTop1, Is.LessThan(100));
 
-                // Probe at world (196, 32) -> screen (228, 150)
-                var arrowScreen2 = canvas.CanvasToClient(new CoreVector(196, 32));
-                var (b2, g2, r2, a2) = ReadPixel(bmp, (int)arrowScreen2.X, (int)arrowScreen2.Y);
-                Assert.That(r2, Is.GreaterThan(180), "Arrow pixel at world (196, 32) should be drawn with red color");
-                Assert.That(g2, Is.LessThan(60));
-                Assert.That(b2, Is.LessThan(60));
+                var wingBotScreen1 = canvas.CanvasToClient(new CoreVector(136, 35));
+                var (bBot1, gBot1, rBot1, aBot1) = ReadPixel(bmp, (int)wingBotScreen1.X, (int)wingBotScreen1.Y);
+                Assert.That(rBot1, Is.GreaterThan(180), "Lower chevron wing at world (136, 35) should be red in OneWay");
+                Assert.That(gBot1, Is.LessThan(100));
+                Assert.That(bBot1, Is.LessThan(100));
 
-                // Probe at zoom 0.5f to ensure visibility at zoom < 1
+                // Point just past the apex off the line at world (147, 29) should be background (white)
+                var pastApexScreen1 = canvas.CanvasToClient(new CoreVector(147, 29));
+                var (bPast1, gPast1, rPast1, _) = ReadPixel(bmp, (int)pastApexScreen1.X, (int)pastApexScreen1.Y);
+                Assert.That(rPast1, Is.GreaterThan(200), "Point past apex off line should be canvas background");
+                Assert.That(gPast1, Is.GreaterThan(200));
+                Assert.That(bPast1, Is.GreaterThan(200));
+
+                // Last chevron is at (232, 32); apex is at x=238, stopping 2px short of Room B border (x=240).
+                // Apex pixel at (238, 32) is red connection line
+                var apexScreen4 = canvas.CanvasToClient(new CoreVector(238, 32));
+                var (bApex4, gApex4, rApex4, _) = ReadPixel(bmp, (int)apexScreen4.X, (int)apexScreen4.Y);
+                Assert.That(rApex4, Is.GreaterThan(180), "Chevron apex at x=238 before room border should be red");
+
+                // Inside Room B at x=245, y=32 is inside Room B (not red connection line)
+                var insideRoomBScreen = canvas.CanvasToClient(new CoreVector(245, 32));
+                var (bInsideB, gInsideB, rInsideB, _) = ReadPixel(bmp, (int)insideRoomBScreen.X, (int)insideRoomBScreen.Y);
+                Assert.That(rInsideB, Is.Not.EqualTo(255).Or.GreaterThan(200), "Inside Room B should not be connection line color");
+
+                // 2. OneWay at Zoom 0.5:
                 canvas.ZoomFactor = 0.5f;
                 bmp.Render(canvas);
-                var arrowScreenZoomed = canvas.CanvasToClient(new CoreVector(140, 32));
-                var (bz, gz, rz, az) = ReadPixel(bmp, (int)arrowScreenZoomed.X, (int)arrowScreenZoomed.Y);
-                Assert.That(rz, Is.GreaterThan(180), "Arrow pixel at zoom 0.5 should still be distinctly visible");
+                var arrowCenterZoomed = canvas.CanvasToClient(new CoreVector(140, 32));
+                // Base at zoom 0.5 is 3 screen px west; probe ±2 screen px perpendicular to centerline
+                var (bTopZ, gTopZ, rTopZ, _) = ReadPixel(bmp, (int)arrowCenterZoomed.X - 2, (int)arrowCenterZoomed.Y - 2);
+                Assert.That(rTopZ, Is.GreaterThan(150), "Chevron wing at zoom 0.5 should be red in OneWay");
+                Assert.That(gTopZ, Is.LessThan(100));
+                Assert.That(bTopZ, Is.LessThan(100));
+
+                var (bBotZ, gBotZ, rBotZ, _) = ReadPixel(bmp, (int)arrowCenterZoomed.X - 2, (int)arrowCenterZoomed.Y + 2);
+                Assert.That(rBotZ, Is.GreaterThan(150), "Lower chevron wing at zoom 0.5 should be red in OneWay");
+
+                // 3. TwoWay Control:
+                // When flow is TwoWay, no chevrons should be drawn, so off-center wing points MUST be background.
+                conn.Flow = ConnectionFlow.TwoWay;
+                canvas.ZoomFactor = 1.0f;
+                bmp.Render(canvas);
+
+                var (bTop2Way, gTop2Way, rTop2Way, _) = ReadPixel(bmp, (int)wingTopScreen1.X, (int)wingTopScreen1.Y);
+                Assert.That(rTop2Way, Is.GreaterThan(200), "TwoWay connection should NOT render chevron: wing pixel must be canvas background");
+                Assert.That(gTop2Way, Is.GreaterThan(200));
+                Assert.That(bTop2Way, Is.GreaterThan(200));
+
+                var (bBot2Way, gBot2Way, rBot2Way, _) = ReadPixel(bmp, (int)wingBotScreen1.X, (int)wingBotScreen1.Y);
+                Assert.That(rBot2Way, Is.GreaterThan(200), "TwoWay connection should NOT render chevron: wing pixel must be canvas background");
+
+                // However, centerline itself is still red on TwoWay
+                var (bLine2Way, gLine2Way, rLine2Way, _) = ReadPixel(bmp, (int)centerScreen.X, (int)centerScreen.Y);
+                Assert.That(rLine2Way, Is.GreaterThan(180), "Line centerline remains red on TwoWay");
+                Assert.That(gLine2Way, Is.LessThan(60));
+                Assert.That(bLine2Way, Is.LessThan(60));
+
+                // TwoWay at Zoom 0.5:
+                canvas.ZoomFactor = 0.5f;
+                bmp.Render(canvas);
+                var (bTopZ2Way, gTopZ2Way, rTopZ2Way, _) = ReadPixel(bmp, (int)arrowCenterZoomed.X - 2, (int)arrowCenterZoomed.Y - 2);
+                Assert.That(rTopZ2Way, Is.GreaterThan(200), "TwoWay at zoom 0.5 must have canvas background at chevron wing position");
             }
             finally
             {
