@@ -80,26 +80,45 @@ public class DialogViewModelTests
         var room1 = new Room(Project.Current) { Name = "Cave", Id = 1 };
         var room2 = new Room(Project.Current) { Name = "Cave", Id = 2 };
         var target = new Room(Project.Current) { Name = "Target", Id = 3 };
-        
         Project.Current.Elements.Add(room1);
         Project.Current.Elements.Add(room2);
         Project.Current.Elements.Add(target);
 
-        // Target references room1 (Cave)
-        target.ReferenceRoomId = room1.Id;
-        
+        // Target references the SECOND duplicate; a name-based lookup would resolve room1.
+        target.ReferenceRoomId = room2.Id;
+
         var vm = new RoomPropertiesViewModel();
         vm.Initialize(target);
-
-        // Selected reference should be Cave (room1)
         vm.SelectedReferenceRoom.ShouldNotBeNull();
-        vm.SelectedReferenceRoom.Id.ShouldBe(room1.Id);
-        vm.SelectedReferenceRoom.Name.ShouldBe("Cave");
+        vm.SelectedReferenceRoom!.Id.ShouldBe(room2.Id);
 
-        // Apply back (simulate no changes)
         vm.ApplyTo(target);
-        
+        target.ReferenceRoomId.ShouldBe(room2.Id);
+
+        // Changing the selection to the other duplicate writes that Id.
+        vm.SelectedReferenceRoom = vm.AvailableReferenceRooms.Single(x => x.Id == room1.Id);
+        vm.ApplyTo(target);
         target.ReferenceRoomId.ShouldBe(room1.Id);
+    }
+
+    [Test]
+    public void RoomPropertiesViewModel_SelfNameCollision_KeepsReferenceAndExcludesSelf()
+    {
+        // The edited room is first in Elements and shares the referenced room's name.
+        var editing = new Room(Project.Current) { Name = "Cave", Id = 1 };
+        var other = new Room(Project.Current) { Name = "Cave", Id = 2 };
+        Project.Current.Elements.Add(editing);
+        Project.Current.Elements.Add(other);
+        editing.ReferenceRoomId = other.Id;
+
+        var vm = new RoomPropertiesViewModel();
+        vm.Initialize(editing);
+
+        vm.AvailableReferenceRooms.Any(x => x.Id == editing.Id).ShouldBeFalse();
+        vm.SelectedReferenceRoom!.Id.ShouldBe(other.Id);
+
+        vm.ApplyTo(editing);
+        editing.ReferenceRoomId.ShouldBe(other.Id);
     }
 
     [Test]

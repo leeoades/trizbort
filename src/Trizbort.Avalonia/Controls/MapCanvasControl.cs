@@ -1487,11 +1487,20 @@ public class MapCanvasControl : Control
         items.Add(appSettingsItem);
 
         menu.ItemsSource = items;
+        LastContextMenu = menu;
         menu.Open(this);
     }
 
+    internal ContextMenu? LastContextMenu { get; private set; }
+
+    internal Func<Element, Task<bool>>? PropertiesDialogOverride { get; set; }
+
     public async Task<bool> ShowPropertiesDialogAsync(Element element)
     {
+        if (PropertiesDialogOverride != null)
+        {
+            return await PropertiesDialogOverride(element);
+        }
         var window = TopLevel.GetTopLevel(this) as Window;
         var dialogService = App.Services?.GetService<IDialogService>();
         if (dialogService != null)

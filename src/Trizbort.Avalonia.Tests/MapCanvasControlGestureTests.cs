@@ -138,9 +138,90 @@ public class MapCanvasControlGestureTests
             // Should have panned (so origin moved)
             service.Origin.X.ShouldNotBe(0f);
             canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            canvas.LastContextMenu.ShouldBeNull();
         }
         finally
         {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void RightClick_WithoutMovement_OpensContextMenu()
+    {
+        var theme = new global::Avalonia.Themes.Fluent.FluentTheme();
+        Application.Current!.Styles.Add(theme);
+        var (window, canvas, _) = CreateTestHarness();
+        try
+        {
+            var p = new Point(200, 200);
+            window.MouseDown(p, MouseButton.Right);
+            window.MouseUp(p, MouseButton.Right);
+
+            canvas.LastContextMenu.ShouldNotBeNull();
+            canvas.LastContextMenu!.IsOpen.ShouldBeTrue();
+            canvas.LastContextMenu.Close();
+        }
+        finally
+        {
+            Application.Current!.Styles.Remove(theme);
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void DoubleClick_OnRoom_SelectsAndRequestsProperties()
+    {
+        var (window, canvas, _) = CreateTestHarness();
+        try
+        {
+            var room = new Room(Project.Current) { Name = "Dbl", Position = new Vector(0, 0), Size = new Vector(96, 64) };
+            Project.Current.Elements.Add(room);
+            Element? requested = null;
+            canvas.PropertiesDialogOverride = e => { requested = e; return Task.FromResult(false); };
+
+            var p = canvas.CanvasToClient(new Vector(48, 32));
+            window.MouseDown(p, MouseButton.Left);
+            window.MouseUp(p, MouseButton.Left);
+            window.MouseDown(p, MouseButton.Left);
+            window.MouseUp(p, MouseButton.Left);
+
+            requested.ShouldBeSameAs(room);
+            Project.Current.GetSelectedElements().ShouldContain(room);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void DoubleClick_OnEmptySpace_AddsRoomWhenSettingEnabled()
+    {
+        var original = ApplicationSettingsController.AppSettings.DoubleClickToAddRoom;
+        var (window, _, _) = CreateTestHarness();
+        try
+        {
+            ApplicationSettingsController.AppSettings.DoubleClickToAddRoom = true;
+            var p = new Point(300, 300);
+            window.MouseDown(p, MouseButton.Left);
+            window.MouseUp(p, MouseButton.Left);
+            window.MouseDown(p, MouseButton.Left);
+            window.MouseUp(p, MouseButton.Left);
+
+            Project.Current.Elements.OfType<Room>().Count().ShouldBe(1);
+
+            ApplicationSettingsController.AppSettings.DoubleClickToAddRoom = false;
+            var q = new Point(600, 500);
+            window.MouseDown(q, MouseButton.Left);
+            window.MouseUp(q, MouseButton.Left);
+            window.MouseDown(q, MouseButton.Left);
+            window.MouseUp(q, MouseButton.Left);
+            Project.Current.Elements.OfType<Room>().Count().ShouldBe(1);
+        }
+        finally
+        {
+            ApplicationSettingsController.AppSettings.DoubleClickToAddRoom = original;
             window.Close();
         }
     }
