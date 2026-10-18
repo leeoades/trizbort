@@ -1,14 +1,19 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
 using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Avalonia.Controls;
 using Trizbort.Avalonia.Services;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Controllers;
 using Trizbort.Domain.Elements;
@@ -329,10 +334,10 @@ public class MapCanvasControlGestureTests
             var room = new Room(Project.Current)
             {
                 Name = "Grand Hall",
-                SubTitle = "North Wing",
                 Position = new Vector(0, 0),
                 Size = new Vector(100, 60)
             };
+            room.Descriptions.Add("Hall description");
             Project.Current.Elements.Add(room);
 
             var centerClient = canvas.CanvasToClient(new Vector(50, 30));
@@ -342,7 +347,7 @@ public class MapCanvasControlGestureTests
             var tip = ToolTip.GetTip(canvas) as string;
             tip.ShouldNotBeNull();
             tip.ShouldContain("Grand Hall");
-            tip.ShouldContain("North Wing");
+            tip.ShouldContain("Hall description");
         }
         finally
         {
@@ -351,7 +356,7 @@ public class MapCanvasControlGestureTests
     }
 
     [AvaloniaTest]
-    public void KeyboardShortcuts_DeleteAndSelectAllAndEscapeAndArrows()
+    public void KeyboardShortcuts_SelectAllEscapeArrowNudgeAndDelete()
     {
         var (window, canvas, service) = CreateTestHarness();
         try
@@ -386,7 +391,7 @@ public class MapCanvasControlGestureTests
     }
 
     [AvaloniaTest]
-    public void Clipboard_CopyCutPaste_RoundTripsElementsAndPreservesConnections()
+    public void CommandService_CopyAndPaste_RoundTripsElementsAndPreservesConnections()
     {
         var (window, canvas, service) = CreateTestHarness();
         try
@@ -421,8 +426,9 @@ public class MapCanvasControlGestureTests
             window.Close();
         }
     }
+
     [AvaloniaTest]
-    public void MarqueeSelection_ShiftAddsToSelection_AndCtrlToggles()
+    public void MarqueeSelection_ShiftOverUnselectedElement_AddsToExistingSelection()
     {
         var (window, canvas, service) = CreateTestHarness();
         try
@@ -483,7 +489,7 @@ public class MapCanvasControlGestureTests
     }
 
     [AvaloniaTest]
-    public void Clipboard_CopyColors_AppliesToSelectedRoomWithoutMoving()
+    public void CommandService_PasteAfterCopyColors_AppliesToSelectedRoomWithoutMoving()
     {
         var (window, canvas, service) = CreateTestHarness();
         try
@@ -517,6 +523,592 @@ public class MapCanvasControlGestureTests
             // Position should remain unchanged
             room2.Position.X.ShouldBe(100f);
             room2.Position.Y.ShouldBe(100f);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    // ---- Lifecycle / cancellation -------------------------------------------------------------
+
+    private static (Room A, Room B, Room.CompassPort PortAEast, Room.CompassPort PortBWest) AddTwoRooms()
+    {
+        var roomA = new Room(Project.Current) { Position = new Vector(-150, 0), Size = new Vector(96, 64) };
+        var roomB = new Room(Project.Current) { Position = new Vector(150, 0), Size = new Vector(96, 64) };
+        Project.Current.Elements.Add(roomA);
+        Project.Current.Elements.Add(roomB);
+        var portA = roomA.PortList.OfType<Room.CompassPort>().First(p => p.CompassPoint == CompassPoint.East);
+        var portB = roomB.PortList.OfType<Room.CompassPort>().First(p => p.CompassPoint == CompassPoint.West);
+        return (roomA, roomB, portA, portB);
+    }
+
+    private static IPointer CapturePointerOnNextMove(MapCanvasControl canvas, Window window, Point where)
+    {
+        IPointer? pointer = null;
+        void Handler(object? sender, PointerEventArgs e) => pointer ??= e.Pointer;
+        canvas.AddHandler(InputElement.PointerMovedEvent, Handler, RoutingStrategies.Tunnel);
+        window.MouseMove(where);
+        canvas.RemoveHandler(InputElement.PointerMovedEvent, Handler);
+        pointer.ShouldNotBeNull();
+        return pointer;
+    }
+
+    [AvaloniaTest]
+    public void SecondButtonPress_DuringConnectionDrag_IsIgnoredAndDragStillDocks()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var (_, _, portA, portB) = AddTwoRooms();
+            var clientA = canvas.CanvasToClient(portA.Position);
+            var clientB = canvas.CanvasToClient(portB.Position);
+            var clientMid = canvas.CanvasToClient(new Vector(0, 32));
+
+            window.MouseMove(clientA);
+            window.MouseDown(clientA, MouseButton.Left);
+            window.MouseMove(clientMid);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+
+            // A second button must neither switch to panning nor drop the half-drawn connection.
+            window.MouseDown(clientMid, MouseButton.Right);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+
+            window.MouseMove(clientB);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+            window.MouseUp(clientB, MouseButton.Left);
+            window.MouseUp(clientB, MouseButton.Right);
+            service.Origin.ShouldBe(Vector.Zero);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            var conn = Project.Current.Elements.OfType<Connection>().Single();
+            conn.VertexList[0].Port.ShouldBe(portA);
+            conn.VertexList[1].Port.ShouldBe(portB);
+            service.SelectedElements.ShouldContain(conn);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void SecondButtonPress_DuringResize_DoesNotSwitchToPan()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var room = new Room(Project.Current) { Position = new Vector(0, 0), Size = new Vector(96, 64) };
+            Project.Current.Elements.Add(room);
+            service.Select(room);
+
+            var handlePos = room.InnerBounds.GetCorner(CompassPoint.SouthEast);
+            var handleClient = canvas.CanvasToClient(handlePos);
+            window.MouseMove(handleClient);
+            window.MouseDown(handleClient, MouseButton.Left);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MoveResizeHandle);
+
+            window.MouseDown(handleClient, MouseButton.Middle);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MoveResizeHandle);
+
+            window.MouseMove(canvas.CanvasToClient(handlePos + new Vector(32, 32)));
+            canvas.DragMode.ShouldBe(CanvasDragMode.MoveResizeHandle);
+            room.Size.X.ShouldBe(128f, 1.0f);
+            service.Origin.ShouldBe(Vector.Zero);
+            window.MouseUp(canvas.CanvasToClient(handlePos + new Vector(32, 32)), MouseButton.Left);
+            window.MouseUp(canvas.CanvasToClient(handlePos + new Vector(32, 32)), MouseButton.Middle);
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void PointerCaptureLost_WhileConnectionBackOnSourcePort_RemovesZeroLengthConnection()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var (_, _, portA, _) = AddTwoRooms();
+            var clientA = canvas.CanvasToClient(portA.Position);
+            var clientAway = canvas.CanvasToClient(portA.Position + new Vector(40, 40));
+
+            window.MouseMove(clientA);
+            window.MouseDown(clientA, MouseButton.Left);
+            var pointer = CapturePointerOnNextMove(canvas, window, clientAway);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+            Project.Current.Elements.OfType<Connection>().Count().ShouldBe(1);
+
+            window.MouseMove(clientA);
+            pointer.Capture(null);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            canvas.IsGestureActive.ShouldBeFalse();
+            Project.Current.Elements.OfType<Connection>().ShouldBeEmpty();
+            service.SelectedElements.ShouldBeEmpty();
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void PointerCaptureLost_DuringMarquee_CancelsWithoutChangingSelection()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var room = new Room(Project.Current) { Position = new Vector(-100, -100), Size = new Vector(60, 40) };
+            Project.Current.Elements.Add(room);
+
+            var start = canvas.CanvasToClient(new Vector(-150, -150));
+            var end = canvas.CanvasToClient(new Vector(0, 0));
+            window.MouseMove(start);
+            window.MouseDown(start, MouseButton.Left);
+            var pointer = CapturePointerOnNextMove(canvas, window, end);
+            canvas.DragMode.ShouldBe(CanvasDragMode.Marquee);
+
+            pointer.Capture(null);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            service.SelectedElements.ShouldBeEmpty();
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void Escape_DuringNewConnectionDrag_DiscardsConnectionAndEndsGesture()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var (_, _, portA, portB) = AddTwoRooms();
+            var clientA = canvas.CanvasToClient(portA.Position);
+            var clientB = canvas.CanvasToClient(portB.Position);
+
+            window.MouseMove(clientA);
+            window.MouseDown(clientA, MouseButton.Left);
+            window.MouseMove(clientB);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+            Project.Current.Elements.OfType<Connection>().Count().ShouldBe(1);
+
+            window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            Project.Current.Elements.OfType<Connection>().ShouldBeEmpty();
+
+            window.MouseUp(clientB, MouseButton.Left);
+            Project.Current.Elements.OfType<Connection>().ShouldBeEmpty();
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void Escape_DuringResize_StopsResizingAndKeepsSelection()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var room = new Room(Project.Current) { Position = new Vector(0, 0), Size = new Vector(96, 64) };
+            Project.Current.Elements.Add(room);
+            service.Select(room);
+
+            var handlePos = room.InnerBounds.GetCorner(CompassPoint.SouthEast);
+            var handleClient = canvas.CanvasToClient(handlePos);
+            window.MouseMove(handleClient);
+            window.MouseDown(handleClient, MouseButton.Left);
+            window.MouseMove(canvas.CanvasToClient(handlePos + new Vector(32, 32)));
+            room.Size.X.ShouldBe(128f, 1.0f);
+
+            window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            service.SelectedElements.ShouldContain(room);
+
+            window.MouseMove(canvas.CanvasToClient(handlePos + new Vector(96, 96)));
+            room.Size.X.ShouldBe(128f, 1.0f);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    // ---- Selection modifiers -----------------------------------------------------------------
+
+    [AvaloniaTest]
+    public void MarqueeSelection_CtrlOverSelectedAndUnselected_TogglesBoth()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var room1 = new Room(Project.Current) { Position = new Vector(-100, -100), Size = new Vector(60, 40) };
+            var room2 = new Room(Project.Current) { Position = new Vector(100, 100), Size = new Vector(60, 40) };
+            Project.Current.Elements.Add(room1);
+            Project.Current.Elements.Add(room2);
+            service.Select(room1);
+
+            var start = canvas.CanvasToClient(new Vector(-150, -150));
+            var end = canvas.CanvasToClient(new Vector(200, 200));
+            window.MouseMove(start);
+            window.MouseDown(start, MouseButton.Left, RawInputModifiers.Control);
+            window.MouseMove(end);
+            window.MouseUp(end, MouseButton.Left, RawInputModifiers.Control);
+
+            service.SelectedElements.ShouldNotContain(room1);
+            service.SelectedElements.ShouldContain(room2);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void MarqueeSelection_ShiftOverAlreadySelected_TogglesItOff()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var room1 = new Room(Project.Current) { Position = new Vector(-100, -100), Size = new Vector(60, 40) };
+            var room2 = new Room(Project.Current) { Position = new Vector(100, 100), Size = new Vector(60, 40) };
+            Project.Current.Elements.Add(room1);
+            Project.Current.Elements.Add(room2);
+            service.Select([room1, room2], clearExisting: true);
+
+            var start = canvas.CanvasToClient(new Vector(-150, -150));
+            var end = canvas.CanvasToClient(new Vector(0, 0));
+            window.MouseMove(start);
+            window.MouseDown(start, MouseButton.Left, RawInputModifiers.Shift);
+            window.MouseMove(end);
+            window.MouseUp(end, MouseButton.Left, RawInputModifiers.Shift);
+
+            service.SelectedElements.ShouldNotContain(room1);
+            service.SelectedElements.ShouldContain(room2);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void ClickWithCtrl_TogglesElementSelection()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var room1 = new Room(Project.Current) { Position = new Vector(0, 0), Size = new Vector(80, 50) };
+            var room2 = new Room(Project.Current) { Position = new Vector(200, 0), Size = new Vector(80, 50) };
+            Project.Current.Elements.Add(room1);
+            Project.Current.Elements.Add(room2);
+            service.Select(room1);
+
+            var c2 = canvas.CanvasToClient(new Vector(240, 25));
+            window.MouseMove(c2);
+            window.MouseDown(c2, MouseButton.Left, RawInputModifiers.Control);
+            window.MouseUp(c2, MouseButton.Left, RawInputModifiers.Control);
+            service.SelectedElements.Count.ShouldBe(2);
+
+            var c1 = canvas.CanvasToClient(new Vector(40, 25));
+            window.MouseMove(c1);
+            window.MouseDown(c1, MouseButton.Left, RawInputModifiers.Control);
+            window.MouseUp(c1, MouseButton.Left, RawInputModifiers.Control);
+            service.SelectedElements.ShouldNotContain(room1);
+            service.SelectedElements.ShouldContain(room2);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    // ---- Pan / zoom / snapping ---------------------------------------------------------------
+
+    [AvaloniaTest]
+    public void Pan_MiddleButtonDrag_OffsetsOrigin()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var start = new Point(200, 200);
+            var end = new Point(250, 170);
+            window.MouseMove(start);
+            window.MouseDown(start, MouseButton.Middle);
+            canvas.DragMode.ShouldBe(CanvasDragMode.Pan);
+            canvas.CursorType.ShouldBe(StandardCursorType.Hand);
+            window.MouseMove(end);
+            window.MouseUp(end, MouseButton.Middle);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            service.Origin.X.ShouldBe(-50f, 0.5f);
+            service.Origin.Y.ShouldBe(30f, 0.5f);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void MoveSelection_WithSnapToGrid_MovesInGridSteps()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            Settings.SnapToGrid = true;
+            var room = new Room(Project.Current) { Position = new Vector(0, 0), Size = new Vector(96, 64) };
+            Project.Current.Elements.Add(room);
+            service.Select(room);
+
+            var start = canvas.CanvasToClient(new Vector(48, 32));
+            window.MouseMove(start);
+            window.MouseDown(start, MouseButton.Left);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MoveElement);
+
+            window.MouseMove(canvas.CanvasToClient(new Vector(48 + 40, 32)));
+            (room.Position.X % 32f).ShouldBe(0f, 0.01f);
+            room.Position.X.ShouldBe(32f, 0.01f);
+
+            window.MouseMove(canvas.CanvasToClient(new Vector(48 + 70, 32 + 20)));
+            (room.Position.X % 32f).ShouldBe(0f, 0.01f);
+            (room.Position.Y % 32f).ShouldBe(0f, 0.01f);
+            room.Position.X.ShouldBeGreaterThanOrEqualTo(64f);
+
+            window.MouseUp(canvas.CanvasToClient(new Vector(48 + 70, 32 + 20)), MouseButton.Left);
+        }
+        finally
+        {
+            Settings.SnapToGrid = false;
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void ZoomShortcuts_PlusMinusAndCtrlZero_ChangeAndResetZoom()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            window.KeyPressQwerty(PhysicalKey.Equal, RawInputModifiers.None);
+            service.ZoomFactor.ShouldBeGreaterThan(1.0f);
+
+            window.KeyPressQwerty(PhysicalKey.Minus, RawInputModifiers.None);
+            window.KeyPressQwerty(PhysicalKey.Minus, RawInputModifiers.None);
+            service.ZoomFactor.ShouldBeLessThan(1.0f);
+
+            service.Origin = new Vector(100, 100);
+            window.KeyPressQwerty(PhysicalKey.Digit0, RawInputModifiers.Control);
+            service.ZoomFactor.ShouldBe(1.0f, 0.001f);
+            service.Origin.ShouldBe(Vector.Zero);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    // ---- Re-docking / cursor ----------------------------------------------------------------
+
+    [AvaloniaTest]
+    public void Redock_ExistingConnectionEnd_MovesToAnotherRoomPort()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var (_, roomB, portA, portB) = AddTwoRooms();
+            var roomC = new Room(Project.Current) { Position = new Vector(150, 200), Size = new Vector(96, 64) };
+            Project.Current.Elements.Add(roomC);
+            var portC = roomC.PortList.OfType<Room.CompassPort>().First(p => p.CompassPoint == CompassPoint.West);
+
+            var conn = new Connection(Project.Current, new Vertex(portA), new Vertex(portB));
+            Project.Current.Elements.Add(conn);
+            service.Select(conn);
+
+            var endClient = canvas.CanvasToClient(conn.VertexList[1].Position);
+            window.MouseMove(endClient);
+            canvas.HoverPort.ShouldBeAssignableTo<MoveablePort>();
+            canvas.CursorType.ShouldBe(StandardCursorType.Hand);
+
+            window.MouseDown(endClient, MouseButton.Left);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+
+            var targetClient = canvas.CanvasToClient(portC.Position);
+            window.MouseMove(targetClient);
+            canvas.HoverPort.ShouldBe(portC);
+            window.MouseUp(targetClient, MouseButton.Left);
+
+            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
+            conn.VertexList[0].Port.ShouldBe(portA);
+            conn.VertexList[1].Port.ShouldBe(portC);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void Cursor_ReflectsHoveredTarget()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var room = new Room(Project.Current) { Position = new Vector(0, 0), Size = new Vector(96, 64) };
+            Project.Current.Elements.Add(room);
+
+            window.MouseMove(canvas.CanvasToClient(new Vector(-300, -300)));
+            canvas.CursorType.ShouldBe(StandardCursorType.Arrow);
+
+            service.Select(room);
+            window.MouseMove(canvas.CanvasToClient(new Vector(48, 32)));
+            canvas.CursorType.ShouldBe(StandardCursorType.SizeAll);
+
+            window.MouseMove(canvas.CanvasToClient(room.InnerBounds.GetCorner(CompassPoint.SouthEast)));
+            canvas.CursorType.ShouldBe(StandardCursorType.TopLeftCorner);
+
+            window.MouseMove(canvas.CanvasToClient(room.InnerBounds.GetCorner(CompassPoint.NorthEast)));
+            canvas.CursorType.ShouldBe(StandardCursorType.TopRightCorner);
+
+            service.ClearSelection();
+            var port = room.PortList.OfType<Room.CompassPort>().First(p => p.CompassPoint == CompassPoint.East);
+            window.MouseMove(canvas.CanvasToClient(new Vector(48, 32)));
+            window.MouseMove(canvas.CanvasToClient(port.Position));
+            canvas.HoverPort.ShouldBe(port);
+            canvas.CursorType.ShouldBe(StandardCursorType.Cross);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    // ---- Tooltips ---------------------------------------------------------------------------
+
+    [AvaloniaTest]
+    public void ToolTip_UsesCoreHeaderTextFooter_AndHonoursShowTooltipsSetting()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        var settings = ApplicationSettingsController.AppSettings;
+        var oldDesc = settings.ShowDescriptionsInTooltips;
+        var oldObjects = settings.ShowObjectsInTooltips;
+        try
+        {
+            var room = new Room(Project.Current)
+            {
+                Name = "Cellar",
+                IsDark = true,
+                Region = "Underground",
+                Position = new Vector(0, 0),
+                Size = new Vector(96, 64)
+            };
+            room.Descriptions.Add("A damp cellar.");
+            Project.Current.Elements.Add(room);
+
+            var tip = MapCanvasControl.BuildToolTipText(room);
+            tip.ShouldNotBeNull();
+            tip.ShouldContain("Cellar");
+            tip.ShouldContain("(Dark)");
+            tip.ShouldContain("A damp cellar.");
+            tip.ShouldContain("Underground");
+
+            var conn = new Connection(Project.Current, new Vertex(new Vector(-100, 0)), new Vertex(new Vector(-50, 0)))
+            {
+                Name = "Rusty door"
+            };
+            Project.Current.Elements.Add(conn);
+            MapCanvasControl.BuildToolTipText(conn).ShouldNotBeNull();
+
+            window.MouseMove(canvas.CanvasToClient(new Vector(48, 32)));
+            (ToolTip.GetTip(canvas) as string).ShouldNotBeNull().ShouldContain("Cellar");
+
+            settings.ShowDescriptionsInTooltips = false;
+            settings.ShowObjectsInTooltips = false;
+            MapCanvasControl.BuildToolTipText(room).ShouldBeNull();
+            MapCanvasControl.BuildToolTipText(null).ShouldBeNull();
+        }
+        finally
+        {
+            settings.ShowDescriptionsInTooltips = oldDesc;
+            settings.ShowObjectsInTooltips = oldObjects;
+            window.Close();
+        }
+    }
+
+    // ---- Real canvas clipboard path ---------------------------------------------------------
+
+    private static void PumpUntil(Func<bool> condition)
+    {
+        for (var i = 0; i < 200 && !condition(); i++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            if (!condition()) System.Threading.Thread.Sleep(10);
+        }
+    }
+
+    private static string? ReadClipboardText(MapCanvasControl canvas)
+    {
+        Dispatcher.UIThread.RunJobs();
+        var clipboard = TopLevel.GetTopLevel(canvas)!.Clipboard!;
+        return clipboard.GetTextAsync().GetAwaiter().GetResult();
+    }
+
+    [AvaloniaTest]
+    public void CanvasClipboardShortcuts_CtrlC_CtrlV_DuplicateElementsAndConnection()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var (roomA, roomB, portA, portB) = AddTwoRooms();
+            var conn = new Connection(Project.Current, new Vertex(portA), new Vertex(portB));
+            Project.Current.Elements.Add(conn);
+            service.Select([roomA, roomB, conn], clearExisting: true);
+
+            window.KeyPressQwerty(PhysicalKey.C, RawInputModifiers.Control);
+            ReadClipboardText(canvas).ShouldNotBeNullOrWhiteSpace();
+            Project.Current.Elements.OfType<Room>().Count().ShouldBe(2);
+
+            window.KeyPressQwerty(PhysicalKey.V, RawInputModifiers.Control);
+            PumpUntil(() => Project.Current.Elements.OfType<Room>().Count() >= 4);
+
+            Project.Current.Elements.OfType<Room>().Count().ShouldBe(4);
+            var copy = Project.Current.Elements.OfType<Connection>().Single(c => c != conn);
+            copy.VertexList[0].Port!.Owner.ShouldNotBe(roomA);
+            copy.VertexList[1].Port!.Owner.ShouldNotBe(roomB);
+            Project.Current.Elements.OfType<Room>().ShouldContain((Room)copy.VertexList[0].Port!.Owner);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void CanvasClipboardShortcuts_CtrlX_RemovesSelectionAndCtrlVRestoresIt()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var room = new Room(Project.Current) { Name = "Cut Me", Position = new Vector(0, 0), Size = new Vector(96, 64) };
+            Project.Current.Elements.Add(room);
+            service.Select(room);
+
+            window.KeyPressQwerty(PhysicalKey.X, RawInputModifiers.Control);
+            ReadClipboardText(canvas).ShouldNotBeNull().ShouldContain("Cut Me");
+            Project.Current.Elements.OfType<Room>().ShouldBeEmpty();
+
+            window.KeyPressQwerty(PhysicalKey.V, RawInputModifiers.Control);
+            PumpUntil(() => Project.Current.Elements.OfType<Room>().Any());
+            var pasted = Project.Current.Elements.OfType<Room>().Single();
+            pasted.Name.ShouldBe("Cut Me");
         }
         finally
         {
