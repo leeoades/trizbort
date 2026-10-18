@@ -270,6 +270,65 @@ public class DrawingAdaptersParityTests
         return (buf[0], buf[1], buf[2], buf[3]);
     }
 
+    private static void AssertPixelIsConnectionRed(byte b, byte g, byte r, string because)
+    {
+        Assert.That(r, Is.GreaterThan(180), because);
+        Assert.That(g, Is.LessThan(100), because);
+        Assert.That(b, Is.LessThan(100), because);
+    }
+
+    private static void AssertPixelIsCanvasBackground(byte b, byte g, byte r, string because)
+    {
+        Assert.That(r, Is.GreaterThan(200), because);
+        Assert.That(g, Is.GreaterThan(200), because);
+        Assert.That(b, Is.GreaterThan(200), because);
+    }
+
+    private static CoreVector ArrowDirectionAlongStroke(CoreVector strokeDirection, CoreVector flowDirection)
+    {
+        var sign = strokeDirection.X * flowDirection.X + strokeDirection.Y * flowDirection.Y >= 0 ? 1 : -1;
+        return new CoreVector(strokeDirection.X * sign, strokeDirection.Y * sign);
+    }
+
+    private static void AssertHandDrawnChevronMatchesStroke(
+        global::Avalonia.Media.Geometry rendered,
+        CoreVector snapped,
+        CoreVector arrowDirection,
+        int seed)
+    {
+        var pos = snapped.ToAvaloniaPoint();
+        var angleDeg = Math.Atan2(arrowDirection.Y, arrowDirection.X) * 180.0 / Math.PI;
+        var size = (double)Setup.Settings.ConnectionArrowSize;
+        var expected = DrawingAdapters.CreateChevronGeometry(pos, angleDeg, size, seed, true);
+        var reversed = DrawingAdapters.CreateChevronGeometry(pos, angleDeg + 180.0, size, seed, true);
+
+        Assert.That(rendered.Bounds.Left, Is.EqualTo(expected.Bounds.Left).Within(0.01));
+        Assert.That(rendered.Bounds.Right, Is.EqualTo(expected.Bounds.Right).Within(0.01));
+        Assert.That(rendered.Bounds.Top, Is.EqualTo(expected.Bounds.Top).Within(0.01));
+        Assert.That(rendered.Bounds.Bottom, Is.EqualTo(expected.Bounds.Bottom).Within(0.01));
+
+        // AABB of a 180°-rotated chevron is nearly identical; occupancy against the reversed
+        // geometry is what proves the apex follows the snapped stroke tangent.
+        var discriminating = 0;
+        for (var dx = -8; dx <= 8; dx++)
+        {
+            for (var dy = -8; dy <= 8; dy++)
+            {
+                var probe = new AvaloniaPoint(pos.X + dx * 0.5, pos.Y + dy * 0.5);
+                var inExpected = expected.FillContains(probe);
+                var inReversed = reversed.FillContains(probe);
+                if (inExpected == inReversed)
+                    continue;
+                discriminating++;
+                Assert.That(rendered.FillContains(probe), Is.EqualTo(inExpected),
+                    $"Rendered chevron orientation does not match stroke tangent at offset ({dx * 0.5}, {dy * 0.5})");
+            }
+        }
+
+        Assert.That(discriminating, Is.GreaterThan(0),
+            "Expected and 180°-reversed chevrons must differ so orientation is actually tested");
+    }
+
     [AvaloniaTest]
     public void RoomCache_InvalidatesOnGeometryAndTextChanges()
     {
@@ -661,10 +720,13 @@ public class DrawingAdaptersParityTests
             Assert.That(chevronCenter.X, Is.EqualTo(snappedPoint.X).Within(2.0));
             Assert.That(chevronCenter.Y, Is.EqualTo(snappedPoint.Y).Within(2.0));
 
-            // Apex should point in positive X direction along +strokeDir (flow goes East)
-            var sign = strokeDir.X >= 0 ? 1 : -1;
-            var effectiveDir = new CoreVector(strokeDir.X * sign, strokeDir.Y * sign);
-            Assert.That(effectiveDir.X, Is.GreaterThan(0));
+            var straightFlow = new CoreVector(100, 0);
+            var straightArrowDir = ArrowDirectionAlongStroke(strokeDir, straightFlow);
+            AssertHandDrawnChevronMatchesStroke(
+                straightChevron.Geometry!,
+                snappedPoint,
+                straightArrowDir,
+                connStraight.Id + 5000);
 
             // Curved hand-drawn connection
             var connCurved = new Connection(project, new Vertex(new CoreVector(0, 0)), new Vertex(new CoreVector(200, 0)))
@@ -683,13 +745,27 @@ public class DrawingAdaptersParityTests
             connCurved.GetCurvedSegments(out var spans);
             Assert.That(curvedChevrons.Count, Is.EqualTo(spans.Count));
 
+            var curveSegments = connCurved.GetSegments();
+            Assert.That(curveSegments, Is.Not.Null);
+            Assert.That(curveSegments!.Count, Is.GreaterThan(0));
+            var curvePoints = new List<CoreVector>(curveSegments.Count + 1);
+            foreach (var seg in curveSegments)
+                curvePoints.Add(seg.Start);
+            curvePoints.Add(curveSegments[^1].End);
+            var sketchedPolyline = Sketch.Polyline(curvePoints, Sketch.Seeded(connCurved.Id));
+
             for (var i = 0; i < spans.Count; i++)
             {
                 var mid = CurveGeometry.PolylineMidpoint(spans[i], out var spanDir);
+                var snappedCurve = Sketch.Nearest(sketchedPolyline, mid, out var curveStrokeDir);
                 Assert.That(curvedChevrons[i].Geometry, Is.Not.Null);
-                var cBounds = curvedChevrons[i].Geometry!.Bounds;
-                Assert.That(cBounds.Center.X, Is.EqualTo(mid.X).Within(6.0));
-                Assert.That(cBounds.Center.Y, Is.EqualTo(mid.Y).Within(6.0));
+
+                var curveArrowDir = ArrowDirectionAlongStroke(curveStrokeDir, spanDir);
+                AssertHandDrawnChevronMatchesStroke(
+                    curvedChevrons[i].Geometry!,
+                    snappedCurve,
+                    curveArrowDir,
+                    connCurved.Id + 5000);
             }
         }
         finally
@@ -888,33 +964,31 @@ public class DrawingAdaptersParityTests
                 // Point just past the apex off the line at world (147, 29) should be background (white)
                 var pastApexScreen1 = canvas.CanvasToClient(new CoreVector(147, 29));
                 var (bPast1, gPast1, rPast1, _) = ReadPixel(bmp, (int)pastApexScreen1.X, (int)pastApexScreen1.Y);
-                Assert.That(rPast1, Is.GreaterThan(200), "Point past apex off line should be canvas background");
-                Assert.That(gPast1, Is.GreaterThan(200));
-                Assert.That(bPast1, Is.GreaterThan(200));
+                AssertPixelIsCanvasBackground(bPast1, gPast1, rPast1, "Point past apex off line should be canvas background");
 
-                // Last chevron is at (232, 32); apex is at x=238, stopping 2px short of Room B border (x=240).
-                // Apex pixel at (238, 32) is red connection line
-                var apexScreen4 = canvas.CanvasToClient(new CoreVector(238, 32));
-                var (bApex4, gApex4, rApex4, _) = ReadPixel(bmp, (int)apexScreen4.X, (int)apexScreen4.Y);
-                Assert.That(rApex4, Is.GreaterThan(180), "Chevron apex at x=238 before room border should be red");
+                // Last chevron is at (232, 32); apex at x=238, Room B border at x=240.
+                // Off-line wing of the last chevron must be red, and the gap between the chevron
+                // and the room border, off the line, must stay canvas background.
+                var lastWingScreen = canvas.CanvasToClient(new CoreVector(228, 29));
+                var (bLastWing, gLastWing, rLastWing, _) = ReadPixel(bmp, (int)lastWingScreen.X, (int)lastWingScreen.Y);
+                AssertPixelIsConnectionRed(bLastWing, gLastWing, rLastWing, "Last chevron off-line wing at world (228, 29) should be red in OneWay");
 
-                // Inside Room B at x=245, y=32 is inside Room B (not red connection line)
-                var insideRoomBScreen = canvas.CanvasToClient(new CoreVector(245, 32));
-                var (bInsideB, gInsideB, rInsideB, _) = ReadPixel(bmp, (int)insideRoomBScreen.X, (int)insideRoomBScreen.Y);
-                Assert.That(rInsideB, Is.Not.EqualTo(255).Or.GreaterThan(200), "Inside Room B should not be connection line color");
+                // Room B's 2px border is centred on x=240, so x=239 is inside the stroke.
+                // (236, 29) sits past the last chevron (which only reaches x≈232 at y=29) and short of the border.
+                var clearanceScreen = canvas.CanvasToClient(new CoreVector(236, 29));
+                var (bClear, gClear, rClear, _) = ReadPixel(bmp, (int)clearanceScreen.X, (int)clearanceScreen.Y);
+                AssertPixelIsCanvasBackground(bClear, gClear, rClear, "Off-line pixel between last chevron and Room B border should be canvas background");
 
                 // 2. OneWay at Zoom 0.5:
                 canvas.ZoomFactor = 0.5f;
                 bmp.Render(canvas);
                 var arrowCenterZoomed = canvas.CanvasToClient(new CoreVector(140, 32));
-                // Base at zoom 0.5 is 3 screen px west; probe ±2 screen px perpendicular to centerline
+                // Pixel (x-2, y-2) has its centre 1.5 px above the line; (x-2, y+1) mirrors that below.
                 var (bTopZ, gTopZ, rTopZ, _) = ReadPixel(bmp, (int)arrowCenterZoomed.X - 2, (int)arrowCenterZoomed.Y - 2);
-                Assert.That(rTopZ, Is.GreaterThan(150), "Chevron wing at zoom 0.5 should be red in OneWay");
-                Assert.That(gTopZ, Is.LessThan(100));
-                Assert.That(bTopZ, Is.LessThan(100));
+                AssertPixelIsConnectionRed(bTopZ, gTopZ, rTopZ, "Upper chevron wing at zoom 0.5 should be red in OneWay");
 
-                var (bBotZ, gBotZ, rBotZ, _) = ReadPixel(bmp, (int)arrowCenterZoomed.X - 2, (int)arrowCenterZoomed.Y + 2);
-                Assert.That(rBotZ, Is.GreaterThan(150), "Lower chevron wing at zoom 0.5 should be red in OneWay");
+                var (bBotZ, gBotZ, rBotZ, _) = ReadPixel(bmp, (int)arrowCenterZoomed.X - 2, (int)arrowCenterZoomed.Y + 1);
+                AssertPixelIsConnectionRed(bBotZ, gBotZ, rBotZ, "Lower chevron wing at zoom 0.5 should be red in OneWay");
 
                 // 3. TwoWay Control:
                 // When flow is TwoWay, no chevrons should be drawn, so off-center wing points MUST be background.
@@ -923,24 +997,23 @@ public class DrawingAdaptersParityTests
                 bmp.Render(canvas);
 
                 var (bTop2Way, gTop2Way, rTop2Way, _) = ReadPixel(bmp, (int)wingTopScreen1.X, (int)wingTopScreen1.Y);
-                Assert.That(rTop2Way, Is.GreaterThan(200), "TwoWay connection should NOT render chevron: wing pixel must be canvas background");
-                Assert.That(gTop2Way, Is.GreaterThan(200));
-                Assert.That(bTop2Way, Is.GreaterThan(200));
+                AssertPixelIsCanvasBackground(bTop2Way, gTop2Way, rTop2Way, "TwoWay connection should NOT render chevron: upper wing pixel must be canvas background");
 
                 var (bBot2Way, gBot2Way, rBot2Way, _) = ReadPixel(bmp, (int)wingBotScreen1.X, (int)wingBotScreen1.Y);
-                Assert.That(rBot2Way, Is.GreaterThan(200), "TwoWay connection should NOT render chevron: wing pixel must be canvas background");
+                AssertPixelIsCanvasBackground(bBot2Way, gBot2Way, rBot2Way, "TwoWay connection should NOT render chevron: lower wing pixel must be canvas background");
 
                 // However, centerline itself is still red on TwoWay
                 var (bLine2Way, gLine2Way, rLine2Way, _) = ReadPixel(bmp, (int)centerScreen.X, (int)centerScreen.Y);
-                Assert.That(rLine2Way, Is.GreaterThan(180), "Line centerline remains red on TwoWay");
-                Assert.That(gLine2Way, Is.LessThan(60));
-                Assert.That(bLine2Way, Is.LessThan(60));
+                AssertPixelIsConnectionRed(bLine2Way, gLine2Way, rLine2Way, "Line centerline remains red on TwoWay");
 
                 // TwoWay at Zoom 0.5:
                 canvas.ZoomFactor = 0.5f;
                 bmp.Render(canvas);
                 var (bTopZ2Way, gTopZ2Way, rTopZ2Way, _) = ReadPixel(bmp, (int)arrowCenterZoomed.X - 2, (int)arrowCenterZoomed.Y - 2);
-                Assert.That(rTopZ2Way, Is.GreaterThan(200), "TwoWay at zoom 0.5 must have canvas background at chevron wing position");
+                AssertPixelIsCanvasBackground(bTopZ2Way, gTopZ2Way, rTopZ2Way, "TwoWay at zoom 0.5 must have canvas background at upper chevron wing position");
+
+                var (bBotZ2Way, gBotZ2Way, rBotZ2Way, _) = ReadPixel(bmp, (int)arrowCenterZoomed.X - 2, (int)arrowCenterZoomed.Y + 1);
+                AssertPixelIsCanvasBackground(bBotZ2Way, gBotZ2Way, rBotZ2Way, "TwoWay at zoom 0.5 must have canvas background at lower chevron wing position");
             }
             finally
             {
