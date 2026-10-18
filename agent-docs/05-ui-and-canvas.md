@@ -209,3 +209,92 @@ but not IF-language source export.
 - `KeyboardHelper.cs` — keyboard P/Invoke helpers (`user32.dll` `keybd_event`, exposed as
   `KeybdEvent`, and `GetKeyState`) for num-lock/caps-lock/scroll-lock indicators.
 - `ClipboardHelper.cs` — clipboard read/write helpers backing `CopyController`.
+
+# Avalonia frontend (`src/Trizbort.Avalonia/`)
+
+Cross-platform client; paths below are relative to `src/Trizbort.Avalonia/`. The sections above
+describe WinForms only.
+
+## Project layout
+
+| Folder | Contents |
+|---|---|
+| `App.axaml(.cs)`, `Program.cs` | Startup and the DI container (`Microsoft.Extensions.DependencyInjection`). |
+| `Views/` | `MainWindow` (menu, toolbar, canvas, minimap, `AutomapBar` overlay), `AboutDialog`, `Views/Dialogs/*` (Room, Connection, MapLabel, MapSettings, MapTheme, AppSettings, AutomapSettings). |
+| `ViewModels/` | `MainWindowViewModel` + one VM per dialog. Dialog VMs expose `Initialize(model)` and `ApplyTo(model)`. |
+| `Controls/` | `MapCanvasControl`, `MinimapControl`, `MinimapTransform` (pure helper), `AutomapBar`, `ColorPickerButton`. |
+| `Services/` | `IDialogService`/`DialogService`, `IStorageService`/`StorageService`, `ICommandService`/`CommandService`, `AvaloniaAutomapCanvas`. |
+| `Drawing/`, `Converters/` | Avalonia adapters for Core's drawing abstractions; dialog value converters. |
+
+## DI and scoped dialogs
+
+`App.axaml.cs` registers singletons `IDialogService`, `IStorageService`, `ICommandService`,
+`IAutomapCanvas` (one `AvaloniaAutomapCanvas`) and `MainWindowViewModel`; each dialog VM is
+**transient**. `DialogService` opens every dialog inside its own `IServiceScopeFactory.CreateScope()`
+(`using var scope`), resolves the VM from that scope, shows the dialog modally, and disposes the
+scope afterward — the root provider stays usable. `ShowElementPropertiesAsync` dispatches by
+element type (Room/Connection/MapLabel). Dialogs edit via `Initialize` → user edits → `ApplyTo`
+on accept only; cancel leaves the model untouched.
+
+## `MapCanvasControl` and its state machine
+
+Single custom `Control` that renders the map and handles input. Pan origin/zoom live in
+`ICommandService` (`Origin`, `ZoomFactor`); `ViewChanged` fires on pan/zoom so the minimap redraws.
+Interaction uses `CanvasDragMode` (`None, Pan, Marquee, MoveElement, MoveResizeHandle, MovePort,
+MoveWaypoint`) plus hover state (element/port/handle/waypoint) and pending-new-connection state.
+Pointer press picks the mode from the hit test; move updates it; release commits through
+`ICommandService`/Core controllers (no undo/redo). Right-drag pans; a right-release with no pan
+movement (`_panMoved` false) opens the context menu (Properties...). Double-click on a
+Room/Connection/MapLabel calls `ShowElementPropertiesAsync`. Space+drag also pans.
+Gesture tests: `MapCanvasControlGestureTests`, `MapCanvasControlSyncTests`.
+
+Rendering: `Render` sorts visible elements once (cached) and calls the shared static
+`DrawElements(context, sortedElements, ...)` (Z-order, spatial line index, `DrawRoom`/
+`DrawMapLabel`/`DrawConnection`); adorners (handles, ports, waypoints, marquee) are drawn on top.
+
+## Minimap
+
+`Controls/MinimapControl.cs` draws scaled rooms/connections and the viewport rectangle. All
+geometry lives in `MinimapTransform` (`ComputeCanvasBounds`, `WorldToMinimap`, `MinimapToWorld`,
+`CalculateOriginFromMinimapPoint`), which is unit-tested (round trip, empty map, drag). Clicking
+centers the canvas there; dragging the viewport rectangle updates the canvas `Origin`. It redraws
+on map change, pan and zoom; an empty map draws nothing.
+
+## Automap
+
+- Core exposes the narrow public API `Automap.Instance.Start(IAutomapCanvas, AutomapSettings)`
+  (`Task`; `StartCl` and parser internals stay internal).
+- `ToggleAutomap` (menu/toolbar) → `IDialogService.ShowAutomapSettingsAsync` (seeded from
+  `ApplicationSettingsController.AppSettings.Automap`), transcript picked through
+  `IStorageService.OpenTranscriptFileAsync`; accepted settings are saved. Cancelling either
+  does not start a run (the default `FileName` is empty).
+- The run uses the singleton `AvaloniaAutomapCanvas`. `MainWindowViewModel.IsAutomapActive`
+  drives `Controls/AutomapBar` (status + Stop). The run is observed in the background; it is
+  stopped on explicit Stop, map load, and window close, and `IsAutomapActive` is cleared on
+  stop, autonomous completion, or handled I/O failure (a run token guards stale completions).
+- `Automap.ErrorReporter` (static) is routed to `IDialogService.ShowMessageAsync` on the UI
+  dispatcher.
+- **Known parity gap**: same-direction room conflicts keep Core's default `KeepRoom1`; Avalonia has
+  no interactive `ConflictingRoomChooser` prompt (a synchronous Core callback vs. async modal).
+- Tests (`AutomapIntegrationTests`) use the real singleton with a temp transcript; they serialize
+  access and restore static callbacks.
+
+## Image export
+
+File → Export → Image (PNG)... → `IStorageService.ExportImageAsync`. An empty map shows a message
+and no picker; otherwise a save picker (PNG) is shown, and the path is saved to
+`AppSettings.LastExportImageFileName`. Rendering is Avalonia-side (Core has no image exporter):
+`MapCanvasControl.RenderToBitmap(project, scale)` computes the full map extent (with padding),
+independent of viewport/zoom, and draws via `RenderMap` → the same `DrawElements` path into a
+`RenderTargetBitmap`. Dimensions are capped at **8192×8192**; larger maps get a reduced scale so the
+whole extent fits (no cropping). It never touches the live canvas `Origin`/`ZoomFactor`.
+Code exporters (File → Export) go through `StorageService.ExportCodeAsync`; theme files via
+`OpenThemeFileAsync`/`SaveThemeFileAsync`.
+
+## Avalonia tests (`src/Trizbort.Avalonia.Tests/`)
+
+NUnit + `Avalonia.Headless.NUnit` (Skia). Use `[AvaloniaTest]` for anything that creates controls or
+a `RenderTargetBitmap`. Files: gesture/sync tests, `DrawingAdaptersParityTests`,
+`DialogViewModelTests` (scope disposal, Room/Connection round-trip), `MinimapTransformTests`,
+`AutomapIntegrationTests`, `ImageExportTests` (pixel read-back via `RenderTargetBitmap.CopyPixels`).
+Run: `dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`.

@@ -11,6 +11,8 @@ avoids deep detail — follow the links to the topic docs for specifics.
 | `src/Trizbort.Core.Tests/` | Standalone headless unit test suite (`net8.0`). Validates pure domain logic, automap parsing, exporters, math, and serialization cross-platform. |
 | `src/Trizbort/` | Windows desktop application project root (`net8.0-windows`): WinForms forms/dialogs, entry point/configuration, GDI+ rendering pipeline, drawing extension adapters, and the `Canvas` control. |
 | `src/Trizbort.Tests/` | WinForms-specific and UI integration test project (`net8.0-windows`), included in the root `Trizbort.sln`. |
+| `src/Trizbort.Avalonia/` | Cross-platform Avalonia UI client (`net8.0`) built on `Trizbort.Core` only (no WinForms/GDI+). See the Avalonia section of [`05-ui-and-canvas.md`](05-ui-and-canvas.md). |
+| `src/Trizbort.Avalonia.Tests/` | Headless Avalonia tests (`Avalonia.Headless.NUnit`, Skia): gestures, sync, drawing parity, dialogs VMs, minimap transform, Automap, image export. |
 | `tests/manual/` | Manual `.trizbort` fixtures and batch/script runners; these are not automated tests. |
 | `samples/` | Sample maps/transcripts. |
 | `legacy/vendor/` | Preserved legacy DLLs not referenced by the current SDK-style project. |
@@ -33,10 +35,15 @@ Domain (Project, Element/Room/MapLabel/Connection, AppSettings, MapLoader/MapSav
 Util (XmlScribe/XmlElementReader for persistence; misc helpers)
 ```
 
+The Avalonia client is a second UI peer of the WinForms one: `Views` + `ViewModels` + `Controls\MapCanvasControl`
+sit on top of `Services` (DI-registered `IDialogService`, `IStorageService`, `ICommandService`) which call into
+`Trizbort.Core` controllers/exporters. No Avalonia types may enter `Trizbort.Core`.
+
 Two things cut across this layering rather than flowing through it:
 
 - **Automap** (`Automap\Automap.cs` in `Trizbort.Core`) mutates `Project.Current.Elements` through the
-  `IAutomapCanvas` abstraction implemented headlessly by `AutomapCanvas` and in WinForms by `Canvas.Automap.cs`.
+  `IAutomapCanvas` abstraction implemented headlessly by `AutomapCanvas`, in WinForms by `Canvas.Automap.cs`, and in Avalonia by
+  `Services\AvaloniaAutomapCanvas.cs`.
 - **Export** (`Export\CodeExporter` + `Export\Languages\*` in `Trizbort.Core`) only *reads* `Project.Current.Elements`
   — it never mutates the project. Image/PDF visual exports are hosted in the UI client (`UI/MainForm.cs`).
 
