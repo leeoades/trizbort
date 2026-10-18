@@ -37,7 +37,7 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private static IServiceProvider ConfigureServices()
+    public static IServiceProvider ConfigureServices()
     {
         var services = new ServiceCollection();
 
@@ -47,8 +47,16 @@ public partial class App : Application
         services.AddSingleton<ICommandService, CommandService>();
         services.AddSingleton<IAutomapCanvas>(_ => new AvaloniaAutomapCanvas());
 
-        // ViewModels
+        // Root ViewModels
         services.AddSingleton<MainWindowViewModel>();
+
+        // Scoped Dialog ViewModels (resolved in child IServiceScope)
+        services.AddTransient<RoomPropertiesViewModel>();
+        services.AddTransient<ConnectionPropertiesViewModel>();
+        services.AddTransient<MapLabelPropertiesViewModel>();
+        services.AddTransient<MapSettingsViewModel>();
+        services.AddTransient<MapThemeViewModel>();
+        services.AddTransient<AppSettingsViewModel>();
 
         return services.BuildServiceProvider();
     }

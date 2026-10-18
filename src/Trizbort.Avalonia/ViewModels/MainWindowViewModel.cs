@@ -289,6 +289,53 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public async Task CopyAsync()
+    {
+        var text = _commandService.CopySelected();
+        if (!string.IsNullOrEmpty(text))
+        {
+            var clipboard = GetActiveTopLevel()?.Clipboard;
+            if (clipboard != null)
+            {
+                await clipboard.SetTextAsync(text);
+                StatusText = "Copied selected element(s) to clipboard";
+            }
+        }
+    }
+
+    [RelayCommand]
+    public async Task CutAsync()
+    {
+        var text = _commandService.CutSelected();
+        if (!string.IsNullOrEmpty(text))
+        {
+            var clipboard = GetActiveTopLevel()?.Clipboard;
+            if (clipboard != null)
+            {
+                await clipboard.SetTextAsync(text);
+                UpdateState();
+                StatusText = "Cut selected element(s) to clipboard";
+            }
+        }
+    }
+
+    [RelayCommand]
+    public async Task PasteAsync()
+    {
+        var clipboard = GetActiveTopLevel()?.Clipboard;
+        if (clipboard != null)
+        {
+            var text = await clipboard.GetTextAsync();
+            if (!string.IsNullOrEmpty(text))
+            {
+                _commandService.Paste(text);
+                UpdateState();
+                StatusText = "Pasted element(s) from clipboard";
+            }
+        }
+    }
+
+    [RelayCommand]
     public void AddRoom()
     {
         var room = _commandService.AddRoom();
@@ -331,14 +378,55 @@ public partial class MainWindowViewModel : ViewModelBase
         await _dialogService.ShowAboutDialogAsync(GetActiveWindow());
     }
 
-    [RelayCommand(CanExecute = nameof(CanShowPropertyDialogs))]
-    public async Task ShowMapSettingsAsync() => await Task.CompletedTask;
+    [RelayCommand]
+    public async Task ShowMapSettingsAsync()
+    {
+        var changed = await _dialogService.ShowMapSettingsAsync(GetActiveWindow());
+        if (changed)
+        {
+            UpdateState();
+            _commandService.InvalidateCanvas();
+            StatusText = "Updated map settings";
+        }
+    }
 
-    [RelayCommand(CanExecute = nameof(CanShowPropertyDialogs))]
-    public async Task ShowMapThemeAsync() => await Task.CompletedTask;
+    [RelayCommand]
+    public async Task ShowMapThemeAsync()
+    {
+        var changed = await _dialogService.ShowMapThemeAsync(GetActiveWindow());
+        if (changed)
+        {
+            UpdateState();
+            _commandService.InvalidateCanvas();
+            StatusText = "Applied map theme";
+        }
+    }
 
-    [RelayCommand(CanExecute = nameof(CanShowPropertyDialogs))]
-    public async Task ShowAppSettingsAsync() => await Task.CompletedTask;
+    [RelayCommand]
+    public async Task ShowAppSettingsAsync()
+    {
+        var changed = await _dialogService.ShowAppSettingsAsync(GetActiveWindow());
+        if (changed)
+        {
+            _commandService.InvalidateCanvas();
+            StatusText = "Updated application settings";
+        }
+    }
 
-    private bool CanShowPropertyDialogs => false; // Activated in Step 4 when property dialogs are implemented
+    [RelayCommand]
+    public async Task ShowSelectedElementPropertiesAsync()
+    {
+        var selected = Project.Current.GetSelectedElements();
+        var element = selected.Count == 1 ? selected[0] : Project.Current.ActiveSelectedElement;
+        if (element != null)
+        {
+            var changed = await _dialogService.ShowElementPropertiesAsync(GetActiveWindow(), element);
+            if (changed)
+            {
+                UpdateState();
+                _commandService.InvalidateCanvas();
+                StatusText = $"Updated properties for {element.Name}";
+            }
+        }
+    }
 }

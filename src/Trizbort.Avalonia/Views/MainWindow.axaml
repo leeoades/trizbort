@@ -19,6 +19,10 @@
         <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveMapAsCommand}" />
         <KeyBinding Gesture="Ctrl+A" Command="{Binding SelectAllCommand}" />
         <KeyBinding Gesture="Delete" Command="{Binding DeleteSelectedCommand}" />
+        <KeyBinding Gesture="Ctrl+C" Command="{Binding CopyCommand}" />
+        <KeyBinding Gesture="Ctrl+X" Command="{Binding CutCommand}" />
+        <KeyBinding Gesture="Ctrl+V" Command="{Binding PasteCommand}" />
+        <KeyBinding Gesture="Alt+Enter" Command="{Binding ShowSelectedElementPropertiesCommand}" />
         <KeyBinding Gesture="Ctrl+OemPlus" Command="{Binding ZoomInCommand}" />
         <KeyBinding Gesture="Ctrl+Add" Command="{Binding ZoomInCommand}" />
         <KeyBinding Gesture="Ctrl+OemMinus" Command="{Binding ZoomOutCommand}" />
@@ -56,6 +60,12 @@
                 <MenuItem Header="_Edit">
                     <MenuItem Header="Select _All" Command="{Binding SelectAllCommand}" InputGesture="Ctrl+A" />
                     <MenuItem Header="_Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Delete" />
+                    <Separator />
+                    <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Ctrl+C" />
+                    <MenuItem Header="Cu_t" Command="{Binding CutCommand}" InputGesture="Ctrl+X" />
+                    <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Ctrl+V" />
+                    <Separator />
+                    <MenuItem Header="_Properties..." Command="{Binding ShowSelectedElementPropertiesCommand}" InputGesture="Alt+Enter" />
                     <Separator />
                     <MenuItem Header="_Map Settings..." Command="{Binding ShowMapSettingsCommand}" />
                     <MenuItem Header="Map _Theme..." Command="{Binding ShowMapThemeCommand}" />

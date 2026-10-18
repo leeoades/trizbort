@@ -4,12 +4,19 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Microsoft.Extensions.DependencyInjection;
+using Trizbort.Avalonia.ViewModels;
 using Trizbort.Avalonia.Views;
+using Trizbort.Avalonia.Views.Dialogs;
+using Trizbort.Domain.Application;
+using Trizbort.Domain.Elements;
 
 namespace Trizbort.Avalonia.Services;
 
-public class DialogService : IDialogService
+public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogService
 {
+    private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
+
     public async Task ShowAboutDialogAsync(Window? owner)
     {
         var dialog = new AboutDialog();
@@ -213,6 +220,110 @@ public class DialogService : IDialogService
             dialog.Show();
         }
 
+        return result;
+    }
+
+    public async Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<RoomPropertiesViewModel>();
+        viewModel.Initialize(room);
+
+        var dialog = new RoomPropertiesDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            viewModel.ApplyTo(room);
+            Project.Current.IsDirty = true;
+        }
+        return result;
+    }
+
+    public async Task<bool> ShowConnectionPropertiesAsync(Window? owner, Connection connection)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<ConnectionPropertiesViewModel>();
+        viewModel.Initialize(connection);
+
+        var dialog = new ConnectionPropertiesDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            viewModel.ApplyTo(connection);
+            Project.Current.IsDirty = true;
+        }
+        return result;
+    }
+
+    public async Task<bool> ShowMapLabelPropertiesAsync(Window? owner, MapLabel label)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<MapLabelPropertiesViewModel>();
+        viewModel.Initialize(label);
+
+        var dialog = new MapLabelPropertiesDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            viewModel.ApplyTo(label);
+            Project.Current.IsDirty = true;
+        }
+        return result;
+    }
+
+    public Task<bool> ShowElementPropertiesAsync(Window? owner, Element element)
+    {
+        return element switch
+        {
+            Room room => ShowRoomPropertiesAsync(owner, room),
+            Connection connection => ShowConnectionPropertiesAsync(owner, connection),
+            MapLabel label => ShowMapLabelPropertiesAsync(owner, label),
+            _ => Task.FromResult(false)
+        };
+    }
+
+    public async Task<bool> ShowMapSettingsAsync(Window? owner)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<MapSettingsViewModel>();
+        viewModel.Initialize();
+
+        var dialog = new MapSettingsDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            viewModel.ApplyToSettings();
+        }
+        return result;
+    }
+
+    public async Task<bool> ShowMapThemeAsync(Window? owner)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<MapThemeViewModel>();
+        viewModel.Initialize();
+
+        var dialog = new MapThemeDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            viewModel.ApplySelectedTheme();
+        }
+        return result;
+    }
+
+    public async Task<bool> ShowAppSettingsAsync(Window? owner)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<AppSettingsViewModel>();
+        viewModel.Initialize();
+
+        var dialog = new AppSettingsDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            viewModel.ApplyToSettings();
+        }
         return result;
     }
 }

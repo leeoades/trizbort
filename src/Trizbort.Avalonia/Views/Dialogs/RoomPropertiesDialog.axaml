@@ -1,0 +1,150 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.RoomPropertiesDialog"
+        x:DataType="vm:RoomPropertiesViewModel"
+        Title="Room Properties"
+        Width="520" Height="480"
+        MinWidth="450" MinHeight="400"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <TabControl Grid.Row="0">
+            <!-- General Tab -->
+            <TabItem Header="General">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="10" Margin="8">
+                        <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" Margin="0,2" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Subtitle:" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SubTitle}" Margin="0,2" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Region:" VerticalAlignment="Center" />
+                            <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding AvailableRegions}"
+                                      SelectedItem="{Binding SelectedRegion}" HorizontalAlignment="Stretch" Margin="0,2" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Hand-drawn:" VerticalAlignment="Center" />
+                            <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding AvailableHandDrawnStyles}"
+                                      SelectedItem="{Binding HandDrawnStyle}" HorizontalAlignment="Stretch" Margin="0,2" />
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Reference Room:" VerticalAlignment="Center" />
+                            <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding AvailableReferenceRooms}"
+                                      SelectedItem="{Binding ReferenceRoomName}" HorizontalAlignment="Stretch" Margin="0,2" />
+                        </Grid>
+
+                        <Separator Margin="0,4" />
+
+                        <WrapPanel Orientation="Horizontal" Margin="0,4">
+                            <CheckBox Content="Dark Room" IsChecked="{Binding IsDark}" Margin="0,0,16,0" />
+                            <CheckBox Content="Start Room" IsChecked="{Binding IsStartRoom}" Margin="0,0,16,0" />
+                            <CheckBox Content="End Room" IsChecked="{Binding IsEndRoom}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Description & Objects Tab -->
+            <TabItem Header="Description &amp; Objects">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid RowDefinitions="Auto,*,Auto,*" Margin="8">
+                        <TextBlock Grid.Row="0" Text="Room Description:" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <TextBox Grid.Row="1" Text="{Binding Description}" AcceptsReturn="True"
+                                 TextWrapping="Wrap" MinHeight="90" Height="90" Margin="0,0,0,10" />
+
+                        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                            <TextBlock Grid.Column="0" Text="Objects in Room:" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <TextBlock Text="Position:" VerticalAlignment="Center" FontSize="11" />
+                                <ComboBox ItemsSource="{Binding AvailableObjectPositions}"
+                                          SelectedItem="{Binding ObjectsPosition}" MinWidth="90" Height="28" FontSize="11" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBox Grid.Row="3" Text="{Binding Objects}" AcceptsReturn="True"
+                                 TextWrapping="Wrap" MinHeight="70" Height="70" />
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Shapes & Corners Tab -->
+            <TabItem Header="Shapes &amp; Corners">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="10" Margin="8">
+                        <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Shape:" VerticalAlignment="Center" />
+                            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding AvailableShapes}"
+                                      SelectedItem="{Binding Shape}" HorizontalAlignment="Stretch" Margin="0,2" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Border Style:" VerticalAlignment="Center" />
+                            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding AvailableBorderStyles}"
+                                      SelectedItem="{Binding BorderStyle}" HorizontalAlignment="Stretch" Margin="0,2" />
+                        </Grid>
+
+                        <HeaderedContentControl Header="Corner Radii">
+                            <StackPanel Spacing="6" Margin="0,4">
+                                <CheckBox Content="All corners equal" IsChecked="{Binding AllCornersEqual}" />
+
+                                <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto" Margin="0,4">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Top-Left:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <NumericUpDown Grid.Row="0" Grid.Column="1" Value="{Binding CornerTopLeft}" Minimum="0" Maximum="100" Margin="0,2,8,2" />
+
+                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Top-Right:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <NumericUpDown Grid.Row="0" Grid.Column="3" Value="{Binding CornerTopRight}" IsEnabled="{Binding !AllCornersEqual}" Minimum="0" Maximum="100" Margin="0,2" />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Bottom-Left:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding CornerBottomLeft}" IsEnabled="{Binding !AllCornersEqual}" Minimum="0" Maximum="100" Margin="0,2,8,2" />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="2" Text="Bottom-Right:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <NumericUpDown Grid.Row="1" Grid.Column="3" Value="{Binding CornerBottomRight}" IsEnabled="{Binding !AllCornersEqual}" Minimum="0" Maximum="100" Margin="0,2" />
+                                </Grid>
+                            </StackPanel>
+                        </HeaderedContentControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Colors Tab -->
+            <TabItem Header="Custom Colours">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="8" Margin="8">
+                        <TextBlock Text="Set custom colours for this room (or leave as Default to use map settings):"
+                                   FontSize="11" Opacity="0.8" Margin="0,0,0,4" />
+
+                        <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Room Fill:" VerticalAlignment="Center" />
+                            <controls:ColorPickerButton Grid.Row="0" Grid.Column="1" SelectedColor="{Binding RoomFillColor}" HorizontalAlignment="Left" Margin="0,2" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Room Border:" VerticalAlignment="Center" />
+                            <controls:ColorPickerButton Grid.Row="1" Grid.Column="1" SelectedColor="{Binding RoomBorderColor}" HorizontalAlignment="Left" Margin="0,2" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Room Name Text:" VerticalAlignment="Center" />
+                            <controls:ColorPickerButton Grid.Row="2" Grid.Column="1" SelectedColor="{Binding RoomNameColor}" HorizontalAlignment="Left" Margin="0,2" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Subtitle Text:" VerticalAlignment="Center" />
+                            <controls:ColorPickerButton Grid.Row="3" Grid.Column="1" SelectedColor="{Binding RoomSubtitleColor}" HorizontalAlignment="Left" Margin="0,2" />
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Objects Text:" VerticalAlignment="Center" />
+                            <controls:ColorPickerButton Grid.Row="4" Grid.Column="1" SelectedColor="{Binding RoomObjectTextColor}" HorizontalAlignment="Left" Margin="0,2" />
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Second Fill:" VerticalAlignment="Center" />
+                            <controls:ColorPickerButton Grid.Row="5" Grid.Column="1" SelectedColor="{Binding SecondFillColor}" HorizontalAlignment="Left" Margin="0,2" />
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Second Fill Location:" VerticalAlignment="Center" />
+                            <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding AvailableSecondFillLocations}"
+                                      SelectedItem="{Binding SecondFillLocation}" HorizontalAlignment="Left" MinWidth="110" Margin="0,2" />
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- OK / Cancel Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,12,0,0">
+            <Button Content="OK" Width="80" IsDefault="True" Click="OnOkClick" />
+            <Button Content="Cancel" Width="80" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>

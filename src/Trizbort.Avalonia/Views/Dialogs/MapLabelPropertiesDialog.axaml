@@ -1,0 +1,65 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.MapLabelPropertiesDialog"
+        x:DataType="vm:MapLabelPropertiesViewModel"
+        Title="Map Label Properties"
+        Width="440" Height="420"
+        MinWidth="380" MinHeight="350"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="10">
+                <!-- Text -->
+                <HeaderedContentControl Header="Text">
+                    <StackPanel Spacing="6" Margin="0,4">
+                        <TextBox Text="{Binding Text}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" Height="60" />
+                        <Grid ColumnDefinitions="100,*" Margin="0,2">
+                            <TextBlock Grid.Column="0" Text="Text Colour:" VerticalAlignment="Center" />
+                            <controls:ColorPickerButton Grid.Column="1" SelectedColor="{Binding TextColor}" HorizontalAlignment="Left" />
+                        </Grid>
+                    </StackPanel>
+                </HeaderedContentControl>
+
+                <!-- Outline -->
+                <HeaderedContentControl Header="Outline">
+                    <StackPanel Spacing="6" Margin="0,4">
+                        <CheckBox Content="Draw Outline" IsChecked="{Binding HasOutline}" />
+                        <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto,Auto" IsEnabled="{Binding HasOutline}" Margin="16,0,0,0">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Shape:" VerticalAlignment="Center" />
+                            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding AvailableShapes}"
+                                      SelectedItem="{Binding Shape}" HorizontalAlignment="Stretch" Margin="0,2" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Line Style:" VerticalAlignment="Center" />
+                            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding AvailableBorderStyles}"
+                                      SelectedItem="{Binding BorderStyle}" HorizontalAlignment="Stretch" Margin="0,2" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Border Colour:" VerticalAlignment="Center" />
+                            <controls:ColorPickerButton Grid.Row="2" Grid.Column="1" SelectedColor="{Binding BorderColor}" HorizontalAlignment="Left" Margin="0,2" />
+                        </Grid>
+                    </StackPanel>
+                </HeaderedContentControl>
+
+                <!-- Background -->
+                <HeaderedContentControl Header="Background">
+                    <StackPanel Spacing="6" Margin="0,4">
+                        <CheckBox Content="Fill Background" IsChecked="{Binding HasBackground}" />
+                        <Grid ColumnDefinitions="100,*" IsEnabled="{Binding HasBackground}" Margin="16,0,0,0">
+                            <TextBlock Grid.Column="0" Text="Fill Colour:" VerticalAlignment="Center" />
+                            <controls:ColorPickerButton Grid.Column="1" SelectedColor="{Binding BackgroundColor}" HorizontalAlignment="Left" />
+                        </Grid>
+                    </StackPanel>
+                </HeaderedContentControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- OK / Cancel Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,12,0,0">
+            <Button Content="OK" Width="80" IsDefault="True" Click="OnOkClick" />
+            <Button Content="Cancel" Width="80" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>

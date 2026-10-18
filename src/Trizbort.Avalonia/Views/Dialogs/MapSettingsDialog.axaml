@@ -1,0 +1,188 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.MapSettingsDialog"
+        x:DataType="vm:MapSettingsViewModel"
+        Title="Map Settings"
+        Width="580" Height="520"
+        MinWidth="500" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <TabControl Grid.Row="0">
+            <!-- Map Details -->
+            <TabItem Header="Map Details">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="8" Margin="8">
+                        <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Title:" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Title}" Margin="0,2" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Author:" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Author}" Margin="0,2" />
+                        </Grid>
+
+                        <TextBlock Text="Description:" FontWeight="SemiBold" Margin="0,4,0,2" />
+                        <TextBox Text="{Binding Description}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" Height="60" />
+
+                        <TextBlock Text="History / Notes:" FontWeight="SemiBold" Margin="0,4,0,2" />
+                        <TextBox Text="{Binding History}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" Height="60" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Grid & Snap -->
+            <TabItem Header="Grid &amp; Snap">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="10" Margin="8">
+                        <Grid ColumnDefinitions="140,*" RowDefinitions="Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Grid Size:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Row="0" Grid.Column="1" Value="{Binding GridSize}" Minimum="4" Maximum="256" HorizontalAlignment="Left" Width="120" />
+                        </Grid>
+
+                        <Separator Margin="0,4" />
+
+                        <CheckBox Content="Show Grid Lines" IsChecked="{Binding IsGridVisible}" />
+                        <CheckBox Content="Snap Elements to Grid" IsChecked="{Binding SnapToGrid}" />
+                        <CheckBox Content="Show Coordinate Origin (0,0)" IsChecked="{Binding ShowOrigin}" />
+                        <CheckBox Content="Hand-Drawn Line Style" IsChecked="{Binding HandDrawn}" />
+                        <CheckBox Content="Wrap Room Name Text at Dashes" IsChecked="{Binding WrapTextAtDashes}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Sizing & Defaults -->
+            <TabItem Header="Sizing &amp; Defaults">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="8" Margin="8">
+                        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Default Room Name:" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DefaultRoomName}" Margin="0,2" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Default Room Shape:" VerticalAlignment="Center" />
+                            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding AvailableShapes}"
+                                      SelectedItem="{Binding DefaultRoomShape}" HorizontalAlignment="Stretch" Margin="0,2" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Line Width:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding LineWidth}" Minimum="1" Maximum="20" HorizontalAlignment="Left" Width="120" Margin="0,2" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Arrow Size:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding ConnectionArrowSize}" Minimum="2" Maximum="64" HorizontalAlignment="Left" Width="120" Margin="0,2" />
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Connection Stalk Length:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Row="4" Grid.Column="1" Value="{Binding ConnectionStalkLength}" Minimum="0" Maximum="128" HorizontalAlignment="Left" Width="120" Margin="0,2" />
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Darkness Stripe Size:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Row="5" Grid.Column="1" Value="{Binding DarknessStripeSize}" Minimum="4" Maximum="128" HorizontalAlignment="Left" Width="120" Margin="0,2" />
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Object List Offset:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Row="6" Grid.Column="1" Value="{Binding ObjectListOffsetFromRoom}" Minimum="0" Maximum="64" HorizontalAlignment="Left" Width="120" Margin="0,2" />
+
+                            <TextBlock Grid.Row="7" Grid.Column="0" Text="Text Offset from Line:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Row="7" Grid.Column="1" Value="{Binding TextOffsetFromConnection}" Minimum="0" Maximum="64" HorizontalAlignment="Left" Width="120" Margin="0,2" />
+
+                            <TextBlock Grid.Row="8" Grid.Column="0" Text="Preferred Distance Between Rooms:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Row="8" Grid.Column="1" Value="{Binding PreferredDistanceBetweenRooms}" Minimum="16" Maximum="512" HorizontalAlignment="Left" Width="120" Margin="0,2" />
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Colours -->
+            <TabItem Header="Colours">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding ColorSettings}" Margin="8">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="160,*" Margin="0,3">
+                                    <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center" />
+                                    <controls:ColorPickerButton Grid.Column="1" SelectedColor="{Binding Color}" HorizontalAlignment="Left" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Fonts -->
+            <TabItem Header="Fonts">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="10" Margin="8">
+                        <HeaderedContentControl Header="Room Name Font">
+                            <Grid ColumnDefinitions="*,80" Margin="0,4">
+                                <TextBox Text="{Binding RoomFontName}" Watermark="Font Family" Margin="0,0,8,0" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding RoomFontSize}" Minimum="6" Maximum="72" />
+                            </Grid>
+                        </HeaderedContentControl>
+
+                        <HeaderedContentControl Header="Objects Font">
+                            <Grid ColumnDefinitions="*,80" Margin="0,4">
+                                <TextBox Text="{Binding ObjectFontName}" Watermark="Font Family" Margin="0,0,8,0" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding ObjectFontSize}" Minimum="6" Maximum="72" />
+                            </Grid>
+                        </HeaderedContentControl>
+
+                        <HeaderedContentControl Header="Subtitle Font">
+                            <Grid ColumnDefinitions="*,80" Margin="0,4">
+                                <TextBox Text="{Binding SubtitleFontName}" Watermark="Font Family" Margin="0,0,8,0" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding SubtitleFontSize}" Minimum="6" Maximum="72" />
+                            </Grid>
+                        </HeaderedContentControl>
+
+                        <HeaderedContentControl Header="Line Text Font">
+                            <Grid ColumnDefinitions="*,80" Margin="0,4">
+                                <TextBox Text="{Binding LineFontName}" Watermark="Font Family" Margin="0,0,8,0" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding LineFontSize}" Minimum="6" Maximum="72" />
+                            </Grid>
+                        </HeaderedContentControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Regions -->
+            <TabItem Header="Regions">
+                <Grid ColumnDefinitions="*,220" Margin="8">
+                    <!-- Region List -->
+                    <DockPanel Grid.Column="0" Margin="0,0,10,0">
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                            <Button Content="Add Region" Command="{Binding AddRegionCommand}" />
+                            <Button Content="Delete Region" Command="{Binding DeleteSelectedRegionCommand}" />
+                        </StackPanel>
+                        <ListBox ItemsSource="{Binding Regions}" SelectedItem="{Binding SelectedRegion}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+
+                    <!-- Selected Region Details -->
+                    <Border Grid.Column="1" Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                            BorderThickness="1" CornerRadius="4" Padding="10">
+                        <StackPanel Spacing="8" DataContext="{Binding SelectedRegion}">
+                            <TextBlock Text="Region Properties" FontWeight="SemiBold" FontSize="12" />
+                            <TextBlock Text="Name:" FontSize="11" />
+                            <TextBox Text="{Binding Name}" IsReadOnly="{Binding IsDefaultRegion}" />
+
+                            <TextBlock Text="Background Fill:" FontSize="11" />
+                            <controls:ColorPickerButton SelectedColor="{Binding FillColor}" HorizontalAlignment="Left" />
+
+                            <TextBlock Text="Text Colour:" FontSize="11" />
+                            <controls:ColorPickerButton SelectedColor="{Binding TextColor}" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- OK / Cancel Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,12,0,0">
+            <Button Content="OK" Width="80" IsDefault="True" Click="OnOkClick" />
+            <Button Content="Cancel" Width="80" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>

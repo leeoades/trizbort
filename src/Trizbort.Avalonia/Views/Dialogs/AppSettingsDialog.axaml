@@ -1,0 +1,86 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.AppSettingsDialog"
+        x:DataType="vm:AppSettingsViewModel"
+        Title="Application Settings"
+        Width="500" Height="440"
+        MinWidth="420" MinHeight="380"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <TabControl Grid.Row="0">
+            <!-- General & Navigation -->
+            <TabItem Header="General &amp; Canvas">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="8" Margin="8">
+                        <CheckBox Content="Invert Mouse Wheel Zoom" IsChecked="{Binding InvertMouseWheel}" />
+                        <CheckBox Content="Show Full File Path in Title Bar" IsChecked="{Binding ShowFullPathInTitleBar}" />
+                        <CheckBox Content="Load Last Opened Project on Startup" IsChecked="{Binding LoadLastProjectOnStart}" />
+                        <CheckBox Content="Double-Click Canvas Background to Add Room" IsChecked="{Binding DoubleClickToAddRoom}" />
+                        <CheckBox Content="Apply Current Theme Style to Newly Added Rooms" IsChecked="{Binding ApplyStyleToNewRooms}" />
+
+                        <Separator Margin="0,4" />
+
+                        <Grid ColumnDefinitions="140,*" Margin="0,4">
+                            <TextBlock Grid.Column="0" Text="Default Font Name:" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="1" Text="{Binding DefaultFontName}" />
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tooltips -->
+            <TabItem Header="Tooltips">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="8" Margin="8">
+                        <CheckBox Content="Show Canvas Tooltips" IsChecked="{Binding ShowTooltips}" />
+
+                        <StackPanel Spacing="6" Margin="16,0,0,0" IsEnabled="{Binding ShowTooltips}">
+                            <CheckBox Content="Show Room Descriptions in Tooltip" IsChecked="{Binding ShowDescriptionsInTooltips}" />
+                            <CheckBox Content="Show Objects in Tooltip" IsChecked="{Binding ShowObjectsInTooltips}" />
+
+                            <Separator Margin="0,4" />
+
+                            <CheckBox Content="Limit Room Description Characters" IsChecked="{Binding LimitRoomDescriptionCharactersInTooltip}" />
+                            <Grid ColumnDefinitions="180,*" IsEnabled="{Binding LimitRoomDescriptionCharactersInTooltip}" Margin="16,0,0,0">
+                                <TextBlock Grid.Column="0" Text="Max Characters to Show:" VerticalAlignment="Center" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding ToolTipRoomDescriptionCharactersToShow}" Minimum="10" Maximum="2000" HorizontalAlignment="Left" Width="100" />
+                            </Grid>
+
+                            <CheckBox Content="Limit Connection Description Characters" IsChecked="{Binding LimitConnectionDescriptionCharactersInTooltip}" />
+                            <Grid ColumnDefinitions="180,*" IsEnabled="{Binding LimitConnectionDescriptionCharactersInTooltip}" Margin="16,0,0,0">
+                                <TextBlock Grid.Column="0" Text="Max Characters to Show:" VerticalAlignment="Center" />
+                                <NumericUpDown Grid.Column="1" Value="{Binding ToolTipConnectionDescriptionCharactersToShow}" Minimum="10" Maximum="2000" HorizontalAlignment="Left" Width="100" />
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Margins -->
+            <TabItem Header="Export Margins">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="8" Margin="8">
+                        <CheckBox Content="Specify General Margins for Export" IsChecked="{Binding SpecifyGenMargins}" />
+
+                        <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto" IsEnabled="{Binding SpecifyGenMargins}" Margin="16,4,0,0">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Horizontal Margin:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Row="0" Grid.Column="1" Value="{Binding GenHorizontalMargin}" Minimum="0" Maximum="1000" HorizontalAlignment="Left" Width="120" Margin="0,2" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Vertical Margin:" VerticalAlignment="Center" />
+                            <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding GenVerticalMargin}" Minimum="0" Maximum="1000" HorizontalAlignment="Left" Width="120" Margin="0,2" />
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- OK / Cancel Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,12,0,0">
+            <Button Content="OK" Width="80" IsDefault="True" Click="OnOkClick" />
+            <Button Content="Cancel" Width="80" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>

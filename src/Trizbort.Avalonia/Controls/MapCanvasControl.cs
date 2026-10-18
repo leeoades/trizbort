@@ -8,11 +8,13 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Avalonia.Drawing;
 using Trizbort.Avalonia.Services;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
+using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using CoreRect = Trizbort.Domain.Misc.Rect;
@@ -83,6 +85,9 @@ public class MapCanvasControl : Control
     private bool _isSpaceKeyDown;
     private bool _isSecondaryButtonRelease;
     private MouseButton? _gestureButton;
+    private bool _panMoved;
+    private CoreVector _lastRightClickWorldPos;
+    private Point _lastRightClickClientPos;
     private Connection? _dragNewConnection;
     private Port? _dragMovePortOriginalPort;
     private CoreVector _dragMovePortOriginalPosition;
@@ -712,6 +717,13 @@ public class MapCanvasControl : Control
         var isCtrl = (e.KeyModifiers & KeyModifiers.Control) != 0;
         _gestureButton = isMiddle ? MouseButton.Middle : isRight ? MouseButton.Right : MouseButton.Left;
 
+        if (isRight)
+        {
+            _panMoved = false;
+            _lastRightClickWorldPos = worldPos;
+            _lastRightClickClientPos = clientPos;
+        }
+
         if (isMiddle || isRight || (isLeft && _isSpaceKeyDown))
         {
             _dragMode = CanvasDragMode.Pan;
@@ -724,6 +736,24 @@ public class MapCanvasControl : Control
 
         if (isLeft)
         {
+            if (e.ClickCount == 2)
+            {
+                var hitDoubleElem = HitTestElement(worldPos);
+                if (hitDoubleElem != null)
+                {
+                    CommandService?.Select([hitDoubleElem], clearExisting: true);
+                    _ = ShowPropertiesDialogAsync(hitDoubleElem);
+                    e.Handled = true;
+                    return;
+                }
+                else if (ApplicationSettingsController.AppSettings.DoubleClickToAddRoom)
+                {
+                    CommandService?.AddRoom(worldPos);
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             var hitHandle = HitTestHandle(worldPos);
             if (hitHandle != null)
             {
@@ -851,6 +881,10 @@ public class MapCanvasControl : Control
         {
             case CanvasDragMode.Pan:
                 var deltaScreen = clientPos - _panStartClient;
+                if (Math.Abs(deltaScreen.X) > 2 || Math.Abs(deltaScreen.Y) > 2)
+                {
+                    _panMoved = true;
+                }
                 _panStartClient = clientPos;
                 Origin = new CoreVector((float)(Origin.X - deltaScreen.X / ZoomFactor), (float)(Origin.Y - deltaScreen.Y / ZoomFactor));
                 e.Handled = true;
@@ -990,8 +1024,20 @@ public class MapCanvasControl : Control
             return;
         }
 
+        var wasPan = _dragMode == CanvasDragMode.Pan;
+        var wasRight = releasedButton == MouseButton.Right;
+        var panMoved = _panMoved;
+        var rightClient = _lastRightClickClientPos;
+        var rightWorld = _lastRightClickWorldPos;
+
         EndDrag(e.KeyModifiers, cancelled: false);
         e.Pointer.Capture(null);
+
+        if (wasPan && wasRight && !panMoved)
+        {
+            ShowContextMenuAt(rightClient, rightWorld);
+            e.Handled = true;
+        }
     }
 
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
@@ -1368,6 +1414,145 @@ public class MapCanvasControl : Control
         {
             System.Diagnostics.Debug.WriteLine($"Paste failed: {ex}");
         }
+    }
+
+    private void ShowContextMenuAt(Point clientPos, CoreVector worldPos)
+    {
+        var hitElem = HitTestElement(worldPos);
+        if (hitElem != null && !_selectedSet.Contains(hitElem))
+        {
+            CommandService?.Select([hitElem], clearExisting: true);
+        }
+
+        var menu = new ContextMenu();
+        var items = new List<Control>();
+
+        var selectedElements = Project.Current.GetSelectedElements();
+        var activeElement = selectedElements.Count == 1 ? selectedElements[0] : (hitElem ?? Project.Current.ActiveSelectedElement);
+
+        if (activeElement != null)
+        {
+            var propertiesItem = new MenuItem { Header = "_Properties..." };
+            propertiesItem.Click += (_, _) => _ = ShowPropertiesDialogAsync(activeElement);
+            items.Add(propertiesItem);
+            items.Add(new Separator());
+        }
+
+        if (selectedElements.Count > 0)
+        {
+            var cutItem = new MenuItem { Header = "Cu_t" };
+            cutItem.Click += async (_, _) => await CutSelectedToClipboardAsync();
+            items.Add(cutItem);
+
+            var copyItem = new MenuItem { Header = "_Copy" };
+            copyItem.Click += async (_, _) => await CopySelectedToClipboardAsync();
+            items.Add(copyItem);
+
+            var deleteItem = new MenuItem { Header = "_Delete" };
+            deleteItem.Click += (_, _) => CommandService?.DeleteSelected();
+            items.Add(deleteItem);
+
+            items.Add(new Separator());
+        }
+
+        var pasteItem = new MenuItem { Header = "_Paste" };
+        pasteItem.Click += async (_, _) => await PasteFromClipboardAsync();
+        items.Add(pasteItem);
+
+        items.Add(new Separator());
+
+        var addRoomItem = new MenuItem { Header = "Add _Room" };
+        addRoomItem.Click += (_, _) => CommandService?.AddRoom(worldPos);
+        items.Add(addRoomItem);
+
+        var addLabelItem = new MenuItem { Header = "Add _Map Label" };
+        addLabelItem.Click += (_, _) => CommandService?.AddMapLabel(worldPos);
+        items.Add(addLabelItem);
+
+        items.Add(new Separator());
+
+        var mapSettingsItem = new MenuItem { Header = "_Map Settings..." };
+        mapSettingsItem.Click += (_, _) => _ = ShowMapSettingsDialogAsync();
+        items.Add(mapSettingsItem);
+
+        var mapThemeItem = new MenuItem { Header = "Map _Theme..." };
+        mapThemeItem.Click += (_, _) => _ = ShowMapThemeDialogAsync();
+        items.Add(mapThemeItem);
+
+        var appSettingsItem = new MenuItem { Header = "_Application Settings..." };
+        appSettingsItem.Click += (_, _) => _ = ShowAppSettingsDialogAsync();
+        items.Add(appSettingsItem);
+
+        menu.ItemsSource = items;
+        menu.Open(this);
+    }
+
+    public async Task<bool> ShowPropertiesDialogAsync(Element element)
+    {
+        var window = TopLevel.GetTopLevel(this) as Window;
+        var dialogService = App.Services?.GetService<IDialogService>();
+        if (dialogService != null)
+        {
+            var changed = await dialogService.ShowElementPropertiesAsync(window, element);
+            if (changed)
+            {
+                CommandService?.InvalidateCanvas();
+                InvalidateVisual();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public async Task<bool> ShowMapSettingsDialogAsync()
+    {
+        var window = TopLevel.GetTopLevel(this) as Window;
+        var dialogService = App.Services?.GetService<IDialogService>();
+        if (dialogService != null)
+        {
+            var changed = await dialogService.ShowMapSettingsAsync(window);
+            if (changed)
+            {
+                CommandService?.InvalidateCanvas();
+                InvalidateVisual();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public async Task<bool> ShowMapThemeDialogAsync()
+    {
+        var window = TopLevel.GetTopLevel(this) as Window;
+        var dialogService = App.Services?.GetService<IDialogService>();
+        if (dialogService != null)
+        {
+            var changed = await dialogService.ShowMapThemeAsync(window);
+            if (changed)
+            {
+                CommandService?.InvalidateCanvas();
+                InvalidateVisual();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public async Task<bool> ShowAppSettingsDialogAsync()
+    {
+        var window = TopLevel.GetTopLevel(this) as Window;
+        var dialogService = App.Services?.GetService<IDialogService>();
+        if (dialogService != null)
+        {
+            var changed = await dialogService.ShowAppSettingsAsync(window);
+            if (changed)
+            {
+                CommandService?.InvalidateCanvas();
+                InvalidateVisual();
+                return true;
+            }
+        }
+        return false;
     }
 
     #endregion

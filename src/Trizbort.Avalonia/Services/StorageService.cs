@@ -20,6 +20,11 @@ public class StorageService(IDialogService dialogService) : IStorageService
         Patterns = ["*.trizbort"]
     };
 
+    private static readonly FilePickerFileType ThemeFileType = new("Trizbort Theme Files (*.trizbort-theme; *.json)")
+    {
+        Patterns = ["*.trizbort-theme", "*.json"]
+    };
+
     private static Window? GetWindow(TopLevel? topLevel)
     {
         if (topLevel is Window window) return window;
@@ -184,5 +189,34 @@ public class StorageService(IDialogService dialogService) : IStorageService
                 $"Error exporting code to '{Path.GetFileName(exportPath)}':\n{ex.Message}");
             return false;
         }
+    }
+
+    public async Task<string?> OpenThemeFileAsync(TopLevel? topLevel)
+    {
+        if (topLevel == null) return null;
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Import Trizbort Theme",
+            AllowMultiple = false,
+            FileTypeFilter = [ThemeFileType, FilePickerFileTypes.All]
+        });
+
+        return files.Count > 0 ? files[0].Path.LocalPath : null;
+    }
+
+    public async Task<string?> SaveThemeFileAsync(TopLevel? topLevel, string suggestedName)
+    {
+        if (topLevel == null) return null;
+
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Export Trizbort Theme",
+            DefaultExtension = "trizbort-theme",
+            SuggestedFileName = suggestedName,
+            FileTypeChoices = [ThemeFileType, FilePickerFileTypes.All]
+        });
+
+        return file?.Path.LocalPath;
     }
 }
