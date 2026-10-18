@@ -25,6 +25,11 @@ public class StorageService(IDialogService dialogService) : IStorageService
         Patterns = ["*.trizbort-theme", "*.json"]
     };
 
+    private static readonly FilePickerFileType TranscriptFileType = new("Text and Log Files (*.txt; *.log)")
+    {
+        Patterns = ["*.txt", "*.log"]
+    };
+
     private static Window? GetWindow(TopLevel? topLevel)
     {
         if (topLevel is Window window) return window;
@@ -218,5 +223,37 @@ public class StorageService(IDialogService dialogService) : IStorageService
         });
 
         return file?.Path.LocalPath;
+    }
+
+    public async Task<string?> OpenTranscriptFileAsync(TopLevel? topLevel, string? initialPath = null)
+    {
+        if (topLevel == null) return null;
+
+        IStorageFolder? suggestedFolder = null;
+        if (!string.IsNullOrEmpty(initialPath))
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(initialPath);
+                if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                {
+                    suggestedFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(dir);
+                }
+            }
+            catch
+            {
+                // ignore invalid path
+            }
+        }
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Open Transcript",
+            AllowMultiple = false,
+            SuggestedStartLocation = suggestedFolder,
+            FileTypeFilter = [TranscriptFileType, FilePickerFileTypes.All]
+        });
+
+        return files.Count > 0 ? files[0].Path.LocalPath : null;
     }
 }

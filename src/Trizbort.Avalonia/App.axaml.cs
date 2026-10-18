@@ -1,13 +1,16 @@
 using System;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Automap;
 using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Avalonia.Views;
 using Trizbort.Domain.Application;
+using AutomapEngine = Trizbort.Automap.Automap;
 
 namespace Trizbort.Avalonia;
 
@@ -25,6 +28,9 @@ public partial class App : Application
         var services = ConfigureServices();
         Services = services;
 
+        var dialogService = services.GetRequiredService<IDialogService>();
+        WireAutomapErrorReporter(dialogService, () => (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow);
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var mainWindowViewModel = services.GetRequiredService<MainWindowViewModel>();
@@ -35,6 +41,30 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    public static Action<string, string> WireAutomapErrorReporter(IDialogService dialogService, Func<Window?> getOwner)
+    {
+        // Wire Automap.ErrorReporter to IDialogService on the UI dispatcher.
+        // Same-direction room conflicts retain default KeepRoom1 (known parity gap: interactive chooser not in Avalonia).
+        Action<string, string> reporter = (message, title) =>
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                var owner = getOwner();
+                _ = dialogService.ShowMessageAsync(owner, title, message);
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(async () =>
+                {
+                    var owner = getOwner();
+                    await dialogService.ShowMessageAsync(owner, title, message);
+                });
+            }
+        };
+        AutomapEngine.ErrorReporter = reporter;
+        return reporter;
     }
 
     public static IServiceProvider ConfigureServices()
@@ -57,6 +87,7 @@ public partial class App : Application
         services.AddTransient<MapSettingsViewModel>();
         services.AddTransient<MapThemeViewModel>();
         services.AddTransient<AppSettingsViewModel>();
+        services.AddTransient<AutomapSettingsViewModel>();
 
         return services.BuildServiceProvider();
     }

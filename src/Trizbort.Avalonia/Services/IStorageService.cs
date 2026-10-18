@@ -11,4 +11,5 @@ public interface IStorageService
     Task<bool> ExportCodeAsync(TopLevel? topLevel, CodeExporter exporter);
     Task<string?> OpenThemeFileAsync(TopLevel? topLevel);
     Task<string?> SaveThemeFileAsync(TopLevel? topLevel, string suggestedName);
+    Task<string?> OpenTranscriptFileAsync(TopLevel? topLevel, string? initialPath = null);
 }

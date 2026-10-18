@@ -965,7 +965,7 @@ public sealed class Automap
   }
 
 
-  internal async Task Start(IAutomapCanvas canvas, AutomapSettings settings)
+  public async Task Start(IAutomapCanvas canvas, AutomapSettings settings)
   {
     if (Running) Stop();
 

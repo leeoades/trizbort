@@ -5,10 +5,12 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Microsoft.Extensions.DependencyInjection;
+using Trizbort.Automap;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Avalonia.Views;
 using Trizbort.Avalonia.Views.Dialogs;
 using Trizbort.Domain.Application;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Elements;
 
 namespace Trizbort.Avalonia.Services;
@@ -325,5 +327,27 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogSe
             viewModel.ApplyToSettings();
         }
         return result;
+    }
+
+    public async Task<AutomapSettings?> ShowAutomapSettingsAsync(Window? owner)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<AutomapSettingsViewModel>();
+        var currentSettings = ApplicationSettingsController.AppSettings.Automap;
+        viewModel.Initialize(currentSettings);
+
+        var dialog = new AutomapSettingsDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            var settings = viewModel.GetSettings();
+            if (!string.IsNullOrWhiteSpace(settings.FileName))
+            {
+                ApplicationSettingsController.AppSettings.Automap = settings;
+                ApplicationSettingsController.SaveSettings();
+            }
+            return settings;
+        }
+        return null;
     }
 }

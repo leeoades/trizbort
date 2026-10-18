@@ -47,6 +47,7 @@ public class DialogViewModelTests
             var mapSettingsVm = scope.ServiceProvider.GetRequiredService<MapSettingsViewModel>();
             var mapThemeVm = scope.ServiceProvider.GetRequiredService<MapThemeViewModel>();
             var appSettingsVm = scope.ServiceProvider.GetRequiredService<AppSettingsViewModel>();
+            var automapSettingsVm = scope.ServiceProvider.GetRequiredService<AutomapSettingsViewModel>();
 
             roomVm.ShouldNotBeNull();
             connVm.ShouldNotBeNull();
@@ -54,6 +55,7 @@ public class DialogViewModelTests
             mapSettingsVm.ShouldNotBeNull();
             mapThemeVm.ShouldNotBeNull();
             appSettingsVm.ShouldNotBeNull();
+            automapSettingsVm.ShouldNotBeNull();
         }
 
         // Root provider should still resolve singletons and spawn new scopes without error

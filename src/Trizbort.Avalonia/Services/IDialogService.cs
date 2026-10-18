@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Trizbort.Automap;
 using Trizbort.Domain.Elements;
 
 namespace Trizbort.Avalonia.Services;
@@ -26,4 +27,5 @@ public interface IDialogService
     Task<bool> ShowMapSettingsAsync(Window? owner);
     Task<bool> ShowMapThemeAsync(Window? owner);
     Task<bool> ShowAppSettingsAsync(Window? owner);
+    Task<AutomapSettings?> ShowAutomapSettingsAsync(Window? owner);
 }

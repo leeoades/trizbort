@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Trizbort.Automap;
@@ -12,6 +13,7 @@ using Trizbort.Avalonia.Services;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Export.Languages;
+using AutomapEngine = Trizbort.Automap.Automap;
 
 namespace Trizbort.Avalonia.ViewModels;
 
@@ -39,6 +41,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isAutomapActive;
+
+    [ObservableProperty]
+    private string _automapStatusText = "Automap is not running.";
+
+    private Task? _automapTask;
+    private DispatcherTimer? _automapStatusTimer;
+    private object? _currentRunToken;
+
+    internal Task? CurrentAutomapTask => _automapTask;
 
     [ObservableProperty]
     private string _cursorPositionText = "X: 0, Y: 0";
@@ -163,6 +174,10 @@ public partial class MainWindowViewModel : ViewModelBase
     public async Task NewMapAsync()
     {
         if (!await CanLoseProjectAsync()) return;
+        if (IsAutomapActive)
+        {
+            StopAutomap();
+        }
         _commandService.NewMap();
         UpdateState();
         StatusText = "New map created";
@@ -175,6 +190,10 @@ public partial class MainWindowViewModel : ViewModelBase
         var success = await _storageService.OpenMapAsync(GetActiveTopLevel());
         if (success)
         {
+            if (IsAutomapActive)
+            {
+                StopAutomap();
+            }
             UpdateState();
             _commandService.ResetZoom();
             StatusText = $"Opened map: {Path.GetFileName(Project.Current.FileName)}";
@@ -366,11 +385,102 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     public void ToggleGrid() => _commandService.ToggleGrid();
 
-    [RelayCommand(CanExecute = nameof(CanToggleAutomap))]
-    public void ToggleAutomap()
+    [RelayCommand]
+    public async Task ToggleAutomapAsync()
     {
+        if (IsAutomapActive)
+        {
+            StopAutomap();
+            return;
+        }
+
+        var settings = await _dialogService.ShowAutomapSettingsAsync(GetActiveWindow());
+        if (settings == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.Value.FileName))
+        {
+            await _dialogService.ShowMessageAsync(
+                GetActiveWindow(),
+                "Automap Error",
+                "Please specify a transcript file to start automapping.");
+            return;
+        }
+
+        await StartAutomapAsync(settings.Value);
     }
-    private bool CanToggleAutomap => false; // Activated in Step 5 when Automap integration is wired
+
+    [RelayCommand]
+    public void StopAutomap()
+    {
+        _currentRunToken = null;
+        _automapStatusTimer?.Stop();
+        _automapStatusTimer = null;
+
+        AutomapEngine.Instance.Stop();
+        IsAutomapActive = false;
+        AutomapStatusText = "Automap is not running.";
+    }
+
+    public Task StartAutomapAsync(AutomapSettings settings)
+    {
+        StopAutomap();
+
+        var runToken = new object();
+        _currentRunToken = runToken;
+
+        IsAutomapActive = true;
+        AutomapStatusText = "Automapping has started.";
+
+        _automapStatusTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(200)
+        };
+        _automapStatusTimer.Tick += (_, _) =>
+        {
+            if (IsAutomapActive && ReferenceEquals(_currentRunToken, runToken))
+            {
+                AutomapStatusText = AutomapEngine.Instance.Status;
+            }
+        };
+        _automapStatusTimer.Start();
+
+        _automapTask = RunAutomapLoopAsync(settings, runToken);
+        return Task.CompletedTask;
+    }
+
+    private async Task RunAutomapLoopAsync(AutomapSettings settings, object runToken)
+    {
+        try
+        {
+            await AutomapEngine.Instance.Start(_automapCanvas, settings);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected on cancellation/stop
+        }
+        catch (Exception ex)
+        {
+            await _dialogService.ShowMessageAsync(
+                GetActiveWindow(),
+                "Automap Error",
+                $"An unexpected error occurred during automapping:\n{ex.Message}");
+        }
+        finally
+        {
+            if (ReferenceEquals(_currentRunToken, runToken))
+            {
+                AutomapStatusText = AutomapEngine.Instance.Status;
+                IsAutomapActive = false;
+                _automapStatusTimer?.Stop();
+                _automapStatusTimer = null;
+                UpdateState();
+                _commandService.InvalidateCanvas();
+            }
+        }
+    }
 
     [RelayCommand]
     public async Task ShowAboutAsync()

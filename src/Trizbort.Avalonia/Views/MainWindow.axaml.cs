@@ -18,14 +18,28 @@ public partial class MainWindow : Window
     {
         if (_isClosingConfirmed) return;
 
-        if (DataContext is MainWindowViewModel vm && Project.Current.IsDirty)
+        if (DataContext is MainWindowViewModel vm)
         {
-            e.Cancel = true;
-            var canClose = await vm.CanLoseProjectAsync();
-            if (canClose)
+            if (Project.Current.IsDirty)
             {
-                _isClosingConfirmed = true;
-                Close();
+                e.Cancel = true;
+                var canClose = await vm.CanLoseProjectAsync();
+                if (canClose)
+                {
+                    if (vm.IsAutomapActive)
+                    {
+                        vm.StopAutomap();
+                    }
+                    _isClosingConfirmed = true;
+                    Close();
+                }
+            }
+            else
+            {
+                if (vm.IsAutomapActive)
+                {
+                    vm.StopAutomap();
+                }
             }
         }
     }

@@ -187,6 +187,13 @@
                                        CommandService="{Binding CommandService}"
                                        HorizontalAlignment="Stretch"
                                        VerticalAlignment="Stretch" />
+
+            <!-- AutomapBar overlay -->
+            <controls:AutomapBar VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Stretch"
+                                 IsVisible="{Binding IsAutomapActive}"
+                                 Status="{Binding AutomapStatusText}"
+                                 StopCommand="{Binding StopAutomapCommand}" />
         </Grid>
     </DockPanel>
 </Window>
