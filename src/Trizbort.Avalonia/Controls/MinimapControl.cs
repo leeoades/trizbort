@@ -49,8 +49,6 @@ public class MinimapControl : Control
     }
 
     private bool _isDragging;
-    private Project? _hookedProject;
-    private ICommandService? _hookedService;
     private MapCanvasControl? _hookedCanvas;
 
     public MinimapControl()
@@ -61,21 +59,13 @@ public class MinimapControl : Control
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        Project.ProjectChanged += OnProjectChanged;
-        Settings.Changed += OnSettingsChanged;
         TryHookCanvas();
-        TryHookProject(Project.Current);
-        TryHookService();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
-        Project.ProjectChanged -= OnProjectChanged;
-        Settings.Changed -= OnSettingsChanged;
         TryUnhookCanvas();
-        TryUnhookProject();
-        TryUnhookService();
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -84,55 +74,14 @@ public class MinimapControl : Control
 
         if (change.Property == CommandServiceProperty)
         {
-            TryUnhookService();
-            TryHookService();
             InvalidateVisual();
         }
         else if (change.Property == CanvasControlProperty)
         {
             TryUnhookCanvas();
             TryHookCanvas();
-            TryUnhookService();
-            TryHookService();
-            TryUnhookProject();
-            TryHookProject(Project.Current);
             InvalidateVisual();
         }
-    }
-
-    private void TryHookService()
-    {
-        if (CanvasControl != null)
-        {
-            TryUnhookService();
-            return;
-        }
-
-        var service = CommandService;
-        if (!this.IsAttachedToVisualTree() || service == null || ReferenceEquals(_hookedService, service))
-        {
-            return;
-        }
-
-        _hookedService = service;
-        _hookedService.CanvasInvalidated += OnServiceCanvasInvalidated;
-        _hookedService.ZoomChanged += OnServiceZoomChanged;
-        _hookedService.SelectionChanged += OnServiceSelectionChanged;
-        _hookedService.ProjectChanged += OnServiceProjectChanged;
-    }
-
-    private void TryUnhookService()
-    {
-        if (_hookedService == null)
-        {
-            return;
-        }
-
-        _hookedService.CanvasInvalidated -= OnServiceCanvasInvalidated;
-        _hookedService.ZoomChanged -= OnServiceZoomChanged;
-        _hookedService.SelectionChanged -= OnServiceSelectionChanged;
-        _hookedService.ProjectChanged -= OnServiceProjectChanged;
-        _hookedService = null;
     }
 
     private void TryHookCanvas()
@@ -158,85 +107,7 @@ public class MinimapControl : Control
         _hookedCanvas = null;
     }
 
-    private void TryHookProject(Project? project)
-    {
-        if (CanvasControl != null)
-        {
-            TryUnhookProject();
-            return;
-        }
-
-        var proj = project ?? Project.Current;
-        if (!this.IsAttachedToVisualTree() || proj == null || ReferenceEquals(_hookedProject, proj))
-        {
-            return;
-        }
-
-        TryUnhookProject();
-        _hookedProject = proj;
-        _hookedProject.Elements.Added += OnElementAdded;
-        _hookedProject.Elements.Removed += OnElementRemoved;
-
-        foreach (var element in _hookedProject.Elements)
-        {
-            element.Changed += OnElementChanged;
-        }
-    }
-
-    private void TryUnhookProject()
-    {
-        if (_hookedProject == null)
-        {
-            return;
-        }
-
-        _hookedProject.Elements.Added -= OnElementAdded;
-        _hookedProject.Elements.Removed -= OnElementRemoved;
-
-        foreach (var element in _hookedProject.Elements)
-        {
-            element.Changed -= OnElementChanged;
-        }
-
-        _hookedProject = null;
-    }
-
-    private void OnProjectChanged(object? sender, ProjectChangedEventArgs e)
-    {
-        if (CanvasControl == null)
-        {
-            TryUnhookProject();
-            TryHookProject(e.NewProject ?? Project.Current);
-            InvalidateVisual();
-        }
-    }
-
-    private void OnSettingsChanged(object? sender, EventArgs e)
-    {
-        if (CanvasControl == null)
-        {
-            InvalidateVisual();
-        }
-    }
-    private void OnServiceCanvasInvalidated(object? sender, EventArgs e) => InvalidateVisual();
-    private void OnServiceZoomChanged(object? sender, float e) => InvalidateVisual();
-    private void OnServiceSelectionChanged(object? sender, EventArgs e) => InvalidateVisual();
-    private void OnServiceProjectChanged(object? sender, EventArgs e) => InvalidateVisual();
     private void OnCanvasViewChanged(object? sender, EventArgs e) => InvalidateVisual();
-
-    private void OnElementAdded(object? sender, ItemEventArgs<Element> e)
-    {
-        if (e.Item != null) e.Item.Changed += OnElementChanged;
-        InvalidateVisual();
-    }
-
-    private void OnElementRemoved(object? sender, ItemEventArgs<Element> e)
-    {
-        if (e.Item != null) e.Item.Changed -= OnElementChanged;
-        InvalidateVisual();
-    }
-
-    private void OnElementChanged(object? sender, EventArgs e) => InvalidateVisual();
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
@@ -282,6 +153,9 @@ public class MinimapControl : Control
 
     private void UpdateOriginFromPointer(Point clientPos)
     {
+        var canvas = CanvasControl;
+        if (canvas == null) return;
+
         var bounds = Bounds;
         const double padding = 6.0;
         var clientArea = new CoreRect(
@@ -296,13 +170,9 @@ public class MinimapControl : Control
         var canvasBounds = MinimapTransform.ComputeCanvasBounds(project?.Elements);
         if (canvasBounds == CoreRect.Empty || canvasBounds.Width <= 0 || canvasBounds.Height <= 0) return;
 
-        var zoom = CanvasControl?.ZoomFactor ?? CommandService?.ZoomFactor ?? 1.0f;
-        var viewportWidth = CanvasControl != null && CanvasControl.Bounds.Width > 0
-            ? CanvasControl.Bounds.Width
-            : (CommandService?.ViewportWidth ?? 800);
-        var viewportHeight = CanvasControl != null && CanvasControl.Bounds.Height > 0
-            ? CanvasControl.Bounds.Height
-            : (CommandService?.ViewportHeight ?? 600);
+        var zoom = canvas.ZoomFactor;
+        var viewportWidth = canvas.Bounds.Width > 0 ? canvas.Bounds.Width : 800;
+        var viewportHeight = canvas.Bounds.Height > 0 ? canvas.Bounds.Height : 600;
 
         var viewportWorldSize = new CoreVector((float)(viewportWidth / zoom), (float)(viewportHeight / zoom));
 
@@ -312,14 +182,7 @@ public class MinimapControl : Control
             clientArea,
             viewportWorldSize);
 
-        if (CanvasControl != null)
-        {
-            CanvasControl.Origin = newOrigin;
-        }
-        else if (CommandService != null)
-        {
-            CommandService.Origin = newOrigin;
-        }
+        canvas.Origin = newOrigin;
 
         InvalidateVisual();
     }
@@ -427,14 +290,13 @@ public class MinimapControl : Control
                 }
 
                 // Draw viewport handle
-                var origin = CanvasControl?.Origin ?? CommandService?.Origin ?? CoreVector.Zero;
-                var zoom = CanvasControl?.ZoomFactor ?? CommandService?.ZoomFactor ?? 1.0f;
-                var viewportWidth = CanvasControl != null && CanvasControl.Bounds.Width > 0
-                    ? CanvasControl.Bounds.Width
-                    : (CommandService?.ViewportWidth ?? 800);
-                var viewportHeight = CanvasControl != null && CanvasControl.Bounds.Height > 0
-                    ? CanvasControl.Bounds.Height
-                    : (CommandService?.ViewportHeight ?? 600);
+                var canvas = CanvasControl;
+                if (canvas == null) return;
+
+                var origin = canvas.Origin;
+                var zoom = canvas.ZoomFactor;
+                var viewportWidth = canvas.Bounds.Width > 0 ? canvas.Bounds.Width : 800;
+                var viewportHeight = canvas.Bounds.Height > 0 ? canvas.Bounds.Height : 600;
 
                 var canvasTransform = new CanvasTransform
                 {

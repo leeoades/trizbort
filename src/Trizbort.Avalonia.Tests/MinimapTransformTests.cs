@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
 using Avalonia.Input;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Avalonia.Controls;
@@ -426,6 +429,7 @@ public class MinimapTransformTests
             emptyFrame.ShouldNotBeNull();
             emptyFrame.PixelSize.Width.ShouldBeGreaterThan(0);
             emptyFrame.PixelSize.Height.ShouldBeGreaterThan(0);
+            CountViewportBluePixels(emptyFrame).ShouldBe(0);
 
             // Populate map
             var roomA = new Room(Project.Current) { Name = "A", Position = new CoreVector(0, 0), Size = new CoreVector(100, 60) };
@@ -437,12 +441,11 @@ public class MinimapTransformTests
             var conn = new Connection(Project.Current, new Vertex(roomA.PortList[0]), new Vertex(roomB.PortList[0]));
             Project.Current.Elements.Add(conn);
 
-            service.Select(roomA);
-
             using var populatedFrame = window.CaptureRenderedFrame();
             populatedFrame.ShouldNotBeNull();
             populatedFrame.PixelSize.Width.ShouldBeGreaterThan(0);
             populatedFrame.PixelSize.Height.ShouldBeGreaterThan(0);
+            CountViewportBluePixels(populatedFrame).ShouldBeGreaterThan(0);
         }
         finally
         {
@@ -480,7 +483,7 @@ public class MinimapTransformTests
             var countAfterAttach = minimap.InvalidationCount;
 
             // Invalidation when attached
-            service.InvalidateCanvas();
+            canvas.InvalidateVisual();
             minimap.InvalidationCount.ShouldBe(countAfterAttach + 1);
 
             // Detach minimap from visual tree
@@ -488,7 +491,7 @@ public class MinimapTransformTests
             var countAfterDetach = minimap.InvalidationCount;
 
             // Invalidation while detached should not affect minimap
-            service.InvalidateCanvas();
+            canvas.InvalidateVisual();
             minimap.InvalidationCount.ShouldBe(countAfterDetach);
 
             // Re-attach minimap to visual tree
@@ -496,12 +499,40 @@ public class MinimapTransformTests
             var countAfterReattach = minimap.InvalidationCount;
 
             // Invalidation when re-attached should increment by exactly 1 (no double subscription)
-            service.InvalidateCanvas();
+            canvas.InvalidateVisual();
             minimap.InvalidationCount.ShouldBe(countAfterReattach + 1);
         }
         finally
         {
             window.Close();
         }
+    }
+
+    private static int CountViewportBluePixels(Bitmap frame)
+    {
+        using var bitmap = new WriteableBitmap(frame.PixelSize, frame.Dpi, PixelFormat.Bgra8888, AlphaFormat.Premul);
+        using var framebuffer = bitmap.Lock();
+        frame.CopyPixels(framebuffer, AlphaFormat.Premul);
+
+        var pixels = new byte[framebuffer.RowBytes * frame.PixelSize.Height];
+        Marshal.Copy(framebuffer.Address, pixels, 0, pixels.Length);
+
+        var count = 0;
+        for (var y = 0; y < frame.PixelSize.Height; y++)
+        {
+            for (var x = 0; x < frame.PixelSize.Width; x++)
+            {
+                var offset = y * framebuffer.RowBytes + x * 4;
+                var blue = pixels[offset];
+                var green = pixels[offset + 1];
+                var red = pixels[offset + 2];
+                if (blue > 120 && green > 50 && blue > red * 1.5 && green > red * 1.25)
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
     }
 }
