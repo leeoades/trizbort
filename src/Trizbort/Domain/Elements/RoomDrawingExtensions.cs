@@ -1,22 +1,13 @@
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using PdfSharp.Drawing;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.AppSettings;
-using Trizbort.Domain.Elements;
-using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Trizbort.Extensions;
-using Trizbort.Properties;
-using Trizbort.Setup;
 using Trizbort.UI;
-using Trizbort.UI.Controls;
-using Trizbort.Util;
 using Settings = Trizbort.Setup.Settings;
 
 namespace Trizbort.Domain.Elements;

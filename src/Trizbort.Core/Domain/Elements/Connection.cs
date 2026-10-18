@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
-using System.Linq;
-using Newtonsoft.Json;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Misc;
 using Trizbort.Util;
-using Settings = Trizbort.Setup.Settings;
 
 namespace Trizbort.Domain.Elements;
 

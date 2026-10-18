@@ -1,19 +1,13 @@
-using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using Avalonia;
 using Avalonia.Media;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
-using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using CoreRect = Trizbort.Domain.Misc.Rect;
-using CoreVector = Trizbort.Domain.Misc.Vector;
 using CoreColor = System.Drawing.Color;
 using CoreColors = Trizbort.Domain.Misc.Colors;
-using AvaloniaRect = Avalonia.Rect;
 using AvaloniaPoint = Avalonia.Point;
-using AvaloniaColor = Avalonia.Media.Color;
 using AvaloniaDrawingContext = Avalonia.Media.DrawingContext;
 
 namespace Trizbort.Avalonia.Drawing;

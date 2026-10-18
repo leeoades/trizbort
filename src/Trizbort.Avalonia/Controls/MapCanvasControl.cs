@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -19,9 +16,7 @@ using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using CoreRect = Trizbort.Domain.Misc.Rect;
 using CoreVector = Trizbort.Domain.Misc.Vector;
-using CoreColor = System.Drawing.Color;
 using CoreColors = Trizbort.Domain.Misc.Colors;
-using CoreLineSegment = Trizbort.Domain.Misc.LineSegment;
 using AvaloniaRect = Avalonia.Rect;
 using AvaloniaVector = Avalonia.Vector;
 using AvaloniaColor = Avalonia.Media.Color;

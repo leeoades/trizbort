@@ -1,4 +1,3 @@
-using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -9,7 +8,6 @@ using Trizbort.Automap;
 using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Avalonia.Views;
-using Trizbort.Domain.Application;
 using AutomapEngine = Trizbort.Automap.Automap;
 
 namespace Trizbort.Avalonia;

@@ -2,7 +2,6 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Domain.Elements;
-using Trizbort.Domain.Enums;
 
 namespace Trizbort.Avalonia.Views.Dialogs;
 

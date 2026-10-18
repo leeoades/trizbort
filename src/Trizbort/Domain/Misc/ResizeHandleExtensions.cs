@@ -1,6 +1,5 @@
 using System.Windows.Forms;
 using PdfSharp.Drawing;
-using Trizbort.Domain.Misc;
 using Trizbort.UI.Controls;
 
 namespace Trizbort.Domain.Misc;

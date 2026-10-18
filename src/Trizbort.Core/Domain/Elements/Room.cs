@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Newtonsoft.Json;
-using Trizbort.Domain;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
-using Trizbort.Extensions;
 using Trizbort.Setup;
 using Trizbort.Util;
 

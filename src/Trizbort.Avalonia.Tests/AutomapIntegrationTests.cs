@@ -1,17 +1,10 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Threading;
-using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Automap;
 using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Domain.Application;
-using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Elements;
 using Trizbort.Export;
 using AutomapEngine = Trizbort.Automap.Automap;

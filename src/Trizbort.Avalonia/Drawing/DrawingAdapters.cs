@@ -1,9 +1,6 @@
 #pragma warning disable CA1416
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Trizbort.Domain.Elements;
@@ -13,8 +10,6 @@ using Trizbort.Setup;
 using CoreRect = Trizbort.Domain.Misc.Rect;
 using CoreVector = Trizbort.Domain.Misc.Vector;
 using CoreColor = System.Drawing.Color;
-using CoreColors = Trizbort.Domain.Misc.Colors;
-using CoreLineSegment = Trizbort.Domain.Misc.LineSegment;
 using AvaloniaRect = Avalonia.Rect;
 using AvaloniaPoint = Avalonia.Point;
 using AvaloniaColor = Avalonia.Media.Color;

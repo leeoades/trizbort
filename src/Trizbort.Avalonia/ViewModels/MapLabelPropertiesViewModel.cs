@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Drawing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Trizbort.Domain.Elements;

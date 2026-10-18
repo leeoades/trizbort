@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Headless.NUnit;
@@ -8,7 +7,6 @@ using Trizbort.Avalonia.Controls;
 using Trizbort.Avalonia.Services;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
-using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Vector = Trizbort.Domain.Misc.Vector;
 

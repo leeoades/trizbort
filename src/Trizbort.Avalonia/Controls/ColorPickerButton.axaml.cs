@@ -1,4 +1,3 @@
-using System;
 using System.Drawing;
 using Avalonia;
 using Avalonia.Controls;

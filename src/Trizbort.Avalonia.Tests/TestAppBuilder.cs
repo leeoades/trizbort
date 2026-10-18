@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Headless;
-using Avalonia.Headless.NUnit;
 
 [assembly: AvaloniaTestApplication(typeof(Trizbort.Avalonia.Tests.TestAppBuilder))]
 
