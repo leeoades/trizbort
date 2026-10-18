@@ -567,24 +567,34 @@ public class MapCanvasControlGestureTests
 
             window.MouseMove(clientA);
             window.MouseDown(clientA, MouseButton.Left);
-            window.MouseMove(clientMid);
+            var pointer = CapturePointerOnNextMove(canvas, window, clientMid);
             canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
 
-            // A second button must neither switch to panning nor drop the half-drawn connection.
+            // Secondary button press and release before primary button release must not cancel the primary drag
             window.MouseDown(clientMid, MouseButton.Right);
             canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+            window.MouseUp(clientMid, MouseButton.Right);
+            Dispatcher.UIThread.RunJobs();
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+            pointer.Captured.ShouldBe(canvas);
 
             window.MouseMove(clientB);
             canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
             window.MouseUp(clientB, MouseButton.Left);
-            window.MouseUp(clientB, MouseButton.Right);
+            Dispatcher.UIThread.RunJobs();
             service.Origin.ShouldBe(Vector.Zero);
+            pointer.Captured.ShouldBeNull();
 
             canvas.DragMode.ShouldBe(CanvasDragMode.None);
             var conn = Project.Current.Elements.OfType<Connection>().Single();
             conn.VertexList[0].Port.ShouldBe(portA);
             conn.VertexList[1].Port.ShouldBe(portB);
             service.SelectedElements.ShouldContain(conn);
+
+            // Detaching control also leaves captured as null without lingering captures
+            window.Content = null;
+            Dispatcher.UIThread.RunJobs();
+            pointer.Captured.ShouldBeNull();
         }
         finally
         {
@@ -608,7 +618,10 @@ public class MapCanvasControlGestureTests
             window.MouseDown(handleClient, MouseButton.Left);
             canvas.DragMode.ShouldBe(CanvasDragMode.MoveResizeHandle);
 
+            // Secondary button press and release before primary button release must not cancel resizing
             window.MouseDown(handleClient, MouseButton.Middle);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MoveResizeHandle);
+            window.MouseUp(handleClient, MouseButton.Middle);
             canvas.DragMode.ShouldBe(CanvasDragMode.MoveResizeHandle);
 
             window.MouseMove(canvas.CanvasToClient(handlePos + new Vector(32, 32)));
@@ -616,7 +629,6 @@ public class MapCanvasControlGestureTests
             room.Size.X.ShouldBe(128f, 1.0f);
             service.Origin.ShouldBe(Vector.Zero);
             window.MouseUp(canvas.CanvasToClient(handlePos + new Vector(32, 32)), MouseButton.Left);
-            window.MouseUp(canvas.CanvasToClient(handlePos + new Vector(32, 32)), MouseButton.Middle);
             canvas.DragMode.ShouldBe(CanvasDragMode.None);
         }
         finally
@@ -957,6 +969,228 @@ public class MapCanvasControlGestureTests
     }
 
     [AvaloniaTest]
+    public void Escape_DuringExistingConnectionEndpointDrag_RestoresOriginalDockedPort()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var (_, _, portA, portB) = AddTwoRooms();
+            var conn = new Connection(Project.Current, new Vertex(portA), new Vertex(portB));
+            Project.Current.Elements.Add(conn);
+            service.Select(conn);
+
+            var endClient = canvas.CanvasToClient(conn.VertexList[1].Position);
+            window.MouseMove(endClient);
+            window.MouseDown(endClient, MouseButton.Left);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+
+            // Drag into empty space
+            window.MouseMove(canvas.CanvasToClient(new Vector(0, 200)));
+            conn.VertexList[1].Port.ShouldBeNull();
+
+            // Press Escape to cancel the drag
+            window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
+            conn.VertexList[0].Port.ShouldBe(portA);
+            conn.VertexList[1].Port.ShouldBe(portB);
+            service.SelectedElements.ShouldContain(conn);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void PointerCaptureLost_DuringExistingConnectionEndpointDrag_RestoresOriginalDockedPort()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var (_, _, portA, portB) = AddTwoRooms();
+            var conn = new Connection(Project.Current, new Vertex(portA), new Vertex(portB));
+            Project.Current.Elements.Add(conn);
+            service.Select(conn);
+
+            var endClient = canvas.CanvasToClient(conn.VertexList[1].Position);
+            var emptyClient = canvas.CanvasToClient(new Vector(0, 200));
+
+            window.MouseMove(endClient);
+            window.MouseDown(endClient, MouseButton.Left);
+            var pointer = CapturePointerOnNextMove(canvas, window, emptyClient);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+            conn.VertexList[1].Port.ShouldBeNull();
+
+            // Simulate pointer capture loss
+            pointer.Capture(null);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
+            conn.VertexList[0].Port.ShouldBe(portA);
+            conn.VertexList[1].Port.ShouldBe(portB);
+            service.SelectedElements.ShouldContain(conn);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void Escape_DuringExistingUndockedConnectionEndpointDrag_RestoresOriginalPosition()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var origPos0 = new Vector(-100, 50);
+            var origPos1 = new Vector(100, 50);
+            var conn = new Connection(Project.Current, new Vertex(origPos0), new Vertex(origPos1));
+            Project.Current.Elements.Add(conn);
+            service.Select(conn);
+
+            var endClient = canvas.CanvasToClient(origPos1);
+            window.MouseMove(endClient);
+            window.MouseDown(endClient, MouseButton.Left);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+
+            // Drag to a new position
+            window.MouseMove(canvas.CanvasToClient(new Vector(200, 300)));
+            conn.VertexList[1].Position.X.ShouldBe(200f, 1.0f);
+
+            // Cancel with Escape
+            window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
+            conn.VertexList[1].Position.ShouldBe(origPos1);
+            service.SelectedElements.ShouldContain(conn);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void MovePort_ReleaseExistingConnectionEndpointInEmptySpace_LeavesFreeEndpoint()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var (_, _, portA, portB) = AddTwoRooms();
+            var conn = new Connection(Project.Current, new Vertex(portA), new Vertex(portB));
+            Project.Current.Elements.Add(conn);
+            service.Select(conn);
+
+            var endClient = canvas.CanvasToClient(conn.VertexList[1].Position);
+            var emptyWorld = new Vector(0, 150);
+            var emptyClient = canvas.CanvasToClient(emptyWorld);
+
+            window.MouseMove(endClient);
+            window.MouseDown(endClient, MouseButton.Left);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+
+            window.MouseMove(emptyClient);
+            window.MouseUp(emptyClient, MouseButton.Left);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
+            conn.VertexList[0].Port.ShouldBe(portA);
+            conn.VertexList[1].Port.ShouldBeNull();
+            conn.VertexList[1].Position.Distance(emptyWorld).ShouldBeLessThan(1.0f);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void MovePort_ExistingConnection_DroppingEndOnOtherEndsPort_RestoresPreviousDockingAndDoesNotDeleteConnection()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var (_, _, portA, portB) = AddTwoRooms();
+            var conn = new Connection(Project.Current, new Vertex(portA), new Vertex(portB));
+            Project.Current.Elements.Add(conn);
+            service.Select(conn);
+
+            var endClient = canvas.CanvasToClient(conn.VertexList[1].Position);
+            var targetClient = canvas.CanvasToClient(portA.Position);
+
+            window.MouseMove(endClient);
+            window.MouseDown(endClient, MouseButton.Left);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+
+            // Drag B's endpoint onto A's port (the same port as vertex 0)
+            window.MouseMove(targetClient);
+            canvas.HoverPort.ShouldBe(portA);
+            window.MouseUp(targetClient, MouseButton.Left);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
+            conn.VertexList[0].Port.ShouldBe(portA);
+            conn.VertexList[1].Port.ShouldBe(portB);
+            service.SelectedElements.ShouldContain(conn);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void Connection_BetweenTouchingRooms_IsNotPrunedAsDegenerate()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            // Room A from (-96, 0) to (0, 64), East port at (0, 32)
+            // Room B from (0, 0) to (96, 64), West port at (0, 32)
+            var roomA = new Room(Project.Current) { Name = "RoomA", Position = new Vector(-96, 0), Size = new Vector(96, 64) };
+            var roomB = new Room(Project.Current) { Name = "RoomB", Position = new Vector(0, 0), Size = new Vector(96, 64) };
+            Project.Current.Elements.Add(roomA);
+            Project.Current.Elements.Add(roomB);
+            var portA = roomA.PortList.OfType<Room.CompassPort>().First(p => p.CompassPoint == CompassPoint.East);
+            var portB = roomB.PortList.OfType<Room.CompassPort>().First(p => p.CompassPoint == CompassPoint.West);
+            var portBEast = roomB.PortList.OfType<Room.CompassPort>().First(p => p.CompassPoint == CompassPoint.East);
+
+            portA.Position.Distance(portB.Position).ShouldBeLessThan(0.01f);
+
+            // Create a connection from roomA East (0, 32) to roomB East (96, 32)
+            var conn = new Connection(Project.Current, new Vertex(portA), new Vertex(portBEast));
+            Project.Current.Elements.Add(conn);
+            service.Select(conn);
+
+            // Drag vertex 1 from roomB East (96, 32) to roomB West (0, 32) touching roomA East
+            var eastClient = canvas.CanvasToClient(portBEast.Position);
+            var endClient = canvas.CanvasToClient(portB.Position);
+
+            window.MouseMove(eastClient);
+            window.MouseDown(eastClient, MouseButton.Left);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
+
+            window.MouseMove(endClient);
+            canvas.HoverPort.ShouldBe(portB);
+            window.MouseUp(endClient, MouseButton.Left);
+
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
+            conn.VertexList[0].Port.ShouldBe(portA);
+            conn.VertexList[1].Port.ShouldBe(portB);
+            conn.VertexList[0].Position.Distance(conn.VertexList[1].Position).ShouldBeLessThan(0.01f);
+            service.SelectedElements.ShouldContain(conn);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
     public void Cursor_ReflectsHoveredTarget()
     {
         var (window, canvas, service) = CreateTestHarness();
@@ -1102,6 +1336,7 @@ public class MapCanvasControlGestureTests
             service.Select(room);
 
             window.KeyPressQwerty(PhysicalKey.X, RawInputModifiers.Control);
+            PumpUntil(() => ReadClipboardText(canvas) != null && Project.Current.Elements.Count == 0);
             ReadClipboardText(canvas).ShouldNotBeNull().ShouldContain("Cut Me");
             Project.Current.Elements.OfType<Room>().ShouldBeEmpty();
 

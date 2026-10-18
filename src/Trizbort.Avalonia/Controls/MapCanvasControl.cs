@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Trizbort.Avalonia.Drawing;
 using Trizbort.Avalonia.Services;
@@ -80,8 +81,11 @@ public class MapCanvasControl : Control
     private Point _pendingNewConnectionStartClient;
     private CoreVector _pendingNewConnectionStartWorld;
     private bool _isSpaceKeyDown;
+    private bool _isSecondaryButtonRelease;
     private MouseButton? _gestureButton;
     private Connection? _dragNewConnection;
+    private Port? _dragMovePortOriginalPort;
+    private CoreVector _dragMovePortOriginalPosition;
     private readonly List<Port> _activePorts = new();
     private readonly List<ResizeHandle> _activeHandles = new();
 
@@ -349,9 +353,12 @@ public class MapCanvasControl : Control
                 _selectedSet.Add(elem);
             }
         }
-        RecreatePorts();
-        RecreateHandles();
-        UpdateCursor();
+        if (_dragMode != CanvasDragMode.MoveResizeHandle && _dragMode != CanvasDragMode.MovePort)
+        {
+            RecreatePorts();
+            RecreateHandles();
+            UpdateCursor();
+        }
         InvalidateVisual();
     }
 
@@ -604,13 +611,10 @@ public class MapCanvasControl : Control
                 continue;
 
             var distance = elem.Distance(canvasPos, includeMargins);
-            if (distance <= Settings.SnapToElementSize)
+            if (distance <= Settings.SnapToElementSize && distance < closestDistance)
             {
-                if (Numeric.ApproxEqual(distance, closestDistance) || distance < closestDistance)
-                {
-                    closest = elem;
-                    closestDistance = distance;
-                }
+                closest = elem;
+                closestDistance = distance;
             }
         }
 
@@ -720,19 +724,6 @@ public class MapCanvasControl : Control
 
         if (isLeft)
         {
-            var hitWp = HitTestWaypoint(worldPos);
-            if (hitWp.HasValue && _selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
-            {
-                _dragMode = CanvasDragMode.MoveWaypoint;
-                _dragWaypoint = hitWp.Value;
-                var handlePos = conn.GetCurveWaypointHandlePosition(_dragWaypoint);
-                _dragWaypointOffset = handlePos - worldPos;
-                e.Pointer.Capture(this);
-                UpdateCursor();
-                e.Handled = true;
-                return;
-            }
-
             var hitHandle = HitTestHandle(worldPos);
             if (hitHandle != null)
             {
@@ -753,6 +744,8 @@ public class MapCanvasControl : Control
                 {
                     _dragMode = CanvasDragMode.MovePort;
                     _dragMovePort = mp;
+                    _dragMovePortOriginalPort = mp.DockedAt;
+                    _dragMovePortOriginalPosition = mp.Position;
                     _dragOffsetCanvas = Settings.Snap(worldPos - mp.Position);
                     e.Pointer.Capture(this);
                     UpdateCursor();
@@ -764,11 +757,26 @@ public class MapCanvasControl : Control
                     _pendingNewConnectionPort = hitPort;
                     _pendingNewConnectionStartClient = clientPos;
                     _pendingNewConnectionStartWorld = worldPos;
+                    _dragMovePortOriginalPort = null;
+                    _dragMovePortOriginalPosition = CoreVector.Zero;
                     e.Pointer.Capture(this);
                     UpdateCursor();
                     e.Handled = true;
                     return;
                 }
+            }
+
+            var hitWp = HitTestWaypoint(worldPos);
+            if (hitWp.HasValue && _selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
+            {
+                _dragMode = CanvasDragMode.MoveWaypoint;
+                _dragWaypoint = hitWp.Value;
+                var handlePos = conn.GetCurveWaypointHandlePosition(_dragWaypoint);
+                _dragWaypointOffset = handlePos - worldPos;
+                e.Pointer.Capture(this);
+                UpdateCursor();
+                e.Handled = true;
+                return;
             }
 
             var hitElem = HitTestElement(worldPos);
@@ -831,11 +839,11 @@ public class MapCanvasControl : Control
                 };
                 Project.Current.Elements.Add(newConn);
                 _dragNewConnection = newConn;
-                CommandService?.Select(newConn);
                 _dragMode = CanvasDragMode.MovePort;
                 _dragMovePort = (MoveablePort)newConn.PortList[1];
                 _dragOffsetCanvas = Settings.Snap(_pendingNewConnectionStartWorld - newConn.VertexList[0].Position);
                 _hoverPort = null;
+                CommandService?.Select(newConn);
             }
         }
 
@@ -968,6 +976,17 @@ public class MapCanvasControl : Control
         if (IsGestureActive && _gestureButton.HasValue && releasedButton != _gestureButton.Value)
         {
             // Releasing a secondary button must not end the gesture owned by another button.
+            // Avalonia MouseDevice drops pointer capture in its finally block after this event.
+            // Mark secondary release and schedule re-capture so the primary gesture continues unbroken.
+            _isSecondaryButtonRelease = true;
+            var pointer = e.Pointer;
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (IsGestureActive && VisualRoot != null)
+                {
+                    pointer.Capture(this);
+                }
+            });
             return;
         }
 
@@ -978,6 +997,12 @@ public class MapCanvasControl : Control
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
+        if (_isSecondaryButtonRelease)
+        {
+            _isSecondaryButtonRelease = false;
+            return;
+        }
+
         EndDrag(KeyModifiers.None, cancelled: true);
     }
 
@@ -988,42 +1013,99 @@ public class MapCanvasControl : Control
         if (connection.VertexList.Count != 2) return false;
         var v0 = connection.VertexList[0];
         var v1 = connection.VertexList[1];
+
+        // Same port on both ends is always degenerate
         if (v0.Port != null && v0.Port == v1.Port) return true;
+
+        // If both ends are docked to different ports, it is a valid connection between ports (even if positions touch)
+        if (v0.Port != null && v1.Port != null && v0.Port != v1.Port) return false;
+
+        // If one or both ends are undocked and the distance is negligible, it is degenerate
         return v0.Position.Distance(v1.Position) < Numeric.Small;
     }
 
     /// <summary>
     /// Single completion/cancel path for every drag gesture (pointer release, capture loss, Escape).
-    /// Never leaves an invalid zero-length or same-port connection behind.
+    /// Never leaves an invalid zero-length or same-port connection behind, and restores original
+    /// connectivity on cancelled existing connection edits.
     /// </summary>
     private void EndDrag(KeyModifiers modifiers, bool cancelled)
     {
         var mode = _dragMode;
         var movePort = _dragMovePort;
         var newConnection = _dragNewConnection;
+        var origPort = _dragMovePortOriginalPort;
+        var origPos = _dragMovePortOriginalPosition;
 
         // Reset state first so re-entrant events (e.g. capture lost) see an idle canvas.
         _dragMode = CanvasDragMode.None;
         _dragHandle = null;
         _dragMovePort = null;
         _dragNewConnection = null;
+        _dragMovePortOriginalPort = null;
+        _dragMovePortOriginalPosition = CoreVector.Zero;
         _pendingNewConnectionPort = null;
         _gestureButton = null;
+        _isSecondaryButtonRelease = false;
 
         if (mode == CanvasDragMode.MovePort && movePort?.Owner is Connection connection)
         {
-            // A connection created by this very drag is discarded when cancelled; otherwise only invalid ones.
-            var discard = IsDegenerateConnection(connection) || (cancelled && ReferenceEquals(connection, newConnection));
-            if (discard)
+            var isCreatedByDrag = ReferenceEquals(connection, newConnection);
+            if (cancelled)
             {
-                Project.Current.Elements.Remove(connection);
-                CommandService?.ClearSelection();
-                _hoverElement = null;
-                _hoverPort = null;
+                if (isCreatedByDrag)
+                {
+                    Project.Current.Elements.Remove(connection);
+                    CommandService?.ClearSelection();
+                    _hoverElement = null;
+                    _hoverPort = null;
+                }
+                else
+                {
+                    // Restore existing connection endpoint to its original docked port or position
+                    if (origPort != null)
+                    {
+                        movePort.DockAt(origPort);
+                    }
+                    else
+                    {
+                        movePort.DockAt(null);
+                        movePort.SetPosition(origPos);
+                    }
+                    CommandService?.Select(connection);
+                }
             }
-            else if (!cancelled || ReferenceEquals(connection, newConnection))
+            else
             {
-                CommandService?.Select(connection);
+                var discard = IsDegenerateConnection(connection);
+                if (discard)
+                {
+                    if (isCreatedByDrag)
+                    {
+                        Project.Current.Elements.Remove(connection);
+                        CommandService?.ClearSelection();
+                        _hoverElement = null;
+                        _hoverPort = null;
+                    }
+                    else
+                    {
+                        // Restore existing connection endpoint to its original docked port or position
+                        if (origPort != null)
+                        {
+                            movePort.DockAt(origPort);
+                        }
+                        else
+                        {
+                            movePort.DockAt(null);
+                            movePort.SetPosition(origPos);
+                        }
+                        CommandService?.Select(connection);
+                    }
+                }
+                else
+                {
+                    CommandService?.Select(connection);
+                }
             }
             Project.Current.IsDirty = true;
         }
