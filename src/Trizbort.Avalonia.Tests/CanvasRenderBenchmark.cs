@@ -15,9 +15,11 @@ using Vector = Trizbort.Domain.Misc.Vector;
 namespace Trizbort.Avalonia.Tests;
 
 [TestFixture]
+[Category("Benchmark")]
 public class CanvasRenderBenchmark
 {
     [AvaloniaTest]
+    [Category("Benchmark")]
     public void Benchmark_Render_400Elements_MeasuresPerformanceAndAllocations()
     {
         var project = new Project();
@@ -63,9 +65,13 @@ public class CanvasRenderBenchmark
 
             using var bmp = new RenderTargetBitmap(new PixelSize(800, 600));
 
-            // 300 warmup frames
-            for (var i = 0; i < 300; i++)
+            // 100 warmup frames with viewport variations
+            for (var i = 0; i < 100; i++)
             {
+                var panX = (i % 10) * 15.0f;
+                var panY = (i / 10) * 10.0f;
+                var zoom = 0.8f + (i % 5) * 0.1f;
+                svc.SetView(new Vector(panX, panY), zoom);
                 bmp.Render(canvas);
             }
 
@@ -79,6 +85,10 @@ public class CanvasRenderBenchmark
             const int iterations = 50;
             for (var i = 0; i < iterations; i++)
             {
+                var panX = (i % 10) * 15.0f;
+                var panY = (i / 10) * 10.0f;
+                var zoom = 0.8f + (i % 5) * 0.1f;
+                svc.SetView(new Vector(panX, panY), zoom);
                 bmp.Render(canvas);
             }
 
@@ -88,14 +98,14 @@ public class CanvasRenderBenchmark
             var avgTimeMs = sw.Elapsed.TotalMilliseconds / iterations;
             var avgAllocKb = (endAlloc - startAlloc) / (double)iterations / 1024.0;
 
-            TestContext.Out.WriteLine($"=== BENCHMARK RESULTS (400 elements @ 800x600, 300 warmup frames) ===");
+            TestContext.Out.WriteLine($"=== BENCHMARK RESULTS (400 elements @ 800x600, varied pan/zoom) ===");
             TestContext.Out.WriteLine($"Total measured frames: {iterations}");
             TestContext.Out.WriteLine($"Average render time: {avgTimeMs:F2} ms");
             TestContext.Out.WriteLine($"Average allocations: {avgAllocKb:F1} KB / frame");
             TestContext.Out.WriteLine($"Frame rate potential: {1000.0 / avgTimeMs:F1} FPS");
 
-            Assert.That(avgTimeMs, Is.LessThan(100)); // Must render within reasonable threshold
-            Assert.That(avgAllocKb, Is.LessThan(10000));
+            Assert.That(avgTimeMs, Is.LessThan(50)); // Render smoothly within 50ms
+            Assert.That(avgAllocKb, Is.LessThan(5000)); // Under 5MB per frame during active pan/zoom
         }
         finally
         {

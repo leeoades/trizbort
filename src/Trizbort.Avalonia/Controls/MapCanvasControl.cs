@@ -38,10 +38,24 @@ public class MapCanvasControl : Control
     private float _zoomFactor = 1.0f;
     private readonly CanvasTransform _transform = new();
     private ICommandService? _hookedService;
+    private Project? _hookedProject;
     private readonly List<Element> _visibleElements = new();
     private readonly SpatialLineIndex _spatialLines = new();
     private readonly HashSet<Element> _selectedSet = new();
     private int _spatialVersion = 1;
+    private int _builtSpatialVersion = 0;
+
+    internal int SpatialVersion => _spatialVersion;
+    internal int InvalidationCount { get; private set; }
+
+    private static readonly IBrush _handleBrush = Brushes.White;
+    private static readonly IPen _handlePen = new Pen(Brushes.Black, 1.0);
+    private static readonly CompassPoint[] _handlePoints =
+    [
+        CompassPoint.NorthWest, CompassPoint.North, CompassPoint.NorthEast,
+        CompassPoint.East, CompassPoint.SouthEast, CompassPoint.South,
+        CompassPoint.SouthWest, CompassPoint.West
+    ];
 
     public CoreVector Origin
     {
@@ -89,11 +103,18 @@ public class MapCanvasControl : Control
         ClipToBounds = true;
     }
 
+    public new void InvalidateVisual()
+    {
+        InvalidationCount++;
+        base.InvalidateVisual();
+    }
+
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
         Project.ProjectChanged += OnProjectChanged;
         Settings.Changed += OnSettingsChanged;
+        HookProject(Project.Current);
         TryHookCommandService();
     }
 
@@ -102,7 +123,70 @@ public class MapCanvasControl : Control
         base.OnDetachedFromVisualTree(e);
         Project.ProjectChanged -= OnProjectChanged;
         Settings.Changed -= OnSettingsChanged;
+        UnhookProject(_hookedProject);
         TryUnhookCommandService();
+    }
+
+    private void HookProject(Project? project)
+    {
+        if (project == null || ReferenceEquals(_hookedProject, project))
+        {
+            return;
+        }
+
+        UnhookProject(_hookedProject);
+        _hookedProject = project;
+        project.Elements.Added += OnElementAdded;
+        project.Elements.Removed += OnElementRemoved;
+
+        foreach (var element in project.Elements)
+        {
+            element.Changed += OnElementChanged;
+        }
+    }
+
+    private void UnhookProject(Project? project)
+    {
+        if (project == null) return;
+
+        project.Elements.Added -= OnElementAdded;
+        project.Elements.Removed -= OnElementRemoved;
+
+        foreach (var element in project.Elements)
+        {
+            element.Changed -= OnElementChanged;
+        }
+
+        if (ReferenceEquals(_hookedProject, project))
+        {
+            _hookedProject = null;
+        }
+    }
+
+    private void OnElementAdded(object? sender, ItemEventArgs<Element> e)
+    {
+        if (e.Item != null)
+        {
+            e.Item.Changed += OnElementChanged;
+        }
+        _spatialVersion++;
+        InvalidateVisual();
+    }
+
+    private void OnElementRemoved(object? sender, ItemEventArgs<Element> e)
+    {
+        if (e.Item != null)
+        {
+            e.Item.Changed -= OnElementChanged;
+        }
+        _spatialVersion++;
+        InvalidateVisual();
+    }
+
+    private void OnElementChanged(object? sender, EventArgs e)
+    {
+        _spatialVersion++;
+        InvalidateVisual();
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -188,6 +272,14 @@ public class MapCanvasControl : Control
 
     private void OnProjectChanged(object? sender, ProjectChangedEventArgs e)
     {
+        if (e.OldProject != null)
+        {
+            UnhookProject(e.OldProject);
+        }
+        if (e.NewProject != null)
+        {
+            HookProject(e.NewProject);
+        }
         _spatialVersion++;
         InvalidateVisual();
     }
@@ -204,7 +296,6 @@ public class MapCanvasControl : Control
         {
             SyncViewFromService(CommandService);
         }
-        _spatialVersion++;
         InvalidateVisual();
     }
 
@@ -354,21 +445,11 @@ public class MapCanvasControl : Control
             _visibleElements.Sort();
 
             // 5. Render elements in Depth / ZOrder sequence (Rooms, Labels, Connections)
-            // Pre-populate room boundary segments for smart line segment crossing calculation
-            _spatialLines.Clear();
-            foreach (var element in _visibleElements)
+            // Pre-populate room boundary and connection segments for smart line segment crossing calculation
+            if (_builtSpatialVersion != _spatialVersion)
             {
-                if (element is Room room)
-                {
-                    var tl = room.InnerBounds.GetCorner(CompassPoint.NorthWest);
-                    var tr = room.InnerBounds.GetCorner(CompassPoint.NorthEast);
-                    var bl = room.InnerBounds.GetCorner(CompassPoint.SouthWest);
-                    var br = room.InnerBounds.GetCorner(CompassPoint.SouthEast);
-                    _spatialLines.Add(new CoreLineSegment(tl, tr));
-                    _spatialLines.Add(new CoreLineSegment(tr, br));
-                    _spatialLines.Add(new CoreLineSegment(br, bl));
-                    _spatialLines.Add(new CoreLineSegment(bl, tl));
-                }
+                ConnectionDrawingAdapter.RebuildSpatialIndex(Project.Current.Elements, _spatialLines, _spatialVersion);
+                _builtSpatialVersion = _spatialVersion;
             }
 
             foreach (var element in _visibleElements)
@@ -463,21 +544,11 @@ public class MapCanvasControl : Control
 
     private static void DrawSelectionHandles(AvaloniaDrawingContext context, ISizeable sizeable)
     {
-        var handleBrush = Brushes.White;
-        var handlePen = new Pen(Brushes.Black, 1.0);
-
-        CompassPoint[] points =
-        [
-            CompassPoint.NorthWest, CompassPoint.North, CompassPoint.NorthEast,
-            CompassPoint.East, CompassPoint.SouthEast, CompassPoint.South,
-            CompassPoint.SouthWest, CompassPoint.West
-        ];
-
-        foreach (var cp in points)
+        foreach (var cp in _handlePoints)
         {
             var handle = new ResizeHandle(cp, sizeable);
             var rect = handle.Bounds;
-            context.DrawRectangle(handleBrush, handlePen, rect.ToRect());
+            context.DrawRectangle(_handleBrush, _handlePen, rect.ToRect());
         }
     }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Avalonia;
 using Avalonia.Headless.NUnit;
 using NUnit.Framework;
 using Trizbort.Avalonia.Drawing;
@@ -81,23 +82,25 @@ public class DrawingAdaptersParityTests
     {
         var origin = new AvaloniaPoint(100, 100);
 
-        // 0 deg -> Facing East (+X)
+        // 0 deg -> Facing East (+X), apex at (105, 100)
         var geo0 = DrawingAdapters.CreateChevronGeometry(origin, 0, 10, 0, false);
-        Assert.That(geo0.Bounds.Right, Is.GreaterThan(100));
-        Assert.That(geo0.Bounds.Left, Is.LessThan(100));
+        Assert.That(geo0.Bounds.Right, Is.EqualTo(105).Within(0.01));
+        Assert.That((geo0.Bounds.Top + geo0.Bounds.Bottom) / 2.0, Is.EqualTo(100).Within(0.01));
 
-        // 90 deg -> Facing South (+Y)
+        // 90 deg -> Facing South (+Y), apex at (100, 105)
         var geo90 = DrawingAdapters.CreateChevronGeometry(origin, 90, 10, 0, false);
-        Assert.That(geo90.Bounds.Bottom, Is.GreaterThan(100));
-        Assert.That(geo90.Bounds.Top, Is.LessThan(100));
+        Assert.That(geo90.Bounds.Bottom, Is.EqualTo(105).Within(0.01));
+        Assert.That((geo90.Bounds.Left + geo90.Bounds.Right) / 2.0, Is.EqualTo(100).Within(0.01));
 
-        // 180 deg -> Facing West (-X)
+        // 180 deg -> Facing West (-X), apex at (95, 100)
         var geo180 = DrawingAdapters.CreateChevronGeometry(origin, 180, 10, 0, false);
-        Assert.That(geo180.Bounds.Left, Is.LessThan(100));
+        Assert.That(geo180.Bounds.Left, Is.EqualTo(95).Within(0.01));
+        Assert.That((geo180.Bounds.Top + geo180.Bounds.Bottom) / 2.0, Is.EqualTo(100).Within(0.01));
 
-        // 270 deg -> Facing North (-Y)
+        // 270 deg -> Facing North (-Y), apex at (100, 95)
         var geo270 = DrawingAdapters.CreateChevronGeometry(origin, 270, 10, 0, false);
-        Assert.That(geo270.Bounds.Top, Is.LessThan(100));
+        Assert.That(geo270.Bounds.Top, Is.EqualTo(95).Within(0.01));
+        Assert.That((geo270.Bounds.Left + geo270.Bounds.Right) / 2.0, Is.EqualTo(100).Within(0.01));
     }
 
     [Test]
@@ -172,6 +175,23 @@ public class DrawingAdaptersParityTests
     }
 
     [Test]
+    public void SmartLineSplitting_ProductionSpatialIndex_SplitsIntersectingLines()
+    {
+        var spatialIndex = new SpatialLineIndex();
+        var line1 = new CoreLineSegment(new CoreVector(0, 50), new CoreVector(100, 50));
+        spatialIndex.Add(line1);
+
+        var line2 = new CoreLineSegment(new CoreVector(50, 0), new CoreVector(50, 100));
+        var split = ConnectionDrawingAdapter.SplitSegment(line2, spatialIndex);
+
+        Assert.That(split.Count, Is.EqualTo(2));
+        Assert.That(split[0].Start.Y, Is.EqualTo(0));
+        Assert.That(split[0].End.Y, Is.LessThan(50));
+        Assert.That(split[1].Start.Y, Is.GreaterThan(50));
+        Assert.That(split[1].End.Y, Is.EqualTo(100));
+    }
+
+    [Test]
     public void SmartLineSplitting_RejectsNonIntersectingLinesFast()
     {
         var line1 = new CoreLineSegment(new CoreVector(0, 0), new CoreVector(10, 10));
@@ -181,7 +201,33 @@ public class DrawingAdaptersParityTests
         var split = ConnectionDrawingAdapter.SplitSegment(line2, linesDrawn);
 
         Assert.That(split.Count, Is.EqualTo(1));
-        Assert.That(split[0], Is.EqualTo(line2));
+        Assert.That(split[0].Start, Is.EqualTo(line2.Start));
+        Assert.That(split[0].End, Is.EqualTo(line2.End));
+    }
+
+    [Test]
+    public void CrossingConnections_SecondConnectionIsSplitInSpatialRebuild()
+    {
+        var project = new Project();
+        var conn1 = new Connection(project, new Vertex(new CoreVector(0, 50)), new Vertex(new CoreVector(200, 50)));
+        var conn2 = new Connection(project, new Vertex(new CoreVector(100, 0)), new Vertex(new CoreVector(100, 100)));
+        project.Elements.Add(conn1);
+        project.Elements.Add(conn2);
+
+        var spatialIndex = new SpatialLineIndex();
+        ConnectionDrawingAdapter.RebuildSpatialIndex(project.Elements, spatialIndex, 1);
+
+        // Conn1 was added first -> 1 segment
+        var cache1 = ConnectionDrawingAdapter.GetCachedSmartSegments(conn1, 1);
+        Assert.That(cache1.Count, Is.EqualTo(1));
+
+        // Conn2 crosses Conn1 -> Conn2 must have smart segments split into 2 parts around the intersection
+        var cache2 = ConnectionDrawingAdapter.GetCachedSmartSegments(conn2, 1);
+        Assert.That(cache2.Count, Is.EqualTo(2));
+        Assert.That(cache2[0].Start.Y, Is.EqualTo(0));
+        Assert.That(cache2[0].End.Y, Is.LessThan(50));
+        Assert.That(cache2[1].Start.Y, Is.GreaterThan(50));
+        Assert.That(cache2[1].End.Y, Is.EqualTo(100));
     }
 
     [AvaloniaTest]
@@ -212,6 +258,21 @@ public class DrawingAdaptersParityTests
         Assert.That(octH.Bounds.Width, Is.GreaterThan(70));
     }
 
+    private static (byte B, byte G, byte R, byte A) ReadPixel(global::Avalonia.Media.Imaging.RenderTargetBitmap bmp, int x, int y)
+    {
+        var buf = new byte[4];
+        var handle = System.Runtime.InteropServices.GCHandle.Alloc(buf, System.Runtime.InteropServices.GCHandleType.Pinned);
+        try
+        {
+            bmp.CopyPixels(new PixelRect(x, y, 1, 1), handle.AddrOfPinnedObject(), buf.Length, 4);
+        }
+        finally
+        {
+            handle.Free();
+        }
+        return (buf[0], buf[1], buf[2], buf[3]);
+    }
+
     [AvaloniaTest]
     public void RoomCache_InvalidatesOnGeometryAndTextChanges()
     {
@@ -226,24 +287,143 @@ public class DrawingAdaptersParityTests
             Size = new CoreVector(100, 60)
         };
 
-        var initialGeo = RoomDrawingAdapter.CreateShapeGeometry(room.InnerBounds, room.Shape, room.Corners, false, room.Id);
-        Assert.That(initialGeo.Bounds.Width, Is.EqualTo(100).Within(0.01));
+        using var bmp = new global::Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize(200, 200));
+        using (var ctx = bmp.CreateDrawingContext())
+        {
+            // Initial render
+            room.DrawRoom(ctx, false, false);
+        }
 
-        // Change shape to Octagonal
+        var geo1 = RoomDrawingAdapter.GetCachedGeometry(room);
+        var name1 = RoomDrawingAdapter.GetCachedName(room);
+        var nameText1 = RoomDrawingAdapter.GetCachedNameText(room);
+        Assert.That(geo1, Is.Not.Null);
+        Assert.That(name1, Is.Not.Null);
+        Assert.That(nameText1, Is.EqualTo("Original Room"));
+
+        // Change shape to Octagonal & name to "Updated"
         room.Shape = RoomShape.Octagonal;
-        var octGeo = RoomDrawingAdapter.CreateShapeGeometry(room.InnerBounds, room.Shape, room.Corners, false, room.Id);
-        Assert.That(octGeo.FillContains(new AvaloniaPoint(15, 2)), Is.False); // chamfer outside
+        room.Name = "Updated Room";
+        room.Objects = "gold";
 
-        // Change shape to Ellipse
-        room.Shape = RoomShape.Ellipse;
-        var ellipseGeo = RoomDrawingAdapter.CreateShapeGeometry(room.InnerBounds, room.Shape, room.Corners, false, room.Id);
-        Assert.That(ellipseGeo.Bounds.Width, Is.EqualTo(100).Within(0.01));
+        using (var ctx2 = bmp.CreateDrawingContext())
+        {
+            // Re-render must invalidate cache and rebuild new shape and text
+            room.DrawRoom(ctx2, true, false);
+        }
 
-        // Change corner radius
-        room.Shape = RoomShape.RoundedCorners;
-        room.Corners.TopLeft = 30;
-        var roundedGeo = RoomDrawingAdapter.CreateShapeGeometry(room.InnerBounds, room.Shape, room.Corners, false, room.Id);
-        Assert.That(roundedGeo.Bounds.Width, Is.EqualTo(100).Within(0.01));
+        var geo2 = RoomDrawingAdapter.GetCachedGeometry(room);
+        var name2 = RoomDrawingAdapter.GetCachedName(room);
+        var nameText2 = RoomDrawingAdapter.GetCachedNameText(room);
+        Assert.That(geo2, Is.Not.Null);
+        Assert.That(name2, Is.Not.Null);
+        Assert.That(nameText2, Is.EqualTo("Updated Room"));
+        Assert.That(ReferenceEquals(geo1, geo2), Is.False); // Cached geometry was replaced
+        Assert.That(ReferenceEquals(name1, name2), Is.False); // Cached name FormattedText was replaced
+
+        // Verify Octagonal chamfer on new geometry
+        Assert.That(geo2!.FillContains(new AvaloniaPoint(15, 2)), Is.False);
+    }
+
+    [AvaloniaTest]
+    public void CanvasControl_Transform_PixelProbe_MatchesCanvasToClient()
+    {
+        var project = new Project();
+        var prevProj = Project.Current;
+        Project.Current = project;
+
+        try
+        {
+            var room = new Room(project)
+            {
+                Position = new CoreVector(100, 100),
+                Size = new CoreVector(60, 60),
+                RoomFillColor = DrawingColor.Red,
+                RoomBorderColor = DrawingColor.Red
+            };
+            project.Elements.Add(room);
+
+            var canvas = new Controls.MapCanvasControl
+            {
+                Width = 400,
+                Height = 300,
+                Origin = new CoreVector(130, 130), // center of room is at (130, 130)
+                ZoomFactor = 2.0f
+            };
+
+            var window = new global::Avalonia.Controls.Window { Width = 400, Height = 300, Content = canvas };
+            window.Show();
+
+            try
+            {
+                // Force layout measurement and arrange
+                window.Measure(new Size(400, 300));
+                window.Arrange(new global::Avalonia.Rect(0, 0, 400, 300));
+                canvas.Measure(new Size(400, 300));
+                canvas.Arrange(new global::Avalonia.Rect(0, 0, 400, 300));
+
+                using var bmp = new global::Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize(400, 300));
+                bmp.Render(canvas);
+
+                // World (130, 130) transforms to client center (200, 150)
+                var centerScreen = canvas.CanvasToClient(new CoreVector(130, 130));
+                Assert.That(centerScreen.X, Is.EqualTo(200).Within(0.01));
+                Assert.That(centerScreen.Y, Is.EqualTo(150).Within(0.01));
+
+                var (cb, cg, cr, ca) = ReadPixel(bmp, 200, 150);
+                Assert.That(cr, Is.GreaterThan(200));
+                Assert.That(cg, Is.LessThan(50));
+                Assert.That(cb, Is.LessThan(50));
+                Assert.That(ca, Is.GreaterThan(200));
+
+                // Off-center world probe inside room: world (110, 110)
+                var offCenterScreen = canvas.CanvasToClient(new CoreVector(110, 110));
+                Assert.That(offCenterScreen.X, Is.EqualTo(160).Within(0.01));
+                Assert.That(offCenterScreen.Y, Is.EqualTo(110).Within(0.01));
+
+                var (ob, og, or, oa) = ReadPixel(bmp, (int)offCenterScreen.X, (int)offCenterScreen.Y);
+                Assert.That(or, Is.GreaterThan(200));
+                Assert.That(og, Is.LessThan(50));
+                Assert.That(ob, Is.LessThan(50));
+
+                // Background probe outside room: world (10, 10)
+                var (bb, bg, br, ba) = ReadPixel(bmp, 10, 10);
+                // Canvas background is white
+                Assert.That(br, Is.GreaterThan(200));
+                Assert.That(bg, Is.GreaterThan(200));
+                Assert.That(bb, Is.GreaterThan(200));
+
+                // Test with second origin/zoom configuration: Origin = (0, 0), Zoom = 1.0f
+                canvas.Origin = new CoreVector(0, 0);
+                canvas.ZoomFactor = 1.0f;
+                bmp.Render(canvas);
+
+                // Room at [100, 100, 60, 60], center is (130, 130).
+                // With Origin = 0, Zoom = 1: screen is (130 - 0) * 1 + 200 = 330, (130 - 0) * 1 + 150 = 280.
+                var roomCenter2 = canvas.CanvasToClient(new CoreVector(130, 130));
+                Assert.That(roomCenter2.X, Is.EqualTo(330).Within(0.01));
+                Assert.That(roomCenter2.Y, Is.EqualTo(280).Within(0.01));
+
+                var (cb2, cg2, cr2, ca2) = ReadPixel(bmp, 330, 280);
+                Assert.That(cr2, Is.GreaterThan(200));
+                Assert.That(cg2, Is.LessThan(50));
+                Assert.That(cb2, Is.LessThan(50));
+
+                // Client center (200, 150) is now empty canvas background
+                var (centerB2, centerG2, centerR2, _) = ReadPixel(bmp, 200, 150);
+                Assert.That(centerR2, Is.GreaterThan(200));
+                Assert.That(centerG2, Is.GreaterThan(200));
+                Assert.That(centerB2, Is.GreaterThan(200));
+            }
+            finally
+            {
+                window.Close();
+            }
+        }
+        finally
+        {
+            Project.Current = prevProj;
+        }
     }
 
     [AvaloniaTest]

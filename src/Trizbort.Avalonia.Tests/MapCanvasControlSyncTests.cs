@@ -7,6 +7,7 @@ using Shouldly;
 using Trizbort.Avalonia.Controls;
 using Trizbort.Avalonia.Services;
 using Trizbort.Domain.Application;
+using Trizbort.Domain.Elements;
 using Vector = Trizbort.Domain.Misc.Vector;
 
 namespace Trizbort.Avalonia.Tests;
@@ -138,6 +139,61 @@ public class MapCanvasControlSyncTests
 
             canvas.Origin.ShouldBe(new Vector(5000f, 5000f));
             service.Origin.ShouldBe(new Vector(5000f, 5000f));
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void ModelChanges_TriggerCanvasInvalidationAndHooking()
+    {
+        var canvas = new MapCanvasControl();
+        var window = Show(canvas);
+        try
+        {
+            var initialVersion = canvas.SpatialVersion;
+            var initialInvalidations = canvas.InvalidationCount;
+
+            var room = new Room(Project.Current)
+            {
+                Name = "Room A",
+                Position = new Vector(10, 10),
+                Size = new Vector(100, 60)
+            };
+
+            // Adding room to project triggers element added, increments spatial version & invalidates
+            Project.Current.Elements.Add(room);
+            canvas.SpatialVersion.ShouldBeGreaterThan(initialVersion);
+            canvas.InvalidationCount.ShouldBeGreaterThan(initialInvalidations);
+
+            var vAfterAdd = canvas.SpatialVersion;
+            var invAfterAdd = canvas.InvalidationCount;
+
+            // Mutating room triggers Changed on element and canvas invalidates
+            room.Name = "Room B";
+            canvas.SpatialVersion.ShouldBeGreaterThan(vAfterAdd);
+            canvas.InvalidationCount.ShouldBeGreaterThan(invAfterAdd);
+
+            var vAfterName = canvas.SpatialVersion;
+            room.Position = new Vector(50, 50);
+            canvas.SpatialVersion.ShouldBeGreaterThan(vAfterName);
+
+            var vAfterPos = canvas.SpatialVersion;
+            room.IsDark = true;
+            canvas.SpatialVersion.ShouldBeGreaterThan(vAfterPos);
+
+            var vBeforeRemove = canvas.SpatialVersion;
+            // Removing room unhooks Changed
+            Project.Current.Elements.Remove(room);
+            canvas.SpatialVersion.ShouldBeGreaterThan(vBeforeRemove);
+
+            var vAfterRemove = canvas.SpatialVersion;
+            // Mutating room after removal must NOT trigger canvas invalidation
+            room.Name = "Room C";
+            room.Position = new Vector(100, 100);
+            canvas.SpatialVersion.ShouldBe(vAfterRemove);
         }
         finally
         {

@@ -94,6 +94,17 @@ public static class ConnectionDrawingAdapter
         public float LastLineWidth;
         public int VerticesHash;
         public int LinesDrawnVersion;
+
+        public string? LastStartText;
+        public string? LastMidText;
+        public string? LastEndText;
+        public FormattedText? CachedStartText;
+        public FormattedText? CachedMidText;
+        public FormattedText? CachedEndText;
+        public float LastAnnotationFontSize;
+        public string? LastAnnotationFontName;
+        public int LastAnnotationFontStyle;
+        public uint LastAnnotationColor;
     }
 
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Connection, ConnectionCache> _connectionCaches = new();
@@ -111,6 +122,75 @@ public static class ConnectionDrawingAdapter
         return hash.ToHashCode();
     }
 
+    public static void RebuildSpatialIndex(
+        IEnumerable<Element> elements,
+        SpatialLineIndex spatialIndex,
+        int spatialVersion)
+    {
+        spatialIndex.Clear();
+        var elementList = elements.ToList();
+
+        // 1. Add all room borders
+        foreach (var element in elementList)
+        {
+            if (element is Room room)
+            {
+                var tl = room.InnerBounds.GetCorner(CompassPoint.NorthWest);
+                var tr = room.InnerBounds.GetCorner(CompassPoint.NorthEast);
+                var bl = room.InnerBounds.GetCorner(CompassPoint.SouthWest);
+                var br = room.InnerBounds.GetCorner(CompassPoint.SouthEast);
+                spatialIndex.Add(new CoreLineSegment(tl, tr));
+                spatialIndex.Add(new CoreLineSegment(tr, br));
+                spatialIndex.Add(new CoreLineSegment(br, bl));
+                spatialIndex.Add(new CoreLineSegment(bl, tl));
+            }
+        }
+
+        // 2. Add connection segments in Depth order
+        var connections = elementList.OfType<Connection>().OrderBy(c => c.Depth).ToList();
+        foreach (var conn in connections)
+        {
+            var segments = conn.GetSegments();
+            var cache = _connectionCaches.GetOrCreateValue(conn);
+            cache.SmartSegments.Clear();
+
+            if (segments != null && segments.Count > 0)
+            {
+                var segsHash = ComputeSegmentsHash(segments);
+                if (!conn.HasCurveWaypoints)
+                {
+                    foreach (var seg in segments)
+                    {
+                        var split = SplitSegment(seg, spatialIndex);
+                        cache.SmartSegments.AddRange(split);
+                        foreach (var s in split)
+                        {
+                            spatialIndex.Add(new CoreLineSegment(s.Start, s.End));
+                        }
+                    }
+                }
+                else
+                {
+                    cache.SmartSegments.AddRange(segments);
+                }
+
+                cache.VerticesHash = segsHash;
+                cache.LastLineWidth = (float)Settings.LineWidth;
+                cache.LinesDrawnVersion = spatialVersion;
+            }
+        }
+    }
+
+    internal static IReadOnlyList<CoreLineSegment> GetCachedSmartSegments(Connection connection, int spatialVersion)
+    {
+        var cache = _connectionCaches.GetOrCreateValue(connection);
+        if (cache.SmartSegments.Count > 0 && cache.LinesDrawnVersion == spatialVersion)
+        {
+            return cache.SmartSegments;
+        }
+        return connection.GetSegments() ?? new List<CoreLineSegment>();
+    }
+
     public static void DrawConnection(
         this Connection connection,
         AvaloniaDrawingContext context,
@@ -119,9 +199,6 @@ public static class ConnectionDrawingAdapter
         SpatialLineIndex? spatialIndex,
         int spatialVersion = 0)
     {
-        var segments = connection.GetSegments();
-        if (segments == null || segments.Count == 0) return;
-
         var color = connection.ConnectionColor != CoreColor.Transparent
             ? connection.ConnectionColor
             : Settings.Color[CoreColors.Line];
@@ -130,68 +207,82 @@ public static class ConnectionDrawingAdapter
         var brush = color.ToBrush();
         var handDrawn = Settings.HandDrawn;
         var seed = connection.Id;
+        var cache = _connectionCaches.GetOrCreateValue(connection);
 
         // 1. Draw Connection Line / Path
         var activeSegments = new List<CoreLineSegment>();
         if (connection.HasCurveWaypoints)
         {
-            activeSegments.AddRange(segments);
-            var points = new List<CoreVector>(segments.Count + 1);
-            foreach (var seg in segments)
+            var segments = connection.GetSegments();
+            if (segments != null && segments.Count > 0)
             {
-                points.Add(seg.Start);
-            }
-            points.Add(segments[^1].End);
+                activeSegments.AddRange(segments);
+                var points = new List<CoreVector>(segments.Count + 1);
+                foreach (var seg in segments)
+                {
+                    points.Add(seg.Start);
+                }
+                points.Add(segments[^1].End);
 
-            var curveGeo = handDrawn
-                ? DrawingAdapters.ToPolylineGeometry(Sketch.Polyline(points, Sketch.Seeded(seed)))
-                : DrawingAdapters.ToPolylineGeometry(points);
+                var curveGeo = handDrawn
+                    ? DrawingAdapters.ToPolylineGeometry(Sketch.Polyline(points, Sketch.Seeded(seed)))
+                    : DrawingAdapters.ToPolylineGeometry(points);
 
-            context.DrawGeometry(null, pen, curveGeo);
+                context.DrawGeometry(null, pen, curveGeo);
 
-            if (isSelected)
-            {
-                var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(Settings.LineWidth + 1.5);
-                context.DrawGeometry(null, selPen, curveGeo);
-            }
-            else if (isHover)
-            {
-                var hoverPen = Settings.Color[CoreColors.HoverLine].ToPen(Settings.LineWidth + 1.0);
-                context.DrawGeometry(null, hoverPen, curveGeo);
+                if (isSelected)
+                {
+                    var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(Settings.LineWidth + 1.5);
+                    context.DrawGeometry(null, selPen, curveGeo);
+                }
+                else if (isHover)
+                {
+                    var hoverPen = Settings.Color[CoreColors.HoverLine].ToPen(Settings.LineWidth + 1.0);
+                    context.DrawGeometry(null, hoverPen, curveGeo);
+                }
             }
         }
         else
         {
-            // Calculate / retrieve cached smart line segments
-            if (spatialIndex != null && spatialIndex.Count > 0)
+            // Retrieve cached smart line segments if valid
+            if (cache.SmartSegments.Count > 0 && cache.LinesDrawnVersion == spatialVersion)
             {
-                var cache = _connectionCaches.GetOrCreateValue(connection);
-                var segsHash = ComputeSegmentsHash(segments);
-
-                if (cache.SmartSegments.Count > 0
-                    && cache.VerticesHash == segsHash
-                    && Math.Abs(cache.LastLineWidth - Settings.LineWidth) < 0.01f
-                    && cache.LinesDrawnVersion == spatialVersion)
-                {
-                    activeSegments.AddRange(cache.SmartSegments);
-                }
-                else
-                {
-                    foreach (var seg in segments)
-                    {
-                        var splitSegs = SplitSegment(seg, spatialIndex);
-                        activeSegments.AddRange(splitSegs);
-                    }
-                    cache.SmartSegments.Clear();
-                    cache.SmartSegments.AddRange(activeSegments);
-                    cache.VerticesHash = segsHash;
-                    cache.LastLineWidth = (float)Settings.LineWidth;
-                    cache.LinesDrawnVersion = spatialVersion;
-                }
+                activeSegments.AddRange(cache.SmartSegments);
             }
             else
             {
-                activeSegments.AddRange(segments);
+                var segments = connection.GetSegments();
+                if (segments != null && segments.Count > 0)
+                {
+                    if (spatialIndex != null && spatialIndex.Count > 0)
+                    {
+                        var segsHash = ComputeSegmentsHash(segments);
+                        if (cache.SmartSegments.Count > 0
+                            && cache.VerticesHash == segsHash
+                            && Math.Abs(cache.LastLineWidth - Settings.LineWidth) < 0.01f
+                            && cache.LinesDrawnVersion == spatialVersion)
+                        {
+                            activeSegments.AddRange(cache.SmartSegments);
+                        }
+                        else
+                        {
+                            foreach (var seg in segments)
+                            {
+                                var splitSegs = SplitSegment(seg, spatialIndex);
+                                activeSegments.AddRange(splitSegs);
+                            }
+                            cache.SmartSegments.Clear();
+                            cache.SmartSegments.AddRange(activeSegments);
+                            cache.VerticesHash = segsHash;
+                            cache.LastLineWidth = (float)Settings.LineWidth;
+                            cache.LinesDrawnVersion = spatialVersion;
+                        }
+                    }
+                    else
+                    {
+                        activeSegments.AddRange(segments);
+                    }
+                }
             }
 
             foreach (var seg in activeSegments)
@@ -230,8 +321,6 @@ public static class ConnectionDrawingAdapter
                         context.DrawLine(hoverPen, p1, p2);
                     }
                 }
-
-                spatialIndex?.Add(seg);
             }
         }
 
@@ -253,7 +342,8 @@ public static class ConnectionDrawingAdapter
         }
 
         // 4. Draw Annotations (StartText, MidText, EndText)
-        DrawAnnotations(connection, context, activeSegments);
+        var connectionCache = _connectionCaches.GetOrCreateValue(connection);
+        DrawAnnotations(connection, context, activeSegments, connectionCache);
     }
 
     public static void DrawConnection(
@@ -278,17 +368,18 @@ public static class ConnectionDrawingAdapter
     public static List<CoreLineSegment> SplitSegment(CoreLineSegment lineSegment, SpatialLineIndex spatialIndex, int depth = 0)
     {
         var result = new List<CoreLineSegment>();
+        var current = new CoreLineSegment(lineSegment.Start, lineSegment.End);
         if (depth > 10)
         {
-            result.Add(lineSegment);
+            result.Add(current);
             return result;
         }
 
         var gap = Math.Max(1.0f, Settings.LineWidth) * 3.0f;
-        var segMinX = Math.Min(lineSegment.Start.X, lineSegment.End.X) - gap;
-        var segMaxX = Math.Max(lineSegment.Start.X, lineSegment.End.X) + gap;
-        var segMinY = Math.Min(lineSegment.Start.Y, lineSegment.End.Y) - gap;
-        var segMaxY = Math.Max(lineSegment.Start.Y, lineSegment.End.Y) + gap;
+        var segMinX = Math.Min(current.Start.X, current.End.X) - gap;
+        var segMaxX = Math.Max(current.Start.X, current.End.X) + gap;
+        var segMinY = Math.Min(current.Start.Y, current.End.Y) - gap;
+        var segMaxY = Math.Max(current.Start.Y, current.End.Y) + gap;
 
         var candidates = new List<CoreLineSegment>();
         spatialIndex.Query(segMinX, segMaxX, segMinY, segMaxY, candidates);
@@ -306,14 +397,14 @@ public static class ConnectionDrawingAdapter
                 continue;
             }
 
-            if (lineSegment.Intersect(previous, true, out var intersects))
+            if (current.Intersect(previous, true, out var intersects))
             {
                 foreach (var intersect in intersects)
                 {
                     if (intersect.Type == LineSegmentIntersectType.MidPointA)
                     {
-                        var seg1 = new CoreLineSegment(lineSegment.Start, intersect.Position);
-                        var seg2 = new CoreLineSegment(intersect.Position, lineSegment.End);
+                        var seg1 = new CoreLineSegment(current.Start, intersect.Position);
+                        var seg2 = new CoreLineSegment(intersect.Position, current.End);
                         if (seg1.Shorten(gap))
                         {
                             result.AddRange(SplitSegment(seg1, spatialIndex, depth + 1));
@@ -335,108 +426,43 @@ public static class ConnectionDrawingAdapter
                     }
                     else if (intersect.Type == LineSegmentIntersectType.StartA)
                     {
-                        if (lineSegment.Forshorten(gap))
+                        if (current.Forshorten(gap))
                         {
-                            return SplitSegment(lineSegment, spatialIndex, depth + 1);
+                            return SplitSegment(current, spatialIndex, depth + 1);
                         }
-                        result.Add(lineSegment);
+                        result.Add(current);
                         return result;
                     }
                     else if (intersect.Type == LineSegmentIntersectType.EndA)
                     {
-                        if (lineSegment.Shorten(gap))
+                        if (current.Shorten(gap))
                         {
-                            return SplitSegment(lineSegment, spatialIndex, depth + 1);
+                            return SplitSegment(current, spatialIndex, depth + 1);
                         }
-                        result.Add(lineSegment);
+                        result.Add(current);
                         return result;
                     }
                 }
             }
         }
 
-        result.Add(lineSegment);
+        result.Add(current);
         return result;
     }
 
-    public static List<CoreLineSegment> SplitSegment(CoreLineSegment lineSegment, List<CoreLineSegment> linesDrawn, int depth = 0)
+    public static List<CoreLineSegment> SplitSegment(CoreLineSegment lineSegment, List<CoreLineSegment> linesDrawn)
     {
-        var result = new List<CoreLineSegment>();
-        if (depth > 10)
+        if (linesDrawn == null || linesDrawn.Count == 0)
         {
-            result.Add(lineSegment);
-            return result;
+            return [new CoreLineSegment(lineSegment.Start, lineSegment.End)];
         }
 
-        var gap = Math.Max(1.0f, Settings.LineWidth) * 3.0f;
-        var segMinX = Math.Min(lineSegment.Start.X, lineSegment.End.X) - gap;
-        var segMaxX = Math.Max(lineSegment.Start.X, lineSegment.End.X) + gap;
-        var segMinY = Math.Min(lineSegment.Start.Y, lineSegment.End.Y) - gap;
-        var segMaxY = Math.Max(lineSegment.Start.Y, lineSegment.End.Y) + gap;
-
-        foreach (var previous in linesDrawn)
+        var spatialIndex = new SpatialLineIndex();
+        foreach (var line in linesDrawn)
         {
-            var prevMinX = Math.Min(previous.Start.X, previous.End.X);
-            var prevMaxX = Math.Max(previous.Start.X, previous.End.X);
-            var prevMinY = Math.Min(previous.Start.Y, previous.End.Y);
-            var prevMaxY = Math.Max(previous.Start.Y, previous.End.Y);
-
-            if (segMaxX < prevMinX || segMinX > prevMaxX || segMaxY < prevMinY || segMinY > prevMaxY)
-            {
-                continue;
-            }
-
-            if (lineSegment.Intersect(previous, true, out var intersects))
-            {
-                foreach (var intersect in intersects)
-                {
-                    if (intersect.Type == LineSegmentIntersectType.MidPointA)
-                    {
-                        var seg1 = new CoreLineSegment(lineSegment.Start, intersect.Position);
-                        var seg2 = new CoreLineSegment(intersect.Position, lineSegment.End);
-                        if (seg1.Shorten(gap))
-                        {
-                            result.AddRange(SplitSegment(seg1, linesDrawn, depth + 1));
-                        }
-                        else
-                        {
-                            result.Add(seg1);
-                        }
-
-                        if (seg2.Forshorten(gap))
-                        {
-                            result.AddRange(SplitSegment(seg2, linesDrawn, depth + 1));
-                        }
-                        else
-                        {
-                            result.Add(seg2);
-                        }
-                        return result;
-                    }
-                    else if (intersect.Type == LineSegmentIntersectType.StartA)
-                    {
-                        if (lineSegment.Forshorten(gap))
-                        {
-                            return SplitSegment(lineSegment, linesDrawn, depth + 1);
-                        }
-                        result.Add(lineSegment);
-                        return result;
-                    }
-                    else if (intersect.Type == LineSegmentIntersectType.EndA)
-                    {
-                        if (lineSegment.Shorten(gap))
-                        {
-                            return SplitSegment(lineSegment, linesDrawn, depth + 1);
-                        }
-                        result.Add(lineSegment);
-                        return result;
-                    }
-                }
-            }
+            spatialIndex.Add(line);
         }
-
-        result.Add(lineSegment);
-        return result;
+        return SplitSegment(lineSegment, spatialIndex);
     }
 
     private static void DrawDoorIcons(AvaloniaDrawingContext context, Door door, CoreLineSegment lineSegment)
@@ -498,10 +524,22 @@ public static class ConnectionDrawingAdapter
         var shackleGeo = new StreamGeometry();
         using (var ctx = shackleGeo.Open())
         {
-            var shackleTop = isLocked ? pos.Y - 6 : pos.Y - 8;
-            ctx.BeginFigure(new AvaloniaPoint(pos.X - 3, pos.Y - 1), false);
-            ctx.ArcTo(new AvaloniaPoint(pos.X + 3, pos.Y - 1), new Size(3, 4), 0, false, SweepDirection.Clockwise);
-            ctx.EndFigure(false);
+            if (isLocked)
+            {
+                ctx.BeginFigure(new AvaloniaPoint(pos.X - 3, pos.Y - 1), false);
+                ctx.LineTo(new AvaloniaPoint(pos.X - 3, pos.Y - 4));
+                ctx.ArcTo(new AvaloniaPoint(pos.X + 3, pos.Y - 4), new Size(3, 3), 0, false, SweepDirection.Clockwise);
+                ctx.LineTo(new AvaloniaPoint(pos.X + 3, pos.Y - 1));
+                ctx.EndFigure(false);
+            }
+            else
+            {
+                ctx.BeginFigure(new AvaloniaPoint(pos.X - 3, pos.Y - 1), false);
+                ctx.LineTo(new AvaloniaPoint(pos.X - 3, pos.Y - 6));
+                ctx.ArcTo(new AvaloniaPoint(pos.X + 3, pos.Y - 6), new Size(3, 3), 0, false, SweepDirection.Clockwise);
+                ctx.LineTo(new AvaloniaPoint(pos.X + 3, pos.Y - 4));
+                ctx.EndFigure(false);
+            }
         }
         context.DrawGeometry(null, pen, shackleGeo);
 
@@ -527,28 +565,64 @@ public static class ConnectionDrawingAdapter
         };
     }
 
-    private static void DrawAnnotations(Connection connection, AvaloniaDrawingContext context, List<CoreLineSegment> segments)
+    private static void DrawAnnotations(
+        Connection connection,
+        AvaloniaDrawingContext context,
+        List<CoreLineSegment> segments,
+        ConnectionCache cache)
     {
         if (segments.Count == 0) return;
 
         var font = Settings.LineFontMetadata;
         var typeface = font.ToTypeface();
         var brush = DrawingAdapters.ToBrush(CoreColors.LineText);
+        var textColor = (uint)Settings.Color[CoreColors.LineText].ToArgb();
+
+        var fontValid = cache.LastAnnotationFontName == font.Name
+                        && cache.LastAnnotationFontStyle == (int)font.Style
+                        && Math.Abs(cache.LastAnnotationFontSize - font.Size) < 0.01f
+                        && cache.LastAnnotationColor == textColor;
+
+        if (!fontValid)
+        {
+            cache.LastAnnotationFontName = font.Name;
+            cache.LastAnnotationFontStyle = (int)font.Style;
+            cache.LastAnnotationFontSize = font.Size;
+            cache.LastAnnotationColor = textColor;
+            cache.CachedStartText = null;
+            cache.CachedMidText = null;
+            cache.CachedEndText = null;
+        }
 
         if (!string.IsNullOrEmpty(connection.StartText))
         {
+            if (cache.LastStartText != connection.StartText || cache.CachedStartText == null)
+            {
+                cache.LastStartText = connection.StartText;
+                cache.CachedStartText = null;
+            }
             var startVertex = connection.VertexList.Count > 0 ? connection.VertexList[0] : null;
-            DrawSingleAnnotation(context, connection.StartText, segments[0], font, typeface, brush, true, startVertex);
+            DrawSingleAnnotation(context, connection.StartText, segments[0], font, typeface, brush, true, startVertex, ref cache.CachedStartText);
         }
 
         if (!string.IsNullOrEmpty(connection.EndText))
         {
+            if (cache.LastEndText != connection.EndText || cache.CachedEndText == null)
+            {
+                cache.LastEndText = connection.EndText;
+                cache.CachedEndText = null;
+            }
             var endVertex = connection.VertexList.Count > 1 ? connection.VertexList[^1] : null;
-            DrawSingleAnnotation(context, connection.EndText, segments[^1], font, typeface, brush, false, endVertex);
+            DrawSingleAnnotation(context, connection.EndText, segments[^1], font, typeface, brush, false, endVertex, ref cache.CachedEndText);
         }
 
         if (!string.IsNullOrEmpty(connection.MidText))
         {
+            if (cache.LastMidText != connection.MidText || cache.CachedMidText == null)
+            {
+                cache.LastMidText = connection.MidText;
+                cache.CachedMidText = null;
+            }
             var totalLength = segments.Sum(s => s.Length);
             var middle = totalLength / 2f;
             foreach (var seg in segments)
@@ -562,7 +636,7 @@ public static class ConnectionDrawingAdapter
                     var ratio = seg.Length > 0.001f ? middle / seg.Length : 0.5f;
                     var midPoint = seg.Start + seg.Delta * ratio;
                     var dummySeg = new CoreLineSegment(midPoint - seg.Delta * 0.01f, midPoint + seg.Delta * 0.01f);
-                    DrawSingleAnnotation(context, connection.MidText, dummySeg, font, typeface, brush, null, null);
+                    DrawSingleAnnotation(context, connection.MidText, dummySeg, font, typeface, brush, null, null, ref cache.CachedMidText);
                     break;
                 }
             }
@@ -577,7 +651,8 @@ public static class ConnectionDrawingAdapter
         Typeface typeface,
         IBrush brush,
         bool? isStart,
-        Vertex? vertex)
+        Vertex? vertex,
+        ref FormattedText? cachedFormattedText)
     {
         var delta = segment.Delta;
         CoreVector anchor;
@@ -634,35 +709,42 @@ public static class ConnectionDrawingAdapter
             };
         }
 
-        var formattedText = new FormattedText(
-            text,
-            CultureInfo.CurrentCulture,
-            FlowDirection.LeftToRight,
-            typeface,
-            font.Size,
-            brush)
+        if (cachedFormattedText == null)
         {
-            TextAlignment = alignment
-        };
-        formattedText.ConstrainToNaturalWidth();
+            cachedFormattedText = new FormattedText(
+                text,
+                CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                typeface,
+                font.Size,
+                brush)
+            {
+                TextAlignment = alignment
+            };
+            cachedFormattedText.ConstrainToNaturalWidth();
+        }
+        else
+        {
+            cachedFormattedText.TextAlignment = alignment;
+        }
 
         double drawX = pos.X;
         double drawY = pos.Y;
 
         if (alignment == TextAlignment.Center)
         {
-            drawX -= formattedText.Width / 2.0;
+            drawX -= cachedFormattedText.Width / 2.0;
         }
         else if (alignment == TextAlignment.Right)
         {
-            drawX -= formattedText.Width;
+            drawX -= cachedFormattedText.Width;
         }
 
         if (compass == CompassPoint.North || compass == CompassPoint.NorthEast || compass == CompassPoint.NorthWest)
         {
-            drawY -= formattedText.Height;
+            drawY -= cachedFormattedText.Height;
         }
 
-        context.DrawText(formattedText, new AvaloniaPoint(drawX, drawY));
+        context.DrawText(cachedFormattedText, new AvaloniaPoint(drawX, drawY));
     }
 }

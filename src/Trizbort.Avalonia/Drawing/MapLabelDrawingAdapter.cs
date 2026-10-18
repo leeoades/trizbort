@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Media;
 using Trizbort.Domain.Elements;
@@ -19,6 +20,25 @@ namespace Trizbort.Avalonia.Drawing;
 
 public static class MapLabelDrawingAdapter
 {
+    private class LabelCache
+    {
+        public CoreRect LastBounds;
+        public RoomShape LastShape;
+        public bool LastHandDrawn;
+        public StreamGeometry? CachedGeometry;
+
+        public string? LastText;
+        public string? LastFontName;
+        public int LastFontStyle;
+        public float LastFontSize;
+        public uint LastTextColor;
+        public CoreRect LastTextBounds;
+        public FormattedText? CachedText;
+        public double CachedStartY;
+    }
+
+    private static readonly ConditionalWeakTable<MapLabel, LabelCache> _labelCaches = new();
+
     public static void DrawMapLabel(this MapLabel label, AvaloniaDrawingContext context, bool isSelected, bool isHover)
     {
         var bounds = label.InnerBounds;
@@ -26,15 +46,27 @@ public static class MapLabelDrawingAdapter
 
         var handDrawn = Settings.HandDrawn;
         var seed = label.Id;
+        var cache = _labelCaches.GetOrCreateValue(label);
 
         // Build Geometry for Shape
-        StreamGeometry geometry = label.Shape switch
+        if (cache.CachedGeometry == null
+            || cache.LastShape != label.Shape
+            || cache.LastHandDrawn != handDrawn
+            || !cache.LastBounds.Equals(bounds))
         {
-            RoomShape.RoundedCorners => DrawingAdapters.CreateRoundedRectangleGeometry(bounds, new CornerRadii(), handDrawn, seed),
-            RoomShape.Ellipse => DrawingAdapters.CreateEllipseGeometry(bounds, handDrawn, seed),
-            RoomShape.Octagonal => DrawingAdapters.CreateOctagonalGeometry(bounds, new CornerRadii(), handDrawn, seed),
-            _ => DrawingAdapters.CreateSquareGeometry(bounds, handDrawn, seed)
-        };
+            cache.CachedGeometry = label.Shape switch
+            {
+                RoomShape.RoundedCorners => DrawingAdapters.CreateRoundedRectangleGeometry(bounds, new CornerRadii(), handDrawn, seed),
+                RoomShape.Ellipse => DrawingAdapters.CreateEllipseGeometry(bounds, handDrawn, seed),
+                RoomShape.Octagonal => DrawingAdapters.CreateOctagonalGeometry(bounds, new CornerRadii(), handDrawn, seed),
+                _ => DrawingAdapters.CreateSquareGeometry(bounds, handDrawn, seed)
+            };
+            cache.LastShape = label.Shape;
+            cache.LastHandDrawn = handDrawn;
+            cache.LastBounds = bounds;
+        }
+
+        var geometry = cache.CachedGeometry;
 
         // Background
         IBrush? fillBrush = label.HasBackground ? label.BackgroundColor.ToBrush() : null;
@@ -77,26 +109,46 @@ public static class MapLabelDrawingAdapter
             if (textBounds.Width > 0 && textBounds.Height > 0)
             {
                 var font = Settings.RoomFontMetadata;
-                var typeface = font.ToTypeface();
-                var textBrush = label.TextColor != CoreColor.Transparent
-                    ? label.TextColor.ToBrush()
-                    : DrawingAdapters.ToBrush(CoreColors.SmallText);
+                var textColor = label.TextColor != CoreColor.Transparent
+                    ? label.TextColor
+                    : Settings.Color[CoreColors.SmallText];
 
-                var formattedText = new FormattedText(
-                    label.Text,
-                    CultureInfo.CurrentCulture,
-                    FlowDirection.LeftToRight,
-                    typeface,
-                    font.Size,
-                    textBrush)
+                var textValid = cache.LastText == label.Text
+                                && cache.LastFontName == font.Name
+                                && cache.LastFontStyle == (int)font.Style
+                                && Math.Abs(cache.LastFontSize - font.Size) < 0.01f
+                                && cache.LastTextColor == (uint)textColor.ToArgb()
+                                && cache.LastTextBounds.Equals(textBounds);
+
+                if (!textValid || cache.CachedText == null)
                 {
-                    TextAlignment = TextAlignment.Center,
-                    MaxTextWidth = textBounds.Width,
-                    MaxTextHeight = textBounds.Height
-                };
+                    var typeface = font.ToTypeface();
+                    var textBrush = textColor.ToBrush();
 
-                var startY = textBounds.Top + Math.Max(0, (textBounds.Height - formattedText.Height) / 2.0);
-                context.DrawText(formattedText, new AvaloniaPoint(textBounds.Left, startY));
+                    var formattedText = new FormattedText(
+                        label.Text,
+                        CultureInfo.CurrentCulture,
+                        FlowDirection.LeftToRight,
+                        typeface,
+                        font.Size,
+                        textBrush)
+                    {
+                        TextAlignment = TextAlignment.Center,
+                        MaxTextWidth = textBounds.Width,
+                        MaxTextHeight = textBounds.Height
+                    };
+
+                    cache.LastText = label.Text;
+                    cache.LastFontName = font.Name;
+                    cache.LastFontStyle = (int)font.Style;
+                    cache.LastFontSize = font.Size;
+                    cache.LastTextColor = (uint)textColor.ToArgb();
+                    cache.LastTextBounds = textBounds;
+                    cache.CachedText = formattedText;
+                    cache.CachedStartY = textBounds.Top + Math.Max(0, (textBounds.Height - formattedText.Height) / 2.0);
+                }
+
+                context.DrawText(cache.CachedText, new AvaloniaPoint(textBounds.Left, cache.CachedStartY));
             }
         }
     }

@@ -26,4 +26,8 @@
 		<ProjectReference Include="..\Trizbort.Core\Trizbort.Core.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="Trizbort.Avalonia.Tests" />
+	</ItemGroup>
+
 </Project>

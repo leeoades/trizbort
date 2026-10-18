@@ -38,6 +38,13 @@ public static class RoomDrawingAdapter
         public GeometryKey LastSelHaloKey;
         public StreamGeometry? CachedSelHaloGeometry;
 
+        public string? LastSecondFillLoc;
+        public CoreRect LastSecondFillBounds;
+        public StreamGeometry? CachedSecondFillGeometry;
+
+        public CoreRect LastDarkBounds;
+        public StreamGeometry? CachedDarkGeometry;
+
         public string? LastName;
         public string? LastSubtitle;
         public string? LastNameFontName;
@@ -70,6 +77,21 @@ public static class RoomDrawingAdapter
     }
 
     private static readonly ConditionalWeakTable<Room, RoomTextCache> _textCaches = new();
+
+    internal static StreamGeometry? GetCachedGeometry(Room room)
+    {
+        return _textCaches.TryGetValue(room, out var c) ? c.CachedGeometry : null;
+    }
+
+    internal static FormattedText? GetCachedName(Room room)
+    {
+        return _textCaches.TryGetValue(room, out var c) ? c.CachedName : null;
+    }
+
+    internal static string? GetCachedNameText(Room room)
+    {
+        return _textCaches.TryGetValue(room, out var c) ? c.LastName : null;
+    }
 
     public static StreamGeometry CreateShapeGeometry(CoreRect bounds, RoomShape shape, CornerRadii? corners, bool handDrawn, int seed)
     {
@@ -177,13 +199,28 @@ public static class RoomDrawingAdapter
         // 7. Draw Second Fill (if configured)
         if (room.SecondFillColor != CoreColor.Transparent && !string.IsNullOrEmpty(room.SecondFillLocation))
         {
-            var poly = GetSecondFillPolygon(bounds, room.SecondFillLocation);
-            if (poly != null && poly.Length > 0)
+            if (cache.CachedSecondFillGeometry == null
+                || cache.LastSecondFillLoc != room.SecondFillLocation
+                || !cache.LastSecondFillBounds.Equals(bounds))
             {
-                var secondGeo = DrawingAdapters.ToPolygonGeometry(poly, true);
+                var poly = GetSecondFillPolygon(bounds, room.SecondFillLocation);
+                if (poly != null && poly.Length > 0)
+                {
+                    cache.CachedSecondFillGeometry = DrawingAdapters.ToPolygonGeometry(poly, true);
+                    cache.LastSecondFillLoc = room.SecondFillLocation;
+                    cache.LastSecondFillBounds = bounds;
+                }
+                else
+                {
+                    cache.CachedSecondFillGeometry = null;
+                }
+            }
+
+            if (cache.CachedSecondFillGeometry != null)
+            {
                 using (context.PushGeometryClip(geometry))
                 {
-                    context.DrawGeometry(room.SecondFillColor.ToBrush(), null, secondGeo);
+                    context.DrawGeometry(room.SecondFillColor.ToBrush(), null, cache.CachedSecondFillGeometry);
                 }
             }
         }
@@ -193,17 +230,21 @@ public static class RoomDrawingAdapter
         {
             using (context.PushGeometryClip(geometry))
             {
-                var darkSize = Math.Min(16f, Math.Min(bounds.Width, bounds.Height) * 0.4f);
-                var darkGeo = new StreamGeometry();
-                using (var darkCtx = darkGeo.Open())
+                if (cache.CachedDarkGeometry == null || !cache.LastDarkBounds.Equals(bounds))
                 {
-                    darkCtx.BeginFigure(new AvaloniaPoint(bounds.Left, bounds.Top), true);
-                    darkCtx.LineTo(new AvaloniaPoint(bounds.Left + darkSize, bounds.Top));
-                    darkCtx.LineTo(new AvaloniaPoint(bounds.Left, bounds.Top + darkSize));
-                    darkCtx.EndFigure(true);
+                    var darkSize = Math.Min(16f, Math.Min(bounds.Width, bounds.Height) * 0.4f);
+                    var darkGeo = new StreamGeometry();
+                    using (var darkCtx = darkGeo.Open())
+                    {
+                        darkCtx.BeginFigure(new AvaloniaPoint(bounds.Left, bounds.Top), true);
+                        darkCtx.LineTo(new AvaloniaPoint(bounds.Left + darkSize, bounds.Top));
+                        darkCtx.LineTo(new AvaloniaPoint(bounds.Left, bounds.Top + darkSize));
+                        darkCtx.EndFigure(true);
+                    }
+                    cache.CachedDarkGeometry = darkGeo;
+                    cache.LastDarkBounds = bounds;
                 }
-                var darkBrush = new SolidColorBrush(AvaloniaColor.FromArgb(180, 20, 20, 20));
-                context.DrawGeometry(darkBrush, null, darkGeo);
+                context.DrawGeometry(_darkBrush, null, cache.CachedDarkGeometry);
             }
         }
 
@@ -388,32 +429,6 @@ public static class RoomDrawingAdapter
             var objTypeface = objFont.ToTypeface();
             var objBrush = objColor.ToBrush();
 
-            var expandedBounds = bounds;
-            expandedBounds.Inflate(Settings.ObjectListOffsetFromRoom, Settings.ObjectListOffsetFromRoom);
-
-            var pos = expandedBounds.GetCorner(room.ObjectsPosition);
-            pos.X += room.ObjectsCustomPosition ? room.ObjectsCustomPositionRight : 0;
-            pos.Y += room.ObjectsCustomPosition ? room.ObjectsCustomPositionDown : 0;
-
-            var alignment = TextAlignment.Left;
-            switch (room.ObjectsPosition)
-            {
-                case CompassPoint.North:
-                case CompassPoint.South:
-                    alignment = TextAlignment.Center;
-                    break;
-                case CompassPoint.East:
-                case CompassPoint.NorthEast:
-                case CompassPoint.SouthEast:
-                    alignment = TextAlignment.Left;
-                    break;
-                case CompassPoint.West:
-                case CompassPoint.NorthWest:
-                case CompassPoint.SouthWest:
-                    alignment = TextAlignment.Right;
-                    break;
-            }
-
             var formattedObj = new FormattedText(
                 displayText,
                 CultureInfo.CurrentCulture,
@@ -422,27 +437,65 @@ public static class RoomDrawingAdapter
                 objFont.Size,
                 objBrush)
             {
-                TextAlignment = alignment
+                TextAlignment = TextAlignment.Left
             };
             formattedObj.ConstrainToNaturalWidth();
 
-            double drawX = pos.X;
-            double drawY = pos.Y;
+            double drawX;
+            double drawY;
 
-            if (alignment == TextAlignment.Center)
+            var isOutside = room.ObjectsPosition switch
             {
-                drawX -= formattedObj.Width / 2.0;
-            }
-            else if (alignment == TextAlignment.Right)
-            {
-                drawX -= formattedObj.Width;
-            }
+                CompassPoint.North or CompassPoint.NorthEast or CompassPoint.East or
+                CompassPoint.SouthEast or CompassPoint.South or CompassPoint.SouthWest or
+                CompassPoint.West or CompassPoint.NorthWest => true,
+                _ => false
+            };
 
-            if (room.ObjectsPosition == CompassPoint.North ||
-                room.ObjectsPosition == CompassPoint.NorthEast ||
-                room.ObjectsPosition == CompassPoint.NorthWest)
+            if (!isOutside)
             {
-                drawY -= formattedObj.Height;
+                // Object list appears inside the room below its name
+                // Matches WinForms RoomDrawingExtensions.DrawText / SetAlignmentFromCardinalOrOrdinalDirection
+                var height = bounds.Height / 2 - objFont.Size / 2;
+                var insideBounds = new CoreRect(
+                    bounds.Left + Settings.ObjectListOffsetFromRoom,
+                    bounds.Bottom - height,
+                    bounds.Width - Settings.ObjectListOffsetFromRoom,
+                    height - Settings.ObjectListOffsetFromRoom);
+
+                drawX = insideBounds.Left + (room.ObjectsCustomPosition ? room.ObjectsCustomPositionRight : 0);
+                drawY = bounds.Bottom - Settings.ObjectListOffsetFromRoom - formattedObj.Height + (room.ObjectsCustomPosition ? room.ObjectsCustomPositionDown : 0);
+            }
+            else
+            {
+                var expandedBounds = bounds;
+                expandedBounds.Inflate(Settings.ObjectListOffsetFromRoom, Settings.ObjectListOffsetFromRoom);
+                var pos = expandedBounds.GetCorner(room.ObjectsPosition);
+
+                if (room.ObjectsPosition == CompassPoint.North || room.ObjectsPosition == CompassPoint.South)
+                {
+                    pos.X += Settings.ObjectListOffsetFromRoom + (room.ObjectsCustomPosition ? room.ObjectsCustomPositionRight : 0);
+                    pos.Y += room.ObjectsCustomPosition ? room.ObjectsCustomPositionDown : 0;
+                }
+                else
+                {
+                    pos.X += room.ObjectsCustomPosition ? room.ObjectsCustomPositionRight : 0;
+                    pos.Y += room.ObjectsCustomPosition ? room.ObjectsCustomPositionDown : 0;
+                }
+
+                drawX = pos.X;
+                drawY = pos.Y;
+
+                if (room.ObjectsPosition is CompassPoint.West or CompassPoint.NorthWest or CompassPoint.SouthWest)
+                {
+                    drawX -= formattedObj.Width;
+                    formattedObj.TextAlignment = TextAlignment.Right;
+                }
+
+                if (room.ObjectsPosition is CompassPoint.North or CompassPoint.NorthEast or CompassPoint.NorthWest)
+                {
+                    drawY -= formattedObj.Height;
+                }
             }
 
             cache.CachedObjects = formattedObj;
