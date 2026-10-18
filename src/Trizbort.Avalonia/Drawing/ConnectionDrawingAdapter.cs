@@ -324,7 +324,7 @@ public static class ConnectionDrawingAdapter
         {
             var lastSegment = activeSegments[^1];
             var angleRad = Math.Atan2(lastSegment.Delta.Y, lastSegment.Delta.X);
-            var angleDeg = angleRad * 180.0 / Math.PI + 90.0;
+            var angleDeg = angleRad * 180.0 / Math.PI;
             var arrowSize = Math.Max(8.0, 2.0 * Settings.LineWidth);
             DrawingAdapters.DrawChevron(context, lastSegment.End.ToAvaloniaPoint(), angleDeg, arrowSize, brush, seed, handDrawn);
         }

@@ -497,4 +497,79 @@ public class DrawingAdaptersParityTests
             window.Close();
         }
     }
+
+    [AvaloniaTest]
+    [TestCase(0, 0, 100, 0, 0)]       // East
+    [TestCase(100, 0, 0, 0, 180)]     // West
+    [TestCase(0, 0, 0, 100, 90)]      // South
+    [TestCase(0, 100, 0, 0, -90)]     // North
+    [TestCase(0, 0, 100, 100, 45)]    // South-East
+    [TestCase(0, 100, 100, 0, -45)]   // North-East
+    public void ConnectionDrawing_OneWayChevron_OrientedAlongLineDirection(float x1, float y1, float x2, float y2, double expectedAngleDeg)
+    {
+        var project = new Project();
+        var conn = new Connection(project, new Vertex(new CoreVector(x1, y1)), new Vertex(new CoreVector(x2, y2)))
+        {
+            Flow = ConnectionFlow.OneWay
+        };
+
+        var group = new global::Avalonia.Media.DrawingGroup();
+        using (var ctx = group.Open())
+        {
+            conn.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
+        }
+
+        var geometryDrawings = group.Children.OfType<global::Avalonia.Media.GeometryDrawing>().ToList();
+        Assert.That(geometryDrawings.Count, Is.GreaterThanOrEqualTo(2));
+
+        var chevronDrawing = geometryDrawings.Last();
+        Assert.That(chevronDrawing.Brush, Is.Not.Null);
+        Assert.That(chevronDrawing.Geometry, Is.Not.Null);
+
+        var endPoint = new AvaloniaPoint(x2, y2);
+        var expectedChevron = DrawingAdapters.CreateChevronGeometry(endPoint, expectedAngleDeg, 8.0, conn.Id, false);
+
+        Assert.That(chevronDrawing.Geometry!.Bounds.Left, Is.EqualTo(expectedChevron.Bounds.Left).Within(0.01));
+        Assert.That(chevronDrawing.Geometry!.Bounds.Right, Is.EqualTo(expectedChevron.Bounds.Right).Within(0.01));
+        Assert.That(chevronDrawing.Geometry!.Bounds.Top, Is.EqualTo(expectedChevron.Bounds.Top).Within(0.01));
+        Assert.That(chevronDrawing.Geometry!.Bounds.Bottom, Is.EqualTo(expectedChevron.Bounds.Bottom).Within(0.01));
+    }
+
+    [AvaloniaTest]
+    public void ConnectionDrawing_OneWayChevron_HandDrawnAndCustomColor()
+    {
+        var prevHandDrawn = Setup.Settings.HandDrawn;
+        Setup.Settings.HandDrawn = true;
+        try
+        {
+            var project = new Project();
+            var conn = new Connection(project, new Vertex(new CoreVector(10, 20)), new Vertex(new CoreVector(110, 20)))
+            {
+                Flow = ConnectionFlow.OneWay,
+                ConnectionColor = DrawingColor.DarkRed
+            };
+
+            var group = new global::Avalonia.Media.DrawingGroup();
+            using (var ctx = group.Open())
+            {
+                conn.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
+            }
+
+            var geometryDrawings = group.Children.OfType<global::Avalonia.Media.GeometryDrawing>().ToList();
+            Assert.That(geometryDrawings.Count, Is.GreaterThanOrEqualTo(2));
+
+            var chevronDrawing = geometryDrawings.Last();
+            Assert.That(chevronDrawing.Brush, Is.Not.Null);
+
+            var solidBrush = chevronDrawing.Brush as global::Avalonia.Media.ISolidColorBrush;
+            Assert.That(solidBrush, Is.Not.Null);
+            Assert.That(solidBrush!.Color.R, Is.EqualTo(DrawingColor.DarkRed.R));
+            Assert.That(solidBrush!.Color.G, Is.EqualTo(DrawingColor.DarkRed.G));
+            Assert.That(solidBrush!.Color.B, Is.EqualTo(DrawingColor.DarkRed.B));
+        }
+        finally
+        {
+            Setup.Settings.HandDrawn = prevHandDrawn;
+        }
+    }
 }

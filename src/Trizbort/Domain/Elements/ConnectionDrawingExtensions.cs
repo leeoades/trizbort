@@ -137,7 +137,7 @@ public static class ConnectionDrawingExtensions
         Drawing.DrawChevron(
           graphics,
           lineSegment.End.ToPointF(),
-          angle * 180 / (float)Math.PI + 90,
+          angle * 180 / (float)Math.PI,
           arrowSize,
           brush,
           Settings.HandDrawn ? Sketch.Seeded(connection.Id) : null);
