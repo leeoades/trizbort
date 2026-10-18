@@ -526,13 +526,99 @@ public class DrawingAdaptersParityTests
         Assert.That(chevronDrawing.Brush, Is.Not.Null);
         Assert.That(chevronDrawing.Geometry, Is.Not.Null);
 
-        var endPoint = new AvaloniaPoint(x2, y2);
-        var expectedChevron = DrawingAdapters.CreateChevronGeometry(endPoint, expectedAngleDeg, 8.0, conn.Id, false);
+        var midPoint = new AvaloniaPoint((x1 + x2) / 2.0, (y1 + y2) / 2.0);
+        var expectedChevron = DrawingAdapters.CreateChevronGeometry(midPoint, expectedAngleDeg, Setup.Settings.ConnectionArrowSize, conn.Id, false);
 
         Assert.That(chevronDrawing.Geometry!.Bounds.Left, Is.EqualTo(expectedChevron.Bounds.Left).Within(0.01));
         Assert.That(chevronDrawing.Geometry!.Bounds.Right, Is.EqualTo(expectedChevron.Bounds.Right).Within(0.01));
         Assert.That(chevronDrawing.Geometry!.Bounds.Top, Is.EqualTo(expectedChevron.Bounds.Top).Within(0.01));
         Assert.That(chevronDrawing.Geometry!.Bounds.Bottom, Is.EqualTo(expectedChevron.Bounds.Bottom).Within(0.01));
+    }
+
+    [AvaloniaTest]
+    public void ConnectionDrawing_OneWayChevron_RespectsCustomArrowSize()
+    {
+        var prevArrowSize = Setup.Settings.ConnectionArrowSize;
+        Setup.Settings.ConnectionArrowSize = 24.0f;
+        try
+        {
+            var project = new Project();
+            var conn = new Connection(project, new Vertex(new CoreVector(0, 0)), new Vertex(new CoreVector(100, 0)))
+            {
+                Flow = ConnectionFlow.OneWay
+            };
+
+            var group = new global::Avalonia.Media.DrawingGroup();
+            using (var ctx = group.Open())
+            {
+                conn.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
+            }
+
+            var geometryDrawings = group.Children.OfType<global::Avalonia.Media.GeometryDrawing>().ToList();
+            var chevronDrawing = geometryDrawings.Last();
+            var midPoint = new AvaloniaPoint(50, 0);
+            var expectedChevron = DrawingAdapters.CreateChevronGeometry(midPoint, 0, 24.0, conn.Id, false);
+
+            Assert.That(chevronDrawing.Geometry!.Bounds.Width, Is.EqualTo(expectedChevron.Bounds.Width).Within(0.01));
+            Assert.That(chevronDrawing.Geometry!.Bounds.Height, Is.EqualTo(expectedChevron.Bounds.Height).Within(0.01));
+        }
+        finally
+        {
+            Setup.Settings.ConnectionArrowSize = prevArrowSize;
+        }
+    }
+
+    [AvaloniaTest]
+    public void ConnectionDrawing_OneWayChevron_ShortSegment_NoChevron()
+    {
+        var project = new Project();
+        // Segment length 8 is smaller than default ConnectionArrowSize 12
+        var conn = new Connection(project, new Vertex(new CoreVector(0, 0)), new Vertex(new CoreVector(8, 0)))
+        {
+            Flow = ConnectionFlow.OneWay
+        };
+
+        var group = new global::Avalonia.Media.DrawingGroup();
+        using (var ctx = group.Open())
+        {
+            conn.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
+        }
+
+        // Only line should be drawn, no chevron drawing with brush
+        var chevronDrawings = group.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
+        Assert.That(chevronDrawings.Count, Is.EqualTo(0));
+    }
+
+    [AvaloniaTest]
+    public void ConnectionDrawing_OneWayChevron_Curved_OneChevronPerSpan()
+    {
+        var project = new Project();
+        var conn = new Connection(project, new Vertex(new CoreVector(0, 0)), new Vertex(new CoreVector(200, 0)))
+        {
+            Flow = ConnectionFlow.OneWay,
+            Style = ConnectionStyle.Solid
+        };
+        conn.SetCurveWaypoint(0, new CoreVector(100, 50)); // Middle waypoint bends the curve
+
+        var group = new global::Avalonia.Media.DrawingGroup();
+        using (var ctx = group.Open())
+        {
+            conn.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
+        }
+
+        var chevronDrawings = group.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
+        conn.GetCurvedSegments(out var spans);
+        Assert.That(spans.Count, Is.GreaterThanOrEqualTo(1));
+        Assert.That(chevronDrawings.Count, Is.EqualTo(spans.Count));
+
+        for (var i = 0; i < spans.Count; i++)
+        {
+            var mid = CurveGeometry.PolylineMidpoint(spans[i], out var dir);
+            var expectedChevron = DrawingAdapters.CreateChevronGeometry(mid.ToAvaloniaPoint(), Math.Atan2(dir.Y, dir.X) * 180.0 / Math.PI, Setup.Settings.ConnectionArrowSize, conn.Id, false);
+
+            Assert.That(chevronDrawings[i].Geometry!.Bounds.Left, Is.EqualTo(expectedChevron.Bounds.Left).Within(0.1));
+            Assert.That(chevronDrawings[i].Geometry!.Bounds.Top, Is.EqualTo(expectedChevron.Bounds.Top).Within(0.1));
+        }
     }
 
     [AvaloniaTest]
@@ -555,10 +641,10 @@ public class DrawingAdaptersParityTests
                 conn.DrawConnection(ctx, isSelected: false, isHover: false, linesDrawn: null);
             }
 
-            var geometryDrawings = group.Children.OfType<global::Avalonia.Media.GeometryDrawing>().ToList();
-            Assert.That(geometryDrawings.Count, Is.GreaterThanOrEqualTo(2));
+            var chevronDrawings = group.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
+            Assert.That(chevronDrawings.Count, Is.GreaterThanOrEqualTo(1));
 
-            var chevronDrawing = geometryDrawings.Last();
+            var chevronDrawing = chevronDrawings.Last();
             Assert.That(chevronDrawing.Brush, Is.Not.Null);
 
             var solidBrush = chevronDrawing.Brush as global::Avalonia.Media.ISolidColorBrush;
@@ -570,6 +656,107 @@ public class DrawingAdaptersParityTests
         finally
         {
             Setup.Settings.HandDrawn = prevHandDrawn;
+        }
+    }
+
+    [AvaloniaTest]
+    public void ConnectionDrawing_DockedRooms_PixelProbe_VisibleAndClearOfRoomBorder()
+    {
+        var prevProj = Project.Current;
+        var prevHandDrawn = Setup.Settings.HandDrawn;
+        Setup.Settings.HandDrawn = false;
+        try
+        {
+            var project = new Project();
+            Project.Current = project;
+
+            // Room A at (0, 0, 96, 64)
+            var roomA = new Room(project)
+            {
+                Position = new CoreVector(0, 0),
+                Size = new CoreVector(96, 64),
+                Name = "Room A"
+            };
+            project.Elements.Add(roomA);
+
+            // Room B at (240, 0, 96, 64)
+            var roomB = new Room(project)
+            {
+                Position = new CoreVector(240, 0),
+                Size = new CoreVector(96, 64),
+                Name = "Room B"
+            };
+            project.Elements.Add(roomB);
+
+            // Connection A(East) -> B(West)
+            var portA = roomA.PortAt(CompassPoint.East);
+            var portB = roomB.PortAt(CompassPoint.West);
+
+            var conn = new Connection(project, new Vertex(portA), new Vertex(portB))
+            {
+                Flow = ConnectionFlow.OneWay,
+                ConnectionColor = DrawingColor.Red
+            };
+            project.Elements.Add(conn);
+
+            // Test rendering through MapCanvasControl at Zoom 1.0
+            var canvas = new Controls.MapCanvasControl
+            {
+                Width = 400,
+                Height = 300,
+                Origin = new CoreVector(168, 32), // midpoint of line is at (168, 32)
+                ZoomFactor = 1.0f
+            };
+
+            var window = new global::Avalonia.Controls.Window { Width = 400, Height = 300, Content = canvas };
+            window.Show();
+
+            try
+            {
+                window.Measure(new Size(400, 300));
+                window.Arrange(new global::Avalonia.Rect(0, 0, 400, 300));
+                canvas.Measure(new Size(400, 300));
+                canvas.Arrange(new global::Avalonia.Rect(0, 0, 400, 300));
+
+                using var bmp = new global::Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize(400, 300));
+                bmp.Render(canvas);
+
+                // World midpoint (168, 32) maps to client center (200, 150)
+                var centerScreen = canvas.CanvasToClient(new CoreVector(168, 32));
+                Assert.That(centerScreen.X, Is.EqualTo(200).Within(0.01));
+                Assert.That(centerScreen.Y, Is.EqualTo(150).Within(0.01));
+
+                // The mid segment (112->168 and 168->224) has arrows at (140, 32) and (196, 32).
+                // Let's probe the arrow at world (140, 32) -> screen (172, 150)
+                var arrowScreen1 = canvas.CanvasToClient(new CoreVector(140, 32));
+                var (b1, g1, r1, a1) = ReadPixel(bmp, (int)arrowScreen1.X, (int)arrowScreen1.Y);
+                Assert.That(r1, Is.GreaterThan(180), "Arrow pixel at world (140, 32) should be drawn with red color");
+                Assert.That(g1, Is.LessThan(60));
+                Assert.That(b1, Is.LessThan(60));
+
+                // Probe at world (196, 32) -> screen (228, 150)
+                var arrowScreen2 = canvas.CanvasToClient(new CoreVector(196, 32));
+                var (b2, g2, r2, a2) = ReadPixel(bmp, (int)arrowScreen2.X, (int)arrowScreen2.Y);
+                Assert.That(r2, Is.GreaterThan(180), "Arrow pixel at world (196, 32) should be drawn with red color");
+                Assert.That(g2, Is.LessThan(60));
+                Assert.That(b2, Is.LessThan(60));
+
+                // Probe at zoom 0.5f to ensure visibility at zoom < 1
+                canvas.ZoomFactor = 0.5f;
+                bmp.Render(canvas);
+                var arrowScreenZoomed = canvas.CanvasToClient(new CoreVector(140, 32));
+                var (bz, gz, rz, az) = ReadPixel(bmp, (int)arrowScreenZoomed.X, (int)arrowScreenZoomed.Y);
+                Assert.That(rz, Is.GreaterThan(180), "Arrow pixel at zoom 0.5 should still be distinctly visible");
+            }
+            finally
+            {
+                window.Close();
+            }
+        }
+        finally
+        {
+            Setup.Settings.HandDrawn = prevHandDrawn;
+            Project.Current = prevProj;
         }
     }
 }

@@ -93,13 +93,28 @@ public static class ConnectionDrawingExtensions
     var brush = palette.Brush(
       connection.ConnectionColor != Color.Transparent ? connection.ConnectionColor : Settings.Color[Colors.Line]);
 
+    var curved = connection.HasCurveWaypoints;
+    var handDrawn = Settings.HandDrawn;
+    var chevrons = new List<(Vector position, Vector direction)>();
+    var sketched = new List<PointF[]>();
+
     if (!ApplicationSettingsController.AppSettings.DebugDisableLineRendering)
     {
-      if (connection.HasCurveWaypoints)
+      if (curved)
       {
         var path = palette.Path();
         path.AddLines(connection.GetSegments().Select(segment => segment.Start.ToPointF()).ToArray());
         graphics.DrawPath(pen, path);
+
+        if (connection.Flow == ConnectionFlow.OneWay)
+        {
+          connection.GetCurvedSegments(out var spans);
+          foreach (var span in spans)
+          {
+            var mid = CurveGeometry.PolylineMidpoint(span, out var direction);
+            if (direction != Vector.Zero) chevrons.Add((mid, direction));
+          }
+        }
       }
       else
       {
@@ -117,7 +132,11 @@ public static class ConnectionDrawingExtensions
             }
 
           if (!customDraw)
-            DrawSmartLine(connection, graphics, palette, context, lineSegment, pen);
+            DrawSmartLine(connection, graphics, palette, context, lineSegment, pen, sketched);
+
+          var delta = lineSegment.Delta;
+          if (connection.Flow == ConnectionFlow.OneWay && delta.Length > Settings.ConnectionArrowSize)
+            chevrons.Add((lineSegment.Mid, delta));
         }
       }
 
@@ -129,18 +148,38 @@ public static class ConnectionDrawingExtensions
         foreach (var lineSegment in lineSegments)
           graphics.DrawLine(palette.HoverLinePen, lineSegment.Start.ToPointF(), lineSegment.End.ToPointF());
 
-      if (connection.Flow == ConnectionFlow.OneWay && lineSegments.Count > 0)
+      if (chevrons.Count > 0)
       {
-        var lineSegment = lineSegments[lineSegments.Count - 1];
-        var angle = (float)Math.Atan2(lineSegment.Delta.Y, lineSegment.Delta.X);
-        var arrowSize = (float)Math.Max(8.0, 2.0 * Settings.LineWidth);
-        Drawing.DrawChevron(
-          graphics,
-          lineSegment.End.ToPointF(),
-          angle * 180 / (float)Math.PI,
-          arrowSize,
-          brush,
-          Settings.HandDrawn ? Sketch.Seeded(connection.Id) : null);
+        var arrowRandom = handDrawn ? Sketch.Seeded(connection.Id + 5000) : null;
+        foreach (var (position, direction) in chevrons)
+        {
+          var bestPoint = position;
+          var arrowDirection = direction;
+          if (handDrawn && sketched.Count > 0)
+          {
+            var bestDistance = float.MaxValue;
+            foreach (var stroke in sketched)
+            {
+              var point = Sketch.Nearest(stroke.Select(p => new Vector(p.X, p.Y)).ToArray(), position, out var strokeDirection);
+              var distance = (point.X - position.X) * (point.X - position.X) + (point.Y - position.Y) * (point.Y - position.Y);
+              if (distance >= bestDistance) continue;
+              bestDistance = distance;
+              bestPoint = point;
+              var sign = strokeDirection.X * direction.X + strokeDirection.Y * direction.Y >= 0 ? 1 : -1;
+              arrowDirection = new Vector(strokeDirection.X * sign, strokeDirection.Y * sign);
+            }
+          }
+
+          if (arrowDirection == Vector.Zero) arrowDirection = direction;
+          var angle = (float)Math.Atan2(arrowDirection.Y, arrowDirection.X);
+          Drawing.DrawChevron(
+            graphics,
+            bestPoint.ToPointF(),
+            angle * 180 / (float)Math.PI,
+            Settings.ConnectionArrowSize,
+            brush,
+            arrowRandom);
+        }
       }
 
       if (connection.Door != null && lineSegments.Count > 0)
@@ -159,11 +198,14 @@ public static class ConnectionDrawingExtensions
     Palette palette,
     DrawingContext context,
     LineSegment lineSegment,
-    Pen pen)
+    Pen pen,
+    List<PointF[]> sketched)
   {
     if (Settings.HandDrawn)
     {
       var path = palette.Path();
+      var stroke = Sketch.Line(lineSegment.Start, lineSegment.End, Sketch.Seeded(connection.Id)).ToPointFArray();
+      sketched?.Add(stroke);
       Drawing.AddLine(path, lineSegment, Sketch.Seeded(connection.Id), false);
       graphics.DrawPath(pen, path);
     }

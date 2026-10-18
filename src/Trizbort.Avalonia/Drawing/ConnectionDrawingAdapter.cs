@@ -203,10 +203,13 @@ public static class ConnectionDrawingAdapter
         var handDrawn = Settings.HandDrawn;
         var seed = connection.Id;
         var cache = _connectionCaches.GetOrCreateValue(connection);
+        var curved = connection.HasCurveWaypoints;
+        var chevrons = new List<(CoreVector position, CoreVector direction)>();
+        var sketched = new List<IReadOnlyList<CoreVector>>();
 
         // 1. Draw Connection Line / Path
         var activeSegments = new List<CoreLineSegment>();
-        if (connection.HasCurveWaypoints)
+        if (curved)
         {
             var segments = connection.GetSegments();
             if (segments != null && segments.Count > 0)
@@ -219,21 +222,53 @@ public static class ConnectionDrawingAdapter
                 }
                 points.Add(segments[^1].End);
 
-                var curveGeo = handDrawn
-                    ? DrawingAdapters.ToPolylineGeometry(Sketch.Polyline(points, Sketch.Seeded(seed)))
-                    : DrawingAdapters.ToPolylineGeometry(points);
-
-                context.DrawGeometry(null, pen, curveGeo);
-
-                if (isSelected)
+                if (handDrawn)
                 {
-                    var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(Settings.LineWidth + 1.5);
-                    context.DrawGeometry(null, selPen, curveGeo);
+                    var polyline = Sketch.Polyline(points, Sketch.Seeded(seed));
+                    sketched.Add(polyline);
+                    var curveGeo = DrawingAdapters.ToPolylineGeometry(polyline);
+                    context.DrawGeometry(null, pen, curveGeo);
+
+                    if (isSelected)
+                    {
+                        var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(Settings.LineWidth + 1.5);
+                        context.DrawGeometry(null, selPen, curveGeo);
+                    }
+                    else if (isHover)
+                    {
+                        var hoverPen = Settings.Color[CoreColors.HoverLine].ToPen(Settings.LineWidth + 1.0);
+                        context.DrawGeometry(null, hoverPen, curveGeo);
+                    }
                 }
-                else if (isHover)
+                else
                 {
-                    var hoverPen = Settings.Color[CoreColors.HoverLine].ToPen(Settings.LineWidth + 1.0);
-                    context.DrawGeometry(null, hoverPen, curveGeo);
+                    var curveGeo = DrawingAdapters.ToPolylineGeometry(points);
+                    context.DrawGeometry(null, pen, curveGeo);
+
+                    if (isSelected)
+                    {
+                        var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(Settings.LineWidth + 1.5);
+                        context.DrawGeometry(null, selPen, curveGeo);
+                    }
+                    else if (isHover)
+                    {
+                        var hoverPen = Settings.Color[CoreColors.HoverLine].ToPen(Settings.LineWidth + 1.0);
+                        context.DrawGeometry(null, hoverPen, curveGeo);
+                    }
+                }
+            }
+
+            if (connection.Flow == ConnectionFlow.OneWay)
+            {
+                // one arrow per curve span, rather than one per flattened line segment
+                connection.GetCurvedSegments(out var spans);
+                foreach (var span in spans)
+                {
+                    var mid = CurveGeometry.PolylineMidpoint(span, out var direction);
+                    if (direction != CoreVector.Zero)
+                    {
+                        chevrons.Add((mid, direction));
+                    }
                 }
             }
         }
@@ -284,8 +319,9 @@ public static class ConnectionDrawingAdapter
             {
                 if (handDrawn)
                 {
-                    var sketched = Sketch.Line(seg.Start, seg.End, Sketch.Seeded(seed));
-                    var lineGeo = DrawingAdapters.ToPolylineGeometry(sketched);
+                    var stroke = Sketch.Line(seg.Start, seg.End, Sketch.Seeded(seed));
+                    sketched.Add(stroke);
+                    var lineGeo = DrawingAdapters.ToPolylineGeometry(stroke);
                     context.DrawGeometry(null, pen, lineGeo);
 
                     if (isSelected)
@@ -316,17 +352,56 @@ public static class ConnectionDrawingAdapter
                         context.DrawLine(hoverPen, p1, p2);
                     }
                 }
+
+                var delta = seg.Delta;
+                if (connection.Flow == ConnectionFlow.OneWay && delta.Length > Settings.ConnectionArrowSize)
+                {
+                    chevrons.Add((seg.Mid, delta));
+                }
             }
         }
 
-        // 2. Draw Directional Chevron (One-Way Flow)
-        if (connection.Flow == ConnectionFlow.OneWay && activeSegments.Count > 0)
+        // 2. Draw Directional Chevrons (One-Way Flow)
+        if (chevrons.Count > 0)
         {
-            var lastSegment = activeSegments[^1];
-            var angleRad = Math.Atan2(lastSegment.Delta.Y, lastSegment.Delta.X);
-            var angleDeg = angleRad * 180.0 / Math.PI;
-            var arrowSize = Math.Max(8.0, 2.0 * Settings.LineWidth);
-            DrawingAdapters.DrawChevron(context, lastSegment.End.ToAvaloniaPoint(), angleDeg, arrowSize, brush, seed, handDrawn);
+            var arrowSize = (double)Settings.ConnectionArrowSize;
+            if (handDrawn && sketched.Count > 0)
+            {
+                var arrowRandom = Sketch.Seeded(seed + 5000);
+                foreach (var (position, direction) in chevrons)
+                {
+                    var target = position;
+                    var bestPoint = target;
+                    var arrowDirection = direction;
+                    var bestDistance = double.MaxValue;
+
+                    foreach (var stroke in sketched)
+                    {
+                        var point = Sketch.Nearest(stroke, target, out var strokeDirection);
+                        var distance = (point.X - target.X) * (point.X - target.X) + (point.Y - target.Y) * (point.Y - target.Y);
+                        if (distance >= bestDistance) continue;
+                        bestDistance = distance;
+                        bestPoint = point;
+
+                        var sign = strokeDirection.X * direction.X + strokeDirection.Y * direction.Y >= 0 ? 1 : -1;
+                        arrowDirection = new CoreVector(strokeDirection.X * sign, strokeDirection.Y * sign);
+                    }
+
+                    if (arrowDirection == CoreVector.Zero) arrowDirection = direction;
+                    var angleRad = Math.Atan2(arrowDirection.Y, arrowDirection.X);
+                    var angleDeg = angleRad * 180.0 / Math.PI;
+                    DrawingAdapters.DrawChevron(context, bestPoint.ToAvaloniaPoint(), angleDeg, arrowSize, brush, seed + 5000, true);
+                }
+            }
+            else
+            {
+                foreach (var (position, direction) in chevrons)
+                {
+                    var angleRad = Math.Atan2(direction.Y, direction.X);
+                    var angleDeg = angleRad * 180.0 / Math.PI;
+                    DrawingAdapters.DrawChevron(context, position.ToAvaloniaPoint(), angleDeg, arrowSize, brush, seed, false);
+                }
+            }
         }
 
         // 3. Draw Door / Lock Icons
