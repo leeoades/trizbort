@@ -172,6 +172,8 @@ public class MapCanvasControl : Control
         }
     }
 
+    public event EventHandler? ViewChanged;
+
     public MapCanvasControl()
     {
         ClipToBounds = true;
@@ -182,6 +184,7 @@ public class MapCanvasControl : Control
     {
         InvalidationCount++;
         base.InvalidateVisual();
+        ViewChanged?.Invoke(this, EventArgs.Empty);
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
