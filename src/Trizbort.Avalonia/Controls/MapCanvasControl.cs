@@ -1638,8 +1638,8 @@ public class MapCanvasControl : Control
             DrawElements(
                 context,
                 _visibleElements,
-                elem => _selectedSet.Contains(elem),
-                elem => elem == _hoverElement,
+                _selectedSet,
+                _hoverElement,
                 _spatialLines,
                 _spatialVersion);
 
@@ -1791,25 +1791,22 @@ public class MapCanvasControl : Control
     /// </summary>
     public static void DrawElements(
         AvaloniaDrawingContext context,
-        IEnumerable<Element> elements,
-        Func<Element, bool>? isSelected = null,
-        Func<Element, bool>? isHover = null,
+        IReadOnlyList<Element> elements,
+        HashSet<Element>? selectedSet = null,
+        Element? hoverElement = null,
         SpatialLineIndex? spatialLines = null,
         int spatialVersion = 1)
     {
-        var sorted = elements.ToList();
-        sorted.Sort();
-
         if (spatialLines == null)
         {
             spatialLines = new SpatialLineIndex();
-            ConnectionDrawingAdapter.RebuildSpatialIndex(sorted, spatialLines, spatialVersion);
+            ConnectionDrawingAdapter.RebuildSpatialIndex(elements, spatialLines, spatialVersion);
         }
 
-        foreach (var element in sorted)
+        foreach (var element in elements)
         {
-            var selected = isSelected?.Invoke(element) ?? false;
-            var hover = isHover?.Invoke(element) ?? false;
+            var selected = selectedSet?.Contains(element) ?? false;
+            var hover = element == hoverElement;
 
             if (element is Room room)
             {
@@ -1852,7 +1849,9 @@ public class MapCanvasControl : Control
 
         using (context.PushTransform(transformMatrix))
         {
-            DrawElements(context, project.Elements);
+            var sorted = project.Elements.ToList();
+            sorted.Sort();
+            DrawElements(context, sorted);
         }
     }
 

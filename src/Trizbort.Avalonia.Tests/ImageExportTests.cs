@@ -126,7 +126,7 @@ public class ImageExportTests
     {
         var room = new Room(Project.Current)
         {
-            Name = "Dungeon",
+            Name = "", // Empty name for font independence
             Position = new CoreVector(0, 0),
             Size = new CoreVector(100, 100),
             RoomFillColor = DrawingColor.Red,
@@ -140,8 +140,11 @@ public class ImageExportTests
         var width = bitmap.PixelSize.Width;
         var height = bitmap.PixelSize.Height;
 
-        // Center pixel corresponds to the room's interior (Red)
-        var centerPixel = ReadPixel(bitmap, width / 2, height / 2);
+        // Sample interior point, away from the center which might be affected by text centering
+        var x = width / 2 + 10;
+        var y = height / 2 + 10;
+        
+        var centerPixel = ReadPixel(bitmap, x, y);
         centerPixel.R.ShouldBeGreaterThan((byte)200);
         centerPixel.G.ShouldBeLessThan((byte)50);
         centerPixel.B.ShouldBeLessThan((byte)50);
