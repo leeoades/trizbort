@@ -33,7 +33,7 @@
 
                             <TextBlock Grid.Row="4" Grid.Column="0" Text="Reference Room:" VerticalAlignment="Center" />
                             <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding AvailableReferenceRooms}"
-                                      SelectedItem="{Binding ReferenceRoomName}" HorizontalAlignment="Stretch" Margin="0,2" />
+                                      SelectedItem="{Binding SelectedReferenceRoom}" HorizontalAlignment="Stretch" Margin="0,2" />
                         </Grid>
 
                         <Separator Margin="0,4" />

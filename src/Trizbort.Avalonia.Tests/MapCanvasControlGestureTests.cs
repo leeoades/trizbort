@@ -117,6 +117,35 @@ public class MapCanvasControlGestureTests
     }
 
     [AvaloniaTest]
+    public void RightDrag_IncrementalSlowMove_DoesNotOpenMenu()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var start = new Point(200, 200);
+            
+            window.MouseDown(start, MouseButton.Right);
+            
+            // Perform several small moves (1px) to simulate slow pan. 
+            // Total displacement 5px > 2px threshold.
+            for (int i = 0; i < 5; i++)
+            {
+                window.MouseMove(new Point(start.X + i, start.Y));
+            }
+            
+            window.MouseUp(new Point(start.X + 5, start.Y), MouseButton.Right);
+            
+            // Should have panned (so origin moved)
+            service.Origin.X.ShouldNotBe(0f);
+            canvas.DragMode.ShouldBe(CanvasDragMode.None);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
     public void MarqueeSelection_SelectsIntersectingElements()
     {
         var (window, canvas, service) = CreateTestHarness();

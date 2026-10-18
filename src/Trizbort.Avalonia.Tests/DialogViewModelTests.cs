@@ -75,6 +75,34 @@ public class DialogViewModelTests
     }
 
     [Test]
+    public void RoomPropertiesViewModel_ReferenceRoomById_HandlesDuplicateNames()
+    {
+        var room1 = new Room(Project.Current) { Name = "Cave", Id = 1 };
+        var room2 = new Room(Project.Current) { Name = "Cave", Id = 2 };
+        var target = new Room(Project.Current) { Name = "Target", Id = 3 };
+        
+        Project.Current.Elements.Add(room1);
+        Project.Current.Elements.Add(room2);
+        Project.Current.Elements.Add(target);
+
+        // Target references room1 (Cave)
+        target.ReferenceRoomId = room1.Id;
+        
+        var vm = new RoomPropertiesViewModel();
+        vm.Initialize(target);
+
+        // Selected reference should be Cave (room1)
+        vm.SelectedReferenceRoom.ShouldNotBeNull();
+        vm.SelectedReferenceRoom.Id.ShouldBe(room1.Id);
+        vm.SelectedReferenceRoom.Name.ShouldBe("Cave");
+
+        // Apply back (simulate no changes)
+        vm.ApplyTo(target);
+        
+        target.ReferenceRoomId.ShouldBe(room1.Id);
+    }
+
+    [Test]
     public void RoomPropertiesViewModel_InitializeAndApplyTo_RoundTripsValuesCorrectly()
     {
         var room = new Room(Project.Current)

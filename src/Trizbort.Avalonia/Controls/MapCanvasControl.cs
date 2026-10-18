@@ -14,7 +14,6 @@ using Trizbort.Avalonia.Services;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
-using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using CoreRect = Trizbort.Domain.Misc.Rect;
@@ -86,8 +85,8 @@ public class MapCanvasControl : Control
     private bool _isSecondaryButtonRelease;
     private MouseButton? _gestureButton;
     private bool _panMoved;
+    private Point _panLastClient;
     private CoreVector _lastRightClickWorldPos;
-    private Point _lastRightClickClientPos;
     private Connection? _dragNewConnection;
     private Port? _dragMovePortOriginalPort;
     private CoreVector _dragMovePortOriginalPosition;
@@ -721,13 +720,13 @@ public class MapCanvasControl : Control
         {
             _panMoved = false;
             _lastRightClickWorldPos = worldPos;
-            _lastRightClickClientPos = clientPos;
         }
 
         if (isMiddle || isRight || (isLeft && _isSpaceKeyDown))
         {
             _dragMode = CanvasDragMode.Pan;
             _panStartClient = clientPos;
+            _panLastClient = clientPos;
             e.Pointer.Capture(this);
             UpdateCursor();
             e.Handled = true;
@@ -880,12 +879,17 @@ public class MapCanvasControl : Control
         switch (_dragMode)
         {
             case CanvasDragMode.Pan:
-                var deltaScreen = clientPos - _panStartClient;
-                if (Math.Abs(deltaScreen.X) > 2 || Math.Abs(deltaScreen.Y) > 2)
+                if (!_panMoved)
                 {
-                    _panMoved = true;
+                    var deltaFromStart = clientPos - _panStartClient;
+                    if (Math.Abs(deltaFromStart.X) > 2 || Math.Abs(deltaFromStart.Y) > 2)
+                    {
+                        _panMoved = true;
+                    }
                 }
-                _panStartClient = clientPos;
+
+                var deltaScreen = clientPos - _panLastClient;
+                _panLastClient = clientPos;
                 Origin = new CoreVector((float)(Origin.X - deltaScreen.X / ZoomFactor), (float)(Origin.Y - deltaScreen.Y / ZoomFactor));
                 e.Handled = true;
                 break;
@@ -1027,7 +1031,6 @@ public class MapCanvasControl : Control
         var wasPan = _dragMode == CanvasDragMode.Pan;
         var wasRight = releasedButton == MouseButton.Right;
         var panMoved = _panMoved;
-        var rightClient = _lastRightClickClientPos;
         var rightWorld = _lastRightClickWorldPos;
 
         EndDrag(e.KeyModifiers, cancelled: false);
@@ -1035,7 +1038,7 @@ public class MapCanvasControl : Control
 
         if (wasPan && wasRight && !panMoved)
         {
-            ShowContextMenuAt(rightClient, rightWorld);
+            ShowContextMenuAt(rightWorld);
             e.Handled = true;
         }
     }
@@ -1416,7 +1419,7 @@ public class MapCanvasControl : Control
         }
     }
 
-    private void ShowContextMenuAt(Point clientPos, CoreVector worldPos)
+    private void ShowContextMenuAt(CoreVector worldPos)
     {
         var hitElem = HitTestElement(worldPos);
         if (hitElem != null && !_selectedSet.Contains(hitElem))

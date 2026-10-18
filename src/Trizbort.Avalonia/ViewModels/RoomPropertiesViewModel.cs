@@ -13,6 +13,8 @@ using Region = Trizbort.Domain.Misc.Region;
 
 namespace Trizbort.Avalonia.ViewModels;
 
+public record RoomReferenceItem(int Id, string Name) { public override string ToString() => Name; }
+
 public partial class RoomPropertiesViewModel : ViewModelBase
 {
     [ObservableProperty]
@@ -88,10 +90,10 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     private string _secondFillLocation = "Bottom";
 
     [ObservableProperty]
-    private string _referenceRoomName = string.Empty;
+    private RoomReferenceItem? _selectedReferenceRoom;
 
     public ObservableCollection<string> AvailableRegions { get; } = [];
-    public ObservableCollection<string> AvailableReferenceRooms { get; } = [];
+    public ObservableCollection<RoomReferenceItem> AvailableReferenceRooms { get; } = [];
     public IReadOnlyList<RoomShape> AvailableShapes { get; } = [
         RoomShape.SquareCorners,
         RoomShape.RoundedCorners,
@@ -189,13 +191,14 @@ public partial class RoomPropertiesViewModel : ViewModelBase
             : (AvailableRegions.FirstOrDefault() ?? Region.DefaultRegion);
 
         AvailableReferenceRooms.Clear();
-        AvailableReferenceRooms.Add(string.Empty);
+        AvailableReferenceRooms.Add(new RoomReferenceItem(-1, string.Empty));
         foreach (var r in Project.Current.Elements.OfType<Room>().Where(p => p.Id != room.Id).OrderBy(p => p.Name))
         {
-            AvailableReferenceRooms.Add(r.Name);
+            AvailableReferenceRooms.Add(new RoomReferenceItem(r.Id, r.Name));
         }
 
-        ReferenceRoomName = room.ReferenceRoom?.Name ?? string.Empty;
+        SelectedReferenceRoom = AvailableReferenceRooms.FirstOrDefault(x => x.Id == room.ReferenceRoomId) 
+                                ?? AvailableReferenceRooms.First();
     }
 
     public void ApplyTo(Room room)
@@ -234,10 +237,9 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         room.SecondFillColor = SecondFillColor;
         room.SecondFillLocation = SecondFillLocation;
 
-        if (!string.IsNullOrEmpty(ReferenceRoomName))
+        if (SelectedReferenceRoom != null && SelectedReferenceRoom.Id != -1)
         {
-            var refRoom = Project.Current?.Elements?.OfType<Room>().FirstOrDefault(p => p.Name == ReferenceRoomName);
-            room.ReferenceRoomId = refRoom?.Id ?? -1;
+            room.ReferenceRoomId = SelectedReferenceRoom.Id;
         }
         else
         {
