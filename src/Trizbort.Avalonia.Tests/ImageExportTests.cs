@@ -17,6 +17,7 @@ using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
+using DrawingColor = System.Drawing.Color;
 using CoreRect = Trizbort.Domain.Misc.Rect;
 using CoreVector = Trizbort.Domain.Misc.Vector;
 
@@ -127,36 +128,31 @@ public class ImageExportTests
         {
             Name = "Dungeon",
             Position = new CoreVector(0, 0),
-            Size = new CoreVector(100, 100)
+            Size = new CoreVector(100, 100),
+            RoomFillColor = DrawingColor.Red,
+            RoomBorderColor = DrawingColor.Red
         };
         Project.Current.Elements.Add(room);
 
         using var bitmap = MapCanvasControl.RenderToBitmap(Project.Current, scale: 1.0);
         bitmap.ShouldNotBeNull();
 
-        // Convert to WriteableBitmap to inspect frame pixels
         var width = bitmap.PixelSize.Width;
         var height = bitmap.PixelSize.Height;
-        var writeable = new WriteableBitmap(
-            bitmap.PixelSize,
-            bitmap.Dpi,
-            global::Avalonia.Platform.PixelFormat.Bgra8888,
-            global::Avalonia.Platform.AlphaFormat.Premul);
 
-        using (var ms = new MemoryStream())
-        {
-            bitmap.Save(ms);
-            ms.Position = 0;
-            using var decoded = new Bitmap(ms);
-            using var fb = writeable.Lock();
-            fb.Size.Width.ShouldBe(width);
-            fb.Size.Height.ShouldBe(height);
+        // Center pixel corresponds to the room's interior (Red)
+        var centerPixel = ReadPixel(bitmap, width / 2, height / 2);
+        centerPixel.R.ShouldBeGreaterThan((byte)200);
+        centerPixel.G.ShouldBeLessThan((byte)50);
+        centerPixel.B.ShouldBeLessThan((byte)50);
+        centerPixel.A.ShouldBe((byte)255);
 
-            // Copy decoded bitmap bytes and verify non-empty pixel buffer
-            var pixelBuffer = new byte[fb.RowBytes * fb.Size.Height];
-            Marshal.Copy(fb.Address, pixelBuffer, 0, pixelBuffer.Length);
-            pixelBuffer.Length.ShouldBeGreaterThan(0);
-        }
+        // Corner pixel is canvas background padding (White)
+        var cornerPixel = ReadPixel(bitmap, 2, 2);
+        cornerPixel.R.ShouldBe((byte)255);
+        cornerPixel.G.ShouldBe((byte)255);
+        cornerPixel.B.ShouldBe((byte)255);
+        cornerPixel.A.ShouldBe((byte)255);
 
         // Verify bitmap stream contains non-zero payload
         using var stream = new MemoryStream();
@@ -165,29 +161,82 @@ public class ImageExportTests
     }
 
     [AvaloniaTest]
-    public void RenderToBitmap_DoesNotMutateCanvasOriginOrZoom()
+    public void RenderToBitmap_LargeMap_FitsWithin8192WithoutCroppingExtremities()
     {
-        var canvas = new MapCanvasControl
+        // Place two rooms 20,000 units apart
+        var room1 = new Room(Project.Current)
         {
-            Origin = new CoreVector(450, 350),
-            ZoomFactor = 2.5f
+            Name = "Northwest Outpost",
+            Position = new CoreVector(-10000, -10000),
+            Size = new CoreVector(100, 100),
+            RoomFillColor = DrawingColor.Red,
+            RoomBorderColor = DrawingColor.Red
         };
-
-        var room = new Room(Project.Current)
+        var room2 = new Room(Project.Current)
         {
-            Name = "Laboratory",
-            Position = new CoreVector(10, 20),
-            Size = new CoreVector(80, 50)
+            Name = "Southeast Outpost",
+            Position = new CoreVector(10000, 10000),
+            Size = new CoreVector(100, 100),
+            RoomFillColor = DrawingColor.Blue,
+            RoomBorderColor = DrawingColor.Blue
         };
-        Project.Current.Elements.Add(room);
+        Project.Current.Elements.Add(room1);
+        Project.Current.Elements.Add(room2);
 
         using var bitmap = MapCanvasControl.RenderToBitmap(Project.Current, scale: 1.0);
         bitmap.ShouldNotBeNull();
 
-        // Verify canvas control properties are unchanged
-        canvas.Origin.X.ShouldBe(450f);
-        canvas.Origin.Y.ShouldBe(350f);
-        canvas.ZoomFactor.ShouldBe(2.5f);
+        var width = bitmap.PixelSize.Width;
+        var height = bitmap.PixelSize.Height;
+
+        // Dimensions must be capped at 8192
+        width.ShouldBeLessThanOrEqualTo(8192);
+        height.ShouldBeLessThanOrEqualTo(8192);
+        width.ShouldBe(8192);
+        height.ShouldBe(8192);
+
+        var bounds = MinimapTransform.ComputeCanvasBounds(Project.Current.Elements, includePadding: true);
+        var effectiveScale = Math.Min((double)width / bounds.Width, (double)height / bounds.Height);
+
+        // Calculate expected pixel positions for center of each room
+        var room1Center = new CoreVector(room1.Position.X + room1.Size.X / 2f, room1.Position.Y + room1.Size.Y / 2f);
+        var room2Center = new CoreVector(room2.Position.X + room2.Size.X / 2f, room2.Position.Y + room2.Size.Y / 2f);
+
+        var px1 = (int)Math.Round((room1Center.X - bounds.Center.X) * effectiveScale + width / 2.0);
+        var py1 = (int)Math.Round((room1Center.Y - bounds.Center.Y) * effectiveScale + height / 2.0);
+
+        var px2 = (int)Math.Round((room2Center.X - bounds.Center.X) * effectiveScale + width / 2.0);
+        var py2 = (int)Math.Round((room2Center.Y - bounds.Center.Y) * effectiveScale + height / 2.0);
+
+        px1.ShouldBeGreaterThanOrEqualTo(0);
+        py1.ShouldBeGreaterThanOrEqualTo(0);
+        px2.ShouldBeLessThan(width);
+        py2.ShouldBeLessThan(height);
+
+        // Northwest room must be visible as Red
+        var pixel1 = ReadPixel(bitmap, px1, py1);
+        pixel1.R.ShouldBeGreaterThan((byte)200);
+        pixel1.B.ShouldBeLessThan((byte)50);
+
+        // Southeast room must be visible as Blue
+        var pixel2 = ReadPixel(bitmap, px2, py2);
+        pixel2.B.ShouldBeGreaterThan((byte)200);
+        pixel2.R.ShouldBeLessThan((byte)50);
+    }
+
+    private static (byte B, byte G, byte R, byte A) ReadPixel(RenderTargetBitmap bmp, int x, int y)
+    {
+        var buf = new byte[4];
+        var handle = GCHandle.Alloc(buf, GCHandleType.Pinned);
+        try
+        {
+            bmp.CopyPixels(new PixelRect(x, y, 1, 1), handle.AddrOfPinnedObject(), buf.Length, 4);
+        }
+        finally
+        {
+            handle.Free();
+        }
+        return (buf[0], buf[1], buf[2], buf[3]);
     }
 
     [Test]

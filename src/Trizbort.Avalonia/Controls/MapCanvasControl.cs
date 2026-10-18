@@ -1635,24 +1635,13 @@ public class MapCanvasControl : Control
                 _builtSpatialVersion = _spatialVersion;
             }
 
-            foreach (var element in _visibleElements)
-            {
-                var isSelected = _selectedSet.Contains(element);
-                var isHover = element == _hoverElement;
-
-                if (element is Room room)
-                {
-                    room.DrawRoom(context, isSelected, isHover);
-                }
-                else if (element is MapLabel label)
-                {
-                    label.DrawMapLabel(context, isSelected, isHover);
-                }
-                else if (element is Connection conn)
-                {
-                    conn.DrawConnection(context, isSelected, isHover, _spatialLines, _spatialVersion);
-                }
-            }
+            DrawElements(
+                context,
+                _visibleElements,
+                elem => _selectedSet.Contains(elem),
+                elem => elem == _hoverElement,
+                _spatialLines,
+                _spatialVersion);
 
             // 6. Render Active Ports
             if (_activePorts.Count > 0)
@@ -1798,6 +1787,46 @@ public class MapCanvasControl : Control
     }
 
     /// <summary>
+    /// Draws the provided elements in depth/Z-order sequence onto the given drawing context.
+    /// </summary>
+    public static void DrawElements(
+        AvaloniaDrawingContext context,
+        IEnumerable<Element> elements,
+        Func<Element, bool>? isSelected = null,
+        Func<Element, bool>? isHover = null,
+        SpatialLineIndex? spatialLines = null,
+        int spatialVersion = 1)
+    {
+        var sorted = elements.ToList();
+        sorted.Sort();
+
+        if (spatialLines == null)
+        {
+            spatialLines = new SpatialLineIndex();
+            ConnectionDrawingAdapter.RebuildSpatialIndex(sorted, spatialLines, spatialVersion);
+        }
+
+        foreach (var element in sorted)
+        {
+            var selected = isSelected?.Invoke(element) ?? false;
+            var hover = isHover?.Invoke(element) ?? false;
+
+            if (element is Room room)
+            {
+                room.DrawRoom(context, selected, hover);
+            }
+            else if (element is MapLabel label)
+            {
+                label.DrawMapLabel(context, selected, hover);
+            }
+            else if (element is Connection conn)
+            {
+                conn.DrawConnection(context, selected, hover, spatialLines, spatialVersion);
+            }
+        }
+    }
+
+    /// <summary>
     /// Renders the map to an Avalonia drawing context at the given origin and scale.
     /// </summary>
     public static void RenderMap(
@@ -1806,8 +1835,7 @@ public class MapCanvasControl : Control
         CoreVector origin,
         double zoomFactor,
         double width,
-        double height,
-        bool isExport = false)
+        double height)
     {
         if (project == null || width <= 0 || height <= 0) return;
 
@@ -1824,44 +1852,8 @@ public class MapCanvasControl : Control
 
         using (context.PushTransform(transformMatrix))
         {
-            var elements = project.Elements.ToList();
-            elements.Sort();
-
-            var spatialLines = new SpatialLineIndex();
-            ConnectionDrawingAdapter.RebuildSpatialIndex(elements, spatialLines, 1);
-
-            foreach (var element in elements)
-            {
-                if (element is Room room)
-                {
-                    room.DrawRoom(context, false, false);
-                }
-                else if (element is MapLabel label)
-                {
-                    label.DrawMapLabel(context, false, false);
-                }
-                else if (element is Connection conn)
-                {
-                    conn.DrawConnection(context, false, false, spatialLines, 1);
-                }
-            }
+            DrawElements(context, project.Elements);
         }
-    }
-
-    /// <summary>
-    /// Draws the map at a given scale and origin on a DrawingContext.
-    /// </summary>
-    public void Draw(
-        AvaloniaDrawingContext context,
-        CoreVector origin,
-        double zoomFactor,
-        double width,
-        double height,
-        bool isExport = false)
-    {
-        var project = CommandService?.Project ?? Project.Current;
-        if (project == null) return;
-        RenderMap(context, project, origin, zoomFactor, width, height, isExport);
     }
 
     /// <summary>
@@ -1875,29 +1867,30 @@ public class MapCanvasControl : Control
         var bounds = MinimapTransform.ComputeCanvasBounds(project.Elements, includePadding: true);
         if (bounds == CoreRect.Empty || bounds.Width <= 0 || bounds.Height <= 0) return null;
 
-        var effectiveScale = scale > 0 ? scale : 1.0;
-        var width = (int)Math.Ceiling(bounds.Width * effectiveScale);
-        var height = (int)Math.Ceiling(bounds.Height * effectiveScale);
+        const int maxDimension = 8192;
+        const int minDimension = 16;
 
-        width = Math.Clamp(width, 16, 16384);
-        height = Math.Clamp(height, 16, 16384);
+        var requestedScale = scale > 0 ? scale : 1.0;
+        var targetW = bounds.Width * requestedScale;
+        var targetH = bounds.Height * requestedScale;
+
+        // Scale down to fit within maxDimension if either axis exceeds it
+        var fitScale = Math.Min(1.0, Math.Min((double)maxDimension / targetW, (double)maxDimension / targetH));
+        var effectiveScale = requestedScale * fitScale;
+
+        var width = Math.Clamp((int)Math.Ceiling(bounds.Width * effectiveScale), minDimension, maxDimension);
+        var height = Math.Clamp((int)Math.Ceiling(bounds.Height * effectiveScale), minDimension, maxDimension);
+
+        // Recompute effectiveScale against actual clamped dimensions to ensure everything fits inside
+        effectiveScale = Math.Min((double)width / bounds.Width, (double)height / bounds.Height);
 
         var bitmap = new RenderTargetBitmap(new PixelSize(width, height), new AvaloniaVector(96, 96));
         using (var ctx = bitmap.CreateDrawingContext())
         {
-            RenderMap(ctx, project, bounds.Center, effectiveScale, width, height, isExport: true);
+            RenderMap(ctx, project, bounds.Center, effectiveScale, width, height);
         }
 
         return bitmap;
-    }
-
-    /// <summary>
-    /// Renders the current project map extent to a RenderTargetBitmap.
-    /// </summary>
-    public RenderTargetBitmap? ExportToBitmap(double scale = 1.0)
-    {
-        var project = CommandService?.Project ?? Project.Current;
-        return RenderToBitmap(project, scale);
     }
 
     #endregion
