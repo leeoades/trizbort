@@ -23,6 +23,17 @@ using AvaloniaDrawingContext = Avalonia.Media.DrawingContext;
 
 namespace Trizbort.Avalonia.Controls;
 
+public enum CanvasDragMode
+{
+    None,
+    Pan,
+    Marquee,
+    MoveElement,
+    MoveResizeHandle,
+    MovePort,
+    MoveWaypoint
+}
+
 public class MapCanvasControl : Control
 {
     public static readonly StyledProperty<ICommandService?> CommandServiceProperty =
@@ -48,13 +59,64 @@ public class MapCanvasControl : Control
     internal int SpatialVersion => _spatialVersion;
     internal int InvalidationCount { get; private set; }
 
+    // Interaction State Machine
+    private CanvasDragMode _dragMode = CanvasDragMode.None;
+    private Point _panStartClient;
+    private CoreVector _dragOffsetCanvas;
+    private CoreVector _dragMarqueeStart;
+    private CoreVector _dragMarqueeCurrent;
+    private CoreVector _dragResizeHandleLastPosition;
+    private ResizeHandle? _dragHandle;
+    private ResizeHandle? _hoverHandle;
+    private Port? _hoverPort;
+    private Element? _hoverElement;
+    private CurveWaypoint? _hoverWaypoint;
+    private CurveWaypoint _dragWaypoint;
+    private CoreVector _dragWaypointOffset;
+    private MoveablePort? _dragMovePort;
+    private Port? _pendingNewConnectionPort;
+    private Point _pendingNewConnectionStartClient;
+    private CoreVector _pendingNewConnectionStartWorld;
+    private bool _isSpaceKeyDown;
+    private readonly List<Port> _activePorts = new();
+    private readonly List<ResizeHandle> _activeHandles = new();
+
+    internal CanvasDragMode DragMode => _dragMode;
+    internal Element? HoverElement => _hoverElement;
+    internal Port? HoverPort => _hoverPort;
+    internal ResizeHandle? HoverHandle => _hoverHandle;
+    internal CurveWaypoint? HoverWaypoint => _hoverWaypoint;
+
+    // Brushes and Pens for Adorners
     private static readonly IBrush _handleBrush = Brushes.White;
+    private static readonly IBrush _hoverHandleBrush = new SolidColorBrush(AvaloniaColor.FromRgb(255, 215, 0));
     private static readonly IPen _handlePen = new Pen(Brushes.Black, 1.0);
+
+    private static readonly IBrush _normalPortBrush = new SolidColorBrush(AvaloniaColor.FromArgb(220, 224, 255, 255));
+    private static readonly IPen _normalPortPen = new Pen(new SolidColorBrush(AvaloniaColor.FromArgb(220, 0, 0, 128)), 1.0);
+    private static readonly IBrush _hoverPortBrush = new SolidColorBrush(AvaloniaColor.FromArgb(240, 255, 140, 0));
+    private static readonly IPen _hoverPortPen = new Pen(new SolidColorBrush(AvaloniaColor.FromArgb(240, 210, 105, 30)), 1.2);
+
+    private static readonly IBrush _setWaypointBrush = new SolidColorBrush(AvaloniaColor.FromArgb(240, 255, 250, 205));
+    private static readonly IPen _setWaypointPen = new Pen(new SolidColorBrush(AvaloniaColor.FromArgb(240, 178, 34, 34)), 1.2);
+    private static readonly IBrush _ghostWaypointBrush = new SolidColorBrush(AvaloniaColor.FromArgb(140, 224, 255, 255));
+    private static readonly IPen _ghostWaypointPen = new Pen(new SolidColorBrush(AvaloniaColor.FromArgb(140, 70, 130, 180)), 1.0);
+    private static readonly IBrush _hoverWaypointBrush = new SolidColorBrush(AvaloniaColor.FromArgb(255, 255, 140, 0));
+    private static readonly IPen _hoverWaypointPen = new Pen(new SolidColorBrush(AvaloniaColor.FromArgb(255, 210, 105, 30)), 1.5);
+
+    private static readonly IBrush _marqueeFillBrush = new SolidColorBrush(AvaloniaColor.FromArgb(40, 0, 120, 215));
+    private static readonly IPen _marqueeBorderPen = new Pen(new SolidColorBrush(AvaloniaColor.FromArgb(200, 0, 120, 215)), 1.0, DashStyle.Dash);
+
     private static readonly CompassPoint[] _handlePoints =
     [
         CompassPoint.NorthWest, CompassPoint.North, CompassPoint.NorthEast,
         CompassPoint.East, CompassPoint.SouthEast, CompassPoint.South,
         CompassPoint.SouthWest, CompassPoint.West
+    ];
+
+    private static readonly CurveWaypoint[] _allWaypoints =
+    [
+        CurveWaypoint.Quarter, CurveWaypoint.ThreeQuarter, CurveWaypoint.Middle
     ];
 
     public CoreVector Origin
@@ -101,6 +163,7 @@ public class MapCanvasControl : Control
     public MapCanvasControl()
     {
         ClipToBounds = true;
+        Focusable = true;
     }
 
     public new void InvalidateVisual()
@@ -170,6 +233,11 @@ public class MapCanvasControl : Control
             e.Item.Changed += OnElementChanged;
         }
         _spatialVersion++;
+        if (_dragMode == CanvasDragMode.None)
+        {
+            RecreatePorts();
+            RecreateHandles();
+        }
         InvalidateVisual();
     }
 
@@ -180,94 +248,115 @@ public class MapCanvasControl : Control
             e.Item.Changed -= OnElementChanged;
         }
         _spatialVersion++;
+        if (ReferenceEquals(_hoverElement, e.Item))
+        {
+            _hoverElement = null;
+            ToolTip.SetTip(this, null);
+        }
+        if (_dragMode == CanvasDragMode.None)
+        {
+            RecreatePorts();
+            RecreateHandles();
+        }
         InvalidateVisual();
     }
 
     private void OnElementChanged(object? sender, EventArgs e)
     {
         _spatialVersion++;
+        if (_dragMode == CanvasDragMode.None)
+        {
+            RecreatePorts();
+            RecreateHandles();
+        }
         InvalidateVisual();
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+
         if (change.Property == CommandServiceProperty)
         {
             TryUnhookCommandService();
-            if (change.NewValue is ICommandService newService)
-            {
-                SyncViewFromService(newService);
-                if (Bounds.Width > 0 && Bounds.Height > 0)
-                {
-                    newService.SetViewportSize(Bounds.Width, Bounds.Height);
-                }
-                if (this.IsAttachedToVisualTree())
-                {
-                    HookCommandService(newService);
-                }
-            }
+            TryHookCommandService();
         }
-    }
-
-    protected override void OnSizeChanged(SizeChangedEventArgs e)
-    {
-        base.OnSizeChanged(e);
-        _transform.ViewportWidth = e.NewSize.Width;
-        _transform.ViewportHeight = e.NewSize.Height;
-        if (CommandService != null && e.NewSize.Width > 0 && e.NewSize.Height > 0)
+        else if (change.Property == BoundsProperty)
         {
-            CommandService.SetViewportSize(e.NewSize.Width, e.NewSize.Height);
+            var bounds = Bounds;
+            _transform.ViewportWidth = bounds.Width;
+            _transform.ViewportHeight = bounds.Height;
+            CommandService?.SetViewportSize(bounds.Width, bounds.Height);
         }
     }
 
     private void TryHookCommandService()
     {
-        if (CommandService != null)
-        {
-            HookCommandService(CommandService);
-        }
-    }
-
-    private void TryUnhookCommandService()
-    {
-        if (_hookedService != null)
-        {
-            UnhookCommandService(_hookedService);
-        }
-    }
-
-    private void HookCommandService(ICommandService service)
-    {
-        if (ReferenceEquals(_hookedService, service))
+        if (!this.IsAttachedToVisualTree() || CommandService == null || ReferenceEquals(_hookedService, CommandService))
         {
             return;
         }
 
-        TryUnhookCommandService();
-        service.CanvasInvalidated += OnCanvasInvalidated;
-        service.ZoomChanged += OnServiceZoomChanged;
-        service.SelectionChanged += OnCanvasInvalidated;
-        _hookedService = service;
+        _hookedService = CommandService;
+        _hookedService.CanvasInvalidated += OnCommandServiceCanvasInvalidated;
+        _hookedService.ZoomChanged += OnCommandServiceZoomChanged;
+        _hookedService.SelectionChanged += OnCommandServiceSelectionChanged;
+        _hookedService.ProjectChanged += OnCommandServiceProjectChanged;
+
+        SyncViewFromService(_hookedService);
     }
 
-    private void UnhookCommandService(ICommandService service)
+    private void TryUnhookCommandService()
     {
-        service.CanvasInvalidated -= OnCanvasInvalidated;
-        service.ZoomChanged -= OnServiceZoomChanged;
-        service.SelectionChanged -= OnCanvasInvalidated;
-        if (ReferenceEquals(_hookedService, service))
+        if (_hookedService == null)
         {
-            _hookedService = null;
+            return;
+        }
+
+        _hookedService.CanvasInvalidated -= OnCommandServiceCanvasInvalidated;
+        _hookedService.ZoomChanged -= OnCommandServiceZoomChanged;
+        _hookedService.SelectionChanged -= OnCommandServiceSelectionChanged;
+        _hookedService.ProjectChanged -= OnCommandServiceProjectChanged;
+        _hookedService = null;
+    }
+
+    private void OnCommandServiceCanvasInvalidated(object? sender, EventArgs e)
+    {
+        InvalidateVisual();
+    }
+
+    private void OnCommandServiceZoomChanged(object? sender, float zoom)
+    {
+        if (Math.Abs(_zoomFactor - zoom) > 0.0001f)
+        {
+            _zoomFactor = zoom;
+            _transform.ZoomFactor = zoom;
+            InvalidateVisual();
         }
     }
 
-    private void SyncViewFromService(ICommandService service)
+    private void OnCommandServiceSelectionChanged(object? sender, EventArgs e)
     {
-        _origin = service.Origin;
-        _zoomFactor = service.ZoomFactor;
-        _transform.Origin = _origin;
-        _transform.ZoomFactor = _zoomFactor;
+        _selectedSet.Clear();
+        if (Project.SelectedElementsProvider != null)
+        {
+            foreach (var elem in Project.SelectedElementsProvider())
+            {
+                _selectedSet.Add(elem);
+            }
+        }
+        RecreatePorts();
+        RecreateHandles();
+        UpdateCursor();
+        InvalidateVisual();
+    }
+
+    private void OnCommandServiceProjectChanged(object? sender, EventArgs e)
+    {
+        _spatialVersion++;
+        RecreatePorts();
+        RecreateHandles();
+        InvalidateVisual();
     }
 
     private void OnProjectChanged(object? sender, ProjectChangedEventArgs e)
@@ -281,17 +370,14 @@ public class MapCanvasControl : Control
             HookProject(e.NewProject);
         }
         _spatialVersion++;
+        RecreatePorts();
+        RecreateHandles();
         InvalidateVisual();
     }
 
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
-        _spatialVersion++;
-        InvalidateVisual();
-    }
-
-    private void OnCanvasInvalidated(object? sender, EventArgs e)
-    {
+        _cachedGridGeometry = null;
         if (CommandService != null)
         {
             SyncViewFromService(CommandService);
@@ -299,57 +385,46 @@ public class MapCanvasControl : Control
         InvalidateVisual();
     }
 
-    private void OnServiceZoomChanged(object? sender, float zoom)
+    private void SyncViewFromService(ICommandService service)
     {
-        if (CommandService != null)
+        _origin = service.Origin;
+        _zoomFactor = service.ZoomFactor;
+        _transform.Origin = _origin;
+        _transform.ZoomFactor = _zoomFactor;
+
+        _selectedSet.Clear();
+        if (Project.SelectedElementsProvider != null)
         {
-            SyncViewFromService(CommandService);
+            foreach (var elem in Project.SelectedElementsProvider())
+            {
+                _selectedSet.Add(elem);
+            }
         }
-        else
-        {
-            _zoomFactor = zoom;
-            _transform.ZoomFactor = zoom;
-        }
-        InvalidateVisual();
+        RecreatePorts();
+        RecreateHandles();
     }
 
     #region Coordinate Transformations
 
     public Point CanvasToClient(CoreVector world)
     {
-        _transform.ViewportWidth = Bounds.Width;
-        _transform.ViewportHeight = Bounds.Height;
         _transform.Origin = Origin;
         _transform.ZoomFactor = ZoomFactor;
-        var p = _transform.CanvasToClient(world);
-        return new Point(p.X, p.Y);
+        return _transform.CanvasToClient(world).ToAvaloniaPoint();
     }
 
     public CoreVector ClientToCanvas(Point screen)
     {
-        _transform.ViewportWidth = Bounds.Width;
-        _transform.ViewportHeight = Bounds.Height;
         _transform.Origin = Origin;
         _transform.ZoomFactor = ZoomFactor;
-        return _transform.ClientToCanvas(new CoreVector((float)screen.X, (float)screen.Y));
-    }
-
-    public CoreRect GetVisibleWorldBounds()
-    {
-        _transform.ViewportWidth = Bounds.Width;
-        _transform.ViewportHeight = Bounds.Height;
-        _transform.Origin = Origin;
-        _transform.ZoomFactor = ZoomFactor;
-        return _transform.GetVisibleWorldBounds();
+        return _transform.ClientToCanvas(screen.ToVector());
     }
 
     public void ZoomAt(Point cursorScreen, float newZoom)
     {
-        _transform.ViewportWidth = Bounds.Width;
-        _transform.ViewportHeight = Bounds.Height;
         _transform.Origin = Origin;
         _transform.ZoomFactor = ZoomFactor;
-        _transform.ZoomAt(new CoreVector((float)cursorScreen.X, (float)cursorScreen.Y), newZoom);
+        _transform.ZoomAt(cursorScreen.ToVector(), newZoom);
 
         if (CommandService != null)
         {
@@ -357,9 +432,8 @@ public class MapCanvasControl : Control
         }
         else
         {
-            _origin = _transform.Origin;
-            _zoomFactor = _transform.ZoomFactor;
-            InvalidateVisual();
+            Origin = _transform.Origin;
+            ZoomFactor = _transform.ZoomFactor;
         }
     }
 
@@ -371,8 +445,6 @@ public class MapCanvasControl : Control
         }
         else
         {
-            _transform.ViewportWidth = Bounds.Width;
-            _transform.ViewportHeight = Bounds.Height;
             _transform.FitToMap(Project.Current.Elements);
             _origin = _transform.Origin;
             _zoomFactor = _transform.ZoomFactor;
@@ -382,18 +454,796 @@ public class MapCanvasControl : Control
 
     #endregion
 
-    #region Pointer & Interaction
+    #region State Machine & Hit Testing
+
+    private void RecreateHandles()
+    {
+        _activeHandles.Clear();
+        if (_selectedSet.Count == 1)
+        {
+            var single = _selectedSet.First();
+            if (single is ISizeable sizeable)
+            {
+                foreach (var cp in _handlePoints)
+                {
+                    _activeHandles.Add(new ResizeHandle(cp, sizeable));
+                }
+            }
+        }
+        if (_hoverHandle != null && !_activeHandles.Contains(_hoverHandle))
+        {
+            _hoverHandle = null;
+        }
+    }
+
+    private void RecreatePorts()
+    {
+        _activePorts.Clear();
+
+        if (_dragMode == CanvasDragMode.MovePort)
+        {
+            if (_hoverElement is Room or MapLabel)
+            {
+                _activePorts.AddRange(_hoverElement.PortList);
+            }
+        }
+        else
+        {
+            if ((_hoverElement is Room || _hoverElement is MapLabel) && !_selectedSet.Contains(_hoverElement))
+            {
+                if (_selectedSet.Count == 0)
+                {
+                    _activePorts.AddRange(_hoverElement.PortList);
+                }
+            }
+
+            if (_selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
+            {
+                _activePorts.AddRange(conn.PortList.OfType<MoveablePort>());
+            }
+        }
+
+        if (_hoverPort != null && !_activePorts.Contains(_hoverPort))
+        {
+            _hoverPort = null;
+        }
+    }
+
+    private IEnumerable<CurveWaypoint> GetVisibleWaypoints(Connection connection)
+    {
+        foreach (var wp in _allWaypoints)
+        {
+            if (connection.GetCurveWaypoint(wp).HasValue || connection.CanAddCurveWaypoint(wp))
+            {
+                yield return wp;
+            }
+        }
+    }
+
+    private CoreRect GetWaypointBounds(Connection connection, CurveWaypoint waypoint)
+    {
+        var isSet = connection.GetCurveWaypoint(waypoint).HasValue;
+        var size = Settings.HandleSize * (isSet ? 2.0f : 1.5f);
+        var pos = connection.GetCurveWaypointHandlePosition(waypoint);
+        return new CoreRect(pos.X - size / 2, pos.Y - size / 2, size, size);
+    }
+
+    private CurveWaypoint? HitTestWaypoint(CoreVector canvasPos)
+    {
+        if (_selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
+        {
+            foreach (var wp in GetVisibleWaypoints(conn))
+            {
+                var bounds = GetWaypointBounds(conn, wp);
+                bounds.Inflate(Settings.HandleSize / 2f);
+                if (bounds.Contains(canvasPos))
+                {
+                    return wp;
+                }
+            }
+        }
+        return null;
+    }
+
+    private ResizeHandle? HitTestHandle(CoreVector canvasPos)
+    {
+        for (var i = _activeHandles.Count - 1; i >= 0; i--)
+        {
+            var handle = _activeHandles[i];
+            if (handle.HitTest(canvasPos))
+            {
+                return handle;
+            }
+        }
+        return null;
+    }
+
+    private Port? HitTestPort(CoreVector canvasPos)
+    {
+        Port? closest = null;
+        var closestDistance = float.MaxValue;
+        var snapDistance = Settings.SnapToElementSize;
+
+        foreach (var port in _activePorts)
+        {
+            if (_dragMode == CanvasDragMode.MovePort && port == _dragMovePort)
+                continue;
+
+            var distance = port.Distance(canvasPos);
+            var curSnap = snapDistance;
+            var bounds = port.Owner.UnionBoundsWith(CoreRect.Empty, true);
+            if (bounds.Contains(canvasPos))
+            {
+                curSnap = _dragMode == CanvasDragMode.MovePort ? float.MaxValue : 0;
+            }
+
+            if (distance <= curSnap && distance < closestDistance)
+            {
+                closest = port;
+                closestDistance = distance;
+            }
+        }
+
+        return closest;
+    }
+
+    private Element? HitTestElement(CoreVector canvasPos, bool includeMargins = false)
+    {
+        Element? closest = null;
+        var closestDistance = float.MaxValue;
+        var elements = Project.Current.Elements;
+
+        for (var i = elements.Count - 1; i >= 0; i--)
+        {
+            var elem = elements[i];
+            if (_dragMode == CanvasDragMode.MovePort && _dragMovePort?.Owner == elem)
+                continue;
+
+            var distance = elem.Distance(canvasPos, includeMargins);
+            if (distance <= Settings.SnapToElementSize)
+            {
+                if (Numeric.ApproxEqual(distance, closestDistance) || distance < closestDistance)
+                {
+                    closest = elem;
+                    closestDistance = distance;
+                }
+            }
+        }
+
+        return closest;
+    }
+
+    private void UpdateCursor()
+    {
+        if (_dragMode == CanvasDragMode.Pan || _isSpaceKeyDown)
+        {
+            Cursor = new Cursor(StandardCursorType.Hand);
+            return;
+        }
+        if (_dragMode == CanvasDragMode.MoveWaypoint || (_dragMode == CanvasDragMode.None && _hoverWaypoint.HasValue))
+        {
+            Cursor = new Cursor(StandardCursorType.SizeAll);
+            return;
+        }
+        if (_dragMode == CanvasDragMode.MovePort || (_hoverPort != null && _hoverPort is not MoveablePort))
+        {
+            Cursor = new Cursor(StandardCursorType.Cross);
+            return;
+        }
+        if (_hoverPort is MoveablePort)
+        {
+            Cursor = new Cursor(StandardCursorType.Hand);
+            return;
+        }
+        if (_hoverHandle != null)
+        {
+            Cursor = _hoverHandle.CompassPoint switch
+            {
+                CompassPoint.NorthWest or CompassPoint.SouthEast => new Cursor(StandardCursorType.TopLeftCorner),
+                CompassPoint.NorthEast or CompassPoint.SouthWest => new Cursor(StandardCursorType.TopRightCorner),
+                CompassPoint.North or CompassPoint.South => new Cursor(StandardCursorType.SizeNorthSouth),
+                CompassPoint.East or CompassPoint.West => new Cursor(StandardCursorType.SizeWestEast),
+                _ => new Cursor(StandardCursorType.Arrow)
+            };
+            return;
+        }
+        if (_hoverElement != null && _selectedSet.Contains(_hoverElement) && _hoverElement is IMoveable)
+        {
+            Cursor = new Cursor(StandardCursorType.SizeAll);
+            return;
+        }
+        Cursor = new Cursor(StandardCursorType.Arrow);
+    }
+
+    private void UpdateToolTip()
+    {
+        if (_hoverElement is Room room)
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(room.Name)) parts.Add(room.Name);
+            if (!string.IsNullOrWhiteSpace(room.SubTitle)) parts.Add(room.SubTitle);
+            if (!string.IsNullOrWhiteSpace(room.Objects)) parts.Add(room.Objects);
+            ToolTip.SetTip(this, parts.Count > 0 ? string.Join("\n", parts) : null);
+        }
+        else if (_hoverElement is MapLabel label && !string.IsNullOrWhiteSpace(label.Text))
+        {
+            ToolTip.SetTip(this, label.Text);
+        }
+        else
+        {
+            ToolTip.SetTip(this, null);
+        }
+    }
+
+    #endregion
+
+    #region Pointer & Keyboard Handlers
+
+    protected override void OnPointerPressed(PointerPressedEventArgs e)
+    {
+        base.OnPointerPressed(e);
+        Focus();
+
+        var point = e.GetCurrentPoint(this);
+        var clientPos = point.Position;
+        var worldPos = ClientToCanvas(clientPos);
+
+        var isMiddle = point.Properties.IsMiddleButtonPressed;
+        var isRight = point.Properties.IsRightButtonPressed;
+        var isLeft = point.Properties.IsLeftButtonPressed;
+        var isShift = (e.KeyModifiers & KeyModifiers.Shift) != 0;
+        var isCtrl = (e.KeyModifiers & KeyModifiers.Control) != 0;
+
+        if (isMiddle || isRight || (isLeft && _isSpaceKeyDown))
+        {
+            _dragMode = CanvasDragMode.Pan;
+            _panStartClient = clientPos;
+            e.Pointer.Capture(this);
+            UpdateCursor();
+            e.Handled = true;
+            return;
+        }
+
+        if (isLeft)
+        {
+            var hitWp = HitTestWaypoint(worldPos);
+            if (hitWp.HasValue && _selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
+            {
+                _dragMode = CanvasDragMode.MoveWaypoint;
+                _dragWaypoint = hitWp.Value;
+                var handlePos = conn.GetCurveWaypointHandlePosition(_dragWaypoint);
+                _dragWaypointOffset = handlePos - worldPos;
+                e.Pointer.Capture(this);
+                UpdateCursor();
+                e.Handled = true;
+                return;
+            }
+
+            var hitHandle = HitTestHandle(worldPos);
+            if (hitHandle != null)
+            {
+                _dragMode = CanvasDragMode.MoveResizeHandle;
+                _dragHandle = hitHandle;
+                _hoverHandle = hitHandle;
+                _dragResizeHandleLastPosition = worldPos;
+                e.Pointer.Capture(this);
+                UpdateCursor();
+                e.Handled = true;
+                return;
+            }
+
+            var hitPort = HitTestPort(worldPos);
+            if (hitPort != null)
+            {
+                if (hitPort is MoveablePort mp)
+                {
+                    _dragMode = CanvasDragMode.MovePort;
+                    _dragMovePort = mp;
+                    _dragOffsetCanvas = Settings.Snap(worldPos - mp.Position);
+                    e.Pointer.Capture(this);
+                    UpdateCursor();
+                    e.Handled = true;
+                    return;
+                }
+                else
+                {
+                    _pendingNewConnectionPort = hitPort;
+                    _pendingNewConnectionStartClient = clientPos;
+                    _pendingNewConnectionStartWorld = worldPos;
+                    e.Pointer.Capture(this);
+                    UpdateCursor();
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            var hitElem = HitTestElement(worldPos);
+            if (hitElem != null)
+            {
+                var alreadySelected = _selectedSet.Contains(hitElem);
+                if (isShift || isCtrl)
+                {
+                    CommandService?.Select(hitElem, toggle: true);
+                }
+                else if (!alreadySelected)
+                {
+                    CommandService?.Select([hitElem], clearExisting: true);
+                }
+
+                if (_selectedSet.Contains(hitElem))
+                {
+                    _dragMode = CanvasDragMode.MoveElement;
+                    _dragOffsetCanvas = Settings.Snap(worldPos);
+                    e.Pointer.Capture(this);
+                }
+                UpdateCursor();
+                e.Handled = true;
+                return;
+            }
+
+            if (!isShift && !isCtrl)
+            {
+                CommandService?.ClearSelection();
+            }
+            _dragMode = CanvasDragMode.Marquee;
+            _dragMarqueeStart = worldPos;
+            _dragMarqueeCurrent = worldPos;
+            e.Pointer.Capture(this);
+            UpdateCursor();
+            e.Handled = true;
+        }
+    }
+
+    protected override void OnPointerMoved(PointerEventArgs e)
+    {
+        base.OnPointerMoved(e);
+
+        var clientPos = e.GetPosition(this);
+        var worldPos = ClientToCanvas(clientPos);
+
+        if (_pendingNewConnectionPort != null)
+        {
+            var dx = clientPos.X - _pendingNewConnectionStartClient.X;
+            var dy = clientPos.Y - _pendingNewConnectionStartClient.Y;
+            var dist = Math.Sqrt(dx * dx + dy * dy);
+            if (dist >= Settings.DragDistanceToInitiateNewConnection)
+            {
+                var port = _pendingNewConnectionPort;
+                _pendingNewConnectionPort = null;
+                var newConn = new Connection(Project.Current, new Vertex(port), new Vertex(port))
+                {
+                    Style = ConnectionStyle.Solid,
+                    Flow = ConnectionFlow.TwoWay
+                };
+                Project.Current.Elements.Add(newConn);
+                CommandService?.Select(newConn);
+                _dragMode = CanvasDragMode.MovePort;
+                _dragMovePort = (MoveablePort)newConn.PortList[1];
+                _dragOffsetCanvas = Settings.Snap(_pendingNewConnectionStartWorld - newConn.VertexList[0].Position);
+                _hoverPort = null;
+            }
+        }
+
+        switch (_dragMode)
+        {
+            case CanvasDragMode.Pan:
+                var deltaScreen = clientPos - _panStartClient;
+                _panStartClient = clientPos;
+                Origin = new CoreVector((float)(Origin.X - deltaScreen.X / ZoomFactor), (float)(Origin.Y - deltaScreen.Y / ZoomFactor));
+                e.Handled = true;
+                break;
+
+            case CanvasDragMode.MoveElement:
+                var snappedWorld = Settings.Snap(worldPos);
+                var moveDelta = snappedWorld - _dragOffsetCanvas;
+                if (moveDelta != CoreVector.Zero)
+                {
+                    MapEditing.Move(Project.Current.Elements, _selectedSet.ToList(), moveDelta);
+                    _dragOffsetCanvas += moveDelta;
+                    Project.Current.IsDirty = true;
+                    _spatialVersion++;
+                    InvalidateVisual();
+                }
+                e.Handled = true;
+                break;
+
+            case CanvasDragMode.MoveResizeHandle:
+                if (_dragHandle != null)
+                {
+                    _dragResizeHandleLastPosition = MapEditing.Resize(_dragHandle, _dragResizeHandleLastPosition, worldPos);
+                    Project.Current.IsDirty = true;
+                    _spatialVersion++;
+                    InvalidateVisual();
+                }
+                e.Handled = true;
+                break;
+
+            case CanvasDragMode.MovePort:
+                if (_dragMovePort != null)
+                {
+                    var targetElem = HitTestElement(worldPos, true);
+                    if (!ReferenceEquals(targetElem, _hoverElement))
+                    {
+                        _hoverElement = targetElem;
+                        RecreatePorts();
+                    }
+
+                    _hoverPort = HitTestPort(worldPos);
+                    if (_hoverPort != null && _hoverPort != _dragMovePort)
+                    {
+                        if (_hoverPort is not MoveablePort)
+                        {
+                            _dragMovePort.DockAt(_hoverPort);
+                        }
+                        else
+                        {
+                            _dragMovePort.DockAt(null);
+                            _dragMovePort.SetPosition(Settings.Snap(worldPos) - _dragOffsetCanvas);
+                        }
+                    }
+                    else
+                    {
+                        _dragMovePort.DockAt(null);
+                        _dragMovePort.SetPosition(Settings.Snap(worldPos) - _dragOffsetCanvas);
+                    }
+                    Project.Current.IsDirty = true;
+                    _spatialVersion++;
+                    InvalidateVisual();
+                }
+                e.Handled = true;
+                break;
+
+            case CanvasDragMode.MoveWaypoint:
+                if (_selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
+                {
+                    conn.SetCurveWaypoint(_dragWaypoint, Settings.Snap(worldPos + _dragWaypointOffset));
+                    Project.Current.IsDirty = true;
+                    _spatialVersion++;
+                    InvalidateVisual();
+                }
+                e.Handled = true;
+                break;
+
+            case CanvasDragMode.Marquee:
+                _dragMarqueeCurrent = worldPos;
+                InvalidateVisual();
+                e.Handled = true;
+                break;
+
+            case CanvasDragMode.None:
+                if (_pendingNewConnectionPort == null)
+                {
+                    var prevHoverElem = _hoverElement;
+                    var prevHoverPort = _hoverPort;
+                    var prevHoverHandle = _hoverHandle;
+                    var prevHoverWp = _hoverWaypoint;
+
+                    var newHoverElem = HitTestElement(worldPos);
+                    if (!ReferenceEquals(newHoverElem, _hoverElement))
+                    {
+                        _hoverElement = newHoverElem;
+                        RecreatePorts();
+                        RecreateHandles();
+                        UpdateToolTip();
+                    }
+
+                    _hoverWaypoint = HitTestWaypoint(worldPos);
+                    _hoverHandle = HitTestHandle(worldPos);
+                    _hoverPort = HitTestPort(worldPos);
+
+                    UpdateCursor();
+
+                    if (!ReferenceEquals(prevHoverElem, _hoverElement) ||
+                        !ReferenceEquals(prevHoverPort, _hoverPort) ||
+                        !ReferenceEquals(prevHoverHandle, _hoverHandle) ||
+                        prevHoverWp != _hoverWaypoint)
+                    {
+                        InvalidateVisual();
+                    }
+                }
+                break;
+        }
+    }
+
+    protected override void OnPointerReleased(PointerReleasedEventArgs e)
+    {
+        base.OnPointerReleased(e);
+
+        if (_pendingNewConnectionPort != null)
+        {
+            _pendingNewConnectionPort = null;
+        }
+
+        if (_dragMode == CanvasDragMode.MovePort)
+        {
+            if (_dragMovePort?.Owner is Connection connection)
+            {
+                var shouldPrune = false;
+                if (connection.VertexList.Count == 2)
+                {
+                    var v0 = connection.VertexList[0];
+                    var v1 = connection.VertexList[1];
+                    if (v0.Port != null && v0.Port == v1.Port)
+                    {
+                        shouldPrune = true;
+                    }
+                    else if (v0.Port == null && v1.Port == null && v0.Position.Distance(v1.Position) < Numeric.Small)
+                    {
+                        shouldPrune = true;
+                    }
+                    else if (v0.Port == null || v1.Port == null)
+                    {
+                        if (v0.Position.Distance(v1.Position) < Numeric.Small)
+                        {
+                            shouldPrune = true;
+                        }
+                    }
+                }
+                if (shouldPrune)
+                {
+                    Project.Current.Elements.Remove(connection);
+                    CommandService?.ClearSelection();
+                }
+                else
+                {
+                    CommandService?.Select(connection);
+                }
+            }
+            _dragMovePort = null;
+        }
+        else if (_dragMode == CanvasDragMode.Marquee)
+        {
+            var minX = Math.Min(_dragMarqueeStart.X, _dragMarqueeCurrent.X);
+            var maxX = Math.Max(_dragMarqueeStart.X, _dragMarqueeCurrent.X);
+            var minY = Math.Min(_dragMarqueeStart.Y, _dragMarqueeCurrent.Y);
+            var maxY = Math.Max(_dragMarqueeStart.Y, _dragMarqueeCurrent.Y);
+            var rect = new CoreRect(minX, minY, Math.Max(0.01f, maxX - minX), Math.Max(0.01f, maxY - minY));
+
+            var hitElements = Project.Current.Elements.Where(elem => elem.Intersects(rect)).ToList();
+            var isShiftOrCtrl = (e.KeyModifiers & (KeyModifiers.Shift | KeyModifiers.Control)) != 0;
+
+            if (!isShiftOrCtrl)
+            {
+                CommandService?.Select(hitElements, clearExisting: true);
+            }
+            else
+            {
+                foreach (var elem in hitElements)
+                {
+                    if (_selectedSet.Contains(elem))
+                    {
+                        CommandService?.Deselect(elem);
+                    }
+                    else
+                    {
+                        CommandService?.Select(elem, addToSelection: true);
+                    }
+                }
+            }
+        }
+
+        _dragMode = CanvasDragMode.None;
+        _dragHandle = null;
+        e.Pointer.Capture(null);
+        RecreatePorts();
+        RecreateHandles();
+        UpdateCursor();
+        InvalidateVisual();
+    }
+
+    protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        _dragMode = CanvasDragMode.None;
+        _dragHandle = null;
+        _dragMovePort = null;
+        _pendingNewConnectionPort = null;
+        RecreatePorts();
+        RecreateHandles();
+        UpdateCursor();
+        InvalidateVisual();
+    }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
-        var delta = e.Delta.Y;
-        if (Math.Abs(delta) > 0.001)
+
+        var cursorScreen = e.GetPosition(this);
+        var zoomDelta = e.Delta.Y > 0 ? 1.25f : 0.8f;
+        var newZoom = ZoomFactor * zoomDelta;
+
+        ZoomAt(cursorScreen, newZoom);
+        e.Handled = true;
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+
+        if (e.Key == Key.Space)
         {
-            var factor = delta > 0 ? 1.15f : 1.0f / 1.15f;
-            var currentPos = e.GetPosition(this);
-            ZoomAt(currentPos, ZoomFactor * factor);
+            _isSpaceKeyDown = true;
+            UpdateCursor();
             e.Handled = true;
+            return;
+        }
+
+        var isCtrl = (e.KeyModifiers & KeyModifiers.Control) != 0;
+        var isShift = (e.KeyModifiers & KeyModifiers.Shift) != 0;
+        var isAlt = (e.KeyModifiers & KeyModifiers.Alt) != 0;
+
+        switch (e.Key)
+        {
+            case Key.Delete or Key.Back:
+                CommandService?.DeleteSelected();
+                e.Handled = true;
+                break;
+
+            case Key.A when isCtrl:
+                CommandService?.SelectAll();
+                e.Handled = true;
+                break;
+
+            case Key.Escape:
+                CommandService?.ClearSelection();
+                e.Handled = true;
+                break;
+
+            case Key.OemPlus or Key.Add:
+                CommandService?.ZoomIn();
+                e.Handled = true;
+                break;
+
+            case Key.OemMinus or Key.Subtract:
+                CommandService?.ZoomOut();
+                e.Handled = true;
+                break;
+
+            case Key.D0 or Key.NumPad0 when isCtrl:
+                CommandService?.ResetZoom();
+                e.Handled = true;
+                break;
+
+            case Key.C when isCtrl:
+                _ = CopySelectedToClipboardAsync();
+                e.Handled = true;
+                break;
+
+            case Key.X when isCtrl:
+                _ = CutSelectedToClipboardAsync();
+                e.Handled = true;
+                break;
+
+            case Key.V when isCtrl:
+                _ = PasteFromClipboardAsync();
+                e.Handled = true;
+                break;
+
+            case Key.Left or Key.Right or Key.Up or Key.Down:
+                if (_selectedSet.Count > 0)
+                {
+                    HandleArrowKey(e.Key, isCtrl, isShift, isAlt);
+                    e.Handled = true;
+                }
+                break;
+        }
+    }
+
+    protected override void OnKeyUp(KeyEventArgs e)
+    {
+        base.OnKeyUp(e);
+
+        if (e.Key == Key.Space)
+        {
+            _isSpaceKeyDown = false;
+            UpdateCursor();
+            e.Handled = true;
+        }
+    }
+
+    private void HandleArrowKey(Key key, bool isCtrl, bool isShift, bool isAlt)
+    {
+        if (isAlt && isCtrl)
+        {
+            var delta = Settings.SnapToGrid ? Settings.GridSize : 2.0f;
+            foreach (var sizeable in _selectedSet.OfType<ISizeable>())
+            {
+                switch (key)
+                {
+                    case Key.Left:
+                        if (sizeable.Width - delta >= Settings.GridSize)
+                            sizeable.Size = new CoreVector(sizeable.Width - delta, sizeable.Height);
+                        break;
+                    case Key.Right:
+                        sizeable.Size = new CoreVector(sizeable.Width + delta, sizeable.Height);
+                        break;
+                    case Key.Up:
+                        if (sizeable.Height - delta >= Settings.GridSize)
+                            sizeable.Size = new CoreVector(sizeable.Width, sizeable.Height - delta);
+                        break;
+                    case Key.Down:
+                        sizeable.Size = new CoreVector(sizeable.Width, sizeable.Height + delta);
+                        break;
+                }
+            }
+            Project.Current.IsDirty = true;
+            _spatialVersion++;
+            InvalidateVisual();
+        }
+        else
+        {
+            var step = isShift ? Settings.GridSize * 2 : (Settings.SnapToGrid ? Settings.GridSize : 2.0f);
+            var moveDelta = key switch
+            {
+                Key.Left => new CoreVector(-step, 0),
+                Key.Right => new CoreVector(step, 0),
+                Key.Up => new CoreVector(0, -step),
+                Key.Down => new CoreVector(0, step),
+                _ => CoreVector.Zero
+            };
+
+            if (moveDelta != CoreVector.Zero && _selectedSet.Count > 0)
+            {
+                CommandService?.NudgeSelected(moveDelta);
+            }
+        }
+    }
+
+    public async Task CopySelectedToClipboardAsync()
+    {
+        try
+        {
+            var text = CommandService?.CopySelected();
+            if (!string.IsNullOrEmpty(text))
+            {
+                var topLevel = TopLevel.GetTopLevel(this);
+                if (topLevel?.Clipboard != null)
+                {
+                    await topLevel.Clipboard.SetTextAsync(text);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Copy failed: {ex}");
+        }
+    }
+
+    public async Task CutSelectedToClipboardAsync()
+    {
+        try
+        {
+            var text = CommandService?.CutSelected();
+            if (!string.IsNullOrEmpty(text))
+            {
+                var topLevel = TopLevel.GetTopLevel(this);
+                if (topLevel?.Clipboard != null)
+                {
+                    await topLevel.Clipboard.SetTextAsync(text);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Cut failed: {ex}");
+        }
+    }
+
+    public async Task PasteFromClipboardAsync()
+    {
+        try
+        {
+            string? text = null;
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel?.Clipboard != null)
+            {
+                text = await topLevel.Clipboard.GetTextAsync();
+            }
+            CommandService?.Paste(text);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Paste failed: {ex}");
         }
     }
 
@@ -405,36 +1255,44 @@ public class MapCanvasControl : Control
     {
         base.Render(context);
 
-        if (Bounds.Width <= 0 || Bounds.Height <= 0) return;
+        var bounds = Bounds;
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            return;
+        }
 
-        // 1. Draw Canvas Background
-        context.DrawRectangle(DrawingAdapters.ToBrush(CoreColors.Canvas), null, new AvaloniaRect(0, 0, Bounds.Width, Bounds.Height));
+        _transform.Origin = Origin;
+        _transform.ZoomFactor = ZoomFactor;
+        _transform.ViewportWidth = bounds.Width;
+        _transform.ViewportHeight = bounds.Height;
 
-        var visibleWorld = GetVisibleWorldBounds();
-        var culledWorld = visibleWorld;
-        culledWorld.Inflate(120f, 120f);
+        // 1. Fill Canvas Background
+        var canvasBrush = DrawingAdapters.ToBrush(CoreColors.Canvas);
+        context.DrawRectangle(canvasBrush, null, new AvaloniaRect(0, 0, bounds.Width, bounds.Height));
 
-        // 2. Push Matrix Transform for World-to-Screen rendering
+        // 2. Setup Matrix Transform
+        var halfWidth = bounds.Width / 2.0;
+        var halfHeight = bounds.Height / 2.0;
         var transformMatrix = Matrix.CreateTranslation(-Origin.X, -Origin.Y)
                               * Matrix.CreateScale(ZoomFactor, ZoomFactor)
-                              * Matrix.CreateTranslation(Bounds.Width / 2.0, Bounds.Height / 2.0);
+                              * Matrix.CreateTranslation(halfWidth, halfHeight);
 
         using (context.PushTransform(transformMatrix))
         {
-            // 3. Draw Grid
-            if (Settings.IsGridVisible && (CommandService?.ShowGrid ?? true) && Settings.GridSize > 0)
+            // 3. Grid Lines/Dots
+            var visibleWorld = _transform.GetVisibleWorldBounds();
+            if (Settings.IsGridVisible)
             {
                 DrawGrid(context, visibleWorld);
             }
 
-            // 4. Viewport Culling & Element Collection
-            _selectedSet.Clear();
-            var selectedList = Project.Current.GetSelectedElements();
-            foreach (var sel in selectedList) _selectedSet.Add(sel);
-            if (_selectedSet.Count == 0 && Project.Current.ActiveSelectedElement != null)
-            {
-                _selectedSet.Add(Project.Current.ActiveSelectedElement);
-            }
+            // 4. Frustum Culling
+            const float margin = 100.0f;
+            var culledWorld = new CoreRect(
+                visibleWorld.Left - margin,
+                visibleWorld.Top - margin,
+                visibleWorld.Width + margin * 2,
+                visibleWorld.Height + margin * 2);
 
             _visibleElements.Clear();
             foreach (var elem in Project.Current.Elements)
@@ -445,7 +1303,6 @@ public class MapCanvasControl : Control
             _visibleElements.Sort();
 
             // 5. Render elements in Depth / ZOrder sequence (Rooms, Labels, Connections)
-            // Pre-populate room boundary and connection segments for smart line segment crossing calculation
             if (_builtSpatialVersion != _spatialVersion)
             {
                 ConnectionDrawingAdapter.RebuildSpatialIndex(Project.Current.Elements, _spatialLines, _spatialVersion);
@@ -455,28 +1312,92 @@ public class MapCanvasControl : Control
             foreach (var element in _visibleElements)
             {
                 var isSelected = _selectedSet.Contains(element);
+                var isHover = element == _hoverElement;
+
                 if (element is Room room)
                 {
-                    room.DrawRoom(context, isSelected, false);
+                    room.DrawRoom(context, isSelected, isHover);
                 }
                 else if (element is MapLabel label)
                 {
-                    label.DrawMapLabel(context, isSelected, false);
+                    label.DrawMapLabel(context, isSelected, isHover);
                 }
                 else if (element is Connection conn)
                 {
-                    conn.DrawConnection(context, isSelected, false, _spatialLines, _spatialVersion);
+                    conn.DrawConnection(context, isSelected, isHover, _spatialLines, _spatialVersion);
                 }
             }
 
-            // 6. Render Selection Resize Handles
-            if (_selectedSet.Count == 1)
+            // 6. Render Active Ports
+            if (_activePorts.Count > 0)
             {
-                var singleSelected = _selectedSet.First();
-                if (singleSelected is ISizeable sizeable)
+                var portRadius = Settings.HandleSize / 2.0;
+                foreach (var port in _activePorts)
                 {
-                    DrawSelectionHandles(context, sizeable);
+                    var isHover = port == _hoverPort;
+                    var brush = isHover ? _hoverPortBrush : _normalPortBrush;
+                    var pen = isHover ? _hoverPortPen : _normalPortPen;
+                    var center = new Point(port.Position.X, port.Position.Y);
+                    context.DrawEllipse(brush, pen, center, portRadius, portRadius);
                 }
+            }
+
+            // 7. Render Curve Waypoint Handles for single selected connection
+            if (_selectedSet.Count == 1 && _selectedSet.First() is Connection selectedConn)
+            {
+                foreach (var wp in GetVisibleWaypoints(selectedConn))
+                {
+                    var isSet = selectedConn.GetCurveWaypoint(wp).HasValue;
+                    var isHover = wp == _hoverWaypoint || (_dragMode == CanvasDragMode.MoveWaypoint && wp == _dragWaypoint);
+                    var wpBounds = GetWaypointBounds(selectedConn, wp);
+
+                    IBrush brush;
+                    IPen pen;
+                    if (isHover)
+                    {
+                        brush = _hoverWaypointBrush;
+                        pen = _hoverWaypointPen;
+                    }
+                    else if (isSet)
+                    {
+                        brush = _setWaypointBrush;
+                        pen = _setWaypointPen;
+                    }
+                    else
+                    {
+                        brush = _ghostWaypointBrush;
+                        pen = _ghostWaypointPen;
+                    }
+
+                    var center = new Point(wpBounds.Center.X, wpBounds.Center.Y);
+                    var rx = wpBounds.Width / 2.0;
+                    var ry = wpBounds.Height / 2.0;
+                    context.DrawEllipse(brush, pen, center, rx, ry);
+                }
+            }
+
+            // 8. Render Selection Resize Handles
+            if (_selectedSet.Count == 1 && _selectedSet.First() is ISizeable sizeable)
+            {
+                foreach (var cp in _handlePoints)
+                {
+                    var handle = new ResizeHandle(cp, sizeable);
+                    var rect = handle.Bounds;
+                    var isHover = _hoverHandle != null && _hoverHandle.CompassPoint == cp;
+                    var brush = isHover ? _hoverHandleBrush : _handleBrush;
+                    context.DrawRectangle(brush, _handlePen, rect.ToRect());
+                }
+            }
+
+            // 9. Render Marquee Box
+            if (_dragMode == CanvasDragMode.Marquee)
+            {
+                var minX = Math.Min(_dragMarqueeStart.X, _dragMarqueeCurrent.X);
+                var maxX = Math.Max(_dragMarqueeStart.X, _dragMarqueeCurrent.X);
+                var minY = Math.Min(_dragMarqueeStart.Y, _dragMarqueeCurrent.Y);
+                var maxY = Math.Max(_dragMarqueeStart.Y, _dragMarqueeCurrent.Y);
+                var marqueeRect = new AvaloniaRect(minX, minY, Math.Max(0.01, maxX - minX), Math.Max(0.01, maxY - minY));
+                context.DrawRectangle(_marqueeFillBrush, _marqueeBorderPen, marqueeRect);
             }
         }
     }
@@ -539,16 +1460,6 @@ public class MapCanvasControl : Control
             var originPen = Settings.Color[CoreColors.Grid].ToPen(1.5 / ZoomFactor);
             context.DrawLine(originPen, new Point(-25, 0), new Point(25, 0));
             context.DrawLine(originPen, new Point(0, -25), new Point(0, 25));
-        }
-    }
-
-    private static void DrawSelectionHandles(AvaloniaDrawingContext context, ISizeable sizeable)
-    {
-        foreach (var cp in _handlePoints)
-        {
-            var handle = new ResizeHandle(cp, sizeable);
-            var rect = handle.Bounds;
-            context.DrawRectangle(_handleBrush, _handlePen, rect.ToRect());
         }
     }
 

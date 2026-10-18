@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Trizbort.Domain.Application;
+using Trizbort.Domain.Controllers;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
@@ -14,8 +16,11 @@ public class CommandService : ICommandService
     private Vector _origin = Vector.Zero;
     private bool _showGrid = true;
     private readonly HashSet<Element> _selectedElements = [];
+    private static string? _internalClipboard;
 
     public Project Project => Project.Current;
+
+    public IReadOnlySet<Element> SelectedElements => _selectedElements;
 
     public double ViewportWidth { get; private set; } = 800;
     public double ViewportHeight { get; private set; } = 600;
@@ -81,6 +86,14 @@ public class CommandService : ICommandService
     {
         Project.SelectedElementsProvider = () => _selectedElements;
         Project.ProjectChanged += OnCoreProjectChanged;
+        if (CopyController.SetClipboardTextHandler == null)
+        {
+            CopyController.SetClipboardTextHandler = text => _internalClipboard = text;
+        }
+        if (CopyController.GetClipboardTextHandler == null)
+        {
+            CopyController.GetClipboardTextHandler = () => _internalClipboard ?? string.Empty;
+        }
     }
 
     private void OnCoreProjectChanged(object? sender, ProjectChangedEventArgs e)
@@ -154,6 +167,80 @@ public class CommandService : ICommandService
         return selected.Count;
     }
 
+    public void Select(Element element, bool toggle = false, bool addToSelection = false)
+    {
+        if (toggle)
+        {
+            if (_selectedElements.Contains(element))
+            {
+                _selectedElements.Remove(element);
+                if (Project.Current.ActiveSelectedElement == element)
+                {
+                    Project.Current.ActiveSelectedElement = _selectedElements.LastOrDefault();
+                }
+            }
+            else
+            {
+                _selectedElements.Add(element);
+                Project.Current.ActiveSelectedElement = element;
+            }
+        }
+        else if (addToSelection)
+        {
+            _selectedElements.Add(element);
+            Project.Current.ActiveSelectedElement = element;
+        }
+        else
+        {
+            _selectedElements.Clear();
+            _selectedElements.Add(element);
+            Project.Current.ActiveSelectedElement = element;
+        }
+
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+        InvalidateCanvas();
+    }
+
+    public void Select(IEnumerable<Element> elements, bool clearExisting = true)
+    {
+        if (clearExisting)
+        {
+            _selectedElements.Clear();
+        }
+
+        Element? last = null;
+        foreach (var element in elements)
+        {
+            _selectedElements.Add(element);
+            last = element;
+        }
+
+        if (last != null)
+        {
+            Project.Current.ActiveSelectedElement = last;
+        }
+        else if (clearExisting)
+        {
+            Project.Current.ActiveSelectedElement = null;
+        }
+
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+        InvalidateCanvas();
+    }
+
+    public void Deselect(Element element)
+    {
+        if (_selectedElements.Remove(element))
+        {
+            if (Project.Current.ActiveSelectedElement == element)
+            {
+                Project.Current.ActiveSelectedElement = _selectedElements.LastOrDefault();
+            }
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            InvalidateCanvas();
+        }
+    }
+
     public void SelectAll()
     {
         _selectedElements.Clear();
@@ -173,6 +260,154 @@ public class CommandService : ICommandService
     {
         _selectedElements.Clear();
         Project.Current.ActiveSelectedElement = null;
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+        InvalidateCanvas();
+    }
+
+    public void NudgeSelected(Vector delta)
+    {
+        if (delta == Vector.Zero || _selectedElements.Count == 0) return;
+
+        MapEditing.Move(Project.Current.Elements, _selectedElements.ToList(), delta);
+        Project.Current.IsDirty = true;
+        InvalidateCanvas();
+    }
+
+    public string? CopySelected()
+    {
+        var selected = _selectedElements.Count > 0
+            ? _selectedElements.ToList()
+            : (Project.Current.ActiveSelectedElement != null ? [Project.Current.ActiveSelectedElement] : new List<Element>());
+
+        if (selected.Count == 0) return null;
+
+        var controller = new CopyController();
+        var copyObj = controller.CreateCopyObject(selected);
+        var json = JsonConvert.SerializeObject(copyObj, Formatting.Indented,
+            new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+        _internalClipboard = json;
+        return json;
+    }
+
+    public string? CutSelected()
+    {
+        var json = CopySelected();
+        if (json != null)
+        {
+            DeleteSelected();
+        }
+        return json;
+    }
+
+    public void Paste(string? clipboardText = null, Vector? targetPosition = null)
+    {
+        var text = !string.IsNullOrEmpty(clipboardText) ? clipboardText : _internalClipboard;
+        if (string.IsNullOrEmpty(text)) return;
+
+        try
+        {
+            var controller = new CopyController();
+            if (text.Contains("\"CopyType\": 1"))
+            {
+                var colorsObj = JsonConvert.DeserializeObject<CopyController.CopyColorsObj>(text);
+                if (colorsObj != null)
+                {
+                    foreach (var room in _selectedElements.OfType<Room>())
+                    {
+                        controller.SetRoomColors(room, colorsObj);
+                    }
+                    Project.Current.IsDirty = true;
+                    InvalidateCanvas();
+                }
+            }
+            else
+            {
+                var copyObj = JsonConvert.DeserializeObject<CopyController.CopyObject>(text);
+                if (copyObj != null)
+                {
+                    PasteRooms(copyObj, controller, targetPosition);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Paste failed: {ex}");
+        }
+    }
+
+    private void PasteRooms(CopyController.CopyObject copyObj, CopyController controller, Vector? targetPosition)
+    {
+        var newRooms = new List<Room>();
+        var newLabels = new List<MapLabel>();
+        var copiedNodes = new Dictionary<int, Element>();
+        var newConnections = new List<Connection>();
+
+        var firstElement = true;
+        float offsetX = 0;
+        float offsetY = 0;
+
+        foreach (var room in copyObj.Rooms)
+        {
+            var newRoom = new Room(Project.Current);
+            Project.Current.Elements.Add(newRoom);
+            newRooms.Add(newRoom);
+
+            if (firstElement)
+            {
+                var firstX = room.Position.X;
+                var firstY = room.Position.Y;
+                var targetX = targetPosition?.X ?? (firstX + Settings.GridSize);
+                var targetY = targetPosition?.Y ?? (firstY + Settings.GridSize);
+                firstElement = false;
+                offsetX = firstX - targetX;
+                offsetY = firstY - targetY;
+            }
+
+            newRoom.Position = new Vector(room.Position.X - offsetX, room.Position.Y - offsetY);
+            controller.SetRoom(newRoom, room);
+            copiedNodes[room.OldId] = newRoom;
+        }
+
+        foreach (var label in copyObj.Labels)
+        {
+            var newLabel = new MapLabel(Project.Current);
+            Project.Current.Elements.Add(newLabel);
+            if (firstElement)
+            {
+                var targetX = targetPosition?.X ?? (label.Position.X + Settings.GridSize);
+                var targetY = targetPosition?.Y ?? (label.Position.Y + Settings.GridSize);
+                offsetX = label.Position.X - targetX;
+                offsetY = label.Position.Y - targetY;
+                firstElement = false;
+            }
+
+            controller.SetLabel(newLabel, label);
+            newLabel.Position = label.Position - new Vector(offsetX, offsetY);
+            copiedNodes[label.OldId] = newLabel;
+            newLabels.Add(newLabel);
+        }
+
+        foreach (var room in newRooms)
+        {
+            room.ReferenceRoomId = copiedNodes.TryGetValue(room.ReferenceRoomId, out var reference) && reference is Room
+                ? reference.Id
+                : -1;
+        }
+
+        newConnections.AddRange(
+            controller.PasteConnections(Project.Current, copyObj.Connections, copiedNodes, new Vector(offsetX, offsetY)));
+
+        _selectedElements.Clear();
+        foreach (var elem in newRooms) _selectedElements.Add(elem);
+        foreach (var elem in newLabels) _selectedElements.Add(elem);
+        foreach (var elem in newConnections) _selectedElements.Add(elem);
+
+        if (_selectedElements.Count > 0)
+        {
+            Project.Current.ActiveSelectedElement = _selectedElements.Last();
+        }
+
+        Project.Current.IsDirty = true;
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         InvalidateCanvas();
     }
