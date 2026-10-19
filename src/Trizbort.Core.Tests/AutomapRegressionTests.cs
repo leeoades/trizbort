@@ -236,6 +236,17 @@ public class AutomapRegressionTests : IsolatedProjectTests
     Project.Current.Elements.ShouldBeEmpty();
   }
 
+  [Test]
+  public async Task OneShotReader_CanReadTranscriptSharedForWriting()
+  {
+    var settings = SettingsFor("Example Game\n\nFirst Room\nA small room.\n");
+    using var stream = File.Open(settings.FileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+    await CreateParser().StartCl(new AutomapCanvas(), settings);
+
+    Project.Current.Elements.OfType<Room>().Single().Name.ShouldBe("First Room");
+  }
+
   [TestCase(AutomapSameDirectionResult.KeepRoom1)]
   [TestCase(AutomapSameDirectionResult.KeepRoom2)]
   [TestCase(AutomapSameDirectionResult.KeepBoth)]
@@ -494,10 +505,26 @@ public class AutomapRegressionTests : IsolatedProjectTests
       var status = parser.Status;
       var running = parser.Running;
       await oldRun.WaitAsync(TimeSpan.FromSeconds(5));
-      parser.Status.ShouldBe(status);
-      parser.Running.ShouldBe(running);
+      if (replacementMode == 0 && running)
+      {
+        new[] { "Automapping is processing the transcript.", "Automapping is waiting for more text." }
+          .Contains(parser.Status)
+          .ShouldBeTrue(parser.Status);
+        parser.Running.ShouldBeTrue();
+      }
+      else if (replacementMode == 4)
+      {
+        parser.Status.ShouldBe(status);
+        parser.Running.ShouldBe(running);
+      }
+
+      if (replacementMode is >= 1 and <= 3)
+        await replacement.WaitAsync(TimeSpan.FromSeconds(5));
+
       Project.Current.Elements.ShouldBeEmpty();
       errors.Count.ShouldBe(replacementMode == 2 || replacementMode == 3 ? 1 : 0);
+      if (replacementMode == 1) parser.Status.ShouldBe("Automapping has completed.");
+      if (replacementMode == 2 || replacementMode == 3) parser.Status.ShouldBe("Automapping halted.");
       if (replacementMode == 0)
       {
         parser.Stop();

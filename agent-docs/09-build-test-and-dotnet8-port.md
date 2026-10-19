@@ -23,7 +23,7 @@ The entire solution targets **.NET 10 LTS** (active LTS, supported through Novem
 
 ### Cross-Platform / Linux
 On Linux/macOS, all projects (including Windows Forms targets) compile with
-`EnableWindowsTargeting=true`; the current build has 0 errors and 5 CA2024 warnings in
+`EnableWindowsTargeting=true`; the current build has 0 errors and 2 CA2024 warnings in
 `Automap.cs` (see Gotcha #13):
 ```bash
 # Build the entire solution
@@ -205,7 +205,7 @@ gesture tests were updated.
 
 ### 13. Modern compiler analyzers (`CA2024`)
 
-The .NET 10 analyzer reports 5 `CA2024` warnings ("Do not use 'reader.EndOfStream' in an async method") in `src/Trizbort.Core/Automap/Automap.cs` (lines 41, 42, 875, 987, 1010) where synchronous `StreamReader.EndOfStream` property checks are used inside asynchronous Automap parsing methods. These are pre-existing logic patterns that compile with 0 errors across the solution.
+The .NET 10 analyzer reports 2 `CA2024` warnings ("Do not use 'reader.EndOfStream' in an async method") in `src/Trizbort.Core/Automap/Automap.cs` where synchronous `StreamReader.EndOfStream` property checks are still used inside live-transcript asynchronous Automap parsing. These are pre-existing logic patterns that compile with 0 errors across the solution. One-shot transcript parsing reads the whole file through a shared-read `FileStream` so Windows tests cover transcripts that remain open for writing by an interpreter.
 
 ### 14. Avalonia headless text rendering pixel probes
 

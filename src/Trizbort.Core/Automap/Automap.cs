@@ -26,13 +26,18 @@ public sealed class Automap
   {
     token.ThrowIfCancellationRequested();
     // for diagnostic purposes, allow single stepping
-    if (_settings.SingleStep && !_stepNow)
+    if (!_settings.SingleStep) return;
+
+    if (_stepNow)
     {
-      Status = "Automapping is waiting for you to step through it (with F11.)";
-      while (!_stepNow) await Task.Delay(50, token);
-      token.ThrowIfCancellationRequested();
       _stepNow = false;
+      return;
     }
+
+    Status = "Automapping is waiting for you to step through it (with F11.)";
+    while (!_stepNow) await Task.Delay(50, token);
+    token.ThrowIfCancellationRequested();
+    _stepNow = false;
   }
 
   private async Task<string> WaitForNewLine(
@@ -878,7 +883,14 @@ public sealed class Automap
     var ownsRun = false;
     try
     {
-      var lines = await File.ReadAllLinesAsync(_settings.FileName, tokenSource.Token);
+      List<string> lines;
+      using (var stream = File.Open(_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+      using (var reader = new StreamReader(stream))
+      {
+        lines = new List<string>();
+        while (await reader.ReadLineAsync(tokenSource.Token) is { } line)
+          lines.Add(line);
+      }
       
       // keep track of lines we read between here and the next prompt
       var linesBetweenPrompts = new List<string>();

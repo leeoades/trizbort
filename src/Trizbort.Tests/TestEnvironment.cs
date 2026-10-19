@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.AppSettings;
+using Trizbort.Domain.Controllers;
 using Trizbort.Setup;
 using Trizbort.UI;
 using Trizbort.Util;
@@ -17,8 +18,16 @@ namespace Trizbort.Tests;
 public class TestEnvironment
 {
   private TemporaryDirectory _directory;
+  private Action<string, bool> _previousBackupReporter;
+  private Action<DocumentVersionWarning, Version, Version> _previousDocVersionWarningReporter;
+  private Action<Exception> _previousErrorReporter;
   private string _previousDirectory;
+  private Func<string> _previousGetClipboardTextHandler;
   private IUserInteraction _previousInteraction;
+  private Action<Exception> _previousSaveErrorReporter;
+  private Action<string> _previousSetClipboardTextHandler;
+  private Action<string> _previousUnknownFileReporter;
+  private Action<string, string> _previousWarningReporter;
 
   [OneTimeSetUp]
   public void Start()
@@ -26,7 +35,16 @@ public class TestEnvironment
     _previousDirectory = Environment.CurrentDirectory;
     _directory = new TemporaryDirectory();
     _previousInteraction = UserInteraction.Current;
+    _previousSetClipboardTextHandler = CopyController.SetClipboardTextHandler;
+    _previousGetClipboardTextHandler = CopyController.GetClipboardTextHandler;
+    _previousUnknownFileReporter = MapLoader.DefaultUnknownFileReporter;
+    _previousErrorReporter = LegacyMapFileEngine.DefaultErrorReporter;
+    _previousWarningReporter = LegacyMapFileEngine.DefaultWarningReporter;
+    _previousSaveErrorReporter = Project.SaveErrorReporter;
+    _previousBackupReporter = Project.BackupReporter;
+    _previousDocVersionWarningReporter = Project.DocVersionWarningReporter;
     UserInteraction.Current = new UnexpectedUserInteraction();
+    InstallUiCallbacks();
     Environment.CurrentDirectory = _directory.Path;
     // Prevent legacy user-settings migration when the controller initializes.
     File.WriteAllText(Path.Combine(_directory.Path, "appsettings.json"), "{}");
@@ -38,8 +56,55 @@ public class TestEnvironment
   {
     Project.FileWatcher.StopWatcher();
     UserInteraction.Current = _previousInteraction;
+    CopyController.SetClipboardTextHandler = _previousSetClipboardTextHandler;
+    CopyController.GetClipboardTextHandler = _previousGetClipboardTextHandler;
+    MapLoader.DefaultUnknownFileReporter = _previousUnknownFileReporter;
+    LegacyMapFileEngine.DefaultErrorReporter = _previousErrorReporter;
+    LegacyMapFileEngine.DefaultWarningReporter = _previousWarningReporter;
+    Project.SaveErrorReporter = _previousSaveErrorReporter;
+    Project.BackupReporter = _previousBackupReporter;
+    Project.DocVersionWarningReporter = _previousDocVersionWarningReporter;
     Environment.CurrentDirectory = _previousDirectory;
     _directory.Dispose();
+  }
+
+  private static void InstallUiCallbacks()
+  {
+    CopyController.SetClipboardTextHandler = text => UserInteraction.SetClipboardText(text);
+    CopyController.GetClipboardTextHandler = () => UserInteraction.GetClipboardText();
+    MapLoader.DefaultUnknownFileReporter = message => UserInteraction.ShowMessage(
+      message,
+      "Not a valid file",
+      MessageBoxButtons.OK,
+      MessageBoxIcon.Exclamation);
+    LegacyMapFileEngine.DefaultErrorReporter = ex => UserInteraction.ShowMessage(
+      $"There was a problem loading the map:{Environment.NewLine}{Environment.NewLine}{ex.Message}",
+      Application.ProductName,
+      MessageBoxButtons.OK,
+      MessageBoxIcon.Error);
+    LegacyMapFileEngine.DefaultWarningReporter = (message, title) => UserInteraction.ShowMessage(message, title);
+    Project.SaveErrorReporter = ex => UserInteraction.ShowMessage(
+      $"There was a problem saving the map:\n\n{ex.Message}",
+      Application.ProductName,
+      MessageBoxButtons.OK,
+      MessageBoxIcon.Error);
+    Project.BackupReporter = (filename, success) => {
+      if (success)
+        UserInteraction.ShowMessage($"Your project has been backed up to {filename}.", "Project backed up.", MessageBoxButtons.OK, MessageBoxIcon.Information);
+      else
+        UserInteraction.ShowMessage("Your project has not yet been saved to a file. There is nothing to backup.", "Nothing to backup.", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+    };
+    Project.DocVersionWarningReporter = (warning, appVers, docVers) => {
+      var infoList = $"Executable Version = {appVers}{Environment.NewLine}Document Version = {docVers}{Environment.NewLine}{Environment.NewLine}";
+      var newVersionText = "Visit https://github.com/leeoades/trizbort/releases to download the latest version.";
+      var message = warning switch {
+        DocumentVersionWarning.Major => $"{infoList}The document is ahead a major version. Information is very likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}",
+        DocumentVersionWarning.Minor => $"{infoList}The document is ahead a minor version. Information is likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}",
+        DocumentVersionWarning.Build => $"{infoList}The document is ahead a build. Information is somewhat likely to be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}",
+        _ => $"{infoList}The document is ahead a minor revision. Information may possibly be lost.{Environment.NewLine}{Environment.NewLine}{newVersionText}"
+      };
+      UserInteraction.ShowMessage(message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+    };
   }
 }
 

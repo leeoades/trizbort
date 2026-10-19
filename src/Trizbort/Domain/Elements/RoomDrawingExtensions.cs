@@ -37,7 +37,7 @@ public static class RoomDrawingExtensions
 
   internal static RoomTextBlocks GetTextBlocks(Room room)
   {
-    var tb = _stateTable.GetOrCreateValue(room);
+    var tb = _stateTable.GetValue(room, key => new RoomTextBlocks(key));
     if (tb.Name.Text != room.Name) tb.Name.Text = room.Name;
     if (tb.SubTitle.Text != room.SubTitle) tb.SubTitle.Text = room.SubTitle;
     if (tb.Objects.Text != room.Objects) tb.Objects.Text = room.Objects;
