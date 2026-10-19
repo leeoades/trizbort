@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -47,15 +48,6 @@ public static class RoomDrawingExtensions
 
   public static void PreDraw(this Room room, DrawingContext context)
   {
-    var topLeft = room.InnerBounds.GetCorner(CompassPoint.NorthWest);
-    var topRight = room.InnerBounds.GetCorner(CompassPoint.NorthEast);
-    var bottomLeft = room.InnerBounds.GetCorner(CompassPoint.SouthWest);
-    var bottomRight = room.InnerBounds.GetCorner(CompassPoint.SouthEast);
-
-    context.LinesDrawn.Add(new LineSegment(topLeft, topRight));
-    context.LinesDrawn.Add(new LineSegment(topRight, bottomRight));
-    context.LinesDrawn.Add(new LineSegment(bottomRight, bottomLeft));
-    context.LinesDrawn.Add(new LineSegment(bottomLeft, topLeft));
   }
 
   public static void Draw(this Room room, XGraphics graphics, Palette palette, DrawingContext context)
@@ -95,11 +87,6 @@ public static class RoomDrawingExtensions
     var slantUp = new LineSegment(bottomLeft, topRight);
     var slantDown = new LineSegment(bottomRight, topLeft);
 
-    context.LinesDrawn.Add(top);
-    context.LinesDrawn.Add(right);
-    context.LinesDrawn.Add(bottom);
-    context.LinesDrawn.Add(left);
-
     if (room.IsStartRoom || room.IsEndRoom || room.IsReference)
     {
       var tBounds = room.InnerBounds;
@@ -129,23 +116,7 @@ public static class RoomDrawingExtensions
     var path = palette.Path();
     room.AddOutline(path, room.InnerBounds, handDrawn);
 
-    if (room.RoomFillColor != Color.Transparent)
-    {
-      graphics.DrawPath(palette.Brush(room.RoomFillColor), path);
-    }
-    else
-    {
-      var region = Settings.Regions.FirstOrDefault(p => p.RegionName == room.Region);
-      if (region?.RegionName != Trizbort.Domain.Misc.Region.DefaultRegion)
-      {
-        if (region != null && region.RColor != Color.Transparent)
-          graphics.DrawPath(palette.Brush(region.RColor), path);
-      }
-      else
-      {
-        graphics.DrawPath(palette.Brush(Settings.Color[Colors.Canvas]), path);
-      }
-    }
+    graphics.DrawPath(palette.Brush(room.ResolveRoomFillColor()), path);
 
     if (room.SecondFillColor != Color.Transparent)
     {
@@ -201,6 +172,29 @@ public static class RoomDrawingExtensions
 
     var textBlocks = GetTextBlocks(room);
     room.DrawText(graphics, palette, textBlocks);
+  }
+
+  private static Color ResolveRoomFillColor(this Room room)
+  {
+    if (room.RoomFillColor != Color.Transparent)
+      return room.RoomFillColor;
+
+    var regionName = string.IsNullOrWhiteSpace(room.Region)
+      ? Trizbort.Domain.Misc.Region.DefaultRegion
+      : room.Region;
+    var region = Settings.Regions.FirstOrDefault(p => string.Equals(
+                   p.RegionName,
+                   regionName,
+                   StringComparison.OrdinalIgnoreCase)) ??
+                 Settings.Regions.FirstOrDefault(p => string.Equals(
+                   p.RegionName,
+                   Trizbort.Domain.Misc.Region.DefaultRegion,
+                   StringComparison.OrdinalIgnoreCase));
+
+    if (region != null && region.RColor != Color.Transparent)
+      return region.RColor;
+
+    return Settings.Color[Colors.Canvas];
   }
 
   public static void AddOutline(this Room room, XGraphicsPath path, Rect bounds, bool handDrawn)
