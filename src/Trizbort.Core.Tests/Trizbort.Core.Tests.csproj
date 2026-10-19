@@ -29,6 +29,7 @@
 	<ItemGroup>
 		<None Include="..\..\tests\manual\*.trizbort" Link="Fixtures\Manual\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\tests\manual\*.bat" Link="Fixtures\Manual\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="Fixtures\classic-manual-model-summaries.txt" Link="Fixtures\classic-manual-model-summaries.txt" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 </Project>

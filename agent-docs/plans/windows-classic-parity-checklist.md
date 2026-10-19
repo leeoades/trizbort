@@ -19,6 +19,7 @@ then mark the section retested.
 Use these status labels in the tables below:
 
 - `Not started`: no parity check has been run.
+- `Partially automated`: model state or selected probes are covered, but rendered pixels and/or UI workflows still need coverage.
 - `Automated`: covered by an automated parity or regression test.
 - `Manual pass`: human visual/interaction check passed.
 - `Difference`: observed difference from baseline; add an entry to the differences log.
@@ -67,18 +68,18 @@ maps are useful smoke tests for real maps, but the manual maps are targeted to s
 | Group | Fixtures | Purpose | Status |
 |---|---|---|---|
 | Persistence inventory | all `tests/manual/*.trizbort` | Load, save, reload, canonical XML, dock-owner identity. | Automated |
-| Basic visual rendering | `borders`, `connections`, `fills`, `object-placement`, `fill-different-room-shapes` | Room borders, connection styles, fills, object placement, room shape fills. | Not started |
+| Basic visual rendering | `borders`, `connections`, `fills`, `object-placement`, `fill-different-room-shapes` | Room borders, connection styles, fills, object placement, room shape fills. | Partially automated |
 | Room shapes and ports | `manual-room-shape-ports-handles`, `rounded-*`, `ellipse-*`, `dark-shapes` | Shape geometry, resize handles, ports, rounded/ellipse line attachment. | Not started |
 | Region and fill colors | `fills-orange-region`, `fills-orange-region-dark`, `map-settings-colors`, `region-accent-*`, `start-room-purple` | Region colors, explicit room colors, dark rooms, start/end/reference highlighting. | Automated |
 | Connection drawing | `connections`, `line-width-*`, `line-colors`, `stalk-length-*`, `one-room-lines`, `stray-line` | Solid/dashed lines, width, colors, stalks, self/stray connections. | Automated |
-| Arrows and labels | `arrow-size-*`, `line-labeling*`, `text-offset-*`, `rounded-to-from*`, `ellipse-to-from*` | Direction chevrons, endpoint labels, mid labels, offsets, shape-specific adjustments. | Not started |
-| Text and fonts | `font-*`, `long-subtitles`, `long-big-subtitles`, `dbcs-text`, `chars-gt-lt-underline-dquote`, `unavailable-font` | Font loading/fallback, style, size, wrapping, Unicode/special characters. | Not started |
-| Object lists | `object-placement`, `object-testing`, `text-cut-paste` | Object list formatting, inside/outside placement, copy/paste text fidelity. | Not started |
-| Map extent and zoom | `17-*`, `big-square`, `vertical-connector-only*`, `horizontal-connector-only*` | Zoom-to-fit, finite zoom, margins, connector-only maps. | Not started |
+| Arrows and labels | `arrow-size-*`, `line-labeling*`, `text-offset-*`, `rounded-to-from*`, `ellipse-to-from*` | Direction chevrons, endpoint labels, mid labels, offsets, shape-specific adjustments. | Partially automated |
+| Text and fonts | `font-*`, `long-subtitles`, `long-big-subtitles`, `dbcs-text`, `chars-gt-lt-underline-dquote`, `unavailable-font` | Font loading/fallback, style, size, wrapping, Unicode/special characters. | Partially automated |
+| Object lists | `object-placement`, `object-testing`, `text-cut-paste` | Object list formatting, inside/outside placement, copy/paste text fidelity. | Partially automated |
+| Map extent and zoom | `17-*`, `big-square`, `vertical-connector-only*`, `horizontal-connector-only*` | Zoom-to-fit, finite zoom, margins, connector-only maps. | Partially automated |
 | Editing commands | `manual-edit-select-special`, `manual-room-swap`, `manual-control-arrow-connections`, `small-room-ctrl-arrow-test` | Select special, room swaps, control-arrow linking, edit command behavior. | Not started |
 | Auto-adjust and navigation | `auto-adjust-*`, `shift-arrow-*`, `connector-choose-right-room`, `connector-rotate-full-ports` | Auto port adjustment, shift-arrow navigation, connector port selection/rotation. | Not started |
 | View/menu workflows | `manual-view-menu`, `manual-help-menu` | View toggles, help/about/menu behavior. | Not started |
-| Statistics | `map-stats-*`, `roomstats-*`, `two-start-rooms` | Room/dead-end/duplicate/start-room statistics. | Not started |
+| Statistics | `map-stats-*`, `roomstats-*`, `two-start-rooms` | Room/dead-end/duplicate/start-room statistics. | Partially automated |
 | PDF and image export | `pdf-save-annotation`, extent fixtures, representative visual fixtures | PDF page bounds, annotations, image dimensions and visual output. | Not started |
 | Code export | `properties-in-brackets-basic`, `ext-chars-test`, representative sample maps | IF language export text and accent/property handling. | Not started |
 | Real sample maps | `samples/*.trizbort`, `Docs/*.trizbort` | Smoke checks on real-world maps and docs examples. | Not started |
@@ -91,6 +92,7 @@ maps are useful smoke tests for real maps, but the manual maps are targeted to s
 |---|---|---|---|
 | New project resets map, selection, viewport, defaults | Automated or manual UI workflow | Not started | |
 | Open all manual fixtures without error | Automated inventory | Automated | See `tests/manual/README.md`. |
+| Manual fixture model summaries preserve classic semantics | `ClassicManualFixtureModelSummaryTests` | Automated | Covers counts, bounds, settings, regions, room fields, connection vertices/segments, and labels for every `tests/manual/*.trizbort`. |
 | Save and Save As preserve canonical map content | Automated parity XML comparison | Not started | |
 | Recent projects and unsaved-change prompts | Manual desktop workflow | Not started | Dialog behavior is intentionally desktop-bound. |
 | File watcher reload prompt | Manual desktop workflow | Not started | |
@@ -101,11 +103,11 @@ maps are useful smoke tests for real maps, but the manual maps are targeted to s
 | Check | Evidence | Status | Notes |
 |---|---|---|---|
 | Canvas background/grid/origin draw correctly | Pixel or screenshot comparison | Not started | |
-| Room fills, second fills, dark tabs, start/end/reference halos | Targeted fixtures and pixel probes | Automated | `ClassicBehaviorCharacterizationTests` covers region and second-fill colors; dark/start/reference still need more probes. |
+| Room fills, second fills, dark tabs, start/end/reference halos | Targeted fixtures, model summaries, and pixel probes | Automated | `ClassicBehaviorCharacterizationTests` covers region and second-fill colors; `ClassicManualFixtureModelSummaryTests` covers loaded style/color state for every manual fixture. Dark/start/reference still need more rendered probes. |
 | Room borders and border styles | `borders.trizbort` screenshot/pixel probes | Not started | |
 | Room shapes: square, rounded, ellipse, octagonal | Shape fixtures and screenshot comparison | Not started | |
 | Text layout: names, subtitles, objects, multiline text | Font/text fixtures | Not started | |
-| Connection geometry, line widths, colors, labels, doors | Connection fixtures | Automated | `ClassicBehaviorCharacterizationTests` covers semantic connection flags/text/colors and rendered line colors; widths/doors still need more probes. |
+| Connection geometry, line widths, colors, labels, doors | Connection fixtures and model summaries | Automated | `ClassicBehaviorCharacterizationTests` covers semantic connection flags/text/colors and rendered line colors; `ClassicManualFixtureModelSummaryTests` covers vertices/segments/door state across all manual fixtures. Widths/doors still need more rendered probes. |
 | Smart-line gaps only at connection crossings, not room borders | Regression tests and visual fixtures | Automated | Covered by current WinForms regression test. |
 | One-way arrows/chevrons render at expected position and direction | Arrow-size fixtures and pixel probes | Not started | |
 | Selection/hover adorners, handles, ports, waypoint handles | Manual interaction and screenshots | Not started | |
@@ -141,7 +143,7 @@ maps are useful smoke tests for real maps, but the manual maps are targeted to s
 
 | Check | Evidence | Status | Notes |
 |---|---|---|---|
-| Load legacy fixtures from `tests/manual` | Automated inventory | Automated | |
+| Load legacy fixtures from `tests/manual` | Automated inventory and model snapshot | Automated | `ClassicManualFixtureModelSummaryTests` characterizes loaded model state for every manual fixture. |
 | Load real sample maps and docs maps | Automated smoke check | Not started | |
 | Save format remains compatible with baseline where expected | XML parity comparison | Not started | Normalize volatile fields. |
 | Unknown/future fields do not crash loader | Targeted tests | Not started | |
@@ -194,11 +196,10 @@ Add one row per observed difference. Keep fixed issues in the table so they can 
 ## Next Automation Targets
 
 1. Add a parity runner that builds a baseline worktree and current tree into separate output folders.
-2. Emit normalized model summaries for every fixture: counts, bounds, regions, room styles, connection endpoints, labels.
-3. Add deterministic export text comparisons for all language exporters.
-4. Add off-screen WinForms canvas bitmap generation for key visual fixtures.
-5. Add tolerant image comparison for selected fixtures after normalizing DPI, size, fonts, and settings.
-6. Store parity output under `artifacts/parity/<baseline>--<current>/` with a machine-readable summary.
+2. Add deterministic export text comparisons for all language exporters.
+3. Add off-screen WinForms canvas bitmap generation for key visual fixtures.
+4. Add tolerant image comparison for selected fixtures after normalizing DPI, size, fonts, and settings.
+5. Store parity output under `artifacts/parity/<baseline>--<current>/` with a machine-readable summary.
 
 ## Forward Characterization Tests
 
@@ -207,4 +208,5 @@ run on every future change, rather than repeatedly launching an old binary. Curr
 
 | Test class | Coverage |
 |---|---|
+| `ClassicManualFixtureModelSummaryTests` | Every `tests/manual/*.trizbort` fixture. Captures deterministic model summaries for loaded settings, regions, room fields, connection endpoints/segments/doors/text, labels, counts, and bounds. Regenerate intentionally with `TRIZBORT_UPDATE_CHARACTERIZATION=1` and `TRIZBORT_CHARACTERIZATION_OUTPUT=<repo snapshot path>`. |
 | `ClassicBehaviorCharacterizationTests` | Manual `connections`, `fills-orange-region`, and `line-colors` fixtures. Captures classic connection semantics, region/second-fill rendering, and rendered custom line colors using off-screen WinForms rendering. |
