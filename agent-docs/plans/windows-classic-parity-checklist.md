@@ -69,8 +69,8 @@ maps are useful smoke tests for real maps, but the manual maps are targeted to s
 | Persistence inventory | all `tests/manual/*.trizbort` | Load, save, reload, canonical XML, dock-owner identity. | Automated |
 | Basic visual rendering | `borders`, `connections`, `fills`, `object-placement`, `fill-different-room-shapes` | Room borders, connection styles, fills, object placement, room shape fills. | Not started |
 | Room shapes and ports | `manual-room-shape-ports-handles`, `rounded-*`, `ellipse-*`, `dark-shapes` | Shape geometry, resize handles, ports, rounded/ellipse line attachment. | Not started |
-| Region and fill colors | `fills-orange-region`, `fills-orange-region-dark`, `map-settings-colors`, `region-accent-*`, `start-room-purple` | Region colors, explicit room colors, dark rooms, start/end/reference highlighting. | Not started |
-| Connection drawing | `connections`, `line-width-*`, `line-colors`, `stalk-length-*`, `one-room-lines`, `stray-line` | Solid/dashed lines, width, colors, stalks, self/stray connections. | Not started |
+| Region and fill colors | `fills-orange-region`, `fills-orange-region-dark`, `map-settings-colors`, `region-accent-*`, `start-room-purple` | Region colors, explicit room colors, dark rooms, start/end/reference highlighting. | Automated |
+| Connection drawing | `connections`, `line-width-*`, `line-colors`, `stalk-length-*`, `one-room-lines`, `stray-line` | Solid/dashed lines, width, colors, stalks, self/stray connections. | Automated |
 | Arrows and labels | `arrow-size-*`, `line-labeling*`, `text-offset-*`, `rounded-to-from*`, `ellipse-to-from*` | Direction chevrons, endpoint labels, mid labels, offsets, shape-specific adjustments. | Not started |
 | Text and fonts | `font-*`, `long-subtitles`, `long-big-subtitles`, `dbcs-text`, `chars-gt-lt-underline-dquote`, `unavailable-font` | Font loading/fallback, style, size, wrapping, Unicode/special characters. | Not started |
 | Object lists | `object-placement`, `object-testing`, `text-cut-paste` | Object list formatting, inside/outside placement, copy/paste text fidelity. | Not started |
@@ -101,11 +101,11 @@ maps are useful smoke tests for real maps, but the manual maps are targeted to s
 | Check | Evidence | Status | Notes |
 |---|---|---|---|
 | Canvas background/grid/origin draw correctly | Pixel or screenshot comparison | Not started | |
-| Room fills, second fills, dark tabs, start/end/reference halos | Targeted fixtures and pixel probes | Not started | Recent regressions were in this area. |
+| Room fills, second fills, dark tabs, start/end/reference halos | Targeted fixtures and pixel probes | Automated | `ClassicBehaviorCharacterizationTests` covers region and second-fill colors; dark/start/reference still need more probes. |
 | Room borders and border styles | `borders.trizbort` screenshot/pixel probes | Not started | |
 | Room shapes: square, rounded, ellipse, octagonal | Shape fixtures and screenshot comparison | Not started | |
 | Text layout: names, subtitles, objects, multiline text | Font/text fixtures | Not started | |
-| Connection geometry, line widths, colors, labels, doors | Connection fixtures | Not started | |
+| Connection geometry, line widths, colors, labels, doors | Connection fixtures | Automated | `ClassicBehaviorCharacterizationTests` covers semantic connection flags/text/colors and rendered line colors; widths/doors still need more probes. |
 | Smart-line gaps only at connection crossings, not room borders | Regression tests and visual fixtures | Automated | Covered by current WinForms regression test. |
 | One-way arrows/chevrons render at expected position and direction | Arrow-size fixtures and pixel probes | Not started | |
 | Selection/hover adorners, handles, ports, waypoint handles | Manual interaction and screenshots | Not started | |
@@ -199,3 +199,12 @@ Add one row per observed difference. Keep fixed issues in the table so they can 
 4. Add off-screen WinForms canvas bitmap generation for key visual fixtures.
 5. Add tolerant image comparison for selected fixtures after normalizing DPI, size, fonts, and settings.
 6. Store parity output under `artifacts/parity/<baseline>--<current>/` with a machine-readable summary.
+
+## Forward Characterization Tests
+
+The preferred long-term protection is to convert baseline observations into ordinary tests that
+run on every future change, rather than repeatedly launching an old binary. Current examples:
+
+| Test class | Coverage |
+|---|---|
+| `ClassicBehaviorCharacterizationTests` | Manual `connections`, `fills-orange-region`, and `line-colors` fixtures. Captures classic connection semantics, region/second-fill rendering, and rendered custom line colors using off-screen WinForms rendering. |
