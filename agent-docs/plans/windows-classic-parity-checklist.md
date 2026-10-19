@@ -14,12 +14,28 @@ then mark the section retested.
 | Test OS | Windows. Record version, DPI scale, and installed fonts for visual runs. |
 | Runner output | Use an ignored directory under `artifacts/parity/`. |
 
+## Latest Capture Output
+
+On 2026-10-19, capture-only test runs generated side-by-side WinForms and Avalonia screenshots
+under `artifacts/parity/2026-10-19/captures/`.
+
+- `index.html`: browser-friendly side-by-side review of every fixture/state.
+- `comparison-summary.csv`: joined manifest for classic/Avalonia dimensions, byte sizes and hashes.
+- `classic-winforms/manifest.csv`: 336 WinForms captures.
+- `avalonia/manifest.csv`: 336 Avalonia captures.
+
+The capture set covers all 112 `tests/manual/*.trizbort` fixtures in three states:
+`export`, `edit-none`, and `edit-selected`. Fixed viewport edit states are `1200x900`;
+export captures intentionally differ in dimensions between frontends because the classic harness
+uses a fixed fitted viewport while Avalonia's export path captures content bounds where available.
+
 ## Status Values
 
 Use these status labels in the tables below:
 
 - `Not started`: no parity check has been run.
 - `Partially automated`: model state or selected probes are covered, but rendered pixels and/or UI workflows still need coverage.
+- `Automated capture`: screenshots/manifests are generated reproducibly, but differences still require review or pixel assertions.
 - `Automated`: covered by an automated parity or regression test.
 - `Manual pass`: human visual/interaction check passed.
 - `Difference`: observed difference from baseline; add an entry to the differences log.
@@ -60,6 +76,14 @@ Use these status labels in the tables below:
 5. For manual UI checks, open the same fixture in baseline and current builds, record pass/fail,
    and add screenshots to `artifacts/parity/<date>/` when reporting a difference.
 
+6. To regenerate the current WinForms/Avalonia visual capture corpus:
+
+   ```powershell
+   $env:TRIZBORT_CAPTURE_OUTPUT="$PWD\artifacts\parity\<date>\captures"
+   dotnet test src\Trizbort.Tests\Trizbort.Tests.csproj -c Debug --filter FullyQualifiedName~ClassicVisualCaptureTests
+   dotnet test src\Trizbort.Avalonia.Tests\Trizbort.Avalonia.Tests.csproj -c Debug --filter FullyQualifiedName~AvaloniaVisualCaptureTests
+   ```
+
 ## Fixture Groups
 
 Use `tests/manual/` as the primary regression fixture set. The `samples/` and `Docs/*.trizbort`
@@ -68,14 +92,14 @@ maps are useful smoke tests for real maps, but the manual maps are targeted to s
 | Group | Fixtures | Purpose | Status |
 |---|---|---|---|
 | Persistence inventory | all `tests/manual/*.trizbort` | Load, save, reload, canonical XML, dock-owner identity. | Automated |
-| Basic visual rendering | `borders`, `connections`, `fills`, `object-placement`, `fill-different-room-shapes` | Room borders, connection styles, fills, object placement, room shape fills. | Partially automated |
-| Room shapes and ports | `manual-room-shape-ports-handles`, `rounded-*`, `ellipse-*`, `dark-shapes` | Shape geometry, resize handles, ports, rounded/ellipse line attachment. | Not started |
+| Basic visual rendering | `borders`, `connections`, `fills`, `object-placement`, `fill-different-room-shapes` | Room borders, connection styles, fills, object placement, room shape fills. | Automated capture |
+| Room shapes and ports | `manual-room-shape-ports-handles`, `rounded-*`, `ellipse-*`, `dark-shapes` | Shape geometry, resize handles, ports, rounded/ellipse line attachment. | Automated capture |
 | Region and fill colors | `fills-orange-region`, `fills-orange-region-dark`, `map-settings-colors`, `region-accent-*`, `start-room-purple` | Region colors, explicit room colors, dark rooms, start/end/reference highlighting. | Automated |
 | Connection drawing | `connections`, `line-width-*`, `line-colors`, `stalk-length-*`, `one-room-lines`, `stray-line` | Solid/dashed lines, width, colors, stalks, self/stray connections. | Automated |
-| Arrows and labels | `arrow-size-*`, `line-labeling*`, `text-offset-*`, `rounded-to-from*`, `ellipse-to-from*` | Direction chevrons, endpoint labels, mid labels, offsets, shape-specific adjustments. | Partially automated |
-| Text and fonts | `font-*`, `long-subtitles`, `long-big-subtitles`, `dbcs-text`, `chars-gt-lt-underline-dquote`, `unavailable-font` | Font loading/fallback, style, size, wrapping, Unicode/special characters. | Partially automated |
-| Object lists | `object-placement`, `object-testing`, `text-cut-paste` | Object list formatting, inside/outside placement, copy/paste text fidelity. | Partially automated |
-| Map extent and zoom | `17-*`, `big-square`, `vertical-connector-only*`, `horizontal-connector-only*` | Zoom-to-fit, finite zoom, margins, connector-only maps. | Partially automated |
+| Arrows and labels | `arrow-size-*`, `line-labeling*`, `text-offset-*`, `rounded-to-from*`, `ellipse-to-from*` | Direction chevrons, endpoint labels, mid labels, offsets, shape-specific adjustments. | Automated capture |
+| Text and fonts | `font-*`, `long-subtitles`, `long-big-subtitles`, `dbcs-text`, `chars-gt-lt-underline-dquote`, `unavailable-font` | Font loading/fallback, style, size, wrapping, Unicode/special characters. | Automated capture |
+| Object lists | `object-placement`, `object-testing`, `text-cut-paste` | Object list formatting, inside/outside placement, copy/paste text fidelity. | Automated capture |
+| Map extent and zoom | `17-*`, `big-square`, `vertical-connector-only*`, `horizontal-connector-only*` | Zoom-to-fit, finite zoom, margins, connector-only maps. | Automated capture |
 | Editing commands | `manual-edit-select-special`, `manual-room-swap`, `manual-control-arrow-connections`, `small-room-ctrl-arrow-test` | Select special, room swaps, control-arrow linking, edit command behavior. | Not started |
 | Auto-adjust and navigation | `auto-adjust-*`, `shift-arrow-*`, `connector-choose-right-room`, `connector-rotate-full-ports` | Auto port adjustment, shift-arrow navigation, connector port selection/rotation. | Not started |
 | View/menu workflows | `manual-view-menu`, `manual-help-menu` | View toggles, help/about/menu behavior. | Not started |
@@ -153,7 +177,7 @@ maps are useful smoke tests for real maps, but the manual maps are targeted to s
 
 | Check | Evidence | Status | Notes |
 |---|---|---|---|
-| Image export dimensions and content match baseline | Bitmap parity | Not started | |
+| Image export dimensions and content match baseline | Bitmap capture corpus | Automated capture | `ClassicVisualCaptureTests` and `AvaloniaVisualCaptureTests` produce manifests and PNGs for all manual fixtures; tolerant pixel assertions are still future work. |
 | PDF page bounds, visual content, annotations match baseline | PDF metadata/pixel/manual | Not started | |
 | Inform 6 export | Text diff | Not started | |
 | Inform 7 export | Text diff | Not started | |
@@ -197,9 +221,8 @@ Add one row per observed difference. Keep fixed issues in the table so they can 
 
 1. Add a parity runner that builds a baseline worktree and current tree into separate output folders.
 2. Add deterministic export text comparisons for all language exporters.
-3. Add off-screen WinForms canvas bitmap generation for key visual fixtures.
-4. Add tolerant image comparison for selected fixtures after normalizing DPI, size, fonts, and settings.
-5. Store parity output under `artifacts/parity/<baseline>--<current>/` with a machine-readable summary.
+3. Add tolerant image comparison for selected fixtures after normalizing DPI, size, fonts, and settings.
+4. Store parity output under `artifacts/parity/<baseline>--<current>/` with a machine-readable summary.
 
 ## Forward Characterization Tests
 
@@ -208,5 +231,7 @@ run on every future change, rather than repeatedly launching an old binary. Curr
 
 | Test class | Coverage |
 |---|---|
+| `ClassicVisualCaptureTests` | Capture-only WinForms screenshot harness. With `TRIZBORT_CAPTURE_OUTPUT` set, writes `export`, `edit-none`, and `edit-selected` PNGs plus a manifest for every manual fixture. Skips when the env var is absent. |
+| `AvaloniaVisualCaptureTests` | Capture-only Avalonia screenshot harness mirroring the WinForms capture states for every manual fixture. Skips when `TRIZBORT_CAPTURE_OUTPUT` is absent. |
 | `ClassicManualFixtureModelSummaryTests` | Every `tests/manual/*.trizbort` fixture. Captures deterministic model summaries for loaded settings, regions, room fields, connection endpoints/segments/doors/text, labels, counts, and bounds. Regenerate intentionally with `TRIZBORT_UPDATE_CHARACTERIZATION=1` and `TRIZBORT_CHARACTERIZATION_OUTPUT=<repo snapshot path>`. |
 | `ClassicBehaviorCharacterizationTests` | Manual `connections`, `fills-orange-region`, and `line-colors` fixtures. Captures classic connection semantics, region/second-fill rendering, and rendered custom line colors using off-screen WinForms rendering. |
