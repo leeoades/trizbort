@@ -53,6 +53,7 @@ prefixed with `tests/`, `samples/`, `Docs/`, or `agent-docs/` are relative to th
 | [`08-cli-and-entry-point.md`](08-cli-and-entry-point.md) | Command-line options, `Program.cs`/`MainForm` startup sequence, how CLI flags map to save/load/automap/export actions. |
 | [`09-build-test-and-dotnet8-port.md`](09-build-test-and-dotnet8-port.md) | Build/test commands, project file structure, and hard-won gotchas from the .NET Framework 4.8 → .NET 8 port & .NET 10 LTS retargeting (read before touching `.csproj`, `app.config`, or `app.manifest`). |
 | [`plans/extract-trizbort-core-and-tests.md`](plans/extract-trizbort-core-and-tests.md) | Architectural roadmap and migration plan for extracting `Trizbort.Core` and `Trizbort.Core.Tests`. |
+| [`plans/windows-classic-parity-checklist.md`](plans/windows-classic-parity-checklist.md) | Persistent checklist for comparing the current WinForms application with a pre-refactor Windows baseline using the manual/sample fixture maps. |
 
 ## Quick orientation (if you only read one paragraph)
 

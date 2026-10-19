@@ -1,0 +1,201 @@
+# Windows Classic Parity Checklist
+
+This plan tracks checks for the Windows Forms application against a known pre-refactor baseline.
+It is intended to be updated incrementally: run a section, record differences, fix regressions,
+then mark the section retested.
+
+## Baseline
+
+| Field | Value |
+|---|---|
+| Baseline revision | TBD. Suggested: last Windows-only release/tag before the core/Avalonia extraction. |
+| Candidate baselines | `v2.3.1-beta.2`, `v2.2.0`, or an explicitly identified pre-refactor commit. |
+| Current revision | Update before each run with `git rev-parse --short HEAD`. |
+| Test OS | Windows. Record version, DPI scale, and installed fonts for visual runs. |
+| Runner output | Use an ignored directory under `artifacts/parity/`. |
+
+## Status Values
+
+Use these status labels in the tables below:
+
+- `Not started`: no parity check has been run.
+- `Automated`: covered by an automated parity or regression test.
+- `Manual pass`: human visual/interaction check passed.
+- `Difference`: observed difference from baseline; add an entry to the differences log.
+- `Fixed`: a difference was fixed but not yet retested.
+- `Retested`: fixed and checked again against baseline.
+- `Accepted`: intentional behavior difference; document why.
+
+## Comparison Workflow
+
+1. Create a baseline worktree outside this worktree, for example:
+
+   ```powershell
+   git worktree add ..\trizbort-baseline v2.3.1-beta.2
+   ```
+
+2. Build both revisions in isolated output folders:
+
+   ```powershell
+   dotnet build Trizbort.sln -c Debug -p:BaseOutputPath=artifacts\parity\current-bin\
+   dotnet build ..\trizbort-baseline\Trizbort.sln -c Debug -p:BaseOutputPath=artifacts\parity\baseline-bin\
+   ```
+
+3. Run current automated tests first:
+
+   ```powershell
+   dotnet test Trizbort.sln -c Debug -p:BaseOutputPath=artifacts\parity\test-bin\
+   ```
+
+4. For parity runs, prefer deterministic comparisons before UI screenshots:
+
+   - load/save canonical XML for every `tests/manual/*.trizbort`
+   - map statistics and validation results
+   - code export text output
+   - PDF metadata/page bounds/annotation counts
+   - rendered canvas bitmap dimensions and sampled pixels
+   - full bitmap comparisons only with tolerance and stable DPI/font settings
+
+5. For manual UI checks, open the same fixture in baseline and current builds, record pass/fail,
+   and add screenshots to `artifacts/parity/<date>/` when reporting a difference.
+
+## Fixture Groups
+
+Use `tests/manual/` as the primary regression fixture set. The `samples/` and `Docs/*.trizbort`
+maps are useful smoke tests for real maps, but the manual maps are targeted to specific behavior.
+
+| Group | Fixtures | Purpose | Status |
+|---|---|---|---|
+| Persistence inventory | all `tests/manual/*.trizbort` | Load, save, reload, canonical XML, dock-owner identity. | Automated |
+| Basic visual rendering | `borders`, `connections`, `fills`, `object-placement`, `fill-different-room-shapes` | Room borders, connection styles, fills, object placement, room shape fills. | Not started |
+| Room shapes and ports | `manual-room-shape-ports-handles`, `rounded-*`, `ellipse-*`, `dark-shapes` | Shape geometry, resize handles, ports, rounded/ellipse line attachment. | Not started |
+| Region and fill colors | `fills-orange-region`, `fills-orange-region-dark`, `map-settings-colors`, `region-accent-*`, `start-room-purple` | Region colors, explicit room colors, dark rooms, start/end/reference highlighting. | Not started |
+| Connection drawing | `connections`, `line-width-*`, `line-colors`, `stalk-length-*`, `one-room-lines`, `stray-line` | Solid/dashed lines, width, colors, stalks, self/stray connections. | Not started |
+| Arrows and labels | `arrow-size-*`, `line-labeling*`, `text-offset-*`, `rounded-to-from*`, `ellipse-to-from*` | Direction chevrons, endpoint labels, mid labels, offsets, shape-specific adjustments. | Not started |
+| Text and fonts | `font-*`, `long-subtitles`, `long-big-subtitles`, `dbcs-text`, `chars-gt-lt-underline-dquote`, `unavailable-font` | Font loading/fallback, style, size, wrapping, Unicode/special characters. | Not started |
+| Object lists | `object-placement`, `object-testing`, `text-cut-paste` | Object list formatting, inside/outside placement, copy/paste text fidelity. | Not started |
+| Map extent and zoom | `17-*`, `big-square`, `vertical-connector-only*`, `horizontal-connector-only*` | Zoom-to-fit, finite zoom, margins, connector-only maps. | Not started |
+| Editing commands | `manual-edit-select-special`, `manual-room-swap`, `manual-control-arrow-connections`, `small-room-ctrl-arrow-test` | Select special, room swaps, control-arrow linking, edit command behavior. | Not started |
+| Auto-adjust and navigation | `auto-adjust-*`, `shift-arrow-*`, `connector-choose-right-room`, `connector-rotate-full-ports` | Auto port adjustment, shift-arrow navigation, connector port selection/rotation. | Not started |
+| View/menu workflows | `manual-view-menu`, `manual-help-menu` | View toggles, help/about/menu behavior. | Not started |
+| Statistics | `map-stats-*`, `roomstats-*`, `two-start-rooms` | Room/dead-end/duplicate/start-room statistics. | Not started |
+| PDF and image export | `pdf-save-annotation`, extent fixtures, representative visual fixtures | PDF page bounds, annotations, image dimensions and visual output. | Not started |
+| Code export | `properties-in-brackets-basic`, `ext-chars-test`, representative sample maps | IF language export text and accent/property handling. | Not started |
+| Real sample maps | `samples/*.trizbort`, `Docs/*.trizbort` | Smoke checks on real-world maps and docs examples. | Not started |
+
+## Functionality Checklist
+
+### File and Project Lifecycle
+
+| Check | Evidence | Status | Notes |
+|---|---|---|---|
+| New project resets map, selection, viewport, defaults | Automated or manual UI workflow | Not started | |
+| Open all manual fixtures without error | Automated inventory | Automated | See `tests/manual/README.md`. |
+| Save and Save As preserve canonical map content | Automated parity XML comparison | Not started | |
+| Recent projects and unsaved-change prompts | Manual desktop workflow | Not started | Dialog behavior is intentionally desktop-bound. |
+| File watcher reload prompt | Manual desktop workflow | Not started | |
+| Clipboard copy/paste of rooms, labels, connections, colors | Automated plus manual clipboard check | Not started | |
+
+### Canvas Rendering
+
+| Check | Evidence | Status | Notes |
+|---|---|---|---|
+| Canvas background/grid/origin draw correctly | Pixel or screenshot comparison | Not started | |
+| Room fills, second fills, dark tabs, start/end/reference halos | Targeted fixtures and pixel probes | Not started | Recent regressions were in this area. |
+| Room borders and border styles | `borders.trizbort` screenshot/pixel probes | Not started | |
+| Room shapes: square, rounded, ellipse, octagonal | Shape fixtures and screenshot comparison | Not started | |
+| Text layout: names, subtitles, objects, multiline text | Font/text fixtures | Not started | |
+| Connection geometry, line widths, colors, labels, doors | Connection fixtures | Not started | |
+| Smart-line gaps only at connection crossings, not room borders | Regression tests and visual fixtures | Automated | Covered by current WinForms regression test. |
+| One-way arrows/chevrons render at expected position and direction | Arrow-size fixtures and pixel probes | Not started | |
+| Selection/hover adorners, handles, ports, waypoint handles | Manual interaction and screenshots | Not started | |
+| Minimap overview and viewport rectangle | Manual UI and/or screenshot | Not started | |
+| Export final-render mode excludes selection/hover adorners | Image/PDF parity check | Not started | |
+
+### Canvas Interaction
+
+| Check | Evidence | Status | Notes |
+|---|---|---|---|
+| Add room/label/connection from keyboard/menu/context menu | Manual or UI integration tests | Not started | |
+| Drag rooms/labels/connections and preserve docked endpoints | Automated geometry tests plus manual feel | Not started | |
+| Resize rooms and labels using handles | Automated plus manual handles fixture | Not started | |
+| Draw new connections between ports and empty canvas | Manual workflow | Not started | |
+| Move connection ports, rotate ports, auto-adjust ports | Manual fixtures | Not started | |
+| Pan, zoom, zoom-to-fit, scrollbars | Extent fixtures and manual view workflow | Not started | |
+| Keyboard movement and shift/control-arrow shortcuts | Manual fixtures and integration tests | Not started | |
+| Selection commands and select-special behavior | Manual fixture | Not started | |
+
+### Dialogs and Settings
+
+| Check | Evidence | Status | Notes |
+|---|---|---|---|
+| Room properties dialog round-trips all fields | Automated dialog tests plus manual | Not started | |
+| Connection properties dialog round-trips all fields | Automated dialog tests plus manual | Not started | |
+| Label properties dialog round-trips outline/background/text | Automated dialog tests plus manual | Not started | |
+| Map settings: colors, fonts, line widths, grid, regions | Settings fixtures and manual dialog | Not started | |
+| Application settings persist and restore | Automated settings tests/manual restart | Not started | |
+| Theme apply/import/export and style preservation prompts | Manual or targeted tests | Not started | |
+| Room style inference preview/apply | Manual or targeted tests | Not started | |
+
+### Persistence and Compatibility
+
+| Check | Evidence | Status | Notes |
+|---|---|---|---|
+| Load legacy fixtures from `tests/manual` | Automated inventory | Automated | |
+| Load real sample maps and docs maps | Automated smoke check | Not started | |
+| Save format remains compatible with baseline where expected | XML parity comparison | Not started | Normalize volatile fields. |
+| Unknown/future fields do not crash loader | Targeted tests | Not started | |
+| Path handling accepts spaces, relative paths, and missing files gracefully | Automated/manual | Not started | |
+
+### Export
+
+| Check | Evidence | Status | Notes |
+|---|---|---|---|
+| Image export dimensions and content match baseline | Bitmap parity | Not started | |
+| PDF page bounds, visual content, annotations match baseline | PDF metadata/pixel/manual | Not started | |
+| Inform 6 export | Text diff | Not started | |
+| Inform 7 export | Text diff | Not started | |
+| TADS export | Text diff | Not started | |
+| Hugo export | Text diff | Not started | |
+| ZIL export | Text diff | Not started | |
+| Alan export | Text diff | Not started | |
+| Quest export | Text diff | Not started | |
+| Adventuron export | Text diff | Not started | |
+| Clipboard exports preserve expected text | Manual/automated clipboard boundary | Not started | |
+
+### Automap
+
+| Check | Evidence | Status | Notes |
+|---|---|---|---|
+| Transcript parsing creates same rooms/exits as baseline | Automated transcript comparison | Not started | |
+| Ambiguous room disambiguation prompts behave as before | Manual UI workflow | Not started | |
+| Same-direction conflict handling behaves as before | Manual/automated callback test | Not started | |
+| Automap start/stop/status/error handling | Manual UI workflow | Not started | |
+| Automap file reading handles encodings and large transcripts | Automated regression | Not started | Recent file-handling changes touched this. |
+
+### Desktop Integration
+
+| Check | Evidence | Status | Notes |
+|---|---|---|---|
+| File dialogs, color dialogs, font dialogs | Manual desktop workflow | Not started | |
+| Clipboard interoperability with external apps | Manual desktop workflow | Not started | |
+| File association launching | Manual desktop workflow | Not started | |
+| Help/about links open expected targets | Manual fixture | Not started | |
+| DPI scaling, multiple monitors, Windows theme differences | Manual screenshot notes | Not started | |
+
+## Differences Log
+
+Add one row per observed difference. Keep fixed issues in the table so they can be retested.
+
+| ID | Date | Fixture/Workflow | Baseline | Current | Severity | Status | Fix commit | Retest notes |
+|---|---|---|---|---|---|---|---|---|
+| D001 | 2026-10-19 | Classic room fills and connection gaps | Room region fills visible; connection lines continuous near rooms | `NoRegion` rooms used canvas color; some lines had gaps near room borders | High | Retested | `3d92b99` | Full solution tests passed after fix. |
+
+## Next Automation Targets
+
+1. Add a parity runner that builds a baseline worktree and current tree into separate output folders.
+2. Emit normalized model summaries for every fixture: counts, bounds, regions, room styles, connection endpoints, labels.
+3. Add deterministic export text comparisons for all language exporters.
+4. Add off-screen WinForms canvas bitmap generation for key visual fixtures.
+5. Add tolerant image comparison for selected fixtures after normalizing DPI, size, fonts, and settings.
+6. Store parity output under `artifacts/parity/<baseline>--<current>/` with a machine-readable summary.
