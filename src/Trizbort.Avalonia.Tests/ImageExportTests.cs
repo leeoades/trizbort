@@ -9,9 +9,11 @@ using Trizbort.Avalonia.Controls;
 using Trizbort.Avalonia.Services;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
+using Trizbort.Setup;
 using DrawingColor = System.Drawing.Color;
 using CoreRect = Trizbort.Domain.Misc.Rect;
 using CoreVector = Trizbort.Domain.Misc.Vector;
+using Region = Trizbort.Domain.Misc.Region;
 
 namespace Trizbort.Avalonia.Tests;
 
@@ -156,6 +158,49 @@ public class ImageExportTests
     }
 
     [AvaloniaTest]
+    public void RenderToBitmap_TransparentRoomFill_UsesDefaultRegionColor()
+    {
+        var previousRegions = Settings.Regions.Select(CloneRegion).ToList();
+
+        try
+        {
+            Settings.Regions = new List<Region>
+            {
+                new()
+                {
+                    RegionName = Region.DefaultRegion,
+                    RColor = DrawingColor.FromArgb(32, 192, 96),
+                    TextColor = DrawingColor.Black
+                }
+            };
+
+            var room = new Room(Project.Current)
+            {
+                Name = string.Empty,
+                Position = new CoreVector(0, 0),
+                Size = new CoreVector(100, 100),
+                Region = Region.DefaultRegion,
+                RoomFillColor = DrawingColor.Transparent,
+                RoomBorderColor = DrawingColor.Transparent
+            };
+            Project.Current.Elements.Add(room);
+
+            using var bitmap = MapCanvasControl.RenderToBitmap(Project.Current, scale: 1.0);
+            bitmap.ShouldNotBeNull();
+
+            var pixel = ReadPixel(bitmap, bitmap.PixelSize.Width / 2, bitmap.PixelSize.Height / 2);
+            pixel.R.ShouldBeLessThan((byte)80);
+            pixel.G.ShouldBeGreaterThan((byte)160);
+            pixel.B.ShouldBeLessThan((byte)140);
+            pixel.A.ShouldBe((byte)255);
+        }
+        finally
+        {
+            Settings.Regions = previousRegions;
+        }
+    }
+
+    [AvaloniaTest]
     public void RenderToBitmap_LargeMap_FitsWithin8192WithoutCroppingExtremities()
     {
         // Place two rooms 20,000 units apart
@@ -232,6 +277,17 @@ public class ImageExportTests
             handle.Free();
         }
         return (buf[0], buf[1], buf[2], buf[3]);
+    }
+
+    private static Region CloneRegion(Region region)
+    {
+        return new Region
+        {
+            RegionName = region.RegionName,
+            RegionId = region.RegionId,
+            RColor = region.RColor,
+            TextColor = region.TextColor
+        };
     }
 
     [Test]

@@ -244,7 +244,6 @@ public class MinimapControl : Control
 
                 // Draw sizeable elements (rooms and map labels)
                 var defaultBorderPen = Settings.Color[CoreColors.Border].ToPen(1.0);
-                var defaultRoomFill = Settings.Color[CoreColors.Canvas].ToBrush();
 
                 foreach (var element in elements)
                 {
@@ -257,7 +256,7 @@ public class MinimapControl : Control
 
                         var fillBrush = isSelected
                             ? selPen.Brush
-                            : (room.RoomFillColor != System.Drawing.Color.Transparent ? room.RoomFillColor.ToBrush() : defaultRoomFill);
+                            : RoomDrawingAdapter.ResolveRoomFillBrush(room);
 
                         var pen = isSelected
                             ? selPen

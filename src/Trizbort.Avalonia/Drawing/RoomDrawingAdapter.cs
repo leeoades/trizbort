@@ -163,27 +163,7 @@ public static class RoomDrawingAdapter
         var geometry = cache.CachedGeometry;
 
         // 4. Determine Primary Fill Brush
-        IBrush fillBrush;
-        if (room.RoomFillColor != CoreColor.Transparent)
-        {
-            fillBrush = room.RoomFillColor.ToBrush();
-        }
-        else if (!string.IsNullOrEmpty(room.Region) && !string.Equals(room.Region, Region.DefaultRegion, StringComparison.OrdinalIgnoreCase))
-        {
-            var regionObj = Settings.Regions.Find(r => string.Equals(r.RegionName, room.Region, StringComparison.OrdinalIgnoreCase));
-            if (regionObj != null && regionObj.RColor != CoreColor.Transparent)
-            {
-                fillBrush = regionObj.RColor.ToBrush();
-            }
-            else
-            {
-                fillBrush = DrawingAdapters.ToBrush(CoreColors.Canvas);
-            }
-        }
-        else
-        {
-            fillBrush = DrawingAdapters.ToBrush(CoreColors.Canvas);
-        }
+        var fillBrush = ResolveRoomFillBrush(room);
 
         // 5. Determine Border Pen
         var borderColor = room.RoomBorderColor != CoreColor.Transparent ? room.RoomBorderColor : Settings.Color[CoreColors.Border];
@@ -277,6 +257,31 @@ public static class RoomDrawingAdapter
             "right" => [topCenter, topRight, bottomRight, bottomCenter],
             _ => null
         };
+    }
+
+    internal static IBrush ResolveRoomFillBrush(Room room)
+    {
+        return ResolveRoomFillColor(room).ToBrush();
+    }
+
+    private static CoreColor ResolveRoomFillColor(Room room)
+    {
+        if (room.RoomFillColor != CoreColor.Transparent)
+        {
+            return room.RoomFillColor;
+        }
+
+        var regionName = string.IsNullOrWhiteSpace(room.Region) ? Region.DefaultRegion : room.Region;
+        var regionObj = Settings.Regions.Find(r =>
+            string.Equals(r.RegionName, regionName, StringComparison.OrdinalIgnoreCase)) ??
+            Settings.Regions.Find(r => string.Equals(r.RegionName, Region.DefaultRegion, StringComparison.OrdinalIgnoreCase));
+
+        if (regionObj != null && regionObj.RColor != CoreColor.Transparent)
+        {
+            return regionObj.RColor;
+        }
+
+        return Settings.Color[CoreColors.Canvas];
     }
 
     private static void DrawRoomText(Room room, AvaloniaDrawingContext context, CoreRect bounds, RoomTextCache cache)
