@@ -227,6 +227,28 @@ public class DrawingAdaptersParityTests
         Assert.That(cache2[1].End.Y, Is.EqualTo(100));
     }
 
+    [Test]
+    public void SmartLineSplitting_SpatialRebuild_DoesNotSplitAgainstRoomBorders()
+    {
+        var project = new Project();
+        var room = new Room(project)
+        {
+            Position = new CoreVector(40, 25),
+            Size = new CoreVector(40, 50)
+        };
+        var conn = new Connection(project, new Vertex(new CoreVector(0, 50)), new Vertex(new CoreVector(120, 50)));
+        project.Elements.Add(room);
+        project.Elements.Add(conn);
+
+        var spatialIndex = new SpatialLineIndex();
+        ConnectionDrawingAdapter.RebuildSpatialIndex(project.Elements, spatialIndex, 1);
+
+        var cache = ConnectionDrawingAdapter.GetCachedSmartSegments(conn, 1);
+        Assert.That(cache.Count, Is.EqualTo(1));
+        Assert.That(cache[0].Start, Is.EqualTo(new CoreVector(0, 50)));
+        Assert.That(cache[0].End, Is.EqualTo(new CoreVector(120, 50)));
+    }
+
     [AvaloniaTest]
     public void GeometryBounds_AllShapes_GenerateValidBounds()
     {

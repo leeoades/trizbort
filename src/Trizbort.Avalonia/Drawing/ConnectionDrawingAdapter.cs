@@ -125,23 +125,8 @@ public static class ConnectionDrawingAdapter
         spatialIndex.Clear();
         var elementList = elements.ToList();
 
-        // 1. Add all room borders
-        foreach (var element in elementList)
-        {
-            if (element is Room room)
-            {
-                var tl = room.InnerBounds.GetCorner(CompassPoint.NorthWest);
-                var tr = room.InnerBounds.GetCorner(CompassPoint.NorthEast);
-                var bl = room.InnerBounds.GetCorner(CompassPoint.SouthWest);
-                var br = room.InnerBounds.GetCorner(CompassPoint.SouthEast);
-                spatialIndex.Add(new CoreLineSegment(tl, tr));
-                spatialIndex.Add(new CoreLineSegment(tr, br));
-                spatialIndex.Add(new CoreLineSegment(br, bl));
-                spatialIndex.Add(new CoreLineSegment(bl, tl));
-            }
-        }
-
-        // 2. Add connection segments in Depth order
+        // Add connection segments in Depth order. This mirrors the stable WinForms
+        // smart-line cache: room borders are not split targets.
         var connections = elementList.OfType<Connection>().OrderBy(c => c.Depth).ToList();
         foreach (var conn in connections)
         {
