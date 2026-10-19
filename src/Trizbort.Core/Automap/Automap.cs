@@ -875,22 +875,11 @@ public sealed class Automap
       _settings.AssumeRoomsWithSameNameAreSameRoom || _settings.VerboseTranscript,
       "Must assume rooms with same name are same room unless transcript is verbose.");
     Status = "Automapping has started.";
-    var lines = new List<string>();
     var ownsRun = false;
     try
     {
-      using (var stream = File.Open(_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-      {
-        using (var reader = new StreamReader(stream))
-        {
-          while (!reader.EndOfStream)
-          {
-            var line = reader.ReadLine();
-            lines.Add(line);
-          }
-        }
-      }
-
+      var lines = await File.ReadAllLinesAsync(_settings.FileName, tokenSource.Token);
+      
       // keep track of lines we read between here and the next prompt
       var linesBetweenPrompts = new List<string>();
       Status = "Automapping is processing the transcript.";
