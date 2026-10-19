@@ -35,14 +35,25 @@ public sealed class Automap
     }
   }
 
-  private async Task<string> WaitForNewLine(StreamReader reader, CancellationToken token)
+  private async Task<string> WaitForNewLine(
+    StreamReader reader,
+    CancellationToken cancellationToken)
   {
-    token.ThrowIfCancellationRequested();
-    if (reader.EndOfStream) Status = "Automapping is waiting for more text.";
-    while (reader.EndOfStream) await Task.Delay(500, token);
-    return await reader.ReadLineAsync();
-  }
+    while (true)
+    {
+      cancellationToken.ThrowIfCancellationRequested();
 
+      var line = await reader.ReadLineAsync(cancellationToken);
+
+      if (line is not null)
+        return line;
+
+      Status = "Automapping is waiting for more text.";
+
+      await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+    }
+  }
+  
   internal bool IsPrompt(string line, out string typedCommand)
   {
     if (line == null)
