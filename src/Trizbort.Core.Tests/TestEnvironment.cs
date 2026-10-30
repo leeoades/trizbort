@@ -22,8 +22,10 @@ public class TestEnvironment
     _previousDirectory = Environment.CurrentDirectory;
     _directory = new TemporaryDirectory();
     Environment.CurrentDirectory = _directory.Path;
-    // Prevent legacy user-settings migration when the controller initializes.
-    File.WriteAllText(Path.Combine(_directory.Path, "appsettings.json"), "{}");
+    // Never touch the real per-user config folder, and prevent legacy migration when the controller initializes.
+    AppPaths.OverrideConfigFolder = Path.Combine(_directory.Path, "config");
+    Directory.CreateDirectory(AppPaths.OverrideConfigFolder);
+    File.WriteAllText(AppPaths.SettingsFilePath, "{}");
     ApplicationSettingsController.ResetSettings();
   }
 
@@ -32,6 +34,7 @@ public class TestEnvironment
   {
     Project.FileWatcher.StopWatcher();
     Environment.CurrentDirectory = _previousDirectory;
+    AppPaths.OverrideConfigFolder = null;
     _directory.Dispose();
   }
 }

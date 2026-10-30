@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Xml;
 using Newtonsoft.Json;
@@ -11,7 +12,6 @@ namespace Trizbort.Domain.AppSettings;
 public static class ApplicationSettingsController
 {
   public const int RecentProjectsMaxCount = 4;
-  private const string AppSettingsFileName = @".\appsettings.json";
 
   private static readonly string _legacyAppSettingsPath = Path.Combine(
     Path.Combine(
@@ -29,18 +29,64 @@ public static class ApplicationSettingsController
 
   public static void LoadSettings()
   {
-    // if app settings don't exist, create a default one
-    if (!File.Exists(AppSettingsFileName))
+    var path = AppPaths.SettingsFilePath;
+
+    // 1. the per-user settings file
+    if (File.Exists(path))
     {
-      if (File.Exists(_legacyAppSettingsPath))
-        LoadLegacyAppSettings();
-      else
+      if (!TryReadSettings(path, true))
+      {
+        AppSettings = new ApplicationSettings();
         ResetSettings();
-      SaveSettings();
+        SaveSettings();
+      }
+
+      return;
+    }
+
+    // 2. a legacy working-directory appsettings.json (imported once), 3. legacy XML, 4. defaults
+    var workingDirectoryFile = Path.Combine(Environment.CurrentDirectory, AppPaths.SettingsFileName);
+    if (!Path.GetFullPath(workingDirectoryFile).Equals(Path.GetFullPath(path), StringComparison.Ordinal)
+        && File.Exists(workingDirectoryFile)
+        && TryReadSettings(workingDirectoryFile, false))
+    {
+      // imported
+    }
+    else if (File.Exists(_legacyAppSettingsPath))
+    {
+      LoadLegacyAppSettings();
     }
     else
     {
-      AppSettings = JsonConvert.DeserializeObject<ApplicationSettings>(File.ReadAllText(AppSettingsFileName));
+      ResetSettings();
+    }
+
+    SaveSettings();
+  }
+
+  private static bool TryReadSettings(string path, bool quarantineIfCorrupt)
+  {
+    try
+    {
+      var loaded = JsonConvert.DeserializeObject<ApplicationSettings>(File.ReadAllText(path));
+      if (loaded == null) throw new JsonException("Settings file is empty.");
+      AppSettings = loaded;
+      return true;
+    }
+    catch (Exception ex)
+    {
+      Debug.WriteLine($"Could not read settings file '{path}': {ex.Message}");
+      if (quarantineIfCorrupt)
+        try
+        {
+          File.Move(path, path + ".bad", true);
+        }
+        catch (Exception moveException)
+        {
+          Debug.WriteLine($"Could not rename corrupt settings file: {moveException.Message}");
+        }
+
+      return false;
     }
   }
 
@@ -63,8 +109,11 @@ public static class ApplicationSettingsController
 
   public static void SaveSettings()
   {
+    var path = AppPaths.SettingsFilePath;
     var serializeObject = JsonConvert.SerializeObject(AppSettings, Formatting.Indented);
-    File.WriteAllText(AppSettingsFileName, serializeObject);
+    var temp = path + ".tmp";
+    File.WriteAllText(temp, serializeObject);
+    File.Move(temp, path, true);
   }
 
   private static void LoadLegacyAppSettings()
