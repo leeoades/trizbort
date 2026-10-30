@@ -11,6 +11,7 @@ using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
+using Trizbort.Editor;
 using Trizbort.Export;
 using Trizbort.Export.Languages;
 using Trizbort.Setup;
@@ -38,7 +39,7 @@ public class FileExportAutomapSmokeTests
     private string? _previousLastProject;
     private bool _previousSaveAt100;
     private Action<string, string>? _previousErrorReporter;
-    private Func<Room, string, AutomapSameDirectionResult>? _previousRoomChooser;
+    private IEditorPrompts? _previousPrompts;
     private MainWindowViewModel? _lastVm;
     private string _tempDir = string.Empty;
 
@@ -53,7 +54,7 @@ public class FileExportAutomapSmokeTests
         _previousLastProject = app.LastProjectFileName;
         _previousSaveAt100 = app.SaveAt100;
         _previousErrorReporter = AutomapEngine.ErrorReporter;
-        _previousRoomChooser = AutomapEngine.ConflictingRoomChooser;
+        _previousPrompts = AutomapEngine.Instance.Prompts;
         _lastVm = null;
         _tempDir = Path.Combine(Path.GetTempPath(), "trizbort_smoke_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_tempDir);
@@ -69,7 +70,7 @@ public class FileExportAutomapSmokeTests
         }
 
         AutomapEngine.ErrorReporter = _previousErrorReporter;
-        AutomapEngine.ConflictingRoomChooser = _previousRoomChooser;
+        AutomapEngine.Instance.Prompts = _previousPrompts ?? NonInteractiveEditorPrompts.Instance;
 
         var app = ApplicationSettingsController.AppSettings;
         app.LoadLastProjectOnStart = _previousLoadLast;
@@ -641,7 +642,7 @@ public class FileExportAutomapSmokeTests
 
     /// <summary>Smoke step 7.62: a transcript naming a room ambiguously asks which room was meant (known gap: I-008).</summary>
     [Test]
-    [Ignore("known gap: I-008")]
+    [Ignore("enabled by ticket 012")]
     public async Task S7_62_AmbiguousRoomName_AsksWhichRoomWasMeant()
     {
         var first = new Room(Project.Current) { Name = "Cave", Id = 1 };
@@ -663,14 +664,14 @@ public class FileExportAutomapSmokeTests
 
     /// <summary>Smoke step 7.63: two rooms claiming the same exit asks what to do (known gap: I-008).</summary>
     [Test]
-    [Ignore("known gap: I-008")]
+    [Ignore("enabled by ticket 012")]
     public void S7_63_SameExitConflict_AsksWhatToDo()
     {
-        // App start-up wires only ErrorReporter; the chooser stays null so Core silently keeps room 1.
-        AutomapEngine.ConflictingRoomChooser = null;
+        // Ticket 012 assigns interactive prompts at start-up; until then Core uses the non-interactive ones.
+        AutomapEngine.Instance.Prompts = NonInteractiveEditorPrompts.Instance;
         App.WireAutomapErrorReporter(new RecordingDialogService(), () => null);
 
-        AutomapEngine.ConflictingRoomChooser.ShouldNotBeNull();
+        AutomapEngine.Instance.Prompts.ShouldNotBeSameAs(NonInteractiveEditorPrompts.Instance);
     }
 
     /// <summary>Smoke step 7.64: with automap running, closing the window stops automap without a hang.</summary>

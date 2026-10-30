@@ -10,6 +10,7 @@ using Trizbort.Automap.Utility;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
+using Trizbort.Editor;
 using Trizbort.Setup;
 using Region = Trizbort.Domain.Misc.Region;
 
@@ -17,7 +18,7 @@ namespace Trizbort.Automap;
 
 public sealed class Automap
 {
-  private readonly Func<Room, string, AutomapSameDirectionResult> _chooseConflictingRoom;
+  private bool _dontAskAboutAmbiguities;
   private readonly Action<string, string> _reportError;
   public bool UseDottedConnection { get; set; }
 
@@ -312,9 +313,30 @@ public sealed class Automap
     return paragraph != null;
   }
 
-  private Room FindRoom(string roomName, string roomDescription, string line)
+  private async Task<Room> FindRoomAsync(
+    string roomName,
+    string roomDescription,
+    string line,
+    CancellationToken token)
   {
-    return _canvas.FindRoom(roomName, roomDescription, line, (n, d, r) => Match(r, n, d));
+    var result = _canvas.FindRooms(roomName, roomDescription, (n, d, r) => Match(r, n, d));
+    if (result.Certain != null) return result.Certain;
+
+    var maybes = result.Maybes;
+    if (maybes == null || maybes.Count == 0) return null;
+    if (_dontAskAboutAmbiguities) return maybes[0];
+    if (maybes.Count == 1 && (string.IsNullOrEmpty(roomDescription) || maybes[0].PrimaryDescription == null))
+      return maybes[0];
+
+    var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, maybes, token);
+    token.ThrowIfCancellationRequested();
+    if (choice.AutoChooseRest)
+    {
+      _dontAskAboutAmbiguities = true;
+      return maybes[0];
+    }
+
+    return choice.NewRoom ? null : choice.Chosen;
   }
 
   private bool? Match(Room room, string name, string description)
@@ -397,7 +419,7 @@ public sealed class Automap
         ExtractParagraph(lines, index + 1, out roomDescription);
 
         // work out which room the transcript is referring to here, asking them if necessary
-        var room = FindRoom(roomName, roomDescription, line);
+        var room = await FindRoomAsync(roomName, roomDescription, line, token);
         token.ThrowIfCancellationRequested();
         if (room == null)
         {
@@ -411,7 +433,7 @@ public sealed class Automap
                             .FirstOrDefault()?.GetTargetRoom();
             if (otherRoom != null)
             {
-              var decision = _chooseConflictingRoom(otherRoom, roomName);
+              var decision = await Prompts.ChooseSameDirectionAsync(otherRoom, roomName, token);
               token.ThrowIfCancellationRequested();
               switch (decision)
               {
@@ -427,6 +449,11 @@ public sealed class Automap
                   room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
                   _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
                   break;
+                case AutomapSameDirectionResult.Cancel:
+                  // treat like a cancelled run
+                  Stop();
+                  token.ThrowIfCancellationRequested();
+                  throw new OperationCanceledException(token);
                 default:
                   throw new ArgumentOutOfRangeException();
               }
@@ -803,21 +830,18 @@ public sealed class Automap
   // This implements the static initialization design pattern for a singleton.
   // It prevents having two automap instances trying to write to the map simultaneously.
 
-  public static Func<Room, string, AutomapSameDirectionResult> ConflictingRoomChooser { get; set; }
   public static Action<string, string> ErrorReporter { get; set; }
 
-  public Automap() : this(
-    (msg, title) => ErrorReporter?.Invoke(msg, title),
-    (room, name) => ConflictingRoomChooser != null ? ConflictingRoomChooser(room, name) : AutomapSameDirectionResult.KeepRoom1)
+  public IEditorPrompts Prompts { get; set; } = NonInteractiveEditorPrompts.Instance;
+
+  public Automap() : this((msg, title) => ErrorReporter?.Invoke(msg, title), NonInteractiveEditorPrompts.Instance)
   {
   }
 
-  public Automap(
-    Action<string, string> reportError,
-    Func<Room, string, AutomapSameDirectionResult> chooseConflictingRoom)
+  public Automap(Action<string, string> reportError, IEditorPrompts prompts)
   {
     _reportError = reportError;
-    _chooseConflictingRoom = chooseConflictingRoom;
+    Prompts = prompts ?? NonInteractiveEditorPrompts.Instance;
     Status = "Automap is not running.";
   }
 
@@ -830,6 +854,7 @@ public sealed class Automap
     _lastMoveDirection = null;
     _gameName = string.Empty;
     _stepNow = false;
+    _dontAskAboutAmbiguities = false;
     UseDottedConnection = false;
   }
 

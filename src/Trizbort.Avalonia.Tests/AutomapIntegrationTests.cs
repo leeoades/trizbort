@@ -6,6 +6,7 @@ using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
+using Trizbort.Editor;
 using Trizbort.Export;
 using AutomapEngine = Trizbort.Automap.Automap;
 
@@ -18,7 +19,7 @@ public class AutomapIntegrationTests
 {
     private Project? _previousProject;
     private Action<string, string>? _previousErrorReporter;
-    private Func<Room, string, AutomapSameDirectionResult>? _previousRoomChooser;
+    private IEditorPrompts? _previousPrompts;
     private string? _tempTranscriptPath;
     private MainWindowViewModel? _lastVm;
 
@@ -28,7 +29,7 @@ public class AutomapIntegrationTests
         _previousProject = Project.Current;
         Project.Current = new Project();
         _previousErrorReporter = AutomapEngine.ErrorReporter;
-        _previousRoomChooser = AutomapEngine.ConflictingRoomChooser;
+        _previousPrompts = AutomapEngine.Instance.Prompts;
         _lastVm = null;
     }
 
@@ -46,7 +47,7 @@ public class AutomapIntegrationTests
         }
 
         AutomapEngine.ErrorReporter = _previousErrorReporter;
-        AutomapEngine.ConflictingRoomChooser = _previousRoomChooser;
+        AutomapEngine.Instance.Prompts = _previousPrompts ?? NonInteractiveEditorPrompts.Instance;
 
         if (_tempTranscriptPath != null && File.Exists(_tempTranscriptPath))
         {

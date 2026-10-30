@@ -166,20 +166,18 @@ public class AutomapCanvas : IAutomapCanvas
     return room;
   }
 
-  public Room FindRoom(string roomName, string roomDescription, string line, RoomMatcher matcher)
+  public RoomSearchResult FindRooms(string roomName, string roomDescription, RoomMatcher matcher)
   {
     var list = new List<Room>();
     foreach (var element in CurrentProject.Elements)
-      if (element is Room room1)
+      if (element is Room room)
       {
-        var room = room1;
         var matches = matcher(roomName, roomDescription, room);
-        if (matches.HasValue && matches.Value) return room;
+        if (matches.HasValue && matches.Value) return new RoomSearchResult(room, list);
         if (!matches.HasValue) list.Add(room);
       }
 
-    if (list.Count == 0) return null;
-    return list[0];
+    return new RoomSearchResult(null, list);
   }
 
   public void RemoveExitStub(Room room, MappableDirection direction)

@@ -16,11 +16,11 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         _innerCanvas = new AutomapCanvas(project, automap);
     }
 
-    public Room FindRoom(string roomName, string roomDescription, string line, RoomMatcher matcher)
+    public RoomSearchResult FindRooms(string roomName, string roomDescription, RoomMatcher matcher)
     {
         return Dispatcher.UIThread.CheckAccess()
-            ? _innerCanvas.FindRoom(roomName, roomDescription, line, matcher)
-            : Dispatcher.UIThread.Invoke(() => _innerCanvas.FindRoom(roomName, roomDescription, line, matcher));
+            ? _innerCanvas.FindRooms(roomName, roomDescription, matcher)
+            : Dispatcher.UIThread.Invoke(() => _innerCanvas.FindRooms(roomName, roomDescription, matcher));
     }
 
     public Room CreateRoom(Room existing, string name)

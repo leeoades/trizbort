@@ -13,6 +13,7 @@ using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
+using Trizbort.Editor;
 using Trizbort.Export.Languages;
 using Trizbort.Setup;
 using Parser = Trizbort.Automap.Automap;
@@ -27,7 +28,34 @@ public class AutomapRegressionTests : IsolatedProjectTests
   {
     return new Parser(
       (message, title) => throw new AssertionException(title + ": " + message),
-      (_, __) => throw new AssertionException("Unexpected ambiguity"));
+      new DelegatePrompts((_, __) => throw new AssertionException("Unexpected ambiguity")));
+  }
+
+  private sealed class DelegatePrompts : IEditorPrompts
+  {
+    private readonly Func<Room, string, AutomapSameDirectionResult> _sameDirection;
+
+    public DelegatePrompts(Func<Room, string, AutomapSameDirectionResult> sameDirection)
+    {
+      _sameDirection = sameDirection;
+    }
+
+    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
+      Room existing,
+      string newRoomName,
+      CancellationToken token = default)
+    {
+      return Task.FromResult(_sameDirection(existing, newRoomName));
+    }
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(
+      string transcriptLine,
+      string roomDescription,
+      IReadOnlyList<Room> candidates,
+      CancellationToken token = default)
+    {
+      throw new AssertionException("Unexpected disambiguation");
+    }
   }
 
   private AutomapSettings SettingsFor(string text, bool twoWay = true, bool guess = false)
@@ -226,7 +254,7 @@ public class AutomapRegressionTests : IsolatedProjectTests
   public async Task MissingTranscript_ReportsErrorAndDoesNotClaimCompletion()
   {
     string failure = null;
-    var parser = new Parser((message, _) => failure = message, (_, __) => AutomapSameDirectionResult.KeepRoom1);
+    var parser = new Parser((message, _) => failure = message, NonInteractiveEditorPrompts.Instance);
     var canvas = new AutomapCanvas();
     var settings = AutomapSettings.Default;
     settings.FileName = Files.File("missing.txt");
@@ -261,12 +289,12 @@ public class AutomapRegressionTests : IsolatedProjectTests
     var decisions = 0;
     var parser = new Parser(
       (message, _) => throw new AssertionException(message),
-      (existing, name) => {
+      new DelegatePrompts((existing, name) => {
         existing.ShouldBeSameAs(original);
         name.ShouldBe("Replacement Room");
         decisions++;
         return decision;
-      });
+      }));
     await parser.StartCl(
       canvas,
       SettingsFor(
@@ -400,12 +428,12 @@ public class AutomapRegressionTests : IsolatedProjectTests
     Parser parser = null;
     parser = new Parser(
       (message, _) => throw new AssertionException(message),
-      (_, __) => {
+      new DelegatePrompts((_, __) => {
         decisions++;
         engine.Save(before).ShouldBeTrue();
         parser.Stop();
         return decision;
-      });
+      }));
     var settings = SettingsFor(
       "Example Game\n\nFirst Room\nA small room.\n\n>e\n\nReplacement Room\nAnother room.\n\n" +
       ">tb see Key\n>n\n\nFinal Room\nA final description.\n\n>look\n");
@@ -487,7 +515,7 @@ public class AutomapRegressionTests : IsolatedProjectTests
     var errors = new List<string>();
     var parser = new Parser(
       (message, _) => errors.Add(message),
-      (_, __) => throw new AssertionException("Unexpected ambiguity"));
+      new DelegatePrompts((_, __) => throw new AssertionException("Unexpected ambiguity")));
     var settings = SettingsFor("Old Game\n\nOld Room\nAn old description.\n\n>look\n");
     settings.SingleStep = true;
     var oldRun = oldOneShot ? parser.StartCl(canvas, settings) : parser.Start(canvas, settings);
