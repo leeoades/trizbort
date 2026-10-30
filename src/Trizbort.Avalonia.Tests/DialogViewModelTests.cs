@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Shouldly;
 using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
@@ -208,6 +209,75 @@ public class DialogViewModelTests
     }
 
     [Test]
+    public void RoomPropertiesViewModel_CustomPositionAndBorderNone_RoundTrip()
+    {
+        var room = new Room(Project.Current)
+        {
+            Name = "Hall",
+            ObjectsCustomPosition = true,
+            ObjectsCustomPositionDown = 12,
+            ObjectsCustomPositionRight = -7,
+            BorderStyle = BorderDashStyle.None
+        };
+        Project.Current.Elements.Add(room);
+
+        var vm = new RoomPropertiesViewModel();
+        vm.Initialize(room);
+        vm.UseCustomPosition.ShouldBeTrue();
+        vm.CustomPositionDown.ShouldBe(12);
+        vm.CustomPositionRight.ShouldBe(-7);
+        vm.AvailableBorderStyles.ShouldContain(BorderDashStyle.None);
+        vm.BorderStyle.ShouldBe(BorderDashStyle.None);
+
+        vm.CustomPositionDown = 3;
+        vm.UseCustomPosition = false;
+        vm.ApplyTo(room);
+        room.ObjectsCustomPosition.ShouldBeFalse();
+        room.ObjectsCustomPositionDown.ShouldBe(3);
+        room.ObjectsCustomPositionRight.ShouldBe(-7);
+        room.BorderStyle.ShouldBe(BorderDashStyle.None);
+    }
+
+    [TestCase("Bottom")]
+    [TestCase("BottomRight")]
+    [TestCase("BottomLeft")]
+    [TestCase("Left")]
+    [TestCase("Right")]
+    [TestCase("TopRight")]
+    [TestCase("TopLeft")]
+    [TestCase("Top")]
+    public void RoomPropertiesViewModel_SecondFillLocation_RoundTrips(string location)
+    {
+        var room = new Room(Project.Current) { Name = "Fill", SecondFillLocation = location };
+        Project.Current.Elements.Add(room);
+
+        var vm = new RoomPropertiesViewModel();
+        vm.AvailableSecondFillLocations.ShouldContain(location);
+        vm.AvailableSecondFillLocations.Count.ShouldBe(8);
+        vm.Initialize(room);
+        vm.SecondFillLocation.ShouldBe(location);
+
+        room.SecondFillLocation = "Bottom";
+        vm.ApplyTo(room);
+        room.SecondFillLocation.ShouldBe(location);
+    }
+
+    [Test]
+    public void EnumDisplay_ProducesFriendlyNames()
+    {
+        EnumDisplay.For(RoomShape.SquareCorners).ShouldBe("Straight Edges");
+        EnumDisplay.For(RoomShape.RoundedCorners).ShouldBe("Rounded Corners");
+        EnumDisplay.For(RoomShape.Ellipse).ShouldBe("Ellipse");
+        EnumDisplay.For(RoomShape.Octagonal).ShouldBe("Octagonal");
+        EnumDisplay.For(BorderDashStyle.DashDot).ShouldBe("Dash-dot");
+        EnumDisplay.For(BorderDashStyle.DashDotDot).ShouldBe("Dash-dot-dot");
+        EnumDisplay.For(BorderDashStyle.None).ShouldBe("None");
+        EnumDisplay.For(HandDrawnStyle.HandDrawn).ShouldBe("Hand-drawn");
+        EnumDisplay.For(HandDrawnStyle.Straight).ShouldBe("Straight");
+        EnumDisplay.For(HandDrawnStyle.MapDefault).ShouldStartWith("Map setting (");
+    }
+
+    [Test]
     public void ConnectionPropertiesViewModel_InitializeAndApplyTo_RoundTripsValuesCorrectly()
     {
         var v1 = new Vertex(new Vector(0, 0));
@@ -316,6 +386,80 @@ public class DialogViewModelTests
         label.HasBackground.ShouldBeFalse();
     }
     [Test]
+    public void MapSettingsViewModel_NewFields_RoundTripThroughSettings()
+    {
+        var savedHandle = Settings.HandleSize;
+        var savedSnap = Settings.SnapToElementSize;
+        var savedWidth = Settings.LineWidth;
+        var savedMargins = Settings.DocumentSpecificMargins;
+        var savedHorizontal = Settings.DocHorizontalMargin;
+        var savedVertical = Settings.DocVerticalMargin;
+        try
+        {
+            var vm = new MapSettingsViewModel();
+            vm.Initialize();
+            vm.HandleSize = 20.0f;
+            vm.SnapToElementDistance = 24.0f;
+            vm.LineWidth = 2.5f;
+            vm.DocumentSpecificMargins = true;
+            vm.DocHorizontalMargin = 30.0f;
+            vm.DocVerticalMargin = 40.0f;
+            vm.ApplyToSettings();
+
+            Settings.HandleSize.ShouldBe(20.0f);
+            Settings.SnapToElementSize.ShouldBe(24.0f);
+            Settings.LineWidth.ShouldBe(2.5f);
+            Settings.DocumentSpecificMargins.ShouldBeTrue();
+            Settings.DocHorizontalMargin.ShouldBe(30.0f);
+            Settings.DocVerticalMargin.ShouldBe(40.0f);
+
+            var reloaded = new MapSettingsViewModel();
+            reloaded.Initialize();
+            reloaded.HandleSize.ShouldBe(20.0f);
+            reloaded.SnapToElementDistance.ShouldBe(24.0f);
+            reloaded.LineWidth.ShouldBe(2.5f);
+        }
+        finally
+        {
+            Settings.HandleSize = savedHandle;
+            Settings.SnapToElementSize = savedSnap;
+            Settings.LineWidth = savedWidth;
+            Settings.DocumentSpecificMargins = savedMargins;
+            Settings.DocHorizontalMargin = savedHorizontal;
+            Settings.DocVerticalMargin = savedVertical;
+        }
+    }
+
+    [Test]
+    public void MapSettingsViewModel_Validate_RejectsEmptyAndLetterlessRoomName()
+    {
+        var vm = new MapSettingsViewModel();
+        vm.Initialize();
+
+        vm.DefaultRoomName = "  ";
+        vm.Validate().ShouldBeFalse();
+        vm.DefaultRoomNameError.ShouldBe(MapSettingsViewModel.EmptyRoomNameMessage);
+        vm.HasDefaultRoomNameError.ShouldBeTrue();
+
+        vm.DefaultRoomName = "123";
+        vm.Validate().ShouldBeFalse();
+        vm.DefaultRoomNameError.ShouldBe(MapSettingsViewModel.NoLetterRoomNameMessage);
+
+        vm.DefaultRoomName = "Cave 2";
+        vm.Validate().ShouldBeTrue();
+        vm.HasDefaultRoomNameError.ShouldBeFalse();
+    }
+
+    [Test]
+    public void MapSettingsViewModel_ShapeChoices_UseLegacyNames()
+    {
+        var vm = new MapSettingsViewModel();
+        vm.ShapeChoices.Select(c => c.Display).ShouldBe(
+            new[] { "Straight Edges", "Rounded Corners", "Ellipse", "Octagonal" });
+        vm.ShapeChoices.Select(c => c.Value).Distinct().Count().ShouldBe(4);
+    }
+
+    [Test]
     public void MapSettingsViewModel_RenameAndDeleteRegion_UpdatesRooms()
     {
         var savedRegions = Settings.Regions.ToList();
@@ -378,6 +522,45 @@ public class DialogViewModelTests
         finally
         {
             Settings.Regions = savedRegions;
+        }
+    }
+
+    [Test]
+    public void AppSettings_PortAdjustAndSmartSave_RoundTrip()
+    {
+        var settings = ApplicationSettingsController.AppSettings;
+        var saved = (settings.PortAdjustDetail, settings.SaveAt100, settings.SaveToPDF, settings.SaveToImage,
+            settings.SaveTadstoAdv3Lite, settings.DefaultImageType);
+        try
+        {
+            var vm = new AppSettingsViewModel();
+            vm.Initialize();
+            vm.PortAdjustDetail = 2;
+            vm.SaveAt100 = true;
+            vm.SaveToPdf = true;
+            vm.SaveToImage = true;
+            vm.SaveTadsToAdv3Lite = true;
+            vm.DefaultImageType = 1;
+            vm.ApplyToSettings();
+
+            var vm2 = new AppSettingsViewModel();
+            vm2.Initialize();
+            vm2.PortAdjustDetail.ShouldBe(2);
+            vm2.SaveAt100.ShouldBeTrue();
+            vm2.SaveToPdf.ShouldBeTrue();
+            vm2.SaveToImage.ShouldBeTrue();
+            vm2.SaveTadsToAdv3Lite.ShouldBeTrue();
+            vm2.DefaultImageType.ShouldBe(1);
+        }
+        finally
+        {
+            settings.PortAdjustDetail = saved.PortAdjustDetail;
+            settings.SaveAt100 = saved.SaveAt100;
+            settings.SaveToPDF = saved.SaveToPDF;
+            settings.SaveToImage = saved.SaveToImage;
+            settings.SaveTadstoAdv3Lite = saved.SaveTadstoAdv3Lite;
+            settings.DefaultImageType = saved.DefaultImageType;
+            ApplicationSettingsController.SaveSettings();
         }
     }
 }

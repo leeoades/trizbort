@@ -40,7 +40,7 @@ Overall layout difference: the legacy dialog keeps Name, Subtitle, Border Style,
 | Subtitle Text colour | "Su&btitle Text" (RPD.D.cs:436) | "Subtitle Text:" (axaml:127) | Implemented | |
 | OK / Cancel | "O&K" (default), "Cancel" (RPD.D.cs:137,150,1198,1202) | "OK" IsDefault, "Cancel" IsCancel (axaml:146-147) | Implemented | Neither has Apply. |
 
-Fields missing in Avalonia: 3 (Custom Position, Down, Right). Also missing: shape preview, Object Syntax help, `Border = None`, 4 Second Fill locations.
+Fields missing in Avalonia: 0 (ticket 071 added Custom Position, Down, Right, `Border = None` and all 8 Second Fill locations; header is now persistent above the tabs; dropdowns show friendly text via `EnumDisplay`; legacy labels and access keys restored; default size 560x600). Still missing: shape preview, Object Syntax help, validation, conditional Rounded Corners group (072), Objects editor (073), region swatches.
 
 ## 2. Context checklist
 

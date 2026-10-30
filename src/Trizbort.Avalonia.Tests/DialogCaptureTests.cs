@@ -43,7 +43,7 @@ public class DialogCaptureTests
         "Has Door",
         "Draw Outline",
         "Fill Background",
-        "All corners equal",
+        "Make all corners _equal",
         "Transcript is verbose"
     };
 

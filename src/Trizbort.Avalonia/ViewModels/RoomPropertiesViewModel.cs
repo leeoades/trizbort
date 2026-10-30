@@ -30,6 +30,15 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     private CompassPoint _objectsPosition = CompassPoint.South;
 
     [ObservableProperty]
+    private bool _useCustomPosition;
+
+    [ObservableProperty]
+    private int _customPositionDown;
+
+    [ObservableProperty]
+    private int _customPositionRight;
+
+    [ObservableProperty]
     private bool _isDark;
 
     [ObservableProperty]
@@ -94,15 +103,16 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     public IReadOnlyList<RoomShape> AvailableShapes { get; } = [
         RoomShape.SquareCorners,
         RoomShape.RoundedCorners,
-        RoomShape.Octagonal,
-        RoomShape.Ellipse
+        RoomShape.Ellipse,
+        RoomShape.Octagonal
     ];
     public IReadOnlyList<BorderDashStyle> AvailableBorderStyles { get; } = [
         BorderDashStyle.Solid,
         BorderDashStyle.Dash,
-        BorderDashStyle.Dot,
         BorderDashStyle.DashDot,
-        BorderDashStyle.DashDotDot
+        BorderDashStyle.DashDotDot,
+        BorderDashStyle.Dot,
+        BorderDashStyle.None
     ];
     public IReadOnlyList<HandDrawnStyle> AvailableHandDrawnStyles { get; } = [
         HandDrawnStyle.MapDefault,
@@ -120,10 +130,14 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         CompassPoint.NorthWest
     ];
     public IReadOnlyList<string> AvailableSecondFillLocations { get; } = [
-        "Top",
         "Bottom",
+        "BottomRight",
+        "BottomLeft",
         "Left",
-        "Right"
+        "Right",
+        "TopRight",
+        "TopLeft",
+        "Top"
     ];
 
     partial void OnAllCornersEqualChanged(bool value)
@@ -153,6 +167,9 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         Description = room.PrimaryDescription ?? string.Empty;
         Objects = room.Objects ?? string.Empty;
         ObjectsPosition = room.ObjectsPosition;
+        UseCustomPosition = room.ObjectsCustomPosition;
+        CustomPositionDown = room.ObjectsCustomPositionDown;
+        CustomPositionRight = room.ObjectsCustomPositionRight;
         IsDark = room.IsDark;
         IsStartRoom = room.IsStartRoom;
         IsEndRoom = room.IsEndRoom;
@@ -209,6 +226,9 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         }
         room.Objects = Objects;
         room.ObjectsPosition = ObjectsPosition;
+        room.ObjectsCustomPosition = UseCustomPosition;
+        room.ObjectsCustomPositionDown = CustomPositionDown;
+        room.ObjectsCustomPositionRight = CustomPositionRight;
         room.IsDark = IsDark;
         room.IsStartRoom = IsStartRoom;
         room.IsEndRoom = IsEndRoom;

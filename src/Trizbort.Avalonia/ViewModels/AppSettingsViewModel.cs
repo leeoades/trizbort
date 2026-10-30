@@ -33,6 +33,21 @@ public partial class AppSettingsViewModel : ViewModelBase
     private int _portAdjustDetail;
 
     [ObservableProperty]
+    private bool _saveAt100;
+
+    [ObservableProperty]
+    private bool _saveToPdf;
+
+    [ObservableProperty]
+    private bool _saveToImage;
+
+    [ObservableProperty]
+    private bool _saveTadsToAdv3Lite;
+
+    [ObservableProperty]
+    private int _defaultImageType;
+
+    [ObservableProperty]
     private string _defaultFontName = "Arial";
 
     [ObservableProperty]
@@ -68,6 +83,11 @@ public partial class AppSettingsViewModel : ViewModelBase
         ApplyStyleToNewRooms = settings.ApplyStyleToNewRooms;
         DoubleClickToAddRoom = settings.DoubleClickToAddRoom;
         PortAdjustDetail = settings.PortAdjustDetail;
+        SaveAt100 = settings.SaveAt100;
+        SaveToPdf = settings.SaveToPDF;
+        SaveToImage = settings.SaveToImage;
+        SaveTadsToAdv3Lite = settings.SaveTadstoAdv3Lite;
+        DefaultImageType = settings.DefaultImageType;
         DefaultFontName = string.IsNullOrEmpty(settings.DefaultFontName) ? "Arial" : settings.DefaultFontName;
         ShowTooltips = settings.ShowTooltips;
         ShowDescriptionsInTooltips = settings.ShowDescriptionsInTooltips;
@@ -90,6 +110,11 @@ public partial class AppSettingsViewModel : ViewModelBase
         settings.ApplyStyleToNewRooms = ApplyStyleToNewRooms;
         settings.DoubleClickToAddRoom = DoubleClickToAddRoom;
         settings.PortAdjustDetail = PortAdjustDetail;
+        settings.SaveAt100 = SaveAt100;
+        settings.SaveToPDF = SaveToPdf;
+        settings.SaveToImage = SaveToImage;
+        settings.SaveTadstoAdv3Lite = SaveTadsToAdv3Lite;
+        settings.DefaultImageType = DefaultImageType;
         settings.DefaultFontName = DefaultFontName;
         settings.ShowDescriptionsInTooltips = ShowDescriptionsInTooltips;
         settings.ShowObjectsInTooltips = ShowObjectsInTooltips;

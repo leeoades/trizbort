@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Drawing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
@@ -63,8 +64,58 @@ public partial class ColorSettingItemViewModel : ViewModelBase
     }
 }
 
+/// <summary>A room shape with its legacy display name for the Default Room Shape drop-down.</summary>
+public sealed record ShapeChoice(RoomShape Value, string Display);
+
 public partial class MapSettingsViewModel : ViewModelBase
 {
+    public const string EmptyRoomNameMessage = "The default room name can't be empty. Please put something in there.";
+    public const string NoLetterRoomNameMessage = "The default room name must contain one letter. Please include a letter.";
+
+    [ObservableProperty]
+    private int _selectedTabIndex;
+
+    [ObservableProperty]
+    private float _handleSize = 12.0f;
+
+    [ObservableProperty]
+    private float _snapToElementDistance = 16.0f;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDefaultRoomNameError))]
+    private string _defaultRoomNameError = string.Empty;
+
+    public bool HasDefaultRoomNameError => !string.IsNullOrEmpty(DefaultRoomNameError);
+
+    public IReadOnlyList<ShapeChoice> ShapeChoices { get; } = [
+        new(RoomShape.SquareCorners, "Straight Edges"),
+        new(RoomShape.RoundedCorners, "Rounded Corners"),
+        new(RoomShape.Ellipse, "Ellipse"),
+        new(RoomShape.Octagonal, "Octagonal")
+    ];
+
+    /// <summary>
+    ///   Checks the default room name as the reference dialog does when OK is pressed. Returns true when valid;
+    ///   otherwise sets <see cref="DefaultRoomNameError"/> and returns false.
+    /// </summary>
+    public bool Validate()
+    {
+        if (string.IsNullOrWhiteSpace(DefaultRoomName))
+            DefaultRoomNameError = EmptyRoomNameMessage;
+        else if (!DefaultRoomName.Any(char.IsLetter))
+            DefaultRoomNameError = NoLetterRoomNameMessage;
+        else
+            DefaultRoomNameError = string.Empty;
+        return !HasDefaultRoomNameError;
+    }
+
+    /// <summary>Remembers the selected tab for the next time the dialog opens.</summary>
+    public void SaveLastTab()
+    {
+        ApplicationSettingsController.AppSettings.MapSettingsLastTab = SelectedTabIndex;
+        ApplicationSettingsController.SaveSettings();
+    }
+
     [ObservableProperty]
     private string _title = string.Empty;
 
@@ -177,6 +228,11 @@ public partial class MapSettingsViewModel : ViewModelBase
         Description = project.Description ?? string.Empty;
         History = project.History ?? string.Empty;
 
+        SelectedTabIndex = Math.Clamp(ApplicationSettingsController.AppSettings.MapSettingsLastTab, 0, 5);
+        HandleSize = Settings.HandleSize;
+        SnapToElementDistance = Settings.SnapToElementSize;
+        DefaultRoomNameError = string.Empty;
+
         GridSize = Settings.GridSize;
         IsGridVisible = Settings.IsGridVisible;
         SnapToGrid = Settings.SnapToGrid;
@@ -231,6 +287,9 @@ public partial class MapSettingsViewModel : ViewModelBase
         if (project.Author != Author) { project.Author = Author; project.IsDirty = true; }
         if (project.Description != Description) { project.Description = Description; project.IsDirty = true; }
         if (project.History != History) { project.History = History; project.IsDirty = true; }
+
+        Settings.HandleSize = HandleSize;
+        Settings.SnapToElementSize = SnapToElementDistance;
 
         Settings.GridSize = GridSize;
         Settings.IsGridVisible = IsGridVisible;
