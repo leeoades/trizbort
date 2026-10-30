@@ -3,6 +3,8 @@
 Written 2026-10-30 (T3.1) from the feature matrix, dialog reviews, issues and the accepted decisions D1–D4.
 Each ticket follows the template in `../../avalonia-parity-review.md` §8 and is sized for one agent session.
 
+**Done so far:** 001, 011, 070 (partial: style + Label dialog), 100, 106, 117 — marked ✅.
+
 **How to pick one:** take the lowest wave whose dependencies are all done; within a wave, P1 first. Mark a ticket done by
 adding `Status: Done (<commit>)` under its title and updating the matrix rows it lists.
 
@@ -16,7 +18,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 
 | # | Ticket | Wave | Pri | Size | Tier | Depends | Matrix rows |
 |---|---|---|---|---|---|---|---|
-| 001 | [Add Selection and Viewport types to Core](001-selection-and-viewport-types-in-core.md) | 1 | P1 | S | mid | — | X010, X047–X049 |
+| 001 ✅ | [Add Selection and Viewport types to Core](001-selection-and-viewport-types-in-core.md) | 1 | P1 | S | mid | — | X010, X047–X049 |
 | 002 | [Add EditorSession to Core; CommandService becomes a thin adapter](002-editor-session-in-core.md) | 2 | P1 | M | mid | 001 | X010, X048, X052, X053 |
 | 003 | [Add UndoStack with gzip snapshot mementos, transactions and dirty flag](003-undostack-snapshot-mementos.md) | 3 | P1 | L | mid + strong review | 002 | undo/redo, X052 |
 | 004 | [Route existing mutations through the EditorSession; remove hand-set IsDirty](004-route-mutations-through-session.md) | 4 | P1 | M | mid | 003 | X012–X015, X021, X022, X052, M024, M026–M030 |
@@ -26,7 +28,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 008 | [Add Undo and Redo commands and UI](008-undo-redo-commands-and-ui.md) | 5 | P1 | S | mid | 004, 010 | undo/redo, X052 |
 | 009 | [Command catalogue types (incl. neutral key input types) and tests in Core](009-command-catalogue-types.md) | 3 | P1 | M | mid | 002 | X050, X051 |
 | 010 | [Avalonia generates main menu, context menu, toolbar and key bindings from the catalogue](010-avalonia-generates-menus-from-catalogue.md) | 4 | P1 | L | mid + strong review | 009 | X050, X051, C001, C002, M001–M013 |
-| 011 | [Add async IEditorPrompts to Core; the automap engine awaits them](011-async-editor-prompts-and-automap-engine.md) | 1 | P1 | M | mid | — | E044, E045 |
+| 011 ✅ | [Add async IEditorPrompts to Core; the automap engine awaits them](011-async-editor-prompts-and-automap-engine.md) | 1 | P1 | M | mid | — | E044, E045 |
 | 012 | [Avalonia IEditorPrompts: same-direction and disambiguation dialogs](012-avalonia-automap-prompt-dialogs.md) | 2 | P1 | M | mid | 011 | E044, E045, D008, D009, I-008 |
 | 020 | [Add Viewport.CenterOn(element) and select-nearest-centre helpers](020-viewport-centre-on-element.md) | 3 | P2 | S | mid | 002 | (supports K001, K003, K004, K011, K013, K014, M030) |
 | 021 | [Add Select All/None and the Select Special commands](021-select-special-commands.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | M015–M023, K002, K027 |
@@ -76,7 +78,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 065 | [Restore tooltip colouring and hide-on-drag](065-tooltip-styling-and-hiding.md) | 6 | P3 | S | cheap | 006 | G018 |
 | 066 | [Generate context menu per target with legacy visibility rules](066-context-menu-target-rules.md) | 7 | P1 | M | mid | 005, 010, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 035, 037 | C015, G016, C019, C001 |
 | 067 | [Add shortcut-map conformance and modifier-exactness tests](067-shortcut-map-conformance-test.md) | 7 | P2 | M | mid | 010, 021, 025, 027, 029, 030, 031, 032, 047, 048, 050 | (all K and M gesture rows) |
-| 070 | [Define and apply shared dialog style guidelines](070-dialog-style-guidelines.md) | 1 | P1 | M | mid | — | D001-D007, D015, D016 |
+| 070 ✅ | [Define and apply shared dialog style guidelines](070-dialog-style-guidelines.md) | 1 | P1 | M | mid | — | D001-D007, D015, D016 |
 | 071 | [Room dialog: persistent header, missing fields and friendly option names](071-room-dialog-header-and-missing-fields.md) | 2 | P1 | M | mid | 070 | D001 |
 | 072 | [Room dialog: shape preview, validation, dependencies, last tab, OK as one undo step](072-room-dialog-preview-validation-undo.md) | 4 | P1 | M | mid | 002, 003, 070, 071 | D001 |
 | 073 | [Port ObjectListEditor to Core and wire it to the Objects box; restore Object Syntax help](073-object-list-editor.md) | 3 | P2 | S | mid | 071 | D001, D013 |
@@ -97,13 +99,13 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 088 | [Online Help: Help menu links and F1](088-online-help.md) | 5 | P2 | S | cheap | 009, 010 | D014 |
 | 089 | [Open Map from URL dialog](089-open-map-from-url-dialog.md) | 5 | P2 | S | mid | 002, 009, 010, 070 | D012 |
 | 090 | [Map Theme dialog: export current map theme, infer default room style, no-undo wording, current indicator](090-map-theme-dialog-gaps.md) | 4 | P2 | M | mid | 002, 003, 070 | D017 |
-| 100 | [Store appsettings.json in a per-user config folder](100-per-user-settings-folder.md) | 1 | P1 | S | mid | — | A012, I-011 |
+| 100 ✅ | [Store appsettings.json in a per-user config folder](100-per-user-settings-folder.md) | 1 | P1 | S | mid | — | A012, I-011 |
 | 101 | [Save settings on exit, project open and project save](101-save-settings-on-exit-and-open.md) | 2 | P1 | S | mid | 100 | A013, A017 |
 | 102 | [Recent files service (storage, pruning, activation)](102-recent-files-service.md) | 3 | P2 | S | mid | 100, 101 | A015, M012 |
 | 103 | [Honour "Load last project on startup"](103-load-last-project-on-startup.md) | 3 | P2 | S | mid | 100, 101, 104 | A014, I-001 |
 | 104 | [Parse command-line arguments and open the named map on launch](104-command-line-arguments-open-file.md) | 2 | P1 | M | mid | 100 | A001, A019 |
 | 105 | [CLI code export flags](105-cli-headless-code-export.md) | 3 | P3 | M | mid | 104, 106 | A002, E014, E015 |
-| 106 | [Core export helpers: export to file and to string for every language](106-core-export-to-file-and-text.md) | 1 | P2 | S | mid | — | E013–E015 |
+| 106 ✅ | [Core export helpers: export to file and to string for every language](106-core-export-to-file-and-text.md) | 1 | P2 | S | mid | — | E013–E015 |
 | 107 | [CLI automap, quick save, smart save and exit flags](107-cli-automap-quicksave-smartsave-exit.md) | 8 | P3 | M | mid | 011, 012, 104, 105, 110 | A018, A019, E015 |
 | 108 | [Wire the --debug startup flag and the debug rendering hooks](108-debug-flag-wiring.md) | 7 | P3 | S | mid | 055, 104 | K062–K064, K067, K069 |
 | 109 | [File association metadata and OS "open file" activation](109-file-association-and-os-open-events.md) | 3 | P3 | S | mid | 104 | A001 |
@@ -113,7 +115,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 114 | [Window title: dirty marker, version and "show full path" setting](114-window-title-format-and-full-path.md) | 4 | P1 | S | mid | 003 | A004, I-006 |
 | 115 | [Honour "Apply style to new rooms"](115-apply-style-to-new-rooms.md) | 3 | P1 | S | mid | 002 | G008, I-006 |
 | 116 | [Persist window size, position and maximised state](116-window-geometry-persistence.md) | 3 | P2 | S | mid | 100, 101 | A009 |
-| 117 | [Profile and fix slow Elements.Add on large maps](117-profile-and-fix-elements-add-performance.md) | 1 | P1 | M | mid | — | I-009 |
+| 117 ✅ | [Profile and fix slow Elements.Add on large maps](117-profile-and-fix-elements-add-performance.md) | 1 | P1 | M | mid | — | I-009 |
 | 118 | [Code export pickers: default name, extension, folder memory, overwrite prompt](118-code-export-dialog-behaviour.md) | 2 | P1 | M | mid | 011, 100, 106 | E005–E008, E010 |
 | 120 | [Image export formats (PNG, JPEG, BMP) and default image type](120-image-export-formats.md) | 3 | P2 | M | mid | 100, 118 | E016, E017, E024 |
 | 121 | [Image export scale and selection-only option](121-image-export-scale-and-selection.md) | 4 | P2 | M | mid | 002, 120 | E018, E019, E022 |
