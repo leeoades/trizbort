@@ -68,4 +68,20 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: medium     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-009 -->
+## I-009 Adding elements one by one gets very slow on big maps
+- Reported: 2026-10-30 by agent (undo benchmark, measured on Windows)   OS: all   Category: performance
+- Evidence: building a 1,000-room / 1,936-connection map with `Project.Elements.Add` took **11 s**, while loading the
+  same map from file took **0.13 s** (`scripts/bench/undo-snapshot-bench.cs`). Something in the add path scales badly
+  (likely per-add change handling). Affects automap and paste on large maps.
+- Severity: medium     Flags: —
+- Ticket: —
+
+## I-010 Esc during a room drag does not put the room back
+- Reported: 2026-10-30 by agent (smoke test S4_33)   OS: all   Category: behaviour
+- Steps: drag a room, press Esc before releasing.   Expected: drag cancelled, room returns (Avalonia already does this
+  for connection-end drags).   Actual: drag ends but the room stays where it was dragged. The reference app has no drag
+  cancel, so this is an improvement, not parity. Will fall out of undo transactions (D1).
+- Severity: low     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-011 -->

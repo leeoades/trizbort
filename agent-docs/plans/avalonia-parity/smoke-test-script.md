@@ -1,5 +1,15 @@
 # Avalonia manual smoke test (T2.4)
 
+> **Automated (2026-10-30).** Most steps now run as headless tests in `src/Trizbort.Avalonia.Tests/Smoke/`
+> (`dotnet test src/Trizbort.Avalonia.Tests --filter TestCategory=Smoke`), on Windows and Linux CI. Test names start with
+> the step number (`S4_33_…`). Known gaps are `[Ignore]`d with their matrix/issue id, so remove the `[Ignore]` when a
+> ticket fixes one. Result at commit time: 32 pass, 25 known gaps.
+>
+> **Still manual** (needs eyes or a real OS dialog) — about 10 minutes:
+> 2.13 paste between apps via the OS clipboard · 3.16 resize handles look right · 3.20 toolbar "new connection" defaults ·
+> 3.23 deleting a waypoint · 3.25 Properties on each element type · 3.28 tooltip colours · 5.48 theme prompts ·
+> 6.51–6.54 and 6.57 export file pickers (naming, overwrite prompt, read-only folder, file-type filter, start folder).
+
 About 30 minutes, 64 steps, run on Windows and again on Linux against the Avalonia app.
 Launch from the repo root: `dotnet run --project src/Trizbort.Avalonia`
 
