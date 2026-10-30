@@ -159,44 +159,138 @@ public class StorageService(IDialogService dialogService) : IStorageService
 
         using var scopedExporter = exporter;
 
+        ExportLanguage? language = ExportPathMemory.TryGetLanguage(scopedExporter, out var found) ? found : null;
+        var remembered = language.HasValue
+            ? ExportPathMemory.Get(language.Value)
+            : (Folder: string.Empty, FileName: string.Empty, Extension: string.Empty);
+
         var filters = new List<FilePickerFileType>();
+        FilePickerFileType? preselected = null;
         foreach (var filter in scopedExporter.FileDialogFilters)
         {
             var ext = filter.Value.StartsWith('.') ? $"*{filter.Value}" : $"*.{filter.Value}";
-            filters.Add(new FilePickerFileType(filter.Key)
+            var fileType = new FilePickerFileType(filter.Key)
             {
                 Patterns = [ext]
-            });
+            };
+            filters.Add(fileType);
+            if (preselected == null && remembered.Extension.Length > 0 &&
+                string.Equals(NormaliseExtension(filter.Value), remembered.Extension, StringComparison.OrdinalIgnoreCase))
+            {
+                preselected = fileType;
+            }
         }
         filters.Add(FilePickerFileTypes.All);
 
-        var suggestedName = string.IsNullOrEmpty(Project.Current.Title)
-            ? (string.IsNullOrEmpty(Project.Current.FileName) ? "map" : Path.GetFileNameWithoutExtension(Project.Current.FileName))
-            : Project.Current.Title;
+        string defaultExtension;
+        string suggestedName;
+        if (language.HasValue)
+        {
+            suggestedName = ExportNaming.SuggestedFileName(Project.Current, language.Value);
+            defaultExtension = CodeExportService.DefaultExtension(language.Value);
+        }
+        else
+        {
+            suggestedName = string.IsNullOrEmpty(Project.Current.Title)
+                ? (string.IsNullOrEmpty(Project.Current.FileName) ? "map" : Path.GetFileNameWithoutExtension(Project.Current.FileName))
+                : Project.Current.Title;
+            defaultExtension = filters.Count > 1 ? NormaliseExtension(scopedExporter.FileDialogFilters[0].Value) : string.Empty;
+        }
 
-        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        IStorageFolder? startFolder = null;
+        if (remembered.Folder.Length > 0 && Directory.Exists(remembered.Folder))
+        {
+            try
+            {
+                startFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(remembered.Folder);
+            }
+            catch
+            {
+                // ignore an unusable remembered folder
+            }
+        }
+
+        var options = new FilePickerSaveOptions
         {
             Title = scopedExporter.FileDialogTitle,
             SuggestedFileName = suggestedName,
+            DefaultExtension = defaultExtension.TrimStart('.'),
+            SuggestedStartLocation = startFolder,
             FileTypeChoices = filters
-        });
+        };
+        if (preselected != null) options.SuggestedFileType = preselected;
 
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
         if (file == null) return false;
 
-        var exportPath = file.Path.LocalPath;
+        return await CompleteCodeExportAsync(
+            GetWindow(topLevel), scopedExporter, language, file.Path.LocalPath,
+            remembered.Extension.Length > 0 ? remembered.Extension : defaultExtension);
+    }
+
+    private static string NormaliseExtension(string extension)
+    {
+        if (string.IsNullOrEmpty(extension)) return string.Empty;
+        return extension.StartsWith('.') ? extension : "." + extension;
+    }
+
+    /// <summary>
+    ///   Second half of a code export once a path has been picked: appends a missing extension, asks before
+    ///   overwriting, writes the file and remembers the path. Returns false when declined or failed.
+    /// </summary>
+    public async Task<bool> CompleteCodeExportAsync(
+        Window? owner, CodeExporter exporter, ExportLanguage? language, string pickedPath, string defaultExtension)
+    {
+        var exportPath = pickedPath;
+        if (string.IsNullOrEmpty(Path.GetExtension(exportPath)) && !string.IsNullOrEmpty(defaultExtension))
+        {
+            exportPath += NormaliseExtension(defaultExtension);
+        }
+
         try
         {
-            scopedExporter.Export(exportPath);
-            return true;
+            // The picker may pre-create an empty placeholder file for an Inform 7 ".inform" bundle; the
+            // exporter needs a directory there, so remove a 0-byte placeholder.
+            if (File.Exists(exportPath) &&
+                string.Equals(Path.GetExtension(exportPath), ".inform", StringComparison.OrdinalIgnoreCase) &&
+                new FileInfo(exportPath).Length == 0)
+            {
+                File.Delete(exportPath);
+            }
+            else if (File.Exists(exportPath) || Directory.Exists(exportPath))
+            {
+                var replace = await _dialogService.ShowConfirmationAsync(
+                    owner,
+                    "Confirm Overwrite",
+                    $"'{Path.GetFileName(exportPath)}' already exists. Replace it?");
+                if (!replace) return false;
+            }
+
+            exporter.Export(exportPath);
         }
         catch (Exception ex)
         {
             await _dialogService.ShowMessageAsync(
-                GetWindow(topLevel),
+                owner,
                 "Export Error",
                 $"Error exporting code to '{Path.GetFileName(exportPath)}':\n{ex.Message}");
             return false;
         }
+
+        if (language.HasValue)
+        {
+            ExportPathMemory.Remember(language.Value, exportPath);
+            try
+            {
+                ApplicationSettingsController.SaveSettings();
+            }
+            catch
+            {
+                // remembering the path is best effort
+            }
+        }
+
+        return true;
     }
 
     public async Task<bool> ExportImageAsync(TopLevel? topLevel)

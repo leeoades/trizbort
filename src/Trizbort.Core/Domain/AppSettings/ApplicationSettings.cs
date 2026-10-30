@@ -40,6 +40,7 @@ public class ApplicationSettings
   public string LastProjectFileName { get; set; }
   public bool LoadLastProjectOnStart { get; set; }
   public int MouseDragButton { get; set; }
+  public int MapSettingsLastTab { get; set; }
   public int PortAdjustDetail { get; set; }
   public List<string> RecentProjects { get; } = new();
   public bool SaveAt100 { get; set; }

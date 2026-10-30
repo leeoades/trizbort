@@ -142,6 +142,9 @@ public static class ApplicationSettingsController
           AppSettings.LastExportHugoFileName = root["lastExportedHugoFileName"].Text;
           AppSettings.LastExportZilFileName = root["lastExportedZilFileName"].Text;
           AppSettings.LastExportQuestFileName = root["lastExportedQuestFileName"].Text;
+          AppSettings.LastExportQuestRoomsFileName = root["lastExportedQuestRoomsFileName"].Text;
+          AppSettings.LastExportAlanFileName = root["lastExportedAlanFileName"].Text;
+          AppSettings.LastExportAdventuronFileName = root["lastExportedAdventuronFileName"].Text;
 
           AppSettings.InvertMouseWheel = root["invertMouseWheel"].ToBool(AppSettings.InvertMouseWheel);
           AppSettings.PortAdjustDetail = root["portAdjustDetail"].ToInt(AppSettings.PortAdjustDetail);
