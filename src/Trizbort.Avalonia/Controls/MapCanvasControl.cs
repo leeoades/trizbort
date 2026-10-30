@@ -14,6 +14,7 @@ using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
+using Trizbort.Editor;
 using Trizbort.Setup;
 using CoreRect = Trizbort.Domain.Misc.Rect;
 using CoreVector = Trizbort.Domain.Misc.Vector;
@@ -90,6 +91,9 @@ public class MapCanvasControl : Control
     private CoreVector _dragMovePortOriginalPosition;
     private readonly List<Port> _activePorts = new();
     private readonly List<ResizeHandle> _activeHandles = new();
+    private HitTester? _hit;
+    private EditorSession? _hitSession;
+    private EditorSession? _fallbackSession;
 
     internal CanvasDragMode DragMode => _dragMode;
     internal Element? HoverElement => _hoverElement;
@@ -473,20 +477,29 @@ public class MapCanvasControl : Control
 
     #region State Machine & Hit Testing
 
+    private HitTester Hit
+    {
+        get
+        {
+            var session = (CommandService as Services.CommandService)?.Session;
+            if (session == null)
+            {
+                _fallbackSession ??= new EditorSession();
+                session = _fallbackSession;
+            }
+            if (_hit == null || !ReferenceEquals(_hitSession, session))
+            {
+                _hitSession = session;
+                _hit = new HitTester(session);
+            }
+            return _hit;
+        }
+    }
+
     private void RecreateHandles()
     {
         _activeHandles.Clear();
-        if (_selectedSet.Count == 1)
-        {
-            var single = _selectedSet.First();
-            if (single is ISizeable sizeable)
-            {
-                foreach (var cp in _handlePoints)
-                {
-                    _activeHandles.Add(new ResizeHandle(cp, sizeable));
-                }
-            }
-        }
+        _activeHandles.AddRange(Hit.ActiveHandles());
         if (_hoverHandle != null && !_activeHandles.Contains(_hoverHandle))
         {
             _hoverHandle = null;
@@ -496,29 +509,7 @@ public class MapCanvasControl : Control
     private void RecreatePorts()
     {
         _activePorts.Clear();
-
-        if (_dragMode == CanvasDragMode.MovePort)
-        {
-            if (_hoverElement is Room or MapLabel)
-            {
-                _activePorts.AddRange(_hoverElement.PortList);
-            }
-        }
-        else
-        {
-            if ((_hoverElement is Room || _hoverElement is MapLabel) && !_selectedSet.Contains(_hoverElement))
-            {
-                if (_selectedSet.Count == 0)
-                {
-                    _activePorts.AddRange(_hoverElement.PortList);
-                }
-            }
-
-            if (_selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
-            {
-                _activePorts.AddRange(conn.PortList.OfType<MoveablePort>());
-            }
-        }
+        _activePorts.AddRange(Hit.ActivePorts(_hoverElement, _dragMode == CanvasDragMode.MovePort));
 
         if (_hoverPort != null && !_activePorts.Contains(_hoverPort))
         {
@@ -526,105 +517,16 @@ public class MapCanvasControl : Control
         }
     }
 
-    private IEnumerable<CurveWaypoint> GetVisibleWaypoints(Connection connection)
+    private Element? HitElementAt(CoreVector canvasPos, bool includeMargins = false)
     {
-        foreach (var wp in _allWaypoints)
-        {
-            if (connection.GetCurveWaypoint(wp).HasValue || connection.CanAddCurveWaypoint(wp))
-            {
-                yield return wp;
-            }
-        }
+        var exclude = _dragMode == CanvasDragMode.MovePort ? _dragMovePort?.Owner : null;
+        return Hit.HitElement(canvasPos, includeMargins, exclude);
     }
 
-    private CoreRect GetWaypointBounds(Connection connection, CurveWaypoint waypoint)
+    private Port? HitPortAt(CoreVector canvasPos)
     {
-        var isSet = connection.GetCurveWaypoint(waypoint).HasValue;
-        var size = Settings.HandleSize * (isSet ? 2.0f : 1.5f);
-        var pos = connection.GetCurveWaypointHandlePosition(waypoint);
-        return new CoreRect(pos.X - size / 2, pos.Y - size / 2, size, size);
-    }
-
-    private CurveWaypoint? HitTestWaypoint(CoreVector canvasPos)
-    {
-        if (_selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
-        {
-            foreach (var wp in GetVisibleWaypoints(conn))
-            {
-                var bounds = GetWaypointBounds(conn, wp);
-                bounds.Inflate(Settings.HandleSize / 2f);
-                if (bounds.Contains(canvasPos))
-                {
-                    return wp;
-                }
-            }
-        }
-        return null;
-    }
-
-    private ResizeHandle? HitTestHandle(CoreVector canvasPos)
-    {
-        for (var i = _activeHandles.Count - 1; i >= 0; i--)
-        {
-            var handle = _activeHandles[i];
-            if (handle.HitTest(canvasPos))
-            {
-                return handle;
-            }
-        }
-        return null;
-    }
-
-    private Port? HitTestPort(CoreVector canvasPos)
-    {
-        Port? closest = null;
-        var closestDistance = float.MaxValue;
-        var snapDistance = Settings.SnapToElementSize;
-
-        foreach (var port in _activePorts)
-        {
-            if (_dragMode == CanvasDragMode.MovePort && port == _dragMovePort)
-                continue;
-
-            var distance = port.Distance(canvasPos);
-            var curSnap = snapDistance;
-            var bounds = port.Owner.UnionBoundsWith(CoreRect.Empty, true);
-            if (bounds.Contains(canvasPos))
-            {
-                curSnap = _dragMode == CanvasDragMode.MovePort ? float.MaxValue : 0;
-            }
-
-            if (distance <= curSnap && distance < closestDistance)
-            {
-                closest = port;
-                closestDistance = distance;
-            }
-        }
-
-        return closest;
-    }
-
-    private Element? HitTestElement(CoreVector canvasPos, bool includeMargins = false)
-    {
-        Element? closest = null;
-        var closestDistance = float.MaxValue;
-        var elements = Project.Current.Elements;
-
-        for (var i = elements.Count - 1; i >= 0; i--)
-        {
-            var elem = elements[i];
-            if (_dragMode == CanvasDragMode.MovePort && _dragMovePort?.Owner == elem)
-                continue;
-
-            var distance = elem.Distance(canvasPos, includeMargins);
-            if (distance <= Settings.SnapToElementSize && distance < closestDistance)
-            {
-                closest = elem;
-                closestDistance = distance;
-            }
-        }
-
-        return closest;
+        var moving = _dragMode == CanvasDragMode.MovePort;
+        return Hit.HitPort(canvasPos, _activePorts, moving, moving ? _dragMovePort : null);
     }
 
     internal StandardCursorType CursorType { get; private set; } = StandardCursorType.Arrow;
@@ -739,7 +641,7 @@ public class MapCanvasControl : Control
         {
             if (e.ClickCount == 2)
             {
-                var hitDoubleElem = HitTestElement(worldPos);
+                var hitDoubleElem = HitElementAt(worldPos);
                 if (hitDoubleElem != null)
                 {
                     CommandService?.Select([hitDoubleElem], clearExisting: true);
@@ -755,7 +657,20 @@ public class MapCanvasControl : Control
                 }
             }
 
-            var hitHandle = HitTestHandle(worldPos);
+            var hitWp = Hit.HitWaypoint(worldPos);
+            if (hitWp.HasValue && _selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
+            {
+                _dragMode = CanvasDragMode.MoveWaypoint;
+                _dragWaypoint = hitWp.Value;
+                var handlePos = conn.GetCurveWaypointHandlePosition(_dragWaypoint);
+                _dragWaypointOffset = handlePos - worldPos;
+                e.Pointer.Capture(this);
+                UpdateCursor();
+                e.Handled = true;
+                return;
+            }
+
+            var hitHandle = Hit.HitHandle(worldPos, _activeHandles);
             if (hitHandle != null)
             {
                 _dragMode = CanvasDragMode.MoveResizeHandle;
@@ -768,7 +683,7 @@ public class MapCanvasControl : Control
                 return;
             }
 
-            var hitPort = HitTestPort(worldPos);
+            var hitPort = HitPortAt(worldPos);
             if (hitPort != null)
             {
                 if (hitPort is MoveablePort mp)
@@ -797,20 +712,7 @@ public class MapCanvasControl : Control
                 }
             }
 
-            var hitWp = HitTestWaypoint(worldPos);
-            if (hitWp.HasValue && _selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
-            {
-                _dragMode = CanvasDragMode.MoveWaypoint;
-                _dragWaypoint = hitWp.Value;
-                var handlePos = conn.GetCurveWaypointHandlePosition(_dragWaypoint);
-                _dragWaypointOffset = handlePos - worldPos;
-                e.Pointer.Capture(this);
-                UpdateCursor();
-                e.Handled = true;
-                return;
-            }
-
-            var hitElem = HitTestElement(worldPos);
+            var hitElem = HitElementAt(worldPos);
             if (hitElem != null)
             {
                 var alreadySelected = _selectedSet.Contains(hitElem);
@@ -924,14 +826,14 @@ public class MapCanvasControl : Control
             case CanvasDragMode.MovePort:
                 if (_dragMovePort != null)
                 {
-                    var targetElem = HitTestElement(worldPos, true);
+                    var targetElem = HitElementAt(worldPos, true);
                     if (!ReferenceEquals(targetElem, _hoverElement))
                     {
                         _hoverElement = targetElem;
                         RecreatePorts();
                     }
 
-                    _hoverPort = HitTestPort(worldPos);
+                    _hoverPort = HitPortAt(worldPos);
                     if (_hoverPort != null && _hoverPort != _dragMovePort)
                     {
                         if (_hoverPort is not MoveablePort)
@@ -981,7 +883,7 @@ public class MapCanvasControl : Control
                     var prevHoverHandle = _hoverHandle;
                     var prevHoverWp = _hoverWaypoint;
 
-                    var newHoverElem = HitTestElement(worldPos);
+                    var newHoverElem = HitElementAt(worldPos);
                     if (!ReferenceEquals(newHoverElem, _hoverElement))
                     {
                         _hoverElement = newHoverElem;
@@ -990,9 +892,9 @@ public class MapCanvasControl : Control
                         UpdateToolTip();
                     }
 
-                    _hoverWaypoint = HitTestWaypoint(worldPos);
-                    _hoverHandle = HitTestHandle(worldPos);
-                    _hoverPort = HitTestPort(worldPos);
+                    _hoverWaypoint = Hit.HitWaypoint(worldPos);
+                    _hoverHandle = Hit.HitHandle(worldPos, _activeHandles);
+                    _hoverPort = HitPortAt(worldPos);
 
                     UpdateCursor();
 
@@ -1423,7 +1325,7 @@ public class MapCanvasControl : Control
 
     private void ShowContextMenuAt(CoreVector worldPos)
     {
-        var hitElem = HitTestElement(worldPos);
+        var hitElem = HitElementAt(worldPos);
         if (hitElem != null && !_selectedSet.Contains(hitElem))
         {
             CommandService?.Select([hitElem], clearExisting: true);
@@ -1656,11 +1558,11 @@ public class MapCanvasControl : Control
             // 7. Render Curve Waypoint Handles for single selected connection
             if (_selectedSet.Count == 1 && _selectedSet.First() is Connection selectedConn)
             {
-                foreach (var wp in GetVisibleWaypoints(selectedConn))
+                foreach (var wp in Hit.VisibleWaypoints(selectedConn))
                 {
                     var isSet = selectedConn.GetCurveWaypoint(wp).HasValue;
                     var isHover = wp == _hoverWaypoint || (_dragMode == CanvasDragMode.MoveWaypoint && wp == _dragWaypoint);
-                    var wpBounds = GetWaypointBounds(selectedConn, wp);
+                    var wpBounds = Hit.WaypointBounds(selectedConn, wp);
 
                     IBrush brush;
                     IPen pen;
