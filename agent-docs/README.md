@@ -1,5 +1,10 @@
 # Trizbort — Technical Reference for AI Coding Agents
 
+> **Layout change (2026-10-30):** the refactored WinForms projects have been removed. The original WinForms app
+> (tag `v2.3.1-beta.2`) now lives in `legacy/` with its own `legacy/Trizbort.Legacy.sln` — see `legacy/README.md`.
+> WinForms sections of these docs describe the refactored app; for the original, paths are under `legacy/src/Trizbort/`
+> and its Domain/Automap/Export code lives inside that project rather than in `Trizbort.Core`.
+
 This folder is a **layered reference** for agents working on this codebase. It exists so an
 agent doesn't have to re-derive the architecture from scratch on every task, and so it only
 needs to load the one or two sub-documents relevant to the current task instead of the whole
@@ -35,7 +40,7 @@ auto-generate a map by parsing a game transcript ("Automap").
    across different components or domains.
 
 Source paths for domain logic, exporters, automap, and persistence are relative to `src/Trizbort.Core/`.
-UI, Canvas, and WinForms adapter paths are relative to `src/Trizbort/`. Avalonia paths are
+UI, Canvas, and WinForms adapter paths are relative to the WinForms project (now the original app at `legacy/src/Trizbort/`). Avalonia paths are
 relative to `src/Trizbort.Avalonia/` (documented at the end of `05-ui-and-canvas.md`). Paths explicitly
 prefixed with `tests/`, `samples/`, `Docs/`, or `agent-docs/` are relative to the repository root.
 
@@ -53,7 +58,8 @@ prefixed with `tests/`, `samples/`, `Docs/`, or `agent-docs/` are relative to th
 | [`08-cli-and-entry-point.md`](08-cli-and-entry-point.md) | Command-line options, `Program.cs`/`MainForm` startup sequence, how CLI flags map to save/load/automap/export actions. |
 | [`09-build-test-and-dotnet8-port.md`](09-build-test-and-dotnet8-port.md) | Build/test commands, project file structure, and hard-won gotchas from the .NET Framework 4.8 → .NET 8 port & .NET 10 LTS retargeting (read before touching `.csproj`, `app.config`, or `app.manifest`). |
 | [`plans/extract-trizbort-core-and-tests.md`](plans/extract-trizbort-core-and-tests.md) | Architectural roadmap and migration plan for extracting `Trizbort.Core` and `Trizbort.Core.Tests`. |
-| [`plans/windows-classic-parity-checklist.md`](plans/windows-classic-parity-checklist.md) | Persistent checklist for comparing the current WinForms application with a pre-refactor Windows baseline using the manual/sample fixture maps. |
+| [`plans/avalonia-parity-review.md`](plans/avalonia-parity-review.md) | **Active plan**: Avalonia vs original WinForms feature parity review, with task cards for agents. |
+| [`plans/windows-classic-parity-checklist.md`](plans/windows-classic-parity-checklist.md) | *(Superseded by the plan above.)* Persistent checklist for comparing the current WinForms application with a pre-refactor Windows baseline using the manual/sample fixture maps. |
 
 ## Quick orientation (if you only read one paragraph)
 
@@ -83,12 +89,11 @@ convert `Project.Elements` into IF-language source code via a shared `CodeExport
 - **Target frameworks & layout**:
   - `src/Trizbort.Core/`: SDK-style `net10.0`, platform-neutral core class library.
   - `src/Trizbort.Core.Tests/`: SDK-style `net10.0`, headless cross-platform test runner.
-  - `src/Trizbort/`: SDK-style `net10.0-windows`, Windows Forms UI client.
-  - `src/Trizbort.Tests/`: SDK-style `net10.0-windows`, UI-bound integration tests.
+  - `legacy/src/Trizbort/` + `legacy/src/Trizbort.Tests/`: the original WinForms app (`net8.0-windows`), own solution `legacy/Trizbort.Legacy.sln`.
   - `src/Trizbort.Avalonia/`: SDK-style `net10.0`, Avalonia UI client (Linux/Windows/macOS).
   - `src/Trizbort.Avalonia.Tests/`: SDK-style `net10.0`, Avalonia.Headless NUnit tests
     (`dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`, ~119 tests).
-- **Tests**: Run pure core unit tests cross-platform with `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`. Run Avalonia headless tests with `dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`. Full solution tests require a Windows environment (`dotnet test Trizbort.sln`). Manual map fixtures and scripts are in `tests/manual/`.
+- **Tests**: Run pure core unit tests cross-platform with `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`. Run Avalonia headless tests with `dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`. `dotnet test Trizbort.sln` runs everything for the new app on any OS; legacy tests need Windows (`dotnet test legacy/Trizbort.Legacy.sln`). Manual map fixtures and scripts are in `tests/manual/`.
 - **PDF export**: `PDFsharp-GDI` 6.2.4 NuGet package (not the older vendored/legacy
   `PDFsharp-gdi` 1.x).
 - **No undo/redo exists anywhere in the codebase.** Don't assume one when reasoning about

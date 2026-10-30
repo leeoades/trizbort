@@ -1,7 +1,7 @@
 # Manual test maps
 
 This directory contains `.trizbort` fixtures and batch/script runners for manual and visual
-regression checks. Automated tests live in `src/Trizbort.Tests/`; the test project copies the
+regression checks. Automated tests that use them live in `src/Trizbort.Core.Tests/` and the legacy `legacy/src/Trizbort.Tests/`; the test projects copy the
 map files and batch runners to its output so NUnit can discover them independently of the
 working directory.
 
@@ -27,7 +27,7 @@ The scripts are retained for optional manual use. Run automated checks from the 
 
 ```
 dotnet test Trizbort.sln -c Debug
-dotnet test Trizbort.sln -c Debug --filter "FullyQualifiedName~PersistenceRegressionTests|FullyQualifiedName~CommandIntegrationTests|FullyQualifiedName~RenderingIntegrationTests"
+dotnet test legacy/Trizbort.Legacy.sln -c Debug --filter "FullyQualifiedName~PersistenceRegressionTests|FullyQualifiedName~CommandIntegrationTests|FullyQualifiedName~RenderingIntegrationTests"
 ```
 
 ## Remaining manual matrix

@@ -1,5 +1,10 @@
 # UI & Canvas
 
+> **Layout change (2026-10-30):** the refactored WinForms projects have been removed. The original WinForms app
+> (tag `v2.3.1-beta.2`) now lives in `legacy/` with its own `legacy/Trizbort.Legacy.sln` — see `legacy/README.md`.
+> WinForms sections of these docs describe the refactored app; for the original, paths are under `legacy/src/Trizbort/`
+> and its Domain/Automap/Export code lives inside that project rather than in `Trizbort.Core`.
+
 See [`README.md`](README.md) for the doc map. For what `Room`/`Connection`/`Project` mean, see
 [`02-domain-model.md`](02-domain-model.md); for the controller layer `MainForm` calls into, see
 [`04-commands-and-controllers.md`](04-commands-and-controllers.md).

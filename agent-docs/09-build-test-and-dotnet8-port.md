@@ -1,5 +1,10 @@
 # Build, Test, and Modernization (.NET 10 LTS & .NET 8 Port Notes)
 
+> **Layout change (2026-10-30):** the refactored WinForms projects have been removed. The original WinForms app
+> (tag `v2.3.1-beta.2`) now lives in `legacy/` with its own `legacy/Trizbort.Legacy.sln` — see `legacy/README.md`.
+> WinForms sections of these docs describe the refactored app; for the original, paths are under `legacy/src/Trizbort/`
+> and its Domain/Automap/Export code lives inside that project rather than in `Trizbort.Core`.
+
 See [`README.md`](README.md) for the doc map. Read this before touching
 `src/Trizbort/Trizbort.csproj`, `src/Trizbort.Tests/Trizbort.Tests.csproj`,
 `src/Trizbort.Avalonia/Trizbort.Avalonia.csproj`,

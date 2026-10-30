@@ -2,8 +2,10 @@ name: Regression tests
 
 on:
   pull_request:
+    paths-ignore: ['legacy/**', '.github/workflows/legacy-tests.yml', '.github/workflows/release-legacy.yml']
   push:
     branches: ['**']
+    paths-ignore: ['legacy/**', '.github/workflows/legacy-tests.yml', '.github/workflows/release-legacy.yml']
 
 permissions:
   contents: read
@@ -14,7 +16,11 @@ concurrency:
 
 jobs:
   tests:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
@@ -32,7 +38,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: regression-results
+          name: regression-results-${{ matrix.os }}
           path: TestResults
           if-no-files-found: warn
           retention-days: 14

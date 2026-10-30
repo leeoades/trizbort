@@ -1,5 +1,8 @@
 name: Release
 
+# Releases of the cross-platform Avalonia app. Tag format: vMAJOR.MINOR.PATCH[.REVISION][-beta.N].
+# Legacy WinForms hotfix releases use legacy-v* tags and release-legacy.yml.
+
 on:
   push:
     tags:
@@ -14,7 +17,7 @@ concurrency:
 
 jobs:
   release:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     defaults:
@@ -22,9 +25,9 @@ jobs:
         shell: pwsh
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
@@ -43,82 +46,49 @@ jobs:
           }
           $version = ($parts | ForEach-Object { [int]$_ }) -join '.'
           "version=$version" >> $env:GITHUB_OUTPUT
+          "informational=$($env:RELEASE_TAG.Substring(1))" >> $env:GITHUB_OUTPUT
           "prerelease=$($prerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
-
-      - name: Stamp assembly version
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          $file = 'src\Trizbort\Properties\AssemblyInfo.cs'
-          $content = Get-Content $file -Raw
-          foreach ($attribute in 'AssemblyVersion', 'AssemblyFileVersion') {
-            $pattern = "(?m)^\[assembly:\s*$attribute\(`"[^`"]*`"\)\]"
-            if ([regex]::Matches($content, $pattern).Count -ne 1) {
-              throw "Expected exactly one $attribute in $file."
-            }
-            $content = $content -replace $pattern, "[assembly: $attribute(`"$env:RELEASE_VERSION`")]"
-          }
-          $content += "`n[assembly: AssemblyInformationalVersion(`"$($env:RELEASE_TAG.Substring(1))`")]`n"
-          Set-Content $file $content -NoNewline -Encoding utf8
 
       - name: Test
         run: dotnet test Trizbort.sln -c Release
 
-      - name: Publish
-        run: >-
-          dotnet publish src\Trizbort\Trizbort.csproj -c Release -r win-x64 -o publish
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
-          -p:EnableCompressionInSingleFile=true
-          -p:DebugType=none
-
-      - name: Smoke test published app
-        run: |
-          $workDir = Join-Path $env:RUNNER_TEMP 'trizbort-smoke'
-          New-Item -ItemType Directory -Path $workDir -Force | Out-Null
-          $exe = (Resolve-Path 'publish\Trizbort.exe').Path
-          $process = Start-Process $exe -ArgumentList '--exit' -WorkingDirectory $workDir -PassThru
-          if (-not $process.WaitForExit(30000)) {
-            Stop-Process -Id $process.Id
-            throw "Published app did not exit after --exit."
-          }
-          if ($process.ExitCode -ne 0) {
-            throw "Published app exited with code $($process.ExitCode)."
-          }
-
-      - name: Package
+      - name: Publish and package
         id: package
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_INFO: ${{ steps.version.outputs.informational }}
           RELEASE_PRERELEASE: ${{ steps.version.outputs.prerelease }}
         run: |
-          $exe = 'publish\Trizbort.exe'
-          if ((Get-Item $exe).VersionInfo.FileVersion -ne $env:RELEASE_VERSION) {
-            throw "Published executable version does not match the release tag."
+          $packageVersion = if ($env:RELEASE_PRERELEASE -eq 'true') { $env:RELEASE_INFO } else { $env:RELEASE_VERSION }
+          $assets = @()
+          foreach ($rid in 'win-x64', 'linux-x64') {
+            $out = "publish/$rid"
+            dotnet publish src/Trizbort.Avalonia/Trizbort.Avalonia.csproj -c Release -r $rid -o $out `
+              --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+              -p:DebugType=none -p:Version=$env:RELEASE_VERSION -p:InformationalVersion=$env:RELEASE_INFO
+            if ($LASTEXITCODE -ne 0) { throw "Publish failed for $rid." }
+            Copy-Item LICENSE.txt -Destination $out
+            if ($rid -like 'win-*') {
+              $name = "Trizbort-$packageVersion-$rid.zip"
+              Compress-Archive -Path "$out/*" -DestinationPath $name
+            } else {
+              $name = "Trizbort-$packageVersion-$rid.tar.gz"
+              tar -czf $name -C $out .
+            }
+            $assets += $name
           }
-          if (Test-Path 'publish\appsettings.json') {
-            throw "User settings must not be included in the release package."
-          }
-          Copy-Item LICENSE.txt, PdfSharp.License.txt -Destination publish
-          $packageVersion = if ($env:RELEASE_PRERELEASE -eq 'true') { $env:RELEASE_TAG.Substring(1) } else { $env:RELEASE_VERSION }
-          $zipName = "Trizbort-$packageVersion-win-x64.zip"
-          Compress-Archive -Path publish\* -DestinationPath $zipName
-          "zip=$zipName" >> $env:GITHUB_OUTPUT
+          "assets=$($assets -join ' ')" >> $env:GITHUB_OUTPUT
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_REPO: ${{ github.repository }}
-          RELEASE_ZIP: ${{ steps.package.outputs.zip }}
+          RELEASE_ASSETS: ${{ steps.package.outputs.assets }}
           RELEASE_PRERELEASE: ${{ steps.version.outputs.prerelease }}
         run: |
-          $releaseArgs = @('release', 'create', $env:RELEASE_TAG, $env:RELEASE_ZIP,
-            '--repo', $env:RELEASE_REPO, '--verify-tag', '--title', "Trizbort $env:RELEASE_TAG",
-            '--generate-notes')
+          $releaseArgs = @('release', 'create', $env:RELEASE_TAG) + ($env:RELEASE_ASSETS -split ' ') + @(
+            '--repo', $env:RELEASE_REPO, '--verify-tag', '--title', "Trizbort $env:RELEASE_TAG", '--generate-notes')
           if ($env:RELEASE_PRERELEASE -eq 'true') {
             $heading = "## [$($env:RELEASE_TAG.Substring(1))]"
             $changelog = Get-Content 'changelog.md' -Raw

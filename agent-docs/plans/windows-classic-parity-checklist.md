@@ -1,5 +1,8 @@
 # Windows Classic Parity Checklist
 
+> **Superseded (2026-10-30)** by [`avalonia-parity-review.md`](avalonia-parity-review.md). The refactored WinForms app this
+> checklist covered has been removed; the original app is in `legacy/`. Kept for its fixture groups and capture workflow.
+
 This plan tracks checks for the Windows Forms application against a known pre-refactor baseline.
 It is intended to be updated incrementally: run a section, record differences, fix regressions,
 then mark the section retested.
