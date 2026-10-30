@@ -37,15 +37,36 @@ Facts checked for this decision:
      `ProjectChanged`/`SelectionChanged`/`ZoomChanged`/`CanvasInvalidated`.
 2. **Every edit is a command executed through the session** (`session.Execute(edit)`), never a direct property
    set from UI code. Dialog OK, paste, delete, nudge, automap batches and drags all go through it.
-3. **Undo v1 = whole-map snapshots.** An undo step stores the map XML before and after (reuse
-   `MapSaver`/`MapLoader`/`LegacyMapFileEngine` to a string) plus selection as element ids. Undo restores the
-   "before" XML in place and reselects by id. This handles cascades, ids, references and paste uniformly and is
-   simple enough for cheap agents. Viewport changes are not undoable.
-   - Grouping: one step per discrete command, per dialog OK, per paste, per completed drag (transaction opened on
-     press, committed on `EndDrag(!cancelled)`, rolled back on cancel), per automap batch.
+3. **Undo is a full multi-level stack** (undo and redo, cap ~200 steps), stored behind an `IUndoMemento`
+   interface so the storage strategy can change without touching commands.
+   - **v1 storage = whole-map snapshot per step** (map XML via `LegacyMapFileEngine`, gzip-compressed, plus selection
+     as element ids). Measured on Lee's PC (2026-10-30, `scripts/bench/undo-snapshot-bench.cs`):
+
+     | Map | Rooms / connections | XML | Snapshot (save) | Restore (load) |
+     |---|---|---|---|---|
+     | space-quest sample | 104 / 137 | 70 KB | 1.4 ms | 11 ms |
+     | synthetic | 250 / 468 | 208 KB | 3.2 ms | 24 ms |
+     | synthetic | 1,000 / 1,936 | 841 KB | 20 ms | 126 ms |
+
+     So for real maps a step costs ~1–3 ms to record and ~10–25 ms to undo; even a 1,000-room map stays under a frame
+     to record and ~0.1 s to undo. Memory is the real cost: uncompressed, 200 steps of a 1,000-room map would be
+     ~170 MB, hence gzip (XML typically compresses ~8–10×) and the step cap.
+   - Why snapshots first: deletes cascade to connections, paste remaps ids, and dialog OKs touch many properties —
+     a snapshot gets all of these right with no per-command undo code, which suits cheap agents.
+   - Caveat: restoring recreates element objects, so the UI must drop references (hover, drag state) and reselect by
+     id after undo. The session's `Changed(Model | Selection)` event covers this.
+   - **Planned v2 = element-level mementos**, only if profiling says so: a transaction records the before-state of
+     just the elements it touches (each element already serialises itself) plus added/removed elements (captured from
+     `Elements.Added/Removed`, which also catches cascades). Cost then scales with the edit, not the map. To keep that
+     upgrade mechanical, commands declare the elements they will change when they open a transaction
+     (`session.Begin("Swap names", touched: rooms)`), even though v1 ignores the hint.
+   - Rejected: hand-written inverse operations per command (classic command pattern) — fastest, but ~100 commands
+     each needing a correct inverse, including cascades and id remapping, is where undo bugs come from; immutable
+     model / structural sharing — too large a rewrite of Core.
+   - Grouping: one step per discrete command, per dialog OK, per paste, per completed drag (snapshot taken on press,
+     committed on `EndDrag(!cancelled)`, discarded on cancel — which also fixes I-010), per automap batch.
    - Dirty flag = "stack position ≠ position at last save".
-   - Performance gate: a test that snapshots a 1,000-room generated map must take < 50 ms per step on CI. If it
-     fails, the fallback is fine-grained edits for drags only; don't build that unless the gate fails.
+   - Performance gate (test): recording a step on the 1,000-room synthetic map must stay < 50 ms and restoring < 250 ms.
 4. **Input-neutral interaction in Core.** Lift `MapCanvasControl`'s `CanvasDragMode` state machine, hit-testing,
    pending-connection logic and `EndDrag(cancelled)` into `CanvasInteraction`, which consumes neutral events —
    `PointerInput(button, modifiers, clientPos, clickCount)`, `WheelInput`, `KeyInput(KeyGesture)` — and outputs
