@@ -92,7 +92,8 @@ Change values: keep = reference gesture unchanged; modernise = convention replac
 | Rotate connection (Ctrl flag, other way) | K056 | Primary+] | none | Primary+] | keep | Reference. | |
 | Adjust all connection ports of room | K018 | ; or \ | none | ; or \ | keep | Reference. | |
 | Cycle port-adjust detail | K053 | Primary+; or Primary+\ | none | Primary+; or Primary+\ | keep | Reference; fix the dead Shift branch in the ticket (matrix K open question 4). | |
-| Delete all connections of room | K017 | Primary+D | none | Primary+D | keep (flag) | Conventionally Duplicate in design tools. See Questions. | |
+| Delete all connections of room | K017 | Primary+D | none | Alt+Delete | modernise | Lee (Q5): Primary+D is Duplicate by convention. | approved |
+| Duplicate selection | (new) | none | none | Primary+D | new | Lee (Q5): reserved for a future Duplicate command. | approved |
 | Backup project | K016 | Primary+B | none | Primary+B | keep | Reference. | |
 | Quick Find | K022 | Primary+F | none | Primary+F | keep | Same as convention. | |
 | Make next selected element active | K065 | F3 | none | F3 | keep | Matches Find Next convention. | |
@@ -119,11 +120,11 @@ Change values: keep = reference gesture unchanged; modernise = convention replac
 | Application Settings | M066 | Alt+Shift+S | none | Primary+, | modernise | Primary+, is Settings in VS Code, browsers and macOS. See Questions. | |
 | Online Help | M071, K024 | F1 | F1 opens About | F1 (macOS: Cmd+? / Primary+Shift+/) | conflict-fix | F1 is help everywhere; About must give it up. | |
 | About | M072 | none | F1 | none (Help menu; macOS app menu) | conflict-fix | Frees F1. | |
-| Debug: toggle FPS | K062 | Ctrl+F1 | none | Developer menu only, if ported (see Questions) | keep | Dev-only. | |
-| Debug: toggle mouse coordinates | K063 | Shift+F1 | none | Developer menu only, if ported | keep | Dev-only. | |
-| Debug: toggle element rendering | K064 | Ctrl+F2 | none | Developer menu only, if ported | keep | Dev-only. | |
-| Debug: toggle line rendering | K067 | Ctrl+F3 | none | Developer menu only, if ported | keep | Dev-only. | |
-| Debug: toggle grid polyline | K069 | Ctrl+F5 (unreachable, Start Room wins) | none | Developer menu only, if ported; no key | conflict-fix | Reference clash with Start Room. | |
+| Debug: toggle FPS | K062 | Ctrl+F1 | none | Ctrl+F1 (only when started with `--debug`) | keep | Lee (Q6): keep the reference keys for advanced users; enable debug features with a startup flag. | approved |
+| Debug: toggle mouse coordinates | K063 | Shift+F1 | none | Shift+F1 (only when started with `--debug`) | keep | Lee (Q6): keep the reference keys for advanced users; enable debug features with a startup flag. | approved |
+| Debug: toggle element rendering | K064 | Ctrl+F2 | none | Ctrl+F2 (only when started with `--debug`) | keep | Lee (Q6): keep the reference keys for advanced users; enable debug features with a startup flag. | approved |
+| Debug: toggle line rendering | K067 | Ctrl+F3 | none | Ctrl+F3 (only when started with `--debug`) | keep | Lee (Q6): keep the reference keys for advanced users; enable debug features with a startup flag. | approved |
+| Debug: toggle grid polyline | K069 | Ctrl+F5 (unreachable, Start Room wins) | none | none; menu item under `--debug` only | conflict-fix | Reference clash with Start Room. | approved |
 
 Commands that have a matrix row but **no gesture in the reference or the proposal** (menu or toolbar only): Export PDF (M007), Export Image (M008), Recent Maps (M012), Select Special submenu (M017 to M023), Validation toggles (M052 to M055), Zoom 50/100/200 presets (M057), Zoom -1%/+1% (M058), Mini Map toggle (M061), Show Grid (M062), Automap Start/Stop (M063, M064), Restore Default Map Settings (M067), Map Statistics and Export (M068, M069), Themes, Import, Export, Infer (M070, M076 to M078), Quest to clipboard with header (M010).
 
@@ -142,7 +143,7 @@ Commands that have a matrix row but **no gesture in the reference or the proposa
 | Primary+Arrows and Shift+Arrows: reference selects in a direction, Avalonia nudges | Reference behaviour restored. Only plain arrows move or pan. Primary+Alt+Arrows resizes. |
 | Primary+F5 Start Room vs debug "grid polyline" Ctrl+F5 | Start Room wins (it already wins in the reference). Debug toggle gets no key. |
 | Primary+, Map Settings (reference) vs Settings convention | Primary+, becomes Application Settings; Map Settings moves to Primary+Shift+,. Flagged in Questions. |
-| Primary+D delete-all-connections vs bare D label Down | Different modifiers, no clash. Primary+D versus the "duplicate" convention is flagged in Questions. |
+| Primary+D delete-all-connections vs bare D label Down | Resolved by Q5: delete-all-connections moves to Alt+Delete; Primary+D is reserved for Duplicate. |
 | Delete and Backspace | Both delete on the canvas only. Window-level binding on Delete duplicates the canvas case; remove one when implementing (matrix K open question 1). |
 | Primary+= / Primary++ / bare + and - | All zoom. Both `OemPlus` and `Add` keys are bound so no Shift is needed on a US keyboard. |
 
@@ -174,11 +175,39 @@ macOS code-level support is in scope (L5); packaging is not. Rules: `Primary` is
 | Alt+Enter Properties | Option+Return works | Unchanged |
 | Primary+NumPad keypad modifier | Ctrl+NumPad is a settings value in the reference (SET:465-468) | Primary+NumPad, i.e. Cmd; add the setting only if Lee wants it |
 
-## 5. Questions for Lee
+## 5. Lee's decisions (2026-10-30)
+
+D4 is **approved** with these answers. Rows Lee did not comment on are accepted as proposed.
+
+1. Primary+W: keep Swap Names on Windows/Linux; Ctrl+W on macOS (Cmd+W stays Close Window).
+2. Settings: Primary+, = Application Settings; Primary+Shift+, = Map Settings.
+3. Redo: Primary+Y (conventional) **and** Primary+Shift+Z (also a common convention, the macOS standard); so Export ZIL (file) moves to Primary+Shift+I.
+4. Smart Save: Primary+Alt+S is OK.
+5. Primary+D is Duplicate (reserved for a future command); Delete all connections of room moves to Alt+Delete.
+6. Debug toggles keep their reference keys but only work when the app is started with a `--debug` flag (no menu otherwise).
+
+## 6. Questions for Lee (answered — see section 5)
 
 1. **Primary+W.** Keep the reference (Swap Names) on Windows/Linux and use Ctrl+W on macOS, or give Primary+W the conventional Close and move Swap Names to a free chord such as Primary+Shift+W?
+- Yes
+
 2. **Settings gestures.** Make Primary+, open Application Settings (VS Code, browsers, macOS) and move Map Settings to Primary+Shift+,, which drops the reference Ctrl+, and Alt+Shift+S? Or keep Ctrl+, for Map Settings and Alt+Shift+S for App Settings on Win/Linux only?
+
+- Yes
+
 3. **Redo vs Export ZIL.** Move the ZIL file export from Primary+Shift+Z to Primary+Shift+I so Redo can use Primary+Shift+Z. Is that acceptable, or should Redo be Primary+Y only on Windows/Linux?
+
+- Primary+Y is conventional for redo so let's use that.
+- Is Primary+Shift+Z convention for redo also? If so then change it to avoid the conflict.
+
 4. **Smart Save.** Is Primary+Alt+S (the old Save As chord) acceptable, given Ctrl+Alt is AltGr on some layouts?
+
+- OK
+
 5. **Primary+D and duplicate.** Keep Primary+D = delete all connections of the room (reference), or reserve Primary+D for a future Duplicate and give delete-all-connections a different chord? Undo makes the destructive command safer.
+
+- Primary + D feels like duplicate to me. Could alt+delete be an option?
+
 6. **Debug toggles** (K062 to K064, K067, K069). Port them behind a hidden Developer menu, port them only in Debug builds, or won't-port?
+
+- Anyone that is advanced enough to be using these probably wouldn't want them to change. We could add a startup flag to enable debug features.

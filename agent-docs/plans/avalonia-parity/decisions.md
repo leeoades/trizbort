@@ -1,6 +1,6 @@
 # Decisions (ADRs) for the Avalonia port
 
-Status of each: **Proposed** until Lee marks it Accepted. Written 2026-10-30 from feature-matrix section X
+Status: **D1–D4 Accepted by Lee on 2026-10-30.** Undo storage strategy in D1 is under review (see D1 point 3). Written 2026-10-30 from feature-matrix section X
 (T1.6), its "Observations for D1", and targeted code checks noted inline.
 
 ---
@@ -127,5 +127,5 @@ from the specs in `dialogs/Automap.md`.
 
 ## D4 — Shortcut map
 
-Drafted in `shortcut-map.md`; **Lee approves each row**. Policy L4: keep reference gestures unless an obvious modern
+**Accepted** — see `shortcut-map.md` section 5 for Lee's answers. Policy L4: keep reference gestures unless an obvious modern
 convention exists.
