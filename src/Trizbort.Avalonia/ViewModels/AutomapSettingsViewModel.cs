@@ -12,9 +12,13 @@ public partial class AutomapSettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanStart))]
+    [NotifyPropertyChangedFor(nameof(IsFileNameMissing))]
     private string _fileName = string.Empty;
 
     public bool CanStart => !string.IsNullOrWhiteSpace(FileName);
+
+    /// <summary>True while no transcript file is chosen (Start is disabled); drives the visible reason.</summary>
+    public bool IsFileNameMissing => !CanStart;
 
     [ObservableProperty]
     private bool _continueTranscript;
@@ -61,10 +65,8 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     partial void OnVerboseTranscriptChanged(bool value)
     {
         IsAssumeRoomsWithSameNameEnabled = value;
-        if (!value)
-        {
-            AssumeRoomsWithSameNameAreSameRoom = true;
-        }
+        // Legacy parity: non-verbose forces "same name" on; turning verbose back on resets it to off.
+        AssumeRoomsWithSameNameAreSameRoom = !value;
     }
 
     [RelayCommand]

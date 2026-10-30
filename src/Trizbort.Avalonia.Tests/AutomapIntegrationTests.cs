@@ -139,6 +139,34 @@ public class AutomapIntegrationTests
     }
 
     [Test]
+    public void AutomapSettingsViewModel_VerboseTurnedBackOn_ResetsSameNameRooms()
+    {
+        var vm = new AutomapSettingsViewModel(new MockStorageService());
+        vm.Initialize(AutomapSettings.Default);
+
+        vm.VerboseTranscript = false;
+        vm.AssumeRoomsWithSameNameAreSameRoom.ShouldBeTrue();
+
+        vm.VerboseTranscript = true;
+        vm.IsAssumeRoomsWithSameNameEnabled.ShouldBeTrue();
+        vm.AssumeRoomsWithSameNameAreSameRoom.ShouldBeFalse();
+    }
+
+    [Test]
+    public void AutomapSettingsViewModel_BlankFileName_ShowsReasonAndDisablesStart()
+    {
+        var vm = new AutomapSettingsViewModel(new MockStorageService());
+        vm.Initialize(AutomapSettings.Default);
+
+        vm.CanStart.ShouldBeFalse();
+        vm.IsFileNameMissing.ShouldBeTrue();
+
+        vm.FileName = "transcript.txt";
+        vm.CanStart.ShouldBeTrue();
+        vm.IsFileNameMissing.ShouldBeFalse();
+    }
+
+    [Test]
     public void AutomapSettingsViewModel_NonVerboseTranscript_ForcesSameNameRooms()
     {
         var storage = new MockStorageService();

@@ -4,61 +4,85 @@
         x:Class="Trizbort.Avalonia.Views.Dialogs.AutomapSettingsDialog"
         x:DataType="vm:AutomapSettingsViewModel"
         x:Name="DialogWindow"
-        Title="Automap Settings"
-        Width="480" Height="420"
-        MinWidth="420" MinHeight="360"
+        Title="Automapping"
+        Width="520" Height="640"
+        MinWidth="442" MinHeight="600"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
-    <Grid RowDefinitions="*,Auto" Margin="16">
+    <Grid RowDefinitions="*,Auto" Margin="16" Grid.IsSharedSizeScope="True">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="10">
+            <StackPanel Spacing="12">
+                <TextBlock Classes="hint"
+                           Text="Trizbort can automatically generate a map from a transcript of a game, even while the game is in progress." />
+
                 <!-- Transcript File Selection -->
-                <TextBlock Text="Transcript File:" FontWeight="SemiBold" />
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBox Grid.Column="0" Text="{Binding FileName}" Watermark="Path to transcript file..." />
-                    <Button Grid.Column="1" Content="Browse..." Margin="8,0,0,0"
-                            Command="{Binding BrowseTranscriptCommand}"
-                            CommandParameter="{Binding #DialogWindow}" />
-                </Grid>
+                <StackPanel Spacing="4">
+                    <Grid ColumnDefinitions="Auto,12,*,8,Auto">
+                        <Label Grid.Column="0" Classes="field-label" Content="_Transcript File:" Target="{Binding #FileNameBox}" />
+                        <TextBox Grid.Column="2" x:Name="FileNameBox" Text="{Binding FileName}" Watermark="Path to transcript file..." />
+                        <Button Grid.Column="4" Classes="dialog-button" Content="_Browse..."
+                                Command="{Binding BrowseTranscriptCommand}"
+                                CommandParameter="{Binding #DialogWindow}" />
+                    </Grid>
+                    <TextBlock Classes="error" Text="Choose a transcript file"
+                               IsVisible="{Binding IsFileNameMissing}" />
+                </StackPanel>
 
-                <CheckBox Content="Start from end of file (for active transcripts)"
-                          IsChecked="{Binding ContinueTranscript}" />
+                <!-- Options -->
+                <HeaderedContentControl Classes="group">
+                    <HeaderedContentControl.Header>
+                        <Label Content="_Options" Target="{Binding #VerboseCheck}" Padding="0" />
+                    </HeaderedContentControl.Header>
+                    <StackPanel Spacing="8">
+                        <CheckBox x:Name="VerboseCheck" Content="Treat transcript as _VERBOSE; expect room descriptions."
+                                  IsChecked="{Binding VerboseTranscript}" />
 
-                <Separator Margin="0,4" />
+                        <CheckBox Content="_Assume no two rooms have the same name."
+                                  Margin="16,0,0,0"
+                                  IsEnabled="{Binding IsAssumeRoomsWithSameNameEnabled}"
+                                  IsChecked="{Binding AssumeRoomsWithSameNameAreSameRoom}" />
 
-                <!-- General Options -->
-                <CheckBox Content="Transcript is verbose"
-                          IsChecked="{Binding VerboseTranscript}" />
+                        <CheckBox Content="_Guess possible exits from a room by reading its initial description."
+                                  IsChecked="{Binding GuessExits}" />
 
-                <CheckBox Content="Rooms with same name are same room"
-                          Margin="16,0,0,0"
-                          IsEnabled="{Binding IsAssumeRoomsWithSameNameEnabled}"
-                          IsChecked="{Binding AssumeRoomsWithSameNameAreSameRoom}" />
+                        <CheckBox Content="_Start processing from the end of the transcript file."
+                                  IsChecked="{Binding ContinueTranscript}" />
 
-                <CheckBox Content="Assume two-way connections"
-                          IsChecked="{Binding AssumeTwoWayConnections}" />
+                        <CheckBox Content="Always assume two-way connections."
+                                  IsChecked="{Binding AssumeTwoWayConnections}" />
+                    </StackPanel>
+                </HeaderedContentControl>
 
-                <CheckBox Content="Guess exits from room descriptions"
-                          IsChecked="{Binding GuessExits}" />
+                <!-- Commands -->
+                <HeaderedContentControl Classes="group">
+                    <HeaderedContentControl.Header>
+                        <Label Content="_Commands" Target="{Binding #AddObjectBox}" Padding="0" />
+                    </HeaderedContentControl.Header>
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="At the in-game prompt:" />
+                        <Grid ColumnDefinitions="Auto,6,110,8,*" RowDefinitions="Auto,Auto" RowSpacing="8">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="&gt;" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="0" Grid.Column="2" x:Name="AddObjectBox" Text="{Binding AddObjectCommand}"
+                                     ToolTip.Tip="Command typed in the game to add an object to the map, for example: tb see lamp" />
+                            <TextBlock Grid.Row="0" Grid.Column="4" Classes="hint" VerticalAlignment="Center"
+                                       Text="followed by an object name adds it to the map." />
 
-                <Separator Margin="0,4" />
-
-                <!-- Command Triggers -->
-                <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto" Margin="0,4">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Add Object Command:" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding AddObjectCommand}" Margin="0,2" />
-
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Add Region Command:" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding AddRegionCommand}" Margin="0,2" />
-                </Grid>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="&gt;" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="1" Grid.Column="2" x:Name="AddRegionBox" Text="{Binding AddRegionCommand}"
+                                     ToolTip.Tip="Command typed in the game to put the current room in a region, for example: tb region Cellar" />
+                            <TextBlock Grid.Row="1" Grid.Column="4" Classes="hint" VerticalAlignment="Center"
+                                       Text="followed by region name to add room to region." />
+                        </Grid>
+                    </StackPanel>
+                </HeaderedContentControl>
             </StackPanel>
         </ScrollViewer>
 
-        <!-- OK / Cancel Buttons -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,12,0,0">
-            <Button Content="Start" Width="80" IsDefault="True" IsEnabled="{Binding CanStart}" Click="OnStartClick" />
-            <Button Content="Cancel" Width="80" IsCancel="True" Click="OnCancelClick" />
+        <!-- Start / Cancel Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+            <Button Classes="dialog-button" Content="Start Auto_mapping" IsDefault="True" IsEnabled="{Binding CanStart}" Click="OnStartClick" />
+            <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Click="OnCancelClick" />
         </StackPanel>
     </Grid>
 </Window>
