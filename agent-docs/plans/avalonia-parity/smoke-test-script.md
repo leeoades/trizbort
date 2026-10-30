@@ -10,6 +10,21 @@
 > 3.23 deleting a waypoint · 3.25 Properties on each element type · 3.28 tooltip colours · 5.48 theme prompts ·
 > 6.51–6.54 and 6.57 export file pickers (naming, overwrite prompt, read-only folder, file-type filter, start folder).
 
+### Manual run — Windows, 2026-10-30 (Claude via screen control, commit `4dae57d`)
+
+| Step | Result | Notes |
+|---|---|---|
+| Open via File > Open | pass | OS picker, `*.trizbort` filter, starts in Downloads (not last folder). |
+| 3.16 resize handles | pass | Yellow selection halo, 8 handles; resizing works and the connection follows. |
+| 3.25 Properties per element | pass (room, connection) | Double-click opens each; dialogs follow the Windows **dark** theme (headless captures were light). Connection dialog fields clipped by its scrollbar (D002). Label not tried. |
+| 3.28 tooltips | partial | Shows name, description and region, but as a plain default tooltip (reference: styled header/footer); footer shows the raw value `NoRegion`. Only appears for elements with tooltip content. |
+| 2.13 OS clipboard | pass (copy) | Ctrl+C puts the room JSON on the OS clipboard. Paste of plain text from another app not tried. |
+| 6.51 / 6.54 / 6.57 export picker | pass | ZIL export suggests `object-testing.zil`, filter `*.zil`, starts in the map's folder. Overwrite prompt (6.52) and read-only folder (6.53) not tried. |
+| Exit with changes | pass | "Save changes…?" Save / Don't Save / Cancel. Title bar shows no unsaved marker. |
+| Status bar cursor position | fail | Stays "X: 0, Y: 0" (I-002). |
+| Settings file location | fail | App wrote `appsettings.json` into the folder it was started from (I-011). |
+| 3.20, 3.23, 5.48 | not run | No toolbar defaults / theme prompt exist (known gaps); waypoint delete left for next run. |
+
 About 30 minutes, 64 steps, run on Windows and again on Linux against the Avalonia app.
 Launch from the repo root: `dotnet run --project src/Trizbort.Avalonia`
 

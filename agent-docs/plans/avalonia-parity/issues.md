@@ -84,4 +84,12 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: low     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-011 -->
+## I-011 Settings are saved to the current folder
+- Reported: 2026-10-30 by agent (manual smoke run)   OS: Windows (and all)   Category: behaviour
+- Steps: start the app from any folder (here the repo root), change nothing, exit.   Expected: settings in the per-user
+  config folder (e.g. `%APPDATA%\Trizbort`, `~/.config/trizbort`).   Actual: `appsettings.json` written into the
+  working directory (matrix A012). Pollutes repos and fails in read-only folders.
+- Severity: medium     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-012 -->
