@@ -664,14 +664,14 @@ public class FileExportAutomapSmokeTests
 
     /// <summary>Smoke step 7.63: two rooms claiming the same exit asks what to do (known gap: I-008).</summary>
     [Test]
-    [Ignore("enabled by ticket 012")]
     public void S7_63_SameExitConflict_AsksWhatToDo()
     {
         // Ticket 012 assigns interactive prompts at start-up; until then Core uses the non-interactive ones.
         AutomapEngine.Instance.Prompts = NonInteractiveEditorPrompts.Instance;
         App.WireAutomapErrorReporter(new RecordingDialogService(), () => null);
+        App.WireAutomapPrompts(() => null);
 
-        AutomapEngine.Instance.Prompts.ShouldNotBeSameAs(NonInteractiveEditorPrompts.Instance);
+        AutomapEngine.Instance.Prompts.ShouldBeOfType<AvaloniaEditorPrompts>();
     }
 
     /// <summary>Smoke step 7.64: with automap running, closing the window stops automap without a hang.</summary>

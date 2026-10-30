@@ -25,7 +25,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Expected: prompt "map modified by another program, reload?" (reference `legacy/src/Trizbort/Domain/Watchers/TrizbortFileWatcher.cs:55–67`).   Actual: nothing happens; the watcher re-arms.
 - Cause: Core's `TrizbortFileWatcher` is armed on load, but Avalonia never sets `ConfirmReloadPrompt`, `UIThreadInvoker` or `Project.MapReloader`. Matrix A005.
 - Severity: medium     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: Avalonia wires `ConfirmReloadPromptAsync`, `UIThreadInvoker` and `Project.MapReloader` (`FileWatcherWiring`); the watcher is debounced, ignores the app's own saves, handles save-by-rename, and no longer subscribes twice. Tests: `FileWatcherTests`.
+- Ticket: 112
 
 ## I-004 Ctrl+Shift+A selects everything instead of the selected rooms' regions
 - Reported: 2026-10-30 by agent (T1.2, code reading)   OS: all   Category: behaviour
@@ -66,7 +67,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   same exit (`AutomapRoomSameDirectionDialog`).   Actual: Core defaults silently pick the first candidate / keep room 1,
   so maps can be merged wrongly without the user knowing. Fix via decision D3 (async prompts). See `dialogs/Automap.md`.
 - Severity: medium     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: `AvaloniaEditorPrompts` shows the same-direction and disambiguation dialogs; smoke S7_63 un-ignored. Tests: `AutomapPromptDialogTests`.
+- Ticket: 012
 
 ## I-009 Adding elements one by one gets very slow on big maps
 - Reported: 2026-10-30 by agent (undo benchmark, measured on Windows)   OS: all   Category: performance

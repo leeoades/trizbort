@@ -1,0 +1,24 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.AutomapSameDirectionDialog"
+        x:DataType="vm:AutomapSameDirectionViewModel"
+        Title="Automapping"
+        Width="560" Height="170"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid ColumnDefinitions="*,16,220" Margin="16">
+        <TextBlock Grid.Column="0" Text="{Binding Message}" TextWrapping="Wrap" VerticalAlignment="Top" />
+
+        <StackPanel Grid.Column="2" Spacing="8">
+            <Button x:Name="KeepExistingButton" Classes="dialog-button" HorizontalAlignment="Stretch"
+                    IsDefault="True" Content="{Binding KeepExistingButtonText}" Click="OnKeepExistingClick" />
+            <Button Classes="dialog-button" HorizontalAlignment="Stretch"
+                    Content="{Binding KeepNewButtonText}" Click="OnKeepNewClick" />
+            <Button Classes="dialog-button" HorizontalAlignment="Stretch"
+                    Content="Keep _Both" Click="OnKeepBothClick" />
+        </StackPanel>
+    </Grid>
+</Window>

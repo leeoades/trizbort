@@ -42,6 +42,9 @@ public class Project : IDisposable
     set {
       if (_current == value) return;
       var oldProject = _current;
+      // The old project must stop listening for external file changes, and an unsaved project has no file to watch.
+      oldProject?.Dispose();
+      if (value != null && !value.HasFileName) FileWatcher.StopWatcher();
       _current = value;
       RaiseProjectChanged(oldProject, _current);
     }
@@ -141,6 +144,7 @@ public class Project : IDisposable
 
   public void InitFileWWatcher(string fileName)
   {
+    FileWatcher.ReloadMap -= ReloadMap;
     FileWatcher.ReloadMap += ReloadMap;
     FileWatcher.InitializeWatcher(fileName);
   }
@@ -213,7 +217,14 @@ public class Project : IDisposable
 
   private void ReloadMap(object sender, EventArgs e)
   {
-    MapReloader?.Invoke(FileName);
+    try
+    {
+      MapReloader?.Invoke(FileName);
+    }
+    finally
+    {
+      FileWatcher.StartWatcher();
+    }
   }
 
   public bool Load()

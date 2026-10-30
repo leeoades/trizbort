@@ -3,7 +3,7 @@
 Written 2026-10-30 (T3.1) from the feature matrix, dialog reviews, issues and the accepted decisions D1–D4.
 Each ticket follows the template in `../../avalonia-parity-review.md` §8 and is sized for one agent session.
 
-**Done so far:** 001, 002, 011, 070 (style + Label dialog), 071, 077, 080, 082, 083, 084, 085, 100, 106, 117, 118 — marked ✅.
+**Done so far:** 001, 002, 011, 012, 070 (style + Label dialog), 071, 077, 080, 082, 083, 084, 085, 100, 101, 104, 106, 112, 117, 118 — marked ✅.
 
 **How to pick one:** take the lowest wave whose dependencies are all done; within a wave, P1 first. Mark a ticket done by
 adding `Status: Done (<commit>)` under its title and updating the matrix rows it lists.
@@ -29,7 +29,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 009 | [Command catalogue types (incl. neutral key input types) and tests in Core](009-command-catalogue-types.md) | 3 | P1 | M | mid | 002 | X050, X051 |
 | 010 | [Avalonia generates main menu, context menu, toolbar and key bindings from the catalogue](010-avalonia-generates-menus-from-catalogue.md) | 4 | P1 | L | mid + strong review | 009 | X050, X051, C001, C002, M001–M013 |
 | 011 ✅ | [Add async IEditorPrompts to Core; the automap engine awaits them](011-async-editor-prompts-and-automap-engine.md) | 1 | P1 | M | mid | — | E044, E045 |
-| 012 | [Avalonia IEditorPrompts: same-direction and disambiguation dialogs](012-avalonia-automap-prompt-dialogs.md) | 2 | P1 | M | mid | 011 | E044, E045, D008, D009, I-008 |
+| 012 ✅ | [Avalonia IEditorPrompts: same-direction and disambiguation dialogs](012-avalonia-automap-prompt-dialogs.md) | 2 | P1 | M | mid | 011 | E044, E045, D008, D009, I-008 |
 | 020 | [Add Viewport.CenterOn(element) and select-nearest-centre helpers](020-viewport-centre-on-element.md) | 3 | P2 | S | mid | 002 | (supports K001, K003, K004, K011, K013, K014, M030) |
 | 021 | [Add Select All/None and the Select Special commands](021-select-special-commands.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | M015–M023, K002, K027 |
 | 022 | [Add Select Regions, Select Start Room and select-nearest-to-centre](022-select-regions-start-room-nearest.md) | 5 | P1 | S | mid | 002, 009, 010, 020 | K001 (selection half), K003, K004 |
@@ -100,10 +100,10 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 089 | [Open Map from URL dialog](089-open-map-from-url-dialog.md) | 5 | P2 | S | mid | 002, 009, 010, 070 | D012 |
 | 090 | [Map Theme dialog: export current map theme, infer default room style, no-undo wording, current indicator](090-map-theme-dialog-gaps.md) | 4 | P2 | M | mid | 002, 003, 070 | D017 |
 | 100 ✅ | [Store appsettings.json in a per-user config folder](100-per-user-settings-folder.md) | 1 | P1 | S | mid | — | A012, I-011 |
-| 101 | [Save settings on exit, project open and project save](101-save-settings-on-exit-and-open.md) | 2 | P1 | S | mid | 100 | A013, A017 |
+| 101 ✅ | [Save settings on exit, project open and project save](101-save-settings-on-exit-and-open.md) | 2 | P1 | S | mid | 100 | A013, A017 |
 | 102 | [Recent files service (storage, pruning, activation)](102-recent-files-service.md) | 3 | P2 | S | mid | 100, 101 | A015, M012 |
 | 103 | [Honour "Load last project on startup"](103-load-last-project-on-startup.md) | 3 | P2 | S | mid | 100, 101, 104 | A014, I-001 |
-| 104 | [Parse command-line arguments and open the named map on launch](104-command-line-arguments-open-file.md) | 2 | P1 | M | mid | 100 | A001, A019 |
+| 104 ✅ | [Parse command-line arguments and open the named map on launch](104-command-line-arguments-open-file.md) | 2 | P1 | M | mid | 100 | A001, A019 |
 | 105 | [CLI code export flags](105-cli-headless-code-export.md) | 3 | P3 | M | mid | 104, 106 | A002, E014, E015 |
 | 106 ✅ | [Core export helpers: export to file and to string for every language](106-core-export-to-file-and-text.md) | 1 | P2 | S | mid | — | E013–E015 |
 | 107 | [CLI automap, quick save, smart save and exit flags](107-cli-automap-quicksave-smartsave-exit.md) | 8 | P3 | M | mid | 011, 012, 104, 105, 110 | A018, A019, E015 |
@@ -111,7 +111,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 109 | [File association metadata and OS "open file" activation](109-file-association-and-os-open-events.md) | 3 | P3 | S | mid | 104 | A001 |
 | 110 | [Smart Save service: file naming, settings, messages, PDF/image output](110-smart-save.md) | 7 | P2 | M | mid | 059, 112, 120, 123 | E030–E034 |
 | 111 | [Status bar cursor position follows the pointer](111-status-bar-cursor-position.md) | 3 | P1 | S | mid | 002 | A020, I-002 |
-| 112 | [Reload prompt when the open map changes on disk](112-file-watcher-reload-prompt.md) | 2 | P1 | S | mid | 011 | A005, I-003 |
+| 112 ✅ | [Reload prompt when the open map changes on disk](112-file-watcher-reload-prompt.md) | 2 | P1 | S | mid | 011 | A005, I-003 |
 | 114 | [Window title: dirty marker, version and "show full path" setting](114-window-title-format-and-full-path.md) | 4 | P1 | S | mid | 003 | A004, I-006 |
 | 115 | [Honour "Apply style to new rooms"](115-apply-style-to-new-rooms.md) | 3 | P1 | S | mid | 002 | G008, I-006 |
 | 116 | [Persist window size, position and maximised state](116-window-geometry-persistence.md) | 3 | P2 | S | mid | 100, 101 | A009 |

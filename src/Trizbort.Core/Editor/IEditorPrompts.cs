@@ -22,6 +22,14 @@ public interface IEditorPrompts
     string roomDescription,
     IReadOnlyList<Room> candidates,
     CancellationToken token = default);
+
+  /// <summary>
+  ///   Asks a yes/no question. Default implementation answers "no" so existing implementers keep compiling.
+  /// </summary>
+  Task<bool> ConfirmAsync(string message, string title, CancellationToken token = default)
+  {
+    return Task.FromResult(false);
+  }
 }
 
 public readonly record struct RoomDisambiguation(Room Chosen, bool NewRoom, bool AutoChooseRest)

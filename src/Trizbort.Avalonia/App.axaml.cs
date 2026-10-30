@@ -28,6 +28,7 @@ public partial class App : Application
 
         var dialogService = services.GetRequiredService<IDialogService>();
         WireAutomapErrorReporter(dialogService, () => (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow);
+        WireAutomapPrompts(() => (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -36,15 +37,23 @@ public partial class App : Application
             {
                 DataContext = mainWindowViewModel
             };
+            FileWatcherWiring.Wire(dialogService, () => desktop.MainWindow, mainWindowViewModel.UpdateState);
         }
 
         base.OnFrameworkInitializationCompleted();
     }
 
+    public static Trizbort.Editor.IEditorPrompts WireAutomapPrompts(Func<Window?> getOwner)
+    {
+        var prompts = new AvaloniaEditorPrompts(getOwner);
+        AutomapEngine.Instance.Prompts = prompts;
+        return prompts;
+    }
+
     public static Action<string, string> WireAutomapErrorReporter(IDialogService dialogService, Func<Window?> getOwner)
     {
         // Wire Automap.ErrorReporter to IDialogService on the UI dispatcher.
-        // Same-direction room conflicts retain default KeepRoom1 (known parity gap: interactive chooser not in Avalonia).
+        // Interactive same-direction / disambiguation prompts are wired by WireAutomapPrompts.
         Action<string, string> reporter = (message, title) =>
         {
             if (Dispatcher.UIThread.CheckAccess())

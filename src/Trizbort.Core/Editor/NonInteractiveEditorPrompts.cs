@@ -33,4 +33,9 @@ public sealed class NonInteractiveEditorPrompts : IEditorPrompts
   {
     return Task.FromResult(RoomDisambiguation.Choose(candidates[0]));
   }
+
+  public Task<bool> ConfirmAsync(string message, string title, CancellationToken token = default)
+  {
+    return Task.FromResult(false);
+  }
 }

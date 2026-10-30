@@ -138,6 +138,20 @@ public class DialogCaptureTests
             var automapVm = sp.GetRequiredService<AutomapSettingsViewModel>();
             automapVm.Initialize(ApplicationSettingsController.AppSettings.Automap);
             CaptureDialog(output, files, "AutomapSettings", new AutomapSettingsDialog { DataContext = automapVm });
+
+            CaptureDialog(output, files, "AutomapSameDirection", new AutomapSameDirectionDialog
+            {
+                DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry")
+            });
+
+            var hallOne = new Room(project) { Name = "Hall" };
+            hallOne.AddDescription("A long hall with portraits.");
+            var hallTwo = new Room(project) { Name = "Hall" };
+            hallTwo.AddDescription("A hall with a spiral staircase.");
+            CaptureDialog(output, files, "DisambiguateRooms", new DisambiguateRoomsDialog
+            {
+                DataContext = new DisambiguateRoomsViewModel("Hall", "A hall with a staircase.", new[] { hallOne, hallTwo })
+            });
         }
 
         CaptureDialog(output, files, "About", new AboutDialog());
