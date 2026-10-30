@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Trizbort.Avalonia.Controls.FontPickerButton">
+    <Button x:Name="PickerButton" MinWidth="160" Height="30" Padding="6,2"
+            HorizontalContentAlignment="Left"
+            AutomationProperties.Name="Font">
+        <Button.Flyout>
+            <Flyout Placement="Bottom" Opened="OnFlyoutOpened">
+                <StackPanel x:Name="FlyoutRoot" Width="320" Spacing="8" KeyDown="OnFlyoutKeyDown">
+                    <TextBlock Text="Choose Font" FontWeight="SemiBold" FontSize="12" />
+
+                    <TextBox x:Name="FilterBox" Watermark="Search fonts" Height="28"
+                             AutomationProperties.Name="Filter font families"
+                             TextChanged="OnFilterChanged" />
+
+                    <ListBox x:Name="FamilyList" Height="160"
+                             AutomationProperties.Name="Font family"
+                             SelectionChanged="OnFamilySelectionChanged" />
+
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,2">
+                        <TextBlock Text="Size" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <NumericUpDown x:Name="SizeBox" Grid.Column="1" Minimum="6" Maximum="72"
+                                       Increment="1" FormatString="0" Value="10"
+                                       AutomationProperties.Name="Font size"
+                                       ValueChanged="OnSizeChanged" />
+                        <ToggleButton x:Name="BoldToggle" Grid.Column="2" Content="B" FontWeight="Bold"
+                                      Width="32" Margin="6,0,0,0" HorizontalContentAlignment="Center"
+                                      AutomationProperties.Name="Bold"
+                                      IsCheckedChanged="OnStyleToggleChanged" />
+                        <ToggleButton x:Name="ItalicToggle" Grid.Column="3" Content="I" FontStyle="Italic"
+                                      Width="32" Margin="4,0,0,0" HorizontalContentAlignment="Center"
+                                      AutomationProperties.Name="Italic"
+                                      IsCheckedChanged="OnStyleToggleChanged" />
+                    </Grid>
+
+                    <Border BorderThickness="1" Padding="6" MinHeight="64"
+                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Name="SampleText" Text="AaBbYyZz 123"
+                                       AutomationProperties.Name="Font sample" />
+                            <TextBlock x:Name="RoomSampleText" Text="Cloakroom"
+                                       AutomationProperties.Name="Room name sample" />
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6">
+                        <Button x:Name="DoneButton" Content="Done" MinWidth="70"
+                                AutomationProperties.Name="Done" Click="OnDoneClick" />
+                        <Button x:Name="CancelButton" Content="Cancel" MinWidth="70"
+                                AutomationProperties.Name="Cancel" Click="OnCancelClick" />
+                    </StackPanel>
+                </StackPanel>
+            </Flyout>
+        </Button.Flyout>
+
+        <TextBlock x:Name="ButtonText" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+    </Button>
+</UserControl>
