@@ -118,8 +118,12 @@ public class Element : IComparable<Element>
 
   public int GetNextId()
   {
+    // Build the set of used ids once (O(n)) rather than rescanning every element for each candidate id.
+    var used = new HashSet<int>();
+    foreach (var existing in Project.Elements)
+      used.Add(existing.Id);
     var id = 1;
-    while (Project.IsElementIdInUse(id))
+    while (used.Contains(id))
       ++id;
     return id;
   }

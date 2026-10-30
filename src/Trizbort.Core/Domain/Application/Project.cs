@@ -128,11 +128,12 @@ public class Project : IDisposable
 
   public bool FindElement(int id, out Element element)
   {
-    foreach (var existing in Elements.Where(existing => existing.Id == id))
-    {
-      element = existing;
-      return true;
-    }
+    foreach (var existing in Elements)
+      if (existing.Id == id)
+      {
+        element = existing;
+        return true;
+      }
 
     element = null;
     return false;
