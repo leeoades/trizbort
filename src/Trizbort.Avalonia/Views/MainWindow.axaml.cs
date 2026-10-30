@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Input;
+using Avalonia;
 using Avalonia.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Avalonia.Controls;
@@ -20,6 +22,87 @@ public partial class MainWindow : Window
         InitializeComponent();
         Closing += OnWindowClosing;
         Opened += OnWindowOpened;
+        PositionChanged += (_, _) => CaptureNormalBounds();
+        PropertyChanged += (_, e) =>
+        {
+            if (e.Property == ClientSizeProperty) CaptureNormalBounds();
+        };
+        RestoreGeometry();
+    }
+
+    private WindowGeometry? _normalGeometry;
+
+    /// <summary>Restores the saved size, position and maximised state, kept on a visible screen.</summary>
+    private void RestoreGeometry()
+    {
+        try
+        {
+            var saved = ApplicationSettingsController.AppSettings.WindowState;
+            if (saved == null) return;
+
+            var screens = new List<ScreenRect>();
+            var scaling = 1.0;
+            foreach (var screen in Screens.All)
+            {
+                var area = screen.WorkingArea;
+                screens.Add(new ScreenRect(area.X, area.Y, area.Width, area.Height));
+            }
+
+            var fitted = WindowGeometry.Fit(saved, screens);
+            if (fitted == null) return;
+
+            foreach (var screen in Screens.All)
+            {
+                var area = screen.WorkingArea;
+                if (fitted.X >= area.X && fitted.X < area.X + area.Width &&
+                    fitted.Y >= area.Y && fitted.Y < area.Y + area.Height)
+                {
+                    scaling = screen.Scaling;
+                    break;
+                }
+            }
+
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Position = new PixelPoint(fitted.X, fitted.Y);
+            Width = fitted.Width / scaling;
+            Height = fitted.Height / scaling;
+            if (fitted.Maximised) WindowState = WindowState.Maximized;
+            _normalGeometry = fitted;
+        }
+        catch (Exception)
+        {
+            // window placement is best effort
+        }
+    }
+
+    /// <summary>Remembers the normal (not maximised, not minimised) bounds in pixels.</summary>
+    private void CaptureNormalBounds()
+    {
+        if (WindowState != WindowState.Normal) return;
+        var scaling = RenderScaling;
+        _normalGeometry = new WindowGeometry
+        {
+            X = Position.X,
+            Y = Position.Y,
+            Width = (int)Math.Round(ClientSize.Width * scaling),
+            Height = (int)Math.Round(ClientSize.Height * scaling)
+        };
+    }
+
+    private void SaveGeometry()
+    {
+        try
+        {
+            if (WindowState == WindowState.Minimized) return;
+            CaptureNormalBounds();
+            if (_normalGeometry == null || _normalGeometry.Width <= 0 || _normalGeometry.Height <= 0) return;
+            _normalGeometry.Maximised = WindowState == WindowState.Maximized;
+            ApplicationSettingsController.AppSettings.WindowState = _normalGeometry;
+        }
+        catch (Exception)
+        {
+            // never block closing because the window state could not be read
+        }
     }
 
     private bool _startupActionsRun;
@@ -56,6 +139,8 @@ public partial class MainWindow : Window
             {
                 menu.Items.Add(item);
             }
+
+            AddRecentMapsMenu(menu, vm);
         }
 
         var toolbar = this.FindControl<StackPanel>("Toolbar");
@@ -79,6 +164,19 @@ public partial class MainWindow : Window
         }
     }
 
+    private static void AddRecentMapsMenu(Menu menu, MainWindowViewModel vm)
+    {
+        foreach (var top in menu.Items)
+        {
+            if (top is MenuItem { Header: string header } fileMenu && header == "_File")
+            {
+                var recent = App.Services?.GetService<IRecentFilesService>();
+                if (recent != null) RecentMapsMenu.InsertInto(fileMenu, recent, vm.OpenRecentMapAsync);
+                return;
+            }
+        }
+    }
+
     /// <summary>
     ///   Core commands that have a view-model counterpart run that instead, so status-bar text and the system
     ///   clipboard behave as before. Everything else runs the catalogue's own action.
@@ -87,18 +185,11 @@ public partial class MainWindow : Window
     {
         switch (command.Id)
         {
-            case "edit.selectAll": return vm.SelectAllCommand;
-            case "edit.delete": return vm.DeleteSelectedCommand;
-            case "edit.copy": return vm.CopyCommand;
-            case "edit.cut": return vm.CutCommand;
-            case "edit.paste": return vm.PasteCommand;
             case "view.zoomIn": return vm.ZoomInCommand;
             case "view.zoomOut": return vm.ZoomOutCommand;
             case "view.resetZoom": return vm.ResetZoomCommand;
             case "view.fitToMap": return vm.FitToMapCommand;
             case "view.toggleGrid": return vm.ToggleGridCommand;
-            case "project.addRoom": return vm.AddRoomCommand;
-            case "project.addLabel": return vm.AddMapLabelCommand;
             default: return null;
         }
     }
@@ -158,8 +249,9 @@ public partial class MainWindow : Window
         }
     }
 
-    private static void SaveSettingsOnExit()
+    private void SaveSettingsOnExit()
     {
+        SaveGeometry();
         try
         {
             ApplicationSettingsController.SaveSettings();

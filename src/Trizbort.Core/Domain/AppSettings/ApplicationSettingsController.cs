@@ -202,13 +202,7 @@ public static class ApplicationSettingsController
   public static void OpenProject(string fileName)
   {
     AppSettings.LastProjectFileName = fileName;
-    if (AppSettings.RecentProjects.Contains(fileName)) AppSettings.RecentProjects.Remove(fileName);
-    AppSettings.RecentProjects.Insert(0, fileName);
-
-    if (AppSettings.RecentProjects.Count > RecentProjectsMaxCount)
-      AppSettings.RecentProjects.RemoveRange(
-        RecentProjectsMaxCount,
-        AppSettings.RecentProjects.Count - RecentProjectsMaxCount);
+    new RecentFiles(AppSettings).Add(fileName);
     SaveSettings();
   }
 }

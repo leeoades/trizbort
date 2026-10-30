@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 
 namespace Trizbort.Avalonia;
@@ -16,10 +17,50 @@ public static class StartupActions
         CommandLineOptions options,
         IStorageService storage,
         IDialogService dialogs,
-        Window? owner)
+        Window? owner,
+        ApplicationSettings? settings = null)
     {
         if (options == null) return;
-        await OpenNamedFileAsync(vm, options, storage, dialogs, owner);
+        if (!string.IsNullOrWhiteSpace(options.FileName))
+        {
+            // a file named on the command line always wins over "load last project"
+            await OpenNamedFileAsync(vm, options, storage, dialogs, owner);
+            return;
+        }
+
+        await OpenLastProjectAsync(vm, options, storage, settings ?? ApplicationSettingsController.AppSettings, owner);
+    }
+
+    private static async Task OpenLastProjectAsync(
+        MainWindowViewModel vm,
+        CommandLineOptions options,
+        IStorageService storage,
+        ApplicationSettings settings,
+        Window? owner)
+    {
+        if (!options.LoadLastProject && !settings.LoadLastProjectOnStart) return;
+
+        var path = settings.LastProjectFileName;
+        if (string.IsNullOrWhiteSpace(path)) return;
+        if (!RecentFiles.IsUrl(path) && !File.Exists(path)) return;
+
+        try
+        {
+            if (await storage.OpenMapFromPathAsync(path, owner))
+            {
+                vm.UpdateState();
+                vm.CommandService.ResetZoom();
+                vm.StatusText = $"Opened map: {Path.GetFileName(path)}";
+            }
+            else
+            {
+                vm.StatusText = $"Could not reopen {path}";
+            }
+        }
+        catch (Exception)
+        {
+            vm.StatusText = $"Could not reopen {path}";
+        }
     }
 
     private static async Task OpenNamedFileAsync(

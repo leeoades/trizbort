@@ -53,6 +53,8 @@ public class MapCanvasControlGestureTests
         {
             Content = canvas
         };
+        // As App.axaml.cs does for the real window: copy/cut/paste go through the system clipboard.
+        service.Session.Clipboard = new Trizbort.Avalonia.Services.AvaloniaClipboard(() => window);
         window.Show();
         window.UpdateLayout();
         canvas.Focus();

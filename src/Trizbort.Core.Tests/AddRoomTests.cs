@@ -117,6 +117,22 @@ public class AddRoomTests : RoomTestBase
   }
 
   [Test]
+  public void AddLabelAsync_OpensPropertiesSelectsAndIsOneUndoStep()
+  {
+    var prompts = new RecordingPrompts();
+    Session.Prompts = prompts;
+
+    var label = Session.AddLabelAsync(new Vector(500, 300)).GetAwaiter().GetResult();
+
+    prompts.Edited.ShouldBe(label);
+    Session.Selection.Primary.ShouldBe(label);
+    Session.Project.Elements.OfType<MapLabel>().Count().ShouldBe(1);
+    Session.PerformUndo();
+    Session.Project.Elements.OfType<MapLabel>().Count().ShouldBe(0);
+    Session.Undo.CanUndo.ShouldBeFalse();
+  }
+
+  [Test]
   public void AddRoomAsync_CancelledDialog_KeepsTheRoom()
   {
     Session.Prompts = new RecordingPrompts();

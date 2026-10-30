@@ -584,6 +584,97 @@ public class DialogViewModelTests
     }
 
     [Test]
+    public void MapSettingsViewModel_ColorSettings_UseFriendlyNamesInOrder()
+    {
+        var vm = new MapSettingsViewModel();
+        vm.Initialize();
+
+        vm.ColorSettings.Select(c => c.DisplayName).ShouldBe(new[]
+        {
+            "Canvas", "Border", "Connection", "Connection (selected)", "Connection (hover)", "Subtitle Text",
+            "Object Text", "Connection Text", "Grid", "Start Room", "End Room"
+        });
+        vm.ColorSettings.Select(c => c.Key).ShouldBe(new[]
+        {
+            "canvas", "border", "line", "selectedLine", "hoverLine", "subTitle", "smallText", "lineText", "grid",
+            "startRoom", "endRoom"
+        });
+    }
+
+    [Test]
+    public void MapSettingsViewModel_FontStyle_RoundTripsToSettings()
+    {
+        var savedRoom = Settings.RoomFontMetadata.Clone();
+        var savedLine = Settings.LineFontMetadata.Clone();
+        try
+        {
+            var vm = new MapSettingsViewModel();
+            vm.Initialize();
+            vm.RoomFont = new FontSpec("Courier New", 15, true, false);
+            vm.LineFont = new FontSpec("Verdana", 11, false, true);
+            vm.ApplyToSettings();
+
+            Settings.RoomFontMetadata.Name.ShouldBe("Courier New");
+            Settings.RoomFontMetadata.Size.ShouldBe(15f);
+            Settings.RoomFontMetadata.Style.HasFlag(FontStyle.Bold).ShouldBeTrue();
+            Settings.RoomFontMetadata.Style.HasFlag(FontStyle.Italic).ShouldBeFalse();
+            Settings.LineFontMetadata.Style.HasFlag(FontStyle.Italic).ShouldBeTrue();
+
+            var reloaded = new MapSettingsViewModel();
+            reloaded.Initialize();
+            reloaded.RoomFont.ShouldBe(new FontSpec("Courier New", 15, true, false));
+            reloaded.LineFont.ShouldBe(new FontSpec("Verdana", 11, false, true));
+        }
+        finally
+        {
+            Settings.RoomFontMetadata = savedRoom;
+            Settings.LineFontMetadata = savedLine;
+        }
+    }
+
+    [AvaloniaTest]
+    public void MapSettingsDialog_ColoursAndFontsTabs_NothingScrollsOrIsClipped()
+    {
+        EnsureDialogStyles();
+        var vm = new MapSettingsViewModel();
+        vm.Initialize();
+        var dialog = new MapSettingsDialog { DataContext = vm };
+        dialog.Show();
+        try
+        {
+            foreach (var tab in new[] { 3, 4 })
+            {
+                vm.SelectedTabIndex = tab;
+                Dispatcher.UIThread.RunJobs();
+                dialog.UpdateLayout();
+
+                foreach (var scroll in dialog.GetVisualDescendants().OfType<global::Avalonia.Controls.ScrollViewer>()
+                             .Where(sv => sv.IsVisible && sv.Bounds.Height > 0))
+                {
+                    scroll.Extent.Height.ShouldBeLessThanOrEqualTo(scroll.Viewport.Height + 1);
+                }
+
+                var pickers = dialog.GetVisualDescendants()
+                    .OfType<global::Avalonia.Controls.Control>()
+                    .Where(c => c.IsVisible && c.Bounds.Width > 0 &&
+                                (c is Trizbort.Avalonia.Controls.ColorPickerButton || c is Trizbort.Avalonia.Controls.FontPickerButton))
+                    .ToList();
+                pickers.Count.ShouldBeGreaterThan(0);
+                foreach (var control in pickers)
+                {
+                    var origin = control.TranslatePoint(new global::Avalonia.Point(0, 0), dialog).ShouldNotBeNull();
+                    (origin.Y + control.Bounds.Height).ShouldBeLessThanOrEqualTo(dialog.ClientSize.Height);
+                    (origin.X + control.Bounds.Width).ShouldBeLessThanOrEqualTo(dialog.ClientSize.Width);
+                }
+            }
+        }
+        finally
+        {
+            dialog.Close();
+        }
+    }
+
+    [Test]
     public void MapSettingsViewModel_ShapeChoices_UseLegacyNames()
     {
         var vm = new MapSettingsViewModel();

@@ -44,8 +44,17 @@
                     </HeaderedContentControl>
 
                     <HeaderedContentControl Grid.Row="1" Classes="group" Header="Objects">
-                        <TextBox Text="{Binding Objects}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70"
-                                 AutomationProperties.Name="Objects" />
+                        <Grid RowDefinitions="*,Auto" RowSpacing="4">
+                            <TextBox x:Name="ObjectsBox" Text="{Binding Objects}" AcceptsReturn="True" AcceptsTab="True"
+                                     TextWrapping="Wrap" MinHeight="70"
+                                     AutomationProperties.Name="Objects"
+                                     ToolTip.Tip="One object per line. Tab / Shift+Tab indent or outdent the selected lines with '-' bullets to show containment; Enter continues the list at the same level." />
+                            <Expander Grid.Row="1" x:Name="ObjectSyntaxExpander" Header="Object syntax" IsExpanded="False"
+                                      HorizontalAlignment="Stretch">
+                                <TextBlock Classes="hint" FontFamily="Consolas,Menlo,DejaVu Sans Mono,monospace"
+                                           Text="[m] = male person&#10;[f] = female person&#10;[p] = neuter person&#10;[!] = proper-named&#10;[s] = scenery&#10;[u] = supporter&#10;[c] = container&#10;[h] = has / part of&#10;[w] = worn by&#10;[1] = singular-named&#10;[2] = plural-named" />
+                            </Expander>
+                        </Grid>
                     </HeaderedContentControl>
 
                     <HeaderedContentControl Grid.Row="2" Classes="group" Header="Position">

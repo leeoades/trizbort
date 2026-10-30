@@ -240,6 +240,21 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>Opens a map from the File &gt; Recent Maps menu (prompts about unsaved changes first).</summary>
+    public async Task OpenRecentMapAsync(string path)
+    {
+        var service = new RecentFilesService(_storageService, _dialogService);
+        if (!await service.OpenRecentAsync(path, GetActiveWindow(), CanLoseProjectAsync)) return;
+
+        if (IsAutomapActive)
+        {
+            StopAutomap();
+        }
+        UpdateState();
+        _commandService.ResetZoom();
+        StatusText = $"Opened map: {Path.GetFileName(path)}";
+    }
+
     [RelayCommand]
     public async Task SaveMapAsync()
     {
@@ -352,69 +367,6 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             StatusText = "Nothing selected to delete";
         }
-    }
-
-    [RelayCommand]
-    public async Task CopyAsync()
-    {
-        var text = _commandService.CopySelected();
-        if (!string.IsNullOrEmpty(text))
-        {
-            var clipboard = GetActiveTopLevel()?.Clipboard;
-            if (clipboard != null)
-            {
-                await clipboard.SetTextAsync(text);
-                StatusText = "Copied selected element(s) to clipboard";
-            }
-        }
-    }
-
-    [RelayCommand]
-    public async Task CutAsync()
-    {
-        var text = _commandService.CutSelected();
-        if (!string.IsNullOrEmpty(text))
-        {
-            var clipboard = GetActiveTopLevel()?.Clipboard;
-            if (clipboard != null)
-            {
-                await clipboard.SetTextAsync(text);
-                UpdateState();
-                StatusText = "Cut selected element(s) to clipboard";
-            }
-        }
-    }
-
-    [RelayCommand]
-    public async Task PasteAsync()
-    {
-        var clipboard = GetActiveTopLevel()?.Clipboard;
-        if (clipboard != null)
-        {
-            var text = await clipboard.TryGetTextAsync();
-            if (!string.IsNullOrEmpty(text))
-            {
-                _commandService.Paste(text);
-                UpdateState();
-                StatusText = "Pasted element(s) from clipboard";
-            }
-        }
-    }
-
-    [RelayCommand]
-    public void AddRoom()
-    {
-        var room = _commandService.AddRoom();
-        UpdateState();
-        StatusText = $"Added room '{room.Name}'";
-    }
-
-    [RelayCommand]
-    public void AddMapLabel()
-    {
-        var label = _commandService.AddMapLabel();
-        UpdateState();
-        StatusText = $"Added label '{label.Name}'";
     }
 
     [RelayCommand]

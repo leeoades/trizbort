@@ -13,6 +13,7 @@ public class ApplicationSettings
   public AutomapSettings Automap { get; set; } = AutomapSettings.Default;
   public int CanvasHeight { get; set; }
   public int CanvasWidth { get; set; }
+  public WindowGeometry WindowState { get; set; }
   public bool DebugDisableElementRendering { get; set; }
   public bool DebugDisableGridPolyline { get; set; }
   public bool DebugDisableLineRendering { get; set; }

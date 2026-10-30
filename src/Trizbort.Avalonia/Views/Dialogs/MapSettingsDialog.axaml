@@ -151,48 +151,38 @@
             <!-- Colours -->
             <TabItem Header="Colours">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding ColorSettings}" Margin="8">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid ColumnDefinitions="160,*" Margin="0,3">
-                                    <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center" />
-                                    <controls:ColorPickerButton Grid.Column="1" SelectedColor="{Binding Color}" HorizontalAlignment="Left" />
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <StackPanel Margin="8">
+                        <HeaderedContentControl Classes="group" Header="Colors">
+                            <ItemsControl ItemsSource="{Binding ColorSettings}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ColorSettingItemViewModel">
+                                        <Grid ColumnDefinitions="Auto,12,*" Margin="0,3">
+                                            <TextBlock Grid.Column="0" Classes="field-label" Text="{Binding DisplayName}" MinWidth="150" />
+                                            <controls:ColorPickerButton Grid.Column="2" SelectedColor="{Binding Color}" HorizontalAlignment="Left"
+                                                                        AutomationProperties.Name="{Binding DisplayName}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </HeaderedContentControl>
+                    </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
             <!-- Fonts -->
             <TabItem Header="Fonts">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="10" Margin="8">
-                        <HeaderedContentControl Header="Room Name Font">
-                            <Grid ColumnDefinitions="*,80" Margin="0,4">
-                                <TextBox Text="{Binding RoomFontName}" Watermark="Font Family" Margin="0,0,8,0" />
-                                <NumericUpDown Grid.Column="1" Value="{Binding RoomFontSize}" Minimum="6" Maximum="72" />
-                            </Grid>
-                        </HeaderedContentControl>
-
-                        <HeaderedContentControl Header="Objects Font">
-                            <Grid ColumnDefinitions="*,80" Margin="0,4">
-                                <TextBox Text="{Binding ObjectFontName}" Watermark="Font Family" Margin="0,0,8,0" />
-                                <NumericUpDown Grid.Column="1" Value="{Binding ObjectFontSize}" Minimum="6" Maximum="72" />
-                            </Grid>
-                        </HeaderedContentControl>
-
-                        <HeaderedContentControl Header="Subtitle Font">
-                            <Grid ColumnDefinitions="*,80" Margin="0,4">
-                                <TextBox Text="{Binding SubtitleFontName}" Watermark="Font Family" Margin="0,0,8,0" />
-                                <NumericUpDown Grid.Column="1" Value="{Binding SubtitleFontSize}" Minimum="6" Maximum="72" />
-                            </Grid>
-                        </HeaderedContentControl>
-
-                        <HeaderedContentControl Header="Line Text Font">
-                            <Grid ColumnDefinitions="*,80" Margin="0,4">
-                                <TextBox Text="{Binding LineFontName}" Watermark="Font Family" Margin="0,0,8,0" />
-                                <NumericUpDown Grid.Column="1" Value="{Binding LineFontSize}" Minimum="6" Maximum="72" />
+                    <StackPanel Margin="8">
+                        <HeaderedContentControl Classes="group" Header="Fonts">
+                            <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+                                <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Room Name:" Target="{Binding #RoomFontButton}" />
+                                <controls:FontPickerButton Grid.Row="0" Grid.Column="2" x:Name="RoomFontButton" SelectedFont="{Binding RoomFont}" HorizontalAlignment="Left" />
+                                <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="_Objects:" Target="{Binding #ObjectFontButton}" />
+                                <controls:FontPickerButton Grid.Row="1" Grid.Column="2" x:Name="ObjectFontButton" SelectedFont="{Binding ObjectFont}" HorizontalAlignment="Left" />
+                                <Label Grid.Row="2" Grid.Column="0" Classes="field-label" Content="_Line:" Target="{Binding #LineFontButton}" />
+                                <controls:FontPickerButton Grid.Row="2" Grid.Column="2" x:Name="LineFontButton" SelectedFont="{Binding LineFont}" HorizontalAlignment="Left" />
+                                <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="_Subtitle:" Target="{Binding #SubtitleFontButton}" />
+                                <controls:FontPickerButton Grid.Row="3" Grid.Column="2" x:Name="SubtitleFontButton" SelectedFont="{Binding SubtitleFont}" HorizontalAlignment="Left" />
                             </Grid>
                         </HeaderedContentControl>
                     </StackPanel>

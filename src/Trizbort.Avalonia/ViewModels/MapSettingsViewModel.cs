@@ -69,16 +69,39 @@ public partial class RegionItemViewModel : ViewModelBase
 
 public partial class ColorSettingItemViewModel : ViewModelBase
 {
+    /// <summary>Friendly names shown in the dialog, in <see cref="Colors"/> index order (legacy Designer:788-799).</summary>
+    public static IReadOnlyList<string> DisplayNames { get; } = [
+        "Canvas",
+        "Border",
+        "Connection",
+        "Connection (selected)",
+        "Connection (hover)",
+        "Subtitle Text",
+        "Object Text",
+        "Connection Text",
+        "Grid",
+        "Start Room",
+        "End Room"
+    ];
+
     public int Index { get; set; }
-    public string Name { get; set; } = string.Empty;
+
+    /// <summary>The persistence key from <c>Colors.ToName</c> (e.g. "selectedLine"); not shown to the user.</summary>
+    public string Key { get; set; } = string.Empty;
+
+    /// <summary>Same as <see cref="Key"/>; kept for existing callers.</summary>
+    public string Name => Key;
+
+    public string DisplayName { get; set; } = string.Empty;
 
     [ObservableProperty]
     private Color _color = Color.Black;
 
-    public ColorSettingItemViewModel(int index, string name, Color color)
+    public ColorSettingItemViewModel(int index, string key, Color color)
     {
         Index = index;
-        Name = name;
+        Key = key;
+        DisplayName = index >= 0 && index < DisplayNames.Count ? DisplayNames[index] : key;
         Color = color;
     }
 }
@@ -258,30 +281,40 @@ public partial class MapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private float _docVerticalMargin = 0.0f;
 
-    // Font properties
+    // Font properties (family, size and style via the font picker)
     [ObservableProperty]
-    private string _roomFontName = "Arial";
+    private FontSpec _roomFont = new("Arial", 12, false, false);
 
     [ObservableProperty]
-    private float _roomFontSize = 12.0f;
+    private FontSpec _objectFont = new("Arial", 9, false, false);
 
     [ObservableProperty]
-    private string _objectFontName = "Arial";
+    private FontSpec _subtitleFont = new("Arial", 9, false, false);
 
     [ObservableProperty]
-    private float _objectFontSize = 9.0f;
+    private FontSpec _lineFont = new("Arial", 9, false, false);
 
-    [ObservableProperty]
-    private string _subtitleFontName = "Arial";
+    private static FontSpec ToFontSpec(ThemeFont font, string fallbackFamily, float fallbackSize) =>
+        font == null
+            ? new FontSpec(fallbackFamily, fallbackSize, false, false)
+            : new FontSpec(font.Name ?? fallbackFamily, font.Size, (font.Style & FontStyle.Bold) != 0,
+                (font.Style & FontStyle.Italic) != 0);
 
-    [ObservableProperty]
-    private float _subtitleFontSize = 9.0f;
-
-    [ObservableProperty]
-    private string _lineFontName = "Arial";
-
-    [ObservableProperty]
-    private float _lineFontSize = 9.0f;
+    /// <summary>
+    ///   Copy of <paramref name="current"/> with the spec's family, size and bold/italic; keeps any underline or
+    ///   strikeout. Assigned through the Settings property so the cached font is rebuilt and Changed is raised.
+    /// </summary>
+    private static ThemeFont WithSpec(ThemeFont current, FontSpec spec)
+    {
+        var font = current?.Clone() ?? new ThemeFont();
+        font.Name = spec.Family;
+        font.Size = (float)spec.Size;
+        var style = font.Style & ~(FontStyle.Bold | FontStyle.Italic);
+        if (spec.Bold) style |= FontStyle.Bold;
+        if (spec.Italic) style |= FontStyle.Italic;
+        font.Style = style;
+        return font;
+    }
 
     public ObservableCollection<ColorSettingItemViewModel> ColorSettings { get; } = [];
     public ObservableCollection<RegionItemViewModel> Regions { get; } = [];
@@ -335,14 +368,10 @@ public partial class MapSettingsViewModel : ViewModelBase
         DocHorizontalMargin = Settings.DocHorizontalMargin;
         DocVerticalMargin = Settings.DocVerticalMargin;
 
-        RoomFontName = Settings.RoomFontMetadata?.Name ?? "Arial";
-        RoomFontSize = Settings.RoomFontMetadata?.Size ?? 12.0f;
-        ObjectFontName = Settings.ObjectFontMetadata?.Name ?? "Arial";
-        ObjectFontSize = Settings.ObjectFontMetadata?.Size ?? 9.0f;
-        SubtitleFontName = Settings.SubtitleFontMetadata?.Name ?? "Arial";
-        SubtitleFontSize = Settings.SubtitleFontMetadata?.Size ?? 9.0f;
-        LineFontName = Settings.LineFontMetadata?.Name ?? "Arial";
-        LineFontSize = Settings.LineFontMetadata?.Size ?? 9.0f;
+        RoomFont = ToFontSpec(Settings.RoomFontMetadata, "Arial", 12.0f);
+        ObjectFont = ToFontSpec(Settings.ObjectFontMetadata, "Arial", 9.0f);
+        SubtitleFont = ToFontSpec(Settings.SubtitleFontMetadata, "Arial", 9.0f);
+        LineFont = ToFontSpec(Settings.LineFontMetadata, "Arial", 9.0f);
 
         ColorSettings.Clear();
         for (var index = 0; index < Colors.Count; index++)
@@ -393,26 +422,10 @@ public partial class MapSettingsViewModel : ViewModelBase
         Settings.DocHorizontalMargin = DocHorizontalMargin;
         Settings.DocVerticalMargin = DocVerticalMargin;
 
-        if (Settings.RoomFontMetadata != null)
-        {
-            Settings.RoomFontMetadata.Name = RoomFontName;
-            Settings.RoomFontMetadata.Size = RoomFontSize;
-        }
-        if (Settings.ObjectFontMetadata != null)
-        {
-            Settings.ObjectFontMetadata.Name = ObjectFontName;
-            Settings.ObjectFontMetadata.Size = ObjectFontSize;
-        }
-        if (Settings.SubtitleFontMetadata != null)
-        {
-            Settings.SubtitleFontMetadata.Name = SubtitleFontName;
-            Settings.SubtitleFontMetadata.Size = SubtitleFontSize;
-        }
-        if (Settings.LineFontMetadata != null)
-        {
-            Settings.LineFontMetadata.Name = LineFontName;
-            Settings.LineFontMetadata.Size = LineFontSize;
-        }
+        Settings.RoomFontMetadata = WithSpec(Settings.RoomFontMetadata, RoomFont);
+        Settings.ObjectFontMetadata = WithSpec(Settings.ObjectFontMetadata, ObjectFont);
+        Settings.SubtitleFontMetadata = WithSpec(Settings.SubtitleFontMetadata, SubtitleFont);
+        Settings.LineFontMetadata = WithSpec(Settings.LineFontMetadata, LineFont);
 
         foreach (var cs in ColorSettings)
         {

@@ -88,7 +88,7 @@ public static class EditCommands
       Scope = CommandScope.Canvas,
       Gestures = new[] { new KeyGesture(InputKey.L, ModifierKeys.None) },
       ContextTargets = ContextTargets.Any,
-      ExecuteAsyncFunc = s => Run(() => s.AddLabel(s.PointerMapPosition))
+      ExecuteAsyncFunc = s => s.AddLabelAsync(s.PointerMapPosition)
     });
   }
 

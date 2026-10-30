@@ -110,7 +110,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Reported: 2026-10-30 by integrator (ticket 076 screenshot)   OS: all   Category: dialog
 - The Label dialog's Shape combo shows `SquareCorners` etc. instead of friendly names ("Square corners").
 - Severity: low     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: the Shape combo uses `EnumDisplay.Converter`.
+- Ticket: 078 batch
 
 ## I-014 Old menus stay subscribed to the editor session
 - Reported: 2026-10-30 by integrator (flaky test)   OS: all   Category: behaviour
@@ -120,4 +121,34 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: low     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-015 -->
+## I-015 Status-bar messages gone for catalogue commands
+- Reported: 2026-10-30 by integrator (037/038/040 wiring)   OS: all   Category: behaviour
+- Copy, cut, paste, delete, select all, add room/label used to post "Copied…", "Deleted…" etc. to the status bar through
+  MainWindowViewModel. They now run as catalogue commands and post nothing. `EditorSession.StatusMessage` /
+  `StatusMessagePosted` exists (ticket 033 uses it for Cycle Port Detail) but no UI shows it. Wire the status bar to it
+  and post messages from the Core commands.
+- Severity: low     Flags: —
+- Ticket: —
+
+## I-016 Toggle Text (Primary+F4) has no visible effect
+- Reported: 2026-10-30 by agent (ticket 054)   OS: all   Category: render
+- The command flips `DebugDisableTextRendering`, but the Avalonia renderer never reads it.
+- Severity: low     Flags: —
+- Ticket: —
+
+## I-017 Project validation toggles are not undoable
+- Reported: 2026-10-30 by agent (ticket 036)   OS: all   Category: behaviour   Flags: needs-decision
+- The four Must* flags are project state outside the map snapshot, so toggling them records no undo step and undo
+  carries them over. The reference had no undo at all. Decide: leave as is, or add them to the snapshot.
+- Severity: low
+- Ticket: —
+
+## I-018 Set Region is a picker, not a submenu with the current region ticked
+- Reported: 2026-10-30 by agent (ticket 024)   OS: all   Category: menu
+- The catalogue has no dynamic child items, so the context menu shows "Set Region…" opening a picker. The reference
+  shows a submenu of regions with a tick. Recent Maps (058) solved dynamic items with a dedicated control
+  (`Controls/RecentMapsMenu.cs`); generalise that into the catalogue builder and use it here.
+- Severity: low     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-019 -->

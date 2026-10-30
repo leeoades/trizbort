@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="using:System"
         xmlns:vm="using:Trizbort.Avalonia.ViewModels"
         xmlns:controls="using:Trizbort.Avalonia.Controls"
         x:Class="Trizbort.Avalonia.Views.Dialogs.MapLabelPropertiesDialog"
@@ -78,7 +79,11 @@
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Classes="field-label" Content="_Shape:" Target="{Binding #ShapeCombo}" />
             <ComboBox Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding AvailableShapes}"
-                      SelectedItem="{Binding Shape}" HorizontalAlignment="Stretch" />
+                      SelectedItem="{Binding Shape}" HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
         </Grid>
         <TextBlock Grid.Row="6" Classes="hint" Text="Shape applies to outline and background." />
 

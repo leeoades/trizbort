@@ -28,7 +28,7 @@ public partial class App : Application
 
         var dialogService = services.GetRequiredService<IDialogService>();
         WireAutomapErrorReporter(dialogService, () => (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow);
-        WireAutomapPrompts(() => (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow);
+        var prompts = WireAutomapPrompts(() => (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -37,6 +37,9 @@ public partial class App : Application
             {
                 DataContext = mainWindowViewModel
             };
+            var session = mainWindowViewModel.CommandService.Session;
+            session.Prompts = prompts;
+            session.Clipboard = new AvaloniaClipboard(() => desktop.MainWindow);
             FileWatcherWiring.Wire(dialogService, () => desktop.MainWindow, mainWindowViewModel.UpdateState,
                 mainWindowViewModel.CommandService.Session);
         }
@@ -46,7 +49,7 @@ public partial class App : Application
 
     public static Trizbort.Editor.IEditorPrompts WireAutomapPrompts(Func<Window?> getOwner)
     {
-        var prompts = new AvaloniaEditorPrompts(getOwner);
+        var prompts = new AvaloniaEditorPrompts(getOwner, App.Services?.GetService<IDialogService>());
         AutomapEngine.Instance.Prompts = prompts;
         return prompts;
     }
@@ -83,6 +86,7 @@ public partial class App : Application
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IStorageService, StorageService>();
         services.AddSingleton<ICommandService, CommandService>();
+        services.AddSingleton<IRecentFilesService, RecentFilesService>();
         services.AddSingleton<IAutomapCanvas>(_ => new AvaloniaAutomapCanvas());
 
         // Root ViewModels

@@ -39,6 +39,13 @@ internal static class CanvasCommandBridge
 
         var input = AvaloniaKeyMapper.ToKeyInput(e.Key, e.KeyModifiers, AvaloniaKeyMapper.IsMacOS);
         var command = catalogue.FindByGesture(input, CommandScope.Canvas);
+        if (command == null)
+        {
+            // Edit commands (copy, cut, paste, select all, delete) are window-scope in the catalogue; the focused canvas
+            // runs them itself so they work without the window's key bindings.
+            command = catalogue.FindByGesture(input, CommandScope.Window);
+            if (command != null && !command.Id.StartsWith("edit.", StringComparison.Ordinal)) command = null;
+        }
         if (command == null || !command.CanExecute(session)) return false;
 
         _ = command.ExecuteAsync(session);
@@ -53,18 +60,13 @@ internal static class CanvasCommandBridge
             case "edit.properties":
                 if (activeElement == null) return null;
                 return new RelayCommand(() => { _ = canvas.ShowPropertiesDialogAsync(activeElement); });
-            case "edit.cut":
-                return new RelayCommand(() => { _ = canvas.CutSelectedToClipboardAsync(); });
-            case "edit.copy":
-                return new RelayCommand(() => { _ = canvas.CopySelectedToClipboardAsync(); });
-            case "edit.delete":
-                return new RelayCommand(() => { canvas.CommandService?.DeleteSelected(); });
             case "edit.paste":
-                return new RelayCommand(() => { _ = canvas.PasteFromClipboardAsync(); });
+                // Pasted at the right-click position; the other clipboard and add commands use the catalogue action.
+                return new RelayCommand(() => { _ = canvas.CommandService?.Session.PasteAsync(worldPos); });
             case "project.addRoom":
-                return new RelayCommand(() => { canvas.CommandService?.AddRoom(worldPos); });
+                return new RelayCommand(() => { _ = canvas.CommandService?.Session.AddRoomAsync(worldPos); });
             case "project.addLabel":
-                return new RelayCommand(() => { canvas.CommandService?.AddMapLabel(worldPos); });
+                return new RelayCommand(() => { _ = canvas.CommandService?.Session.AddLabelAsync(worldPos); });
             case "edit.mapSettings":
                 return new RelayCommand(() => { _ = canvas.ShowMapSettingsDialogAsync(); });
             case "edit.mapTheme":

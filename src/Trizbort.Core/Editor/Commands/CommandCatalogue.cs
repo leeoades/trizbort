@@ -177,13 +177,14 @@ public sealed partial class CommandCatalogue
       Scope = CommandScope.Canvas,
       Gestures = new[] { new KeyGesture(InputKey.R, ModifierKeys.None) },
       ContextTargets = ContextTargets.Any,
-      ExecuteAsyncFunc = s => s.AddRoomAsync(null)
+      ExecuteAsyncFunc = s => s.AddRoomAsync(s.PointerMapPosition)
     });
 
     // Command groups live in partial files (CommandCatalogue.<Group>.cs) so they can be edited independently.
     RegisterRoomCommands(catalogue);
     RegisterConnectionAndSelectionCommands(catalogue);
     RegisterViewCommands(catalogue);
+    RegisterMoreCommands(catalogue);
 
     return catalogue;
   }

@@ -670,33 +670,8 @@ public class MapCanvasControl : Control
 
         switch (e.Key)
         {
-            case Key.Delete or Key.Back:
-                CommandService?.DeleteSelected();
-                e.Handled = true;
-                break;
-
-            case Key.A when isCtrl:
-                CommandService?.SelectAll();
-                e.Handled = true;
-                break;
-
             case Key.D0 or Key.NumPad0 when isCtrl:
                 CommandService?.ResetZoom();
-                e.Handled = true;
-                break;
-
-            case Key.C when isCtrl:
-                _ = CopySelectedToClipboardAsync();
-                e.Handled = true;
-                break;
-
-            case Key.X when isCtrl:
-                _ = CutSelectedToClipboardAsync();
-                e.Handled = true;
-                break;
-
-            case Key.V when isCtrl:
-                _ = PasteFromClipboardAsync();
                 e.Handled = true;
                 break;
 
@@ -733,64 +708,6 @@ public class MapCanvasControl : Control
         }
     }
 
-    public async Task CopySelectedToClipboardAsync()
-    {
-        try
-        {
-            var text = CommandService?.CopySelected();
-            if (!string.IsNullOrEmpty(text))
-            {
-                var topLevel = TopLevel.GetTopLevel(this);
-                if (topLevel?.Clipboard != null)
-                {
-                    await topLevel.Clipboard.SetTextAsync(text);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Copy failed: {ex}");
-        }
-    }
-
-    public async Task CutSelectedToClipboardAsync()
-    {
-        try
-        {
-            var text = CommandService?.CutSelected();
-            if (!string.IsNullOrEmpty(text))
-            {
-                var topLevel = TopLevel.GetTopLevel(this);
-                if (topLevel?.Clipboard != null)
-                {
-                    await topLevel.Clipboard.SetTextAsync(text);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Cut failed: {ex}");
-        }
-    }
-
-    public async Task PasteFromClipboardAsync()
-    {
-        try
-        {
-            string? text = null;
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel?.Clipboard != null)
-            {
-                text = await topLevel.Clipboard.TryGetTextAsync();
-            }
-            CommandService?.Paste(text);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Paste failed: {ex}");
-        }
-    }
-
     private void ShowContextMenuAt(CoreVector worldPos)
     {
         var hitElem = Hit.HitElement(worldPos);
@@ -801,6 +718,7 @@ public class MapCanvasControl : Control
 
         var session = CommandService?.Session;
         if (session == null) return;
+        _ = session.RefreshClipboardStateAsync();
 
         var selectedElements = Project.Current.GetSelectedElements();
         var activeElement = selectedElements.Count == 1 ? selectedElements[0] : (hitElem ?? Project.Current.ActiveSelectedElement);

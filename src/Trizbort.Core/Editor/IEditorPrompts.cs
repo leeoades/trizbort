@@ -39,6 +39,15 @@ public interface IEditorPrompts
   {
     return Task.FromResult(false);
   }
+
+  /// <summary>
+  ///   Asks the user to pick a region. Returns the chosen region name, or null when cancelled. Default
+  ///   implementation cancels so existing implementers keep compiling.
+  /// </summary>
+  Task<string> ChooseRegionAsync(IReadOnlyList<string> regions, string current, CancellationToken token = default)
+  {
+    return Task.FromResult<string>(null);
+  }
 }
 
 public readonly record struct RoomDisambiguation(Room Chosen, bool NewRoom, bool AutoChooseRest)
