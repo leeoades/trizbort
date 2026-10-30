@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Enums;
@@ -7,14 +9,26 @@ namespace Trizbort.Editor.Commands;
 
 public sealed partial class CommandCatalogue
 {
+  private static IReadOnlyList<DynamicMenuItem> RegionMenuItems(EditorSession session)
+  {
+    var current = session.PrimaryRoom?.Region;
+    return session.RegionNames()
+      .Select(name => new DynamicMenuItem
+      {
+        Title = name,
+        IsChecked = string.Equals(name, current, StringComparison.OrdinalIgnoreCase),
+        Execute = s => s.SetSelectedRoomsRegion(name)
+      })
+      .ToList();
+  }
+
   /// <summary>Regions, port adjust, z-order, validation toggles and Toggle Text (tickets 024, 033, 035, 036, 054).</summary>
   private static void RegisterMoreCommands(CommandCatalogue catalogue)
   {
     var primary = ModifierKeys.Primary;
     var none = ModifierKeys.None;
 
-    // Regions (024). The Set Region submenu needs dynamic children the catalogue does not have, so the context
-    // item opens the same region picker as Change Region.
+    // Regions (024). The context menu has a Set Region submenu listing the regions, the current one ticked.
     catalogue.Register(new EditorCommand
     {
       Id = "room.changeRegion",
@@ -31,10 +45,10 @@ public sealed partial class CommandCatalogue
       Id = "room.setRegion",
       Hidden = true, // context menu only
       ContextOrder = 70, ContextGroup = "7-region",
-      Title = "Set _Region...",
+      Title = "Set _Region",
       ContextTargets = ContextTargets.Room,
       CanExecuteFunc = s => s.Selection.Rooms.Any() && s.HasMultipleRegions,
-      ExecuteAsyncFunc = s => s.ChangeRegionAsync()
+      DynamicChildren = RegionMenuItems
     });
 
     // Ports (033).

@@ -21,6 +21,9 @@ public static class StartupActions
         ApplicationSettings? settings = null)
     {
         if (options == null) return;
+        // the debug commands and rendering toggles only work when started with --debug
+        var session = vm.CommandService?.Session;
+        if (session != null) session.DebugEnabled = options.Debug;
         if (!string.IsNullOrWhiteSpace(options.FileName))
         {
             // a file named on the command line always wins over "load last project"

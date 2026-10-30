@@ -41,6 +41,28 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         return await service.ShowElementPropertiesAsync(owner, element);
     }
 
+    /// <summary>Shows a message box and completes when it is dismissed.</summary>
+    public Task ShowMessageAsync(string title, string message, CancellationToken token = default)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            return ShowMessageCoreAsync(title, message);
+        }
+
+        return Dispatcher.UIThread.InvokeAsync(() => ShowMessageCoreAsync(title, message));
+    }
+
+    private async Task ShowMessageCoreAsync(string title, string message)
+    {
+        var service = _dialogService ?? App.Services?.GetService<IDialogService>();
+        if (service == null)
+        {
+            return;
+        }
+
+        await service.ShowMessageAsync(_getOwner(), title, message);
+    }
+
     public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
         Room existing,
         string newRoomName,
@@ -99,6 +121,104 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         var dialog = new DisambiguateRoomsDialog { DataContext = viewModel };
         await dialog.ShowDialog(owner);
         return viewModel.Result;
+    }
+
+    public Task<string?> QuickFindAsync(IReadOnlyList<string> suggestions, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            if (owner == null)
+            {
+                return null;
+            }
+
+            var dialog = new QuickFindDialog();
+            dialog.SetSuggestions(suggestions);
+            return await dialog.ShowDialog<string?>(owner);
+        });
+    }
+
+    public Task ShowTextReportAsync(string title, string text, CancellationToken token = default)
+    {
+        return OnUiThreadAsync<object?>(async () =>
+        {
+            var owner = _getOwner();
+            if (owner != null)
+            {
+                var window = new MapStatisticsWindow { Title = title, ReportText = text };
+                await window.ShowDialog(owner);
+            }
+
+            return null;
+        });
+    }
+
+    public Task<string?> PickSaveFileAsync(string title, string suggestedPath, string extension, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            if (owner == null)
+            {
+                return null;
+            }
+
+            var options = new global::Avalonia.Platform.Storage.FilePickerSaveOptions
+            {
+                Title = title,
+                DefaultExtension = extension.TrimStart('.'),
+                SuggestedFileName = Path.GetFileName(suggestedPath),
+                FileTypeChoices =
+                [
+                    new global::Avalonia.Platform.Storage.FilePickerFileType("Log files") { Patterns = ["*" + extension] },
+                    global::Avalonia.Platform.Storage.FilePickerFileTypes.All
+                ]
+            };
+            var folder = Path.GetDirectoryName(suggestedPath);
+            if (!string.IsNullOrEmpty(folder))
+            {
+                options.SuggestedStartLocation = await owner.StorageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(folder)));
+            }
+
+            var file = await owner.StorageProvider.SaveFilePickerAsync(options);
+            return file?.Path.LocalPath;
+        });
+    }
+
+    public Task MessageAsync(string message, string title, CancellationToken token = default)
+    {
+        return OnUiThreadAsync<object?>(async () =>
+        {
+            var service = _dialogService ?? App.Services?.GetService<IDialogService>();
+            if (service != null)
+            {
+                await service.ShowMessageAsync(_getOwner(), title, message);
+            }
+
+            return null;
+        });
+    }
+
+    public Task<bool> OpenUriAsync(string uri, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            try
+            {
+                var launcher = _getOwner()?.Launcher;
+                return launcher != null && await launcher.LaunchUriAsync(new Uri(uri));
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        });
+    }
+
+    private static Task<T> OnUiThreadAsync<T>(Func<Task<T>> action)
+    {
+        return Dispatcher.UIThread.CheckAccess() ? action() : Dispatcher.UIThread.InvokeAsync(action);
     }
 
     public Task<string?> ChooseRegionAsync(

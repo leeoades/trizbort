@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Trizbort.Editor;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
@@ -11,10 +12,15 @@ public class AutomapCanvas : IAutomapCanvas
 {
   private readonly Automap _automap;
   private readonly Project _project;
+  private readonly EditorSession _session;
 
-  public AutomapCanvas(Project project = null, Automap automap = null)
+  /// <param name="session">
+  ///   When given, the room being worked on is also selected in the session and scrolled into view.
+  /// </param>
+  public AutomapCanvas(Project project = null, Automap automap = null, EditorSession session = null)
   {
     _project = project;
+    _session = session;
     _automap = automap ?? Automap.Instance;
   }
 
@@ -203,6 +209,10 @@ public class AutomapCanvas : IAutomapCanvas
   {
     if (!CurrentProject.Elements.Contains(room)) return;
     CurrentProject.ActiveSelectedElement = room;
+    if (_session == null) return;
+
+    _session.Selection.Set(new List<Element> { room });
+    _session.EnsureVisible(room);
   }
 
   private Connection AddConnection(

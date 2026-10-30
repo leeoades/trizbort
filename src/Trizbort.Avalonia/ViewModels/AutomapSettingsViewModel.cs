@@ -44,6 +44,13 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string _addRegionCommand = "tb region";
 
+    /// <summary>Step through the transcript with F11 instead of running freely. Debug only.</summary>
+    [ObservableProperty]
+    private bool _singleStep;
+
+    /// <summary>True when started with <c>--debug</c>; the single-step option is hidden otherwise.</summary>
+    public bool IsDebugEnabled { get; set; } = AppOptions.Debug;
+
     public AutomapSettingsViewModel(IStorageService storageService)
     {
         _storageService = storageService;
@@ -53,6 +60,7 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     {
         FileName = settings.FileName ?? string.Empty;
         ContinueTranscript = settings.ContinueTranscript;
+        SingleStep = IsDebugEnabled && settings.SingleStep;
         VerboseTranscript = settings.VerboseTranscript;
         IsAssumeRoomsWithSameNameEnabled = settings.VerboseTranscript;
         AssumeRoomsWithSameNameAreSameRoom = !settings.VerboseTranscript || settings.AssumeRoomsWithSameNameAreSameRoom;
@@ -83,7 +91,7 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     {
         var settings = AutomapSettings.Default;
         settings.FileName = FileName?.Trim() ?? string.Empty;
-        settings.SingleStep = false;
+        settings.SingleStep = IsDebugEnabled && SingleStep;
         settings.VerboseTranscript = VerboseTranscript;
         settings.AssumeRoomsWithSameNameAreSameRoom = !VerboseTranscript || AssumeRoomsWithSameNameAreSameRoom;
         settings.GuessExits = GuessExits;

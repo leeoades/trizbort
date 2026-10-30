@@ -39,6 +39,7 @@ public sealed class CanvasInteraction : IDisposable
   private ResizeHandle _hoverHandle;
   private CurveWaypoint? _hoverWaypoint;
   private bool _spaceHeld;
+  private bool _referenceJumpHeld;
 
   private UndoTransaction _transaction;
   private Project _gestureProject;
@@ -133,6 +134,13 @@ public sealed class CanvasInteraction : IDisposable
 
     var shift = IsShift(input.Modifiers);
     var ctrl = IsCtrl(input.Modifiers);
+
+    if (IsReferenceJumpModifier(input.Modifiers) && TryJumpToReferencedRoom(world))
+    {
+      _gestureButton = PointerButton.None;
+      Refresh();
+      return true;
+    }
 
     if (input.ClickCount == 2)
     {
@@ -245,6 +253,7 @@ public sealed class CanvasInteraction : IDisposable
   {
     var world = _session.Viewport.ClientToCanvas(input.Client);
     _lastWorld = world;
+    _referenceJumpHeld = IsReferenceJumpModifier(input.Modifiers);
 
     if (_pendingPort != null)
     {
@@ -365,6 +374,9 @@ public sealed class CanvasInteraction : IDisposable
       case InputKey.Up:
       case InputKey.Down:
         if (_session.Selection.Count == 0) return false;
+        // Shift and Primary arrows are navigation commands (047, 048), never a nudge; only Primary+Alt resizes.
+        if (input.Modifiers != ModifierKeys.None && !(IsCtrl(input.Modifiers) && (input.Modifiers & ModifierKeys.Alt) != 0))
+          return false;
         HandleArrow(input);
         return true;
     }
@@ -402,7 +414,7 @@ public sealed class CanvasInteraction : IDisposable
     }
     else
     {
-      var step = IsShift(input.Modifiers) ? Settings.GridSize * 2 : Settings.SnapToGrid ? Settings.GridSize : 2.0f;
+      var step = Settings.SnapToGrid ? Settings.GridSize : 2.0f;
       _session.NudgeSelected(unit * step);
     }
   }
@@ -666,6 +678,8 @@ public sealed class CanvasInteraction : IDisposable
   private CursorKind DetermineCursor()
   {
     if (_mode == CanvasDragMode.Pan || _spaceHeld) return CursorKind.Pan;
+    if (_mode == CanvasDragMode.None && _referenceJumpHeld && _hoverElement is Room { IsReference: true })
+      return CursorKind.Hand;
     if (_mode == CanvasDragMode.MoveWaypoint || (_mode == CanvasDragMode.None && _hoverWaypoint.HasValue))
       return CursorKind.SizeAll;
     if (_mode == CanvasDragMode.MovePort || (_hoverPort != null && _hoverPort is not MoveablePort))
@@ -761,6 +775,21 @@ public sealed class CanvasInteraction : IDisposable
   }
 
   #endregion
+
+  // Ctrl alone (no Shift or Alt), as the reference's jump to the original of a reference room (062).
+  private static bool IsReferenceJumpModifier(ModifierKeys modifiers)
+  {
+    return modifiers == ModifierKeys.Control || modifiers == ModifierKeys.Primary;
+  }
+
+  private bool TryJumpToReferencedRoom(Vector world)
+  {
+    var selection = _session.Selection;
+    if (selection.Count != 1 || selection.Primary is not Room { IsReference: true } room) return false;
+    if (_hit.HitElement(world) != room) return false;
+
+    return _session.JumpToReferencedRoom(room);
+  }
 
   private static bool IsShift(ModifierKeys modifiers)
   {

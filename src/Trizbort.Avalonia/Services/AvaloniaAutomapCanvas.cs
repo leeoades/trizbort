@@ -3,6 +3,7 @@ using Trizbort.Automap;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
+using Trizbort.Editor;
 using AutomapEngine = Trizbort.Automap.Automap;
 
 namespace Trizbort.Avalonia.Services;
@@ -11,9 +12,9 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
 {
     private readonly AutomapCanvas _innerCanvas;
 
-    public AvaloniaAutomapCanvas(Project? project = null, AutomapEngine? automap = null)
+    public AvaloniaAutomapCanvas(Project? project = null, AutomapEngine? automap = null, EditorSession? session = null)
     {
-        _innerCanvas = new AutomapCanvas(project, automap);
+        _innerCanvas = new AutomapCanvas(project, automap, session);
     }
 
     public RoomSearchResult FindRooms(string roomName, string roomDescription, RoomMatcher matcher)

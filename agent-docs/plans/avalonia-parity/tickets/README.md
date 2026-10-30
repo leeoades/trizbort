@@ -3,7 +3,7 @@
 Written 2026-10-30 (T3.1) from the feature matrix, dialog reviews, issues and the accepted decisions D1–D4.
 Each ticket follows the template in `../../avalonia-parity-review.md` §8 and is sized for one agent session.
 
-**Done so far (74):** 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 033, 034, 035, 036, 037, 038, 039, 040, 046, 050, 051, 052, 053, 054, 056, 057, 058, 063, 064, 070, 071, 072, 073, 074, 075, 076, 077, 078, 079, 080, 081, 082, 083, 084, 085, 100, 101, 102, 103, 104, 106, 111, 112, 114, 115, 116, 117, 118, 120 — marked ✅. Follow-ups found during integration are logged in `../issues.md`.
+**Done so far (89):** 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 033, 034, 035, 036, 037, 038, 039, 040, 044, 045, 046, 047, 048, 050, 051, 052, 053, 054, 055, 056, 057, 058, 061, 062, 063, 064, 066, 070, 071, 072, 073, 074, 075, 076, 077, 078, 079, 080, 081, 082, 083, 084, 085, 086, 087, 088, 100, 101, 102, 103, 104, 106, 108, 111, 112, 114, 115, 116, 117, 118, 120, 126, 127, 128 — marked ✅. Follow-ups found during integration are logged in `../issues.md`.
 
 **How to pick one:** take the lowest wave whose dependencies are all done; within a wave, P1 first. Mark a ticket done by
 adding `Status: Done (<commit>)` under its title and updating the matrix rows it lists.
@@ -54,29 +54,29 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 041 | [Add Copy Color command](041-copy-color-command.md) | 6 | P3 | S | cheap | 002, 009, 010, 040 | M025 |
 | 042 | [Add Duplicate command (Primary+D)](042-duplicate-selection-command.md) | 6 | P2 | S | mid | 002, 003, 009, 010, 040 | (new, shortcut-map Q5) |
 | 043 | [Add Backup Project command](043-backup-project-command.md) | 5 | P3 | S | cheap | 002, 009, 010 | K016 |
-| 044 | [Add Quick Find command](044-quick-find-command.md) | 5 | P2 | S | cheap | 002, 009, 010 | K022 |
-| 045 | [Add F3 / Shift+F3 active-element cycling](045-active-element-cycling.md) | 5 | P3 | S | cheap | 002, 009, 010, 020 | K065, K066 |
+| 044 ✅ | [Add Quick Find command](044-quick-find-command.md) | 5 | P2 | S | cheap | 002, 009, 010 | K022 |
+| 045 ✅ | [Add F3 / Shift+F3 active-element cycling](045-active-element-cycling.md) | 5 | P3 | S | cheap | 002, 009, 010, 020 | K065, K066 |
 | 046 ✅ | [Make plain arrows move the selection or pan the view](046-arrow-keys-move-and-pan.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | K012, K015 |
-| 047 | [Add Shift+Arrow / Shift+Home/End/PgUp/PgDn / keypad navigation](047-shift-arrow-navigation.md) | 5 | P2 | M | strong | 002, 005, 006, 009, 010, 020 | K011, K014, K032–K034, K049, K050 |
-| 048 | [Add Primary+Arrow / Primary+NumPad add-or-connect room](048-ctrl-arrow-add-or-connect.md) | 6 | P2 | M | strong | 002, 003, 009, 010, 020, 030, 037, 047 | K013, K051 |
+| 047 ✅ | [Add Shift+Arrow / Shift+Home/End/PgUp/PgDn / keypad navigation](047-shift-arrow-navigation.md) | 5 | P2 | M | strong | 002, 005, 006, 009, 010, 020 | K011, K014, K032–K034, K049, K050 |
+| 048 ✅ | [Add Primary+Arrow / Primary+NumPad add-or-connect room](048-ctrl-arrow-add-or-connect.md) | 6 | P2 | M | strong | 002, 003, 009, 010, 020, 030, 037, 047 | K013, K051 |
 | 049 | [Add Alt+NumPad unexplored connection](049-alt-numpad-unexplored-connection.md) | 6 | P3 | S | mid | 002, 003, 009, 010, 030 | K052 |
 | 050 ✅ | [Add zoom presets, micro zoom and unify zoom gestures](050-zoom-commands-presets-micro.md) | 5 | P1 | M | mid | 002, 009, 010 | M056–M058, K028–K030 |
 | 051 ✅ | [Honour InvertMouseWheel and Ctrl micro-zoom on the wheel](051-wheel-zoom-invert-and-micro.md) | 6 | P2 | S | mid | 006, 050 | G017 |
 | 052 ✅ | [Add Reset View, Zoom to Entire Map, grid check state, minimap toggle, zoom label](052-view-origin-fit-grid-minimap.md) | 6 | P1 | M | mid | 002, 009, 010, 050 | M059–M062, K010, K031, C018 |
 | 053 ✅ | [Apply approved gestures for Save As, Settings, Help, About and Exit](053-settings-help-about-exit-save-as-gestures.md) | 5 | P1 | S | cheap | 009, 010 | M005, M013, M065, M066, M071, M072, K024 |
 | 054 ✅ | [Add Toggle Text command](054-toggle-text-command.md) | 5 | P2 | S | cheap | 002, 009, 010 | M014 |
-| 055 | [Add debug toggles enabled only with --debug](055-debug-toggles-behind-debug-flag.md) | 6 | P3 | S | mid | 009, 010, 054 | K062–K064, K067, K069 |
+| 055 ✅ | [Add debug toggles enabled only with --debug](055-debug-toggles-behind-debug-flag.md) | 6 | P3 | S | mid | 009, 010, 054 | K062–K064, K067, K069 |
 | 056 ✅ | [Add export-to-file gestures and enable-when-rooms rule](056-export-file-gestures-and-enable.md) | 5 | P2 | S | cheap | 009, 010 | M009 |
 | 057 ✅ | [Add Export to Clipboard commands](057-export-to-clipboard-commands.md) | 5 | P2 | M | mid | 002, 009, 010 | M010, M011 |
 | 058 ✅ | [Add Recent Maps submenu](058-recent-maps-menu.md) | 5 | P2 | M | mid | 002, 009, 010 | M012 |
 | 059 | [Add Smart Save command](059-smart-save-command.md) | 6 | P2 | M | mid | 002, 009, 010, 053 | M006 |
 | 060 | [Add Open Map from Web](060-open-map-from-web.md) | 5 | P2 | M | mid | 002, 009, 010 | M003 |
-| 061 | [Add automap run-to-completion and single-step keys](061-automap-run-and-step-keys.md) | 5 | P3 | S | mid | 009, 010 | K068, K071 |
-| 062 | [Add Ctrl-click to jump to the original of a reference room](062-ctrl-click-reference-room.md) | 6 | P3 | S | mid | 005, 006, 020 | G003, G019 (hand cursor part) |
+| 061 ✅ | [Add automap run-to-completion and single-step keys](061-automap-run-and-step-keys.md) | 5 | P3 | S | mid | 009, 010 | K068, K071 |
+| 062 ✅ | [Add Ctrl-click to jump to the original of a reference room](062-ctrl-click-reference-room.md) | 6 | P3 | S | mid | 005, 006, 020 | G003, G019 (hand cursor part) |
 | 063 ✅ | [Align marquee modifiers and double-click empty-space rule with legacy](063-click-marquee-doubleclick-rules.md) | 6 | P2 | S | mid | 005, 006 | G005, G014 |
 | 064 ✅ | [Add waypoint drag threshold, selected waypoint and delete](064-waypoint-drag-threshold-and-delete.md) | 6 | P2 | M | strong | 005, 006, 039 | G011, G012 |
 | 065 | [Restore tooltip colouring and hide-on-drag](065-tooltip-styling-and-hiding.md) | 6 | P3 | S | cheap | 006 | G018 |
-| 066 | [Generate context menu per target with legacy visibility rules](066-context-menu-target-rules.md) | 7 | P1 | M | mid | 005, 010, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 035, 037 | C015, G016, C019, C001 |
+| 066 ✅ | [Generate context menu per target with legacy visibility rules](066-context-menu-target-rules.md) | 7 | P1 | M | mid | 005, 010, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 035, 037 | C015, G016, C019, C001 |
 | 067 | [Add shortcut-map conformance and modifier-exactness tests](067-shortcut-map-conformance-test.md) | 7 | P2 | M | mid | 010, 021, 025, 027, 029, 030, 031, 032, 047, 048, 050 | (all K and M gesture rows) |
 | 070 ✅ | [Define and apply shared dialog style guidelines](070-dialog-style-guidelines.md) | 1 | P1 | M | mid | — | D001-D007, D015, D016 |
 | 071 ✅ | [Room dialog: persistent header, missing fields and friendly option names](071-room-dialog-header-and-missing-fields.md) | 2 | P1 | M | mid | 070 | D001 |
@@ -94,9 +94,9 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 083 ✅ | [About dialog: version, credits, repository links, licence, third-party notices](083-about-dialog.md) | 2 | P2 | S | cheap | 070 | D015 |
 | 084 ✅ | [Font picker control (family list, size, bold/italic, live sample)](084-font-picker-control.md) | 2 | P2 | M | mid | 070 | D016, D004, D006 |
 | 085 ✅ | [Colour picker: visible no-colour state, one-click clear, optional full colour view](085-colour-picker-improvements.md) | 2 | P1 | S | mid | 070 | D016, D001, D002, D003 |
-| 086 | [Quick Find: search rooms and jump to the match](086-quick-find.md) | 5 | P2 | M | mid | 002, 009, 010, 070 | D010 |
-| 087 | [Map Statistics window and Export](087-map-statistics-and-export.md) | 5 | P2 | M | mid | 009, 010, 070 | D011 |
-| 088 | [Online Help: Help menu links and F1](088-online-help.md) | 5 | P2 | S | cheap | 009, 010 | D014 |
+| 086 ✅ | [Quick Find: search rooms and jump to the match](086-quick-find.md) | 5 | P2 | M | mid | 002, 009, 010, 070 | D010 |
+| 087 ✅ | [Map Statistics window and Export](087-map-statistics-and-export.md) | 5 | P2 | M | mid | 009, 010, 070 | D011 |
+| 088 ✅ | [Online Help: Help menu links and F1](088-online-help.md) | 5 | P2 | S | cheap | 009, 010 | D014 |
 | 089 | [Open Map from URL dialog](089-open-map-from-url-dialog.md) | 5 | P2 | S | mid | 002, 009, 010, 070 | D012 |
 | 090 | [Map Theme dialog: export current map theme, infer default room style, no-undo wording, current indicator](090-map-theme-dialog-gaps.md) | 4 | P2 | M | mid | 002, 003, 070 | D017 |
 | 100 ✅ | [Store appsettings.json in a per-user config folder](100-per-user-settings-folder.md) | 1 | P1 | S | mid | — | A012, I-011 |
@@ -107,7 +107,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 105 | [CLI code export flags](105-cli-headless-code-export.md) | 3 | P3 | M | mid | 104, 106 | A002, E014, E015 |
 | 106 ✅ | [Core export helpers: export to file and to string for every language](106-core-export-to-file-and-text.md) | 1 | P2 | S | mid | — | E013–E015 |
 | 107 | [CLI automap, quick save, smart save and exit flags](107-cli-automap-quicksave-smartsave-exit.md) | 8 | P3 | M | mid | 011, 012, 104, 105, 110 | A018, A019, E015 |
-| 108 | [Wire the --debug startup flag and the debug rendering hooks](108-debug-flag-wiring.md) | 7 | P3 | S | mid | 055, 104 | K062–K064, K067, K069 |
+| 108 ✅ | [Wire the --debug startup flag and the debug rendering hooks](108-debug-flag-wiring.md) | 7 | P3 | S | mid | 055, 104 | K062–K064, K067, K069 |
 | 109 | [File association metadata and OS "open file" activation](109-file-association-and-os-open-events.md) | 3 | P3 | S | mid | 104 | A001 |
 | 110 | [Smart Save service: file naming, settings, messages, PDF/image output](110-smart-save.md) | 7 | P2 | M | mid | 059, 112, 120, 123 | E030–E034 |
 | 111 ✅ | [Status bar cursor position follows the pointer](111-status-bar-cursor-position.md) | 3 | P1 | S | mid | 002 | A020, I-002 |
@@ -122,8 +122,8 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 122 | [Verify and fix image export background and margins](122-image-export-fidelity-background-margins.md) | 4 | P2 | S | mid | 120 | E020, E021 |
 | 123 | [Export PDF (single page, vector, metadata), includes engine decision](123-pdf-export.md) | 5 | P2 | L | mid | 011, 120, 121, 122 | M007, E027, E029 |
 | 124 | [PDF room-description annotations](124-pdf-room-description-annotations.md) | 6 | P3 | M | mid | 123 | E028 |
-| 126 | [Automap start/stop/status UX gaps and single-step](126-automap-start-stop-ux-and-single-step.md) | 7 | P2 | M | mid | 009, 010, 011, 012, 055 | E037, E038, E040, E041, M063 |
-| 127 | [Automap error reporting and recovery](127-automap-error-handling-and-recovery.md) | 4 | P2 | S | mid | 003, 011 | E046–E049 |
-| 128 | [Automap canvas ops parity: SelectRoom scrolls into view, dotted connections](128-automap-select-room-visibility.md) | 3 | P2 | S | mid | 002 | E049 |
+| 126 ✅ | [Automap start/stop/status UX gaps and single-step](126-automap-start-stop-ux-and-single-step.md) | 7 | P2 | M | mid | 009, 010, 011, 012, 055 | E037, E038, E040, E041, M063 |
+| 127 ✅ | [Automap error reporting and recovery](127-automap-error-handling-and-recovery.md) | 4 | P2 | S | mid | 003, 011 | E046–E049 |
+| 128 ✅ | [Automap canvas ops parity: SelectRoom scrolls into view, dotted connections](128-automap-select-room-visibility.md) | 3 | P2 | S | mid | 002 | E049 |
 
 Totals: 107 tickets — P1 53, P2 41, P3 13. Waves: 1: 6, 2: 13, 3: 17, 4: 11, 5: 36, 6: 18, 7: 5, 8: 1.

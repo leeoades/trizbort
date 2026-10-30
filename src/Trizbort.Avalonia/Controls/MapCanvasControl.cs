@@ -1,3 +1,4 @@
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -549,6 +550,10 @@ public class MapCanvasControl : Control
 
         var clientPos = e.GetPosition(this);
         CommandService?.SetPointerClientPosition(clientPos.X, clientPos.Y);
+        if (CommandService?.Session?.ShowMouseCoordinates == true)
+        {
+            InvalidateVisual();
+        }
 
         var interaction = Interaction;
         interaction.OnPointerMoved(ToPointerInput(PointerButton.None, e.KeyModifiers, clientPos, 0));
@@ -720,8 +725,8 @@ public class MapCanvasControl : Control
         if (session == null) return;
         _ = session.RefreshClipboardStateAsync();
 
-        var selectedElements = Project.Current.GetSelectedElements();
-        var activeElement = selectedElements.Count == 1 ? selectedElements[0] : (hitElem ?? Project.Current.ActiveSelectedElement);
+        // Properties acts on the element under the pointer, never on a stale selection.
+        var activeElement = hitElem;
         var target = hitElem switch
         {
             Room => Trizbort.Editor.Commands.ContextTargets.Room,
@@ -882,13 +887,17 @@ public class MapCanvasControl : Control
 
             var adorners = _interaction?.Adorners ?? AdornerState.Empty;
 
+            // --debug toggles (ticket 108); both are true unless debug is on and the toggle is off
+            var debugSession = CommandService?.Session;
             DrawElements(
                 context,
                 _visibleElements,
                 _selectedSet,
                 adorners.HoverElement,
                 _spatialLines,
-                _spatialVersion);
+                _spatialVersion,
+                debugSession?.ElementRenderingEnabled ?? true,
+                debugSession?.LineRenderingEnabled ?? true);
 
             // 6. Render Active Ports
             if (adorners.Ports.Count > 0)
@@ -954,6 +963,53 @@ public class MapCanvasControl : Control
                 context.DrawRectangle(_marqueeFillBrush, _marqueeBorderPen, marqueeRect);
             }
         }
+
+        var overlaySession = CommandService?.Session;
+        if (overlaySession != null && (overlaySession.ShowFps || overlaySession.ShowMouseCoordinates))
+        {
+            DrawDebugOverlay(context, overlaySession);
+        }
+    }
+
+    private readonly System.Diagnostics.Stopwatch _fpsWatch = System.Diagnostics.Stopwatch.StartNew();
+    private int _fpsFrames;
+    private int _fps;
+
+    /// <summary>Debug text in client pixels: frames per second and the pointer position (ticket 108).</summary>
+    private void DrawDebugOverlay(AvaloniaDrawingContext context, EditorSession session)
+    {
+        var y = 10.0;
+        if (session.ShowFps)
+        {
+            _fpsFrames++;
+            if (_fpsWatch.ElapsedMilliseconds >= 1000)
+            {
+                _fps = (int)(_fpsFrames * 1000 / _fpsWatch.ElapsedMilliseconds);
+                _fpsFrames = 0;
+                _fpsWatch.Restart();
+            }
+
+            DrawDebugLine(context, $"{_fps} fps", Brushes.Red, ref y);
+        }
+
+        if (session.ShowMouseCoordinates)
+        {
+            var pointer = session.PointerMapPosition;
+            DrawDebugLine(context, pointer == null ? "X:-  Y:-" : $"X:{pointer.Value.X:0}  Y:{pointer.Value.Y:0}", Brushes.Green, ref y);
+        }
+    }
+
+    private static void DrawDebugLine(AvaloniaDrawingContext context, string text, IBrush brush, ref double y)
+    {
+        var formatted = new FormattedText(
+            text,
+            CultureInfo.CurrentCulture,
+            FlowDirection.LeftToRight,
+            Typeface.Default,
+            12,
+            brush);
+        context.DrawText(formatted, new Point(10, y));
+        y += formatted.Height + 2;
     }
 
     private StreamGeometry? _cachedGridGeometry;
@@ -1034,7 +1090,9 @@ public class MapCanvasControl : Control
         HashSet<Element>? selectedSet = null,
         Element? hoverElement = null,
         SpatialLineIndex? spatialLines = null,
-        int spatialVersion = 1)
+        int spatialVersion = 1,
+        bool drawRoomsAndLabels = true,
+        bool drawConnections = true)
     {
         if (spatialLines == null)
         {
@@ -1049,15 +1107,15 @@ public class MapCanvasControl : Control
 
             if (element is Room room)
             {
-                room.DrawRoom(context, selected, hover);
+                if (drawRoomsAndLabels) room.DrawRoom(context, selected, hover);
             }
             else if (element is MapLabel label)
             {
-                label.DrawMapLabel(context, selected, hover);
+                if (drawRoomsAndLabels) label.DrawMapLabel(context, selected, hover);
             }
             else if (element is Connection conn)
             {
-                conn.DrawConnection(context, selected, hover, spatialLines, spatialVersion);
+                if (drawConnections) conn.DrawConnection(context, selected, hover, spatialLines, spatialVersion);
             }
         }
     }

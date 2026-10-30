@@ -187,6 +187,7 @@ public sealed partial class CommandCatalogue
     RegisterViewCommands(catalogue);
     RegisterMoreCommands(catalogue);
     RegisterNavigationCommands(catalogue);
+    RegisterDebugCommands(catalogue);
 
     return catalogue;
   }

@@ -3,10 +3,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
+using Trizbort.Setup;
 
 namespace Trizbort.Editor;
 
-// Navigation, properties, connection label and join commands (tickets 020, 022, 023, 028, 031).
+// Navigation, properties, connection label, join and direction commands (tickets 020, 022, 023, 028, 031, 045, 047, 048, 062).
 public sealed partial class EditorSession
 {
   // ---- Viewport helpers (020) ----
@@ -71,11 +72,11 @@ public sealed partial class EditorSession
     SelectAndCentre(room);
   }
 
-  private void SelectAndCentre(Room room)
+  private void SelectAndCentre(Element element)
   {
-    Selection.Set(new Element[] { room });
-    Project.ActiveSelectedElement = room;
-    CenterOnElement(room);
+    Selection.Set(new Element[] { element });
+    Project.ActiveSelectedElement = element;
+    CenterOnElement(element);
   }
 
   // ---- Properties (023) ----
@@ -223,5 +224,265 @@ public sealed partial class EditorSession
     }, new Element[] { room1, room2 });
     RaiseChanged(EditorChange.Model);
     return connection;
+  }
+
+  // ---- Direction navigation (047, 048) ----
+
+  /// <summary>
+  ///   The direction a room's connection port on this side is facing away from the room: the rough opposite of a
+  ///   port compass point. Null in, null out.
+  /// </summary>
+  public static CompassPoint? RoughOpposite(CompassPoint? point)
+  {
+    if (point == null) return null;
+
+    switch (point.Value)
+    {
+      case CompassPoint.North:
+      case CompassPoint.NorthNorthEast:
+      case CompassPoint.NorthNorthWest:
+        return CompassPoint.South;
+      case CompassPoint.South:
+      case CompassPoint.SouthSouthEast:
+      case CompassPoint.SouthSouthWest:
+        return CompassPoint.North;
+      case CompassPoint.East:
+      case CompassPoint.EastSouthEast:
+      case CompassPoint.EastNorthEast:
+        return CompassPoint.West;
+      case CompassPoint.West:
+      case CompassPoint.WestSouthWest:
+      case CompassPoint.WestNorthWest:
+        return CompassPoint.East;
+      case CompassPoint.SouthWest:
+        return CompassPoint.NorthEast;
+      case CompassPoint.SouthEast:
+        return CompassPoint.NorthWest;
+      case CompassPoint.NorthWest:
+        return CompassPoint.SouthEast;
+      case CompassPoint.NorthEast:
+        return CompassPoint.SouthWest;
+    }
+
+    return CompassPoint.North;
+  }
+
+  /// <summary>True when exactly one room is selected.</summary>
+  public bool HasSingleSelectedRoom => Selection.Count == 1 && Selection.Primary is Room;
+
+  /// <summary>True when exactly one room or connection is selected (the start of direction navigation).</summary>
+  public bool CanNavigateFromSelection =>
+    Selection.Count == 1 && (Selection.Primary is Room || Selection.Primary is Connection);
+
+  /// <summary>
+  ///   The room reached from <paramref name="room" /> through a connection leaving on <paramref name="direction" />,
+  ///   trying the direction itself, then anticlockwise, then clockwise. Null when there is none.
+  /// </summary>
+  public static Room FindRoomInDirection(Room room, CompassPoint direction)
+  {
+    return RoomAcrossConnections(room, direction)
+           ?? RoomAcrossConnections(room, CompassPointHelper.RotateAntiClockwise(direction))
+           ?? RoomAcrossConnections(room, CompassPointHelper.RotateClockwise(direction));
+  }
+
+  private static Room RoomAcrossConnections(Room room, CompassPoint direction)
+  {
+    foreach (var connection in room.GetConnections(direction))
+    {
+      foreach (var vertex in connection.VertexList)
+      {
+        var port = vertex.Port;
+        if (port != null && port.Owner != room && port.Owner is Room other) return other;
+      }
+    }
+
+    return null;
+  }
+
+  /// <summary>
+  ///   Selects the room next to the single selected room in the given direction and centres it. Returns false (and
+  ///   changes nothing) when no room is selected or none is found.
+  /// </summary>
+  public bool SelectRoomInDirection(CompassPoint direction)
+  {
+    if (!HasSingleSelectedRoom) return false;
+
+    var next = FindRoomInDirection((Room)Selection.Primary, direction);
+    if (next == null) return false;
+
+    SelectAndCentre(next);
+    return true;
+  }
+
+  /// <summary>
+  ///   With a connection selected: selects the room at the end of the connection that points in the given direction
+  ///   and centres it. Returns false when the selection is not one connection or no end points that way.
+  /// </summary>
+  public bool SelectRoomRelativeToSelectedConnection(CompassPoint direction)
+  {
+    if (Selection.Count != 1 || Selection.Primary is not Connection connection) return false;
+    if (connection.VertexList.Count < 2) return false;
+
+    for (var index = 0; index < 2; index++)
+    {
+      var port = connection.VertexList[index].Port;
+      var compass = (port as Room.CompassPort)?.CompassPoint;
+      var outDirection = RoughOpposite(compass);
+      if (!PointsToward(outDirection, direction)) continue;
+
+      var owner = port?.Owner;
+      if (owner == null) return false;
+
+      SelectAndCentre(owner);
+      return true;
+    }
+
+    return false;
+  }
+
+  private static bool PointsToward(CompassPoint? outDirection, CompassPoint direction)
+  {
+    if (outDirection == null) return false;
+
+    var diagonal = outDirection.Value;
+    var overrideDirection =
+      diagonal == CompassPoint.NorthEast && (direction == CompassPoint.North || direction == CompassPoint.East) ||
+      diagonal == CompassPoint.NorthWest && (direction == CompassPoint.North || direction == CompassPoint.West) ||
+      diagonal == CompassPoint.SouthEast && (direction == CompassPoint.South || direction == CompassPoint.East) ||
+      diagonal == CompassPoint.SouthWest && (direction == CompassPoint.South || direction == CompassPoint.West);
+    return overrideDirection || CompassPointHelper.IsSameApproximateDirection(direction, diagonal);
+  }
+
+  /// <summary>
+  ///   Shift+arrow: with a room selected, selects a connection leaving it in the direction (else the one on the
+  ///   clockwise side, else the anticlockwise side) and centres it; when there is no connection, selects the room
+  ///   in that direction. With a connection selected, selects the room at its end pointing that way. Returns false
+  ///   when nothing is found.
+  /// </summary>
+  public bool SelectConnectionOrRoomInDirection(CompassPoint direction)
+  {
+    if (Selection.Count != 1) return false;
+    if (Selection.Primary is Connection) return SelectRoomRelativeToSelectedConnection(direction);
+    if (Selection.Primary is not Room room) return false;
+
+    var sides = new[]
+    {
+      direction, CompassPointHelper.RotateClockwise(direction), CompassPointHelper.RotateAntiClockwise(direction)
+    };
+    foreach (var side in sides)
+    {
+      var connection = room.GetConnections(side).FirstOrDefault();
+      if (connection == null) continue;
+
+      SelectAndCentre(connection);
+      return true;
+    }
+
+    return SelectRoomInDirection(direction);
+  }
+
+  /// <summary>
+  ///   Primary+arrow: selects the room in the direction; else, with a connection selected, the room at its end
+  ///   pointing that way; else (room selected) connects to the room found at the target point or creates a new one
+  ///   there. A new room copies the selected room's size, region, shape and style, is joined by a connection, is
+  ///   selected and centred, and its properties open through <see cref="Prompts" />. Everything is one undo step.
+  /// </summary>
+  public async Task<bool> NavigateOrAddRoomAsync(CompassPoint direction)
+  {
+    if (SelectRoomInDirection(direction)) return true;
+    if (SelectRoomRelativeToSelectedConnection(direction)) return true;
+    if (!HasSingleSelectedRoom) return false;
+
+    var room = (Room)Selection.Primary;
+    var rect = room.InnerBounds;
+    rect.Inflate(
+      Settings.PreferredDistanceBetweenRooms + room.Width / 2,
+      Settings.PreferredDistanceBetweenRooms + room.Height / 2);
+    var centreOfNewRoom = rect.GetCorner(direction);
+    var opposite = CompassPointHelper.GetOpposite(direction);
+
+    var existing = new HitTester(this).HitElement(centreOfNewRoom) as Room;
+    if (existing != null && existing != room)
+    {
+      Execute("Connect rooms", () => AddRoomConnection(room, direction, existing, opposite),
+        new Element[] { room, existing });
+      SelectAndCentre(existing);
+      RaiseChanged(EditorChange.Model);
+      return true;
+    }
+
+    var newRoom = RoomFactory.CreateNewRoom(Project, centreOfNewRoom, room, true);
+    var transaction = BeginTransaction("Add room", new Element[] { room, newRoom });
+    try
+    {
+      Project.Elements.Add(newRoom);
+      AddRoomConnection(room, direction, newRoom, opposite);
+      SelectAndCentre(newRoom);
+      RaiseChanged(EditorChange.Model);
+      await Prompts.EditElementAsync(newRoom);
+    }
+    catch
+    {
+      transaction.Cancel();
+      transaction.Dispose();
+      throw;
+    }
+    transaction.Dispose();
+    RaiseChanged(EditorChange.Model);
+    return true;
+  }
+
+  private Connection AddRoomConnection(Room from, CompassPoint fromPoint, Room to, CompassPoint toPoint)
+  {
+    var connection = new Connection(Project, new Vertex(from.PortAt(fromPoint)), new Vertex(to.PortAt(toPoint)))
+    {
+      Style = NewConnection.Style,
+      Flow = NewConnection.Flow
+    };
+    connection.SetText(NewConnection.Label);
+    Project.Elements.Add(connection);
+    return connection;
+  }
+
+  // ---- Active element cycling (045) ----
+
+  /// <summary>True when more than one element is selected, so there is another one to make active.</summary>
+  public bool CanCycleActiveElement => Selection.Count > 1;
+
+  /// <summary>
+  ///   F3 / Shift+F3: makes the next (or previous) selected element the active one, wrapping round, and centres
+  ///   it. The selection itself does not change. Does nothing unless several elements are selected.
+  /// </summary>
+  public void CycleActiveElement(bool forward)
+  {
+    var items = Selection.Items;
+    if (items.Count < 2) return;
+
+    var index = -1;
+    for (var i = 0; i < items.Count; i++)
+    {
+      if (ReferenceEquals(items[i], Project.ActiveSelectedElement)) index = i;
+    }
+    if (index < 0) index = items.Count - 1;
+
+    var next = forward ? (index + 1) % items.Count : (index - 1 + items.Count) % items.Count;
+    Project.ActiveSelectedElement = items[next];
+    CenterOnElement(items[next]);
+    RaiseChanged(EditorChange.Selection);
+  }
+
+  // ---- Reference rooms (062) ----
+
+  /// <summary>
+  ///   Ctrl+click on a selected reference room: selects the room it refers to and centres it. Returns false when
+  ///   <paramref name="room" /> is not a reference room.
+  /// </summary>
+  public bool JumpToReferencedRoom(Room room)
+  {
+    var original = room?.ReferenceRoom;
+    if (original == null) return false;
+
+    SelectAndCentre(original);
+    return true;
   }
 }

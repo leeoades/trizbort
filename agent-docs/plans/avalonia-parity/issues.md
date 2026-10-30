@@ -121,7 +121,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   discarded keep refreshing. A test hit this as a cross-thread update; refreshes are now marshalled to the UI thread, but
   the subscription should be tied to the menu's lifetime (unsubscribe when detached).
 - Severity: low     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: `CatalogueMenuBuilder` ties each menu's session subscription to its attach/detach (`MenuRefresher`); context menus listen only while open.
+- Ticket: 066
 
 ## I-015 Status-bar messages gone for catalogue commands
 - Reported: 2026-10-30 by integrator (037/038/040 wiring)   OS: all   Category: behaviour
@@ -153,7 +154,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   shows a submenu of regions with a tick. Recent Maps (058) solved dynamic items with a dedicated control
   (`Controls/RecentMapsMenu.cs`); generalise that into the catalogue builder and use it here.
 - Severity: low     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: `EditorCommand.DynamicChildren`; "Set Region" is a submenu with the current region ticked. Recent Maps keeps its own control (reads `IRecentFilesService`).
+- Ticket: 066
 
 ## I-019 Three smoke tests use an outdated harness
 - Reported: 2026-10-30 by integrator   OS: all   Category: tests

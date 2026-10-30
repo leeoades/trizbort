@@ -180,7 +180,8 @@ public class RoomCommandTests : RoomTestBase
   {
     Find(InputKey.F5, ModifierKeys.Primary, CommandScope.Window).Id.ShouldBe("room.setStart");
     Find(InputKey.F5, ModifierKeys.Shift, CommandScope.Canvas).Id.ShouldBe("room.setEnd");
-    Find(InputKey.F5, ModifierKeys.None, CommandScope.Canvas).ShouldBeNull();
+    // Plain F5 is "run automap to completion" (shortcut-map, K068), enabled only while automapping.
+    Find(InputKey.F5, ModifierKeys.None, CommandScope.Canvas).Id.ShouldBe("automap.run");
   }
 
   // ---- 027 shapes ----

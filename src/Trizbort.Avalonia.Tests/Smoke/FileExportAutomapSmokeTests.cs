@@ -606,7 +606,8 @@ public class FileExportAutomapSmokeTests
         await vm.ToggleAutomapAsync();
 
         vm.IsAutomapActive.ShouldBeTrue();
-        vm.AutomapStatusText.ShouldBe("Automapping has started.");
+        // Status now follows the engine's events, which may already have moved on to the next reference message.
+        vm.AutomapStatusText.ShouldBeOneOf("Automapping has started.", "Automapping is processing the transcript.");
 
         // Status bar indicator and AutomapBar are both visibility-bound to IsAutomapActive.
         var xaml = LoadMainWindowXaml();
@@ -638,25 +639,32 @@ public class FileExportAutomapSmokeTests
         vm.AutomapStatusText.ShouldBe("Automap is not running.");
     }
 
-    /// <summary>Smoke step 7.61: the Automap menu item keeps one static label (differs from reference: E038).</summary>
+    /// <summary>Smoke step 7.61: Start and Stop Automap are separate commands that follow the running state (E038).</summary>
     [Test]
-    public async Task S7_61_AutomapMenuItem_KeepsStaticLabelWhileRunning()
+    public async Task S7_61_StartAndStopAutomap_FollowRunningState()
     {
-        var command = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null).Find("project.toggleAutomap")!;
-        var header = command.Title;
-        header.ShouldBe("Toggle _Automap");
-        command.DynamicTitle.ShouldBeNull();
+        var catalogue = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null);
+        var start = catalogue.Find("project.startAutomap")!;
+        var stop = catalogue.Find("project.stopAutomap")!;
+        start.Title.ShouldBe("_Start Automap...");
+        stop.Title.ShouldBe("Sto_p Automap");
+        catalogue.Find("project.toggleAutomap").ShouldBeNull();
 
         var settings = AutomapSettings.Default;
         settings.FileName = await WriteTranscriptAsync(TwoRoomTranscript);
         var vm = CreateVm(new RecordingDialogService(), new StubStorageService());
+        var session = vm.CommandService.Session;
+        start.CanExecute(session).ShouldBeTrue();
+        stop.CanExecute(session).ShouldBeFalse();
+
         await vm.StartAutomapAsync(settings);
         vm.IsAutomapActive.ShouldBeTrue();
-
-        // The header is a literal, so it cannot change to "Stop Automap" while running.
-        header.ShouldNotContain("Stop");
+        start.CanExecute(session).ShouldBeFalse();
+        stop.CanExecute(session).ShouldBeTrue();
 
         await StopAndAwaitAsync(vm);
+        start.CanExecute(session).ShouldBeTrue();
+        stop.CanExecute(session).ShouldBeFalse();
     }
 
     /// <summary>Smoke step 7.62: a transcript naming a room ambiguously asks which room was meant (known gap: I-008).</summary>
@@ -687,7 +695,7 @@ public class FileExportAutomapSmokeTests
     {
         // Ticket 012 assigns interactive prompts at start-up; until then Core uses the non-interactive ones.
         AutomapEngine.Instance.Prompts = NonInteractiveEditorPrompts.Instance;
-        App.WireAutomapErrorReporter(new RecordingDialogService(), () => null);
+        AutomapEngine.Instance.Prompts = new AvaloniaEditorPrompts(() => null, new RecordingDialogService());
         App.WireAutomapPrompts(() => null);
 
         AutomapEngine.Instance.Prompts.ShouldBeOfType<AvaloniaEditorPrompts>();

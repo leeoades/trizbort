@@ -128,7 +128,8 @@ public static class CatalogueMenuBuilder
             result.Add(top);
         }
 
-        Track(session, refreshers);
+        var refresher = new MenuRefresher(session, refreshers);
+        foreach (var top in result) refresher.Watch(top);
         return result;
     }
 
@@ -139,6 +140,7 @@ public static class CatalogueMenuBuilder
         Func<EditorCommand, ICommand?>? commandFor = null)
     {
         var menu = new ContextMenu();
+        var refreshers = new List<Action>();
         var commands = catalogue.ForContext(target)
             .Select((c, i) => (Command: c, Index: i))
             .OrderBy(x => x.Command.ContextOrder)
@@ -155,13 +157,14 @@ public static class CatalogueMenuBuilder
             }
             previousGroup = group;
 
-            var adapter = new CatalogueCommandAdapter(command, session, commandFor?.Invoke(command));
-            var item = new MenuItem { Header = command.TitleFor(session), Command = adapter };
-            // Items in a closed menu are not attached yet, so do not rely on the command to set this.
-            item.IsEnabled = adapter.CanExecute(null);
-            menu.Items.Add(item);
+            // CreateMenuItem sets the enabled state itself (items in a closed menu are not attached yet).
+            menu.Items.Add(CreateMenuItem(command, session, commandFor, refreshers, showGesture: false));
         }
 
+        // A context menu is rebuilt each time it is shown, so it only listens to the session while it is open.
+        var refresher = new MenuRefresher(session, refreshers);
+        menu.Opened += (_, _) => refresher.Attach();
+        menu.Closed += (_, _) => refresher.Detach();
         return menu;
     }
 
@@ -224,7 +227,8 @@ public static class CatalogueMenuBuilder
             });
         }
 
-        Track(session, refreshers);
+        var refresher = new MenuRefresher(session, refreshers);
+        foreach (var control in result.OfType<Button>()) refresher.Watch(control);
         return result;
     }
 
@@ -313,13 +317,16 @@ public static class CatalogueMenuBuilder
         EditorCommand command,
         EditorSession session,
         Func<EditorCommand, ICommand?>? commandFor,
-        List<Action> refreshers)
+        List<Action> refreshers,
+        bool showGesture = true)
     {
         var macOS = AvaloniaKeyMapper.IsMacOS;
         var adapter = new CatalogueCommandAdapter(command, session, commandFor?.Invoke(command));
-        var item = new MenuItem { Header = command.TitleFor(session), Command = adapter };
+        var item = new MenuItem { Header = command.TitleFor(session) };
+        var dynamic = command.DynamicChildren != null;
+        if (!dynamic) item.Command = adapter;
 
-        if (command.Gestures.Count > 0 &&
+        if (showGesture && command.Gestures.Count > 0 &&
             AvaloniaKeyMapper.TryToAvaloniaGesture(command.Gestures[0], macOS, out var gesture))
         {
             item.InputGesture = gesture;
@@ -330,6 +337,12 @@ public static class CatalogueMenuBuilder
             item.ToggleType = MenuItemToggleType.CheckBox;
         }
 
+        if (dynamic)
+        {
+            // Rebuilt when the submenu opens, so the items are never stale even if no session change was seen.
+            item.SubmenuOpened += (_, _) => PopulateDynamic(item, command, session);
+        }
+
         refreshers.Add(() =>
         {
             adapter.RaiseCanExecuteChanged();
@@ -337,24 +350,92 @@ public static class CatalogueMenuBuilder
             item.IsEnabled = adapter.CanExecute(null);
             if (command.IsCheckedFunc != null) item.IsChecked = command.IsChecked(session) == true;
             if (command.DynamicTitle != null) item.Header = command.TitleFor(session);
+            if (dynamic) PopulateDynamic(item, command, session);
         });
         return item;
     }
 
-    private static void Track(EditorSession session, List<Action> refreshers)
+    /// <summary>Rebuilds the children of a dynamic submenu (<see cref="EditorCommand.DynamicChildren" />).</summary>
+    private static void PopulateDynamic(MenuItem parent, EditorCommand command, EditorSession session)
     {
-        void RefreshAll()
+        parent.Items.Clear();
+        if (command.DynamicChildren == null) return;
+
+        foreach (var child in command.DynamicChildren(session))
         {
-            foreach (var refresh in refreshers) refresh();
+            var execute = child.Execute;
+            var item = new MenuItem
+            {
+                // Dynamic titles are data, not mnemonics.
+                Header = child.Title.Replace("_", "__"),
+                ToggleType = MenuItemToggleType.CheckBox,
+                IsChecked = child.IsChecked,
+                IsEnabled = child.IsEnabled
+            };
+            item.Click += (_, _) => execute?.Invoke(session);
+            parent.Items.Add(item);
+        }
+    }
+
+    /// <summary>
+    ///   Refreshes menu items when the editor session changes. The session subscription lives only while the menu is
+    ///   attached (or open, for a context menu), so discarded menus are not kept alive or refreshed.
+    /// </summary>
+    private sealed class MenuRefresher
+    {
+        private readonly EditorSession _session;
+        private readonly List<Action> _refreshers;
+        private int _attached;
+        private bool _subscribed;
+
+        public MenuRefresher(EditorSession session, List<Action> refreshers)
+        {
+            _session = session;
+            _refreshers = refreshers;
+            // A menu that is never attached to a window (for example in a unit test) still tracks the session.
+            Subscribe();
         }
 
-        RefreshAll();
-        // Session changes can be raised off the UI thread (automap, file reload); controls may only be touched on it.
-        session.Changed += _ =>
+        /// <summary>Starts refreshing while <paramref name="control" /> is in the visual tree.</summary>
+        public void Watch(Control control)
         {
+            control.AttachedToVisualTree += (_, _) => Attach();
+            control.DetachedFromVisualTree += (_, _) => Detach();
+        }
+
+        public void Attach()
+        {
+            _attached++;
+            Subscribe();
+        }
+
+        private void Subscribe()
+        {
+            if (_subscribed) return;
+            _subscribed = true;
+            _session.Changed += OnChanged;
+            RefreshAll();
+        }
+
+        public void Detach()
+        {
+            _attached = Math.Max(0, _attached - 1);
+            if (_attached > 0 || !_subscribed) return;
+            _subscribed = false;
+            _session.Changed -= OnChanged;
+        }
+
+        private void OnChanged(EditorChange change)
+        {
+            // Session changes can be raised off the UI thread (automap, file reload); controls may only be touched on it.
             if (Dispatcher.UIThread.CheckAccess()) RefreshAll();
             else Dispatcher.UIThread.Post(RefreshAll);
-        };
+        }
+
+        private void RefreshAll()
+        {
+            foreach (var refresh in _refreshers) refresh();
+        }
     }
 
     /// <summary>

@@ -49,7 +49,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private Task? _automapTask;
     private UndoTransaction? _automapTransaction;
-    private DispatcherTimer? _automapStatusTimer;
     private object? _currentRunToken;
 
     internal Task? CurrentAutomapTask => _automapTask;
@@ -85,6 +84,9 @@ public partial class MainWindowViewModel : ViewModelBase
         if (_commandService.Session != null)
         {
             _commandService.Session.StatusMessagePosted += message => StatusText = message;
+            // status text and failures come from the engine's events, not from polling it
+            _commandService.Session.AutomapStatusChanged += OnAutomapStatusChanged;
+            _commandService.Session.AutomapFailed += OnAutomapFailed;
         }
 
         UpdateState();
@@ -432,8 +434,6 @@ public partial class MainWindowViewModel : ViewModelBase
     public void StopAutomap()
     {
         _currentRunToken = null;
-        _automapStatusTimer?.Stop();
-        _automapStatusTimer = null;
 
         AutomapEngine.Instance.Stop();
         EndAutomapTransaction();
@@ -459,19 +459,6 @@ public partial class MainWindowViewModel : ViewModelBase
         IsAutomapActive = true;
         AutomapStatusText = "Automapping has started.";
 
-        _automapStatusTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(200)
-        };
-        _automapStatusTimer.Tick += (_, _) =>
-        {
-            if (IsAutomapActive && ReferenceEquals(_currentRunToken, runToken))
-            {
-                AutomapStatusText = AutomapEngine.Instance.Status;
-            }
-        };
-        _automapStatusTimer.Start();
-
         _automapTransaction = _commandService.Session.BeginTransaction("Automap");
         _automapTask = RunAutomapLoopAsync(settings, runToken);
         return Task.CompletedTask;
@@ -487,13 +474,6 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             // Expected on cancellation/stop
         }
-        catch (Exception ex)
-        {
-            await _dialogService.ShowMessageAsync(
-                GetActiveWindow(),
-                "Automap Error",
-                $"An unexpected error occurred during automapping:\n{ex.Message}");
-        }
         finally
         {
             if (ReferenceEquals(_currentRunToken, runToken))
@@ -501,12 +481,51 @@ public partial class MainWindowViewModel : ViewModelBase
                 EndAutomapTransaction();
                 AutomapStatusText = AutomapEngine.Instance.Status;
                 IsAutomapActive = false;
-                _automapStatusTimer?.Stop();
-                _automapStatusTimer = null;
                 UpdateState();
                 _commandService.InvalidateCanvas();
             }
         }
+    }
+
+    private static void RunOnUiThread(Action action)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            action();
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(action);
+        }
+    }
+
+    private void OnAutomapStatusChanged(string status)
+    {
+        RunOnUiThread(() => AutomapStatusText = status);
+    }
+
+    // The engine has already reported the error through IEditorPrompts; here the UI returns to "not running".
+    private void OnAutomapFailed(Exception exception)
+    {
+        RunOnUiThread(() =>
+        {
+            if (!IsAutomapActive)
+            {
+                return;
+            }
+
+            EndAutomapTransaction();
+            AutomapStatusText = AutomapEngine.Instance.Status;
+            IsAutomapActive = false;
+            UpdateState();
+            _commandService.InvalidateCanvas();
+        });
+    }
+
+    // Menu items such as Start/Stop Automap depend on the running state; ask the menus to re-evaluate.
+    partial void OnIsAutomapActiveChanged(bool value)
+    {
+        _commandService.Session?.Invalidate(EditorChange.Adorners);
     }
 
     [RelayCommand]

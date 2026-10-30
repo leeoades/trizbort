@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using Trizbort.Avalonia.Controls;
 using Trizbort.Avalonia.ViewModels;
+using Trizbort.Domain.Application;
 using Trizbort.Domain.Enums;
 using Trizbort.Editor;
 using Trizbort.Editor.Commands;
@@ -136,24 +138,74 @@ public static class AppCommands
             ExecuteAsyncFunc = Run(() => vm!.ShowAppSettingsAsync())
         });
 
+        // Start and Stop are separate commands (the reference changes one menu item's label). The toolbar button is
+        // Start; while a run is active the automap bar's Stop button and the Stop menu item end it.
         c.Register(new EditorCommand
         {
-            Id = "project.toggleAutomap",
-            Title = "Toggle _Automap",
+            Id = "project.startAutomap",
+            Title = "_Start Automap...",
             MenuPath = "Project",
             Group = "2-automap",
             ShowInToolbar = true, ToolbarOrder = 110, ToolbarGroup = "4-tools", IconKey = "IconAutomap",
+            CanExecuteFunc = s => !s.Automap.IsRunning,
             ExecuteAsyncFunc = Run(() => vm!.ToggleAutomapAsync())
         });
+        c.Register(new EditorCommand
+        {
+            Id = "project.stopAutomap",
+            Title = "Sto_p Automap",
+            MenuPath = "Project",
+            Group = "2-automap",
+            CanExecuteFunc = s => s.Automap.IsRunning,
+            ExecuteAsyncFunc = Run(() =>
+            {
+                vm!.StopAutomap();
+                return Task.CompletedTask;
+            })
+        });
 
+        // Quick Find (044/086) and Map Statistics (087): the dialogs come through session.Prompts.
+        c.Register(new EditorCommand
+        {
+            Id = "edit.quickFind",
+            Title = "_Quick Find...",
+            MenuPath = "Edit",
+            Group = "6-find",
+            Gestures = new[] { new KeyGesture(InputKey.F, ModifierKeys.Primary) },
+            ExecuteAsyncFunc = s => QuickFind.RunAsync(s)
+        });
+        c.Register(new EditorCommand
+        {
+            Id = "tools.mapStatistics",
+            Title = "Map _Statistics...",
+            MenuPath = "Project",
+            Group = "3-statistics",
+            ExecuteAsyncFunc = s => MapStatisticsCommands.ShowAsync(s, ComputeDimensions(s.Project))
+        });
+        c.Register(new EditorCommand
+        {
+            Id = "tools.mapStatisticsExport",
+            Title = "_Export Map Statistics...",
+            MenuPath = "Project",
+            Group = "3-statistics",
+            ExecuteAsyncFunc = s => MapStatisticsCommands.ExportAsync(s, ComputeDimensions(s.Project))
+        });
         c.Register(new EditorCommand
         {
             Id = "help.online",
-            Title = "Online _Help",
+            Title = "Online _Help (User Guide)",
             MenuPath = "Help",
             Group = "1-help",
             Gestures = new[] { new KeyGesture(InputKey.F1, ModifierKeys.None) },
-            ExecuteAsyncFunc = _ => OpenOnlineHelpAsync()
+            ExecuteAsyncFunc = s => HelpLinks.OpenAsync(s, HelpLinks.UserGuide)
+        });
+        c.Register(new EditorCommand
+        {
+            Id = "help.originalHelp",
+            Title = "_Original Trizbort v1 Help",
+            MenuPath = "Help",
+            Group = "1-help",
+            ExecuteAsyncFunc = s => HelpLinks.OpenAsync(s, HelpLinks.OriginalHelp)
         });
         c.Register(new EditorCommand
         {
@@ -165,25 +217,11 @@ public static class AppCommands
         });
     }
 
-    /// <summary>Where Online Help opens.</summary>
-    public const string OnlineHelpUrl = "https://github.com/leeoades/trizbort/blob/master/Docs/index.md";
-
-    private static async Task OpenOnlineHelpAsync()
+    private static MapDimensions ComputeDimensions(Project project)
     {
-        try
-        {
-            var lifetime = global::Avalonia.Application.Current?.ApplicationLifetime
-                as global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
-            var launcher = lifetime?.MainWindow?.Launcher;
-            if (launcher != null)
-            {
-                await launcher.LaunchUriAsync(new Uri(OnlineHelpUrl));
-            }
-        }
-        catch (Exception)
-        {
-            // opening a browser must never crash the app
-        }
+        var with = MinimapTransform.ComputeCanvasBounds(project.Elements, true);
+        var without = MinimapTransform.ComputeCanvasBounds(project.Elements);
+        return new MapDimensions(with.Width, with.Height, without.Width, without.Height);
     }
 
     private static Task RunFileExportAsync(MainWindowViewModel vm, ExportLanguage language)

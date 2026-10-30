@@ -57,9 +57,15 @@ public sealed record EditorCommand
 
   public Func<EditorSession, Task> ExecuteAsyncFunc { get; init; }
 
+  /// <summary>
+  ///   When set, the command is a submenu whose items are computed each time the menu is shown (for example the
+  ///   regions). The command itself then has no action; <see cref="CanExecuteFunc" /> decides whether the submenu is enabled.
+  /// </summary>
+  public Func<EditorSession, IReadOnlyList<DynamicMenuItem>> DynamicChildren { get; init; }
+
   public bool CanExecute(EditorSession session)
   {
-    return ExecuteAsyncFunc != null && (CanExecuteFunc == null || CanExecuteFunc(session));
+    return (ExecuteAsyncFunc != null || DynamicChildren != null) && (CanExecuteFunc == null || CanExecuteFunc(session));
   }
 
   /// <summary>Null when the command is not a toggle.</summary>
@@ -77,4 +83,17 @@ public sealed record EditorCommand
   {
     return ExecuteAsyncFunc == null ? Task.CompletedTask : ExecuteAsyncFunc(session);
   }
+}
+
+/// <summary>One item of a dynamic submenu (see <see cref="EditorCommand.DynamicChildren" />).</summary>
+public sealed class DynamicMenuItem
+{
+  /// <summary>Plain text; the menu escapes any mnemonic characters.</summary>
+  public string Title { get; set; }
+
+  public bool IsChecked { get; set; }
+
+  public bool IsEnabled { get; set; } = true;
+
+  public Action<EditorSession> Execute { get; set; }
 }

@@ -267,6 +267,7 @@ public class EditKeyboardSmokeTests
     }
 
     /// <summary>Step 31: Select one room and press Ctrl+Arrow. Expected: Avalonia nudges the selection one step (differs: K013).</summary>
+    [Ignore("superseded by shortcut decision K013: Primary+Arrow selects in a direction (NavigationKeyTests)")]
     [AvaloniaTest]
     public void S4_31_CtrlArrow_NudgesSelectionOneStep()
     {
@@ -285,6 +286,7 @@ public class EditKeyboardSmokeTests
     }
 
     /// <summary>Step 32: Select one room and press Shift+Arrow. Expected: Avalonia moves the selection by twice the grid (differs: K014).</summary>
+    [Ignore("superseded by shortcut decision K014: Shift+Arrow selects a connection/room in a direction (NavigationKeyTests)")]
     [AvaloniaTest]
     public void S4_32_ShiftArrow_MovesSelectionTwiceGrid()
     {

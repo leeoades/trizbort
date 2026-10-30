@@ -16,7 +16,7 @@ using Region = Trizbort.Domain.Misc.Region;
 
 namespace Trizbort.Automap;
 
-public sealed class Automap
+public sealed class Automap : IAutomapController
 {
   private bool _dontAskAboutAmbiguities;
   private readonly Action<string, string> _reportError;
@@ -830,6 +830,10 @@ public sealed class Automap
   // This implements the static initialization design pattern for a singleton.
   // It prevents having two automap instances trying to write to the map simultaneously.
 
+  /// <summary>
+  ///   Deprecated adapter kept for tests: called (message, title) in addition to
+  ///   <see cref="IEditorPrompts.ShowMessageAsync" />. The app reports errors through the prompts only.
+  /// </summary>
   public static Action<string, string> ErrorReporter { get; set; }
 
   public IEditorPrompts Prompts { get; set; } = NonInteractiveEditorPrompts.Instance;
@@ -875,7 +879,25 @@ public sealed class Automap
     Step();
   }
 
-  public string Status { get; private set; }
+  public string Status
+  {
+    get => _status;
+    private set
+    {
+      _status = value;
+      StatusChanged?.Invoke(value);
+    }
+  }
+
+  private string _status;
+
+  public event Action<string> StatusChanged;
+
+  public event Action<Exception> AutomapFailed;
+
+  public bool IsRunning => Running;
+
+  public bool SingleStep => _settings.SingleStep;
 
   public bool Running => _tokenSource != null && !_tokenSource.IsCancellationRequested;
 
@@ -894,6 +916,43 @@ public sealed class Automap
     Status = "Automap is not running.";
   }
 
+
+  private const string AccessErrorMessage =
+    "Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
+    "or with scripting off in your interpreter.\n\nAutomapping halted.";
+
+  private static string UnexpectedErrorMessage(Exception ex)
+  {
+    return "An unexpected error occurred during automapping:\n" + ex.Message + "\n\nAutomapping halted.";
+  }
+
+  /// <summary>
+  ///   Stops the run after an error: marks it finished, sets the status, raises <see cref="AutomapFailed" /> and shows
+  ///   one message. Never throws.
+  /// </summary>
+  private async Task FailAsync(CancellationTokenSource tokenSource, Exception exception, string title, string message)
+  {
+    if (ReferenceEquals(_tokenSource, tokenSource)) _tokenSource = null;
+    Status = "Automapping halted.";
+    try
+    {
+      AutomapFailed?.Invoke(exception);
+    }
+    catch (Exception)
+    {
+      // a faulty subscriber must not mask the original error
+    }
+
+    _reportError?.Invoke(message, title);
+    try
+    {
+      await Prompts.ShowMessageAsync(title, message);
+    }
+    catch (Exception)
+    {
+      // reporting is best effort
+    }
+  }
 
   internal async Task StartCl(IAutomapCanvas canvas, AutomapSettings settings)
   {
@@ -964,17 +1023,17 @@ public sealed class Automap
     {
       // couldn't read from the file
       Trace("Automap: Error reading line in file.\nError message: " + ex.Message);
-      _reportError("Error opening transcript file:\n" + ex.Message + "\n\nAutomapping halted.", "File Error");
-      Status = "Automapping halted.";
+      await FailAsync(tokenSource, ex, "File Error", "Error opening transcript file:\n" + ex.Message + "\n\nAutomapping halted.");
       return;
     }
-    catch (UnauthorizedAccessException)
+    catch (UnauthorizedAccessException ex)
     {
-      _reportError(
-        "Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
-        "or with scripting off in your interpreter.\n\nAutomapping halted.",
-        "Access Error");
-      Status = "Automapping halted.";
+      await FailAsync(tokenSource, ex, "Access Error", AccessErrorMessage);
+      return;
+    }
+    catch (Exception ex) when (ex is not OperationCanceledException)
+    {
+      await FailAsync(tokenSource, ex, "Automap Error", UnexpectedErrorMessage(ex));
       return;
     }
     finally
@@ -1099,16 +1158,15 @@ public sealed class Automap
     {
       // couldn't read from the file
       Trace("Automap: Error reading line in file.\nError message: " + ex.Message);
-      _reportError("Error opening transcript file:\n" + ex.Message + "\n\nAutomapping halted.", "File Error");
-      Status = "Automapping halted.";
+      await FailAsync(tokenSource, ex, "File Error", "Error opening transcript file:\n" + ex.Message + "\n\nAutomapping halted.");
     }
-    catch (UnauthorizedAccessException)
+    catch (UnauthorizedAccessException ex)
     {
-      _reportError(
-        "Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
-        "or with scripting off in your interpreter.\n\nAutomapping halted.",
-        "Access Error");
-      Status = "Automapping halted.";
+      await FailAsync(tokenSource, ex, "Access Error", AccessErrorMessage);
+    }
+    catch (Exception ex) when (ex is not OperationCanceledException)
+    {
+      await FailAsync(tokenSource, ex, "Automap Error", UnexpectedErrorMessage(ex));
     }
     finally
     {

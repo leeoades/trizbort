@@ -303,8 +303,8 @@ public class AutomapIntegrationTests
         var dialog = new MockDialogService();
         var canvas = new AvaloniaAutomapCanvas();
 
-        // Exercise real App error reporter wiring to IDialogService
-        App.WireAutomapErrorReporter(dialog, () => null);
+        // Errors reach the dialog service through the engine's IEditorPrompts
+        AutomapEngine.Instance.Prompts = new AvaloniaEditorPrompts(() => null, dialog);
 
         var vm = new MainWindowViewModel(commandService, storage, dialog, canvas);
         _lastVm = vm;

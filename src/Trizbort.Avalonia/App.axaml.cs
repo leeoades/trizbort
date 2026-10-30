@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Automap;
 using Trizbort.Avalonia.Services;
@@ -27,7 +26,6 @@ public partial class App : Application
         Services = services;
 
         var dialogService = services.GetRequiredService<IDialogService>();
-        WireAutomapErrorReporter(dialogService, () => (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow);
         var prompts = WireAutomapPrompts(() => (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -39,6 +37,7 @@ public partial class App : Application
             };
             var session = mainWindowViewModel.CommandService.Session;
             session.Prompts = prompts;
+            session.DebugEnabled = AppOptions.Debug;
             session.Clipboard = new AvaloniaClipboard(() => desktop.MainWindow);
             FileWatcherWiring.Wire(dialogService, () => desktop.MainWindow, mainWindowViewModel.UpdateState,
                 mainWindowViewModel.CommandService.Session);
@@ -54,30 +53,6 @@ public partial class App : Application
         return prompts;
     }
 
-    public static Action<string, string> WireAutomapErrorReporter(IDialogService dialogService, Func<Window?> getOwner)
-    {
-        // Wire Automap.ErrorReporter to IDialogService on the UI dispatcher.
-        // Interactive same-direction / disambiguation prompts are wired by WireAutomapPrompts.
-        Action<string, string> reporter = (message, title) =>
-        {
-            if (Dispatcher.UIThread.CheckAccess())
-            {
-                var owner = getOwner();
-                _ = dialogService.ShowMessageAsync(owner, title, message);
-            }
-            else
-            {
-                Dispatcher.UIThread.Post(async () =>
-                {
-                    var owner = getOwner();
-                    await dialogService.ShowMessageAsync(owner, title, message);
-                });
-            }
-        };
-        AutomapEngine.ErrorReporter = reporter;
-        return reporter;
-    }
-
     public static IServiceProvider ConfigureServices()
     {
         var services = new ServiceCollection();
@@ -87,7 +62,8 @@ public partial class App : Application
         services.AddSingleton<IStorageService, StorageService>();
         services.AddSingleton<ICommandService, CommandService>();
         services.AddSingleton<IRecentFilesService, RecentFilesService>();
-        services.AddSingleton<IAutomapCanvas>(_ => new AvaloniaAutomapCanvas());
+        services.AddSingleton<IAutomapCanvas>(
+            sp => new AvaloniaAutomapCanvas(session: sp.GetRequiredService<ICommandService>().Session));
 
         // Root ViewModels
         services.AddSingleton<MainWindowViewModel>();

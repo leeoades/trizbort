@@ -277,8 +277,12 @@ on map change, pan and zoom; an empty map draws nothing.
   drives `Controls/AutomapBar` (status + Stop). The run is observed in the background; it is
   stopped on explicit Stop, map load, and window close, and `IsAutomapActive` is cleared on
   stop, autonomous completion, or handled I/O failure (a run token guards stale completions).
-- `Automap.ErrorReporter` (static) is routed to `IDialogService.ShowMessageAsync` on the UI
-  dispatcher.
+- Errors go through `IEditorPrompts.ShowMessageAsync` (`AvaloniaEditorPrompts` -> `IDialogService`);
+  the engine catches every exception, sets "Automapping halted.", raises `AutomapFailed` and shows one
+  message. The static `Automap.ErrorReporter` remains only as a deprecated adapter for tests. The
+  status text is event-driven (`Automap.StatusChanged` -> `EditorSession.AutomapStatusChanged`).
+- `--debug` (`AppOptions.Debug` -> `DebugOptions.Enabled`, `EditorSession.DebugEnabled`) enables the
+  `debug.*` toggles and `automap.step`; the canvas honours them in `MapCanvasControl.Render`.
 - **Known parity gap**: same-direction room conflicts keep Core's default `KeepRoom1`; Avalonia has
   no interactive `ConflictingRoomChooser` prompt (a synchronous Core callback vs. async modal).
 - Tests (`AutomapIntegrationTests`) use the real singleton with a temp transcript; they serialize

@@ -157,7 +157,7 @@ public class CatalogueMenuTests
             "project.addRoom", "project.addLabel", "edit.delete", "edit.undo", "edit.redo",
             "connection.toggleDotted", "connection.toggleOneWay",
             "view.zoomIn", "view.zoomOut", "view.resetZoom", "view.toggleGrid",
-            "project.toggleAutomap", "edit.mapSettings"
+            "project.startAutomap", "edit.mapSettings"
         });
         toolbar.Count(c => c is not Button).ShouldBe(3);
     }
