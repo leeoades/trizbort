@@ -1,0 +1,131 @@
+# Decisions (ADRs) for the Avalonia port
+
+Status of each: **Proposed** until Lee marks it Accepted. Written 2026-10-30 from feature-matrix section X
+(T1.6), its "Observations for D1", and targeted code checks noted inline.
+
+---
+
+## D1 — An editor model in Core; the UI only renders and forwards input
+
+**Context.** Lee's direction (L2): the UI is a thin rendering of a logical model and viewport. Today the
+reference app keeps editing logic in WinForms classes (`Canvas.cs`, `CommandController` bound to `Canvas`),
+and the Avalonia app keeps selection, viewport, drag state and editing in `Services/CommandService.cs` and the
+67 KB `Controls/MapCanvasControl.cs`. Undo/redo is P1 (L3) and needs every mutation to pass through one place;
+today `IsDirty` is set by hand at ~20 sites and drags mutate elements directly.
+
+Facts checked for this decision:
+- Hit-testing needs **no text measurement**: `Room`, `MapLabel` and `Connection` `Distance`/`UnionBoundsWith`
+  use only stored bounds and vertex positions (`src/Trizbort.Core/Domain/Elements/MapLabel.cs:130–145`,
+  `Connection.cs:631–643`). So hit-testing can move to Core with no UI abstraction.
+- Deleting a room **cascades**: `Project.OnElementRemoved` removes every connection docked to it
+  (`src/Trizbort.Core/Domain/Application/Project.cs:192–205`). Undo of a delete must restore those too.
+- Ids, `ReferenceRoomId`, ports by `PortId` and paste's `OldId` remapping make per-property undo fragile.
+- `Project.Current` is used ~75 times in Core and ~87 times in Avalonia.
+
+**Decision.**
+
+1. Add `src/Trizbort.Core/Editor/` with an **`EditorSession`** that owns:
+   - `Project` (wraps `Project.Current`; the static stays for now — removing it is out of scope and would touch
+     160+ call sites; the session is the only thing new code talks to);
+   - **`Selection`**: an *ordered* list with a primary element (legacy semantics; swap/join/navigation depend on
+     order), replacing Avalonia's `HashSet` + `Project.ActiveSelectedElement`;
+   - **`Viewport`**: origin, zoom, viewport size, canvas↔client transforms (reuse `CanvasTransform`), fit-to-map,
+     zoom-about-point, zoom steps and micro-zoom, wheel inversion setting;
+   - **`UndoStack`** (below);
+   - **`CanvasInteraction`** (below);
+   - one event `Changed(EditorChange flags)` with `Model | Selection | Viewport | Adorners | Dirty`, replacing
+     `ProjectChanged`/`SelectionChanged`/`ZoomChanged`/`CanvasInvalidated`.
+2. **Every edit is a command executed through the session** (`session.Execute(edit)`), never a direct property
+   set from UI code. Dialog OK, paste, delete, nudge, automap batches and drags all go through it.
+3. **Undo v1 = whole-map snapshots.** An undo step stores the map XML before and after (reuse
+   `MapSaver`/`MapLoader`/`LegacyMapFileEngine` to a string) plus selection as element ids. Undo restores the
+   "before" XML in place and reselects by id. This handles cascades, ids, references and paste uniformly and is
+   simple enough for cheap agents. Viewport changes are not undoable.
+   - Grouping: one step per discrete command, per dialog OK, per paste, per completed drag (transaction opened on
+     press, committed on `EndDrag(!cancelled)`, rolled back on cancel), per automap batch.
+   - Dirty flag = "stack position ≠ position at last save".
+   - Performance gate: a test that snapshots a 1,000-room generated map must take < 50 ms per step on CI. If it
+     fails, the fallback is fine-grained edits for drags only; don't build that unless the gate fails.
+4. **Input-neutral interaction in Core.** Lift `MapCanvasControl`'s `CanvasDragMode` state machine, hit-testing,
+   pending-connection logic and `EndDrag(cancelled)` into `CanvasInteraction`, which consumes neutral events —
+   `PointerInput(button, modifiers, clientPos, clickCount)`, `WheelInput`, `KeyInput(KeyGesture)` — and outputs
+   commands plus an `AdornerState` (hover element/port/handle/waypoint, marquee rect, pending line, `CursorKind`).
+   Keep Avalonia's cancel/restore behaviour (better than legacy). The Avalonia control shrinks to: convert events,
+   call the session, draw model + adorners.
+5. **UI services Core asks for, via interfaces** (implemented in Avalonia, faked in tests):
+   `IClipboard` (async text), `IEditorPrompts` (async message, confirm, save/discard/cancel, edit-element-properties,
+   pick file, automap prompts — see D3). Commands that need input ask the interface and await; they never open
+   windows themselves. "Add room then edit it" becomes "add room" + `prompts.EditElement(room)`.
+6. **Behaviours settled now** (so the move doesn't drift): right-drag pans and a right-click with ≤ 2 px movement
+   opens the context menu (Avalonia, approved); hit-testing honours `ZOrder` (legacy); selection modifiers follow
+   legacy (Ctrl toggles, Shift adds) unless D4 says otherwise; new rooms/connections use the "new room/new
+   connection" defaults as legacy does (Avalonia currently ignores them — matrix G008).
+7. **Rendering stays UI-side** (`Drawing/*`, spatial line index, smart-segment recompute, `RenderToBitmap`) and
+   reads only model + `AdornerState`.
+
+**Consequences.** Avalonia tests shrink to rendering and wiring; behaviour gets Core unit tests that run on any OS.
+Legacy is untouched. `AGENTS.md`'s "No undo/redo exists" line changes when F3 lands.
+
+**Foundation tickets (in order, each ≤ ~1 day, mid tier unless noted):**
+
+| # | Ticket | Notes |
+|---|---|---|
+| F1 | `Selection` and `Viewport` types in Core, with tests | Ordered selection with primary; viewport maths from `CommandService`/`CanvasTransform`. |
+| F2 | `EditorSession` in Core; `CommandService` becomes a thin adapter over it | App keeps working; existing Avalonia tests stay green. |
+| F3 | `UndoStack` with snapshot mementos, transactions, dirty flag, perf gate test | Strong-tier review of the diff. |
+| F4 | Route existing mutations (add, delete, paste, nudge, dialog OK, automap) through the session | Remove hand-set `IsDirty`. |
+| F5 | `CanvasInteraction` extraction with Core tests pinning gestures | L size: split into hit-testing, drag modes, connections. Strong-tier review. |
+| F6 | Undo/Redo commands and UI (menu, toolbar, gestures) | Depends on D2 catalogue. |
+
+---
+
+## D2 — One command catalogue drives menus, toolbar, context menus and keys
+
+**Context.** Avalonia wires each surface separately: `MainWindow.axaml` menu items, `Window.KeyBindings`, toolbar
+buttons, `MapCanvasControl.OnKeyDown` and `ShowContextMenuAt`. ~150 matrix rows need commands; wiring each in five
+places invites the conflicts already found (Ctrl+Shift+A, Ctrl+Shift+S, F1).
+
+**Decision.** `src/Trizbort.Core/Editor/Commands/`:
+- `EditorCommand` record: `Id` (e.g. `room.swapNames`), `Title`, `MenuPath` (e.g. `Edit/Rooms/Swap`), `Group` for
+  separators, `Gestures` (list of `KeyGesture` = key + `ModifierKeys`, where a new `Primary` flag means Ctrl on
+  Windows/Linux and Cmd on macOS), `Scope` (`Window` or `Canvas` — single-letter keys are `Canvas` and only fire
+  when the canvas has focus and no text box is editing), `ContextTargets` (`Room | Connection | Label | Empty` for
+  the context menu), `CanExecute(session)`, optional `IsChecked(session)`, `ExecuteAsync(session)`.
+- `CommandCatalogue` registers all commands in Core. Avalonia **generates** the main menu, macOS `NativeMenu`,
+  context menus, toolbar and key bindings from it — no hand-written menu XAML beyond layout containers.
+- Tests: duplicate gesture within a scope fails; every catalogue id has a title and menu path or is marked
+  hidden; every matrix-referenced command id exists (once tickets add them).
+- D4's approved shortcut table becomes the catalogue's gesture data.
+
+**Tickets:** C1 catalogue types + tests; C2 Avalonia menu/context/toolbar/key generation replacing the current
+hand-wired items (behaviour-preserving); then every feature ticket is "add command X to the catalogue".
+
+---
+
+## D3 — Prompts from Core are async
+
+**Context.** Automap's same-direction prompt is a synchronous `Func<Room,string,AutomapSameDirectionResult>`
+(`src/Trizbort.Core/Automap/Automap.cs:806–811`) and never assigned in Avalonia (matrix E044–E045); room
+disambiguation happens inside the synchronous `IAutomapCanvas.FindRoom`. The engine itself is already async
+(`Start`, `StartCl`, `ProcessTranscriptText` await I/O and stepping), and `AvaloniaAutomapCanvas` marshals each
+call to the UI thread with `Dispatcher.UIThread.Invoke`.
+
+**Decision.** Make the prompts async and await them in the engine:
+- Replace `ConflictingRoomChooser` with `IEditorPrompts.ChooseSameDirectionAsync(room, name)` returning
+  `Task<AutomapSameDirectionResult>`; add `IEditorPrompts.DisambiguateRoomAsync(candidates, line)` and have the
+  engine call it where `FindRoom` currently resolves ambiguity.
+- Propagate `await` up the engine's call chain to `ProcessTranscriptText` (already async). No blocking waits on the
+  UI thread (no `.GetAwaiter().GetResult()`), so no deadlocks.
+- When automap is driven by the `EditorSession` (D1), `AvaloniaAutomapCanvas`'s dispatcher marshalling goes away:
+  the engine runs on the UI synchronisation context and awaits I/O.
+- Headless/CLI runs pass a non-interactive `IEditorPrompts` that returns today's defaults (`KeepRoom1`, first match).
+
+**Tickets:** A1 async prompt interfaces + engine changes + Core tests with a scripted fake; A2 Avalonia prompt dialogs
+from the specs in `dialogs/Automap.md`.
+
+---
+
+## D4 — Shortcut map
+
+Drafted in `shortcut-map.md`; **Lee approves each row**. Policy L4: keep reference gestures unless an obvious modern
+convention exists.
