@@ -84,6 +84,15 @@ public class DialogCaptureTests
             Application.Current.Styles.Add(new FluentTheme());
         }
 
+        // The headless test app doesn't load App.axaml, so add the app's dialog styles explicitly.
+        if (Application.Current != null && !Application.Current.Styles.OfType<global::Avalonia.Markup.Xaml.Styling.StyleInclude>().Any())
+        {
+            Application.Current.Styles.Add(new global::Avalonia.Markup.Xaml.Styling.StyleInclude(new Uri("avares://Trizbort.Avalonia/"))
+            {
+                Source = new Uri("avares://Trizbort.Avalonia/Styles/DialogStyles.axaml")
+            });
+        }
+
         using var project = new Project();
         Project.Current = project;
         Settings.Reset();
