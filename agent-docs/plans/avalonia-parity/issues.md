@@ -56,7 +56,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   delete moves them to the default region: `:359`).   Actual: `MapSettingsViewModel.ApplyTo` just rebuilds
   `Settings.Regions` (`src/Trizbort.Avalonia/ViewModels/MapSettingsViewModel.cs` ~276), so rooms keep a region name
   that no longer exists and lose their colour.
-- Severity: high (silently changes the saved map)     Flags: fix-now?
+- Severity: high (silently changes the saved map)     Flags: fix-now (Lee, 2026-10-30)
+- **Fixed** 2026-10-30: `MapSettingsViewModel` tracks each region's original name and remaps rooms in one pass on OK (rename → new name, delete → default region; swapped names work). Tests: `DialogViewModelTests.MapSettingsViewModel_RenameAndDeleteRegion_UpdatesRooms`, `…_SwappedRegionNames_MoveRoomsCorrectly` (both fail without the fix).
 - Ticket: —
 
 ## I-008 Automap never asks about ambiguous or conflicting rooms

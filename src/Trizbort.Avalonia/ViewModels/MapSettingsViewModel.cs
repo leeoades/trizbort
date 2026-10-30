@@ -23,11 +23,18 @@ public partial class RegionItemViewModel : ViewModelBase
 
     public bool IsDefaultRegion => Name == Region.DefaultRegion;
 
+    /// <summary>
+    ///   The region's name when the dialog opened, or null for a region added in the dialog. Used to move rooms
+    ///   to the new name when a region is renamed, and to the default region when it is deleted.
+    /// </summary>
+    public string? OriginalName { get; set; }
+
     public RegionItemViewModel() { }
 
     public RegionItemViewModel(Region region)
     {
         Name = region.RegionName;
+        OriginalName = region.RegionName;
         FillColor = region.RColor;
         TextColor = region.TextColor;
     }
@@ -273,10 +280,13 @@ public partial class MapSettingsViewModel : ViewModelBase
             Settings.Color[cs.Index] = cs.Color;
         }
 
+        UpdateRoomRegions(project);
+
         Settings.Regions.Clear();
         foreach (var r in Regions)
         {
             Settings.Regions.Add(r.ToRegion());
+            r.OriginalName = r.Name;
         }
 
         if (Settings.Regions.All(r => r.RegionName != Region.DefaultRegion))
@@ -285,6 +295,34 @@ public partial class MapSettingsViewModel : ViewModelBase
         }
 
         project.IsDirty = true;
+    }
+
+    /// <summary>
+    ///   Moves rooms whose region was renamed to the new name, and rooms whose region was deleted to the default
+    ///   region, as the reference SettingsDialog does. Computed as one old-to-new map so swapped names work.
+    /// </summary>
+    private void UpdateRoomRegions(Project project)
+    {
+        var renames = new Dictionary<string, string>(StringComparer.Ordinal);
+        var kept = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var item in Regions.Where(r => r.OriginalName != null))
+        {
+            kept.Add(item.OriginalName!);
+            if (item.OriginalName != item.Name) renames[item.OriginalName!] = item.Name;
+        }
+
+        foreach (var region in Settings.Regions)
+            if (!kept.Contains(region.RegionName) && region.RegionName != Region.DefaultRegion)
+                renames[region.RegionName] = Region.DefaultRegion;
+
+        if (renames.Count == 0) return;
+
+        foreach (var room in project.Elements.OfType<Room>())
+            if (room.Region != null && renames.TryGetValue(room.Region, out var newName))
+            {
+                room.Region = newName;
+                project.IsDirty = true;
+            }
     }
 
     [RelayCommand]

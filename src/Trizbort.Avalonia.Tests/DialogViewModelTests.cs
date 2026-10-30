@@ -8,6 +8,8 @@ using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
+using Trizbort.Setup;
+using Region = Trizbort.Domain.Misc.Region;
 
 namespace Trizbort.Avalonia.Tests;
 
@@ -312,5 +314,70 @@ public class DialogViewModelTests
         label.Shape.ShouldBe(RoomShape.RoundedCorners);
         label.BorderStyle.ShouldBe(BorderDashStyle.None);
         label.HasBackground.ShouldBeFalse();
+    }
+    [Test]
+    public void MapSettingsViewModel_RenameAndDeleteRegion_UpdatesRooms()
+    {
+        var savedRegions = Settings.Regions.ToList();
+        try
+        {
+            Settings.Regions = new List<Region>
+            {
+                new() { RegionName = Region.DefaultRegion },
+                new() { RegionName = "Forest" },
+                new() { RegionName = "Castle" }
+            };
+            var inForest = new Room(Project.Current) { Name = "Glade", Region = "Forest" };
+            var inCastle = new Room(Project.Current) { Name = "Keep", Region = "Castle" };
+            Project.Current.Elements.Add(inForest);
+            Project.Current.Elements.Add(inCastle);
+
+            var vm = new MapSettingsViewModel();
+            vm.Initialize();
+            vm.Regions.Single(r => r.Name == "Forest").Name = "Woods";
+            vm.SelectedRegion = vm.Regions.Single(r => r.Name == "Castle");
+            vm.DeleteSelectedRegion();
+            vm.ApplyToSettings();
+
+            inForest.Region.ShouldBe("Woods");
+            inCastle.Region.ShouldBe(Region.DefaultRegion);
+            Settings.Regions.Select(r => r.RegionName).ShouldBe(new[] { Region.DefaultRegion, "Woods" });
+        }
+        finally
+        {
+            Settings.Regions = savedRegions;
+        }
+    }
+
+    [Test]
+    public void MapSettingsViewModel_SwappedRegionNames_MoveRoomsCorrectly()
+    {
+        var savedRegions = Settings.Regions.ToList();
+        try
+        {
+            Settings.Regions = new List<Region>
+            {
+                new() { RegionName = Region.DefaultRegion },
+                new() { RegionName = "North" },
+                new() { RegionName = "South" }
+            };
+            var north = new Room(Project.Current) { Name = "N", Region = "North" };
+            var south = new Room(Project.Current) { Name = "S", Region = "South" };
+            Project.Current.Elements.Add(north);
+            Project.Current.Elements.Add(south);
+
+            var vm = new MapSettingsViewModel();
+            vm.Initialize();
+            vm.Regions.Single(r => r.Name == "North").Name = "South";
+            vm.Regions.First(r => r.OriginalName == "South").Name = "North";
+            vm.ApplyToSettings();
+
+            north.Region.ShouldBe("South");
+            south.Region.ShouldBe("North");
+        }
+        finally
+        {
+            Settings.Regions = savedRegions;
+        }
     }
 }
