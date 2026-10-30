@@ -50,3 +50,20 @@ public class CoreColorToNameOrHexConverter : IValueConverter
         throw new NotSupportedException();
     }
 }
+
+/// <summary>Maps a region name to a brush of that region's colour (for the Region combo swatches).</summary>
+public class RegionNameToBrushConverter : IValueConverter
+{
+    public static readonly RegionNameToBrushConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var region = Trizbort.Setup.Settings.Regions.FirstOrDefault(r => r.RegionName == value as string);
+        return (region?.RColor ?? CoreColor.White).ToBrush();
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
+    }
+}

@@ -2,11 +2,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Trizbort.Avalonia.ViewModels"
         xmlns:controls="using:Trizbort.Avalonia.Controls"
+        xmlns:conv="using:Trizbort.Avalonia.Converters"
         x:Class="Trizbort.Avalonia.Views.Dialogs.ConnectionPropertiesDialog"
         x:DataType="vm:ConnectionPropertiesViewModel"
         Title="Connection Properties"
-        Width="520" Height="660"
-        MinWidth="442" MinHeight="561"
+        Width="520" Height="700"
+        MinWidth="442" MinHeight="595"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
@@ -24,7 +25,7 @@
                     <StackPanel Spacing="8">
                         <StackPanel Orientation="Horizontal" Spacing="24">
                             <CheckBox Content="_Dotted" IsChecked="{Binding IsDotted}" />
-                            <CheckBox Content="One Way _Arrow" IsChecked="{Binding IsDirectional}" />
+                            <CheckBox Content="One Wa_y Arrow" IsChecked="{Binding IsDirectional}" />
                         </StackPanel>
                         <Grid ColumnDefinitions="Auto,12,*">
                             <Label Grid.Column="0" Classes="field-label" Content="_Color:" Target="{Binding #LineColorButton}" />
@@ -39,22 +40,27 @@
                     <StackPanel Spacing="8">
                         <Grid ColumnDefinitions="*,12,*,12,*" RowDefinitions="Auto,Auto" RowSpacing="2">
                             <Label Grid.Row="0" Grid.Column="0" Content="_Start:" Target="{Binding #StartBox}" />
-                            <TextBox Grid.Row="1" Grid.Column="0" x:Name="StartBox" Text="{Binding StartText}" />
-                            <Label Grid.Row="0" Grid.Column="2" Content="_Middle:" Target="{Binding #MidBox}" />
-                            <TextBox Grid.Row="1" Grid.Column="2" x:Name="MidBox" Text="{Binding MidText}" />
+                            <TextBox Grid.Row="1" Grid.Column="0" x:Name="StartBox" Text="{Binding StartText}" ToolTip.Tip="Text shown near the start of the connection line." />
+                            <Label Grid.Row="0" Grid.Column="2" Content="Midd_le:" Target="{Binding #MidBox}" />
+                            <TextBox Grid.Row="1" Grid.Column="2" x:Name="MidBox" Text="{Binding MidText}" ToolTip.Tip="Text shown at the middle of the connection line." />
                             <Label Grid.Row="0" Grid.Column="4" Content="_End:" Target="{Binding #EndBox}" />
-                            <TextBox Grid.Row="1" Grid.Column="4" x:Name="EndBox" Text="{Binding EndText}" />
+                            <TextBox Grid.Row="1" Grid.Column="4" x:Name="EndBox" Text="{Binding EndText}" ToolTip.Tip="Text shown near the end of the connection line." />
                         </Grid>
 
-                        <!-- Presets (reworked in ticket 075) -->
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="Presets:" VerticalAlignment="Center" FontSize="11" Opacity="0.8" />
-                            <Button Content="Up / Down" Height="26" FontSize="11" Click="OnPresetUpDownClick" />
-                            <Button Content="Down / Up" Height="26" FontSize="11" Click="OnPresetDownUpClick" />
-                            <Button Content="In / Out" Height="26" FontSize="11" Click="OnPresetInOutClick" />
-                            <Button Content="Out / In" Height="26" FontSize="11" Click="OnPresetOutInClick" />
-                            <Button Content="Clear" Height="26" FontSize="11" Click="OnPresetClearClick" />
-                        </StackPanel>
+                        <!-- Presets: radios track the Start/Middle/End text -->
+                        <WrapPanel Orientation="Horizontal">
+                            <RadioButton Margin="0,0,16,0" GroupName="TextPreset" Content="_Up / Down"
+                                         IsChecked="{Binding SelectedPreset, Converter={x:Static conv:TextPresetConverter.Instance}, ConverterParameter={x:Static vm:TextPreset.UpDown}}" />
+                            <RadioButton Margin="0,0,16,0" GroupName="TextPreset" Content="Do_wn / Up"
+                                         IsChecked="{Binding SelectedPreset, Converter={x:Static conv:TextPresetConverter.Instance}, ConverterParameter={x:Static vm:TextPreset.DownUp}}" />
+                            <RadioButton Margin="0,0,16,0" GroupName="TextPreset" Content="_In / Out"
+                                         IsChecked="{Binding SelectedPreset, Converter={x:Static conv:TextPresetConverter.Instance}, ConverterParameter={x:Static vm:TextPreset.InOut}}" />
+                            <RadioButton Margin="0,0,16,0" GroupName="TextPreset" Content="Ou_t / In"
+                                         IsChecked="{Binding SelectedPreset, Converter={x:Static conv:TextPresetConverter.Instance}, ConverterParameter={x:Static vm:TextPreset.OutIn}}" />
+                            <RadioButton Margin="0,0,16,0" GroupName="TextPreset" Content="Custo_m"
+                                         IsChecked="{Binding SelectedPreset, Converter={x:Static conv:TextPresetConverter.Instance}, ConverterParameter={x:Static vm:TextPreset.Custom}}" />
+                            <Button Content="Clear te_xt" Click="OnClearTextClick" />
+                        </WrapPanel>
                     </StackPanel>
                 </HeaderedContentControl>
 
@@ -62,9 +68,9 @@
                 <StackPanel Grid.Row="3" Spacing="8">
                     <CheckBox Content="Doo_r" IsChecked="{Binding HasDoor}" />
                     <StackPanel Orientation="Horizontal" Spacing="16" Margin="16,0,0,0" IsEnabled="{Binding HasDoor}">
-                        <CheckBox Content="_Openable" IsChecked="{Binding Openable}" />
-                        <CheckBox Content="Ope_n" IsChecked="{Binding Open}" />
-                        <CheckBox Content="_Lockable" IsChecked="{Binding Lockable}" />
+                        <CheckBox Content="Open_able" IsChecked="{Binding Openable}" />
+                        <CheckBox Content="_Open" IsChecked="{Binding Open}" />
+                        <CheckBox Content="Locka_ble" IsChecked="{Binding Lockable}" />
                         <CheckBox Content="Loc_ked" IsChecked="{Binding Locked}" />
                     </StackPanel>
                 </StackPanel>

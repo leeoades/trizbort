@@ -4,6 +4,15 @@ using Trizbort.Domain.Elements;
 
 namespace Trizbort.Avalonia.ViewModels;
 
+public enum TextPreset
+{
+    UpDown,
+    DownUp,
+    InOut,
+    OutIn,
+    Custom
+}
+
 public partial class ConnectionPropertiesViewModel : ViewModelBase
 {
     [ObservableProperty]
@@ -20,6 +29,11 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _endText = string.Empty;
+
+    [ObservableProperty]
+    private TextPreset _selectedPreset = TextPreset.Custom;
+
+    private bool _updatingPreset;
 
     [ObservableProperty]
     private bool _isDirectional;
@@ -52,6 +66,7 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         StartText = connection.StartText ?? string.Empty;
         MidText = connection.MidText ?? string.Empty;
         EndText = connection.EndText ?? string.Empty;
+        SelectedPreset = MatchPreset();
         IsDirectional = connection.Flow == ConnectionFlow.OneWay;
         IsDotted = connection.Style == ConnectionStyle.Dashed;
         ConnectionColor = connection.ConnectionColor;
@@ -103,10 +118,79 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         }
     }
 
+    partial void OnStartTextChanged(string value) => UpdatePresetFromText();
+
+    partial void OnMidTextChanged(string value) => UpdatePresetFromText();
+
+    partial void OnEndTextChanged(string value) => UpdatePresetFromText();
+
+    partial void OnSelectedPresetChanged(TextPreset value)
+    {
+        if (_updatingPreset || value == TextPreset.Custom) return;
+        _updatingPreset = true;
+        try
+        {
+            SetLabelPreset(ToLabel(value));
+        }
+        finally
+        {
+            _updatingPreset = false;
+        }
+    }
+
+    private void UpdatePresetFromText()
+    {
+        if (_updatingPreset) return;
+        var match = MatchPreset();
+        if (match == SelectedPreset) return;
+        _updatingPreset = true;
+        try
+        {
+            SelectedPreset = match;
+        }
+        finally
+        {
+            _updatingPreset = false;
+        }
+    }
+
+    private bool MatchText(ConnectionLabel label)
+    {
+        Connection.GetText(label, out var start, out var end);
+        return StartText == start && EndText == end && string.IsNullOrEmpty(MidText);
+    }
+
+    private TextPreset MatchPreset()
+    {
+        if (MatchText(ConnectionLabel.Up)) return TextPreset.UpDown;
+        if (MatchText(ConnectionLabel.Down)) return TextPreset.DownUp;
+        if (MatchText(ConnectionLabel.In)) return TextPreset.InOut;
+        if (MatchText(ConnectionLabel.Out)) return TextPreset.OutIn;
+        return TextPreset.Custom;
+    }
+
+    private static ConnectionLabel ToLabel(TextPreset preset) => preset switch
+    {
+        TextPreset.UpDown => ConnectionLabel.Up,
+        TextPreset.DownUp => ConnectionLabel.Down,
+        TextPreset.InOut => ConnectionLabel.In,
+        _ => ConnectionLabel.Out
+    };
+
+    /// <summary>Writes Start/End for the label; Middle is left untouched.</summary>
     public void SetLabelPreset(ConnectionLabel label)
     {
         Connection.GetText(label, out var start, out var end);
         StartText = start;
         EndText = end;
+    }
+
+    /// <summary>Empties Start, Middle and End and selects Custom.</summary>
+    public void ClearText()
+    {
+        StartText = string.Empty;
+        MidText = string.Empty;
+        EndText = string.Empty;
+        UpdatePresetFromText();
     }
 }

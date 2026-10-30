@@ -1,16 +1,24 @@
 using System.Drawing;
+using Avalonia;
+using Avalonia.Headless.NUnit;
+using Avalonia.Themes.Fluent;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
+using Trizbort.Avalonia.Views.Dialogs;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
+using Trizbort.Editor;
 using Trizbort.Setup;
 using Region = Trizbort.Domain.Misc.Region;
+using Vector = Trizbort.Domain.Misc.Vector;
 
 namespace Trizbort.Avalonia.Tests;
 
@@ -385,6 +393,131 @@ public class DialogViewModelTests
         label.BorderStyle.ShouldBe(BorderDashStyle.None);
         label.HasBackground.ShouldBeFalse();
     }
+
+    [Test]
+    public void MapLabelPropertiesViewModel_ShapeEnabled_WhenOutlineOrBackgroundIsOn()
+    {
+        var label = new MapLabel(Project.Current) { BorderStyle = BorderDashStyle.None, HasBackground = false };
+        Project.Current.Elements.Add(label);
+
+        var vm = new MapLabelPropertiesViewModel();
+        vm.Initialize(label);
+
+        vm.ShapeEnabled.ShouldBeFalse();
+
+        vm.HasBackground = true;
+        vm.ShapeEnabled.ShouldBeTrue();
+
+        vm.HasBackground = false;
+        vm.HasOutline = true;
+        vm.ShapeEnabled.ShouldBeTrue();
+
+        vm.HasOutline = false;
+        vm.ShapeEnabled.ShouldBeFalse();
+    }
+
+    [Test]
+    public void MapLabelPropertiesViewModel_ShapeEnabled_RaisesChangeNotification()
+    {
+        var vm = new MapLabelPropertiesViewModel();
+        var raised = new List<string>();
+        vm.PropertyChanged += (_, args) => raised.Add(args.PropertyName ?? string.Empty);
+
+        vm.HasBackground = true;
+
+        raised.ShouldContain(nameof(MapLabelPropertiesViewModel.ShapeEnabled));
+    }
+
+    [Test]
+    public void MapLabelPropertiesViewModel_EditEverySetting_RoundTripsThroughLabel()
+    {
+        var label = new MapLabel(Project.Current) { Text = "Old", BorderStyle = BorderDashStyle.None, HasBackground = false };
+        Project.Current.Elements.Add(label);
+
+        var vm = new MapLabelPropertiesViewModel();
+        vm.Initialize(label);
+        vm.Text = "Cellar";
+        vm.TextColor = Color.Green;
+        vm.HasOutline = true;
+        vm.Shape = RoomShape.Ellipse;
+        vm.BorderStyle = BorderDashStyle.DashDot;
+        vm.BorderColor = Color.Maroon;
+        vm.HasBackground = true;
+        vm.BackgroundColor = Color.Khaki;
+        vm.ApplyTo(label);
+
+        var reloaded = new MapLabelPropertiesViewModel();
+        reloaded.Initialize(label);
+
+        reloaded.Text.ShouldBe("Cellar");
+        reloaded.TextColor.ShouldBe(Color.Green);
+        reloaded.HasOutline.ShouldBeTrue();
+        reloaded.Shape.ShouldBe(RoomShape.Ellipse);
+        reloaded.BorderStyle.ShouldBe(BorderDashStyle.DashDot);
+        reloaded.BorderColor.ShouldBe(Color.Maroon);
+        reloaded.HasBackground.ShouldBeTrue();
+        reloaded.BackgroundColor.ShouldBe(Color.Khaki);
+    }
+
+    [AvaloniaTest]
+    public void MapLabelPropertiesDialog_DefaultSize_NothingIsClipped()
+    {
+        EnsureDialogStyles();
+        var label = new MapLabel(Project.Current) { Text = "Label", HasBackground = true };
+        Project.Current.Elements.Add(label);
+
+        var vm = new MapLabelPropertiesViewModel();
+        vm.Initialize(label);
+        var dialog = new MapLabelPropertiesDialog { DataContext = vm };
+        dialog.Show();
+        try
+        {
+            Dispatcher.UIThread.RunJobs();
+            dialog.UpdateLayout();
+
+            var controls = dialog.GetVisualDescendants()
+                .OfType<global::Avalonia.Controls.Control>()
+                .Where(c => c.IsVisible && (c is global::Avalonia.Controls.CheckBox || c is global::Avalonia.Controls.ComboBox
+                                            || c is global::Avalonia.Controls.Button || c is global::Avalonia.Controls.TextBox
+                                            || c is Trizbort.Avalonia.Controls.ColorPickerButton))
+                .ToList();
+
+            controls.Count.ShouldBeGreaterThan(8);
+            foreach (var control in controls)
+            {
+                var origin = control.TranslatePoint(new global::Avalonia.Point(0, 0), dialog).ShouldNotBeNull();
+                (origin.Y + control.Bounds.Height).ShouldBeLessThanOrEqualTo(dialog.ClientSize.Height);
+                (origin.X + control.Bounds.Width).ShouldBeLessThanOrEqualTo(dialog.ClientSize.Width);
+            }
+        }
+        finally
+        {
+            dialog.Close();
+        }
+    }
+
+    private static void EnsureDialogStyles()
+    {
+        // The headless test app doesn't load App.axaml, so add the theme and dialog styles explicitly.
+        if (global::Avalonia.Application.Current == null)
+        {
+            return;
+        }
+
+        if (!global::Avalonia.Application.Current.Styles.OfType<FluentTheme>().Any())
+        {
+            global::Avalonia.Application.Current.Styles.Add(new FluentTheme());
+        }
+
+        if (!global::Avalonia.Application.Current.Styles.OfType<global::Avalonia.Markup.Xaml.Styling.StyleInclude>().Any())
+        {
+            global::Avalonia.Application.Current.Styles.Add(new global::Avalonia.Markup.Xaml.Styling.StyleInclude(new Uri("avares://Trizbort.Avalonia/"))
+            {
+                Source = new Uri("avares://Trizbort.Avalonia/Styles/DialogStyles.axaml")
+            });
+        }
+    }
+
     [Test]
     public void MapSettingsViewModel_NewFields_RoundTripThroughSettings()
     {
@@ -518,6 +651,112 @@ public class DialogViewModelTests
 
             north.Region.ShouldBe("South");
             south.Region.ShouldBe("North");
+        }
+        finally
+        {
+            Settings.Regions = savedRegions;
+        }
+    }
+
+    [Test]
+    public void MapSettingsViewModel_RegionValidation_ReportsMessagesAndSanitizes()
+    {
+        var savedRegions = Settings.Regions.ToList();
+        try
+        {
+            Settings.Regions = new List<Region>
+            {
+                new() { RegionName = Region.DefaultRegion },
+                new() { RegionName = "Forest" },
+                new() { RegionName = "Castle" }
+            };
+            var vm = new MapSettingsViewModel();
+            vm.Initialize();
+            var forest = vm.Regions.Single(r => r.Name == "Forest");
+            var castle = vm.Regions.Single(r => r.Name == "Castle");
+
+            forest.Name = "  ";
+            vm.ValidateRegions(false).ShouldBeFalse();
+            forest.NameError.ShouldBe(RegionNaming.EmptyMessage);
+
+            forest.Name = "a_b";
+            vm.ValidateRegions(false).ShouldBeFalse();
+            forest.NameError.ShouldBe(RegionNaming.InvalidCharacterMessage);
+
+            forest.Name = "castle";
+            vm.ValidateRegions(false).ShouldBeFalse();
+            forest.HasNameError.ShouldBeTrue();
+            castle.HasNameError.ShouldBeTrue();
+            vm.HasRegionErrors.ShouldBeTrue();
+
+            forest.Name = " The \"Wood\" ";
+            vm.ValidateRegions(true).ShouldBeTrue();
+            forest.Name.ShouldBe("The 'Wood'");
+            vm.HasRegionErrors.ShouldBeFalse();
+        }
+        finally
+        {
+            Settings.Regions = savedRegions;
+        }
+    }
+
+    [Test]
+    public void MapSettingsViewModel_DefaultRegion_CannotBeDeletedOrRenamed_AndNewRegionsAreNumbered()
+    {
+        var savedRegions = Settings.Regions.ToList();
+        try
+        {
+            Settings.Regions = new List<Region> { new() { RegionName = Region.DefaultRegion } };
+            var vm = new MapSettingsViewModel();
+            vm.Initialize();
+
+            vm.SelectedRegion = vm.Regions.Single(r => r.IsDefaultRegion);
+            vm.DeleteSelectedRegionCommand.CanExecute(null).ShouldBeFalse();
+            vm.DeleteSelectedRegion();
+            vm.Regions.Count.ShouldBe(1);
+
+            vm.AddRegion();
+            vm.AddRegion();
+            vm.Regions.Select(r => r.Name).ShouldBe(new[] { Region.DefaultRegion, "Region1", "Region2" });
+            vm.SelectedRegion!.FillColor.ToArgb().ShouldBe(Color.White.ToArgb());
+            vm.SelectedRegion.TextColor.ToArgb().ShouldBe(Settings.Color[Colors.Subtitle].ToArgb());
+            vm.DeleteSelectedRegionCommand.CanExecute(null).ShouldBeTrue();
+        }
+        finally
+        {
+            Settings.Regions = savedRegions;
+        }
+    }
+
+    [Test]
+    public void MapSettingsViewModel_ApplyInsideSession_IsOneUndoStep()
+    {
+        var savedRegions = Settings.Regions.ToList();
+        using var session = new EditorSession();
+        try
+        {
+            Settings.Regions = new List<Region>
+            {
+                new() { RegionName = Region.DefaultRegion },
+                new() { RegionName = "Forest" }
+            };
+            Project.Current.Elements.Add(new Room(Project.Current) { Name = "Glade", Region = "Forest" });
+            session.Undo.Clear();
+
+            var vm = new MapSettingsViewModel();
+            vm.Initialize();
+            vm.Regions.Single(r => r.Name == "Forest").Name = "Woods";
+            session.Execute("Edit map settings", vm.ApplyToSettings);
+
+            session.Undo.UndoTitle.ShouldBe("Edit map settings");
+            Project.Current.Elements.OfType<Room>().Single().Region.ShouldBe("Woods");
+
+            session.PerformUndo();
+
+            Project.Current.Elements.OfType<Room>().Single().Region.ShouldBe("Forest");
+            Settings.Regions.Select(r => r.RegionName).ShouldContain("Forest");
+            Settings.Regions.Select(r => r.RegionName).ShouldNotContain("Woods");
+            session.Undo.CanUndo.ShouldBeFalse();
         }
         finally
         {
@@ -678,5 +917,65 @@ public class DialogViewModelTests
         vm.LimitRoomDescriptionCharactersInTooltip = false;
         vm.CanEditRoomCharacterCount.ShouldBeFalse();
         vm.CanEditConnectionCharacterCount.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ConnectionPropertiesViewModel_SelectingPreset_FillsStartAndEnd_LeavesMiddle()
+    {
+        var vm = new ConnectionPropertiesViewModel { MidText = "through" };
+
+        vm.SelectedPreset = TextPreset.UpDown;
+        vm.StartText.ShouldBe("up");
+        vm.EndText.ShouldBe("down");
+
+        vm.SelectedPreset = TextPreset.DownUp;
+        vm.StartText.ShouldBe("down");
+        vm.EndText.ShouldBe("up");
+        vm.SelectedPreset.ShouldBe(TextPreset.DownUp);
+
+        vm.SelectedPreset = TextPreset.InOut;
+        vm.StartText.ShouldBe("in");
+        vm.EndText.ShouldBe("out");
+
+        vm.SelectedPreset = TextPreset.OutIn;
+        vm.StartText.ShouldBe("out");
+        vm.EndText.ShouldBe("in");
+
+        vm.MidText.ShouldBe("through");
+    }
+
+    [Test]
+    public void ConnectionPropertiesViewModel_TypingText_TracksPreset()
+    {
+        var vm = new ConnectionPropertiesViewModel();
+        vm.StartText = "up";
+        vm.EndText = "down";
+        vm.SelectedPreset.ShouldBe(TextPreset.UpDown);
+
+        vm.StartText = "down";
+        vm.EndText = "up";
+        vm.SelectedPreset.ShouldBe(TextPreset.DownUp);
+
+        vm.StartText = "north";
+        vm.SelectedPreset.ShouldBe(TextPreset.Custom);
+
+        vm.StartText = "down";
+        vm.MidText = "x";
+        vm.SelectedPreset.ShouldBe(TextPreset.Custom);
+    }
+
+    [Test]
+    public void ConnectionPropertiesViewModel_ClearText_EmptiesAllAndSelectsCustom()
+    {
+        var vm = new ConnectionPropertiesViewModel();
+        vm.SelectedPreset = TextPreset.InOut;
+        vm.MidText = "m";
+
+        vm.ClearText();
+
+        vm.StartText.ShouldBeEmpty();
+        vm.MidText.ShouldBeEmpty();
+        vm.EndText.ShouldBeEmpty();
+        vm.SelectedPreset.ShouldBe(TextPreset.Custom);
     }
 }

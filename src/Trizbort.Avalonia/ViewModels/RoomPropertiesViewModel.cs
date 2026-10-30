@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Drawing;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
+using Trizbort.Editor;
 using Trizbort.Setup;
 using Region = Trizbort.Domain.Misc.Region;
 
@@ -98,6 +100,88 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private RoomReferenceItem? _selectedReferenceRoom;
 
+    [ObservableProperty]
+    private int _selectedTabIndex;
+
+    private int _roomId = -1;
+
+    /// <summary>Tab indexes of the Room dialog; used for remembering the last tab.</summary>
+    public const int TabCount = 4;
+    public const int TabRegion = 2;
+    public const int TabShapes = 1;
+
+    /// <summary>The Rounded Corners group is only shown when the rounded shape is chosen.</summary>
+    public bool ShowCornerRadii => Shape == RoomShape.RoundedCorners;
+
+    partial void OnShapeChanged(RoomShape value)
+    {
+        OnPropertyChanged(nameof(ShowCornerRadii));
+    }
+
+    /// <summary>Returns the validation message for the room name, or null when it is acceptable.</summary>
+    public string? Validate()
+    {
+        if (string.IsNullOrWhiteSpace(Name))
+        {
+            return "The room name can't be empty";
+        }
+
+        if (!Name.Any(char.IsLetter))
+        {
+            return "The room name must contain at least one letter";
+        }
+
+        return null;
+    }
+
+    /// <summary>Validation message currently shown under the Name field (null/empty when valid).</summary>
+    [ObservableProperty]
+    private string? _nameError;
+
+    /// <summary>The other room that is already the start room, if any.</summary>
+    public Room? FindOtherStartRoom()
+    {
+        return Project.Current.Elements.OfType<Room>().FirstOrDefault(r => r.IsStartRoom && r.Id != _roomId);
+    }
+
+    /// <summary>
+    ///   Validates and, when needed, asks whether to take over the start-room flag. Returns true when the dialog
+    ///   may close with OK. Answering No unticks only the Start Room flag and returns false (dialog stays open).
+    /// </summary>
+    public async Task<bool> TryAcceptAsync(IEditorPrompts prompts)
+    {
+        NameError = Validate();
+        if (NameError != null)
+        {
+            return false;
+        }
+
+        if (IsStartRoom)
+        {
+            var other = FindOtherStartRoom();
+            if (other != null)
+            {
+                var change = await prompts.ConfirmAsync(
+                    $"The room '{other.Name}' is set as the starting room.  Do you want to change it to this room?", "Change Starting Room");
+                if (!change)
+                {
+                    IsStartRoom = false;
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    partial void OnNameChanged(string value)
+    {
+        if (NameError != null)
+        {
+            NameError = Validate();
+        }
+    }
+
     public ObservableCollection<string> AvailableRegions { get; } = [];
     public ObservableCollection<RoomReferenceItem> AvailableReferenceRooms { get; } = [];
     public IReadOnlyList<RoomShape> AvailableShapes { get; } = [
@@ -160,8 +244,15 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         }
     }
 
-    public void Initialize(Room room)
+    public void SaveLastTab()
     {
+        ApplicationSettingsController.AppSettings.RoomDialogLastTab = SelectedTabIndex;
+    }
+
+    public void Initialize(Room room, int? startTab = null)
+    {
+        _roomId = room.Id;
+        SelectedTabIndex = Math.Clamp(startTab ?? ApplicationSettingsController.AppSettings.RoomDialogLastTab, 0, TabCount - 1);
         Name = room.Name ?? string.Empty;
         SubTitle = room.SubTitle ?? string.Empty;
         Description = room.PrimaryDescription ?? string.Empty;

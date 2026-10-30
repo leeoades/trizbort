@@ -14,15 +14,34 @@ namespace Trizbort.Avalonia.ViewModels;
 public partial class RegionItemViewModel : ViewModelBase
 {
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDefaultRegion))]
     private string _name = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FillBrush))]
     private Color _fillColor = Color.White;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TextBrush))]
     private Color _textColor = Color.MidnightBlue;
 
-    public bool IsDefaultRegion => Name == Region.DefaultRegion;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNameError))]
+    private string _nameError = string.Empty;
+
+    public bool HasNameError => !string.IsNullOrEmpty(NameError);
+
+    /// <summary>The default region can't be renamed or deleted.</summary>
+    public bool IsDefaultRegion => OriginalName != null ? OriginalName == Region.DefaultRegion : Name == Region.DefaultRegion;
+
+    public bool CanEditName => !IsDefaultRegion;
+
+    public global::Avalonia.Media.IBrush FillBrush => ToBrush(FillColor);
+
+    public global::Avalonia.Media.IBrush TextBrush => ToBrush(TextColor);
+
+    private static global::Avalonia.Media.IBrush ToBrush(Color color) =>
+        new global::Avalonia.Media.SolidColorBrush(global::Avalonia.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
 
     /// <summary>
     ///   The region's name when the dialog opened, or null for a region added in the dialog. Used to move rooms
@@ -87,6 +106,60 @@ public partial class MapSettingsViewModel : ViewModelBase
 
     public bool HasDefaultRoomNameError => !string.IsNullOrEmpty(DefaultRoomNameError);
 
+    /// <summary>True when any region name failed validation.</summary>
+    public bool HasRegionErrors => Regions.Any(r => r.HasNameError);
+
+    public MapSettingsViewModel()
+    {
+        Regions.CollectionChanged += OnRegionsCollectionChanged;
+    }
+
+    private void OnRegionsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems != null)
+            foreach (RegionItemViewModel item in e.OldItems)
+                item.PropertyChanged -= OnRegionPropertyChanged;
+        if (e.NewItems != null)
+            foreach (RegionItemViewModel item in e.NewItems)
+                item.PropertyChanged += OnRegionPropertyChanged;
+        if (e.Action != System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+            ValidateRegions(false);
+    }
+
+    private void OnRegionPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(RegionItemViewModel.Name)) ValidateRegions(false);
+    }
+
+    /// <summary>
+    ///   Checks every region name against the legacy rules and sets each item's <c>NameError</c>. When
+    ///   <paramref name="sanitize"/> is true, names are first trimmed and double quotes replaced.
+    ///   Returns true when all names are valid.
+    /// </summary>
+    public bool ValidateRegions(bool sanitize)
+    {
+        if (sanitize)
+            foreach (var region in Regions.Where(r => !r.IsDefaultRegion))
+            {
+                var clean = RegionNaming.Sanitize(region.Name);
+                if (clean != region.Name) region.Name = clean;
+            }
+
+        foreach (var region in Regions)
+        {
+            if (region.IsDefaultRegion)
+            {
+                region.NameError = string.Empty;
+                continue;
+            }
+            var others = Regions.Where(r => !ReferenceEquals(r, region)).Select(r => RegionNaming.Sanitize(r.Name));
+            region.NameError = RegionNaming.Validate(region.Name, others, null);
+        }
+
+        OnPropertyChanged(nameof(HasRegionErrors));
+        return !HasRegionErrors;
+    }
+
     public IReadOnlyList<ShapeChoice> ShapeChoices { get; } = [
         new(RoomShape.SquareCorners, "Straight Edges"),
         new(RoomShape.RoundedCorners, "Rounded Corners"),
@@ -100,13 +173,16 @@ public partial class MapSettingsViewModel : ViewModelBase
     /// </summary>
     public bool Validate()
     {
+        var regionsValid = ValidateRegions(true);
+        if (!regionsValid) SelectedRegion = Regions.First(r => r.HasNameError);
+
         if (string.IsNullOrWhiteSpace(DefaultRoomName))
             DefaultRoomNameError = EmptyRoomNameMessage;
         else if (!DefaultRoomName.Any(char.IsLetter))
             DefaultRoomNameError = NoLetterRoomNameMessage;
         else
             DefaultRoomNameError = string.Empty;
-        return !HasDefaultRoomNameError;
+        return !HasDefaultRoomNameError && regionsValid;
     }
 
     /// <summary>Remembers the selected tab for the next time the dialog opens.</summary>
@@ -211,7 +287,11 @@ public partial class MapSettingsViewModel : ViewModelBase
     public ObservableCollection<RegionItemViewModel> Regions { get; } = [];
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(DeleteSelectedRegionCommand))]
     private RegionItemViewModel? _selectedRegion;
+
+    /// <summary>Delete is disabled for the default region (and when nothing is selected).</summary>
+    public bool CanDeleteSelectedRegion() => SelectedRegion is { IsDefaultRegion: false };
 
     public IReadOnlyList<RoomShape> AvailableShapes { get; } = [
         RoomShape.SquareCorners,
@@ -384,26 +464,25 @@ public partial class MapSettingsViewModel : ViewModelBase
     [RelayCommand]
     public void AddRegion()
     {
-        var baseName = "New Region";
-        var name = baseName;
         var i = 1;
+        var name = "Region1";
         while (Regions.Any(r => string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase)))
         {
             i++;
-            name = $"{baseName} {i}";
+            name = $"Region{i}";
         }
 
         var newRegion = new RegionItemViewModel
         {
             Name = name,
-            FillColor = Color.LightYellow,
-            TextColor = Color.MidnightBlue
+            FillColor = Color.White,
+            TextColor = Settings.Color[Colors.Subtitle]
         };
         Regions.Add(newRegion);
         SelectedRegion = newRegion;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanDeleteSelectedRegion))]
     public void DeleteSelectedRegion()
     {
         if (SelectedRegion != null && !SelectedRegion.IsDefaultRegion)

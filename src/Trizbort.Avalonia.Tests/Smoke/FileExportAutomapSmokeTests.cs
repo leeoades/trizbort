@@ -288,13 +288,13 @@ public class FileExportAutomapSmokeTests
 
     // ================================================================== 1. Start-up & File
 
-    /// <summary>Smoke step 1.1: window opens on an empty map; title starts with "Trizbort".</summary>
+    /// <summary>Smoke step 1.1: window opens on an empty map; title reads "Untitled - Trizbort - &lt;version&gt;".</summary>
     [Test]
     public void S1_01_Launch_StartsOnEmptyMapWithTrizbortTitle()
     {
         var vm = CreateVm(new RecordingDialogService(), new StubStorageService());
 
-        vm.WindowTitle.ShouldStartWith("Trizbort");
+        vm.WindowTitle.ShouldStartWith("Untitled - Trizbort - ");
         vm.ElementCount.ShouldStartWith("Rooms: 0 | Connections: 0");
         Project.Current.Elements.Count.ShouldBe(0);
     }
@@ -318,7 +318,7 @@ public class FileExportAutomapSmokeTests
         Project.Current.Elements.Count.ShouldBe(0);
     }
 
-    /// <summary>Smoke step 1.3: Ctrl+O opens basics-1570; title reads "Trizbort - basics-1570".</summary>
+    /// <summary>Smoke step 1.3: Ctrl+O opens basics-1570; title reads "basics-1570 - Trizbort - &lt;version&gt;".</summary>
     [Test]
     public async Task S1_03_Open_LoadsMapAndSetsTitle()
     {
@@ -329,12 +329,11 @@ public class FileExportAutomapSmokeTests
 
         storage.OpenCalls.ShouldBe(1);
         Project.Current.Elements.OfType<Room>().Any().ShouldBeTrue();
-        vm.WindowTitle.ShouldBe("Trizbort - basics-1570");
+        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort - ");
     }
 
     /// <summary>Smoke step 1.3 (reference part): reference title is "&lt;name&gt; - Trizbort - &lt;version&gt;".</summary>
     [Test]
-    [Ignore("known gap: A004")]
     public async Task S1_03b_Open_TitleHasReferenceFormatWithVersion()
     {
         var storage = new StubStorageService { OpenPath = CopyFixtureToTemp(ManualFixture(Fixture1570)) };
@@ -363,7 +362,27 @@ public class FileExportAutomapSmokeTests
 
         room.Position.ShouldNotBe(before);
         Project.Current.IsDirty.ShouldBeTrue();
-        vm.WindowTitle.ShouldEndWith("*");
+        vm.WindowTitle.ShouldContain("basics-1570* - Trizbort - ");
+    }
+
+    /// <summary>Smoke step 1.4b: undoing the move back to the saved state removes the dirty marker again.</summary>
+    [Test]
+    public async Task S1_04b_UndoToSavedState_ClearsTitleDirtyMarker()
+    {
+        var storage = new StubStorageService { OpenPath = CopyFixtureToTemp(ManualFixture(Fixture1570)) };
+        var commandService = new CommandService();
+        var vm = CreateVm(new RecordingDialogService(), storage, commandService);
+        await vm.OpenMapAsync();
+
+        commandService.Select(Project.Current.Elements.OfType<Room>().First());
+        commandService.NudgeSelected(new CoreVector(40, 40));
+        vm.WindowTitle.ShouldContain("basics-1570* - Trizbort - ");
+
+        commandService.Session.PerformUndo();
+
+        Project.Current.IsDirty.ShouldBeFalse();
+        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort - ");
+        vm.WindowTitle.ShouldNotContain("*");
     }
 
     /// <summary>Smoke step 1.5: Ctrl+S saves without a dialog and the dirty marker disappears.</summary>
@@ -379,7 +398,7 @@ public class FileExportAutomapSmokeTests
         commandService.Select(Project.Current.Elements.OfType<Room>().First());
         commandService.NudgeSelected(new CoreVector(40, 40));
         vm.UpdateState();
-        vm.WindowTitle.ShouldEndWith("*");
+        vm.WindowTitle.ShouldContain("basics-1570* - Trizbort - ");
         var writtenBefore = File.GetLastWriteTimeUtc(path);
         await Task.Delay(20);
 
@@ -388,7 +407,8 @@ public class FileExportAutomapSmokeTests
         storage.SaveCalls.ShouldBe(new[] { false });
         storage.SavePickerShown.ShouldBe(0);
         Project.Current.IsDirty.ShouldBeFalse();
-        vm.WindowTitle.ShouldBe("Trizbort - basics-1570");
+        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort - ");
+        vm.WindowTitle.ShouldNotContain("*");
         File.GetLastWriteTimeUtc(path).ShouldBeGreaterThanOrEqualTo(writtenBefore);
     }
 
@@ -414,7 +434,7 @@ public class FileExportAutomapSmokeTests
         storage.SaveCalls.ShouldBe(new[] { true });
         storage.SavePickerShown.ShouldBe(1);
         File.Exists(saveAsPath).ShouldBeTrue();
-        vm.WindowTitle.ShouldBe("Trizbort - saved-as");
+        vm.WindowTitle.ShouldStartWith("saved-as - Trizbort - ");
     }
 
     /// <summary>Smoke step 1.7: dirty map then Ctrl+O prompts Yes/No/Cancel; Cancel keeps the map and the move.</summary>

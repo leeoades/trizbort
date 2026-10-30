@@ -41,8 +41,8 @@ public class DialogCaptureTests
         "Limit Connection Description Characters",
         "Specify General Margins for Export",
         "Doo_r",
-        "Draw Outline",
-        "Fill Background",
+        "_Enabled",
+        "E_nabled",
         "Make all corners _equal",
         "Transcript is verbose"
     };

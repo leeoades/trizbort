@@ -575,9 +575,8 @@ public class MouseDialogSmokeTests
         }
     }
 
-    /// <summary>Smoke step 46 (known gap I-006 / A004): Show Full Path in Title Bar puts the full path in the window title.</summary>
+    /// <summary>Smoke step 46 (I-006 / A004, ticket 114): Show Full Path in Title Bar puts the full path in the window title.</summary>
     [AvaloniaTest]
-    [Ignore("known gap: I-006 / A004")]
     public void S5_46_ShowFullPathInTitleBar_TitleContainsFullPath()
     {
         var vm = App.ConfigureServices().GetRequiredService<MainWindowViewModel>();

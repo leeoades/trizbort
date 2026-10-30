@@ -119,9 +119,9 @@ public class ConnectionPropertiesDialogLayoutTests
         {
             AssertNoClipping(window);
             var texts = window.GetVisualDescendants().OfType<CheckBox>().Select(c => c.Content?.ToString()).ToList();
-            texts.ShouldContain("_Openable");
-            texts.ShouldContain("Ope_n");
-            texts.ShouldContain("_Lockable");
+            texts.ShouldContain("Open_able");
+            texts.ShouldContain("_Open");
+            texts.ShouldContain("Locka_ble");
             texts.ShouldContain("Loc_ked");
         }
         finally

@@ -65,6 +65,7 @@ public class CommandService : ICommandService
     public event EventHandler<float>? ZoomChanged;
     public event EventHandler? CanvasInvalidated;
     public event EventHandler? PointerMoved;
+    public event EventHandler? DirtyChanged;
 
     public void SetViewportSize(double width, double height) => Session.Viewport.SetSize(width, height);
     public void SetView(Vector origin, float zoomFactor) => Session.Viewport.SetView(origin, zoomFactor);
@@ -123,6 +124,11 @@ public class CommandService : ICommandService
         {
             _lastProject = Session.Project;
             ProjectChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        if ((change & EditorChange.Dirty) != 0)
+        {
+            DirtyChanged?.Invoke(this, EventArgs.Empty);
         }
 
         if ((change & EditorChange.Selection) != 0)

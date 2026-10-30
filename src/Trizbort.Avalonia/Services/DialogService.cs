@@ -224,19 +224,39 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         return result;
     }
 
-    public async Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room)
+    public Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room)
+    {
+        return ShowRoomPropertiesAsync(owner, room, null);
+    }
+
+    /// <summary>Shows the room dialog; <paramref name="startTab" /> (e.g. the Region tab) overrides the remembered tab.</summary>
+    public async Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room, int? startTab)
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var viewModel = scope.ServiceProvider.GetRequiredService<RoomPropertiesViewModel>();
-        viewModel.Initialize(room);
+        viewModel.Initialize(room, startTab);
 
         var dialog = new RoomPropertiesDialog { DataContext = viewModel };
+        dialog.Prompts = new DialogConfirmPrompts(this, dialog);
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
-            _commandService.Session.Apply("Edit room", room, () => viewModel.ApplyTo(room));
+            _commandService.Session.Apply("Edit room properties", room, () => viewModel.ApplyTo(room));
         }
         return result;
+    }
+
+    /// <summary>Routes the confirmation prompt of a dialog to a modal yes/no box owned by that dialog.</summary>
+    private sealed class DialogConfirmPrompts(IDialogService dialogService, Window dialog) : Trizbort.Editor.IEditorPrompts
+    {
+        public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, CancellationToken token = default)
+            => Trizbort.Editor.NonInteractiveEditorPrompts.Instance.ChooseSameDirectionAsync(existing, newRoomName, token);
+
+        public Task<Trizbort.Editor.RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, CancellationToken token = default)
+            => Trizbort.Editor.NonInteractiveEditorPrompts.Instance.DisambiguateRoomAsync(transcriptLine, roomDescription, candidates, token);
+
+        public Task<bool> ConfirmAsync(string message, string title, CancellationToken token = default)
+            => dialogService.ShowConfirmationAsync(dialog, title, message);
     }
 
     public async Task<bool> ShowConnectionPropertiesAsync(Window? owner, Connection connection)
@@ -249,7 +269,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
-            _commandService.Session.Apply("Edit connection", connection, () => viewModel.ApplyTo(connection));
+            _commandService.Session.Apply("Edit connection properties", connection, () => viewModel.ApplyTo(connection));
         }
         return result;
     }
@@ -264,7 +284,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
-            _commandService.Session.Apply("Edit label", label, () => viewModel.ApplyTo(label));
+            _commandService.Session.Apply("Edit label properties", label, () => viewModel.ApplyTo(label));
         }
         return result;
     }
@@ -290,7 +310,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
-            _commandService.Session.Execute("Map settings", viewModel.ApplyToSettings);
+            _commandService.Session.Execute("Edit map settings", viewModel.ApplyToSettings);
         }
         return result;
     }

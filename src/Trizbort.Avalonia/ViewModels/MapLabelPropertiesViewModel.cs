@@ -16,6 +16,9 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hasOutline;
 
+    /// <summary>Shape changes both the outline and the fill, so it is editable when either one is on.</summary>
+    public bool ShapeEnabled => HasOutline || HasBackground;
+
     [ObservableProperty]
     private RoomShape _shape = RoomShape.SquareCorners;
 
@@ -30,6 +33,16 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
 
     [ObservableProperty]
     private Color _backgroundColor = Color.Transparent;
+
+    partial void OnHasOutlineChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShapeEnabled));
+    }
+
+    partial void OnHasBackgroundChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShapeEnabled));
+    }
 
     public IReadOnlyList<RoomShape> AvailableShapes { get; } = [
         RoomShape.SquareCorners,

@@ -3,7 +3,7 @@
 Written 2026-10-30 (T3.1) from the feature matrix, dialog reviews, issues and the accepted decisions D1–D4.
 Each ticket follows the template in `../../avalonia-parity-review.md` §8 and is sized for one agent session.
 
-**Done so far:** 001, 002, 003, 004, 005, 009, 010, 011, 012, 070 (style + Label dialog), 071, 074, 077, 080, 081, 082, 083, 084, 085, 100, 101, 104, 106, 111, 112, 117, 118 — marked ✅.
+**Done so far:** 001, 002, 003, 004, 005, 009, 010, 011, 012, 070 (style + Label dialog), 071, 072, 074, 075, 076, 077, 079, 080, 081, 082, 083, 084, 085, 100, 101, 104, 106, 111, 112, 114, 117, 118 — marked ✅.
 
 **How to pick one:** take the lowest wave whose dependencies are all done; within a wave, P1 first. Mark a ticket done by
 adding `Status: Done (<commit>)` under its title and updating the matrix rows it lists.
@@ -80,14 +80,14 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 067 | [Add shortcut-map conformance and modifier-exactness tests](067-shortcut-map-conformance-test.md) | 7 | P2 | M | mid | 010, 021, 025, 027, 029, 030, 031, 032, 047, 048, 050 | (all K and M gesture rows) |
 | 070 ✅ | [Define and apply shared dialog style guidelines](070-dialog-style-guidelines.md) | 1 | P1 | M | mid | — | D001-D007, D015, D016 |
 | 071 ✅ | [Room dialog: persistent header, missing fields and friendly option names](071-room-dialog-header-and-missing-fields.md) | 2 | P1 | M | mid | 070 | D001 |
-| 072 | [Room dialog: shape preview, validation, dependencies, last tab, OK as one undo step](072-room-dialog-preview-validation-undo.md) | 4 | P1 | M | mid | 002, 003, 070, 071 | D001 |
+| 072 ✅ | [Room dialog: shape preview, validation, dependencies, last tab, OK as one undo step](072-room-dialog-preview-validation-undo.md) | 4 | P1 | M | mid | 002, 003, 070, 071 | D001 |
 | 073 | [Port ObjectListEditor to Core and wire it to the Objects box; restore Object Syntax help](073-object-list-editor.md) | 3 | P2 | S | mid | 071 | D001, D013 |
 | 074 ✅ | [Connection dialog: restore Style group, colour swatch/clear, multiline description, no clipping](074-connection-dialog-layout-and-style.md) | 3 | P1 | M | mid | 070, 085 | D002, D016 |
-| 075 | [Connection dialog: preset radios that track the text, access keys, OK as one undo step](075-connection-dialog-text-presets-and-undo.md) | 4 | P1 | M | mid | 002, 003, 074 | D002 |
-| 076 | [Label dialog: Shape enable rule, initial focus, groups, size, OK as one undo step](076-label-dialog.md) | 4 | P1 | S | mid | 002, 003, 070 | D003 |
+| 075 ✅ | [Connection dialog: preset radios that track the text, access keys, OK as one undo step](075-connection-dialog-text-presets-and-undo.md) | 4 | P1 | M | mid | 002, 003, 074 | D002 |
+| 076 ✅ | [Label dialog: Shape enable rule, initial focus, groups, size, OK as one undo step](076-label-dialog.md) | 4 | P1 | S | mid | 002, 003, 070 | D003 |
 | 077 ✅ | [Map settings: add missing fields and restore group headings, hints and tab layout](077-map-settings-missing-fields-and-groups.md) | 2 | P1 | M | mid | 070 | D004 |
 | 078 | [Map settings: friendly colour names and fonts with style via font picker](078-map-settings-colours-and-fonts.md) | 3 | P2 | M | mid | 077, 084, 085 | D004, D016 |
-| 079 | [Map settings: region validation, swatch preview; OK as one undo step (rename/delete already fixed, I-007)](079-map-settings-regions-and-undo.md) | 4 | P1 | M | mid | 002, 003, 077 | D004, D005 |
+| 079 ✅ | [Map settings: region validation, swatch preview; OK as one undo step (rename/delete already fixed, I-007)](079-map-settings-regions-and-undo.md) | 4 | P1 | M | mid | 002, 003, 077 | D004, D005 |
 | 080 ✅ | [App settings: restore General tab groups, Port Adjust Detail, hover tips, honest labels](080-app-settings-general-tab.md) | 2 | P1 | M | mid | 070 | D006 |
 | 081 ✅ | [App settings: tooltip tab dependencies and Show Canvas Tooltips master toggle (I-005)](081-app-settings-tooltips-tab.md) | 3 | P1 | S | mid | 080 | D006 |
 | 082 ✅ | [Automap settings dialog: groups, intro and hint text, access keys, no clipping](082-automap-settings-dialog.md) | 2 | P1 | M | mid | 070 | D007 |
@@ -112,7 +112,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 110 | [Smart Save service: file naming, settings, messages, PDF/image output](110-smart-save.md) | 7 | P2 | M | mid | 059, 112, 120, 123 | E030–E034 |
 | 111 ✅ | [Status bar cursor position follows the pointer](111-status-bar-cursor-position.md) | 3 | P1 | S | mid | 002 | A020, I-002 |
 | 112 ✅ | [Reload prompt when the open map changes on disk](112-file-watcher-reload-prompt.md) | 2 | P1 | S | mid | 011 | A005, I-003 |
-| 114 | [Window title: dirty marker, version and "show full path" setting](114-window-title-format-and-full-path.md) | 4 | P1 | S | mid | 003 | A004, I-006 |
+| 114 ✅ | [Window title: dirty marker, version and "show full path" setting](114-window-title-format-and-full-path.md) | 4 | P1 | S | mid | 003 | A004, I-006 |
 | 115 | [Honour "Apply style to new rooms"](115-apply-style-to-new-rooms.md) | 3 | P1 | S | mid | 002 | G008, I-006 |
 | 116 | [Persist window size, position and maximised state](116-window-geometry-persistence.md) | 3 | P2 | S | mid | 100, 101 | A009 |
 | 117 ✅ | [Profile and fix slow Elements.Add on large maps](117-profile-and-fix-elements-add-performance.md) | 1 | P1 | M | mid | — | I-009 |

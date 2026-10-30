@@ -10,6 +10,14 @@ public partial class MapLabelPropertiesDialog : Window
         InitializeComponent();
     }
 
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        // As the reference dialog: the label text is focused and selected, so typing replaces it.
+        LabelText.Focus();
+        LabelText.SelectAll();
+    }
+
     private void OnOkClick(object? sender, RoutedEventArgs e)
     {
         Close(true);

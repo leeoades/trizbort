@@ -50,7 +50,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Settings saved but never read anywhere under `src/Trizbort.Avalonia`: `InvertMouseWheel`, `ShowFullPathInTitleBar`,
   `ApplyStyleToNewRooms` (and `LoadLastProjectOnStart`, see I-001). Details per setting in `dialogs/AppSettings.md`.
 - Severity: medium (users will think settings are broken)     Flags: —
-- Ticket: —
+- Progress 2026-10-30: `ShowFullPathInTitleBar` is now honoured (ticket 114). `ApplyStyleToNewRooms` → ticket 115; `InvertMouseWheel` still open.
+- Ticket: 114 (partial), 115
 
 ## I-007 Renaming or deleting a region leaves rooms with the old region name
 - Reported: 2026-10-30 by agent (T1.4d, code reading; verified)   OS: all   Category: behaviour (data)
@@ -104,4 +105,18 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: medium     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-013 -->
+## I-013 Label dialog Shape list shows raw enum names
+- Reported: 2026-10-30 by integrator (ticket 076 screenshot)   OS: all   Category: dialog
+- The Label dialog's Shape combo shows `SquareCorners` etc. instead of friendly names ("Square corners").
+- Severity: low     Flags: —
+- Ticket: —
+
+## I-014 Old menus stay subscribed to the editor session
+- Reported: 2026-10-30 by integrator (flaky test)   OS: all   Category: behaviour
+- `CatalogueMenuBuilder.Track` subscribes to `EditorSession.Changed` and never unsubscribes, so menus that are rebuilt or
+  discarded keep refreshing. A test hit this as a cross-thread update; refreshes are now marshalled to the UI thread, but
+  the subscription should be tied to the menu's lifetime (unsubscribe when detached).
+- Severity: low     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-015 -->

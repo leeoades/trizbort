@@ -58,5 +58,8 @@ public interface ICommandService
     /// <summary>The pointer moved over the map (<see cref="PointerMapPosition" /> changed); no redraw needed.</summary>
     event EventHandler? PointerMoved;
 
+    /// <summary>The unsaved-changes flag changed (undo stack moved away from or back to the saved state, or the map was saved).</summary>
+    event EventHandler? DirtyChanged;
+
     void InvalidateCanvas();
 }

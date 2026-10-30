@@ -5,9 +5,11 @@ using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Reflection;
 using Trizbort.Automap;
 using Trizbort.Editor;
 using Trizbort.Avalonia.Services;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Export.Languages;
@@ -21,9 +23,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IStorageService _storageService;
     private readonly IDialogService _dialogService;
     private readonly IAutomapCanvas _automapCanvas;
+    private static readonly string _appVersion = GetAppVersion();
 
     [ObservableProperty]
-    private string _windowTitle = "Trizbort - Untitled";
+    private string _windowTitle = "Untitled - Trizbort";
 
     [ObservableProperty]
     private string _statusText = "Ready";
@@ -76,6 +79,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _commandService.ZoomChanged += OnZoomChanged;
         _commandService.CanvasInvalidated += OnCanvasInvalidated;
         _commandService.PointerMoved += OnCanvasInvalidated;
+        _commandService.DirtyChanged += OnDirtyChanged;
 
         UpdateState();
     }
@@ -83,6 +87,31 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnProjectChanged(object? sender, EventArgs e)
     {
         UpdateState();
+    }
+
+    private void OnDirtyChanged(object? sender, EventArgs e)
+    {
+        UpdateWindowTitle();
+    }
+
+    private static string GetAppVersion()
+    {
+        var assembly = typeof(MainWindowViewModel).Assembly;
+        return assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+               ?? assembly.GetName().Version?.ToString()
+               ?? string.Empty;
+    }
+
+    private void UpdateWindowTitle()
+    {
+        var project = Project.Current;
+        WindowTitle = TitleFormatter.Format(
+            project.Name,
+            project.FileName,
+            project.IsDirty,
+            ApplicationSettingsController.AppSettings.ShowFullPathInTitleBar,
+            "Trizbort",
+            _appVersion);
     }
 
     private void OnCanvasInvalidated(object? sender, EventArgs e)
@@ -120,12 +149,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public void UpdateState()
     {
         var project = Project.Current;
-        var name = string.IsNullOrEmpty(project.FileName)
-            ? (string.IsNullOrEmpty(project.Title) ? "Untitled" : project.Title)
-            : Path.GetFileNameWithoutExtension(project.FileName);
-
-        var dirtyMarker = project.IsDirty ? " *" : "";
-        WindowTitle = $"Trizbort - {name}{dirtyMarker}";
+        UpdateWindowTitle();
 
         var roomCount = project.Elements.OfType<Room>().Count();
         var connectionCount = project.Elements.OfType<Connection>().Count();
@@ -552,6 +576,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var changed = await _dialogService.ShowAppSettingsAsync(GetActiveWindow());
         if (changed)
         {
+            UpdateWindowTitle();
             _commandService.InvalidateCanvas();
             StatusText = "Updated application settings";
         }

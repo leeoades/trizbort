@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Trizbort.Editor;
 using Trizbort.Editor.Commands;
 
@@ -348,7 +349,12 @@ public static class CatalogueMenuBuilder
         }
 
         RefreshAll();
-        session.Changed += _ => RefreshAll();
+        // Session changes can be raised off the UI thread (automap, file reload); controls may only be touched on it.
+        session.Changed += _ =>
+        {
+            if (Dispatcher.UIThread.CheckAccess()) RefreshAll();
+            else Dispatcher.UIThread.Post(RefreshAll);
+        };
     }
 
     /// <summary>
