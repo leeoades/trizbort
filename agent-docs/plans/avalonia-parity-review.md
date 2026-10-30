@@ -1,6 +1,6 @@
 # Avalonia Feature Parity Review — Plan
 
-Status: Draft 3 (2026-10-30). Progress: Phase 0 and Phase 1 done except the dialog reviews (T1.4a–g). Owner: Lee. Working folder: `agent-docs/plans/avalonia-parity/`.
+Status: Draft 3 (2026-10-30). Progress: Phases 0 and 1 done; D1–D3 proposed in `avalonia-parity/decisions.md` (awaiting Lee). Owner: Lee. Working folder: `agent-docs/plans/avalonia-parity/`.
 
 ## 1. Goal and direction
 
@@ -210,7 +210,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
     target), marquee, drag room/label, resize handles, draw connection from port, drag from port to empty space, move connection end, move/add
     waypoint, pan, wheel zoom (about cursor?), double-click element vs empty canvas, hover tooltips, cursor shapes. Right-drag pan = `Different`, intentional.
 
-- [ ] **T1.4a–g Dialog review (fields + context)** · Mid (must read images) · Section D + `dialogs/<name>.md` · Depends: T0.4, T0.5
+- [x] **T1.4a–g Dialog review (fields + context)** · Mid (must read images) · Section D + `dialogs/<name>.md` · Depends: T0.4, T0.5
   - Per dialog read: its screenshots in both `screenshots/` folders; reference `.cs` (+ `.Designer.cs` via grep for `Text =`, `ToolTip`, `Enabled`,
     `Visible`, control declarations); Avalonia `.axaml` + ViewModel.
     a Room properties (+ `ObjectListEditor`) · b Connection properties · c Label properties · d Map settings (`SettingsDialog`, `RegionSettings`) ·
@@ -267,7 +267,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
 
 ### Phase 3 — Decisions and tickets
 
-- [ ] **D1 Editor model in Core** · Strong · Input: matrix section X, §7 below, `agent-docs/01-architecture-overview.md`, `02-domain-model.md`,
+- [ ] **D1 Editor model in Core** — *proposed, see `decisions.md`* **** · Strong · Input: matrix section X, §7 below, `agent-docs/01-architecture-overview.md`, `02-domain-model.md`,
   `src/Trizbort.Avalonia/Services/ICommandService.cs`, the `CanvasDragMode` part of `MapCanvasControl.cs`.
   Output: ADR in `decisions.md` (≤ 2 pages) plus ticket outlines for an `EditorSession` in `Trizbort.Core` that owns:
   - `Project`, `Selection`, `Viewport` (origin, zoom, size; canvas↔client transforms; fit; zoom-about-point);
@@ -278,10 +278,10 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
   - abstractions for what Core can't do itself: text measurement, clipboard, async prompts/dialogs, file pickers;
   - migration order that keeps the app working between tickets, and the test strategy (Core tests for commands and interaction;
     Avalonia tests shrink to rendering and wiring).
-- [ ] **D2 Command catalogue** · Strong · Depends: D1. One registry in Core: id, display name, menu path, default gesture written platform-neutrally
+- [ ] **D2 Command catalogue** — *proposed, see `decisions.md`* **** · Strong · Depends: D1. One registry in Core: id, display name, menu path, default gesture written platform-neutrally
   (`Primary+S`; `Primary` = Ctrl on Windows/Linux, Cmd on macOS), CanExecute, handler → editor command. Avalonia generates main menu, macOS
   `NativeMenu`, context menus, toolbar and key bindings from it. Include a test that fails on duplicate gestures. ADR + skeleton ticket.
-- [ ] **D3 Async prompts from Core** · Strong · Automap same-direction/disambiguation and any other Core→user question: async callback vs
+- [ ] **D3 Async prompts from Core** — *proposed, see `decisions.md`* **** · Strong · Automap same-direction/disambiguation and any other Core→user question: async callback vs
   background loop + dispatcher. ADR.
 - [ ] **D4 Shortcut map** · Mid drafts, Lee approves · Depends: T1.1, T1.2. Table `Command | Reference gesture | Proposed gesture | Reason`.
   Policy (L4): keep the reference gesture unless an obvious modern convention exists. Candidates: Save As `Primary+Shift+S` (Smart Save then needs a

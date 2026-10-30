@@ -1,7 +1,7 @@
 # Avalonia Feature Matrix
 
 "WinForms" columns describe the **reference app** (`$REF` = `legacy/`, the original v2.3.1-beta.2). Phase 1 inventory
-filled in on 2026-10-30 by code reading (tasks T1.1–T1.3, T1.5–T1.7); section D waits for the dialog screenshots (T1.4).
+filled in on 2026-10-30 by code reading (tasks T1.1–T1.3, T1.5–T1.7); section D (dialogs, T1.4) from screenshots of both apps.
 Status words are defined in `../avalonia-parity-review.md` §2. Some sections abbreviate file paths; each section
 states its abbreviations at the top. Each section ends with its own open questions.
 
@@ -19,9 +19,10 @@ Contents: [Summary](#summary) · [M menus](#m--main-menu-and-toolbar-task-t11) �
 | G | 21 | 10 | 5 | 1 | 0 | 4 | 1 | 0 |
 | A | 28 | 6 | 5 | 12 | 2 | 2 | 1 | 0 |
 | E | 49 | 13 | 9 | 19 | 0 | 2 | 6 | 0 |
+| D | 17 | 0 | 8 | 7 | 0 | 1 | 1 | 0 |
 | X | 53 | — | — | — | — | — | — | — |
 
-Section X has no status column (it lists logic to move into Core). Section D is not inventoried yet.
+Section X has no status column (it lists logic to move into Core). 
 
 ## M — Main menu and toolbar (task T1.1)
 
@@ -279,24 +280,29 @@ Legacy handlers: `OnMouseDown` CS:1465, `OnMouseMove` CS:1495, `OnMouseUp` CS:15
 
 ## D — Dialogs (tasks T1.4a–g)
 
-| ID | WinForms dialog | Avalonia dialog | Seed status | Verified status | Field gaps (see dialogs/<name>.md) | Notes |
+Field-by-field and context reviews with screenshots are in `dialogs/`. Screenshots: `screenshots/winforms/` and `screenshots/avalonia/`.
+Common pattern: data fields mostly survive, but **context is lost** — group boxes, intro/hint text, tooltips, access keys,
+tab order, previews, validation, and default window sizes that hide controls behind a scrollbar.
+
+| ID | WinForms dialog | Avalonia dialog | Seed status | Verified status | Details | Notes |
 |---|---|---|---|---|---|---|
-| D001 | RoomPropertiesDialog | RoomPropertiesDialog.axaml | Suspected-Partial (77KB designer vs 11KB axaml — field-by-field check) |  |  |  |
-| D002 | ConnectionPropertiesDialog | ConnectionPropertiesDialog.axaml | Suspected-Implemented |  |  |  |
-| D003 | LabelPropertiesDialog | MapLabelPropertiesDialog.axaml | Suspected-Implemented |  |  |  |
-| D004 | SettingsDialog (map settings) | MapSettingsDialog.axaml | Suspected-Partial (87KB designer vs 12KB axaml) |  |  |  |
-| D005 | RegionSettings | — (inside MapSettings?) | Suspected-Missing |  |  |  |
-| D006 | AppSettingsDialog | AppSettingsDialog.axaml | Suspected-Partial |  |  |  |
-| D007 | AutomapDialog | AutomapSettingsDialog.axaml | Suspected-Implemented |  |  |  |
-| D008 | AutomapRoomSameDirectionDialog | — | Known gap (documented in 05-ui-and-canvas.md) |  |  |  |
-| D009 | DisambiguateRoomsDialog | — | Suspected-Missing |  |  |  |
-| D010 | QuickFind | — | Suspected-Missing |  |  |  |
-| D011 | MapStatisticsView | — | Suspected-Missing |  |  |  |
-| D012 | InputDialog (rename etc.) | — | Suspected-Missing |  |  |  |
-| D013 | ObjectListEditor (control) | ? (check RoomPropertiesDialog objects tab) | Unknown |  |  |  |
-| D014 | OnlineHelpDialog | — | Suspected-Missing |  |  |  |
-| D015 | AboutDialog | AboutDialog.axaml | Suspected-Implemented |  |  |  |
-| D016 | Colour/font pickers | ColorPickerButton; fonts? | Unknown |  |  |  |
+| D001 | RoomPropertiesDialog | RoomPropertiesDialog.axaml | Suspected-Partial | Partial | [dialogs/RoomProperties.md](dialogs/RoomProperties.md): 3 fields missing, 5 context lost | Custom Position/Down/Right gone; enum names, validation, ObjectListEditor, shape preview lost |
+| D002 | ConnectionPropertiesDialog | ConnectionPropertiesDialog.axaml | Suspected-Implemented | Partial | [dialogs/ConnectionProperties.md](dialogs/ConnectionProperties.md): 0 fields missing, 8 context lost/changed | Radios became one-shot presets; Description lost multiline; Colour/clear buried; default size hides Colour and door options |
+| D003 | LabelPropertiesDialog | MapLabelPropertiesDialog.axaml | Suspected-Implemented | Partial | [dialogs/LabelProperties.md](dialogs/LabelProperties.md): 0 fields missing, 3 context lost | Shape is only enabled with Outline (legacy: Outline or Background); no initial focus/select-all or mnemonics; the 420px height clips the Background group behind a scrollbar |
+| D004 | SettingsDialog (map settings) | MapSettingsDialog.axaml | Suspected-Partial | Partial | [dialogs/MapSettings.md](dialogs/MapSettings.md): 5 fields missing, 6 context lost | Missing: handle size, snap-to-element distance, document margins (VM has props, no UI). Font picker/style, colour names, validation, About hint lost. |
+| D005 | RegionSettings | MapSettingsDialog.axaml Regions tab, "Region Properties" panel | Suspected-Missing | Different | [dialogs/MapSettings.md](dialogs/MapSettings.md) | Inline editing is a reasonable change; lost name validation and live preview. Rename/delete leaves rooms with stale region names (I-007). |
+| D006 | AppSettingsDialog | AppSettingsDialog.axaml | Suspected-Partial | Partial | [dialogs/AppSettings.md](dialogs/AppSettings.md): 6 fields missing, 8 context lost/changed, 5 ignored | 4 settings shown but ignored; "Show Canvas Tooltips" master toggle is a no-op (Broken, I-005) |
+| D007 | AutomapDialog | AutomapSettingsDialog.axaml | Suspected-Implemented | Partial | [dialogs/Automap.md](dialogs/Automap.md) | All fields except DEBUG-only Single Step; group boxes, intro text, prompt hints and access keys lost; default size clips the Commands rows. |
+| D008 | AutomapRoomSameDirectionDialog | — | Known gap | Missing | [dialogs/Automap.md](dialogs/Automap.md) (spec) | `ConflictingRoomChooser` never set in Avalonia, so Core silently keeps room 1 (I-008). |
+| D009 | DisambiguateRoomsDialog | — | Suspected-Missing | Missing | [dialogs/Automap.md](dialogs/Automap.md) (spec) | Core `AutomapCanvas.FindRoom` always returns the first candidate and never asks (I-008). |
+| D010 | QuickFind | — | Suspected-Missing | Missing | [dialogs/NoCounterpart.md](dialogs/NoCounterpart.md) (spec) | Ctrl+F only, no menu item. Core `Indexer` exists; select-and-centre logic is UI-only. |
+| D011 | MapStatisticsView | — | Suspected-Missing | Missing | [dialogs/NoCounterpart.md](dialogs/NoCounterpart.md) (spec) | Tools menu view plus export. Core `MapStatistics` exists; the report builder is in the WinForms view. |
+| D012 | InputDialog | — | Suspected-Missing | Missing | [dialogs/NoCounterpart.md](dialogs/NoCounterpart.md) (spec) | Only caller is Open Map from Web (Ctrl+Shift+O). `Project.Load(Uri)` is internal in Core. |
+| D013 | ObjectListEditor | — (plain TextBox) | Unknown | Missing | [dialogs/NoCounterpart.md](dialogs/NoCounterpart.md) (spec) | No Tab/Shift+Tab indent, no bullet-on-Enter in the objects box. |
+| D014 | OnlineHelpDialog | — | Suspected-Missing | Missing | [dialogs/NoCounterpart.md](dialogs/NoCounterpart.md) (spec) | F1 is bound to About in Avalonia. |
+| D015 | AboutDialog | AboutDialog.axaml | Suspected-Implemented | Partial | [dialogs/About.md](dialogs/About.md) | Version, Lautzenheiser/Oades credits, repo links, licence text and PDFsharp credit are all missing; only a Genstein line remains |
+| D016 | Colour/font pickers | ColorPickerButton; no font picker | Unknown | Partial | [dialogs/NoCounterpart.md](dialogs/NoCounterpart.md) (spec) | Colour swatches plus hex exist; fonts are free-text name plus size. |
+| D017 | (none — themes were menu items) | MapThemeDialog.axaml | — | New-in-Avalonia | [dialogs/MapSettings.md](dialogs/MapSettings.md) | Legacy "Export current theme" and "Infer default room style" have no Avalonia equivalent (`RoomStyleInference` has no caller). |
 
 ## A — Application behaviour (task T1.5)
 

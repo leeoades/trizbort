@@ -33,4 +33,38 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: low     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-005 -->
+## I-005 "Show Canvas Tooltips" master toggle does nothing
+- Reported: 2026-10-30 by agent (T1.4e, code reading; verified)   OS: all   Category: behaviour
+- Steps: App Settings → Tooltips → untick "Show Canvas Tooltips" → OK → hover a room.
+- Expected: no tooltips.   Actual: tooltips still shown; the setting reverts next time the dialog opens.
+- Cause: `src/Trizbort.Avalonia/ViewModels/AppSettingsViewModel.cs:72` reads `ShowTooltips` in `Initialize`, but `ApplyTo`
+  never writes it (it is a computed read-only property in settings). See `dialogs/AppSettings.md`.
+- Severity: low     Flags: —
+- Ticket: —
+
+## I-006 App settings shown but ignored by the Avalonia app
+- Reported: 2026-10-30 by agent (T1.4e, code reading)   OS: all   Category: behaviour
+- Settings saved but never read anywhere under `src/Trizbort.Avalonia`: `InvertMouseWheel`, `ShowFullPathInTitleBar`,
+  `ApplyStyleToNewRooms` (and `LoadLastProjectOnStart`, see I-001). Details per setting in `dialogs/AppSettings.md`.
+- Severity: medium (users will think settings are broken)     Flags: —
+- Ticket: —
+
+## I-007 Renaming or deleting a region leaves rooms with the old region name
+- Reported: 2026-10-30 by agent (T1.4d, code reading; verified)   OS: all   Category: behaviour (data)
+- Steps: Map Settings → Regions → rename a region used by rooms → OK.
+- Expected: rooms move to the renamed region (reference updates them: `legacy/src/Trizbort/UI/SettingsDialog.cs:596`;
+  delete moves them to the default region: `:359`).   Actual: `MapSettingsViewModel.ApplyTo` just rebuilds
+  `Settings.Regions` (`src/Trizbort.Avalonia/ViewModels/MapSettingsViewModel.cs` ~276), so rooms keep a region name
+  that no longer exists and lose their colour.
+- Severity: high (silently changes the saved map)     Flags: fix-now?
+- Ticket: —
+
+## I-008 Automap never asks about ambiguous or conflicting rooms
+- Reported: 2026-10-30 by agent (T1.4f, code reading)   OS: all   Category: behaviour (data)
+- Expected: reference asks which room was meant (`DisambiguateRoomsDialog`) and what to do when two rooms claim the
+  same exit (`AutomapRoomSameDirectionDialog`).   Actual: Core defaults silently pick the first candidate / keep room 1,
+  so maps can be merged wrongly without the user knowing. Fix via decision D3 (async prompts). See `dialogs/Automap.md`.
+- Severity: medium     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-009 -->

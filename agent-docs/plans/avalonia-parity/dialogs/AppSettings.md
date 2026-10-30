@@ -1,0 +1,57 @@
+# Dialog review: App settings (T1.4e)
+
+Reference: `legacy/src/Trizbort/UI/AppSettingsDialog.cs` + `.Designer.cs` (abbrev. **D**), tabs General / ToolTips / Map.
+Avalonia: `src/Trizbort.Avalonia/Views/Dialogs/AppSettingsDialog.axaml` (**X**), `ViewModels/AppSettingsViewModel.cs` (**VM**), tabs General & Canvas / Tooltips / Export Margins.
+Screenshots: `screenshots/winforms/AppSettingsDialog__{General,Map,ToolTips}__*.png`, `screenshots/avalonia/AppSettings__*.png`.
+Evidence is code reading only (no dotnet). "Honoured?" = is the setting read anywhere in `src/Trizbort.Avalonia` or Core code the Avalonia app runs.
+
+## 1. Field table
+
+| Field | Reference (tab, control, label) | Avalonia (control, binding, label) | Status | Honoured by Avalonia app? | Notes |
+|---|---|---|---|---|---|
+| Save images at 100% | General > Preferences, `_chkSaveAtZoom` "&Save images at 100%" (D:137), tooltip "If this is unchecked, images will be saved at their current zoom %" (D:138) | none (property `SaveAt100` not in VM) | Missing | No: no reads under `src/Trizbort.Avalonia`; legacy used it for export scale (`Canvas.cs:315`, `MainForm.cs:858`) | Setting still loaded/saved by Core (`ApplicationSettingsController.cs:109`). |
+| Open last project on start | General > Preferences, `_chkLoadLast` "&Open last project on start" (D:158), tooltip D:159 | General & Canvas, CheckBox `LoadLastProjectOnStart`, "Load Last Opened Project on Startup" (X:20) | Partial | **No (Broken)**: only in VM (VM:64,86); no startup code reads it (legacy `MainForm.cs:653`) | Shown, saved, ignored. Tooltip lost. |
+| Invert Mouse Wheel Zoom | General > Preferences, `_invertWheelCheckBox` "Invert Mouse Wheel &Zoom" (D:148) | General & Canvas, CheckBox `InvertMouseWheel` (X:18) | Partial | **No (Broken)**: `MapCanvasControl.cs:1204-1213` uses `e.Delta.Y > 0` unconditionally (legacy `Canvas.cs:2512-2519`) | Shown, saved, ignored. |
+| Show Full Path in Title Bar | General > Preferences, `_chkFullPathTitleBar` "Show Full Path in Title Bar" (D:127) | General & Canvas, CheckBox `ShowFullPathInTitleBar`, "Show Full File Path in Title Bar" (X:19) | Partial | **No (Broken)**: `MainWindowViewModel.cs:109` builds title from name only (legacy `MainForm.cs:1188`) | Shown, saved, ignored. Label reworded. |
+| Port Adjust Detail | General > Preferences, `_cboPortAdjustDetail` DropDownList, label "Port Ad&just Detail :" (D:183), items "NSEW (4)", "Diagonals (8)", "All ports (16)" (D:166-170) | none; property exists in VM (VM:33,70,92) but no control in X | Missing | Core honours it (`Room.cs:300`), but user cannot change it | Value round-trips unchanged. |
+| Save to PDF | General > Smart Save, `_chkSaveToPDF` "Save to PDF" (D:274) | none | Missing | No (legacy `MainForm.cs:1049,1080`) | Core loads/saves (`ApplicationSettingsController.cs:107`). Avalonia export flow does not read it. |
+| Save to Image | General > Smart Save, `_chkSaveToImage` "Save to Image" (D:264); screenshot clips it to "Save to Imag" | none | Missing | No | As above. |
+| Save TADS to ADV3Lite | General > Smart Save, `_chkSaveTADSToADV3Lite` "Save TADS to ADV3Lite" (D:254) | none | Missing | No | Core property is `SaveTadstoAdv3Lite` (`ApplicationSettings.cs:46`). |
+| Default Image Save Type | General > Smart Save, `_cboImageSaveType` DropDownList, label "&Default Image Save Type :" (D:229), items PNG / JPEG / BMP / Enhanced Metafiles (EMF) (D:212-215) | none | Missing | No (legacy `MainForm.cs:549`) | EMF is Windows-only; decide whether to port the list. |
+| Margins horizontal | General > App defaults, `_preferredHorizontalMargin` NumericUpDown, label "Horizontal" (D:354), 1 decimal, max 4096 (D:299-303) | Export Margins, NumericUpDown `GenHorizontalMargin`, "Horizontal Margin:" (X:69-70), 0-1000 | Partial | Yes, but only in minimap bounds (`MinimapTransform.cs:31-35`); export not verified | Core property is `int` (`ApplicationSettings.cs:26`), so the 1-decimal legacy UI was already lossy. Max lowered 4096 to 1000. |
+| Margins vertical | `_preferredVerticalMargin`, "Vertical" (D:363) | `GenVerticalMargin`, "Vertical Margin:" (X:72-73) | Partial | As above | As above. |
+| Specify margins | General > App defaults, `_chkSpecifyMargins` "Specify margins" (D:344); margin spinners enabled only when checked | Export Margins, CheckBox `SpecifyGenMargins`, "Specify General Margins for Export" (X:66) | Implemented | Yes (`MinimapTransform.cs:31`) | Spinners disabled when unchecked (X:68), matches. Moved to its own tab. |
+| Default Font Name | General > App defaults, `_txtDefaultFontName` TextBox, "Default &Font Name :" (D:205) | General & Canvas, TextBox `DefaultFontName`, "Default Font Name:" (X:27-28) | Implemented | Yes (`Core/Setup/Settings.cs:644-648`) | Free text in both (no font picker). |
+| Show Objects in Tooltip | ToolTips, `_chkShowObjectsInTooltip` "Show Objects in Tooltip" (D:497), top level | Tooltips, CheckBox `ShowObjectsInTooltips` (X:42), nested under master | Implemented | Yes (`Room.cs:753`) | See context. |
+| Show Descriptions in Tooltip | ToolTips, `_chkShowDescriptionsInTooltip` "Show Descriptions in Tooltip" (D:433); acts as group-box caption for the limit options | Tooltips, CheckBox `ShowDescriptionsInTooltips`, "Show Room Descriptions in Tooltip" (X:41) | Different | Yes (`Room.cs:742`, `Connection.cs:402`) | Label says "Room" but the flag also controls connection descriptions. Wording is misleading. |
+| Limit room description chars (flag) | ToolTips, `_chkLimitRoomDescriptionTooltipChars` "Limit Characters of Room Description to" (D:420) | CheckBox, "Limit Room Description Characters" (X:46) | Implemented | Yes (`Room.cs:745`) | |
+| Room description char count | `_txtNumOfRoomDescriptionChars` NumericUpDown, default 50, max 4096 (D:443-452) | NumericUpDown, "Max Characters to Show:" (X:48-49), 10-2000 | Partial | Yes (`Room.cs:741`) | Label moved from inline "...to [n]" to a separate row. Limits changed (min 10, max 2000; legacy min 0). VM default 100 (VM:51) differs from Core default 50 (`ApplicationSettings.cs:53`) but `Initialize` overwrites it. |
+| Limit connection description chars (flag) | `_chkLimitConnectionDescriptionTooltipChars` "Limit Characters of Connection Description to" (D:485) | CheckBox, "Limit Connection Description Characters" (X:52) | Implemented | Yes (`Connection.cs:405-406`) | |
+| Connection description char count | `_txtNumOfConnectionDescriptionChars` (D:464-473) | NumericUpDown (X:55) | Partial | Yes (`Connection.cs:404`) | As room count. |
+| Show Canvas Tooltips (master) | none (no such control) | Tooltips, CheckBox `ShowTooltips`, "Show Canvas Tooltips" (X:38) | New-in-Avalonia, **Broken** | **No**: `ShowTooltips` is a read-only computed property (`ApplicationSettings.cs:60`, `Descriptions \|\| Objects`); `ApplyToSettings` never writes it (VM:84-99) | Unchecking it then OK changes nothing: children keep their values so tooltips still show. If both children are off, the dialog re-opens with the master unchecked and children greyed. Either remove it or make it drive the two flags. Needs `issues.md` entry. |
+| Apply style to new rooms | Map, `_chkApplyStyleToNewRooms` "Apply style to new rooms" (D:528), tooltip "If this is checked, new rooms adopt the style of the last selected room" (D:529) | General & Canvas, CheckBox `ApplyStyleToNewRooms`, "Apply Current Theme Style to Newly Added Rooms" (X:22) | Partial | **No (Broken)**: nothing in Avalonia/Core reads it (legacy `Canvas.cs:358`) | Label now says "Theme Style", which is a different meaning from "style of last selected room". Tooltip lost. |
+| Double click to add room | Map, `_chkDoubleClickToAddRoom` "Double click to add room" (D:539), tooltip D:540 | General & Canvas, CheckBox `DoubleClickToAddRoom`, "Double-Click Canvas Background to Add Room" (X:21) | Implemented | Yes (`MapCanvasControl.cs:750`) | Tooltip lost. |
+
+Counts: 6 fields missing from the dialog (SaveAt100, SaveToPDF, SaveToImage, SaveTadsToAdv3Lite, DefaultImageType, PortAdjustDetail); 5 shown but ignored (LoadLastProjectOnStart, InvertMouseWheel, ShowFullPathInTitleBar, ApplyStyleToNewRooms, master ShowTooltips).
+
+## 2. Context checklist
+
+| Item | Verdict | Note |
+|---|---|---|
+| Grouping (group boxes / headings) | Lost | Legacy: "Preferences" (D:118), "Smart Save" (D:244), "App defaults" (D:291), Map "Preferences" (D:519), tooltip group (D:410). Avalonia: flat checkbox list, one `Separator` (X:24, X:44). |
+| Tab placement | Changed | Legacy 3 tabs General/ToolTips/Map (D:386,398,507). Avalonia 3 tabs General & Canvas / Tooltips / Export Margins (X:15,35,63). Map options folded into General; margins moved from "App defaults" to their own tab. |
+| Label wording and units | Changed | Several relabelled (see table); "Show Room Descriptions" misleading; "Theme Style" changes meaning; no unit shown for margins or characters in either app. |
+| Tooltips / help text | Lost | Legacy has 5 hover tips (D:138,159,529,540 plus none elsewhere); Avalonia has none (no `ToolTip.Tip` in X). |
+| Enable/disable dependencies | Changed | Legacy: limit checkbox and count enabled only while "Show Descriptions" checked (D:137-151). Avalonia: whole sub-panel gated on the unsaved master checkbox (X:40) so limit controls stay enabled when "Show Room Descriptions" is off; count gated on its limit checkbox (X:47,53), which is better than legacy, where unchecking a limit checkbox disabled itself (D:128-139, a legacy bug). Margin spinners gated on "Specify" in both. |
+| Defaults | Changed | Char limit VM default 100 vs Core 50 (masked by `Initialize`); tooltip master defaults true. |
+| Order and tab order | Changed | Avalonia order follows XAML order; legacy explicit TabIndex (D:89-90 etc.). Mnemonics (`&Save`, `&Open`, `Invert Mouse Wheel &Zoom`, `Port Ad&just`, `&Default`, `&Font`, `&OK`, `C&ancel`) all lost. |
+| Previews | Pass (n/a) | No previews in either. |
+| Validation messages | Pass (n/a) | None in either; numeric bounds enforced by controls (Avalonia 10-2000 / 0-1000). |
+| OK / Cancel / Apply | Pass | OK/Cancel in both, no Apply. Avalonia applies and saves only on OK (`DialogService.cs:322-326`, `VM:101`). Close via window X returns null = cancel. |
+| Enter / Esc | Pass | Legacy `AcceptButton`/`CancelButton` (D:545,548); Avalonia `IsDefault`/`IsCancel` (X:82-83). |
+| Size / resizability | Changed | Legacy fixed 446x370, no maximize (D:549,554,556). Avalonia 500x440, resizable, min 420x380 (X:7-8). Screenshots show the Tooltips tab clipped with a scrollbar at default size. |
+| Live effect after OK | Changed | Avalonia only invalidates the canvas (`MapCanvasControl.cs:1560-1564`); title-bar and other settings have no consumer. |
+
+## 3. Recommendation
+
+Keep the Avalonia tabbed layout as a base but restore the reference context: reinstate the General tab groups (Preferences, Smart Save, App defaults) and add the six missing controls (the Smart Save and Default Image Type ones only once the Avalonia export flow reads them; drop the EMF item), restore the four hover tips, and fix the Show Descriptions wording to "Descriptions" (rooms and connections) and gate the limit options on it rather than on the master checkbox. Remove or properly implement the "Show Canvas Tooltips" master (it is computed, not stored). Separately, wire up the four ignored settings (Load last project, Invert wheel, Full path in title, Apply style to new rooms) or hide them until they work; showing them is a trap. Fold Export Margins back under "App defaults" unless more export options are coming.
