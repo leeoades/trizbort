@@ -32,6 +32,23 @@ public sealed record EditorCommand
 
   public bool Hidden { get; init; }
 
+  /// <summary>
+  ///   The gesture is shown next to the menu item but no key binding is generated (the OS handles it, e.g. Alt+F4).
+  /// </summary>
+  public bool GestureDisplayOnly { get; init; }
+
+  /// <summary>Toolbar position (ascending). Only used when <see cref="ShowInToolbar" /> is set.</summary>
+  public int ToolbarOrder { get; init; }
+
+  /// <summary>A separator is drawn in the toolbar whenever this changes between neighbouring buttons.</summary>
+  public string ToolbarGroup { get; init; }
+
+  /// <summary>Position in the canvas context menu (ascending, then registration order).</summary>
+  public int ContextOrder { get; init; }
+
+  /// <summary>A separator is drawn in the context menu whenever this changes between neighbouring items.</summary>
+  public string ContextGroup { get; init; }
+
   public Func<EditorSession, bool> CanExecuteFunc { get; init; }
 
   public Func<EditorSession, bool> IsCheckedFunc { get; init; }

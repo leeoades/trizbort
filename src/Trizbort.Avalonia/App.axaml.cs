@@ -37,7 +37,8 @@ public partial class App : Application
             {
                 DataContext = mainWindowViewModel
             };
-            FileWatcherWiring.Wire(dialogService, () => desktop.MainWindow, mainWindowViewModel.UpdateState);
+            FileWatcherWiring.Wire(dialogService, () => desktop.MainWindow, mainWindowViewModel.UpdateState,
+                mainWindowViewModel.CommandService.Session);
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -86,6 +87,10 @@ public partial class App : Application
 
         // Root ViewModels
         services.AddSingleton<MainWindowViewModel>();
+
+        // Menus, toolbar, context menu and key bindings are generated from this catalogue
+        services.AddSingleton<Trizbort.Editor.Commands.CommandCatalogue>(
+            sp => AppCommands.CreateCatalogue(sp.GetRequiredService<MainWindowViewModel>()));
 
         // Scoped Dialog ViewModels (resolved in child IServiceScope)
         services.AddTransient<RoomPropertiesViewModel>();

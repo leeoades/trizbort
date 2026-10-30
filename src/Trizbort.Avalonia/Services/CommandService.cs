@@ -64,9 +64,14 @@ public class CommandService : ICommandService
     public event EventHandler? SelectionChanged;
     public event EventHandler<float>? ZoomChanged;
     public event EventHandler? CanvasInvalidated;
+    public event EventHandler? PointerMoved;
 
     public void SetViewportSize(double width, double height) => Session.Viewport.SetSize(width, height);
     public void SetView(Vector origin, float zoomFactor) => Session.Viewport.SetView(origin, zoomFactor);
+
+    public Vector? PointerMapPosition => Session.PointerMapPosition;
+    public void SetPointerClientPosition(double x, double y) => Session.SetPointerClientPosition(x, y);
+    public void ClearPointerPosition() => Session.ClearPointerPosition();
 
     public void NewMap() => Session.NewProject();
     public Room AddRoom(Vector? position = null) => Session.AddRoom(position);
@@ -83,6 +88,7 @@ public class CommandService : ICommandService
     public void SelectAll() => Session.SelectAll();
     public void ClearSelection() => Session.ClearSelection();
     public void NudgeSelected(Vector delta) => Session.NudgeSelected(delta);
+    public void ResizeSelected(Vector delta) => Session.ResizeSelected(delta);
 
     public string? CopySelected() => Session.CopySelected();
     public string? CutSelected() => Session.CutSelected();
@@ -99,6 +105,13 @@ public class CommandService : ICommandService
 
     private void OnSessionChanged(EditorChange change)
     {
+        if ((change & EditorChange.Pointer) != 0)
+        {
+            PointerMoved?.Invoke(this, EventArgs.Empty);
+            change &= ~EditorChange.Pointer;
+            if (change == EditorChange.None) return;
+        }
+
         if ((change & EditorChange.Viewport) != 0 && !HasVisibleViewportChange())
         {
             // Only the viewport size changed: the legacy service never raised events for that.

@@ -660,6 +660,7 @@ public class MapCanvasControl : Control
             var hitWp = Hit.HitWaypoint(worldPos);
             if (hitWp.HasValue && _selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
             {
+                BeginDragTransaction("Move waypoint");
                 _dragMode = CanvasDragMode.MoveWaypoint;
                 _dragWaypoint = hitWp.Value;
                 var handlePos = conn.GetCurveWaypointHandlePosition(_dragWaypoint);
@@ -673,6 +674,7 @@ public class MapCanvasControl : Control
             var hitHandle = Hit.HitHandle(worldPos, _activeHandles);
             if (hitHandle != null)
             {
+                BeginDragTransaction("Resize");
                 _dragMode = CanvasDragMode.MoveResizeHandle;
                 _dragHandle = hitHandle;
                 _hoverHandle = hitHandle;
@@ -688,6 +690,7 @@ public class MapCanvasControl : Control
             {
                 if (hitPort is MoveablePort mp)
                 {
+                    BeginDragTransaction("Move connection");
                     _dragMode = CanvasDragMode.MovePort;
                     _dragMovePort = mp;
                     _dragMovePortOriginalPort = mp.DockedAt;
@@ -727,6 +730,7 @@ public class MapCanvasControl : Control
 
                 if (_selectedSet.Contains(hitElem))
                 {
+                    BeginDragTransaction("Move");
                     _dragMode = CanvasDragMode.MoveElement;
                     _dragOffsetCanvas = Settings.Snap(worldPos);
                     e.Pointer.Capture(this);
@@ -755,6 +759,7 @@ public class MapCanvasControl : Control
 
         var clientPos = e.GetPosition(this);
         var worldPos = ClientToCanvas(clientPos);
+        CommandService?.SetPointerClientPosition(clientPos.X, clientPos.Y);
 
         if (_pendingNewConnectionPort != null)
         {
@@ -765,6 +770,7 @@ public class MapCanvasControl : Control
             {
                 var port = _pendingNewConnectionPort;
                 _pendingNewConnectionPort = null;
+                BeginDragTransaction("Add connection");
                 var newConn = new Connection(Project.Current, new Vertex(port), new Vertex(port))
                 {
                     Style = ConnectionStyle.Solid,
@@ -805,7 +811,6 @@ public class MapCanvasControl : Control
                 {
                     MapEditing.Move(Project.Current.Elements, _selectedSet.ToList(), moveDelta);
                     _dragOffsetCanvas += moveDelta;
-                    Project.Current.IsDirty = true;
                     _spatialVersion++;
                     InvalidateVisual();
                 }
@@ -816,7 +821,6 @@ public class MapCanvasControl : Control
                 if (_dragHandle != null)
                 {
                     _dragResizeHandleLastPosition = MapEditing.Resize(_dragHandle, _dragResizeHandleLastPosition, worldPos);
-                    Project.Current.IsDirty = true;
                     _spatialVersion++;
                     InvalidateVisual();
                 }
@@ -851,7 +855,6 @@ public class MapCanvasControl : Control
                         _dragMovePort.DockAt(null);
                         _dragMovePort.SetPosition(Settings.Snap(worldPos) - _dragOffsetCanvas);
                     }
-                    Project.Current.IsDirty = true;
                     _spatialVersion++;
                     InvalidateVisual();
                 }
@@ -862,7 +865,6 @@ public class MapCanvasControl : Control
                 if (_selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
                 {
                     conn.SetCurveWaypoint(_dragWaypoint, Settings.Snap(worldPos + _dragWaypointOffset));
-                    Project.Current.IsDirty = true;
                     _spatialVersion++;
                     InvalidateVisual();
                 }
@@ -908,6 +910,12 @@ public class MapCanvasControl : Control
                 }
                 break;
         }
+    }
+
+    protected override void OnPointerExited(PointerEventArgs e)
+    {
+        base.OnPointerExited(e);
+        CommandService?.ClearPointerPosition();
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
@@ -957,6 +965,22 @@ public class MapCanvasControl : Control
         }
 
         EndDrag(KeyModifiers.None, cancelled: true);
+    }
+
+    private UndoTransaction? _dragTransaction;
+
+    /// <summary>Open one undo transaction covering a whole drag gesture (stop-gap until drags move to Core).</summary>
+    private void BeginDragTransaction(string title)
+    {
+        EndDragTransaction();
+        _dragTransaction = CommandService?.Session.BeginTransaction(title);
+    }
+
+    private void EndDragTransaction()
+    {
+        var transaction = _dragTransaction;
+        _dragTransaction = null;
+        transaction?.Dispose();
     }
 
     internal bool IsGestureActive => _dragMode != CanvasDragMode.None || _pendingNewConnectionPort != null;
@@ -1060,7 +1084,6 @@ public class MapCanvasControl : Control
                     CommandService?.Select(connection);
                 }
             }
-            Project.Current.IsDirty = true;
         }
         else if (mode == CanvasDragMode.Marquee && !cancelled)
         {
@@ -1093,6 +1116,10 @@ public class MapCanvasControl : Control
             }
         }
 
+        // The manual restore above has already put a cancelled drag back, so the transaction records nothing for
+        // it. (Transaction.Cancel() is not used: it would replace Project.Current under the canvas. Ticket 006.)
+        EndDragTransaction();
+
         if (mode != CanvasDragMode.None)
         {
             _spatialVersion++;
@@ -1123,6 +1150,12 @@ public class MapCanvasControl : Control
         {
             _isSpaceKeyDown = true;
             UpdateCursor();
+            e.Handled = true;
+            return;
+        }
+
+        if (CanvasCommandBridge.TryRunCanvasGesture(this, e))
+        {
             e.Handled = true;
             return;
         }
@@ -1222,27 +1255,16 @@ public class MapCanvasControl : Control
         if (isAlt && isCtrl)
         {
             var delta = Settings.SnapToGrid ? Settings.GridSize : 2.0f;
-            foreach (var sizeable in _selectedSet.OfType<ISizeable>())
+            var resizeDelta = key switch
             {
-                switch (key)
-                {
-                    case Key.Left:
-                        if (sizeable.Width - delta >= Settings.GridSize)
-                            sizeable.Size = new CoreVector(sizeable.Width - delta, sizeable.Height);
-                        break;
-                    case Key.Right:
-                        sizeable.Size = new CoreVector(sizeable.Width + delta, sizeable.Height);
-                        break;
-                    case Key.Up:
-                        if (sizeable.Height - delta >= Settings.GridSize)
-                            sizeable.Size = new CoreVector(sizeable.Width, sizeable.Height - delta);
-                        break;
-                    case Key.Down:
-                        sizeable.Size = new CoreVector(sizeable.Width, sizeable.Height + delta);
-                        break;
-                }
-            }
-            Project.Current.IsDirty = true;
+                Key.Left => new CoreVector(-delta, 0),
+                Key.Right => new CoreVector(delta, 0),
+                Key.Up => new CoreVector(0, -delta),
+                Key.Down => new CoreVector(0, delta),
+                _ => CoreVector.Zero
+            };
+            // One undo step per key press (key repeat makes one step per repeat).
+            CommandService?.ResizeSelected(resizeDelta);
             _spatialVersion++;
             InvalidateVisual();
         }
@@ -1331,69 +1353,30 @@ public class MapCanvasControl : Control
             CommandService?.Select([hitElem], clearExisting: true);
         }
 
-        var menu = new ContextMenu();
-        var items = new List<Control>();
+        var session = CommandService?.Session;
+        if (session == null) return;
 
         var selectedElements = Project.Current.GetSelectedElements();
         var activeElement = selectedElements.Count == 1 ? selectedElements[0] : (hitElem ?? Project.Current.ActiveSelectedElement);
-
-        if (activeElement != null)
+        var target = hitElem switch
         {
-            var propertiesItem = new MenuItem { Header = "_Properties..." };
-            propertiesItem.Click += (_, _) => _ = ShowPropertiesDialogAsync(activeElement);
-            items.Add(propertiesItem);
-            items.Add(new Separator());
-        }
+            Room => Trizbort.Editor.Commands.ContextTargets.Room,
+            Connection => Trizbort.Editor.Commands.ContextTargets.Connection,
+            MapLabel => Trizbort.Editor.Commands.ContextTargets.Label,
+            _ => Trizbort.Editor.Commands.ContextTargets.Empty
+        };
 
-        if (selectedElements.Count > 0)
-        {
-            var cutItem = new MenuItem { Header = "Cu_t" };
-            cutItem.Click += async (_, _) => await CutSelectedToClipboardAsync();
-            items.Add(cutItem);
-
-            var copyItem = new MenuItem { Header = "_Copy" };
-            copyItem.Click += async (_, _) => await CopySelectedToClipboardAsync();
-            items.Add(copyItem);
-
-            var deleteItem = new MenuItem { Header = "_Delete" };
-            deleteItem.Click += (_, _) => CommandService?.DeleteSelected();
-            items.Add(deleteItem);
-
-            items.Add(new Separator());
-        }
-
-        var pasteItem = new MenuItem { Header = "_Paste" };
-        pasteItem.Click += async (_, _) => await PasteFromClipboardAsync();
-        items.Add(pasteItem);
-
-        items.Add(new Separator());
-
-        var addRoomItem = new MenuItem { Header = "Add _Room" };
-        addRoomItem.Click += (_, _) => CommandService?.AddRoom(worldPos);
-        items.Add(addRoomItem);
-
-        var addLabelItem = new MenuItem { Header = "Add _Map Label" };
-        addLabelItem.Click += (_, _) => CommandService?.AddMapLabel(worldPos);
-        items.Add(addLabelItem);
-
-        items.Add(new Separator());
-
-        var mapSettingsItem = new MenuItem { Header = "_Map Settings..." };
-        mapSettingsItem.Click += (_, _) => _ = ShowMapSettingsDialogAsync();
-        items.Add(mapSettingsItem);
-
-        var mapThemeItem = new MenuItem { Header = "Map _Theme..." };
-        mapThemeItem.Click += (_, _) => _ = ShowMapThemeDialogAsync();
-        items.Add(mapThemeItem);
-
-        var appSettingsItem = new MenuItem { Header = "_Application Settings..." };
-        appSettingsItem.Click += (_, _) => _ = ShowAppSettingsDialogAsync();
-        items.Add(appSettingsItem);
-
-        menu.ItemsSource = items;
+        var menu = CatalogueMenuBuilder.BuildContextMenu(
+            CanvasCommandBridge.Resolve(this),
+            session,
+            target,
+            command => CanvasCommandBridge.ContextCommandFor(this, command, worldPos, activeElement));
         LastContextMenu = menu;
         menu.Open(this);
     }
+
+    /// <summary>The command catalogue the menus and canvas keys come from. Set by the host window; falls back to the application's.</summary>
+    internal Trizbort.Editor.Commands.CommandCatalogue? Catalogue { get; set; }
 
     internal ContextMenu? LastContextMenu { get; private set; }
 

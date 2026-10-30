@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Watchers;
+using Trizbort.Editor;
 
 namespace Trizbort.Avalonia.Services;
 
@@ -15,20 +16,22 @@ public static class FileWatcherWiring
     public const string ReloadMessage = "The map was modified by another program. Reload it?";
     public const string ReloadDirtyMessage = "The map was modified by another program. Reload it? Unsaved changes will be lost.";
 
-    public static void Wire(IDialogService dialogService, Func<Window?> getOwner, Action? afterReload = null)
+    public static void Wire(IDialogService dialogService, Func<Window?> getOwner, Action? afterReload = null,
+        EditorSession? session = null)
     {
         TrizbortFileWatcher.UIThreadInvoker = action => Dispatcher.UIThread.Post(action);
         TrizbortFileWatcher.ConfirmReloadPromptAsync = dirty =>
             dialogService.ShowConfirmationAsync(getOwner(), "Trizbort", dirty ? ReloadDirtyMessage : ReloadMessage);
         Project.MapReloader = path =>
         {
-            Reload(path, dialogService, getOwner);
+            Reload(path, dialogService, getOwner, session);
             afterReload?.Invoke();
         };
     }
 
     /// <summary>Loads <paramref name="path" /> without the unsaved-changes prompt and makes it the current project.</summary>
-    internal static bool Reload(string path, IDialogService dialogService, Func<Window?> getOwner)
+    internal static bool Reload(string path, IDialogService dialogService, Func<Window?> getOwner,
+        EditorSession? session = null)
     {
         try
         {
@@ -36,8 +39,8 @@ public static class FileWatcherWiring
             var loader = new MapLoader(project);
             if (!loader.LoadMap(path)) return false;
             project.FileName = path;
-            project.IsDirty = false;
             Project.Current = project;
+            session?.Undo.Clear();
             return true;
         }
         catch (Exception ex)

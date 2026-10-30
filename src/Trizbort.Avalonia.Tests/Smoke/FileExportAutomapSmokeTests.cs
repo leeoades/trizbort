@@ -139,6 +139,14 @@ public class FileExportAutomapSmokeTests
 
     private static readonly XNamespace Ui = "https://github.com/avaloniaui";
 
+    private static string? WindowGestureCommandId(Trizbort.Editor.Input.InputKey key, Trizbort.Domain.Enums.ModifierKeys modifiers)
+    {
+        var catalogue = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null);
+        return catalogue.FindByGesture(
+            new Trizbort.Editor.Input.KeyInput(key, modifiers),
+            Trizbort.Editor.Commands.CommandScope.Window)?.Id;
+    }
+
     private MainWindowViewModel CreateVm(
         RecordingDialogService dialog,
         StubStorageService storage,
@@ -295,10 +303,7 @@ public class FileExportAutomapSmokeTests
     [Test]
     public async Task S1_02_CtrlN_NewMap_NoPromptWhenClean()
     {
-        var keyBinding = LoadMainWindowXaml().Descendants(Ui + "KeyBinding")
-            .FirstOrDefault(k => (string?)k.Attribute("Gesture") == "Ctrl+N");
-        keyBinding.ShouldNotBeNull();
-        ((string?)keyBinding!.Attribute("Command")).ShouldBe("{Binding NewMapCommand}");
+        WindowGestureCommandId(Trizbort.Editor.Input.InputKey.N, Trizbort.Domain.Enums.ModifierKeys.Primary).ShouldBe("file.new");
 
         var dialog = new RecordingDialogService();
         var vm = CreateVm(dialog, new StubStorageService());
@@ -391,10 +396,9 @@ public class FileExportAutomapSmokeTests
     [Test]
     public async Task S1_06_CtrlShiftS_SaveAs_AsksForNewFileAndRetitles()
     {
-        var keyBinding = LoadMainWindowXaml().Descendants(Ui + "KeyBinding")
-            .FirstOrDefault(k => (string?)k.Attribute("Gesture") == "Ctrl+Shift+S");
-        keyBinding.ShouldNotBeNull();
-        ((string?)keyBinding!.Attribute("Command")).ShouldBe("{Binding SaveMapAsCommand}");
+        WindowGestureCommandId(
+            Trizbort.Editor.Input.InputKey.S,
+            Trizbort.Domain.Enums.ModifierKeys.Primary | Trizbort.Domain.Enums.ModifierKeys.Shift).ShouldBe("file.saveAs");
 
         var saveAsPath = Path.Combine(_tempDir, "saved-as.trizbort");
         var storage = new StubStorageService
@@ -482,17 +486,13 @@ public class FileExportAutomapSmokeTests
     [Test]
     public void S6_49_ExportMenu_HasOneItemPerLanguage()
     {
-        var exportMenu = LoadMainWindowXaml().Descendants(Ui + "MenuItem")
-            .First(m => (string?)m.Attribute("Header") == "_Export");
-
-        var languageItems = exportMenu.Elements(Ui + "MenuItem")
-            .Where(m => ((string?)m.Attribute("Command") ?? "").Contains("Export")
-                        && !((string?)m.Attribute("Command") ?? "").Contains("ExportImage"))
+        var languageItems = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null).All
+            .Where(c => c.MenuPath == "File/Export" && c.Id != "file.export.png")
             .ToList();
 
         languageItems.Count.ShouldBe(8);
         // Strip access-key underscores ("A_dventuron") before matching.
-        var headers = string.Join("|", languageItems.Select(m => ((string?)m.Attribute("Header"))?.Replace("_", "")));
+        var headers = string.Join("|", languageItems.Select(c => c.Title.Replace("_", "")));
         foreach (var language in new[] { "Alan", "Adventuron", "Hugo", "Quest", "TADS", "ZIL", "Inform 6", "Inform 7" })
         {
             headers.ShouldContain(language);
@@ -623,10 +623,10 @@ public class FileExportAutomapSmokeTests
     [Test]
     public async Task S7_61_AutomapMenuItem_KeepsStaticLabelWhileRunning()
     {
-        var menuItem = LoadMainWindowXaml().Descendants(Ui + "MenuItem")
-            .First(m => ((string?)m.Attribute("Command") ?? "").Contains("ToggleAutomapCommand"));
-        var header = (string?)menuItem.Attribute("Header");
+        var command = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null).Find("project.toggleAutomap")!;
+        var header = command.Title;
         header.ShouldBe("Toggle _Automap");
+        command.DynamicTitle.ShouldBeNull();
 
         var settings = AutomapSettings.Default;
         settings.FileName = await WriteTranscriptAsync(TwoRoomTranscript);

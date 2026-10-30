@@ -9,9 +9,10 @@ using Trizbort.Export;
 
 namespace Trizbort.Avalonia.Services;
 
-public class StorageService(IDialogService dialogService) : IStorageService
+public class StorageService(IDialogService dialogService, ICommandService? commandService = null) : IStorageService
 {
     private readonly IDialogService _dialogService = dialogService;
+    private readonly ICommandService? _commandService = commandService;
 
     private static readonly FilePickerFileType TrizbortFileType = new("Trizbort Map Files (*.trizbort)")
     {
@@ -98,8 +99,8 @@ public class StorageService(IDialogService dialogService) : IStorageService
             if (loader.LoadMap(filePath))
             {
                 project.FileName = filePath;
-                project.IsDirty = false;
                 Project.Current = project;
+                _commandService?.Session.Undo.Clear();
                 RecordProjectOpened(filePath);
                 return true;
             }
@@ -129,8 +130,8 @@ public class StorageService(IDialogService dialogService) : IStorageService
             if (loader.LoadMap(path))
             {
                 project.FileName = path;
-                project.IsDirty = false;
                 Project.Current = project;
+                _commandService?.Session.Undo.Clear();
                 RecordProjectOpened(path);
                 return true;
             }
@@ -199,6 +200,7 @@ public class StorageService(IDialogService dialogService) : IStorageService
             currentProject.FileName = filePath;
             if (currentProject.Save())
             {
+                _commandService?.Session.MarkSaved();
                 RecordProjectOpened(filePath);
                 return true;
             }

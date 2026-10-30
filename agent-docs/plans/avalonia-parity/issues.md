@@ -17,7 +17,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Expected: X/Y readout follows the cursor.   Actual: always "X: 0, Y: 0".
 - Cause: `CursorPositionText` (`src/Trizbort.Avalonia/ViewModels/MainWindowViewModel.cs:52`) is bound in `Views/MainWindow.axaml:172` but never assigned. Matrix A020.
 - Severity: low     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: the session tracks the pointer's map position (`EditorChange.Pointer`, no redraw); the status bar shows it and clears it when the pointer leaves the canvas. Tests: `CursorPositionTests`, `ViewportPointerTests`.
+- Ticket: 111
 
 ## I-003 Changes to the open map on disk are silently ignored
 - Reported: 2026-10-30 by agent (T1.5, code reading)   OS: all   Category: behaviour

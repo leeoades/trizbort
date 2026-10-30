@@ -13,9 +13,10 @@ using Trizbort.Domain.Elements;
 
 namespace Trizbort.Avalonia.Services;
 
-public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogService
+public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandService commandService) : IDialogService
 {
     private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
+    private readonly ICommandService _commandService = commandService;
 
     public async Task ShowAboutDialogAsync(Window? owner)
     {
@@ -233,8 +234,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogSe
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
-            viewModel.ApplyTo(room);
-            Project.Current.IsDirty = true;
+            _commandService.Session.Apply("Edit room", room, () => viewModel.ApplyTo(room));
         }
         return result;
     }
@@ -249,8 +249,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogSe
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
-            viewModel.ApplyTo(connection);
-            Project.Current.IsDirty = true;
+            _commandService.Session.Apply("Edit connection", connection, () => viewModel.ApplyTo(connection));
         }
         return result;
     }
@@ -265,8 +264,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogSe
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
-            viewModel.ApplyTo(label);
-            Project.Current.IsDirty = true;
+            _commandService.Session.Apply("Edit label", label, () => viewModel.ApplyTo(label));
         }
         return result;
     }
@@ -292,7 +290,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogSe
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
-            viewModel.ApplyToSettings();
+            _commandService.Session.Execute("Map settings", viewModel.ApplyToSettings);
         }
         return result;
     }
@@ -307,7 +305,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory) : IDialogSe
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
-            viewModel.ApplySelectedTheme();
+            _commandService.Session.Execute("Map theme", viewModel.ApplySelectedTheme);
         }
         return result;
     }

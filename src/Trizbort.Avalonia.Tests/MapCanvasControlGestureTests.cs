@@ -288,6 +288,42 @@ public class MapCanvasControlGestureTests
     }
 
     [AvaloniaTest]
+    public void DragRoom_Release_IsOneUndoStep()
+    {
+        var (window, canvas, service) = CreateTestHarness();
+        try
+        {
+            var room = new Room(Project.Current) { Position = new Vector(-50, -50), Size = new Vector(60, 40) };
+            Project.Current.Elements.Add(room);
+            service.Select(room);
+            service.Session.Undo.Clear();
+
+            var startClient = canvas.CanvasToClient(new Vector(-20, -30));
+            window.MouseMove(startClient);
+            window.MouseDown(startClient, MouseButton.Left);
+            canvas.DragMode.ShouldBe(CanvasDragMode.MoveElement);
+
+            // Several moves in one gesture still make a single step.
+            window.MouseMove(canvas.CanvasToClient(new Vector(30, -30)));
+            window.MouseMove(canvas.CanvasToClient(new Vector(80, 20)));
+            window.MouseUp(canvas.CanvasToClient(new Vector(80, 20)), MouseButton.Left);
+
+            service.Session.Undo.CanUndo.ShouldBeTrue();
+            Project.Current.IsDirty.ShouldBeTrue();
+
+            service.Session.PerformUndo();
+
+            Project.Current.Elements.OfType<Room>().Single().Position.X.ShouldBe(-50f, 1.0f);
+            service.Session.Undo.CanUndo.ShouldBeFalse();
+            Project.Current.IsDirty.ShouldBeFalse();
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
     public void Resize_ContinuousDraggingAcrossMultipleMoves_ResizesRoom()
     {
         var (window, canvas, service) = CreateTestHarness();

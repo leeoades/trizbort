@@ -400,15 +400,18 @@ public class EditKeyboardSmokeTests
     }
 
     /// <summary>
-    /// Step 37 (first half): Alt+Enter opens Properties. The binding lives on MainWindow (Window.KeyBindings),
-    /// which cannot be instantiated headlessly without App resources, so this checks the declared binding.
+    /// Step 37 (first half): Alt+Enter opens Properties. MainWindow generates its key bindings from the command
+    /// catalogue, so this checks the catalogue's window-scope gesture.
     /// </summary>
     [AvaloniaTest]
     public void S4_37_AltEnter_IsBoundToProperties()
     {
-        var xaml = ReadMainWindowXaml();
+        var catalogue = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null);
 
-        xaml.ShouldContain("Gesture=\"Alt+Enter\" Command=\"{Binding ShowSelectedElementPropertiesCommand}\"");
+        catalogue.FindByGesture(
+                new Trizbort.Editor.Input.KeyInput(Trizbort.Editor.Input.InputKey.Enter, Trizbort.Domain.Enums.ModifierKeys.Alt),
+                Trizbort.Editor.Commands.CommandScope.Window)!
+            .Id.ShouldBe("edit.properties");
     }
 
     /// <summary>Step 37 (second half): Plain Enter with a selected room should open Properties at canvas level, as in the reference (known gap: K026 / M029).</summary>
@@ -435,9 +438,12 @@ public class EditKeyboardSmokeTests
     [AvaloniaTest]
     public void S4_38_F1_IsBoundToAbout()
     {
-        var xaml = ReadMainWindowXaml();
+        var catalogue = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null);
 
-        xaml.ShouldContain("Gesture=\"F1\" Command=\"{Binding ShowAboutCommand}\"");
+        catalogue.FindByGesture(
+                new Trizbort.Editor.Input.KeyInput(Trizbort.Editor.Input.InputKey.F1, Trizbort.Domain.Enums.ModifierKeys.None),
+                Trizbort.Editor.Commands.CommandScope.Window)!
+            .Id.ShouldBe("help.about");
     }
 
     /// <summary>Step 39: Press Ctrl+, . Expected (reference): opens Map Settings. Avalonia has no binding (known gap: M065).</summary>

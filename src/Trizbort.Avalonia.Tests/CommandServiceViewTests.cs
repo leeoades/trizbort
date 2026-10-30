@@ -111,4 +111,21 @@ public class CommandServiceViewTests
         service.Origin.ShouldBe(Vector.Zero);
         service.ZoomFactor.ShouldBe(1.0f);
     }
+
+    [Test]
+    public void AddRoom_MarksProjectDirty_ViaUndoStack()
+    {
+        var service = new CommandService();
+        Project.Current.IsDirty.ShouldBeFalse();
+
+        service.AddRoom(new Vector(0, 0));
+
+        service.Session.Undo.CanUndo.ShouldBeTrue();
+        service.Session.Undo.IsDirty.ShouldBeTrue();
+        Project.Current.IsDirty.ShouldBeTrue();
+
+        service.Session.PerformUndo();
+
+        Project.Current.IsDirty.ShouldBeFalse();
+    }
 }

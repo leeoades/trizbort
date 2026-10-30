@@ -20,6 +20,7 @@ public sealed class EditorSession : IDisposable
   private static string _internalClipboard;
 
   private bool _showGrid = true;
+  private Vector? _pointerMapPosition;
   private bool _suppressSelectionEvents;
   private bool _lastDirty;
   private bool _disposed;
@@ -73,6 +74,21 @@ public sealed class EditorSession : IDisposable
       _showGrid = value;
       RaiseChanged(EditorChange.Viewport);
     }
+  }
+
+  /// <summary>Map-space point under the pointer while it is over the canvas; null when it is not.</summary>
+  public Vector? PointerMapPosition => _pointerMapPosition;
+
+  /// <summary>Record the pointer position in canvas client pixels, converted to map space through <see cref="Viewport" />.</summary>
+  public void SetPointerClientPosition(double x, double y)
+  {
+    SetPointerMapPosition(Viewport.ClientToCanvas(new Vector((float)x, (float)y)));
+  }
+
+  /// <summary>Forget the pointer position (for example when it leaves the canvas).</summary>
+  public void ClearPointerPosition()
+  {
+    SetPointerMapPosition(null);
   }
 
   public event Action<EditorChange> Changed;
@@ -181,6 +197,8 @@ public sealed class EditorSession : IDisposable
     Selection.Clear();
     // The Project.Current setter raises Project.ProjectChanged, which notifies listeners of this session.
     Project.Current = new Project();
+    // A new document starts with no history and counts as saved.
+    Undo.Clear();
   }
 
   public Room AddRoom(Vector? position)
@@ -190,8 +208,7 @@ public sealed class EditorSession : IDisposable
     {
       Position = Settings.Snap(pos)
     };
-    Project.Elements.Add(room);
-    Project.IsDirty = true;
+    Execute("Add room", () => Project.Elements.Add(room), new Element[] { room });
     Selection.Set(new Element[] { room });
     Project.ActiveSelectedElement = room;
     RaiseChanged(EditorChange.Model);
@@ -205,8 +222,7 @@ public sealed class EditorSession : IDisposable
     {
       Position = Settings.Snap(pos)
     };
-    Project.Elements.Add(label);
-    Project.IsDirty = true;
+    Execute("Add label", () => Project.Elements.Add(label), new Element[] { label });
     Selection.Set(new Element[] { label });
     Project.ActiveSelectedElement = label;
     RaiseChanged(EditorChange.Model);
@@ -218,13 +234,16 @@ public sealed class EditorSession : IDisposable
     var selected = GetSelectedOrActive();
     if (selected.Count == 0) return 0;
 
-    foreach (var element in selected)
+    Execute("Delete", () =>
     {
-      Project.Elements.Remove(element);
-    }
+      foreach (var element in selected)
+      {
+        Project.Elements.Remove(element);
+      }
+    }, selected);
+    // Undo restores a new project object, so the selection is cleared against whichever project is current now.
     Selection.Clear();
     Project.ActiveSelectedElement = null;
-    Project.IsDirty = true;
     RaiseChanged(EditorChange.Model);
     return selected.Count;
   }
@@ -269,8 +288,41 @@ public sealed class EditorSession : IDisposable
   {
     if (delta == Vector.Zero || Selection.Count == 0) return;
 
-    MapEditing.Move(Project.Elements, Selection.Items.ToList(), delta);
-    Project.IsDirty = true;
+    var items = Selection.Items.ToList();
+    Execute("Move", () => MapEditing.Move(Project.Elements, items, delta), items);
+    RaiseChanged(EditorChange.Model);
+  }
+
+  /// <summary>
+  ///   Resize the selected rooms by <paramref name="delta" /> (the Ctrl+Alt+arrow gesture), keeping at least one grid
+  ///   cell. One undo step per call, so key repeat makes one step per repeat.
+  /// </summary>
+  public void ResizeSelected(Vector delta)
+  {
+    if (delta == Vector.Zero || Selection.Count == 0) return;
+
+    var sizeables = Selection.Items.OfType<ISizeable>().ToList();
+    if (sizeables.Count == 0) return;
+
+    Execute("Resize", () =>
+    {
+      foreach (var sizeable in sizeables)
+      {
+        var width = sizeable.Width + delta.X;
+        var height = sizeable.Height + delta.Y;
+        // Shrinking never goes below one grid cell; the axis is left unchanged instead.
+        if (delta.X < 0 && width < Settings.GridSize) width = sizeable.Width;
+        if (delta.Y < 0 && height < Settings.GridSize) height = sizeable.Height;
+        sizeable.Size = new Vector(width, height);
+      }
+    }, sizeables.OfType<Element>());
+    RaiseChanged(EditorChange.Model);
+  }
+
+  /// <summary>Run <paramref name="apply"/> (typically a dialog's OK handler) as one undo step.</summary>
+  public void Apply(string title, Element element, Action apply)
+  {
+    Execute(title, apply, new[] { element });
     RaiseChanged(EditorChange.Model);
   }
 
@@ -292,7 +344,8 @@ public sealed class EditorSession : IDisposable
     var json = CopySelected();
     if (json != null)
     {
-      DeleteSelected();
+      // DeleteSelected opens its own transaction; the outer one makes the whole cut a single "Cut" step.
+      Execute("Cut", () => DeleteSelected());
     }
     return json;
   }
@@ -310,11 +363,14 @@ public sealed class EditorSession : IDisposable
         var colorsObj = JsonConvert.DeserializeObject<CopyController.CopyColorsObj>(text);
         if (colorsObj != null)
         {
-          foreach (var room in Selection.Rooms.ToList())
+          var rooms = Selection.Rooms.ToList();
+          Execute("Paste", () =>
           {
-            controller.SetRoomColors(room, colorsObj);
-          }
-          Project.IsDirty = true;
+            foreach (var room in rooms)
+            {
+              controller.SetRoomColors(room, colorsObj);
+            }
+          }, rooms);
           RaiseChanged(EditorChange.Model);
         }
       }
@@ -323,7 +379,7 @@ public sealed class EditorSession : IDisposable
         var copyObj = JsonConvert.DeserializeObject<CopyController.CopyObject>(text);
         if (copyObj != null)
         {
-          PasteRooms(copyObj, controller, target);
+          Execute("Paste", () => PasteRooms(copyObj, controller, target));
         }
       }
     }
@@ -402,7 +458,6 @@ public sealed class EditorSession : IDisposable
     pasted.AddRange(newConnections);
     Selection.Set(pasted);
 
-    project.IsDirty = true;
     RaiseChanged(EditorChange.Model);
   }
 
@@ -453,6 +508,14 @@ public sealed class EditorSession : IDisposable
 
     _lastDirty = e.NewProject != null && e.NewProject.IsDirty;
     RaiseChanged(EditorChange.Model | EditorChange.Selection);
+  }
+
+  private void SetPointerMapPosition(Vector? position)
+  {
+    if (_pointerMapPosition == position) return;
+
+    _pointerMapPosition = position;
+    RaiseChanged(EditorChange.Pointer);
   }
 
   private void RaiseChanged(EditorChange change)

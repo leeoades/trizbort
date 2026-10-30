@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Trizbort.Automap;
+using Trizbort.Editor;
 using Trizbort.Avalonia.Services;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
@@ -43,13 +44,16 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _automapStatusText = "Automap is not running.";
 
     private Task? _automapTask;
+    private UndoTransaction? _automapTransaction;
     private DispatcherTimer? _automapStatusTimer;
     private object? _currentRunToken;
 
     internal Task? CurrentAutomapTask => _automapTask;
 
     [ObservableProperty]
-    private string _cursorPositionText = "X: 0, Y: 0";
+    private string _cursorPositionText = string.Empty;
+
+    private Trizbort.Domain.Misc.Vector? _lastCursorPosition;
 
     [ObservableProperty]
     private string _activeTool = "Select";
@@ -70,6 +74,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _commandService.ProjectChanged += OnProjectChanged;
         _commandService.SelectionChanged += OnSelectionChanged;
         _commandService.ZoomChanged += OnZoomChanged;
+        _commandService.CanvasInvalidated += OnCanvasInvalidated;
+        _commandService.PointerMoved += OnCanvasInvalidated;
 
         UpdateState();
     }
@@ -77,6 +83,19 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnProjectChanged(object? sender, EventArgs e)
     {
         UpdateState();
+    }
+
+    private void OnCanvasInvalidated(object? sender, EventArgs e)
+    {
+        // Only rebuild the readout when the map-space position actually changed.
+        var position = _commandService.PointerMapPosition;
+        if (position == _lastCursorPosition) return;
+
+        _lastCursorPosition = position;
+        // "+ 0.0" turns a rounded -0 into 0 so the readout never shows "-0".
+        CursorPositionText = position is { } p
+            ? $"X: {Math.Round(p.X) + 0.0:0}, Y: {Math.Round(p.Y) + 0.0:0}"
+            : string.Empty;
     }
 
     private void OnSelectionChanged(object? sender, EventArgs e)
@@ -424,8 +443,17 @@ public partial class MainWindowViewModel : ViewModelBase
         _automapStatusTimer = null;
 
         AutomapEngine.Instance.Stop();
+        EndAutomapTransaction();
         IsAutomapActive = false;
         AutomapStatusText = "Automap is not running.";
+    }
+
+    // One undo step for the whole automap run (plan section 7).
+    private void EndAutomapTransaction()
+    {
+        var transaction = _automapTransaction;
+        _automapTransaction = null;
+        transaction?.Dispose();
     }
 
     public Task StartAutomapAsync(AutomapSettings settings)
@@ -451,6 +479,7 @@ public partial class MainWindowViewModel : ViewModelBase
         };
         _automapStatusTimer.Start();
 
+        _automapTransaction = _commandService.Session.BeginTransaction("Automap");
         _automapTask = RunAutomapLoopAsync(settings, runToken);
         return Task.CompletedTask;
     }
@@ -476,6 +505,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             if (ReferenceEquals(_currentRunToken, runToken))
             {
+                EndAutomapTransaction();
                 AutomapStatusText = AutomapEngine.Instance.Status;
                 IsAutomapActive = false;
                 _automapStatusTimer?.Stop();

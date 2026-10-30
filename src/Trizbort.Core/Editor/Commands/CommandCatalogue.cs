@@ -35,6 +35,25 @@ public sealed class CommandCatalogue
     _commands.Add(command);
   }
 
+  /// <summary>The command of the given scope bound to <paramref name="gesture" />, or null.</summary>
+  public EditorCommand FindByGesture(KeyGesture gesture, CommandScope scope)
+  {
+    foreach (var command in _commands)
+    {
+      if (command.Scope != scope) continue;
+      foreach (var candidate in command.Gestures)
+      {
+        if (candidate == gesture) return command;
+      }
+    }
+    return null;
+  }
+
+  public EditorCommand FindByGesture(KeyInput input, CommandScope scope)
+  {
+    return FindByGesture(new KeyGesture(input.Key, input.Modifiers), scope);
+  }
+
   public IEnumerable<EditorCommand> ForContext(ContextTargets target)
   {
     return _commands.Where(c => (c.ContextTargets & target) != 0);
@@ -64,6 +83,28 @@ public sealed class CommandCatalogue
 
     catalogue.Register(new EditorCommand
     {
+      Id = "edit.undo",
+      Title = "_Undo",
+      DynamicTitle = s => s.Undo.CanUndo ? "_Undo " + s.Undo.UndoTitle : "_Undo",
+      MenuPath = "Edit",
+      Group = "0-undo",
+      Gestures = new[] { new KeyGesture(InputKey.Z, primary) },
+      CanExecuteFunc = s => s.Undo.CanUndo,
+      ExecuteAsyncFunc = s => Run(() => s.PerformUndo())
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "edit.redo",
+      Title = "_Redo",
+      DynamicTitle = s => s.Undo.CanRedo ? "_Redo " + s.Undo.RedoTitle : "_Redo",
+      MenuPath = "Edit",
+      Group = "0-undo",
+      Gestures = new[] { new KeyGesture(InputKey.Y, primary), new KeyGesture(InputKey.Z, primary | ModifierKeys.Shift) },
+      CanExecuteFunc = s => s.Undo.CanRedo,
+      ExecuteAsyncFunc = s => Run(() => s.PerformRedo())
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "edit.selectAll",
       Title = "Select _All",
       MenuPath = "Edit",
@@ -75,6 +116,8 @@ public sealed class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "edit.delete",
+      ToolbarOrder = 60, ToolbarGroup = "2-edit", ShowInToolbar = true, IconKey = "IconDelete",
+      ContextOrder = 22, ContextGroup = "2-clipboard",
       Title = "_Delete",
       MenuPath = "Edit",
       Group = "1-select",
@@ -86,6 +129,7 @@ public sealed class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "edit.copy",
+      ContextOrder = 21, ContextGroup = "2-clipboard",
       Title = "_Copy",
       MenuPath = "Edit",
       Group = "2-clipboard",
@@ -97,6 +141,7 @@ public sealed class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "edit.cut",
+      ContextOrder = 20, ContextGroup = "2-clipboard",
       Title = "Cu_t",
       MenuPath = "Edit",
       Group = "2-clipboard",
@@ -108,17 +153,19 @@ public sealed class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "edit.paste",
+      ContextOrder = 30, ContextGroup = "3-paste",
       Title = "_Paste",
       MenuPath = "Edit",
       Group = "2-clipboard",
       Gestures = new[] { new KeyGesture(InputKey.V, primary) },
-      ContextTargets = ContextTargets.Empty,
+      ContextTargets = ContextTargets.Any,
       ExecuteAsyncFunc = s => Run(() => s.Paste(null, null))
     });
 
     catalogue.Register(new EditorCommand
     {
       Id = "view.zoomIn",
+      ToolbarOrder = 70, ToolbarGroup = "3-view", ShowInToolbar = true, IconKey = "IconZoomIn",
       Title = "Zoom _In",
       MenuPath = "View",
       Group = "1-zoom",
@@ -132,6 +179,7 @@ public sealed class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "view.zoomOut",
+      ToolbarOrder = 80, ToolbarGroup = "3-view", ShowInToolbar = true, IconKey = "IconZoomOut",
       Title = "Zoom _Out",
       MenuPath = "View",
       Group = "1-zoom",
@@ -145,6 +193,7 @@ public sealed class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "view.resetZoom",
+      ToolbarOrder = 90, ToolbarGroup = "3-view", ShowInToolbar = true, IconKey = "IconZoomReset",
       Title = "_Reset Zoom",
       MenuPath = "View",
       Group = "1-zoom",
@@ -166,6 +215,7 @@ public sealed class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "view.toggleGrid",
+      ToolbarOrder = 100, ToolbarGroup = "3-view", ShowInToolbar = true, IconKey = "IconGrid",
       Title = "Toggle _Grid",
       MenuPath = "View",
       Group = "2-display",
@@ -176,19 +226,23 @@ public sealed class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "project.addRoom",
+      ToolbarOrder = 40, ToolbarGroup = "2-edit", ShowInToolbar = true, IconKey = "IconAddRoom",
+      ContextOrder = 40, ContextGroup = "4-add",
       Title = "Add _Room",
       MenuPath = "Project",
       Group = "1-add",
-      ContextTargets = ContextTargets.Empty,
+      ContextTargets = ContextTargets.Any,
       ExecuteAsyncFunc = s => Run(() => s.AddRoom(null))
     });
     catalogue.Register(new EditorCommand
     {
       Id = "project.addLabel",
+      ToolbarOrder = 50, ToolbarGroup = "2-edit", ShowInToolbar = true, IconKey = "IconAddLabel",
+      ContextOrder = 41, ContextGroup = "4-add",
       Title = "Add _Map Label",
       MenuPath = "Project",
       Group = "1-add",
-      ContextTargets = ContextTargets.Empty,
+      ContextTargets = ContextTargets.Any,
       ExecuteAsyncFunc = s => Run(() => s.AddMapLabel(null))
     });
 

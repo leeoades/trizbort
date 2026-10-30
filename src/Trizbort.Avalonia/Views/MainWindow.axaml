@@ -12,141 +12,17 @@
         MinWidth="640" MinHeight="480"
         WindowStartupLocation="CenterScreen">
 
-    <Window.KeyBindings>
-        <KeyBinding Gesture="Ctrl+N" Command="{Binding NewMapCommand}" />
-        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenMapCommand}" />
-        <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveMapCommand}" />
-        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveMapAsCommand}" />
-        <KeyBinding Gesture="Ctrl+A" Command="{Binding SelectAllCommand}" />
-        <KeyBinding Gesture="Delete" Command="{Binding DeleteSelectedCommand}" />
-        <KeyBinding Gesture="Ctrl+C" Command="{Binding CopyCommand}" />
-        <KeyBinding Gesture="Ctrl+X" Command="{Binding CutCommand}" />
-        <KeyBinding Gesture="Ctrl+V" Command="{Binding PasteCommand}" />
-        <KeyBinding Gesture="Alt+Enter" Command="{Binding ShowSelectedElementPropertiesCommand}" />
-        <KeyBinding Gesture="Ctrl+OemPlus" Command="{Binding ZoomInCommand}" />
-        <KeyBinding Gesture="Ctrl+Add" Command="{Binding ZoomInCommand}" />
-        <KeyBinding Gesture="Ctrl+OemMinus" Command="{Binding ZoomOutCommand}" />
-        <KeyBinding Gesture="Ctrl+Subtract" Command="{Binding ZoomOutCommand}" />
-        <KeyBinding Gesture="Ctrl+D0" Command="{Binding ResetZoomCommand}" />
-        <KeyBinding Gesture="Ctrl+NumPad0" Command="{Binding ResetZoomCommand}" />
-        <KeyBinding Gesture="F1" Command="{Binding ShowAboutCommand}" />
-    </Window.KeyBindings>
-
     <DockPanel LastChildFill="True">
         <!-- Top Menu & Toolbar Area -->
         <StackPanel DockPanel.Dock="Top">
-            <!-- Modern Menu Bar -->
-            <Menu>
-                <MenuItem Header="_File">
-                    <MenuItem Header="_New Map" Command="{Binding NewMapCommand}" InputGesture="Ctrl+N" />
-                    <MenuItem Header="_Open Map..." Command="{Binding OpenMapCommand}" InputGesture="Ctrl+O" />
-                    <MenuItem Header="_Save Map" Command="{Binding SaveMapCommand}" InputGesture="Ctrl+S" />
-                    <MenuItem Header="Save Map _As..." Command="{Binding SaveMapAsCommand}" InputGesture="Ctrl+Shift+S" />
-                    <Separator />
-                    <MenuItem Header="_Export">
-                        <MenuItem Header="_Image (PNG)..." Command="{Binding ExportImageCommand}" />
-                        <Separator />
-                        <MenuItem Header="Inform _7 Source..." Command="{Binding ExportInform7Command}" />
-                        <MenuItem Header="Inform _6 Source..." Command="{Binding ExportInform6Command}" />
-                        <MenuItem Header="_TADS Source..." Command="{Binding ExportTadsCommand}" />
-                        <MenuItem Header="_Hugo Source..." Command="{Binding ExportHugoCommand}" />
-                        <MenuItem Header="_ZIL Source..." Command="{Binding ExportZilCommand}" />
-                        <MenuItem Header="_Quest Source..." Command="{Binding ExportQuestCommand}" />
-                        <MenuItem Header="_Alan Source..." Command="{Binding ExportAlanCommand}" />
-                        <MenuItem Header="A_dventuron Source..." Command="{Binding ExportAdventuronCommand}" />
-                    </MenuItem>
-                    <Separator />
-                    <MenuItem Header="E_xit" Command="{Binding ExitCommand}" InputGesture="Alt+F4" />
-                </MenuItem>
+            <!-- Menu, toolbar and key bindings are generated from the command catalogue (MainWindow.axaml.cs) -->
+            <Menu x:Name="MainMenu" />
 
-                <MenuItem Header="_Edit">
-                    <MenuItem Header="Select _All" Command="{Binding SelectAllCommand}" InputGesture="Ctrl+A" />
-                    <MenuItem Header="_Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Delete" />
-                    <Separator />
-                    <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Ctrl+C" />
-                    <MenuItem Header="Cu_t" Command="{Binding CutCommand}" InputGesture="Ctrl+X" />
-                    <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Ctrl+V" />
-                    <Separator />
-                    <MenuItem Header="_Properties..." Command="{Binding ShowSelectedElementPropertiesCommand}" InputGesture="Alt+Enter" />
-                    <Separator />
-                    <MenuItem Header="_Map Settings..." Command="{Binding ShowMapSettingsCommand}" />
-                    <MenuItem Header="Map _Theme..." Command="{Binding ShowMapThemeCommand}" />
-                    <MenuItem Header="_Application Settings..." Command="{Binding ShowAppSettingsCommand}" />
-                </MenuItem>
-
-                <MenuItem Header="_View">
-                    <MenuItem Header="Zoom _In" Command="{Binding ZoomInCommand}" InputGesture="Ctrl++" />
-                    <MenuItem Header="Zoom _Out" Command="{Binding ZoomOutCommand}" InputGesture="Ctrl+-" />
-                    <MenuItem Header="_Reset Zoom" Command="{Binding ResetZoomCommand}" InputGesture="Ctrl+D0" />
-                    <MenuItem Header="_Fit to Map" Command="{Binding FitToMapCommand}" />
-                    <Separator />
-                    <MenuItem Header="Toggle _Grid" Command="{Binding ToggleGridCommand}" />
-                </MenuItem>
-
-                <MenuItem Header="_Project">
-                    <MenuItem Header="Add _Room" Command="{Binding AddRoomCommand}" />
-                    <MenuItem Header="Add _Map Label" Command="{Binding AddMapLabelCommand}" />
-                    <Separator />
-                    <MenuItem Header="Toggle _Automap" Command="{Binding ToggleAutomapCommand}" />
-                </MenuItem>
-
-                <MenuItem Header="_Help">
-                    <MenuItem Header="_About Trizbort..." Command="{Binding ShowAboutCommand}" InputGesture="F1" />
-                </MenuItem>
-            </Menu>
-
-            <!-- Vector Toolbar -->
             <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                     BorderThickness="0,0,0,1"
                     Padding="4,2">
-                <StackPanel Orientation="Horizontal" Spacing="2">
-                    <Button Command="{Binding NewMapCommand}" ToolTip.Tip="New Map (Ctrl+N)" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconNew}" Width="16" Height="16" />
-                    </Button>
-                    <Button Command="{Binding OpenMapCommand}" ToolTip.Tip="Open Map (Ctrl+O)" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconOpen}" Width="16" Height="16" />
-                    </Button>
-                    <Button Command="{Binding SaveMapCommand}" ToolTip.Tip="Save Map (Ctrl+S)" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconSave}" Width="16" Height="16" />
-                    </Button>
-
-                    <Rectangle Width="1" Margin="4,2" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" VerticalAlignment="Stretch" />
-
-                    <Button Command="{Binding AddRoomCommand}" ToolTip.Tip="Add Room" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconAddRoom}" Width="16" Height="16" />
-                    </Button>
-                    <Button Command="{Binding AddMapLabelCommand}" ToolTip.Tip="Add Map Label" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconAddLabel}" Width="16" Height="16" />
-                    </Button>
-                    <Button Command="{Binding DeleteSelectedCommand}" ToolTip.Tip="Delete Selected (Delete)" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconDelete}" Width="16" Height="16" />
-                    </Button>
-
-                    <Rectangle Width="1" Margin="4,2" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" VerticalAlignment="Stretch" />
-
-                    <Button Command="{Binding ZoomInCommand}" ToolTip.Tip="Zoom In (Ctrl++)" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconZoomIn}" Width="16" Height="16" />
-                    </Button>
-                    <Button Command="{Binding ZoomOutCommand}" ToolTip.Tip="Zoom Out (Ctrl+-)" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconZoomOut}" Width="16" Height="16" />
-                    </Button>
-                    <Button Command="{Binding ResetZoomCommand}" ToolTip.Tip="Reset Zoom (Ctrl+0)" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconZoomReset}" Width="16" Height="16" />
-                    </Button>
-                    <Button Command="{Binding ToggleGridCommand}" ToolTip.Tip="Toggle Grid" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconGrid}" Width="16" Height="16" />
-                    </Button>
-
-                    <Rectangle Width="1" Margin="4,2" Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" VerticalAlignment="Stretch" />
-
-                    <Button Command="{Binding ToggleAutomapCommand}" ToolTip.Tip="Toggle Automap" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconAutomap}" Width="16" Height="16" />
-                    </Button>
-                    <Button Command="{Binding ShowMapSettingsCommand}" ToolTip.Tip="Map Settings" Padding="6,4">
-                        <PathIcon Data="{StaticResource IconSettings}" Width="16" Height="16" />
-                    </Button>
-                </StackPanel>
+                <StackPanel x:Name="Toolbar" Orientation="Horizontal" Spacing="2" />
             </Border>
         </StackPanel>
 

@@ -55,10 +55,14 @@ public sealed class UndoStack
     RaiseChanged();
   }
 
-  /// <summary>Forget all history and treat the current state as saved (new or opened document).</summary>
+  /// <summary>
+  ///   Forget all history and treat the current state as saved (new or opened document). An open transaction is
+  ///   abandoned without being recorded or rolled back: the document was replaced, so there is nothing to restore,
+  ///   and the transaction's handle becomes a no-op.
+  /// </summary>
   public void Clear()
   {
-    if (_isOpen) throw new InvalidOperationException("Cannot clear the undo history inside a transaction.");
+    if (_isOpen) CloseTransaction();
 
     _undo.Clear();
     _redo.Clear();

@@ -1,11 +1,15 @@
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
+using Trizbort.Editor;
 
 namespace Trizbort.Avalonia.Services;
 
 public interface ICommandService
 {
+    /// <summary>The editor session that owns the project, selection and undo history.</summary>
+    EditorSession Session { get; }
+
     Project Project { get; }
 
     IReadOnlySet<Element> SelectedElements { get; }
@@ -19,6 +23,11 @@ public interface ICommandService
     void SetView(Vector origin, float zoomFactor);
     void SetViewportSize(double width, double height);
 
+    /// <summary>Map-space point under the pointer while it is over the canvas; null when it is not.</summary>
+    Vector? PointerMapPosition { get; }
+    void SetPointerClientPosition(double x, double y);
+    void ClearPointerPosition();
+
     void NewMap();
     Room AddRoom(Vector? position = null);
     MapLabel AddMapLabel(Vector? position = null);
@@ -29,6 +38,7 @@ public interface ICommandService
     void SelectAll();
     void ClearSelection();
     void NudgeSelected(Vector delta);
+    void ResizeSelected(Vector delta);
 
     string? CopySelected();
     string? CutSelected();
@@ -44,6 +54,9 @@ public interface ICommandService
     event EventHandler? SelectionChanged;
     event EventHandler<float>? ZoomChanged;
     event EventHandler? CanvasInvalidated;
+
+    /// <summary>The pointer moved over the map (<see cref="PointerMapPosition" /> changed); no redraw needed.</summary>
+    event EventHandler? PointerMoved;
 
     void InvalidateCanvas();
 }

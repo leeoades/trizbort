@@ -3,7 +3,7 @@
 Written 2026-10-30 (T3.1) from the feature matrix, dialog reviews, issues and the accepted decisions D1–D4.
 Each ticket follows the template in `../../avalonia-parity-review.md` §8 and is sized for one agent session.
 
-**Done so far:** 001, 002, 003, 005, 009, 011, 012, 070 (style + Label dialog), 071, 074, 077, 080, 081, 082, 083, 084, 085, 100, 101, 104, 106, 112, 117, 118 — marked ✅.
+**Done so far:** 001, 002, 003, 004, 005, 009, 010, 011, 012, 070 (style + Label dialog), 071, 074, 077, 080, 081, 082, 083, 084, 085, 100, 101, 104, 106, 111, 112, 117, 118 — marked ✅.
 
 **How to pick one:** take the lowest wave whose dependencies are all done; within a wave, P1 first. Mark a ticket done by
 adding `Status: Done (<commit>)` under its title and updating the matrix rows it lists.
@@ -21,13 +21,13 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 001 ✅ | [Add Selection and Viewport types to Core](001-selection-and-viewport-types-in-core.md) | 1 | P1 | S | mid | — | X010, X047–X049 |
 | 002 ✅ | [Add EditorSession to Core; CommandService becomes a thin adapter](002-editor-session-in-core.md) | 2 | P1 | M | mid | 001 | X010, X048, X052, X053 |
 | 003 ✅ | [Add UndoStack with gzip snapshot mementos, transactions and dirty flag](003-undostack-snapshot-mementos.md) | 3 | P1 | L | mid + strong review | 002 | undo/redo, X052 |
-| 004 | [Route existing mutations through the EditorSession; remove hand-set IsDirty](004-route-mutations-through-session.md) | 4 | P1 | M | mid | 003 | X012–X015, X021, X022, X052, M024, M026–M030 |
+| 004 ✅ | [Route existing mutations through the EditorSession; remove hand-set IsDirty](004-route-mutations-through-session.md) | 4 | P1 | M | mid | 003 | X012–X015, X021, X022, X052, M024, M026–M030 |
 | 005 ✅ | [Move canvas hit-testing to Core (ZOrder-aware)](005-hit-testing-to-core.md) | 3 | P1 | M | mid | 002 | X034–X036, X046, G001, G013, G016 |
 | 006 | [Move the pointer/key drag state machine to Core (CanvasInteraction)](006-drag-state-machine-to-core.md) | 5 | P1 | L | mid + strong review | 004, 005, 009 | X037–X044, X046, X051, G001–G021, I-010 |
 | 007 | [New-connection gesture uses new-connection defaults; redock gesture in Core](007-connection-gestures-defaults-redock.md) | 6 | P1 | M | mid | 006 | G008–G010, X004, X011, X041 |
 | 008 | [Add Undo and Redo commands and UI](008-undo-redo-commands-and-ui.md) | 5 | P1 | S | mid | 004, 010 | undo/redo, X052 |
 | 009 ✅ | [Command catalogue types (incl. neutral key input types) and tests in Core](009-command-catalogue-types.md) | 3 | P1 | M | mid | 002 | X050, X051 |
-| 010 | [Avalonia generates main menu, context menu, toolbar and key bindings from the catalogue](010-avalonia-generates-menus-from-catalogue.md) | 4 | P1 | L | mid + strong review | 009 | X050, X051, C001, C002, M001–M013 |
+| 010 ✅ | [Avalonia generates main menu, context menu, toolbar and key bindings from the catalogue](010-avalonia-generates-menus-from-catalogue.md) | 4 | P1 | L | mid + strong review | 009 | X050, X051, C001, C002, M001–M013 |
 | 011 ✅ | [Add async IEditorPrompts to Core; the automap engine awaits them](011-async-editor-prompts-and-automap-engine.md) | 1 | P1 | M | mid | — | E044, E045 |
 | 012 ✅ | [Avalonia IEditorPrompts: same-direction and disambiguation dialogs](012-avalonia-automap-prompt-dialogs.md) | 2 | P1 | M | mid | 011 | E044, E045, D008, D009, I-008 |
 | 020 | [Add Viewport.CenterOn(element) and select-nearest-centre helpers](020-viewport-centre-on-element.md) | 3 | P2 | S | mid | 002 | (supports K001, K003, K004, K011, K013, K014, M030) |
@@ -110,7 +110,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 108 | [Wire the --debug startup flag and the debug rendering hooks](108-debug-flag-wiring.md) | 7 | P3 | S | mid | 055, 104 | K062–K064, K067, K069 |
 | 109 | [File association metadata and OS "open file" activation](109-file-association-and-os-open-events.md) | 3 | P3 | S | mid | 104 | A001 |
 | 110 | [Smart Save service: file naming, settings, messages, PDF/image output](110-smart-save.md) | 7 | P2 | M | mid | 059, 112, 120, 123 | E030–E034 |
-| 111 | [Status bar cursor position follows the pointer](111-status-bar-cursor-position.md) | 3 | P1 | S | mid | 002 | A020, I-002 |
+| 111 ✅ | [Status bar cursor position follows the pointer](111-status-bar-cursor-position.md) | 3 | P1 | S | mid | 002 | A020, I-002 |
 | 112 ✅ | [Reload prompt when the open map changes on disk](112-file-watcher-reload-prompt.md) | 2 | P1 | S | mid | 011 | A005, I-003 |
 | 114 | [Window title: dirty marker, version and "show full path" setting](114-window-title-format-and-full-path.md) | 4 | P1 | S | mid | 003 | A004, I-006 |
 | 115 | [Honour "Apply style to new rooms"](115-apply-style-to-new-rooms.md) | 3 | P1 | S | mid | 002 | G008, I-006 |

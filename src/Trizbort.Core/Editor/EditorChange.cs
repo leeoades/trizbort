@@ -13,5 +13,8 @@ public enum EditorChange
   Selection = 2,
   Viewport = 4,
   Adorners = 8,
-  Dirty = 16
+  Dirty = 16,
+
+  /// <summary>Only the pointer position changed (status-bar readout); nothing needs redrawing.</summary>
+  Pointer = 32
 }

@@ -283,10 +283,10 @@ public partial class MapSettingsViewModel : ViewModelBase
     public void ApplyToSettings()
     {
         var project = Project.Current;
-        if (project.Title != Title) { project.Title = Title; project.IsDirty = true; }
-        if (project.Author != Author) { project.Author = Author; project.IsDirty = true; }
-        if (project.Description != Description) { project.Description = Description; project.IsDirty = true; }
-        if (project.History != History) { project.History = History; project.IsDirty = true; }
+        if (project.Title != Title) { project.Title = Title; }
+        if (project.Author != Author) { project.Author = Author; }
+        if (project.Description != Description) { project.Description = Description; }
+        if (project.History != History) { project.History = History; }
 
         Settings.HandleSize = HandleSize;
         Settings.SnapToElementSize = SnapToElementDistance;
@@ -352,8 +352,6 @@ public partial class MapSettingsViewModel : ViewModelBase
         {
             Settings.Regions.Insert(0, new Region { RegionName = Region.DefaultRegion, RColor = Color.White, TextColor = Color.MidnightBlue });
         }
-
-        project.IsDirty = true;
     }
 
     /// <summary>
@@ -380,7 +378,6 @@ public partial class MapSettingsViewModel : ViewModelBase
             if (room.Region != null && renames.TryGetValue(room.Region, out var newName))
             {
                 room.Region = newName;
-                project.IsDirty = true;
             }
     }
 

@@ -54,6 +54,20 @@ public class CommandCatalogueTests
   }
 
   [Test]
+  public void FindByGesture_ReturnsCanvasCommand()
+  {
+    var catalogue = new CommandCatalogue();
+    catalogue.Register(Command("window", CommandScope.Window, "Primary+Z"));
+    catalogue.Register(Command("canvas", CommandScope.Canvas, "R", "Shift+F2"));
+
+    KeyGesture.TryParse("Shift+F2", out var gesture).ShouldBeTrue();
+    catalogue.FindByGesture(gesture, CommandScope.Canvas).Id.ShouldBe("canvas");
+    catalogue.FindByGesture(new KeyInput(InputKey.R, ModifierKeys.None), CommandScope.Canvas).Id.ShouldBe("canvas");
+    catalogue.FindByGesture(new KeyInput(InputKey.R, ModifierKeys.None), CommandScope.Window).ShouldBeNull();
+    catalogue.FindByGesture(new KeyInput(InputKey.Z, ModifierKeys.Primary), CommandScope.Canvas).ShouldBeNull();
+  }
+
+  [Test]
   public void DefaultCatalogue_HasNoValidationProblems()
   {
     CatalogueValidator.Validate(CommandCatalogue.CreateDefault()).ShouldBeEmpty();
