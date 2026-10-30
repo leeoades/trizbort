@@ -261,13 +261,13 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
     `issues.md` (category `render`). Ignore anti-aliasing/hinting.
 - [ ] **T2.3 Reproduce Lee's teething issues** · Mid · one card per `issues.md` entry
   - Reproduce (failing headless test if possible), locate cause, record `file:line` and proposed fix. Fix only if flagged `fix-now`.
-- [ ] **T2.4 Manual smoke-test script** · Cheap · Depends: T1.8
+- [x] **T2.4 Manual smoke-test script** · Cheap · Depends: T1.8
   - `smoke-test-script.md`: ~30-minute checklist per OS (**Windows and Linux**), grouped File / Edit / Canvas / Dialogs / Export / Automap, each
     step with expected result and `[ ] pass / fail / notes`. Use `tests/manual/` fixtures.
 
 ### Phase 3 — Decisions and tickets
 
-- [ ] **D1 Editor model in Core** — *proposed, see `decisions.md`* **** · Strong · Input: matrix section X, §7 below, `agent-docs/01-architecture-overview.md`, `02-domain-model.md`,
+- [ ] **D1 Editor model in Core** — *proposed, see `decisions.md`* · Strong · Input: matrix section X, §7 below, `agent-docs/01-architecture-overview.md`, `02-domain-model.md`,
   `src/Trizbort.Avalonia/Services/ICommandService.cs`, the `CanvasDragMode` part of `MapCanvasControl.cs`.
   Output: ADR in `decisions.md` (≤ 2 pages) plus ticket outlines for an `EditorSession` in `Trizbort.Core` that owns:
   - `Project`, `Selection`, `Viewport` (origin, zoom, size; canvas↔client transforms; fit; zoom-about-point);
@@ -278,12 +278,12 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
   - abstractions for what Core can't do itself: text measurement, clipboard, async prompts/dialogs, file pickers;
   - migration order that keeps the app working between tickets, and the test strategy (Core tests for commands and interaction;
     Avalonia tests shrink to rendering and wiring).
-- [ ] **D2 Command catalogue** — *proposed, see `decisions.md`* **** · Strong · Depends: D1. One registry in Core: id, display name, menu path, default gesture written platform-neutrally
+- [ ] **D2 Command catalogue** — *proposed, see `decisions.md`* · Strong · Depends: D1. One registry in Core: id, display name, menu path, default gesture written platform-neutrally
   (`Primary+S`; `Primary` = Ctrl on Windows/Linux, Cmd on macOS), CanExecute, handler → editor command. Avalonia generates main menu, macOS
   `NativeMenu`, context menus, toolbar and key bindings from it. Include a test that fails on duplicate gestures. ADR + skeleton ticket.
-- [ ] **D3 Async prompts from Core** — *proposed, see `decisions.md`* **** · Strong · Automap same-direction/disambiguation and any other Core→user question: async callback vs
+- [ ] **D3 Async prompts from Core** — *proposed, see `decisions.md`* · Strong · Automap same-direction/disambiguation and any other Core→user question: async callback vs
   background loop + dispatcher. ADR.
-- [ ] **D4 Shortcut map** · Mid drafts, Lee approves · Depends: T1.1, T1.2. Table `Command | Reference gesture | Proposed gesture | Reason`.
+- [ ] **D4 Shortcut map** — *drafted in `avalonia-parity/shortcut-map.md`, awaiting Lee* · Mid drafts, Lee approves · Depends: T1.1, T1.2. Table `Command | Reference gesture | Proposed gesture | Reason`.
   Policy (L4): keep the reference gesture unless an obvious modern convention exists. Candidates: Save As `Primary+Shift+S` (Smart Save then needs a
   new gesture), Undo `Primary+Z`, Redo `Primary+Y` and `Primary+Shift+Z`, Help `F1`, Find `Primary+F`, Settings `Primary+,`, Zoom
   `Primary+=`/`Primary+-`/`Primary+0`, `Primary+wheel` zoom, `Primary+W` (conventionally Close; reference uses it for Swap Names — flag), Delete
