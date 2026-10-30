@@ -1,6 +1,6 @@
 # Avalonia Feature Parity Review — Plan
 
-Status: Draft 3 (2026-10-30). Progress: Phases 0 and 1 done; D1–D4 accepted (`avalonia-parity/decisions.md`, `shortcut-map.md`); next: tickets (T3.1). Owner: Lee. Working folder: `agent-docs/plans/avalonia-parity/`.
+Status: Draft 3 (2026-10-30). Progress: Phases 0 and 1 done; D1–D4 accepted (`avalonia-parity/decisions.md`, `shortcut-map.md`); tickets written (T3.1); next: Lee confirms priorities (T3.2), then Phase 4 from wave 1. Owner: Lee. Working folder: `agent-docs/plans/avalonia-parity/`.
 
 ## 1. Goal and direction
 
@@ -288,7 +288,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
   new gesture), Undo `Primary+Z`, Redo `Primary+Y` and `Primary+Shift+Z`, Help `F1`, Find `Primary+F`, Settings `Primary+,`, Zoom
   `Primary+=`/`Primary+-`/`Primary+0`, `Primary+wheel` zoom, `Primary+W` (conventionally Close; reference uses it for Swap Names — flag), Delete
   *and* Backspace delete, right-drag pan (keep). Lee marks each row approve/change.
-- [ ] **T3.1 Write tickets** · Mid · Depends: T1.8, D1, D2, D4. One ticket per `Missing`/`Partial`/`Broken` row or tight group, ≤ ~1 day each,
+- [x] **T3.1 Write tickets** — *107 tickets, index in `avalonia-parity/tickets/README.md`* · Mid · Depends: T1.8, D1, D2, D4. One ticket per `Missing`/`Partial`/`Broken` row or tight group, ≤ ~1 day each,
   template §8. Order: editor-model foundation → command catalogue → undo/redo UI → feature tickets → dialog fixes → macOS code-level tickets.
 - [ ] **T3.2 Prioritise** · Lee · P1 / P2 / P3 / `Won't-port`.
 - [ ] **T3.3 macOS code-level tickets** · Mid · Depends: D2. Cmd mapping (from the catalogue); `NativeMenu` with the standard app menu (About,
