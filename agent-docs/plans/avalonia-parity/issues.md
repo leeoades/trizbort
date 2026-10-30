@@ -92,4 +92,12 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: medium     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-012 -->
+## I-012 Avalonia draws only 4 of the 8 second-fill locations
+- Reported: 2026-10-30 by agent (ticket 071)   OS: all   Category: render
+- The Room dialog now offers all 8 Second Fill locations (as the reference does), but
+  `src/Trizbort.Avalonia/Drawing/RoomDrawingAdapter.cs` `GetSecondFillPolygon` only builds polygons for 4 of them, so the
+  other 4 render with no second fill. Compare with the reference `legacy/src/Trizbort/Domain/Elements/RoomDrawingExtensions.cs`.
+- Severity: medium     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-013 -->
