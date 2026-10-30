@@ -3,7 +3,7 @@
 Written 2026-10-30 (T3.1) from the feature matrix, dialog reviews, issues and the accepted decisions D1–D4.
 Each ticket follows the template in `../../avalonia-parity-review.md` §8 and is sized for one agent session.
 
-**Done so far:** 001, 002, 003, 004, 005, 006, 009, 010, 011, 012, 070 (style + Label dialog), 071, 072, 074, 075, 076, 077, 079, 080, 081, 082, 083, 084, 085, 100, 101, 104, 106, 111, 112, 114, 117, 118 — marked ✅.
+**Done so far:** 001, 002, 003, 004, 005, 006, 008, 009, 010, 011, 012, 021, 025, 026, 027, 029, 030, 032, 039, 046, 050, 053, 070, 071, 072, 074, 075, 076, 077, 079, 080, 081, 082, 083, 084, 085, 100, 101, 104, 106, 111, 112, 114, 115, 117, 118 — marked ✅. **Partly done (◐):** 037 and 038 (Core done; R/L do not open the properties dialog yet — needs an Avalonia `IEditorPrompts.EditElementAsync`), 040 (Core clipboard commands done; no Avalonia `IClipboard` adapter yet, canvas/menu still use the old copy/paste path).
 
 **How to pick one:** take the lowest wave whose dependencies are all done; within a wave, P1 first. Mark a ticket done by
 adding `Status: Done (<commit>)` under its title and updating the matrix rows it lists.
@@ -25,45 +25,45 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 005 ✅ | [Move canvas hit-testing to Core (ZOrder-aware)](005-hit-testing-to-core.md) | 3 | P1 | M | mid | 002 | X034–X036, X046, G001, G013, G016 |
 | 006 ✅ | [Move the pointer/key drag state machine to Core (CanvasInteraction)](006-drag-state-machine-to-core.md) | 5 | P1 | L | mid + strong review | 004, 005, 009 | X037–X044, X046, X051, G001–G021, I-010 |
 | 007 | [New-connection gesture uses new-connection defaults; redock gesture in Core](007-connection-gestures-defaults-redock.md) | 6 | P1 | M | mid | 006 | G008–G010, X004, X011, X041 |
-| 008 | [Add Undo and Redo commands and UI](008-undo-redo-commands-and-ui.md) | 5 | P1 | S | mid | 004, 010 | undo/redo, X052 |
+| 008 ✅ | [Add Undo and Redo commands and UI](008-undo-redo-commands-and-ui.md) | 5 | P1 | S | mid | 004, 010 | undo/redo, X052 |
 | 009 ✅ | [Command catalogue types (incl. neutral key input types) and tests in Core](009-command-catalogue-types.md) | 3 | P1 | M | mid | 002 | X050, X051 |
 | 010 ✅ | [Avalonia generates main menu, context menu, toolbar and key bindings from the catalogue](010-avalonia-generates-menus-from-catalogue.md) | 4 | P1 | L | mid + strong review | 009 | X050, X051, C001, C002, M001–M013 |
 | 011 ✅ | [Add async IEditorPrompts to Core; the automap engine awaits them](011-async-editor-prompts-and-automap-engine.md) | 1 | P1 | M | mid | — | E044, E045 |
 | 012 ✅ | [Avalonia IEditorPrompts: same-direction and disambiguation dialogs](012-avalonia-automap-prompt-dialogs.md) | 2 | P1 | M | mid | 011 | E044, E045, D008, D009, I-008 |
 | 020 | [Add Viewport.CenterOn(element) and select-nearest-centre helpers](020-viewport-centre-on-element.md) | 3 | P2 | S | mid | 002 | (supports K001, K003, K004, K011, K013, K014, M030) |
-| 021 | [Add Select All/None and the Select Special commands](021-select-special-commands.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | M015–M023, K002, K027 |
+| 021 ✅ | [Add Select All/None and the Select Special commands](021-select-special-commands.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | M015–M023, K002, K027 |
 | 022 | [Add Select Regions, Select Start Room and select-nearest-to-centre](022-select-regions-start-room-nearest.md) | 5 | P1 | S | mid | 002, 009, 010, 020 | K001 (selection half), K003, K004 |
 | 023 | [Add Properties/Rename commands with Enter, F2 and Alt+Enter](023-properties-rename-enter.md) | 6 | P1 | S | mid | 002, 009, 010, 022 | M029, M031, K001, K026, C007 |
 | 024 | [Add Change Region (Shift+F2) and Set Region context submenu](024-change-region-and-set-region-menu.md) | 5 | P2 | M | mid | 002, 003, 009, 010 | M032, C011 |
-| 025 | [Add Toggle Darkness, Force Darkness and Force Lighted commands](025-room-lighting-commands.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M033–M035, K023, K060, K061, C008 |
-| 026 | [Add Start Room and End Room commands](026-start-end-room-commands.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M036, M037, C009, C010 |
-| 027 | [Add the four Room Shape commands](027-room-shape-commands.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M038–M041, K009, K035, K036, C012 |
+| 025 ✅ | [Add Toggle Darkness, Force Darkness and Force Lighted commands](025-room-lighting-commands.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M033–M035, K023, K060, K061, C008 |
+| 026 ✅ | [Add Start Room and End Room commands](026-start-end-room-commands.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M036, M037, C009, C010 |
+| 027 ✅ | [Add the four Room Shape commands](027-room-shape-commands.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M038–M041, K009, K035, K036, C012 |
 | 028 | [Add Join Rooms command](028-join-rooms-command.md) | 6 | P2 | M | mid | 002, 003, 009, 010, 030 | M042, K020, C013 |
-| 029 | [Add Swap Objects/Names/Formats/Regions commands](029-swap-family-commands.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | M043–M046, K021, K057–K059, C014 |
-| 030 | [Add new-connection defaults and the Plain/Dotted/One Way commands](030-new-connection-defaults-and-line-styles.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | M047–M049, M073, M074, K005, K041, K042, C004 |
+| 029 ✅ | [Add Swap Objects/Names/Formats/Regions commands](029-swap-family-commands.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | M043–M046, K021, K057–K059, C014 |
+| 030 ✅ | [Add new-connection defaults and the Plain/Dotted/One Way commands](030-new-connection-defaults-and-line-styles.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | M047–M049, M073, M074, K005, K041, K042, C004 |
 | 031 | [Add connection label commands Up/Down/In/Out](031-connection-label-commands.md) | 6 | P1 | S | mid | 002, 003, 009, 010, 030 | M050, K006, K038–K040, C005 |
-| 032 | [Add Reverse Line and Rotate Connector commands](032-reverse-line-and-rotate-connector.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M051, K007, C006, K019, K054–K056 |
+| 032 ✅ | [Add Reverse Line and Rotate Connector commands](032-reverse-line-and-rotate-connector.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M051, K007, C006, K019, K054–K056 |
 | 033 | [Add Adjust Ports, Cycle Port Detail and Delete All Connections](033-port-adjust-and-delete-all-connections.md) | 5 | P2 | S | mid | 002, 003, 009, 010 | K017, K018, K053 |
 | 034 | [Make drawn connections use new-connection defaults](034-new-connections-use-defaults.md) | 6 | P1 | S | mid | 006, 030 | G008 |
 | 035 | [Add Bring to Front and Send to Back commands](035-z-order-commands.md) | 5 | P2 | S | mid | 002, 003, 009, 010 | C002, C003 |
 | 036 | [Add the four project validation toggles](036-validation-toggles.md) | 5 | P2 | S | mid | 002, 003, 009, 010 | M052–M055 |
-| 037 | [Add Room command with new-room defaults and insert-into-connection](037-add-room-at-cursor.md) | 5 | P1 | M | mid | 002, 003, 005, 006, 009, 010 | M030, K008, C001 |
-| 038 | [Add Map Label command (L)](038-add-label-at-cursor.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M075, K037 |
-| 039 | [Route Delete through one command and add Backspace alias](039-delete-and-backspace-aliases.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M028, K046, K047 |
-| 040 | [Move Copy/Cut/Paste into Core commands over IClipboard](040-clipboard-copy-cut-paste.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | K043–K045, M026 |
+| 037 ◐ | [Add Room command with new-room defaults and insert-into-connection](037-add-room-at-cursor.md) | 5 | P1 | M | mid | 002, 003, 005, 006, 009, 010 | M030, K008, C001 |
+| 038 ◐ | [Add Map Label command (L)](038-add-label-at-cursor.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M075, K037 |
+| 039 ✅ | [Route Delete through one command and add Backspace alias](039-delete-and-backspace-aliases.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M028, K046, K047 |
+| 040 ◐ | [Move Copy/Cut/Paste into Core commands over IClipboard](040-clipboard-copy-cut-paste.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | K043–K045, M026 |
 | 041 | [Add Copy Color command](041-copy-color-command.md) | 6 | P3 | S | cheap | 002, 009, 010, 040 | M025 |
 | 042 | [Add Duplicate command (Primary+D)](042-duplicate-selection-command.md) | 6 | P2 | S | mid | 002, 003, 009, 010, 040 | (new, shortcut-map Q5) |
 | 043 | [Add Backup Project command](043-backup-project-command.md) | 5 | P3 | S | cheap | 002, 009, 010 | K016 |
 | 044 | [Add Quick Find command](044-quick-find-command.md) | 5 | P2 | S | cheap | 002, 009, 010 | K022 |
 | 045 | [Add F3 / Shift+F3 active-element cycling](045-active-element-cycling.md) | 5 | P3 | S | cheap | 002, 009, 010, 020 | K065, K066 |
-| 046 | [Make plain arrows move the selection or pan the view](046-arrow-keys-move-and-pan.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | K012, K015 |
+| 046 ✅ | [Make plain arrows move the selection or pan the view](046-arrow-keys-move-and-pan.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | K012, K015 |
 | 047 | [Add Shift+Arrow / Shift+Home/End/PgUp/PgDn / keypad navigation](047-shift-arrow-navigation.md) | 5 | P2 | M | strong | 002, 005, 006, 009, 010, 020 | K011, K014, K032–K034, K049, K050 |
 | 048 | [Add Primary+Arrow / Primary+NumPad add-or-connect room](048-ctrl-arrow-add-or-connect.md) | 6 | P2 | M | strong | 002, 003, 009, 010, 020, 030, 037, 047 | K013, K051 |
 | 049 | [Add Alt+NumPad unexplored connection](049-alt-numpad-unexplored-connection.md) | 6 | P3 | S | mid | 002, 003, 009, 010, 030 | K052 |
-| 050 | [Add zoom presets, micro zoom and unify zoom gestures](050-zoom-commands-presets-micro.md) | 5 | P1 | M | mid | 002, 009, 010 | M056–M058, K028–K030 |
+| 050 ✅ | [Add zoom presets, micro zoom and unify zoom gestures](050-zoom-commands-presets-micro.md) | 5 | P1 | M | mid | 002, 009, 010 | M056–M058, K028–K030 |
 | 051 | [Honour InvertMouseWheel and Ctrl micro-zoom on the wheel](051-wheel-zoom-invert-and-micro.md) | 6 | P2 | S | mid | 006, 050 | G017 |
 | 052 | [Add Reset View, Zoom to Entire Map, grid check state, minimap toggle, zoom label](052-view-origin-fit-grid-minimap.md) | 6 | P1 | M | mid | 002, 009, 010, 050 | M059–M062, K010, K031, C018 |
-| 053 | [Apply approved gestures for Save As, Settings, Help, About and Exit](053-settings-help-about-exit-save-as-gestures.md) | 5 | P1 | S | cheap | 009, 010 | M005, M013, M065, M066, M071, M072, K024 |
+| 053 ✅ | [Apply approved gestures for Save As, Settings, Help, About and Exit](053-settings-help-about-exit-save-as-gestures.md) | 5 | P1 | S | cheap | 009, 010 | M005, M013, M065, M066, M071, M072, K024 |
 | 054 | [Add Toggle Text command](054-toggle-text-command.md) | 5 | P2 | S | cheap | 002, 009, 010 | M014 |
 | 055 | [Add debug toggles enabled only with --debug](055-debug-toggles-behind-debug-flag.md) | 6 | P3 | S | mid | 009, 010, 054 | K062–K064, K067, K069 |
 | 056 | [Add export-to-file gestures and enable-when-rooms rule](056-export-file-gestures-and-enable.md) | 5 | P2 | S | cheap | 009, 010 | M009 |
@@ -113,7 +113,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 111 ✅ | [Status bar cursor position follows the pointer](111-status-bar-cursor-position.md) | 3 | P1 | S | mid | 002 | A020, I-002 |
 | 112 ✅ | [Reload prompt when the open map changes on disk](112-file-watcher-reload-prompt.md) | 2 | P1 | S | mid | 011 | A005, I-003 |
 | 114 ✅ | [Window title: dirty marker, version and "show full path" setting](114-window-title-format-and-full-path.md) | 4 | P1 | S | mid | 003 | A004, I-006 |
-| 115 | [Honour "Apply style to new rooms"](115-apply-style-to-new-rooms.md) | 3 | P1 | S | mid | 002 | G008, I-006 |
+| 115 ✅ | [Honour "Apply style to new rooms"](115-apply-style-to-new-rooms.md) | 3 | P1 | S | mid | 002 | G008, I-006 |
 | 116 | [Persist window size, position and maximised state](116-window-geometry-persistence.md) | 3 | P2 | S | mid | 100, 101 | A009 |
 | 117 ✅ | [Profile and fix slow Elements.Add on large maps](117-profile-and-fix-elements-add-performance.md) | 1 | P1 | M | mid | — | I-009 |
 | 118 ✅ | [Code export pickers: default name, extension, folder memory, overwrite prompt](118-code-export-dialog-behaviour.md) | 2 | P1 | M | mid | 011, 100, 106 | E005–E008, E010 |

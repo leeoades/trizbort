@@ -14,11 +14,8 @@ namespace Trizbort.Editor;
 ///   Owns the editing state of one map window: the project, the selection and the viewport. UI hosts render it
 ///   and forward input to it; they listen to <see cref="Changed" /> for everything that needs a repaint.
 /// </summary>
-public sealed class EditorSession : IDisposable
+public sealed partial class EditorSession : IDisposable
 {
-  // Fallback clipboard until an IClipboard abstraction exists. Static to match the previous CommandService behaviour.
-  private static string _internalClipboard;
-
   private bool _showGrid = true;
   private Vector? _pointerMapPosition;
   private bool _suppressSelectionEvents;
@@ -40,17 +37,18 @@ public sealed class EditorSession : IDisposable
 
     Selection.Changed += OnSelectionChanged;
     Viewport.Changed += OnViewportChanged;
+    NewConnection.Changed += (_, _) => RaiseChanged(EditorChange.Selection);
     Project.ProjectChanged += OnProjectChanged;
 
     Project.SelectedElementsProvider = () => Selection.Items;
 
     if (CopyController.SetClipboardTextHandler == null)
     {
-      CopyController.SetClipboardTextHandler = text => _internalClipboard = text;
+      CopyController.SetClipboardTextHandler = text => DefaultClipboard.Text = text;
     }
     if (CopyController.GetClipboardTextHandler == null)
     {
-      CopyController.GetClipboardTextHandler = () => _internalClipboard ?? string.Empty;
+      CopyController.GetClipboardTextHandler = () => DefaultClipboard.Text ?? string.Empty;
     }
 
     _lastDirty = Project.Current != null && Project.Current.IsDirty;
@@ -201,32 +199,9 @@ public sealed class EditorSession : IDisposable
     Undo.Clear();
   }
 
-  public Room AddRoom(Vector? position)
-  {
-    var pos = position ?? Viewport.Origin;
-    var room = new Room(Project)
-    {
-      Position = Settings.Snap(pos)
-    };
-    Execute("Add room", () => Project.Elements.Add(room), new Element[] { room });
-    Selection.Set(new Element[] { room });
-    Project.ActiveSelectedElement = room;
-    RaiseChanged(EditorChange.Model);
-    return room;
-  }
-
   public MapLabel AddMapLabel(Vector? position)
   {
-    var pos = position ?? Viewport.Origin;
-    var label = new MapLabel(Project)
-    {
-      Position = Settings.Snap(pos)
-    };
-    Execute("Add label", () => Project.Elements.Add(label), new Element[] { label });
-    Selection.Set(new Element[] { label });
-    Project.ActiveSelectedElement = label;
-    RaiseChanged(EditorChange.Model);
-    return label;
+    return AddLabel(position);
   }
 
   public int DeleteSelected()
@@ -323,141 +298,6 @@ public sealed class EditorSession : IDisposable
   public void Apply(string title, Element element, Action apply)
   {
     Execute(title, apply, new[] { element });
-    RaiseChanged(EditorChange.Model);
-  }
-
-  public string CopySelected()
-  {
-    var selected = GetSelectedOrActive();
-    if (selected.Count == 0) return null;
-
-    var controller = new CopyController();
-    var copyObj = controller.CreateCopyObject(selected);
-    var json = JsonConvert.SerializeObject(copyObj, Formatting.Indented,
-      new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
-    _internalClipboard = json;
-    return json;
-  }
-
-  public string CutSelected()
-  {
-    var json = CopySelected();
-    if (json != null)
-    {
-      // DeleteSelected opens its own transaction; the outer one makes the whole cut a single "Cut" step.
-      Execute("Cut", () => DeleteSelected());
-    }
-    return json;
-  }
-
-  public void Paste(string clipboardText, Vector? target)
-  {
-    var text = !string.IsNullOrEmpty(clipboardText) ? clipboardText : _internalClipboard;
-    if (string.IsNullOrEmpty(text)) return;
-
-    try
-    {
-      var controller = new CopyController();
-      if (text.Contains("\"CopyType\": 1"))
-      {
-        var colorsObj = JsonConvert.DeserializeObject<CopyController.CopyColorsObj>(text);
-        if (colorsObj != null)
-        {
-          var rooms = Selection.Rooms.ToList();
-          Execute("Paste", () =>
-          {
-            foreach (var room in rooms)
-            {
-              controller.SetRoomColors(room, colorsObj);
-            }
-          }, rooms);
-          RaiseChanged(EditorChange.Model);
-        }
-      }
-      else
-      {
-        var copyObj = JsonConvert.DeserializeObject<CopyController.CopyObject>(text);
-        if (copyObj != null)
-        {
-          Execute("Paste", () => PasteRooms(copyObj, controller, target));
-        }
-      }
-    }
-    catch (Exception ex)
-    {
-      System.Diagnostics.Debug.WriteLine($"Paste failed: {ex}");
-    }
-  }
-
-  private void PasteRooms(CopyController.CopyObject copyObj, CopyController controller, Vector? targetPosition)
-  {
-    var project = Project;
-    var newRooms = new List<Room>();
-    var newLabels = new List<MapLabel>();
-    var copiedNodes = new Dictionary<int, Element>();
-    var newConnections = new List<Connection>();
-
-    var firstElement = true;
-    float offsetX = 0;
-    float offsetY = 0;
-
-    foreach (var room in copyObj.Rooms)
-    {
-      var newRoom = new Room(project);
-      project.Elements.Add(newRoom);
-      newRooms.Add(newRoom);
-
-      if (firstElement)
-      {
-        var firstX = room.Position.X;
-        var firstY = room.Position.Y;
-        var targetX = targetPosition?.X ?? (firstX + Settings.GridSize);
-        var targetY = targetPosition?.Y ?? (firstY + Settings.GridSize);
-        firstElement = false;
-        offsetX = firstX - targetX;
-        offsetY = firstY - targetY;
-      }
-
-      newRoom.Position = new Vector(room.Position.X - offsetX, room.Position.Y - offsetY);
-      controller.SetRoom(newRoom, room);
-      copiedNodes[room.OldId] = newRoom;
-    }
-
-    foreach (var label in copyObj.Labels)
-    {
-      var newLabel = new MapLabel(project);
-      project.Elements.Add(newLabel);
-      if (firstElement)
-      {
-        var targetX = targetPosition?.X ?? (label.Position.X + Settings.GridSize);
-        var targetY = targetPosition?.Y ?? (label.Position.Y + Settings.GridSize);
-        offsetX = label.Position.X - targetX;
-        offsetY = label.Position.Y - targetY;
-        firstElement = false;
-      }
-
-      controller.SetLabel(newLabel, label);
-      newLabel.Position = label.Position - new Vector(offsetX, offsetY);
-      copiedNodes[label.OldId] = newLabel;
-      newLabels.Add(newLabel);
-    }
-
-    foreach (var room in newRooms)
-    {
-      room.ReferenceRoomId = copiedNodes.TryGetValue(room.ReferenceRoomId, out var reference) && reference is Room
-        ? reference.Id
-        : -1;
-    }
-
-    newConnections.AddRange(
-      controller.PasteConnections(project, copyObj.Connections, copiedNodes, new Vector(offsetX, offsetY)));
-
-    var pasted = new List<Element>();
-    pasted.AddRange(newRooms);
-    pasted.AddRange(newLabels);
-    pasted.AddRange(newConnections);
-    Selection.Set(pasted);
-
     RaiseChanged(EditorChange.Model);
   }
 

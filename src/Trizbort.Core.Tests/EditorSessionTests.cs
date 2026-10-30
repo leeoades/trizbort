@@ -55,7 +55,8 @@ public class EditorSessionTests
     Project.Current.Elements.ShouldContain(room);
     _session.Selection.Primary.ShouldBe(room);
     _session.Selection.Count.ShouldBe(1);
-    room.Position.ShouldBe(Settings.Snap(new Vector(100, 200)));
+    // The point is the room's centre (ticket 037).
+    room.Position.ShouldBe(Settings.Snap(new Vector(100, 200) - room.Size / 2));
   }
 
   [Test]

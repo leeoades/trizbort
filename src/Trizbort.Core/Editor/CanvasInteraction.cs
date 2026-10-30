@@ -69,6 +69,7 @@ public sealed class CanvasInteraction : IDisposable
     _session = session ?? throw new ArgumentNullException(nameof(session));
     _hit = hit ?? throw new ArgumentNullException(nameof(hit));
     _session.Changed += OnSessionChanged;
+    _session.InteractionActiveProbe = () => IsGestureActive;
   }
 
   /// <summary>What to draw on top of the map right now.</summary>
@@ -91,6 +92,7 @@ public sealed class CanvasInteraction : IDisposable
   public void Dispose()
   {
     _session.Changed -= OnSessionChanged;
+    _session.InteractionActiveProbe = null;
     // The host is going away mid-gesture: close the transaction without rolling back (that would replace the project).
     CommitTransaction();
     ResetGestureState();

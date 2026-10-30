@@ -154,7 +154,8 @@ public class CatalogueMenuTests
         buttons.Select(b => global::Avalonia.Automation.AutomationProperties.GetAutomationId(b)).ShouldBe(new[]
         {
             "file.new", "file.open", "file.save",
-            "project.addRoom", "project.addLabel", "edit.delete",
+            "project.addRoom", "project.addLabel", "edit.delete", "edit.undo", "edit.redo",
+            "connection.toggleDotted", "connection.toggleOneWay",
             "view.zoomIn", "view.zoomOut", "view.resetZoom", "view.toggleGrid",
             "project.toggleAutomap", "edit.mapSettings"
         });

@@ -680,16 +680,6 @@ public class MapCanvasControl : Control
                 e.Handled = true;
                 break;
 
-            case Key.OemPlus or Key.Add:
-                CommandService?.ZoomIn();
-                e.Handled = true;
-                break;
-
-            case Key.OemMinus or Key.Subtract:
-                CommandService?.ZoomOut();
-                e.Handled = true;
-                break;
-
             case Key.D0 or Key.NumPad0 when isCtrl:
                 CommandService?.ResetZoom();
                 e.Handled = true;

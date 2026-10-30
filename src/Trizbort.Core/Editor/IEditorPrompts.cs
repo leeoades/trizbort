@@ -30,6 +30,15 @@ public interface IEditorPrompts
   {
     return Task.FromResult(false);
   }
+
+  /// <summary>
+  ///   Opens the properties dialog for a freshly added element. Returns true when the user accepted. Default
+  ///   implementation does nothing so existing implementers keep compiling.
+  /// </summary>
+  Task<bool> EditElementAsync(Element element, CancellationToken token = default)
+  {
+    return Task.FromResult(false);
+  }
 }
 
 public readonly record struct RoomDisambiguation(Room Chosen, bool NewRoom, bool AutoChooseRest)

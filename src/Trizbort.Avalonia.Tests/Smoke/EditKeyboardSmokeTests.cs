@@ -250,7 +250,6 @@ public class EditKeyboardSmokeTests
 
     /// <summary>Step 30 (second half): With no selection an arrow key should pan the canvas (known gap: K012).</summary>
     [AvaloniaTest]
-    [Ignore("known gap: K012")]
     public void S4_30_ArrowKeys_NoSelection_PansCanvas()
     {
         var (window, _, service) = CreateHarness();
@@ -439,25 +438,32 @@ public class EditKeyboardSmokeTests
         finally { window.Close(); }
     }
 
-    /// <summary>Step 38: Press F1. Expected: About dialog opens (differs: K024). Checks the MainWindow key binding to the About command.</summary>
+    /// <summary>Step 38: Press F1. Lee's shortcut decision (shortcut-map.md): F1 is Online Help; About has no gesture.</summary>
     [AvaloniaTest]
-    public void S4_38_F1_IsBoundToAbout()
+    public void S4_38_F1_IsBoundToOnlineHelp()
     {
         var catalogue = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null);
 
         catalogue.FindByGesture(
                 new Trizbort.Editor.Input.KeyInput(Trizbort.Editor.Input.InputKey.F1, Trizbort.Domain.Enums.ModifierKeys.None),
                 Trizbort.Editor.Commands.CommandScope.Window)!
-            .Id.ShouldBe("help.about");
+            .Id.ShouldBe("help.online");
     }
 
-    /// <summary>Step 39: Press Ctrl+, . Expected (reference): opens Map Settings. Avalonia has no binding (known gap: M065).</summary>
+    /// <summary>Step 39: Lee's decision: Primary+, opens App Settings and Primary+Shift+, opens Map Settings.</summary>
     [AvaloniaTest]
-    [Ignore("known gap: M065")]
-    public void S4_39_CtrlComma_IsBoundToMapSettings()
+    public void S4_39_PrimaryComma_OpensSettings()
     {
-        var xaml = ReadMainWindowXaml();
+        var catalogue = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null);
+        var primary = Trizbort.Domain.Enums.ModifierKeys.Primary;
 
-        xaml.ShouldContain("Gesture=\"Ctrl+OemComma\" Command=\"{Binding ShowMapSettingsCommand}\"");
+        catalogue.FindByGesture(
+                new Trizbort.Editor.Input.KeyInput(Trizbort.Editor.Input.InputKey.OemComma, primary),
+                Trizbort.Editor.Commands.CommandScope.Window)!
+            .Id.ShouldBe("edit.appSettings");
+        catalogue.FindByGesture(
+                new Trizbort.Editor.Input.KeyInput(Trizbort.Editor.Input.InputKey.OemComma, primary | Trizbort.Domain.Enums.ModifierKeys.Shift),
+                Trizbort.Editor.Commands.CommandScope.Window)!
+            .Id.ShouldBe("edit.mapSettings");
     }
 }

@@ -12,7 +12,7 @@ public sealed class Viewport
 {
   private const float MinZoom = 0.1f;
   private const float MaxZoom = 10.0f;
-  private const float ZoomStep = 1.25f;
+  private const float ZoomFactorStep = 1.25f;
   private const float MicroZoomStep = 0.01f;
 
   private readonly CanvasTransform _transform = new()
@@ -75,12 +75,39 @@ public sealed class Viewport
 
   public void ZoomIn()
   {
-    SetView(_transform.Origin, (float)Math.Round(_transform.ZoomFactor * ZoomStep, 2));
+    SetView(_transform.Origin, (float)Math.Round(_transform.ZoomFactor * ZoomFactorStep, 2));
   }
 
   public void ZoomOut()
   {
-    SetView(_transform.Origin, (float)Math.Round(_transform.ZoomFactor / ZoomStep, 2));
+    SetView(_transform.Origin, (float)Math.Round(_transform.ZoomFactor / ZoomFactorStep, 2));
+  }
+
+  /// <summary>Set the zoom factor (clamped to 0.1-10), keeping the viewport centre (<see cref="Origin" />) fixed.</summary>
+  public void SetZoom(double zoom)
+  {
+    SetView(_transform.Origin, (float)zoom);
+  }
+
+  /// <summary>Zoom in by 0.01 (the reference "+1%" menu item).</summary>
+  public void ZoomMicroIn()
+  {
+    SetView(_transform.Origin, (float)Math.Round(_transform.ZoomFactor + MicroZoomStep, 2));
+  }
+
+  /// <summary>Zoom out by 0.01 (the reference "-1%" menu item).</summary>
+  public void ZoomMicroOut()
+  {
+    SetView(_transform.Origin, (float)Math.Round(_transform.ZoomFactor - MicroZoomStep, 2));
+  }
+
+  /// <summary>
+  ///   Pan by a fraction of the viewport size in each axis (<paramref name="unit" /> is e.g. (1, 0) for right). Uses the
+  ///   viewport width for horizontal and its height for vertical moves.
+  /// </summary>
+  public void PanByViewportFraction(Vector unit, double fraction)
+  {
+    PanClient(new Vector((float)(unit.X * Width * fraction), (float)(unit.Y * Height * fraction)));
   }
 
   public void ZoomBy(float factor, Vector clientPoint)
@@ -100,7 +127,7 @@ public sealed class Viewport
     }
     else
     {
-      ZoomBy(sign > 0 ? ZoomStep : 1.0f / ZoomStep, clientPoint);
+      ZoomBy(sign > 0 ? ZoomFactorStep : 1.0f / ZoomFactorStep, clientPoint);
     }
   }
 

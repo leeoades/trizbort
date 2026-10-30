@@ -35,4 +35,4 @@ the same change.
   - Exclude `.junie/` and user-specific files (`*.DotSettings.user`) from git commits.
 - Layout: new-app projects under `src/` (`Trizbort.Core`, `Trizbort.Core.Tests`, `Trizbort.Avalonia`, `Trizbort.Avalonia.Tests`), legacy app under `legacy/`, manual map fixtures and runners in `tests/manual/` (shared).
 - Avalonia parity work: follow `agent-docs/plans/avalonia-parity-review.md` (one task card per session).
-- No undo/redo exists anywhere in the codebase — don't assume one.
+- Undo/redo: `UndoStack` (Core, `EditorSession.Undo`). All map edits must go through `EditorSession.Execute`/`BeginTransaction` so each is one undo step; keep to the undo performance gate in `UndoPerformanceTests`.

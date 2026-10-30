@@ -89,8 +89,11 @@ public static class AppCommands
             Title = "E_xit",
             MenuPath = "File",
             Group = "3-exit",
-            Gestures = new[] { new KeyGesture(InputKey.F4, ModifierKeys.Alt) },
-            GestureDisplayOnly = true,
+            // Windows: Alt+F4 is handled by the OS (shown only). Linux: Primary+Q. macOS: Cmd+Q (Primary).
+            Gestures = OperatingSystem.IsWindows()
+                ? new[] { new KeyGesture(InputKey.F4, ModifierKeys.Alt) }
+                : new[] { new KeyGesture(InputKey.Q, primary) },
+            GestureDisplayOnly = OperatingSystem.IsWindows(),
             ExecuteAsyncFunc = _ =>
             {
                 vm?.Exit();
@@ -115,6 +118,7 @@ public static class AppCommands
             Title = "_Map Settings...",
             MenuPath = "Edit",
             Group = "4-settings",
+            Gestures = new[] { new KeyGesture(InputKey.OemComma, primary | ModifierKeys.Shift) },
             ContextTargets = ContextTargets.Any,
             ContextOrder = 50, ContextGroup = "5-settings",
             ShowInToolbar = true, ToolbarOrder = 120, ToolbarGroup = "4-tools", IconKey = "IconSettings",
@@ -136,6 +140,7 @@ public static class AppCommands
             Title = "_Application Settings...",
             MenuPath = "Edit",
             Group = "4-settings",
+            Gestures = new[] { new KeyGesture(InputKey.OemComma, primary) },
             ContextTargets = ContextTargets.Any,
             ContextOrder = 52, ContextGroup = "5-settings",
             ExecuteAsyncFunc = Run(() => vm!.ShowAppSettingsAsync())
@@ -153,13 +158,42 @@ public static class AppCommands
 
         c.Register(new EditorCommand
         {
-            Id = "help.about",
-            Title = "_About Trizbort...",
+            Id = "help.online",
+            Title = "Online _Help",
             MenuPath = "Help",
             Group = "1-help",
             Gestures = new[] { new KeyGesture(InputKey.F1, ModifierKeys.None) },
+            ExecuteAsyncFunc = _ => OpenOnlineHelpAsync()
+        });
+        c.Register(new EditorCommand
+        {
+            Id = "help.about",
+            Title = "_About Trizbort...",
+            MenuPath = "Help",
+            Group = "2-about",
             ExecuteAsyncFunc = Run(() => vm!.ShowAboutAsync())
         });
+    }
+
+    /// <summary>Where Online Help opens.</summary>
+    public const string OnlineHelpUrl = "https://github.com/leeoades/trizbort/blob/master/Docs/index.md";
+
+    private static async Task OpenOnlineHelpAsync()
+    {
+        try
+        {
+            var lifetime = global::Avalonia.Application.Current?.ApplicationLifetime
+                as global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+            var launcher = lifetime?.MainWindow?.Launcher;
+            if (launcher != null)
+            {
+                await launcher.LaunchUriAsync(new Uri(OnlineHelpUrl));
+            }
+        }
+        catch (Exception)
+        {
+            // opening a browser must never crash the app
+        }
     }
 
     private static void RegisterExport(CommandCatalogue c, string id, string title, string group, Func<EditorSession, Task> execute)

@@ -50,7 +50,7 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Settings saved but never read anywhere under `src/Trizbort.Avalonia`: `InvertMouseWheel`, `ShowFullPathInTitleBar`,
   `ApplyStyleToNewRooms` (and `LoadLastProjectOnStart`, see I-001). Details per setting in `dialogs/AppSettings.md`.
 - Severity: medium (users will think settings are broken)     Flags: —
-- Progress 2026-10-30: `ShowFullPathInTitleBar` is now honoured (ticket 114). `ApplyStyleToNewRooms` → ticket 115; `InvertMouseWheel` still open.
+- Progress 2026-10-30: `ShowFullPathInTitleBar` is now honoured (ticket 114). `ApplyStyleToNewRooms` honoured (ticket 115, `RoomFactory`); `InvertMouseWheel` still open.
 - Ticket: 114 (partial), 115
 
 ## I-007 Renaming or deleting a region leaves rooms with the old region name

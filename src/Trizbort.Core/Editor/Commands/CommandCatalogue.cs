@@ -12,7 +12,7 @@ namespace Trizbort.Editor.Commands;
 ///   <see cref="CreateDefault" />; UI projects register app-level ones (dialogs, files) through
 ///   <see cref="Register" />.
 /// </summary>
-public sealed class CommandCatalogue
+public sealed partial class CommandCatalogue
 {
   private readonly List<EditorCommand> _commands = new();
   private readonly Dictionary<string, EditorCommand> _byId = new(StringComparer.Ordinal);
@@ -84,84 +84,27 @@ public sealed class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "edit.undo",
+      ToolbarOrder = 62, ToolbarGroup = "2-edit", ShowInToolbar = true, IconKey = "IconUndo",
       Title = "_Undo",
       DynamicTitle = s => s.Undo.CanUndo ? "_Undo " + s.Undo.UndoTitle : "_Undo",
       MenuPath = "Edit",
       Group = "0-undo",
       Gestures = new[] { new KeyGesture(InputKey.Z, primary) },
-      CanExecuteFunc = s => s.Undo.CanUndo,
+      CanExecuteFunc = s => s.Undo.CanUndo && !s.IsInteractionActive,
       ExecuteAsyncFunc = s => Run(() => s.PerformUndo())
     });
     catalogue.Register(new EditorCommand
     {
       Id = "edit.redo",
+      ToolbarOrder = 64, ToolbarGroup = "2-edit", ShowInToolbar = true, IconKey = "IconRedo",
       Title = "_Redo",
       DynamicTitle = s => s.Undo.CanRedo ? "_Redo " + s.Undo.RedoTitle : "_Redo",
       MenuPath = "Edit",
       Group = "0-undo",
       Gestures = new[] { new KeyGesture(InputKey.Y, primary), new KeyGesture(InputKey.Z, primary | ModifierKeys.Shift) },
-      CanExecuteFunc = s => s.Undo.CanRedo,
+      CanExecuteFunc = s => s.Undo.CanRedo && !s.IsInteractionActive,
       ExecuteAsyncFunc = s => Run(() => s.PerformRedo())
     });
-    catalogue.Register(new EditorCommand
-    {
-      Id = "edit.selectAll",
-      Title = "Select _All",
-      MenuPath = "Edit",
-      Group = "1-select",
-      Gestures = new[] { new KeyGesture(InputKey.A, primary) },
-      CanExecuteFunc = s => s.Project.Elements.Any(),
-      ExecuteAsyncFunc = s => Run(() => s.SelectAll())
-    });
-    catalogue.Register(new EditorCommand
-    {
-      Id = "edit.delete",
-      ToolbarOrder = 60, ToolbarGroup = "2-edit", ShowInToolbar = true, IconKey = "IconDelete",
-      ContextOrder = 22, ContextGroup = "2-clipboard",
-      Title = "_Delete",
-      MenuPath = "Edit",
-      Group = "1-select",
-      Gestures = new[] { new KeyGesture(InputKey.Delete, ModifierKeys.None) },
-      ContextTargets = ContextTargets.Room | ContextTargets.Connection | ContextTargets.Label,
-      CanExecuteFunc = s => s.Selection.Count > 0,
-      ExecuteAsyncFunc = s => Run(() => s.DeleteSelected())
-    });
-    catalogue.Register(new EditorCommand
-    {
-      Id = "edit.copy",
-      ContextOrder = 21, ContextGroup = "2-clipboard",
-      Title = "_Copy",
-      MenuPath = "Edit",
-      Group = "2-clipboard",
-      Gestures = new[] { new KeyGesture(InputKey.C, primary) },
-      ContextTargets = ContextTargets.Room | ContextTargets.Connection | ContextTargets.Label,
-      CanExecuteFunc = s => s.Selection.Count > 0,
-      ExecuteAsyncFunc = s => Run(() => s.CopySelected())
-    });
-    catalogue.Register(new EditorCommand
-    {
-      Id = "edit.cut",
-      ContextOrder = 20, ContextGroup = "2-clipboard",
-      Title = "Cu_t",
-      MenuPath = "Edit",
-      Group = "2-clipboard",
-      Gestures = new[] { new KeyGesture(InputKey.X, primary) },
-      ContextTargets = ContextTargets.Room | ContextTargets.Connection | ContextTargets.Label,
-      CanExecuteFunc = s => s.Selection.Count > 0,
-      ExecuteAsyncFunc = s => Run(() => s.CutSelected())
-    });
-    catalogue.Register(new EditorCommand
-    {
-      Id = "edit.paste",
-      ContextOrder = 30, ContextGroup = "3-paste",
-      Title = "_Paste",
-      MenuPath = "Edit",
-      Group = "2-clipboard",
-      Gestures = new[] { new KeyGesture(InputKey.V, primary) },
-      ContextTargets = ContextTargets.Any,
-      ExecuteAsyncFunc = s => Run(() => s.Paste(null, null))
-    });
-
     catalogue.Register(new EditorCommand
     {
       Id = "view.zoomIn",
@@ -231,20 +174,16 @@ public sealed class CommandCatalogue
       Title = "Add _Room",
       MenuPath = "Project",
       Group = "1-add",
+      Scope = CommandScope.Canvas,
+      Gestures = new[] { new KeyGesture(InputKey.R, ModifierKeys.None) },
       ContextTargets = ContextTargets.Any,
-      ExecuteAsyncFunc = s => Run(() => s.AddRoom(null))
+      ExecuteAsyncFunc = s => s.AddRoomAsync(null)
     });
-    catalogue.Register(new EditorCommand
-    {
-      Id = "project.addLabel",
-      ToolbarOrder = 50, ToolbarGroup = "2-edit", ShowInToolbar = true, IconKey = "IconAddLabel",
-      ContextOrder = 41, ContextGroup = "4-add",
-      Title = "Add _Map Label",
-      MenuPath = "Project",
-      Group = "1-add",
-      ContextTargets = ContextTargets.Any,
-      ExecuteAsyncFunc = s => Run(() => s.AddMapLabel(null))
-    });
+
+    // Command groups live in partial files (CommandCatalogue.<Group>.cs) so they can be edited independently.
+    RegisterRoomCommands(catalogue);
+    RegisterConnectionAndSelectionCommands(catalogue);
+    RegisterViewCommands(catalogue);
 
     return catalogue;
   }

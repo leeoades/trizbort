@@ -34,8 +34,8 @@ internal static class CanvasCommandBridge
     public static bool TryRunCanvasGesture(MapCanvasControl canvas, KeyEventArgs e)
     {
         var session = canvas.CommandService?.Session;
-        var catalogue = Find(canvas);
-        if (session == null || catalogue == null) return false;
+        if (session == null) return false;
+        var catalogue = Resolve(canvas);
 
         var input = AvaloniaKeyMapper.ToKeyInput(e.Key, e.KeyModifiers, AvaloniaKeyMapper.IsMacOS);
         var command = catalogue.FindByGesture(input, CommandScope.Canvas);
