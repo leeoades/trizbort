@@ -68,8 +68,8 @@ public class CatalogueMenuTests
             .Select(c => c is Separator ? "-" : Plain((c as MenuItem)!.Header))
             .ShouldBe(new[]
             {
-                "Image (PNG)...", "-", "Inform 7 Source...", "Inform 6 Source...", "TADS Source...", "Hugo Source...",
-                "ZIL Source...", "Quest Source...", "Alan Source...", "Adventuron Source..."
+                "Image...", "-", "Inform 7 Source...", "Inform 6 Source...", "TADS Source...", "Hugo Source...",
+                "ZIL Source...", "Quest Source...", "Alan Source...", "Adventuron Source...", "-", "To Clipboard"
             });
     }
 

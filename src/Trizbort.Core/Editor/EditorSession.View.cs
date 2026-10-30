@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
@@ -32,6 +33,26 @@ public sealed partial class EditorSession
     }
 
     NudgeSelected(unit * ArrowStep);
+  }
+
+  /// <summary>Reset View: puts the map origin back at (0, 0) and keeps the current zoom (unlike Reset Zoom).</summary>
+  public void ResetViewOrigin()
+  {
+    Viewport.SetView(Vector.Zero, Viewport.ZoomFactor);
+  }
+
+  /// <summary>Whether the mini map is shown (the persisted <c>ShowMiniMap</c> application setting).</summary>
+  public bool ShowMiniMap
+  {
+    get => ApplicationSettingsController.AppSettings.ShowMiniMap;
+    set
+    {
+      var settings = ApplicationSettingsController.AppSettings;
+      if (settings.ShowMiniMap == value) return;
+
+      settings.ShowMiniMap = value;
+      RaiseChanged(EditorChange.Viewport);
+    }
   }
 
   /// <summary>True when at least one selected element can be resized.</summary>

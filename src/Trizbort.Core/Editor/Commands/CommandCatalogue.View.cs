@@ -79,6 +79,26 @@ public sealed partial class CommandCatalogue
       ExecuteAsyncFunc = s => Run(() => s.Viewport.ZoomOut())
     });
 
+    catalogue.Register(new EditorCommand
+    {
+      Id = "view.resetOrigin",
+      Title = "Reset _View",
+      MenuPath = "View",
+      Group = "1-zoom",
+      Scope = CommandScope.Canvas,
+      Gestures = new[] { new KeyGesture(InputKey.Home, none) },
+      ExecuteAsyncFunc = s => Run(() => s.ResetViewOrigin())
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "view.toggleMiniMap",
+      Title = "_Mini Map",
+      MenuPath = "View",
+      Group = "2-display",
+      IsCheckedFunc = s => s.ShowMiniMap,
+      ExecuteAsyncFunc = s => Run(() => s.ShowMiniMap = !s.ShowMiniMap)
+    });
+
     RegisterArrow(catalogue, "left", InputKey.Left, new Vector(-1, 0));
     RegisterArrow(catalogue, "right", InputKey.Right, new Vector(1, 0));
     RegisterArrow(catalogue, "up", InputKey.Up, new Vector(0, -1));

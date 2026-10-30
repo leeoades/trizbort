@@ -45,6 +45,14 @@ public sealed class NewConnectionDefaults
 
   public event EventHandler Changed;
 
+  /// <summary>Take the flow and style of <paramref name="connection" /> (legacy SetConnectionDefaultsFrom; the label is kept).</summary>
+  public void CopyFrom(Connection connection)
+  {
+    if (connection == null) return;
+    Flow = connection.Flow;
+    Style = connection.Style;
+  }
+
   private void RaiseChanged()
   {
     var handler = Changed;

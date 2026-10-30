@@ -799,6 +799,6 @@ public static class ConnectionDrawingAdapter
             drawY -= cachedFormattedText.Height;
         }
 
-        context.DrawText(cachedFormattedText, new AvaloniaPoint(drawX, drawY));
+        if (TextRenderingGate.IsEnabled) context.DrawText(cachedFormattedText, new AvaloniaPoint(drawX, drawY));
     }
 }

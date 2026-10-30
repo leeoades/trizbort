@@ -35,6 +35,7 @@ public sealed partial class EditorSession
     }
     transaction.Dispose();
     RaiseChanged(EditorChange.Model);
+    PostStatusMessage("Added label");
     return label;
   }
 }

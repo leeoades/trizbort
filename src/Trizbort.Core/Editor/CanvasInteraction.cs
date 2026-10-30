@@ -56,6 +56,7 @@ public sealed class CanvasInteraction : IDisposable
   private Vector _dragHandleLast;
   private CurveWaypoint _dragWaypoint;
   private Vector _dragWaypointOffset;
+  private Vector _dragWaypointStartClient;
   private MoveablePort _dragPort;
   private Connection _dragNewConnection;
   private Port _newConnectionFrom;
@@ -145,7 +146,8 @@ public sealed class CanvasInteraction : IDisposable
         return true;
       }
 
-      if (ApplicationSettingsController.AppSettings.DoubleClickToAddRoom)
+      // Legacy IsEmptySpace: no handle, port, waypoint or element under the pointer.
+      if (ApplicationSettingsController.AppSettings.DoubleClickToAddRoom && IsEmptySpace(world))
       {
         _gestureButton = PointerButton.None;
         _session.AddRoom(world);
@@ -163,6 +165,9 @@ public sealed class CanvasInteraction : IDisposable
       BeginTransaction("Move waypoint");
       _mode = CanvasDragMode.MoveWaypoint;
       _dragWaypoint = waypoint.Value;
+      _dragWaypointStartClient = input.Client;
+      // A "ghost" handle only becomes a real (and selected) waypoint once it is dragged past the threshold.
+      _session.SelectedWaypoint = connection.GetCurveWaypoint(_dragWaypoint).HasValue ? _dragWaypoint : null;
       _dragWaypointOffset = connection.GetCurveWaypointHandlePosition(_dragWaypoint) - world;
       Refresh();
       return true;
@@ -281,7 +286,17 @@ public sealed class CanvasInteraction : IDisposable
 
       case CanvasDragMode.MoveWaypoint:
         if (_session.Selection.Count == 1 && _session.Selection.Items[0] is Connection waypointOwner)
+        {
+          if (!waypointOwner.GetCurveWaypoint(_dragWaypoint).HasValue)
+          {
+            if ((input.Client - _dragWaypointStartClient).Length <= Settings.DragDistanceToInitiateNewConnection) break;
+            if (!waypointOwner.CanAddCurveWaypoint(_dragWaypoint)) break;
+          }
+
           waypointOwner.SetCurveWaypoint(_dragWaypoint, Settings.Snap(world + _dragWaypointOffset));
+          _session.SelectedWaypoint = _dragWaypoint;
+        }
+
         break;
 
       case CanvasDragMode.Marquee:
@@ -323,7 +338,7 @@ public sealed class CanvasInteraction : IDisposable
   public void OnWheel(WheelInput input)
   {
     var direction = input.DeltaY > 0 ? 1 : input.DeltaY < 0 ? -1 : 0;
-    _session.Viewport.ZoomWheel(direction, input.Client, false,
+    _session.Viewport.ZoomWheel(direction, input.Client, IsCtrl(input.Modifiers),
       ApplicationSettingsController.AppSettings.InvertMouseWheel);
   }
 
@@ -402,11 +417,13 @@ public sealed class CanvasInteraction : IDisposable
     _pendingPort = null;
     BeginTransaction("Add connection");
     var project = _session.Project;
+    var defaults = _session.NewConnection;
     var connection = new Connection(project, new Vertex(port), new Vertex(port))
     {
-      Style = ConnectionStyle.Solid,
-      Flow = ConnectionFlow.TwoWay
+      Style = defaults.Style,
+      Flow = defaults.Flow
     };
+    connection.SetText(defaults.Label);
     project.Elements.Add(connection);
     _dragNewConnection = connection;
     _newConnectionFrom = port;
@@ -431,11 +448,12 @@ public sealed class CanvasInteraction : IDisposable
     _hoverPort = _hit.HitPort(world, _ports, true, _dragPort);
     if (_hoverPort != null && _hoverPort is not MoveablePort)
     {
-      _dragPort.DockAt(_hoverPort);
+      // Only dock when the hovered port changes, so the docked end stays stable while the pointer stays on it.
+      if (!ReferenceEquals(_dragPort.DockedAt, _hoverPort)) _dragPort.DockAt(_hoverPort);
     }
     else
     {
-      _dragPort.DockAt(null);
+      if (_dragPort.DockedAt != null) _dragPort.DockAt(null);
       _dragPort.SetPosition(Settings.Snap(world) - _dragOffset);
     }
   }
@@ -503,18 +521,31 @@ public sealed class CanvasInteraction : IDisposable
     CommitTransaction();
   }
 
+  // Legacy EndDrag marquee: no modifier replaces the selection; Ctrl adds; Shift (with or without Ctrl) toggles.
   private void ApplyMarquee(Rect rect, ModifierKeys modifiers)
   {
     var hits = _hit.HitRect(rect);
-    if (IsCtrl(modifiers) || IsShift(modifiers))
-    {
-      // With a modifier held the marquee toggles every element it touches (adds unselected, removes selected).
-      foreach (var element in hits) _session.Selection.Toggle(element);
-    }
-    else
+    var shift = IsShift(modifiers);
+    if (!shift && !IsCtrl(modifiers))
     {
       _session.Selection.Set(hits);
+      return;
     }
+
+    foreach (var element in hits)
+    {
+      if (!_session.Selection.Contains(element)) _session.Selection.Add(element);
+      else if (shift) _session.Selection.Remove(element);
+    }
+  }
+
+  private bool IsEmptySpace(Vector world)
+  {
+    RefreshLists();
+    if (_hit.HitWaypoint(world).HasValue) return false;
+    if (_hit.HitHandle(world, _handles) != null) return false;
+    if (_hit.HitPort(world, _ports) != null) return false;
+    return _hit.HitElement(world) == null;
   }
 
   private static bool IsDegenerateConnection(Connection connection)

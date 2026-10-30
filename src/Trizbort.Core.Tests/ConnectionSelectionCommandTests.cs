@@ -222,7 +222,9 @@ public class ConnectionSelectionCommandTests
     _session.PerformUndo();
 
     Connections().Single().Style.ShouldBe(ConnectionStyle.Solid);
-    _session.NewConnection.Style.ShouldBe(ConnectionStyle.Dashed);
+    // Undo re-selects the restored connection, and selecting a single connection copies its style into the
+    // new-connection defaults (reference rule, ticket 007), so the defaults follow it back to Solid.
+    _session.NewConnection.Style.ShouldBe(ConnectionStyle.Solid);
   }
 
   [Test]

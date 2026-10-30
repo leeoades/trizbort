@@ -29,11 +29,6 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
         Patterns = ["*.txt", "*.log"]
     };
 
-    private static readonly FilePickerFileType PngFileType = new("PNG Image (*.png)")
-    {
-        Patterns = ["*.png"]
-    };
-
     private static Window? GetWindow(TopLevel? topLevel)
     {
         if (topLevel is Window window) return window;
@@ -381,19 +376,53 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
             ? (string.IsNullOrEmpty(currentProject.FileName) ? "map" : Path.GetFileNameWithoutExtension(currentProject.FileName))
             : currentProject.Title;
 
+        var defaultFormat = ImageFormats.FromSetting(ApplicationSettingsController.AppSettings.DefaultImageType);
+        var filters = new Dictionary<ImageFormat, FilePickerFileType>();
+        foreach (var format in ImageFormatOrder(defaultFormat))
+        {
+            filters[format] = ImageFileType(format);
+        }
+
+        // E024: the folder of the last image export is remembered, not the file.
+        var rememberedFolder = ExportPathMemory.Split(ApplicationSettingsController.AppSettings.LastExportImageFileName).Folder;
+        IStorageFolder? startFolder = null;
+        if (rememberedFolder.Length > 0 && Directory.Exists(rememberedFolder))
+        {
+            try
+            {
+                startFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(rememberedFolder);
+            }
+            catch
+            {
+                // ignore an unusable remembered folder
+            }
+        }
+
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = "Export Image",
-            DefaultExtension = "png",
+            DefaultExtension = ImageFormats.Extension(defaultFormat).TrimStart('.'),
             SuggestedFileName = suggestedName,
-            FileTypeChoices = [PngFileType, FilePickerFileTypes.All]
+            SuggestedStartLocation = startFolder,
+            SuggestedFileType = filters[defaultFormat],
+            FileTypeChoices = [.. ImageFormatOrder(defaultFormat).Select(f => filters[f]), FilePickerFileTypes.All]
         });
 
         if (file == null) return false;
 
-        var exportPath = file.Path.LocalPath;
+        var pickedPath = file.Path.LocalPath;
+        var exportPath = ResolveImageExportPath(pickedPath, defaultFormat, out var chosenFormat);
         try
         {
+            if (!string.Equals(exportPath, pickedPath, StringComparison.Ordinal) && File.Exists(exportPath))
+            {
+                var replace = await _dialogService.ShowConfirmationAsync(
+                    GetWindow(topLevel),
+                    "Confirm Overwrite",
+                    $"'{Path.GetFileName(exportPath)}' already exists. Replace it?");
+                if (!replace) return false;
+            }
+
             using var bitmap = MapCanvasControl.RenderToBitmap(currentProject);
             if (bitmap == null)
             {
@@ -404,12 +433,20 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
                 return false;
             }
 
-            await using (var stream = await file.OpenWriteAsync())
+            await using (var stream = new FileStream(exportPath, FileMode.Create, FileAccess.Write))
             {
-                bitmap.Save(stream);
+                ImageEncoder.Encode(bitmap, chosenFormat, stream);
             }
 
             ApplicationSettingsController.AppSettings.LastExportImageFileName = exportPath;
+            try
+            {
+                ApplicationSettingsController.SaveSettings();
+            }
+            catch
+            {
+                // remembering the folder is best effort
+            }
             return true;
         }
         catch (Exception ex)
@@ -420,6 +457,37 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
                 $"Error exporting image to '{Path.GetFileName(exportPath)}':\n{ex.Message}");
             return false;
         }
+    }
+
+    /// <summary>
+    ///   The path an image is written to and the format it is encoded in. The extension decides the format, so the
+    ///   bytes always match the name; a missing or unknown extension gets the default format's extension appended.
+    /// </summary>
+    public static string ResolveImageExportPath(string pickedPath, ImageFormat defaultFormat, out ImageFormat format)
+    {
+        if (ImageFormats.TryFromExtension(Path.GetExtension(pickedPath), out format)) return pickedPath;
+
+        format = defaultFormat;
+        return pickedPath + ImageFormats.Extension(defaultFormat);
+    }
+
+    private static IEnumerable<ImageFormat> ImageFormatOrder(ImageFormat first)
+    {
+        yield return first;
+        foreach (var format in new[] { ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Bmp })
+        {
+            if (format != first) yield return format;
+        }
+    }
+
+    private static FilePickerFileType ImageFileType(ImageFormat format)
+    {
+        return format switch
+        {
+            ImageFormat.Jpeg => new FilePickerFileType("JPEG Image (*.jpg; *.jpeg)") { Patterns = ["*.jpg", "*.jpeg"] },
+            ImageFormat.Bmp => new FilePickerFileType("BMP Image (*.bmp)") { Patterns = ["*.bmp"] },
+            _ => new FilePickerFileType("PNG Image (*.png)") { Patterns = ["*.png"] }
+        };
     }
 
     public async Task<string?> OpenThemeFileAsync(TopLevel? topLevel)

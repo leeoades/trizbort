@@ -927,7 +927,7 @@ public class MapCanvasControlGestureTests
     // ---- Selection modifiers -----------------------------------------------------------------
 
     [AvaloniaTest]
-    public void MarqueeSelection_CtrlOverSelectedAndUnselected_TogglesBoth()
+    public void MarqueeSelection_CtrlOverSelectedAndUnselected_OnlyAdds()
     {
         var (window, canvas, service) = CreateTestHarness();
         try
@@ -945,7 +945,8 @@ public class MapCanvasControlGestureTests
             window.MouseMove(end);
             window.MouseUp(end, MouseButton.Left, RawInputModifiers.Control);
 
-            service.SelectedElements.ShouldNotContain(room1);
+            // Legacy: Ctrl only adds; an already selected element stays selected (Shift toggles).
+            service.SelectedElements.ShouldContain(room1);
             service.SelectedElements.ShouldContain(room2);
         }
         finally

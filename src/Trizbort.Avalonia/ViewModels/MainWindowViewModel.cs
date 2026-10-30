@@ -12,6 +12,7 @@ using Trizbort.Avalonia.Services;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
+using Trizbort.Export;
 using Trizbort.Export.Languages;
 using AutomapEngine = Trizbort.Automap.Automap;
 
@@ -80,6 +81,11 @@ public partial class MainWindowViewModel : ViewModelBase
         _commandService.CanvasInvalidated += OnCanvasInvalidated;
         _commandService.PointerMoved += OnCanvasInvalidated;
         _commandService.DirtyChanged += OnDirtyChanged;
+
+        if (_commandService.Session != null)
+        {
+            _commandService.Session.StatusMessagePosted += message => StatusText = message;
+        }
 
         UpdateState();
     }
@@ -277,11 +283,22 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private static bool _emfNoteShown;
+
     [RelayCommand]
     public async Task ExportImageAsync()
     {
         var success = await _storageService.ExportImageAsync(GetActiveTopLevel());
-        if (success) StatusText = "Exported map image (PNG)";
+        if (!success) return;
+
+        var format = ImageFormats.FromExtension(
+            Path.GetExtension(ApplicationSettingsController.AppSettings.LastExportImageFileName), ImageFormat.Png);
+        StatusText = $"Exported map image ({ImageFormats.DisplayName(format)})";
+        if (ApplicationSettingsController.AppSettings.DefaultImageType == ImageFormats.EmfSettingValue && !_emfNoteShown)
+        {
+            _emfNoteShown = true;
+            StatusText += ". EMF is not supported on this platform; PNG is the default instead.";
+        }
     }
 
     [RelayCommand]

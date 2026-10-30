@@ -123,6 +123,14 @@ public partial class MainWindow : Window
         if (session == null) return;
         _commandSurfacesBuilt = true;
 
+        // The mini map follows the persisted ShowMiniMap setting (View > Mini Map).
+        var minimap = this.FindControl<Control>("Minimap");
+        if (minimap != null)
+        {
+            minimap.IsVisible = session.ShowMiniMap;
+            session.Changed += _ => minimap.IsVisible = session.ShowMiniMap;
+        }
+
         var services = App.Services;
         var catalogue = services?.GetService<CommandCatalogue>();
         if (catalogue == null || !ReferenceEquals(services!.GetService<MainWindowViewModel>(), vm))

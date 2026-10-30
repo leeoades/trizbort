@@ -5,6 +5,7 @@ using Trizbort.Domain.Enums;
 using Trizbort.Editor;
 using Trizbort.Editor.Commands;
 using Trizbort.Editor.Input;
+using Trizbort.Export;
 
 namespace Trizbort.Avalonia.Services;
 
@@ -73,15 +74,15 @@ public static class AppCommands
         });
 
         // Group is "<group in File menu>/<group in Export submenu>".
-        RegisterExport(c, "file.export.png", "_Image (PNG)...", "2-export/1-image", Run(() => vm!.ExportImageAsync()));
-        RegisterExport(c, "file.export.inform7", "Inform _7 Source...", "2-export/2-code", Run(() => vm!.ExportInform7Async()));
-        RegisterExport(c, "file.export.inform6", "Inform _6 Source...", "2-export/2-code", Run(() => vm!.ExportInform6Async()));
-        RegisterExport(c, "file.export.tads", "_TADS Source...", "2-export/2-code", Run(() => vm!.ExportTadsAsync()));
-        RegisterExport(c, "file.export.hugo", "_Hugo Source...", "2-export/2-code", Run(() => vm!.ExportHugoAsync()));
-        RegisterExport(c, "file.export.zil", "_ZIL Source...", "2-export/2-code", Run(() => vm!.ExportZilAsync()));
-        RegisterExport(c, "file.export.quest", "_Quest Source...", "2-export/2-code", Run(() => vm!.ExportQuestAsync()));
-        RegisterExport(c, "file.export.alan", "_Alan Source...", "2-export/2-code", Run(() => vm!.ExportAlanAsync()));
-        RegisterExport(c, "file.export.adventuron", "A_dventuron Source...", "2-export/2-code", Run(() => vm!.ExportAdventuronAsync()));
+        RegisterExport(c, "file.export.png", "_Image...", "2-export/1-image", Run(() => vm!.ExportImageAsync()));
+        ExportCommands.Register(
+            c,
+            language => vm == null ? Task.CompletedTask : RunFileExportAsync(vm, language),
+            OperatingSystem.IsMacOS(),
+            text =>
+            {
+                if (vm != null) vm.StatusText = text;
+            });
 
         c.Register(new EditorCommand
         {
@@ -101,17 +102,6 @@ public static class AppCommands
             }
         });
 
-        c.Register(new EditorCommand
-        {
-            Id = "edit.properties",
-            Title = "_Properties...",
-            MenuPath = "Edit",
-            Group = "3-properties",
-            Gestures = new[] { new KeyGesture(InputKey.Enter, ModifierKeys.Alt) },
-            ContextTargets = ContextTargets.Room | ContextTargets.Connection | ContextTargets.Label,
-            ContextOrder = 10, ContextGroup = "1-properties",
-            ExecuteAsyncFunc = Run(() => vm!.ShowSelectedElementPropertiesAsync())
-        });
         c.Register(new EditorCommand
         {
             Id = "edit.mapSettings",
@@ -194,6 +184,22 @@ public static class AppCommands
         {
             // opening a browser must never crash the app
         }
+    }
+
+    private static Task RunFileExportAsync(MainWindowViewModel vm, ExportLanguage language)
+    {
+        return language switch
+        {
+            ExportLanguage.Alan => vm.ExportAlanAsync(),
+            ExportLanguage.Adventuron => vm.ExportAdventuronAsync(),
+            ExportLanguage.Hugo => vm.ExportHugoAsync(),
+            ExportLanguage.Inform6 => vm.ExportInform6Async(),
+            ExportLanguage.Inform7 => vm.ExportInform7Async(),
+            ExportLanguage.Tads => vm.ExportTadsAsync(),
+            ExportLanguage.Quest => vm.ExportQuestAsync(),
+            ExportLanguage.Zil => vm.ExportZilAsync(),
+            _ => Task.CompletedTask
+        };
     }
 
     private static void RegisterExport(CommandCatalogue c, string id, string title, string group, Func<EditorSession, Task> execute)

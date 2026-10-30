@@ -150,16 +150,17 @@ public sealed partial class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "view.fitToMap",
-      Title = "_Fit to Map",
+      Title = "Zoom to _Entire Map",
       MenuPath = "View",
       Group = "1-zoom",
+      Gestures = new[] { new KeyGesture(InputKey.Home, primary) },
       ExecuteAsyncFunc = s => Run(() => s.Viewport.FitToMap(s.Project.Elements))
     });
     catalogue.Register(new EditorCommand
     {
       Id = "view.toggleGrid",
       ToolbarOrder = 100, ToolbarGroup = "3-view", ShowInToolbar = true, IconKey = "IconGrid",
-      Title = "Toggle _Grid",
+      Title = "Show _Grid",
       MenuPath = "View",
       Group = "2-display",
       IsCheckedFunc = s => s.ShowGrid,
@@ -185,6 +186,7 @@ public sealed partial class CommandCatalogue
     RegisterConnectionAndSelectionCommands(catalogue);
     RegisterViewCommands(catalogue);
     RegisterMoreCommands(catalogue);
+    RegisterNavigationCommands(catalogue);
 
     return catalogue;
   }

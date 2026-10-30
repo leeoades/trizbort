@@ -140,12 +140,14 @@ public sealed partial class EditorSession : IDisposable
   /// </summary>
   public void PerformUndo()
   {
+    _selectedWaypoint = null;
     Undo.Undo(this);
   }
 
   /// <summary>Redo the last undone step.</summary>
   public void PerformRedo()
   {
+    _selectedWaypoint = null;
     Undo.Redo(this);
   }
 
@@ -206,6 +208,9 @@ public sealed partial class EditorSession : IDisposable
 
   public int DeleteSelected()
   {
+    // Legacy: Delete first removes the selected curve waypoint (one undo step) before any element.
+    if (DeleteSelectedWaypoint()) return 0;
+
     var selected = GetSelectedOrActive();
     if (selected.Count == 0) return 0;
 
@@ -220,6 +225,7 @@ public sealed partial class EditorSession : IDisposable
     Selection.Clear();
     Project.ActiveSelectedElement = null;
     RaiseChanged(EditorChange.Model);
+    PostStatusMessage($"Deleted {selected.Count} element(s)");
     return selected.Count;
   }
 
@@ -251,6 +257,7 @@ public sealed partial class EditorSession : IDisposable
   public void SelectAll()
   {
     Selection.Set(Project.Elements);
+    PostStatusMessage(Selection.Count > 0 ? $"Selected all {Selection.Count} elements" : "No elements to select");
   }
 
   public void ClearSelection()
@@ -313,6 +320,9 @@ public sealed partial class EditorSession : IDisposable
 
   private void OnSelectionChanged(object sender, EventArgs e)
   {
+    // A selection change drops the selected waypoint; a single selected connection becomes the template for new ones.
+    _selectedWaypoint = null;
+    if (Selection.Count == 1 && Selection.Primary is Connection selectedConnection) NewConnection.CopyFrom(selectedConnection);
     if (Project != null)
     {
       Project.ActiveSelectedElement = Selection.Primary;

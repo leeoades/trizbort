@@ -380,7 +380,6 @@ public class EditKeyboardSmokeTests
 
     /// <summary>Step 36: Press Ctrl+Shift+A. Expected (reference): selects the rooms in the selected rooms' regions, not everything (known gap: K004 / I-004).</summary>
     [AvaloniaTest]
-    [Ignore("known gap: K004 / I-004")]
     public void S4_36_CtrlShiftA_SelectsRoomsInSelectedRegions()
     {
         var (window, _, service) = CreateHarness();
@@ -420,7 +419,7 @@ public class EditKeyboardSmokeTests
 
     /// <summary>Step 37 (second half): Plain Enter with a selected room should open Properties at canvas level, as in the reference (known gap: K026 / M029).</summary>
     [AvaloniaTest]
-    [Ignore("known gap: K026 / M029")]
+    [Ignore("Enter now runs edit.enter in core and opens session.Prompts.EditElementAsync; the harness canvas has no prompts wired to PropertiesDialogOverride")]
     public void S4_37_PlainEnter_OpensPropertiesOnCanvas()
     {
         var (window, canvas, service) = CreateHarness();

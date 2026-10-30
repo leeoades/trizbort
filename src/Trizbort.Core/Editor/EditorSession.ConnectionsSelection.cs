@@ -162,6 +162,7 @@ public sealed partial class EditorSession
 
     DefaultClipboard.Text = json;
     _lastPasteText = null;
+    PostStatusMessage($"Copied {GetSelectedOrActive().Count} element(s)");
     return json;
   }
 
@@ -171,7 +172,9 @@ public sealed partial class EditorSession
     if (json != null)
     {
       // DeleteSelected opens its own transaction; the outer one makes the whole cut a single "Cut" step.
+      var count = GetSelectedOrActive().Count;
       Execute("Cut", () => DeleteSelected());
+      PostStatusMessage($"Cut {count} element(s)");
     }
     return json;
   }
@@ -185,6 +188,7 @@ public sealed partial class EditorSession
     await _clipboard.SetTextAsync(json);
     _clipboardHasData = true;
     _lastPasteText = null;
+    PostStatusMessage($"Copied {GetSelectedOrActive().Count} element(s)");
     return true;
   }
 
@@ -193,7 +197,9 @@ public sealed partial class EditorSession
   {
     if (!await CopyAsync()) return false;
 
+    var count = GetSelectedOrActive().Count;
     Execute("Cut", () => DeleteSelected());
+    PostStatusMessage($"Cut {count} element(s)");
     return true;
   }
 
@@ -265,6 +271,7 @@ public sealed partial class EditorSession
           }
         }, rooms);
         RaiseChanged(EditorChange.Model);
+        PostStatusMessage("Pasted colours");
         return true;
       }
 
@@ -276,6 +283,7 @@ public sealed partial class EditorSession
       var copyObj = JsonConvert.DeserializeObject<CopyController.CopyObject>(text);
       var step = Settings.GridSize * (_pasteRepeat + 1);
       Execute("Paste", () => PasteElements(copyObj, controller, target, step));
+      PostStatusMessage("Pasted " + ((copyObj.Rooms?.Count ?? 0) + (copyObj.Labels?.Count ?? 0) + (copyObj.Connections?.Count ?? 0)) + " element(s)");
       return true;
     }
     catch (Exception ex)

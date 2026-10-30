@@ -142,7 +142,7 @@ public static class MapLabelDrawingAdapter
                     cache.CachedStartY = textBounds.Top + Math.Max(0, (textBounds.Height - formattedText.Height) / 2.0);
                 }
 
-                context.DrawText(cache.CachedText, new AvaloniaPoint(textBounds.Left, cache.CachedStartY));
+                if (TextRenderingGate.IsEnabled) context.DrawText(cache.CachedText, new AvaloniaPoint(textBounds.Left, cache.CachedStartY));
             }
         }
     }

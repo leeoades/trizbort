@@ -9,7 +9,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Expected: the last map opens (reference: `legacy/src/Trizbort/UI/MainForm.cs` ~196–199, 652–664).   Actual: empty map.
 - Cause: the setting is shown and saved (`src/Trizbort.Avalonia/ViewModels/AppSettingsViewModel.cs:64,86`) but nothing reads it at startup (`App.axaml.cs`). Matrix A014.
 - Severity: medium     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: `StartupActions` opens the last project when the setting is on (a command-line file wins). Tests: `StartupLastProjectTests`.
+- Ticket: 103
 
 ## I-002 Status-bar cursor position never updates
 - Reported: 2026-10-30 by agent (T1.5, code reading)   OS: all   Category: behaviour
@@ -51,7 +52,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   `ApplyStyleToNewRooms` (and `LoadLastProjectOnStart`, see I-001). Details per setting in `dialogs/AppSettings.md`.
 - Severity: medium (users will think settings are broken)     Flags: —
 - Progress 2026-10-30: `ShowFullPathInTitleBar` is now honoured (ticket 114). `ApplyStyleToNewRooms` honoured (ticket 115, `RoomFactory`); `InvertMouseWheel` still open.
-- Ticket: 114 (partial), 115
+- **Fixed** 2026-10-30: all three settings are honoured: full path in title (114), apply style to new rooms (115), invert mouse wheel (`CanvasInteraction.OnWheel`, 051).
+- Ticket: 114, 115, 051
 
 ## I-007 Renaming or deleting a region leaves rooms with the old region name
 - Reported: 2026-10-30 by agent (T1.4d, code reading; verified)   OS: all   Category: behaviour (data)
@@ -128,13 +130,15 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   `StatusMessagePosted` exists (ticket 033 uses it for Cycle Port Detail) but no UI shows it. Wire the status bar to it
   and post messages from the Core commands.
 - Severity: low     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: Core commands post status messages via `EditorSession.PostStatusMessage`; the main window status bar shows them.
+- Ticket: 052 batch
 
 ## I-016 Toggle Text (Primary+F4) has no visible effect
 - Reported: 2026-10-30 by agent (ticket 054)   OS: all   Category: render
 - The command flips `DebugDisableTextRendering`, but the Avalonia renderer never reads it.
 - Severity: low     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: the Avalonia adapters skip text when `DebugDisableTextRendering` is set (`Drawing/TextRenderingGate.cs`).
+- Ticket: 052 batch
 
 ## I-017 Project validation toggles are not undoable
 - Reported: 2026-10-30 by agent (ticket 036)   OS: all   Category: behaviour   Flags: needs-decision
@@ -151,4 +155,12 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: low     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-019 -->
+## I-019 Three smoke tests use an outdated harness
+- Reported: 2026-10-30 by integrator   OS: all   Category: tests
+- S1_08 (reload prompt), S1_09 (load last project) and S7_62 (ambiguous room) check through the old fake dialog service
+  or startup path, so they fail although the features work (covered by FileWatcherTests, StartupLastProjectTests and
+  AutomapPromptDialogTests). Rewrite them against IEditorPrompts / StartupActions(settings) and remove the [Ignore].
+- Severity: low     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-020 -->

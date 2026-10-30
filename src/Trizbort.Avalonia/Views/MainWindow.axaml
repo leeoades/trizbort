@@ -67,13 +67,24 @@
                                        VerticalAlignment="Stretch" />
 
             <!-- MinimapControl overlay -->
-            <controls:MinimapControl HorizontalAlignment="Right"
+            <controls:MinimapControl x:Name="Minimap"
+                                     HorizontalAlignment="Right"
                                      VerticalAlignment="Top"
                                      Margin="0,10,10,0"
                                      Width="200"
                                      Height="130"
                                      CanvasControl="{Binding #CanvasControl}"
                                      CommandService="{Binding CommandService}" />
+
+            <!-- Current zoom, bottom-left corner of the canvas -->
+            <TextBlock x:Name="ZoomLabel"
+                       Text="{Binding ZoomText}"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom"
+                       Margin="8,0,0,6"
+                       FontSize="11"
+                       Foreground="Gray"
+                       IsHitTestVisible="False" />
 
             <!-- AutomapBar overlay -->
             <controls:AutomapBar VerticalAlignment="Bottom"

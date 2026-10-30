@@ -232,7 +232,6 @@ public class MouseDialogSmokeTests
 
     /// <summary>Smoke step 18 (known gap G005): reference Ctrl-marquee only adds; it must not deselect an already selected room.</summary>
     [AvaloniaTest]
-    [Ignore("known gap: G005")]
     public void S3_18_CtrlMarquee_OverSelectedRoom_KeepsItSelected()
     {
         var (window, canvas, service) = CreateCanvas();

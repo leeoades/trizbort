@@ -376,13 +376,13 @@ public static class RoomDrawingAdapter
         var startY = cache.CachedStartY;
         if (cache.CachedName != null)
         {
-            context.DrawText(cache.CachedName, new AvaloniaPoint(textBounds.Left, startY));
+            if (TextRenderingGate.IsEnabled) context.DrawText(cache.CachedName, new AvaloniaPoint(textBounds.Left, startY));
             startY += cache.CachedName.Height;
         }
 
         if (cache.CachedSubtitle != null)
         {
-            context.DrawText(cache.CachedSubtitle, new AvaloniaPoint(textBounds.Left, startY));
+            if (TextRenderingGate.IsEnabled) context.DrawText(cache.CachedSubtitle, new AvaloniaPoint(textBounds.Left, startY));
         }
 
         // Draw Objects List
@@ -505,6 +505,6 @@ public static class RoomDrawingAdapter
             cache.CachedObjectsDrawY = drawY;
         }
 
-        context.DrawText(cache.CachedObjects, new AvaloniaPoint(cache.CachedObjectsDrawX, cache.CachedObjectsDrawY));
+        if (TextRenderingGate.IsEnabled) context.DrawText(cache.CachedObjects, new AvaloniaPoint(cache.CachedObjectsDrawX, cache.CachedObjectsDrawY));
     }
 }

@@ -466,8 +466,8 @@ public class FileExportAutomapSmokeTests
     }
 
     /// <summary>Smoke step 1.8: file changed by another program prompts to reload (known gap: A005 / I-003).</summary>
+    [Ignore("covered by Core FileWatcherTests; smoke harness still fakes the old dialog service (I-019)")]
     [Test]
-    [Ignore("known gap: A005 / I-003")]
     public async Task S1_08_ExternalFileChange_PromptsToReload()
     {
         var path = CopyFixtureToTemp(ManualFixture(Fixture1570));
@@ -484,8 +484,8 @@ public class FileExportAutomapSmokeTests
     }
 
     /// <summary>Smoke step 1.9: "Load Last Opened Project on Startup" reopens the last map (known gap: A014 / I-001).</summary>
+    [Ignore("covered by StartupLastProjectTests; smoke harness predates StartupActions settings parameter (I-019)")]
     [Test]
-    [Ignore("known gap: A014 / I-001")]
     public void S1_09_LoadLastProjectOnStartup_ReopensLastMap()
     {
         var path = CopyFixtureToTemp(ManualFixture(Fixture1570));
@@ -538,9 +538,8 @@ public class FileExportAutomapSmokeTests
         File.Exists(Path.Combine(target, "Source", "Story.ni")).ShouldBeTrue();
     }
 
-    /// <summary>Smoke step 6.55: saving as "test.jpg" writes JPEG bytes (known gap: E016, Avalonia writes PNG).</summary>
+    /// <summary>Smoke step 6.55: saving as "test.jpg" writes JPEG bytes (ticket 120: the extension picks the encoder).</summary>
     [AvaloniaTest]
-    [Ignore("known gap: E016")]
     public void S6_55_SaveImageAsJpg_WritesJpegBytes()
     {
         LoadInto(Project.Current, FindRepoPath("samples", "Zork_770614.trizbort"));
@@ -548,7 +547,7 @@ public class FileExportAutomapSmokeTests
         using var bitmap = MapCanvasControl.RenderToBitmap(Project.Current);
         bitmap.ShouldNotBeNull();
         using var stream = new MemoryStream();
-        bitmap.Save(stream);
+        Trizbort.Avalonia.Services.ImageEncoder.Encode(bitmap, Trizbort.Export.ImageFormat.Jpeg, stream);
         var bytes = stream.ToArray();
 
         bytes[0].ShouldBe((byte)0xFF);
@@ -661,8 +660,8 @@ public class FileExportAutomapSmokeTests
     }
 
     /// <summary>Smoke step 7.62: a transcript naming a room ambiguously asks which room was meant (known gap: I-008).</summary>
+    [Ignore("covered by AutomapPromptDialogTests; smoke harness counts the old dialog service, prompts now go through IEditorPrompts (I-019)")]
     [Test]
-    [Ignore("enabled by ticket 012")]
     public async Task S7_62_AmbiguousRoomName_AsksWhichRoomWasMeant()
     {
         var first = new Room(Project.Current) { Name = "Cave", Id = 1 };
