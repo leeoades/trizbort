@@ -161,7 +161,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
        as superseded by this plan (keep the file). Commit C: `build: split legacy and new solutions; CI per solution`.
   - Done when: both solutions build and pass tests; history check passes; CI and docs updated.
 
-- [ ] **T0.4 WinForms dialog screenshots from the reference** · Mid · Windows · Depends: T0.2
+- [x] **T0.4 WinForms dialog screenshots from the reference** · Mid · Windows · Depends: T0.2
   - Read: `$REF/src/Trizbort.Tests/RoomPropertiesDialogTests.cs`, `$REF/src/Trizbort.Tests/TestEnvironment.cs` (how tests create dialogs).
   - Steps: Add `legacy/src/Trizbort.Tests/DialogCaptureTests.cs`, skipped unless env var `TRIZBORT_CAPTURE_OUTPUT` is set (so the legacy
     test run is unaffected). It opens each dialog off-screen at 100 % DPI with `tests/manual/object-testing.trizbort` loaded and one
@@ -172,7 +172,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
     Name files `<Dialog>__<tab>__<state>.png`; write them to `agent-docs/plans/avalonia-parity/screenshots/winforms/` with an `index.md`.
   - Done when: test and PNGs committed.
 
-- [ ] **T0.5 Avalonia dialog screenshots** · Mid · Depends: none
+- [x] **T0.5 Avalonia dialog screenshots** · Mid · Depends: none
   - Read: `src/Trizbort.Avalonia.Tests/AvaloniaVisualCaptureTests.cs`, `DialogViewModelTests.cs`, `src/Trizbort.Avalonia/Services/DialogService.cs`.
   - Steps: Add `DialogCaptureTests.cs` to `src/Trizbort.Avalonia.Tests` (skipped unless `TRIZBORT_CAPTURE_OUTPUT` is set) rendering every dialog in
     `Views/Dialogs/` and `AboutDialog` headlessly, with the same map/selection, tabs, dependent states and naming as T0.4. Output to
