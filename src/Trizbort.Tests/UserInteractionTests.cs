@@ -7,10 +7,10 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using NUnit.Framework;
 using Shouldly;
-using Trizbort.Core.Tests;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Controllers;
 using Trizbort.Domain.Elements;
+using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using Trizbort.UI;
 using Trizbort.UI.Controls;
@@ -340,7 +340,7 @@ public class UserInteractionTests : IsolatedProjectTests
   {
     _interaction.Result = result;
     _interaction.EditCommonDialog = dialog => dialog.ShouldBeOfType<ColorDialog>().Color = Color.Blue;
-    ColorDialogHelper.ShowColorDialog(Color.Red, null).ShouldBe(result == DialogResult.OK ? Color.Blue : Color.Red);
+    Colors.ShowColorDialog(Color.Red, null).ShouldBe(result == DialogResult.OK ? Color.Blue : Color.Red);
   }
 
   [Test]

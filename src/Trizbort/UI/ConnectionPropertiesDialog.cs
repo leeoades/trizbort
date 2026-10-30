@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Trizbort.Domain.Elements;
+using Trizbort.Domain.Misc;
 
 namespace Trizbort.UI;
 
@@ -119,7 +120,7 @@ public partial class ConnectionPropertiesDialog : Form
 
   private void ChangeConnectionColor()
   {
-    ConnectionColor = ColorDialogHelper.ShowColorDialog(ConnectionColor, this);
+    ConnectionColor = Colors.ShowColorDialog(ConnectionColor, this);
   }
 
   private void ChkDoorCheckedChanged(object sender, EventArgs e)

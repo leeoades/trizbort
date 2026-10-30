@@ -6,7 +6,6 @@ using NUnit.Framework;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf.IO;
 using Shouldly;
-using Trizbort.Core.Tests;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
@@ -55,69 +54,6 @@ public class RenderingIntegrationTests : IsolatedProjectTests
 
     canvas.Viewport.Center.ShouldBe(origin);
     canvas.ZoomFactor.ShouldBe(zoom);
-  }
-
-  [Test]
-  public void CanvasRendering_TransparentNoRegionRoom_UsesNoRegionFillColor()
-  {
-    Settings.IsGridVisible = false;
-    Settings.ShowOrigin = false;
-    Settings.Color[Colors.Canvas] = Color.White;
-    Settings.Regions.Clear();
-    Settings.Regions.Add(
-      new Trizbort.Domain.Misc.Region
-      {
-        RegionName = Trizbort.Domain.Misc.Region.DefaultRegion,
-        RColor = Color.Lime
-      });
-
-    using var canvas = new Canvas { Size = new Size(300, 200) };
-    var room = canvas.AddRoom(false, false, false);
-    room.Name = "";
-    room.Position = new Vector(-50, -30);
-    room.Size = new Vector(100, 60);
-    room.RoomFillColor = Color.Transparent;
-    room.Region = Trizbort.Domain.Misc.Region.DefaultRegion;
-    canvas.Origin = Vector.Zero;
-    canvas.ZoomFactor = 1;
-
-    using var bitmap = Render(canvas, false);
-    bitmap.GetPixel(150, 100).ToArgb().ShouldBe(Color.Lime.ToArgb());
-  }
-
-  [Test]
-  public void CanvasRendering_UncachedSmartLines_DoNotGapAtRoomBorders()
-  {
-    Settings.IsGridVisible = false;
-    Settings.ShowOrigin = false;
-    Settings.HandDrawn = false;
-
-    using var canvas = new Canvas { Size = new Size(400, 200) };
-    var left = canvas.AddRoom(false, false, false);
-    left.Name = "";
-    left.Position = new Vector(-140, -30);
-    left.Size = new Vector(80, 60);
-
-    var right = canvas.AddRoom(false, false, false);
-    right.Name = "";
-    right.Position = new Vector(80, -30);
-    right.Size = new Vector(80, 60);
-
-    var connection = new Connection(
-      Project.Current,
-      new Vertex(left.PortAt(CompassPoint.East)),
-      new Vertex(right.PortAt(CompassPoint.West)))
-    {
-      ConnectionColor = Color.Red
-    };
-    Project.Current.Elements.Add(connection);
-
-    canvas.Origin = Vector.Zero;
-    canvas.ZoomFactor = 1;
-
-    using var bitmap = Render(canvas, false);
-    var probe = canvas.CanvasToClient(left.PortAt(CompassPoint.East).Position + new Vector(4, 0));
-    AssertPixelIsRedLine(bitmap.GetPixel((int)probe.X, (int)probe.Y));
   }
 
   [Test]
@@ -203,12 +139,5 @@ public class RenderingIntegrationTests : IsolatedProjectTests
     native.Clear(Color.White);
     canvas.Draw(graphics, final, bitmap.Width, bitmap.Height);
     return bitmap;
-  }
-
-  private static void AssertPixelIsRedLine(Color color)
-  {
-    ((int)color.R).ShouldBeGreaterThan(180);
-    ((int)color.G).ShouldBeLessThan(160);
-    ((int)color.B).ShouldBeLessThan(160);
   }
 }

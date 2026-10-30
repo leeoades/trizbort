@@ -17,7 +17,6 @@ using Trizbort.Domain.Controllers;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
-using Trizbort.Extensions;
 using Trizbort.Setup;
 using Region = Trizbort.Domain.Misc.Region;
 using Timer = System.Threading.Timer;
@@ -95,14 +94,12 @@ public partial class Canvas : UserControl, IAutomapCanvas
     _minimap.Canvas = this;
   }
 
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool CanDrawLine => true;
 
   internal int ResizeHandleCount => _handles.Count;
   internal int PortCount => _ports.Count;
   internal TrizbortToolTip ElementToolTip => _trizbortToolTip1;
 
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool CanSelectElements => true;
 
   public override Cursor Cursor {
@@ -115,7 +112,7 @@ public partial class Canvas : UserControl, IAutomapCanvas
 
       if (HoverPort is MoveablePort) return Drawing.MoveLineCursor;
 
-      var cursor = HoverHandle?.GetCursor();
+      var cursor = HoverHandle?.Cursor;
       if (cursor != null) return cursor;
 
       if (HoverElement is IMoveable && _selectedElements.Contains(HoverElement)) return Cursors.SizeAll;
@@ -124,11 +121,8 @@ public partial class Canvas : UserControl, IAutomapCanvas
     set { base.Cursor = value; }
   }
 
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool HasSelectedRooms => _selectedElements.OfType<Room>().Any();
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool HasSingleSelectedElement => SelectedElementCount == 1;
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public bool HasSingleSelectedRoom => _selectedElements.OfType<Room>().Count() == 1;
 
   [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -141,8 +135,6 @@ public partial class Canvas : UserControl, IAutomapCanvas
     }
   }
 
-  [DefaultValue(true)]
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
   public bool MinimapVisible {
     get { return _minimap.Visible; }
     set {
@@ -200,7 +192,6 @@ public partial class Canvas : UserControl, IAutomapCanvas
     }
   }
 
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public List<Connection> SelectedConnections {
     get { return _selectedElements.Where(p => p is Connection).ToList().Cast<Connection>().ToList(); }
   }
@@ -219,13 +210,10 @@ public partial class Canvas : UserControl, IAutomapCanvas
     }
   }
 
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public int SelectedElementCount => _selectedElements.Count;
 
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public IList<Element> SelectedElements => _selectedElements;
 
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public List<Room> SelectedRooms {
     get { return _selectedElements.Where(p => p is Room).ToList().Cast<Room>().ToList(); }
   }
@@ -1676,12 +1664,12 @@ public partial class Canvas : UserControl, IAutomapCanvas
   private void AddOrSelectRooms(CompassPoint? compassPoint)
   {
     if (compassPoint != null && !SelectRoomRelativeToSelectedRoom(compassPoint.Value))
-      if (ModifierKeys.ToModifierKeys() == Settings.KeypadNavigationCreationModifier)
+      if (ModifierKeys == Settings.KeypadNavigationCreationModifier)
       {
         AddOrConnectRoomRelativeToSelectedRoom(compassPoint.Value);
         SelectRoomRelativeToSelectedConnection(compassPoint.Value);
       }
-      else if (ModifierKeys.ToModifierKeys() == Settings.KeypadNavigationUnexploredModifier)
+      else if (ModifierKeys == Settings.KeypadNavigationUnexploredModifier)
       {
         AddUnexploredConnectionToSelectedRoom(compassPoint.Value);
       }
@@ -1707,7 +1695,7 @@ public partial class Canvas : UserControl, IAutomapCanvas
 
   private void ApplicationSettingsToolStripMenuItemClick(object sender, EventArgs e)
   {
-    AppSettingsDialog.ShowAppDialog();
+    ApplicationSettingsController.ShowAppDialog();
   }
 
   private void BeginDragDrawLine()
@@ -2578,7 +2566,7 @@ public partial class Canvas : UserControl, IAutomapCanvas
 
   private void MapSettingsToolStripMenuItemClick(object sender, EventArgs e)
   {
-    SettingsDialog.ShowMapDialog();
+    Settings.ShowMapDialog();
     Refresh();
   }
 

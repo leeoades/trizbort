@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Windows.Forms;
-using Trizbort.Automap;
 using Trizbort.Domain.Elements;
 
 namespace Trizbort.UI;
+
+public enum AutomapSameDirectionResult
+{
+  KeepRoom1,
+  KeepRoom2,
+  KeepBoth
+}
 
 public partial class AutomapRoomSameDirectionDialog : Form
 {

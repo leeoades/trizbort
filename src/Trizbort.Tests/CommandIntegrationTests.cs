@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Shouldly;
-using Trizbort.Core.Tests;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Cache;
 using Trizbort.Domain.Controllers;

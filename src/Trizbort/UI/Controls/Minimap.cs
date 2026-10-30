@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -34,8 +33,6 @@ internal sealed partial class Minimap : UserControl
     DoubleBuffered = true;
   }
 
-  [DefaultValue(null)]
-  [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
   public Canvas Canvas { get; set; }
 
   public bool IsMouseOverMe()

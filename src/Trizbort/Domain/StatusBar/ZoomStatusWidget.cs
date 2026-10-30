@@ -31,18 +31,16 @@ public class ZoomStatusWidget : IStatusWidget
 
   public string DisplayText()
   {
-    return (TrizbortApplication.MainForm?.Canvas.ZoomFactor ?? 1.0f).ToString("P");
+    return Project.Current.Canvas.ZoomFactor.ToString("P");
   }
 
   public void ClickHandler()
   {
-    if (TrizbortApplication.MainForm?.Canvas != null)
-      _menu.Show(TrizbortApplication.MainForm.Canvas, Cursor.Position);
+    _menu.Show(Project.Current.Canvas, Cursor.Position);
   }
 
   private void SetZoom(object sender, float zoomFactor)
   {
-    if (TrizbortApplication.MainForm?.Canvas != null)
-      TrizbortApplication.MainForm.Canvas.ZoomFactor = zoomFactor;
+    Project.Current.Canvas.ZoomFactor = zoomFactor;
   }
 }

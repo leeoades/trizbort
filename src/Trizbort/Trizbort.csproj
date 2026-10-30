@@ -2,8 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net10.0-windows</TargetFramework>
-		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+		<TargetFramework>net8.0-windows</TargetFramework>
 		<UseWindowsForms>true</UseWindowsForms>
 		<RootNamespace>Trizbort</RootNamespace>
 		<AssemblyName>Trizbort</AssemblyName>
@@ -16,10 +15,8 @@
 		<ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<!-- This is a Windows-only WinForms app targeting the Windows-specific TFM;
-			 CA1416 (Windows-only API usage) is expected noise here, not a real risk.
-			 WFO1000 is suppressed because runtime-only Form dialog properties do not require designer serialization;
-			 custom controls under UI/Controls/ have explicit DesignerSerializationVisibility annotations. -->
-		<NoWarn>$(NoWarn);CA1416;WFO1000</NoWarn>
+			 CA1416 (Windows-only API usage) is expected noise here, not a real risk. -->
+		<NoWarn>$(NoWarn);CA1416</NoWarn>
 		<Nullable>disable</Nullable>
 		<ImplicitUsings>disable</ImplicitUsings>
 	</PropertyGroup>
@@ -28,10 +25,6 @@
 		<PackageReference Include="CommandLineParser" Version="2.9.1"/>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4"/>
 		<PackageReference Include="PDFsharp-GDI" Version="6.2.4"/>
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\Trizbort.Core\Trizbort.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -26,126 +26,6 @@ public partial class SettingsDialog : Form
   private Font _smallFont;
   private Font _subtitleFont;
 
-  public static void ShowMapDialog()
-  {
-    using var dialog = new SettingsDialog();
-    for (var index = 0; index < Colors.Count; ++index) dialog.ElementColors[index] = Settings.Color[index];
-
-    var regCount = Settings.Regions.Count;
-    var regNameList = Settings.Regions.Select(p => p.RegionName).ToList();
-    var regTextColorList = Settings.Regions.Select(p => p.TextColor).ToList();
-    var regBkgdColorList = Settings.Regions.Select(p => p.RColor).ToList();
-
-    dialog.Title = Project.Current.Title;
-    dialog.Author = Project.Current.Author;
-    dialog.Description = Project.Current.Description;
-    dialog.History = Project.Current.History;
-    dialog.DefaultRoomName = Settings.DefaultRoomName;
-    dialog.LargeFont = Settings.RoomNameFont;
-    dialog.SmallFont = Settings.ObjectFont;
-    dialog.LineFont = Settings.LineFont;
-    dialog.SubtitleFont = Settings.SubtitleFont;
-    dialog.LineWidth = Settings.LineWidth;
-    dialog.HandDrawn = Settings.HandDrawn;
-    dialog.SnapToGrid = Settings.SnapToGrid;
-    dialog.GridSize = Settings.GridSize;
-    dialog.IsGridVisible = Settings.IsGridVisible;
-    dialog.ShowOrigin = Settings.ShowOrigin;
-    dialog.DarknessStripeSize = Settings.DarknessStripeSize;
-    dialog.ObjectListOffsetFromRoom = Settings.ObjectListOffsetFromRoom;
-    dialog.ConnectionStalkLength = Settings.ConnectionStalkLength;
-    dialog.PreferredDistanceBetweenRooms = Settings.PreferredDistanceBetweenRooms;
-    dialog.TextOffsetFromConnection = Settings.TextOffsetFromConnection;
-    dialog.HandleSize = Settings.HandleSize;
-    dialog.SnapToElementSize = Settings.SnapToElementSize;
-    dialog.DocumentSpecificMargins = Settings.DocumentSpecificMargins;
-    dialog.DocHorizontalMargin = Settings.DocHorizontalMargin;
-    dialog.DocVerticalMargin = Settings.DocVerticalMargin;
-    dialog.WrapTextAtDashes = Settings.WrapTextAtDashes;
-    dialog.ConnectionArrowSize = Settings.ConnectionArrowSize;
-    dialog.DefaultRoomShape = Settings.DefaultRoomShape;
-    if (UserInteraction.ShowDialog(dialog) == DialogResult.OK)
-    {
-      for (var index = 0; index < Colors.Count; ++index)
-      {
-        if (Settings.Color[index] != dialog.ElementColors[index]) Project.Current.IsDirty = true;
-        Settings.Color[index] = dialog.ElementColors[index];
-      }
-
-      if (Project.Current.Title != dialog.Title) Project.Current.IsDirty = true;
-      Project.Current.Title = dialog.Title;
-      if (Project.Current.Author != dialog.Author) Project.Current.IsDirty = true;
-      Project.Current.Author = dialog.Author;
-      if (Project.Current.Description != dialog.Description) Project.Current.IsDirty = true;
-      Project.Current.Description = dialog.Description;
-      if (Project.Current.History != dialog.History) Project.Current.IsDirty = true;
-      Project.Current.History = dialog.History;
-      if (Settings.DefaultRoomName != dialog.DefaultRoomName) Project.Current.IsDirty = true;
-      Settings.DefaultRoomName = dialog.DefaultRoomName;
-      if (!Equals(Settings.RoomNameFont, dialog.LargeFont)) Project.Current.IsDirty = true;
-      Settings.RoomNameFont = dialog.LargeFont;
-      if (!Equals(Settings.ObjectFont, dialog.SmallFont)) Project.Current.IsDirty = true;
-      Settings.ObjectFont = dialog.SmallFont;
-      if (!Equals(Settings.SubtitleFont, dialog.SubtitleFont)) Project.Current.IsDirty = true;
-      Settings.SubtitleFont = dialog.SubtitleFont;
-      if (!Equals(Settings.LineFont, dialog.LineFont)) Project.Current.IsDirty = true;
-      Settings.LineFont = dialog.LineFont;
-      if (Settings.LineWidth != dialog.LineWidth) Project.Current.IsDirty = true;
-      Settings.LineWidth = dialog.LineWidth;
-      if (Settings.HandDrawn != dialog.HandDrawn) Project.Current.IsDirty = true;
-      Settings.HandDrawn = dialog.HandDrawn;
-      if (Settings.SnapToGrid != dialog.SnapToGrid) Project.Current.IsDirty = true;
-      Settings.SnapToGrid = dialog.SnapToGrid;
-      if (Settings.GridSize != dialog.GridSize) Project.Current.IsDirty = true;
-      Settings.GridSize = dialog.GridSize;
-      if (Settings.IsGridVisible != dialog.IsGridVisible) Project.Current.IsDirty = true;
-      Settings.IsGridVisible = dialog.IsGridVisible;
-      if (Settings.ShowOrigin != dialog.ShowOrigin) Project.Current.IsDirty = true;
-      Settings.ShowOrigin = dialog.ShowOrigin;
-      if (Settings.DarknessStripeSize != dialog.DarknessStripeSize) Project.Current.IsDirty = true;
-      Settings.DarknessStripeSize = dialog.DarknessStripeSize;
-      if (Settings.ObjectListOffsetFromRoom != dialog.ObjectListOffsetFromRoom) Project.Current.IsDirty = true;
-      Settings.ObjectListOffsetFromRoom = dialog.ObjectListOffsetFromRoom;
-      if (Settings.ConnectionStalkLength != dialog.ConnectionStalkLength) Project.Current.IsDirty = true;
-      Settings.ConnectionStalkLength = dialog.ConnectionStalkLength;
-      if (Settings.PreferredDistanceBetweenRooms != dialog.PreferredDistanceBetweenRooms) Project.Current.IsDirty = true;
-      Settings.PreferredDistanceBetweenRooms = dialog.PreferredDistanceBetweenRooms;
-      if (Settings.TextOffsetFromConnection != dialog.TextOffsetFromConnection) Project.Current.IsDirty = true;
-      Settings.TextOffsetFromConnection = dialog.TextOffsetFromConnection;
-      if (Settings.HandleSize != dialog.HandleSize) Project.Current.IsDirty = true;
-      Settings.HandleSize = dialog.HandleSize;
-      if (Settings.SnapToElementSize != dialog.SnapToElementSize) Project.Current.IsDirty = true;
-      Settings.SnapToElementSize = dialog.SnapToElementSize;
-      if (Settings.ConnectionArrowSize != dialog.ConnectionArrowSize) Project.Current.IsDirty = true;
-      Settings.ConnectionArrowSize = dialog.ConnectionArrowSize;
-      if (Settings.DocumentSpecificMargins != dialog.DocumentSpecificMargins) Project.Current.IsDirty = true;
-      Settings.DocumentSpecificMargins = dialog.DocumentSpecificMargins;
-      if (Settings.DocHorizontalMargin != dialog.DocHorizontalMargin) Project.Current.IsDirty = true;
-      Settings.DocHorizontalMargin = dialog.DocHorizontalMargin;
-      if (Settings.DocVerticalMargin != dialog.DocVerticalMargin) Project.Current.IsDirty = true;
-      Settings.DocVerticalMargin = dialog.DocVerticalMargin;
-      if (Settings.WrapTextAtDashes != dialog.WrapTextAtDashes) Project.Current.IsDirty = true;
-      Settings.WrapTextAtDashes = dialog.WrapTextAtDashes;
-      if (Settings.DefaultRoomShape != dialog.DefaultRoomShape) Project.Current.IsDirty = true;
-      Settings.DefaultRoomShape = dialog.DefaultRoomShape;
-    }
-
-    var newRegCount = Settings.Regions.Count;
-    var newReg = Settings.Regions.ToArray();
-    if (newRegCount != regCount)
-      Project.Current.IsDirty = true;
-    else
-      for (var index = 0; index < newRegCount; index++)
-      {
-        if (regBkgdColorList[index] != newReg[index].RColor)
-          Project.Current.IsDirty = true;
-        if (regTextColorList[index] != newReg[index].TextColor)
-          Project.Current.IsDirty = true;
-        if (regNameList[index] != newReg[index].RegionName)
-          Project.Current.IsDirty = true;
-      }
-  }
-
   public SettingsDialog()
   {
     ElementColors = new Color[Colors.Count];
@@ -598,13 +478,13 @@ public partial class SettingsDialog : Form
   {
     if (_colorListBox.SelectedItems.Count == 1)
     {
-      var color = ColorDialogHelper.ShowColorDialog(ElementColors[_colorListBox.SelectedIndex], this);
+      var color = Colors.ShowColorDialog(ElementColors[_colorListBox.SelectedIndex], this);
       if (color != Color.Empty)
         ElementColors[_colorListBox.SelectedIndex] = color;
     }
     else
     {
-      var color = ColorDialogHelper.ShowColorDialog(Color.Empty, this);
+      var color = Colors.ShowColorDialog(Color.Empty, this);
       if (color != Color.Empty)
         foreach (int selectedIndex in _colorListBox.SelectedIndices)
           ElementColors[selectedIndex] = color;

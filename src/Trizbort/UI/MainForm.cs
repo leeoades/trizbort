@@ -82,7 +82,7 @@ public partial class MainForm : Form
     if (UserInteraction.ShowDialog(dialog) == DialogResult.OK) OpenProject(dialog.FileName);
   }
 
-  protected override void OnFormClosing(FormClosingEventArgs e)
+  protected override void OnClosing(CancelEventArgs e)
   {
     if (!CheckLoseProject())
     {
@@ -97,7 +97,7 @@ public partial class MainForm : Form
 
     Project.FileWatcher.Dispose();
 
-    base.OnFormClosing(e);
+    base.OnClosing(e);
   }
 
   private void AlanToTextToolStripMenuItemClick(object sender, EventArgs e)
@@ -113,7 +113,7 @@ public partial class MainForm : Form
 
   private void AppSettingsToolStripMenuItemClick(object sender, EventArgs e)
   {
-    AppSettingsDialog.ShowAppDialog();
+    ApplicationSettingsController.ShowAppDialog();
   }
 
   private void AutomapStartMenuItem_Click(object sender, EventArgs e)
@@ -734,7 +734,7 @@ public partial class MainForm : Form
 
   private void ProjectSettingsMenuItem_Click(object sender, EventArgs e)
   {
-    SettingsDialog.ShowMapDialog();
+    Settings.ShowMapDialog();
     Canvas.Refresh();
   }
 
@@ -756,25 +756,25 @@ public partial class MainForm : Form
   private void RoomsMustHaveADescriptionToolStripMenuItemClick(object sender, EventArgs e)
   {
     _commandController.SetValidation(ValidationType.RoomDescription);
-    Canvas.Invalidate();
+    Project.Current.Canvas.Invalidate();
   }
 
   private void RoomsMustHaveASubtitleToolStripMenuItemClick(object sender, EventArgs e)
   {
     _commandController.SetValidation(ValidationType.RoomSubTitle);
-    Canvas.Invalidate();
+    Project.Current.Canvas.Invalidate();
   }
 
   private void RoomsMustHaveUniqueNamesToolStripMenuItemClick(object sender, EventArgs e)
   {
     _commandController.SetValidation(ValidationType.RoomUniqueName);
-    Canvas.Invalidate();
+    Project.Current.Canvas.Invalidate();
   }
 
   private void RoomsMustNotHaveADanglingConnectionToolStripMenuItemClick(object sender, EventArgs e)
   {
     _commandController.SetValidation(ValidationType.RoomDanglingConnection);
-    Canvas.Invalidate();
+    Project.Current.Canvas.Invalidate();
   }
 
   private void RoundedEdgesToolStripMenuItemClick(object sender, EventArgs e)

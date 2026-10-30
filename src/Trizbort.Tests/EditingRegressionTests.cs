@@ -6,7 +6,6 @@ using System.Windows.Forms;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Shouldly;
-using Trizbort.Core.Tests;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Controllers;
@@ -162,7 +161,7 @@ public class EditingRegressionTests : IsolatedProjectTests
     connection.SetCurveWaypoint(CurveWaypoint.Middle, new Vector(100, 60));
     var controller = new CopyController();
     var copy = JsonConvert.DeserializeObject<CopyController.CopyObject>(
-      JsonConvert.SerializeObject(controller.CreateCopyObject(new Element[] { connection })));
+      JsonConvert.SerializeObject(controller.CreateCopyObject(new[] { connection })));
     var copied = ProjectRegressionTests.AddRoom("Copy");
     var pasted = controller.PasteConnections(
       Project.Current,

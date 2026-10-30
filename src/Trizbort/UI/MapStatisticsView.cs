@@ -5,7 +5,6 @@ using System.Text;
 using System.Windows.Forms;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
-using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 
 namespace Trizbort.UI;
@@ -45,11 +44,11 @@ public partial class MapStatisticsView : Form
       stats += "No end room.";
     stats += $"{Environment.NewLine}";
 
-    var canvasBounds = TrizbortApplication.MainForm?.Canvas.ComputeCanvasBounds(true) ?? Rect.Empty;
+    var canvasBounds = Project.Current.Canvas.ComputeCanvasBounds(true);
     stats +=
       $"{Environment.NewLine}Dimensions with margins: height {canvasBounds.Bottom - canvasBounds.Top}, width {canvasBounds.Right - canvasBounds.Left}{Environment.NewLine}";
 
-    canvasBounds = TrizbortApplication.MainForm?.Canvas.ComputeCanvasBounds(false) ?? Rect.Empty;
+    canvasBounds = Project.Current.Canvas.ComputeCanvasBounds(false);
     stats +=
       $"Dimensions without margins: height {canvasBounds.Bottom - canvasBounds.Top}, width {canvasBounds.Right - canvasBounds.Left}{Environment.NewLine}";
 

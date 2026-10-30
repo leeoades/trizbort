@@ -12,7 +12,7 @@ using Trizbort.Util;
 
 namespace Trizbort.UI;
 
-public partial class RoomPropertiesDialog : Form
+internal partial class RoomPropertiesDialog : Form
 {
   private const int HorizontalMargin = 2;
   private const int VerticalMargin = 2;
@@ -480,32 +480,33 @@ public partial class RoomPropertiesDialog : Form
 
   private void ChangeObjectTextColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) ObjectTextColor = ColorDialogHelper.ShowColorDialog(ObjectTextColor, this);
+    if (_tabControl.SelectedTab == _tabColors) ObjectTextColor = Colors.ShowColorDialog(ObjectTextColor, this);
   }
 
   private void ChangeRoomBorderColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) RoomBorderColor = ColorDialogHelper.ShowColorDialog(RoomBorderColor, this);
+    if (_tabControl.SelectedTab == _tabColors) RoomBorderColor = Colors.ShowColorDialog(RoomBorderColor, this);
   }
 
   private void ChangeRoomFillColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) RoomFillColor = ColorDialogHelper.ShowColorDialog(RoomFillColor, this);
+    if (_tabControl.SelectedTab == _tabColors) RoomFillColor = Colors.ShowColorDialog(RoomFillColor, this);
   }
 
   private void ChangeRoomTextColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) RoomNameColor = ColorDialogHelper.ShowColorDialog(RoomNameColor, this);
+    if (_tabControl.SelectedTab == _tabColors) RoomNameColor = Colors.ShowColorDialog(RoomNameColor, this);
   }
 
+  // Added for Room specific colors
   private void ChangeSecondFillColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) SecondFillColor = ColorDialogHelper.ShowColorDialog(SecondFillColor, this);
+    if (_tabControl.SelectedTab == _tabColors) SecondFillColor = Colors.ShowColorDialog(SecondFillColor, this);
   }
 
   private void ChangeSubtitleColor()
   {
-    if (_tabControl.SelectedTab == _tabColors) RoomSubtitleColor = ColorDialogHelper.ShowColorDialog(RoomSubtitleColor, this);
+    if (_tabControl.SelectedTab == _tabColors) RoomSubtitleColor = Colors.ShowColorDialog(RoomSubtitleColor, this);
   }
 
   private void ChkCornersSameCheckedChanged(object sender, EventArgs e)
@@ -719,7 +720,7 @@ public partial class RoomPropertiesDialog : Form
     graph.SmoothingMode = SmoothingMode.AntiAlias;
     var pen = new Pen(Color.Black, 2.0f) { LineJoin = LineJoin.Round };
 
-    var rect = new Rect(10, 10, 3 * Settings.GridSize, 2 * Settings.GridSize);
+    var rect = new RectangleF(10, 10, 3 * Settings.GridSize, 2 * Settings.GridSize);
     var handDrawn = IsPreviewHandDrawn;
     var random = Sketch.Seeded(0);
     var shape = _cboDrawType.SelectedItem?.ToString();
@@ -733,36 +734,36 @@ public partial class RoomPropertiesDialog : Form
         (float)_txtTopRight.Value,
         (float)_txtBottomRight.Value,
         (float)_txtBottomLeft.Value);
-      outline = (handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints).ToPointFArray();
+      outline = handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints;
     }
     else if (shape == "Ellipse")
     {
       var outlinePoints = Sketch.Ellipse(rect);
-      outline = (handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints).ToPointFArray();
+      outline = handDrawn ? Sketch.ClosedCurve(outlinePoints, random) : outlinePoints;
     }
     else
     {
-      Vector[] vertices;
+      PointF[] vertices;
       if (shape == "Octagonal")
       {
         var qw = rect.Width / 4;
         var qh = rect.Height / 4;
         vertices = new[] {
-          new Vector(rect.Left, rect.Bottom - qh), new Vector(rect.Left, rect.Top + qh),
-          new Vector(rect.Left + qw, rect.Top), new Vector(rect.Right - qw, rect.Top),
-          new Vector(rect.Right, rect.Top + qh), new Vector(rect.Right, rect.Bottom - qh),
-          new Vector(rect.Right - qw, rect.Bottom), new Vector(rect.Left + qw, rect.Bottom)
+          new PointF(rect.Left, rect.Bottom - qh), new PointF(rect.Left, rect.Top + qh),
+          new PointF(rect.Left + qw, rect.Top), new PointF(rect.Right - qw, rect.Top),
+          new PointF(rect.Right, rect.Top + qh), new PointF(rect.Right, rect.Bottom - qh),
+          new PointF(rect.Right - qw, rect.Bottom), new PointF(rect.Left + qw, rect.Bottom)
         };
       }
       else
       {
         vertices = new[] {
-          new Vector(rect.Left, rect.Top), new Vector(rect.Right, rect.Top),
-          new Vector(rect.Right, rect.Bottom), new Vector(rect.Left, rect.Bottom)
+          new PointF(rect.Left, rect.Top), new PointF(rect.Right, rect.Top),
+          new PointF(rect.Right, rect.Bottom), new PointF(rect.Left, rect.Bottom)
         };
       }
 
-      outline = (handDrawn ? Sketch.Polygon(vertices, random) : vertices).ToPointFArray();
+      outline = handDrawn ? Sketch.Polygon(vertices, random) : vertices;
     }
 
     graph.DrawPolygon(pen, outline);
