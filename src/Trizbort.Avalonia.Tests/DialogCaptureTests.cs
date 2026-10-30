@@ -40,7 +40,7 @@ public class DialogCaptureTests
         "Limit Room Description Characters",
         "Limit Connection Description Characters",
         "Specify General Margins for Export",
-        "Has Door",
+        "Doo_r",
         "Draw Outline",
         "Fill Background",
         "Make all corners _equal",

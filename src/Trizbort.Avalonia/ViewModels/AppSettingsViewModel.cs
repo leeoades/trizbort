@@ -51,25 +51,67 @@ public partial class AppSettingsViewModel : ViewModelBase
     private string _defaultFontName = "Arial";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditTooltipOptions))]
+    [NotifyPropertyChangedFor(nameof(CanEditDescriptionLimits))]
+    [NotifyPropertyChangedFor(nameof(CanEditRoomCharacterCount))]
+    [NotifyPropertyChangedFor(nameof(CanEditConnectionCharacterCount))]
     private bool _showTooltips = true;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditDescriptionLimits))]
     private bool _showDescriptionsInTooltips = true;
 
     [ObservableProperty]
     private bool _showObjectsInTooltips = true;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditRoomCharacterCount))]
     private bool _limitRoomDescriptionCharactersInTooltip;
 
     [ObservableProperty]
-    private int _toolTipRoomDescriptionCharactersToShow = 100;
+    private int _toolTipRoomDescriptionCharactersToShow = 50;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditConnectionCharacterCount))]
     private bool _limitConnectionDescriptionCharactersInTooltip;
 
     [ObservableProperty]
-    private int _toolTipConnectionDescriptionCharactersToShow = 100;
+    private int _toolTipConnectionDescriptionCharactersToShow = 50;
+
+    // Children's values remembered while the master is unticked, so re-ticking restores them.
+    private bool _savedShowDescriptionsInTooltips = true;
+    private bool _savedShowObjectsInTooltips = true;
+
+    /// <summary>Show Objects and Show Descriptions are editable only while the master is ticked.</summary>
+    public bool CanEditTooltipOptions => ShowTooltips;
+
+    /// <summary>Limit options are editable only while tooltips show descriptions.</summary>
+    public bool CanEditDescriptionLimits => ShowTooltips && ShowDescriptionsInTooltips;
+
+    public bool CanEditRoomCharacterCount => CanEditDescriptionLimits && LimitRoomDescriptionCharactersInTooltip;
+
+    public bool CanEditConnectionCharacterCount => CanEditDescriptionLimits && LimitConnectionDescriptionCharactersInTooltip;
+
+    partial void OnShowTooltipsChanged(bool value)
+    {
+        if (value)
+        {
+            ShowDescriptionsInTooltips = _savedShowDescriptionsInTooltips;
+            ShowObjectsInTooltips = _savedShowObjectsInTooltips;
+            if (!ShowDescriptionsInTooltips && !ShowObjectsInTooltips)
+            {
+                ShowDescriptionsInTooltips = true;
+                ShowObjectsInTooltips = true;
+            }
+        }
+        else
+        {
+            _savedShowDescriptionsInTooltips = ShowDescriptionsInTooltips;
+            _savedShowObjectsInTooltips = ShowObjectsInTooltips;
+            ShowDescriptionsInTooltips = false;
+            ShowObjectsInTooltips = false;
+        }
+    }
 
     public void Initialize()
     {
@@ -89,9 +131,12 @@ public partial class AppSettingsViewModel : ViewModelBase
         SaveTadsToAdv3Lite = settings.SaveTadstoAdv3Lite;
         DefaultImageType = settings.DefaultImageType;
         DefaultFontName = string.IsNullOrEmpty(settings.DefaultFontName) ? "Arial" : settings.DefaultFontName;
-        ShowTooltips = settings.ShowTooltips;
+        // Children first, so the master hook never restores stale values from a previous Initialize.
         ShowDescriptionsInTooltips = settings.ShowDescriptionsInTooltips;
         ShowObjectsInTooltips = settings.ShowObjectsInTooltips;
+        _savedShowDescriptionsInTooltips = ShowDescriptionsInTooltips;
+        _savedShowObjectsInTooltips = ShowObjectsInTooltips;
+        ShowTooltips = settings.ShowTooltips;
         LimitRoomDescriptionCharactersInTooltip = settings.LimitRoomDescriptionCharactersInTooltip;
         ToolTipRoomDescriptionCharactersToShow = settings.ToolTipRoomDescriptionCharactersToShow;
         LimitConnectionDescriptionCharactersInTooltip = settings.LimitConnectionDescriptionCharactersInTooltip;
@@ -116,8 +161,21 @@ public partial class AppSettingsViewModel : ViewModelBase
         settings.SaveTadstoAdv3Lite = SaveTadsToAdv3Lite;
         settings.DefaultImageType = DefaultImageType;
         settings.DefaultFontName = DefaultFontName;
-        settings.ShowDescriptionsInTooltips = ShowDescriptionsInTooltips;
-        settings.ShowObjectsInTooltips = ShowObjectsInTooltips;
+        // The master is a UI convenience: unticked turns both flags off; ticked with both off turns both on.
+        var showDescriptions = ShowDescriptionsInTooltips;
+        var showObjects = ShowObjectsInTooltips;
+        if (!ShowTooltips)
+        {
+            showDescriptions = false;
+            showObjects = false;
+        }
+        else if (!showDescriptions && !showObjects)
+        {
+            showDescriptions = true;
+            showObjects = true;
+        }
+        settings.ShowDescriptionsInTooltips = showDescriptions;
+        settings.ShowObjectsInTooltips = showObjects;
         settings.LimitRoomDescriptionCharactersInTooltip = LimitRoomDescriptionCharactersInTooltip;
         settings.ToolTipRoomDescriptionCharactersToShow = ToolTipRoomDescriptionCharactersToShow;
         settings.LimitConnectionDescriptionCharactersInTooltip = LimitConnectionDescriptionCharactersInTooltip;

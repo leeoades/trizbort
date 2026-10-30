@@ -5,53 +5,49 @@
         x:Class="Trizbort.Avalonia.Views.Dialogs.ConnectionPropertiesDialog"
         x:DataType="vm:ConnectionPropertiesViewModel"
         Title="Connection Properties"
-        Width="480" Height="480"
-        MinWidth="420" MinHeight="400"
+        Width="520" Height="660"
+        MinWidth="442" MinHeight="561"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
-    <Grid RowDefinitions="*,Auto" Margin="16">
+    <Grid RowDefinitions="*,Auto" Margin="16" Grid.IsSharedSizeScope="True">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="12">
-                <!-- General -->
-                <HeaderedContentControl Header="General">
-                    <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto" Margin="0,4">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ConnectionName}" Margin="0,2" />
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="12">
+                <!-- Name -->
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,12,*">
+                    <Label Grid.Column="0" Classes="field-label" Content="_Name:" Target="{Binding #NameBox}" />
+                    <TextBox Grid.Column="2" x:Name="NameBox" Text="{Binding ConnectionName}" />
+                </Grid>
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ConnectionDescription}" Margin="0,2" />
-                    </Grid>
+                <!-- Style -->
+                <HeaderedContentControl Grid.Row="1" Classes="group" Header="Style">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="24">
+                            <CheckBox Content="_Dotted" IsChecked="{Binding IsDotted}" />
+                            <CheckBox Content="One Way _Arrow" IsChecked="{Binding IsDirectional}" />
+                        </StackPanel>
+                        <Grid ColumnDefinitions="Auto,12,*">
+                            <Label Grid.Column="0" Classes="field-label" Content="_Color:" Target="{Binding #LineColorButton}" />
+                            <controls:ColorPickerButton Grid.Column="2" x:Name="LineColorButton"
+                                                        SelectedColor="{Binding ConnectionColor}" HorizontalAlignment="Left" />
+                        </Grid>
+                    </StackPanel>
                 </HeaderedContentControl>
 
-                <!-- Line Style & Direction -->
-                <HeaderedContentControl Header="Line Style &amp; Direction">
-                    <WrapPanel Margin="0,4">
-                        <CheckBox Content="One-Way (Directional)" IsChecked="{Binding IsDirectional}" Margin="0,0,16,0" />
-                        <CheckBox Content="Dotted Line" IsChecked="{Binding IsDotted}" />
-                    </WrapPanel>
-                </HeaderedContentControl>
-
-                <!-- Text Labels & Presets -->
-                <HeaderedContentControl Header="Text Labels">
-                    <StackPanel Spacing="6" Margin="0,4">
-                        <Grid ColumnDefinitions="*,8,*,8,*">
-                            <StackPanel Grid.Column="0" Spacing="2">
-                                <TextBlock Text="Start:" FontSize="11" />
-                                <TextBox Text="{Binding StartText}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="2">
-                                <TextBlock Text="Middle:" FontSize="11" />
-                                <TextBox Text="{Binding MidText}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="4" Spacing="2">
-                                <TextBlock Text="End:" FontSize="11" />
-                                <TextBox Text="{Binding EndText}" />
-                            </StackPanel>
+                <!-- Text -->
+                <HeaderedContentControl Grid.Row="2" Classes="group" Header="Text">
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*,12,*,12,*" RowDefinitions="Auto,Auto" RowSpacing="2">
+                            <Label Grid.Row="0" Grid.Column="0" Content="_Start:" Target="{Binding #StartBox}" />
+                            <TextBox Grid.Row="1" Grid.Column="0" x:Name="StartBox" Text="{Binding StartText}" />
+                            <Label Grid.Row="0" Grid.Column="2" Content="_Middle:" Target="{Binding #MidBox}" />
+                            <TextBox Grid.Row="1" Grid.Column="2" x:Name="MidBox" Text="{Binding MidText}" />
+                            <Label Grid.Row="0" Grid.Column="4" Content="_End:" Target="{Binding #EndBox}" />
+                            <TextBox Grid.Row="1" Grid.Column="4" x:Name="EndBox" Text="{Binding EndText}" />
                         </Grid>
 
-                        <!-- Presets -->
-                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">
+                        <!-- Presets (reworked in ticket 075) -->
+                        <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Presets:" VerticalAlignment="Center" FontSize="11" Opacity="0.8" />
                             <Button Content="Up / Down" Height="26" FontSize="11" Click="OnPresetUpDownClick" />
                             <Button Content="Down / Up" Height="26" FontSize="11" Click="OnPresetDownUpClick" />
@@ -62,33 +58,29 @@
                     </StackPanel>
                 </HeaderedContentControl>
 
-                <!-- Door & Lock -->
-                <HeaderedContentControl Header="Door &amp; Lock Status">
-                    <StackPanel Spacing="6" Margin="0,4">
-                        <CheckBox Content="Has Door" IsChecked="{Binding HasDoor}" />
-                        <WrapPanel Margin="16,0,0,0" IsEnabled="{Binding HasDoor}">
-                            <CheckBox Content="Openable" IsChecked="{Binding Openable}" Margin="0,0,16,0" />
-                            <CheckBox Content="Open" IsChecked="{Binding Open}" Margin="0,0,16,0" />
-                            <CheckBox Content="Lockable" IsChecked="{Binding Lockable}" Margin="0,0,16,0" />
-                            <CheckBox Content="Locked" IsChecked="{Binding Locked}" />
-                        </WrapPanel>
+                <!-- Door -->
+                <StackPanel Grid.Row="3" Spacing="8">
+                    <CheckBox Content="Doo_r" IsChecked="{Binding HasDoor}" />
+                    <StackPanel Orientation="Horizontal" Spacing="16" Margin="16,0,0,0" IsEnabled="{Binding HasDoor}">
+                        <CheckBox Content="_Openable" IsChecked="{Binding Openable}" />
+                        <CheckBox Content="Ope_n" IsChecked="{Binding Open}" />
+                        <CheckBox Content="_Lockable" IsChecked="{Binding Lockable}" />
+                        <CheckBox Content="Loc_ked" IsChecked="{Binding Locked}" />
                     </StackPanel>
-                </HeaderedContentControl>
+                </StackPanel>
 
-                <!-- Colour -->
-                <HeaderedContentControl Header="Colour">
-                    <Grid ColumnDefinitions="100,*" Margin="0,4">
-                        <TextBlock Grid.Column="0" Text="Line Colour:" VerticalAlignment="Center" />
-                        <controls:ColorPickerButton Grid.Column="1" SelectedColor="{Binding ConnectionColor}" HorizontalAlignment="Left" />
-                    </Grid>
-                </HeaderedContentControl>
-            </StackPanel>
+                <!-- Description (label above, multi-line) -->
+                <Label Grid.Row="4" Content="Descri_ption:" Target="{Binding #DescriptionBox}" />
+                <TextBox Grid.Row="5" x:Name="DescriptionBox" Text="{Binding ConnectionDescription}"
+                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90"
+                         VerticalContentAlignment="Top" />
+            </Grid>
         </ScrollViewer>
 
         <!-- OK / Cancel Buttons -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,12,0,0">
-            <Button Content="OK" Width="80" IsDefault="True" Click="OnOkClick" />
-            <Button Content="Cancel" Width="80" IsCancel="True" Click="OnCancelClick" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+            <Button Classes="dialog-button" Content="OK" IsDefault="True" Click="OnOkClick" />
+            <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Click="OnCancelClick" />
         </StackPanel>
     </Grid>
 </Window>

@@ -91,26 +91,29 @@
             <!-- Tooltips -->
             <TabItem Header="Tooltips">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="8" Margin="8">
-                        <CheckBox Content="Show Canvas Tooltips" IsChecked="{Binding ShowTooltips}" />
+                    <StackPanel Spacing="12" Margin="8">
+                        <CheckBox Content="Show _Canvas Tooltips" IsChecked="{Binding ShowTooltips}" />
 
-                        <StackPanel Spacing="6" Margin="16,0,0,0" IsEnabled="{Binding ShowTooltips}">
-                            <CheckBox Content="Show Room Descriptions in Tooltip" IsChecked="{Binding ShowDescriptionsInTooltips}" />
-                            <CheckBox Content="Show Objects in Tooltip" IsChecked="{Binding ShowObjectsInTooltips}" />
+                        <StackPanel Spacing="8" Margin="16,0,0,0">
+                            <CheckBox Content="Show _Objects in Tooltip" IsChecked="{Binding ShowObjectsInTooltips}" IsEnabled="{Binding CanEditTooltipOptions}" />
 
-                            <Separator Margin="0,4" />
+                            <HeaderedContentControl Classes="group" Header="Descriptions">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Show _Descriptions in Tooltip" IsChecked="{Binding ShowDescriptionsInTooltips}" IsEnabled="{Binding CanEditTooltipOptions}" />
 
-                            <CheckBox Content="Limit Room Description Characters" IsChecked="{Binding LimitRoomDescriptionCharactersInTooltip}" />
-                            <Grid ColumnDefinitions="180,*" IsEnabled="{Binding LimitRoomDescriptionCharactersInTooltip}" Margin="16,0,0,0">
-                                <TextBlock Grid.Column="0" Text="Max Characters to Show:" VerticalAlignment="Center" />
-                                <NumericUpDown Grid.Column="1" Value="{Binding ToolTipRoomDescriptionCharactersToShow}" Minimum="10" Maximum="2000" HorizontalAlignment="Left" Width="100" />
-                            </Grid>
+                                    <WrapPanel Margin="16,0,0,0">
+                                        <CheckBox Content="Limit Characters of _Room Description to" IsChecked="{Binding LimitRoomDescriptionCharactersInTooltip}" IsEnabled="{Binding CanEditDescriptionLimits}" Margin="0,0,8,8" />
+                                        <NumericUpDown Value="{Binding ToolTipRoomDescriptionCharactersToShow}" Minimum="0" Maximum="4096" Width="100" IsEnabled="{Binding CanEditRoomCharacterCount}" Margin="0,0,8,8" />
+                                        <TextBlock Text="characters" VerticalAlignment="Center" Margin="0,0,0,8" IsEnabled="{Binding CanEditRoomCharacterCount}" />
+                                    </WrapPanel>
 
-                            <CheckBox Content="Limit Connection Description Characters" IsChecked="{Binding LimitConnectionDescriptionCharactersInTooltip}" />
-                            <Grid ColumnDefinitions="180,*" IsEnabled="{Binding LimitConnectionDescriptionCharactersInTooltip}" Margin="16,0,0,0">
-                                <TextBlock Grid.Column="0" Text="Max Characters to Show:" VerticalAlignment="Center" />
-                                <NumericUpDown Grid.Column="1" Value="{Binding ToolTipConnectionDescriptionCharactersToShow}" Minimum="10" Maximum="2000" HorizontalAlignment="Left" Width="100" />
-                            </Grid>
+                                    <WrapPanel Margin="16,0,0,0">
+                                        <CheckBox Content="Limit Characters of Co_nnection Description to" IsChecked="{Binding LimitConnectionDescriptionCharactersInTooltip}" IsEnabled="{Binding CanEditDescriptionLimits}" Margin="0,0,8,0" />
+                                        <NumericUpDown Value="{Binding ToolTipConnectionDescriptionCharactersToShow}" Minimum="0" Maximum="4096" Width="100" IsEnabled="{Binding CanEditConnectionCharacterCount}" Margin="0,0,8,0" />
+                                        <TextBlock Text="characters" VerticalAlignment="Center" IsEnabled="{Binding CanEditConnectionCharacterCount}" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </HeaderedContentControl>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>

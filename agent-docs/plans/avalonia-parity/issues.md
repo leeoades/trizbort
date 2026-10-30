@@ -41,7 +41,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Cause: `src/Trizbort.Avalonia/ViewModels/AppSettingsViewModel.cs:72` reads `ShowTooltips` in `Initialize`, but `ApplyTo`
   never writes it (it is a computed read-only property in settings). See `dialogs/AppSettings.md`.
 - Severity: low     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: the App settings Tooltips tab has a working Show Canvas Tooltips master (untick saves and clears the children; re-tick restores them) and dependent controls grey out. Smoke S5_45 un-ignored; tests in `DialogViewModelTests`.
+- Ticket: 081
 
 ## I-006 App settings shown but ignored by the Avalonia app
 - Reported: 2026-10-30 by agent (T1.4e, code reading)   OS: all   Category: behaviour

@@ -563,4 +563,120 @@ public class DialogViewModelTests
             ApplicationSettingsController.SaveSettings();
         }
     }
+
+    [Test]
+    public void AppSettings_TooltipMasterUntickedAndOk_TurnsBothChildrenOff()
+    {
+        var settings = ApplicationSettingsController.AppSettings;
+        var savedDescriptions = settings.ShowDescriptionsInTooltips;
+        var savedObjects = settings.ShowObjectsInTooltips;
+        try
+        {
+            var vm = new AppSettingsViewModel();
+            vm.Initialize();
+            vm.ShowTooltips = false;
+            vm.ApplyToSettings();
+
+            settings.ShowTooltips.ShouldBeFalse();
+            settings.ShowDescriptionsInTooltips.ShouldBeFalse();
+            settings.ShowObjectsInTooltips.ShouldBeFalse();
+
+            var reopened = new AppSettingsViewModel();
+            reopened.Initialize();
+            reopened.ShowTooltips.ShouldBeFalse();
+        }
+        finally
+        {
+            settings.ShowDescriptionsInTooltips = savedDescriptions;
+            settings.ShowObjectsInTooltips = savedObjects;
+            ApplicationSettingsController.SaveSettings();
+        }
+    }
+
+    [Test]
+    public void AppSettings_TooltipMasterReticked_RestoresPreviousChildren()
+    {
+        var settings = ApplicationSettingsController.AppSettings;
+        var savedDescriptions = settings.ShowDescriptionsInTooltips;
+        var savedObjects = settings.ShowObjectsInTooltips;
+        try
+        {
+            settings.ShowDescriptionsInTooltips = true;
+            settings.ShowObjectsInTooltips = false;
+            var vm = new AppSettingsViewModel();
+            vm.Initialize();
+            vm.ShowTooltips.ShouldBeTrue();
+
+            vm.ShowTooltips = false;
+            vm.ShowDescriptionsInTooltips.ShouldBeFalse();
+            vm.ShowObjectsInTooltips.ShouldBeFalse();
+
+            vm.ShowTooltips = true;
+            vm.ShowDescriptionsInTooltips.ShouldBeTrue();
+            vm.ShowObjectsInTooltips.ShouldBeFalse();
+        }
+        finally
+        {
+            settings.ShowDescriptionsInTooltips = savedDescriptions;
+            settings.ShowObjectsInTooltips = savedObjects;
+        }
+    }
+
+    [Test]
+    public void AppSettings_TooltipMasterTickedWithBothChildrenOff_OkTurnsBothOn()
+    {
+        var settings = ApplicationSettingsController.AppSettings;
+        var savedDescriptions = settings.ShowDescriptionsInTooltips;
+        var savedObjects = settings.ShowObjectsInTooltips;
+        try
+        {
+            var vm = new AppSettingsViewModel();
+            vm.Initialize();
+            vm.ShowTooltips = true;
+            vm.ShowDescriptionsInTooltips = false;
+            vm.ShowObjectsInTooltips = false;
+            vm.ApplyToSettings();
+
+            settings.ShowTooltips.ShouldBeTrue();
+            settings.ShowDescriptionsInTooltips.ShouldBeTrue();
+            settings.ShowObjectsInTooltips.ShouldBeTrue();
+        }
+        finally
+        {
+            settings.ShowDescriptionsInTooltips = savedDescriptions;
+            settings.ShowObjectsInTooltips = savedObjects;
+            ApplicationSettingsController.SaveSettings();
+        }
+    }
+
+    [Test]
+    public void AppSettings_TooltipDependencies_FollowMasterDescriptionsAndLimits()
+    {
+        var vm = new AppSettingsViewModel();
+        vm.Initialize();
+
+        vm.ShowTooltips = false;
+        vm.CanEditTooltipOptions.ShouldBeFalse();
+        vm.CanEditDescriptionLimits.ShouldBeFalse();
+        vm.CanEditRoomCharacterCount.ShouldBeFalse();
+        vm.CanEditConnectionCharacterCount.ShouldBeFalse();
+
+        vm.ShowTooltips = true;
+        vm.ShowDescriptionsInTooltips = false;
+        vm.LimitRoomDescriptionCharactersInTooltip = true;
+        vm.LimitConnectionDescriptionCharactersInTooltip = true;
+        vm.CanEditTooltipOptions.ShouldBeTrue();
+        vm.CanEditDescriptionLimits.ShouldBeFalse();
+        vm.CanEditRoomCharacterCount.ShouldBeFalse();
+        vm.CanEditConnectionCharacterCount.ShouldBeFalse();
+
+        vm.ShowDescriptionsInTooltips = true;
+        vm.CanEditDescriptionLimits.ShouldBeTrue();
+        vm.CanEditRoomCharacterCount.ShouldBeTrue();
+        vm.CanEditConnectionCharacterCount.ShouldBeTrue();
+
+        vm.LimitRoomDescriptionCharactersInTooltip = false;
+        vm.CanEditRoomCharacterCount.ShouldBeFalse();
+        vm.CanEditConnectionCharacterCount.ShouldBeTrue();
+    }
 }

@@ -439,7 +439,6 @@ public class MouseDialogSmokeTests
 
     /// <summary>Smoke step 41 (known gap D002): Connection Properties Description is multiline.</summary>
     [AvaloniaTest]
-    [Ignore("known gap: D002")]
     public void S5_41_ConnectionProperties_DescriptionIsMultiline()
     {
         EnsureTheme();
@@ -455,9 +454,7 @@ public class MouseDialogSmokeTests
         var window = ShowDialog(new ConnectionPropertiesDialog { DataContext = vm });
         try
         {
-            var label = window.GetVisualDescendants().OfType<TextBlock>().First(t => t.Text == "Description:");
-            var grid = label.Parent.ShouldBeOfType<Grid>();
-            var box = grid.Children.OfType<TextBox>().First(t => Grid.GetRow(t) == Grid.GetRow(label));
+            var box = window.GetVisualDescendants().OfType<TextBox>().First(t => t.Name == "DescriptionBox");
             box.AcceptsReturn.ShouldBeTrue();
         }
         finally
@@ -538,7 +535,6 @@ public class MouseDialogSmokeTests
 
     /// <summary>Smoke step 45 (known gap I-005): unticking Show Canvas Tooltips and pressing OK persists to application settings.</summary>
     [AvaloniaTest]
-    [Ignore("known gap: I-005")]
     public void S5_45_AppSettings_UntickShowTooltips_IsApplied()
     {
         var vm = new AppSettingsViewModel();
