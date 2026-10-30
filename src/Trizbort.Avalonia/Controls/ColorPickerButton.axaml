@@ -8,10 +8,17 @@
         <converters:CoreColorToNameOrHexConverter x:Key="ColorToName" />
     </UserControl.Resources>
 
+    <Grid ColumnDefinitions="*,Auto">
     <Button x:Name="PickerButton" MinWidth="110" Height="30" Padding="4,2">
         <Button.Flyout>
             <Flyout Placement="Bottom">
-                <StackPanel Width="220" Spacing="8">
+                <StackPanel x:Name="FlyoutPanel" Width="220" Spacing="8" KeyDown="OnFlyoutKeyDown">
+                    <StackPanel.Styles>
+                        <Style Selector="WrapPanel > Button">
+                            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                            <Setter Property="BorderThickness" Value="1" />
+                        </Style>
+                    </StackPanel.Styles>
                     <TextBlock Text="Choose Colour" FontWeight="SemiBold" FontSize="12" />
 
                     <!-- Transparent / Default option -->
@@ -26,14 +33,14 @@
                     <!-- Preset Palette Grid -->
                     <WrapPanel Width="220" Margin="0,2">
                         <Button Width="24" Height="24" Margin="2" Background="Black" Click="OnPaletteColorClick" Tag="Black" ToolTip.Tip="Black" />
-                        <Button Width="24" Height="24" Margin="2" Background="White" BorderBrush="Gray" BorderThickness="1" Click="OnPaletteColorClick" Tag="White" ToolTip.Tip="White" />
+                        <Button Width="24" Height="24" Margin="2" Background="White" Click="OnPaletteColorClick" Tag="White" ToolTip.Tip="White" />
                         <Button Width="24" Height="24" Margin="2" Background="Gray" Click="OnPaletteColorClick" Tag="Gray" ToolTip.Tip="Gray" />
                         <Button Width="24" Height="24" Margin="2" Background="LightGray" Click="OnPaletteColorClick" Tag="LightGray" ToolTip.Tip="LightGray" />
                         <Button Width="24" Height="24" Margin="2" Background="DarkRed" Click="OnPaletteColorClick" Tag="DarkRed" ToolTip.Tip="DarkRed" />
                         <Button Width="24" Height="24" Margin="2" Background="Red" Click="OnPaletteColorClick" Tag="Red" ToolTip.Tip="Red" />
                         <Button Width="24" Height="24" Margin="2" Background="Orange" Click="OnPaletteColorClick" Tag="Orange" ToolTip.Tip="Orange" />
                         <Button Width="24" Height="24" Margin="2" Background="Gold" Click="OnPaletteColorClick" Tag="Gold" ToolTip.Tip="Gold" />
-                        <Button Width="24" Height="24" Margin="2" Background="LightYellow" BorderBrush="Gray" BorderThickness="1" Click="OnPaletteColorClick" Tag="LightYellow" ToolTip.Tip="LightYellow" />
+                        <Button Width="24" Height="24" Margin="2" Background="LightYellow" Click="OnPaletteColorClick" Tag="LightYellow" ToolTip.Tip="LightYellow" />
                         <Button Width="24" Height="24" Margin="2" Background="Green" Click="OnPaletteColorClick" Tag="Green" ToolTip.Tip="Green" />
                         <Button Width="24" Height="24" Margin="2" Background="ForestGreen" Click="OnPaletteColorClick" Tag="ForestGreen" ToolTip.Tip="ForestGreen" />
                         <Button Width="24" Height="24" Margin="2" Background="LightGreen" Click="OnPaletteColorClick" Tag="LightGreen" ToolTip.Tip="LightGreen" />
@@ -54,6 +61,18 @@
                         <TextBox x:Name="HexInput" Watermark="#RRGGBB" Height="28" FontSize="11" />
                         <Button Grid.Column="1" Content="Set" Height="28" Margin="4,0,0,0" Click="OnHexSetClick" />
                     </Grid>
+
+                    <!-- Full colour view -->
+                    <ToggleButton x:Name="MoreToggle" Content="More..."
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Center"
+                                  Height="26" />
+                    <StackPanel IsVisible="{Binding IsChecked, ElementName=MoreToggle}" Spacing="6">
+                        <ColorView x:Name="FullColorView" Width="220" IsAlphaVisible="False"
+                                   IsColorPaletteVisible="False" IsColorSpectrumVisible="True"
+                                   ColorChanged="OnColorViewChanged" />
+                        <Button Content="Cancel" HorizontalAlignment="Right" Height="26" Click="OnCancelClick" />
+                    </StackPanel>
                 </StackPanel>
             </Flyout>
         </Button.Flyout>
@@ -63,11 +82,19 @@
             <Border Grid.Column="0" Width="18" Height="18" CornerRadius="2"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                     BorderThickness="1"
-                    Background="{Binding SelectedColor, ElementName=root, Converter={StaticResource ColorToBrush}}" />
+                    Background="{Binding SelectedColor, ElementName=root, Converter={StaticResource ColorToBrush}}">
+                <!-- Diagonal hatch line: marks the "no colour" state -->
+                <Path x:Name="NoColorHatch" Data="M0,16 L16,0" Stroke="Red" StrokeThickness="1.5" Stretch="Fill" />
+            </Border>
 
             <!-- Color label -->
-            <TextBlock Grid.Column="1" Margin="6,0,0,0" FontSize="11" VerticalAlignment="Center"
-                       Text="{Binding SelectedColor, ElementName=root, Converter={StaticResource ColorToName}}" />
+            <TextBlock x:Name="ColorLabel" Grid.Column="1" Margin="6,0,0,0" FontSize="11" VerticalAlignment="Center" />
         </Grid>
     </Button>
+    <Button x:Name="ClearButton" Grid.Column="1" Width="30" Height="30" Padding="0" Margin="4,0,0,0"
+            Content="&#x2715;" FontSize="12"
+            ToolTip.Tip="Clear colour"
+            AutomationProperties.Name="Clear colour"
+            Click="OnTransparentClick" />
+    </Grid>
 </UserControl>
