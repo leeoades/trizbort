@@ -87,7 +87,8 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   for connection-end drags).   Actual: drag ends but the room stays where it was dragged. The reference app has no drag
   cancel, so this is an improvement, not parity. Will fall out of undo transactions (D1).
 - Severity: low     Flags: —
-- Ticket: —
+- **Fixed** 2026-10-30: drags run in Core `CanvasInteraction` inside one undo transaction; Esc or lost pointer capture cancels it, restoring the pre-drag map and recording nothing. Smoke S4_33 un-ignored; tests in `CanvasInteractionTests`, `MapCanvasControlGestureTests`.
+- Ticket: 006
 
 ## I-011 Settings are saved to the current folder
 - Reported: 2026-10-30 by agent (manual smoke run)   OS: Windows (and all)   Category: behaviour

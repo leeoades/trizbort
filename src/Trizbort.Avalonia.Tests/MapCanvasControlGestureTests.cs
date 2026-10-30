@@ -17,6 +17,7 @@ using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using Vector = Trizbort.Domain.Misc.Vector;
+using CanvasDragMode = Trizbort.Editor.CanvasDragMode;
 
 namespace Trizbort.Avalonia.Tests;
 
@@ -677,13 +678,31 @@ public class MapCanvasControlGestureTests
 
     private static (Room A, Room B, Room.CompassPort PortAEast, Room.CompassPort PortBWest) AddTwoRooms()
     {
+        // Add each room before creating the next: ids are allocated from the elements already in the project,
+        // and a snapshot restore (cancelled drag) renumbers duplicates.
         var roomA = new Room(Project.Current) { Position = new Vector(-150, 0), Size = new Vector(96, 64) };
-        var roomB = new Room(Project.Current) { Position = new Vector(150, 0), Size = new Vector(96, 64) };
         Project.Current.Elements.Add(roomA);
+        var roomB = new Room(Project.Current) { Position = new Vector(150, 0), Size = new Vector(96, 64) };
         Project.Current.Elements.Add(roomB);
         var portA = roomA.PortList.OfType<Room.CompassPort>().First(p => p.CompassPoint == CompassPoint.East);
         var portB = roomB.PortList.OfType<Room.CompassPort>().First(p => p.CompassPoint == CompassPoint.West);
         return (roomA, roomB, portA, portB);
+    }
+
+    /// <summary>
+    /// A cancelled drag restores the whole map from a snapshot, which replaces every element object, so tests
+    /// re-find elements by id and compare ports by owner id and compass point.
+    /// </summary>
+    private static Connection FindConnection(int id)
+    {
+        return Project.Current.Elements.OfType<Connection>().Single(c => c.Id == id);
+    }
+
+    private static void ShouldBeDockedAt(Port? port, int ownerId, CompassPoint point)
+    {
+        port.ShouldNotBeNull();
+        port.Owner.Id.ShouldBe(ownerId);
+        port.ShouldBeOfType<Room.CompassPort>().CompassPoint.ShouldBe(point);
     }
 
     private static IPointer CapturePointerOnNextMove(MapCanvasControl canvas, Window window, Point where)
@@ -868,7 +887,7 @@ public class MapCanvasControlGestureTests
     }
 
     [AvaloniaTest]
-    public void Escape_DuringResize_StopsResizingAndKeepsSelection()
+    public void Escape_DuringResize_RestoresSizeAndKeepsSelection()
     {
         var (window, canvas, service) = CreateTestHarness();
         try
@@ -876,6 +895,7 @@ public class MapCanvasControlGestureTests
             var room = new Room(Project.Current) { Position = new Vector(0, 0), Size = new Vector(96, 64) };
             Project.Current.Elements.Add(room);
             service.Select(room);
+            var roomId = room.Id;
 
             var handlePos = room.InnerBounds.GetCorner(CompassPoint.SouthEast);
             var handleClient = canvas.CanvasToClient(handlePos);
@@ -886,10 +906,15 @@ public class MapCanvasControlGestureTests
 
             window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
             canvas.DragMode.ShouldBe(CanvasDragMode.None);
-            service.SelectedElements.ShouldContain(room);
+
+            // The cancel replaced the project: look the room up again.
+            var restored = Project.Current.Elements.OfType<Room>().Single(r => r.Id == roomId);
+            restored.Size.X.ShouldBe(96f, 1.0f);
+            service.SelectedElements.ShouldContain(restored);
+            service.Session.Undo.CanUndo.ShouldBeFalse();
 
             window.MouseMove(canvas.CanvasToClient(handlePos + new Vector(96, 96)));
-            room.Size.X.ShouldBe(128f, 1.0f);
+            restored.Size.X.ShouldBe(96f, 1.0f);
         }
         finally
         {
@@ -1117,10 +1142,11 @@ public class MapCanvasControlGestureTests
         var (window, canvas, service) = CreateTestHarness();
         try
         {
-            var (_, _, portA, portB) = AddTwoRooms();
+            var (roomA, roomB, portA, portB) = AddTwoRooms();
             var conn = new Connection(Project.Current, new Vertex(portA), new Vertex(portB));
             Project.Current.Elements.Add(conn);
             service.Select(conn);
+            var connId = conn.Id;
 
             var endClient = canvas.CanvasToClient(conn.VertexList[1].Position);
             window.MouseMove(endClient);
@@ -1135,10 +1161,10 @@ public class MapCanvasControlGestureTests
             window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
 
             canvas.DragMode.ShouldBe(CanvasDragMode.None);
-            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
-            conn.VertexList[0].Port.ShouldBe(portA);
-            conn.VertexList[1].Port.ShouldBe(portB);
-            service.SelectedElements.ShouldContain(conn);
+            var restored = FindConnection(connId);
+            ShouldBeDockedAt(restored.VertexList[0].Port, roomA.Id, CompassPoint.East);
+            ShouldBeDockedAt(restored.VertexList[1].Port, roomB.Id, CompassPoint.West);
+            service.SelectedElements.ShouldContain(restored);
         }
         finally
         {
@@ -1152,10 +1178,11 @@ public class MapCanvasControlGestureTests
         var (window, canvas, service) = CreateTestHarness();
         try
         {
-            var (_, _, portA, portB) = AddTwoRooms();
+            var (roomA, roomB, portA, portB) = AddTwoRooms();
             var conn = new Connection(Project.Current, new Vertex(portA), new Vertex(portB));
             Project.Current.Elements.Add(conn);
             service.Select(conn);
+            var connId = conn.Id;
 
             var endClient = canvas.CanvasToClient(conn.VertexList[1].Position);
             var emptyClient = canvas.CanvasToClient(new Vector(0, 200));
@@ -1170,10 +1197,10 @@ public class MapCanvasControlGestureTests
             pointer.Capture(null);
 
             canvas.DragMode.ShouldBe(CanvasDragMode.None);
-            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
-            conn.VertexList[0].Port.ShouldBe(portA);
-            conn.VertexList[1].Port.ShouldBe(portB);
-            service.SelectedElements.ShouldContain(conn);
+            var restored = FindConnection(connId);
+            ShouldBeDockedAt(restored.VertexList[0].Port, roomA.Id, CompassPoint.East);
+            ShouldBeDockedAt(restored.VertexList[1].Port, roomB.Id, CompassPoint.West);
+            service.SelectedElements.ShouldContain(restored);
         }
         finally
         {
@@ -1192,6 +1219,7 @@ public class MapCanvasControlGestureTests
             var conn = new Connection(Project.Current, new Vertex(origPos0), new Vertex(origPos1));
             Project.Current.Elements.Add(conn);
             service.Select(conn);
+            var connId = conn.Id;
 
             var endClient = canvas.CanvasToClient(origPos1);
             window.MouseMove(endClient);
@@ -1206,9 +1234,9 @@ public class MapCanvasControlGestureTests
             window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
 
             canvas.DragMode.ShouldBe(CanvasDragMode.None);
-            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
-            conn.VertexList[1].Position.ShouldBe(origPos1);
-            service.SelectedElements.ShouldContain(conn);
+            var restored = FindConnection(connId);
+            restored.VertexList[1].Position.ShouldBe(origPos1);
+            service.SelectedElements.ShouldContain(restored);
         }
         finally
         {
@@ -1256,10 +1284,11 @@ public class MapCanvasControlGestureTests
         var (window, canvas, service) = CreateTestHarness();
         try
         {
-            var (_, _, portA, portB) = AddTwoRooms();
+            var (roomA, roomB, portA, portB) = AddTwoRooms();
             var conn = new Connection(Project.Current, new Vertex(portA), new Vertex(portB));
             Project.Current.Elements.Add(conn);
             service.Select(conn);
+            var connId = conn.Id;
 
             var endClient = canvas.CanvasToClient(conn.VertexList[1].Position);
             var targetClient = canvas.CanvasToClient(portA.Position);
@@ -1273,11 +1302,13 @@ public class MapCanvasControlGestureTests
             canvas.HoverPort.ShouldBe(portA);
             window.MouseUp(targetClient, MouseButton.Left);
 
+            // Both ends on one port is degenerate: the drag is rolled back (which replaces the elements).
             canvas.DragMode.ShouldBe(CanvasDragMode.None);
-            Project.Current.Elements.OfType<Connection>().ShouldContain(conn);
-            conn.VertexList[0].Port.ShouldBe(portA);
-            conn.VertexList[1].Port.ShouldBe(portB);
-            service.SelectedElements.ShouldContain(conn);
+            var restored = FindConnection(connId);
+            ShouldBeDockedAt(restored.VertexList[0].Port, roomA.Id, CompassPoint.East);
+            ShouldBeDockedAt(restored.VertexList[1].Port, roomB.Id, CompassPoint.West);
+            service.SelectedElements.ShouldContain(restored);
+            service.Session.Undo.CanUndo.ShouldBeFalse();
         }
         finally
         {

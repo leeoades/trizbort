@@ -3,7 +3,7 @@
 Written 2026-10-30 (T3.1) from the feature matrix, dialog reviews, issues and the accepted decisions D1–D4.
 Each ticket follows the template in `../../avalonia-parity-review.md` §8 and is sized for one agent session.
 
-**Done so far:** 001, 002, 003, 004, 005, 009, 010, 011, 012, 070 (style + Label dialog), 071, 072, 074, 075, 076, 077, 079, 080, 081, 082, 083, 084, 085, 100, 101, 104, 106, 111, 112, 114, 117, 118 — marked ✅.
+**Done so far:** 001, 002, 003, 004, 005, 006, 009, 010, 011, 012, 070 (style + Label dialog), 071, 072, 074, 075, 076, 077, 079, 080, 081, 082, 083, 084, 085, 100, 101, 104, 106, 111, 112, 114, 117, 118 — marked ✅.
 
 **How to pick one:** take the lowest wave whose dependencies are all done; within a wave, P1 first. Mark a ticket done by
 adding `Status: Done (<commit>)` under its title and updating the matrix rows it lists.
@@ -23,7 +23,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 003 ✅ | [Add UndoStack with gzip snapshot mementos, transactions and dirty flag](003-undostack-snapshot-mementos.md) | 3 | P1 | L | mid + strong review | 002 | undo/redo, X052 |
 | 004 ✅ | [Route existing mutations through the EditorSession; remove hand-set IsDirty](004-route-mutations-through-session.md) | 4 | P1 | M | mid | 003 | X012–X015, X021, X022, X052, M024, M026–M030 |
 | 005 ✅ | [Move canvas hit-testing to Core (ZOrder-aware)](005-hit-testing-to-core.md) | 3 | P1 | M | mid | 002 | X034–X036, X046, G001, G013, G016 |
-| 006 | [Move the pointer/key drag state machine to Core (CanvasInteraction)](006-drag-state-machine-to-core.md) | 5 | P1 | L | mid + strong review | 004, 005, 009 | X037–X044, X046, X051, G001–G021, I-010 |
+| 006 ✅ | [Move the pointer/key drag state machine to Core (CanvasInteraction)](006-drag-state-machine-to-core.md) | 5 | P1 | L | mid + strong review | 004, 005, 009 | X037–X044, X046, X051, G001–G021, I-010 |
 | 007 | [New-connection gesture uses new-connection defaults; redock gesture in Core](007-connection-gestures-defaults-redock.md) | 6 | P1 | M | mid | 006 | G008–G010, X004, X011, X041 |
 | 008 | [Add Undo and Redo commands and UI](008-undo-redo-commands-and-ui.md) | 5 | P1 | S | mid | 004, 010 | undo/redo, X052 |
 | 009 ✅ | [Command catalogue types (incl. neutral key input types) and tests in Core](009-command-catalogue-types.md) | 3 | P1 | M | mid | 002 | X050, X051 |
@@ -47,7 +47,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 034 | [Make drawn connections use new-connection defaults](034-new-connections-use-defaults.md) | 6 | P1 | S | mid | 006, 030 | G008 |
 | 035 | [Add Bring to Front and Send to Back commands](035-z-order-commands.md) | 5 | P2 | S | mid | 002, 003, 009, 010 | C002, C003 |
 | 036 | [Add the four project validation toggles](036-validation-toggles.md) | 5 | P2 | S | mid | 002, 003, 009, 010 | M052–M055 |
-| 037 | [Add Room command with new-room defaults and insert-into-connection](037-add-room-at-cursor.md) | 5 | P1 | M | mid | 002, 003, 005, 009, 010 | M030, K008, C001 |
+| 037 | [Add Room command with new-room defaults and insert-into-connection](037-add-room-at-cursor.md) | 5 | P1 | M | mid | 002, 003, 005, 006, 009, 010 | M030, K008, C001 |
 | 038 | [Add Map Label command (L)](038-add-label-at-cursor.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M075, K037 |
 | 039 | [Route Delete through one command and add Backspace alias](039-delete-and-backspace-aliases.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | M028, K046, K047 |
 | 040 | [Move Copy/Cut/Paste into Core commands over IClipboard](040-clipboard-copy-cut-paste.md) | 5 | P1 | M | mid | 002, 003, 009, 010 | K043–K045, M026 |
@@ -57,7 +57,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 044 | [Add Quick Find command](044-quick-find-command.md) | 5 | P2 | S | cheap | 002, 009, 010 | K022 |
 | 045 | [Add F3 / Shift+F3 active-element cycling](045-active-element-cycling.md) | 5 | P3 | S | cheap | 002, 009, 010, 020 | K065, K066 |
 | 046 | [Make plain arrows move the selection or pan the view](046-arrow-keys-move-and-pan.md) | 5 | P1 | S | mid | 002, 003, 009, 010 | K012, K015 |
-| 047 | [Add Shift+Arrow / Shift+Home/End/PgUp/PgDn / keypad navigation](047-shift-arrow-navigation.md) | 5 | P2 | M | strong | 002, 005, 009, 010, 020 | K011, K014, K032–K034, K049, K050 |
+| 047 | [Add Shift+Arrow / Shift+Home/End/PgUp/PgDn / keypad navigation](047-shift-arrow-navigation.md) | 5 | P2 | M | strong | 002, 005, 006, 009, 010, 020 | K011, K014, K032–K034, K049, K050 |
 | 048 | [Add Primary+Arrow / Primary+NumPad add-or-connect room](048-ctrl-arrow-add-or-connect.md) | 6 | P2 | M | strong | 002, 003, 009, 010, 020, 030, 037, 047 | K013, K051 |
 | 049 | [Add Alt+NumPad unexplored connection](049-alt-numpad-unexplored-connection.md) | 6 | P3 | S | mid | 002, 003, 009, 010, 030 | K052 |
 | 050 | [Add zoom presets, micro zoom and unify zoom gestures](050-zoom-commands-presets-micro.md) | 5 | P1 | M | mid | 002, 009, 010 | M056–M058, K028–K030 |

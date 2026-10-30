@@ -15,6 +15,7 @@ using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 using Trizbort.Editor;
+using Trizbort.Editor.Input;
 using Trizbort.Setup;
 using CoreRect = Trizbort.Domain.Misc.Rect;
 using CoreVector = Trizbort.Domain.Misc.Vector;
@@ -23,19 +24,9 @@ using AvaloniaRect = Avalonia.Rect;
 using AvaloniaVector = Avalonia.Vector;
 using AvaloniaColor = Avalonia.Media.Color;
 using AvaloniaDrawingContext = Avalonia.Media.DrawingContext;
+using CoreModifierKeys = Trizbort.Domain.Enums.ModifierKeys;
 
 namespace Trizbort.Avalonia.Controls;
-
-public enum CanvasDragMode
-{
-    None,
-    Pan,
-    Marquee,
-    MoveElement,
-    MoveResizeHandle,
-    MovePort,
-    MoveWaypoint
-}
 
 public class MapCanvasControl : Control
 {
@@ -62,44 +53,21 @@ public class MapCanvasControl : Control
     internal int SpatialVersion => _spatialVersion;
     internal int InvalidationCount { get; private set; }
 
-    // Interaction State Machine
-    private CanvasDragMode _dragMode = CanvasDragMode.None;
-    private Point _panStartClient;
-    private CoreVector _dragOffsetCanvas;
-    private CoreVector _dragMarqueeStart;
-    private CoreVector _dragMarqueeCurrent;
-    private CoreVector _dragResizeHandleLastPosition;
-    private ResizeHandle? _dragHandle;
-    private ResizeHandle? _hoverHandle;
-    private Port? _hoverPort;
-    private Element? _hoverElement;
-    private CurveWaypoint? _hoverWaypoint;
-    private CurveWaypoint _dragWaypoint;
-    private CoreVector _dragWaypointOffset;
-    private MoveablePort? _dragMovePort;
-    private Port? _pendingNewConnectionPort;
-    private Point _pendingNewConnectionStartClient;
-    private CoreVector _pendingNewConnectionStartWorld;
-    private bool _isSpaceKeyDown;
-    private bool _isSecondaryButtonRelease;
-    private MouseButton? _gestureButton;
-    private bool _panMoved;
-    private Point _panLastClient;
-    private CoreVector _lastRightClickWorldPos;
-    private Connection? _dragNewConnection;
-    private Port? _dragMovePortOriginalPort;
-    private CoreVector _dragMovePortOriginalPosition;
-    private readonly List<Port> _activePorts = new();
-    private readonly List<ResizeHandle> _activeHandles = new();
+    // Interaction state machine lives in Core (CanvasInteraction); this control converts events and draws.
+    private CanvasInteraction? _interaction;
+    private EditorSession? _interactionSession;
     private HitTester? _hit;
     private EditorSession? _hitSession;
     private EditorSession? _fallbackSession;
+    private bool _isSecondaryButtonRelease;
+    private Element? _toolTipTarget;
 
-    internal CanvasDragMode DragMode => _dragMode;
-    internal Element? HoverElement => _hoverElement;
-    internal Port? HoverPort => _hoverPort;
-    internal ResizeHandle? HoverHandle => _hoverHandle;
-    internal CurveWaypoint? HoverWaypoint => _hoverWaypoint;
+    internal CanvasDragMode DragMode => _interaction?.Mode ?? CanvasDragMode.None;
+    internal Element? HoverElement => _interaction?.Adorners.HoverElement;
+    internal Port? HoverPort => _interaction?.Adorners.HoverPort;
+    internal ResizeHandle? HoverHandle => _interaction?.Adorners.HoverHandle;
+    internal CurveWaypoint? HoverWaypoint => _interaction?.Adorners.HoverWaypoint;
+    internal bool IsGestureActive => _interaction?.IsGestureActive ?? false;
 
     // Brushes and Pens for Adorners
     private static readonly IBrush _handleBrush = Brushes.White;
@@ -120,18 +88,6 @@ public class MapCanvasControl : Control
 
     private static readonly IBrush _marqueeFillBrush = new SolidColorBrush(AvaloniaColor.FromArgb(40, 0, 120, 215));
     private static readonly IPen _marqueeBorderPen = new Pen(new SolidColorBrush(AvaloniaColor.FromArgb(200, 0, 120, 215)), 1.0, DashStyle.Dash);
-
-    private static readonly CompassPoint[] _handlePoints =
-    [
-        CompassPoint.NorthWest, CompassPoint.North, CompassPoint.NorthEast,
-        CompassPoint.East, CompassPoint.SouthEast, CompassPoint.South,
-        CompassPoint.SouthWest, CompassPoint.West
-    ];
-
-    private static readonly CurveWaypoint[] _allWaypoints =
-    [
-        CurveWaypoint.Quarter, CurveWaypoint.ThreeQuarter, CurveWaypoint.Middle
-    ];
 
     public CoreVector Origin
     {
@@ -205,6 +161,7 @@ public class MapCanvasControl : Control
         Settings.Changed -= OnSettingsChanged;
         UnhookProject(_hookedProject);
         TryUnhookCommandService();
+        DisposeInteraction();
     }
 
     private void HookProject(Project? project)
@@ -250,11 +207,6 @@ public class MapCanvasControl : Control
             e.Item.Changed += OnElementChanged;
         }
         _spatialVersion++;
-        if (_dragMode == CanvasDragMode.None)
-        {
-            RecreatePorts();
-            RecreateHandles();
-        }
         InvalidateVisual();
     }
 
@@ -265,27 +217,12 @@ public class MapCanvasControl : Control
             e.Item.Changed -= OnElementChanged;
         }
         _spatialVersion++;
-        if (ReferenceEquals(_hoverElement, e.Item))
-        {
-            _hoverElement = null;
-            ToolTip.SetTip(this, null);
-        }
-        if (_dragMode == CanvasDragMode.None)
-        {
-            RecreatePorts();
-            RecreateHandles();
-        }
         InvalidateVisual();
     }
 
     private void OnElementChanged(object? sender, EventArgs e)
     {
         _spatialVersion++;
-        if (_dragMode == CanvasDragMode.None)
-        {
-            RecreatePorts();
-            RecreateHandles();
-        }
         InvalidateVisual();
     }
 
@@ -295,6 +232,7 @@ public class MapCanvasControl : Control
 
         if (change.Property == CommandServiceProperty)
         {
+            DisposeInteraction();
             TryUnhookCommandService();
             TryHookCommandService();
         }
@@ -304,6 +242,7 @@ public class MapCanvasControl : Control
             _transform.ViewportWidth = bounds.Width;
             _transform.ViewportHeight = bounds.Height;
             CommandService?.SetViewportSize(bounds.Width, bounds.Height);
+            _fallbackSession?.Viewport.SetSize(bounds.Width, bounds.Height);
             InvalidateVisual();
         }
     }
@@ -340,6 +279,8 @@ public class MapCanvasControl : Control
 
     private void OnCommandServiceCanvasInvalidated(object? sender, EventArgs e)
     {
+        UpdateCursor();
+        UpdateToolTip();
         InvalidateVisual();
     }
 
@@ -363,20 +304,13 @@ public class MapCanvasControl : Control
                 _selectedSet.Add(elem);
             }
         }
-        if (_dragMode != CanvasDragMode.MoveResizeHandle && _dragMode != CanvasDragMode.MovePort)
-        {
-            RecreatePorts();
-            RecreateHandles();
-            UpdateCursor();
-        }
+        UpdateCursor();
         InvalidateVisual();
     }
 
     private void OnCommandServiceProjectChanged(object? sender, EventArgs e)
     {
         _spatialVersion++;
-        RecreatePorts();
-        RecreateHandles();
         InvalidateVisual();
     }
 
@@ -391,8 +325,6 @@ public class MapCanvasControl : Control
             HookProject(e.NewProject);
         }
         _spatialVersion++;
-        RecreatePorts();
-        RecreateHandles();
         InvalidateVisual();
     }
 
@@ -421,8 +353,6 @@ public class MapCanvasControl : Control
                 _selectedSet.Add(elem);
             }
         }
-        RecreatePorts();
-        RecreateHandles();
     }
 
     #region Coordinate Transformations
@@ -477,16 +407,29 @@ public class MapCanvasControl : Control
 
     #region State Machine & Hit Testing
 
-    private HitTester Hit
+    private EditorSession ActiveSession
     {
         get
         {
             var session = (CommandService as Services.CommandService)?.Session;
             if (session == null)
             {
-                _fallbackSession ??= new EditorSession();
+                if (_fallbackSession == null)
+                {
+                    _fallbackSession = new EditorSession();
+                    _fallbackSession.Viewport.SetSize(Bounds.Width, Bounds.Height);
+                }
                 session = _fallbackSession;
             }
+            return session;
+        }
+    }
+
+    private HitTester Hit
+    {
+        get
+        {
+            var session = ActiveSession;
             if (_hit == null || !ReferenceEquals(_hitSession, session))
             {
                 _hitSession = session;
@@ -496,86 +439,58 @@ public class MapCanvasControl : Control
         }
     }
 
-    private void RecreateHandles()
+    /// <summary>The gesture state machine for the current session (recreated if the session changes).</summary>
+    private CanvasInteraction Interaction
     {
-        _activeHandles.Clear();
-        _activeHandles.AddRange(Hit.ActiveHandles());
-        if (_hoverHandle != null && !_activeHandles.Contains(_hoverHandle))
+        get
         {
-            _hoverHandle = null;
+            var session = ActiveSession;
+            if (_interaction == null || !ReferenceEquals(_interactionSession, session))
+            {
+                DisposeInteraction();
+                _interactionSession = session;
+                _interaction = new CanvasInteraction(session, Hit);
+                _interaction.EditRequested += OnEditRequested;
+                _interaction.ContextMenuRequested += ShowContextMenuAt;
+            }
+            return _interaction;
         }
     }
 
-    private void RecreatePorts()
+    private void DisposeInteraction()
     {
-        _activePorts.Clear();
-        _activePorts.AddRange(Hit.ActivePorts(_hoverElement, _dragMode == CanvasDragMode.MovePort));
+        if (_interaction == null) return;
 
-        if (_hoverPort != null && !_activePorts.Contains(_hoverPort))
-        {
-            _hoverPort = null;
-        }
+        _interaction.EditRequested -= OnEditRequested;
+        _interaction.ContextMenuRequested -= ShowContextMenuAt;
+        _interaction.Dispose();
+        _interaction = null;
+        _interactionSession = null;
     }
 
-    private Element? HitElementAt(CoreVector canvasPos, bool includeMargins = false)
+    private void OnEditRequested(Element element)
     {
-        var exclude = _dragMode == CanvasDragMode.MovePort ? _dragMovePort?.Owner : null;
-        return Hit.HitElement(canvasPos, includeMargins, exclude);
-    }
-
-    private Port? HitPortAt(CoreVector canvasPos)
-    {
-        var moving = _dragMode == CanvasDragMode.MovePort;
-        return Hit.HitPort(canvasPos, _activePorts, moving, moving ? _dragMovePort : null);
+        _ = ShowPropertiesDialogAsync(element);
     }
 
     internal StandardCursorType CursorType { get; private set; } = StandardCursorType.Arrow;
 
     private void UpdateCursor()
     {
-        CursorType = DetermineCursorType();
-        Cursor = new Cursor(CursorType);
-    }
+        var type = InputMapper.ToCursor(_interaction?.Adorners.Cursor ?? CursorKind.Default);
+        if (type == CursorType && Cursor != null) return;
 
-    private StandardCursorType DetermineCursorType()
-    {
-        if (_dragMode == CanvasDragMode.Pan || _isSpaceKeyDown)
-        {
-            return StandardCursorType.Hand;
-        }
-        if (_dragMode == CanvasDragMode.MoveWaypoint || (_dragMode == CanvasDragMode.None && _hoverWaypoint.HasValue))
-        {
-            return StandardCursorType.SizeAll;
-        }
-        if (_dragMode == CanvasDragMode.MovePort || (_hoverPort != null && _hoverPort is not MoveablePort))
-        {
-            return StandardCursorType.Cross;
-        }
-        if (_hoverPort is MoveablePort)
-        {
-            return StandardCursorType.Hand;
-        }
-        if (_hoverHandle != null)
-        {
-            return _hoverHandle.CompassPoint switch
-            {
-                CompassPoint.NorthWest or CompassPoint.SouthEast => StandardCursorType.TopLeftCorner,
-                CompassPoint.NorthEast or CompassPoint.SouthWest => StandardCursorType.TopRightCorner,
-                CompassPoint.North or CompassPoint.South => StandardCursorType.SizeNorthSouth,
-                CompassPoint.East or CompassPoint.West => StandardCursorType.SizeWestEast,
-                _ => StandardCursorType.Arrow
-            };
-        }
-        if (_hoverElement != null && _selectedSet.Contains(_hoverElement) && _hoverElement is IMoveable)
-        {
-            return StandardCursorType.SizeAll;
-        }
-        return StandardCursorType.Arrow;
+        CursorType = type;
+        Cursor = new Cursor(type);
     }
 
     private void UpdateToolTip()
     {
-        ToolTip.SetTip(this, BuildToolTipText(_hoverElement));
+        var target = _interaction?.Adorners.TooltipTarget;
+        if (ReferenceEquals(target, _toolTipTarget)) return;
+
+        _toolTipTarget = target;
+        ToolTip.SetTip(this, BuildToolTipText(target));
     }
 
     internal static string? BuildToolTipText(Element? element)
@@ -597,160 +512,35 @@ public class MapCanvasControl : Control
 
     #region Pointer & Keyboard Handlers
 
+    private static PointerInput ToPointerInput(PointerButton button, KeyModifiers modifiers, Point position, int clickCount)
+    {
+        return new PointerInput(button, InputMapper.ToModifiers(modifiers), position.ToVector(), clickCount);
+    }
+
+    private void AfterInteraction()
+    {
+        UpdateCursor();
+        UpdateToolTip();
+    }
+
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
         Focus();
 
-        if (IsGestureActive)
-        {
-            // A drag (or a not-yet-started connection drag) owns the pointer; ignore other buttons.
-            e.Handled = true;
-            return;
-        }
-
         var point = e.GetCurrentPoint(this);
-        var clientPos = point.Position;
-        var worldPos = ClientToCanvas(clientPos);
+        var button = point.Properties.IsMiddleButtonPressed ? PointerButton.Middle
+            : point.Properties.IsRightButtonPressed ? PointerButton.Right
+            : PointerButton.Left;
 
-        var isMiddle = point.Properties.IsMiddleButtonPressed;
-        var isRight = point.Properties.IsRightButtonPressed;
-        var isLeft = point.Properties.IsLeftButtonPressed;
-        var isShift = (e.KeyModifiers & KeyModifiers.Shift) != 0;
-        var isCtrl = (e.KeyModifiers & KeyModifiers.Control) != 0;
-        _gestureButton = isMiddle ? MouseButton.Middle : isRight ? MouseButton.Right : MouseButton.Left;
-
-        if (isRight)
+        var interaction = Interaction;
+        var handled = interaction.OnPointerPressed(ToPointerInput(button, e.KeyModifiers, point.Position, e.ClickCount));
+        if (interaction.IsGestureActive)
         {
-            _panMoved = false;
-            _lastRightClickWorldPos = worldPos;
-        }
-
-        if (isMiddle || isRight || (isLeft && _isSpaceKeyDown))
-        {
-            _dragMode = CanvasDragMode.Pan;
-            _panStartClient = clientPos;
-            _panLastClient = clientPos;
             e.Pointer.Capture(this);
-            UpdateCursor();
-            e.Handled = true;
-            return;
         }
-
-        if (isLeft)
-        {
-            if (e.ClickCount == 2)
-            {
-                var hitDoubleElem = HitElementAt(worldPos);
-                if (hitDoubleElem != null)
-                {
-                    CommandService?.Select([hitDoubleElem], clearExisting: true);
-                    _ = ShowPropertiesDialogAsync(hitDoubleElem);
-                    e.Handled = true;
-                    return;
-                }
-                else if (ApplicationSettingsController.AppSettings.DoubleClickToAddRoom)
-                {
-                    CommandService?.AddRoom(worldPos);
-                    e.Handled = true;
-                    return;
-                }
-            }
-
-            var hitWp = Hit.HitWaypoint(worldPos);
-            if (hitWp.HasValue && _selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
-            {
-                BeginDragTransaction("Move waypoint");
-                _dragMode = CanvasDragMode.MoveWaypoint;
-                _dragWaypoint = hitWp.Value;
-                var handlePos = conn.GetCurveWaypointHandlePosition(_dragWaypoint);
-                _dragWaypointOffset = handlePos - worldPos;
-                e.Pointer.Capture(this);
-                UpdateCursor();
-                e.Handled = true;
-                return;
-            }
-
-            var hitHandle = Hit.HitHandle(worldPos, _activeHandles);
-            if (hitHandle != null)
-            {
-                BeginDragTransaction("Resize");
-                _dragMode = CanvasDragMode.MoveResizeHandle;
-                _dragHandle = hitHandle;
-                _hoverHandle = hitHandle;
-                _dragResizeHandleLastPosition = worldPos;
-                e.Pointer.Capture(this);
-                UpdateCursor();
-                e.Handled = true;
-                return;
-            }
-
-            var hitPort = HitPortAt(worldPos);
-            if (hitPort != null)
-            {
-                if (hitPort is MoveablePort mp)
-                {
-                    BeginDragTransaction("Move connection");
-                    _dragMode = CanvasDragMode.MovePort;
-                    _dragMovePort = mp;
-                    _dragMovePortOriginalPort = mp.DockedAt;
-                    _dragMovePortOriginalPosition = mp.Position;
-                    _dragOffsetCanvas = Settings.Snap(worldPos - mp.Position);
-                    e.Pointer.Capture(this);
-                    UpdateCursor();
-                    e.Handled = true;
-                    return;
-                }
-                else
-                {
-                    _pendingNewConnectionPort = hitPort;
-                    _pendingNewConnectionStartClient = clientPos;
-                    _pendingNewConnectionStartWorld = worldPos;
-                    _dragMovePortOriginalPort = null;
-                    _dragMovePortOriginalPosition = CoreVector.Zero;
-                    e.Pointer.Capture(this);
-                    UpdateCursor();
-                    e.Handled = true;
-                    return;
-                }
-            }
-
-            var hitElem = HitElementAt(worldPos);
-            if (hitElem != null)
-            {
-                var alreadySelected = _selectedSet.Contains(hitElem);
-                if (isShift || isCtrl)
-                {
-                    CommandService?.Select(hitElem, toggle: true);
-                }
-                else if (!alreadySelected)
-                {
-                    CommandService?.Select([hitElem], clearExisting: true);
-                }
-
-                if (_selectedSet.Contains(hitElem))
-                {
-                    BeginDragTransaction("Move");
-                    _dragMode = CanvasDragMode.MoveElement;
-                    _dragOffsetCanvas = Settings.Snap(worldPos);
-                    e.Pointer.Capture(this);
-                }
-                UpdateCursor();
-                e.Handled = true;
-                return;
-            }
-
-            if (!isShift && !isCtrl)
-            {
-                CommandService?.ClearSelection();
-            }
-            _dragMode = CanvasDragMode.Marquee;
-            _dragMarqueeStart = worldPos;
-            _dragMarqueeCurrent = worldPos;
-            e.Pointer.Capture(this);
-            UpdateCursor();
-            e.Handled = true;
-        }
+        AfterInteraction();
+        e.Handled = handled;
     }
 
     protected override void OnPointerMoved(PointerEventArgs e)
@@ -758,158 +548,24 @@ public class MapCanvasControl : Control
         base.OnPointerMoved(e);
 
         var clientPos = e.GetPosition(this);
-        var worldPos = ClientToCanvas(clientPos);
         CommandService?.SetPointerClientPosition(clientPos.X, clientPos.Y);
 
-        if (_pendingNewConnectionPort != null)
+        var interaction = Interaction;
+        interaction.OnPointerMoved(ToPointerInput(PointerButton.None, e.KeyModifiers, clientPos, 0));
+
+        switch (interaction.Mode)
         {
-            var dx = clientPos.X - _pendingNewConnectionStartClient.X;
-            var dy = clientPos.Y - _pendingNewConnectionStartClient.Y;
-            var dist = Math.Sqrt(dx * dx + dy * dy);
-            if (dist >= Settings.DragDistanceToInitiateNewConnection)
-            {
-                var port = _pendingNewConnectionPort;
-                _pendingNewConnectionPort = null;
-                BeginDragTransaction("Add connection");
-                var newConn = new Connection(Project.Current, new Vertex(port), new Vertex(port))
-                {
-                    Style = ConnectionStyle.Solid,
-                    Flow = ConnectionFlow.TwoWay
-                };
-                Project.Current.Elements.Add(newConn);
-                _dragNewConnection = newConn;
-                _dragMode = CanvasDragMode.MovePort;
-                _dragMovePort = (MoveablePort)newConn.PortList[1];
-                _dragOffsetCanvas = Settings.Snap(_pendingNewConnectionStartWorld - newConn.VertexList[0].Position);
-                _hoverPort = null;
-                CommandService?.Select(newConn);
-            }
-        }
-
-        switch (_dragMode)
-        {
-            case CanvasDragMode.Pan:
-                if (!_panMoved)
-                {
-                    var deltaFromStart = clientPos - _panStartClient;
-                    if (Math.Abs(deltaFromStart.X) > 2 || Math.Abs(deltaFromStart.Y) > 2)
-                    {
-                        _panMoved = true;
-                    }
-                }
-
-                var deltaScreen = clientPos - _panLastClient;
-                _panLastClient = clientPos;
-                Origin = new CoreVector((float)(Origin.X - deltaScreen.X / ZoomFactor), (float)(Origin.Y - deltaScreen.Y / ZoomFactor));
-                e.Handled = true;
-                break;
-
             case CanvasDragMode.MoveElement:
-                var snappedWorld = Settings.Snap(worldPos);
-                var moveDelta = snappedWorld - _dragOffsetCanvas;
-                if (moveDelta != CoreVector.Zero)
-                {
-                    MapEditing.Move(Project.Current.Elements, _selectedSet.ToList(), moveDelta);
-                    _dragOffsetCanvas += moveDelta;
-                    _spatialVersion++;
-                    InvalidateVisual();
-                }
-                e.Handled = true;
-                break;
-
             case CanvasDragMode.MoveResizeHandle:
-                if (_dragHandle != null)
-                {
-                    _dragResizeHandleLastPosition = MapEditing.Resize(_dragHandle, _dragResizeHandleLastPosition, worldPos);
-                    _spatialVersion++;
-                    InvalidateVisual();
-                }
-                e.Handled = true;
-                break;
-
             case CanvasDragMode.MovePort:
-                if (_dragMovePort != null)
-                {
-                    var targetElem = HitElementAt(worldPos, true);
-                    if (!ReferenceEquals(targetElem, _hoverElement))
-                    {
-                        _hoverElement = targetElem;
-                        RecreatePorts();
-                    }
-
-                    _hoverPort = HitPortAt(worldPos);
-                    if (_hoverPort != null && _hoverPort != _dragMovePort)
-                    {
-                        if (_hoverPort is not MoveablePort)
-                        {
-                            _dragMovePort.DockAt(_hoverPort);
-                        }
-                        else
-                        {
-                            _dragMovePort.DockAt(null);
-                            _dragMovePort.SetPosition(Settings.Snap(worldPos) - _dragOffsetCanvas);
-                        }
-                    }
-                    else
-                    {
-                        _dragMovePort.DockAt(null);
-                        _dragMovePort.SetPosition(Settings.Snap(worldPos) - _dragOffsetCanvas);
-                    }
-                    _spatialVersion++;
-                    InvalidateVisual();
-                }
-                e.Handled = true;
-                break;
-
             case CanvasDragMode.MoveWaypoint:
-                if (_selectedSet.Count == 1 && _selectedSet.First() is Connection conn)
-                {
-                    conn.SetCurveWaypoint(_dragWaypoint, Settings.Snap(worldPos + _dragWaypointOffset));
-                    _spatialVersion++;
-                    InvalidateVisual();
-                }
-                e.Handled = true;
-                break;
-
-            case CanvasDragMode.Marquee:
-                _dragMarqueeCurrent = worldPos;
+                _spatialVersion++;
                 InvalidateVisual();
-                e.Handled = true;
-                break;
-
-            case CanvasDragMode.None:
-                if (_pendingNewConnectionPort == null)
-                {
-                    var prevHoverElem = _hoverElement;
-                    var prevHoverPort = _hoverPort;
-                    var prevHoverHandle = _hoverHandle;
-                    var prevHoverWp = _hoverWaypoint;
-
-                    var newHoverElem = HitElementAt(worldPos);
-                    if (!ReferenceEquals(newHoverElem, _hoverElement))
-                    {
-                        _hoverElement = newHoverElem;
-                        RecreatePorts();
-                        RecreateHandles();
-                        UpdateToolTip();
-                    }
-
-                    _hoverWaypoint = Hit.HitWaypoint(worldPos);
-                    _hoverHandle = Hit.HitHandle(worldPos, _activeHandles);
-                    _hoverPort = HitPortAt(worldPos);
-
-                    UpdateCursor();
-
-                    if (!ReferenceEquals(prevHoverElem, _hoverElement) ||
-                        !ReferenceEquals(prevHoverPort, _hoverPort) ||
-                        !ReferenceEquals(prevHoverHandle, _hoverHandle) ||
-                        prevHoverWp != _hoverWaypoint)
-                    {
-                        InvalidateVisual();
-                    }
-                }
                 break;
         }
+
+        AfterInteraction();
+        e.Handled = interaction.Mode != CanvasDragMode.None;
     }
 
     protected override void OnPointerExited(PointerEventArgs e)
@@ -922,8 +578,10 @@ public class MapCanvasControl : Control
     {
         base.OnPointerReleased(e);
 
-        var releasedButton = e.GetCurrentPoint(this).Properties.PointerUpdateKind.GetMouseButton();
-        if (IsGestureActive && _gestureButton.HasValue && releasedButton != _gestureButton.Value)
+        var interaction = Interaction;
+        var releasedButton = InputMapper.ToButton(e.GetCurrentPoint(this).Properties.PointerUpdateKind.GetMouseButton());
+        if (interaction.IsGestureActive && interaction.GestureButton != PointerButton.None &&
+            releasedButton != interaction.GestureButton)
         {
             // Releasing a secondary button must not end the gesture owned by another button.
             // Avalonia MouseDevice drops pointer capture in its finally block after this event.
@@ -940,19 +598,14 @@ public class MapCanvasControl : Control
             return;
         }
 
-        var wasPan = _dragMode == CanvasDragMode.Pan;
-        var wasRight = releasedButton == MouseButton.Right;
-        var panMoved = _panMoved;
-        var rightWorld = _lastRightClickWorldPos;
-
-        EndDrag(e.KeyModifiers, cancelled: false);
+        var wasActive = interaction.IsGestureActive;
+        interaction.OnPointerReleased(ToPointerInput(releasedButton, e.KeyModifiers, e.GetPosition(this), 0));
         e.Pointer.Capture(null);
-
-        if (wasPan && wasRight && !panMoved)
-        {
-            ShowContextMenuAt(rightWorld);
-            e.Handled = true;
-        }
+        _isSecondaryButtonRelease = false;
+        _spatialVersion++;
+        InvalidateVisual();
+        AfterInteraction();
+        e.Handled = wasActive;
     }
 
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
@@ -964,181 +617,19 @@ public class MapCanvasControl : Control
             return;
         }
 
-        EndDrag(KeyModifiers.None, cancelled: true);
-    }
+        if (_interaction == null || !_interaction.IsGestureActive) return;
 
-    private UndoTransaction? _dragTransaction;
-
-    /// <summary>Open one undo transaction covering a whole drag gesture (stop-gap until drags move to Core).</summary>
-    private void BeginDragTransaction(string title)
-    {
-        EndDragTransaction();
-        _dragTransaction = CommandService?.Session.BeginTransaction(title);
-    }
-
-    private void EndDragTransaction()
-    {
-        var transaction = _dragTransaction;
-        _dragTransaction = null;
-        transaction?.Dispose();
-    }
-
-    internal bool IsGestureActive => _dragMode != CanvasDragMode.None || _pendingNewConnectionPort != null;
-
-    private static bool IsDegenerateConnection(Connection connection)
-    {
-        if (connection.VertexList.Count != 2) return false;
-        var v0 = connection.VertexList[0];
-        var v1 = connection.VertexList[1];
-
-        // Same port on both ends is always degenerate
-        if (v0.Port != null && v0.Port == v1.Port) return true;
-
-        // If both ends are docked to different ports, it is a valid connection between ports (even if positions touch)
-        if (v0.Port != null && v1.Port != null && v0.Port != v1.Port) return false;
-
-        // If one or both ends are undocked and the distance is negligible, it is degenerate
-        return v0.Position.Distance(v1.Position) < Numeric.Small;
-    }
-
-    /// <summary>
-    /// Single completion/cancel path for every drag gesture (pointer release, capture loss, Escape).
-    /// Never leaves an invalid zero-length or same-port connection behind, and restores original
-    /// connectivity on cancelled existing connection edits.
-    /// </summary>
-    private void EndDrag(KeyModifiers modifiers, bool cancelled)
-    {
-        var mode = _dragMode;
-        var movePort = _dragMovePort;
-        var newConnection = _dragNewConnection;
-        var origPort = _dragMovePortOriginalPort;
-        var origPos = _dragMovePortOriginalPosition;
-
-        // Reset state first so re-entrant events (e.g. capture lost) see an idle canvas.
-        _dragMode = CanvasDragMode.None;
-        _dragHandle = null;
-        _dragMovePort = null;
-        _dragNewConnection = null;
-        _dragMovePortOriginalPort = null;
-        _dragMovePortOriginalPosition = CoreVector.Zero;
-        _pendingNewConnectionPort = null;
-        _gestureButton = null;
-        _isSecondaryButtonRelease = false;
-
-        if (mode == CanvasDragMode.MovePort && movePort?.Owner is Connection connection)
-        {
-            var isCreatedByDrag = ReferenceEquals(connection, newConnection);
-            if (cancelled)
-            {
-                if (isCreatedByDrag)
-                {
-                    Project.Current.Elements.Remove(connection);
-                    CommandService?.ClearSelection();
-                    _hoverElement = null;
-                    _hoverPort = null;
-                }
-                else
-                {
-                    // Restore existing connection endpoint to its original docked port or position
-                    if (origPort != null)
-                    {
-                        movePort.DockAt(origPort);
-                    }
-                    else
-                    {
-                        movePort.DockAt(null);
-                        movePort.SetPosition(origPos);
-                    }
-                    CommandService?.Select(connection);
-                }
-            }
-            else
-            {
-                var discard = IsDegenerateConnection(connection);
-                if (discard)
-                {
-                    if (isCreatedByDrag)
-                    {
-                        Project.Current.Elements.Remove(connection);
-                        CommandService?.ClearSelection();
-                        _hoverElement = null;
-                        _hoverPort = null;
-                    }
-                    else
-                    {
-                        // Restore existing connection endpoint to its original docked port or position
-                        if (origPort != null)
-                        {
-                            movePort.DockAt(origPort);
-                        }
-                        else
-                        {
-                            movePort.DockAt(null);
-                            movePort.SetPosition(origPos);
-                        }
-                        CommandService?.Select(connection);
-                    }
-                }
-                else
-                {
-                    CommandService?.Select(connection);
-                }
-            }
-        }
-        else if (mode == CanvasDragMode.Marquee && !cancelled)
-        {
-            var minX = Math.Min(_dragMarqueeStart.X, _dragMarqueeCurrent.X);
-            var maxX = Math.Max(_dragMarqueeStart.X, _dragMarqueeCurrent.X);
-            var minY = Math.Min(_dragMarqueeStart.Y, _dragMarqueeCurrent.Y);
-            var maxY = Math.Max(_dragMarqueeStart.Y, _dragMarqueeCurrent.Y);
-            var rect = new CoreRect(minX, minY, Math.Max(0.01f, maxX - minX), Math.Max(0.01f, maxY - minY));
-
-            var hitElements = Project.Current.Elements.Where(elem => elem.Intersects(rect)).ToList();
-            var isShiftOrCtrl = (modifiers & (KeyModifiers.Shift | KeyModifiers.Control)) != 0;
-
-            if (!isShiftOrCtrl)
-            {
-                CommandService?.Select(hitElements, clearExisting: true);
-            }
-            else
-            {
-                foreach (var elem in hitElements)
-                {
-                    if (_selectedSet.Contains(elem))
-                    {
-                        CommandService?.Deselect(elem);
-                    }
-                    else
-                    {
-                        CommandService?.Select(elem, addToSelection: true);
-                    }
-                }
-            }
-        }
-
-        // The manual restore above has already put a cancelled drag back, so the transaction records nothing for
-        // it. (Transaction.Cancel() is not used: it would replace Project.Current under the canvas. Ticket 006.)
-        EndDragTransaction();
-
-        if (mode != CanvasDragMode.None)
-        {
-            _spatialVersion++;
-        }
-        RecreatePorts();
-        RecreateHandles();
-        UpdateCursor();
+        _interaction.Cancel();
+        _spatialVersion++;
         InvalidateVisual();
+        AfterInteraction();
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
 
-        var cursorScreen = e.GetPosition(this);
-        var zoomDelta = e.Delta.Y > 0 ? 1.25f : 0.8f;
-        var newZoom = ZoomFactor * zoomDelta;
-
-        ZoomAt(cursorScreen, newZoom);
+        Interaction.OnWheel(new WheelInput((float)e.Delta.Y, InputMapper.ToModifiers(e.KeyModifiers), e.GetPosition(this).ToVector()));
         e.Handled = true;
     }
 
@@ -1146,10 +637,25 @@ public class MapCanvasControl : Control
     {
         base.OnKeyDown(e);
 
-        if (e.Key == Key.Space)
+        var interaction = Interaction;
+        var keyInput = AvaloniaKeyMapper.ToKeyInput(e.Key, e.KeyModifiers, AvaloniaKeyMapper.IsMacOS);
+
+        if (e.Key == Key.Space || e.Key == Key.Escape)
         {
-            _isSpaceKeyDown = true;
-            UpdateCursor();
+            interaction.OnKey(keyInput);
+            if (e.Key == Key.Escape)
+            {
+                _spatialVersion++;
+                InvalidateVisual();
+            }
+            AfterInteraction();
+            e.Handled = true;
+            return;
+        }
+
+        if (interaction.IsGestureActive)
+        {
+            // While a drag owns the map (its undo transaction is open) no other command may run.
             e.Handled = true;
             return;
         }
@@ -1161,30 +667,16 @@ public class MapCanvasControl : Control
         }
 
         var isCtrl = (e.KeyModifiers & KeyModifiers.Control) != 0;
-        var isShift = (e.KeyModifiers & KeyModifiers.Shift) != 0;
-        var isAlt = (e.KeyModifiers & KeyModifiers.Alt) != 0;
 
         switch (e.Key)
         {
             case Key.Delete or Key.Back:
-                if (!IsGestureActive) CommandService?.DeleteSelected();
+                CommandService?.DeleteSelected();
                 e.Handled = true;
                 break;
 
             case Key.A when isCtrl:
                 CommandService?.SelectAll();
-                e.Handled = true;
-                break;
-
-            case Key.Escape:
-                if (IsGestureActive)
-                {
-                    EndDrag(KeyModifiers.None, cancelled: true);
-                }
-                else
-                {
-                    CommandService?.ClearSelection();
-                }
                 e.Handled = true;
                 break;
 
@@ -1219,9 +711,10 @@ public class MapCanvasControl : Control
                 break;
 
             case Key.Left or Key.Right or Key.Up or Key.Down:
-                if (_selectedSet.Count > 0)
+                if (interaction.OnKey(keyInput))
                 {
-                    HandleArrowKey(e.Key, isCtrl, isShift, isAlt);
+                    _spatialVersion++;
+                    InvalidateVisual();
                     e.Handled = true;
                 }
                 break;
@@ -1231,10 +724,10 @@ public class MapCanvasControl : Control
     protected override void OnLostFocus(RoutedEventArgs e)
     {
         base.OnLostFocus(e);
-        if (_isSpaceKeyDown)
+        if (_interaction != null)
         {
-            _isSpaceKeyDown = false;
-            UpdateCursor();
+            _interaction.SetSpaceHeld(false);
+            AfterInteraction();
         }
     }
 
@@ -1244,46 +737,9 @@ public class MapCanvasControl : Control
 
         if (e.Key == Key.Space)
         {
-            _isSpaceKeyDown = false;
-            UpdateCursor();
+            Interaction.OnKeyUp(AvaloniaKeyMapper.ToKeyInput(e.Key, e.KeyModifiers, AvaloniaKeyMapper.IsMacOS));
+            AfterInteraction();
             e.Handled = true;
-        }
-    }
-
-    private void HandleArrowKey(Key key, bool isCtrl, bool isShift, bool isAlt)
-    {
-        if (isAlt && isCtrl)
-        {
-            var delta = Settings.SnapToGrid ? Settings.GridSize : 2.0f;
-            var resizeDelta = key switch
-            {
-                Key.Left => new CoreVector(-delta, 0),
-                Key.Right => new CoreVector(delta, 0),
-                Key.Up => new CoreVector(0, -delta),
-                Key.Down => new CoreVector(0, delta),
-                _ => CoreVector.Zero
-            };
-            // One undo step per key press (key repeat makes one step per repeat).
-            CommandService?.ResizeSelected(resizeDelta);
-            _spatialVersion++;
-            InvalidateVisual();
-        }
-        else
-        {
-            var step = isShift ? Settings.GridSize * 2 : (Settings.SnapToGrid ? Settings.GridSize : 2.0f);
-            var moveDelta = key switch
-            {
-                Key.Left => new CoreVector(-step, 0),
-                Key.Right => new CoreVector(step, 0),
-                Key.Up => new CoreVector(0, -step),
-                Key.Down => new CoreVector(0, step),
-                _ => CoreVector.Zero
-            };
-
-            if (moveDelta != CoreVector.Zero && _selectedSet.Count > 0)
-            {
-                CommandService?.NudgeSelected(moveDelta);
-            }
         }
     }
 
@@ -1347,7 +803,7 @@ public class MapCanvasControl : Control
 
     private void ShowContextMenuAt(CoreVector worldPos)
     {
-        var hitElem = HitElementAt(worldPos);
+        var hitElem = Hit.HitElement(worldPos);
         if (hitElem != null && !_selectedSet.Contains(hitElem))
         {
             CommandService?.Select([hitElem], clearExisting: true);
@@ -1516,21 +972,23 @@ public class MapCanvasControl : Control
                 _builtSpatialVersion = _spatialVersion;
             }
 
+            var adorners = _interaction?.Adorners ?? AdornerState.Empty;
+
             DrawElements(
                 context,
                 _visibleElements,
                 _selectedSet,
-                _hoverElement,
+                adorners.HoverElement,
                 _spatialLines,
                 _spatialVersion);
 
             // 6. Render Active Ports
-            if (_activePorts.Count > 0)
+            if (adorners.Ports.Count > 0)
             {
                 var portRadius = Settings.HandleSize / 2.0;
-                foreach (var port in _activePorts)
+                foreach (var port in adorners.Ports)
                 {
-                    var isHover = port == _hoverPort;
+                    var isHover = port == adorners.HoverPort;
                     var brush = isHover ? _hoverPortBrush : _normalPortBrush;
                     var pen = isHover ? _hoverPortPen : _normalPortPen;
                     var center = new Point(port.Position.X, port.Position.Y);
@@ -1544,7 +1002,7 @@ public class MapCanvasControl : Control
                 foreach (var wp in Hit.VisibleWaypoints(selectedConn))
                 {
                     var isSet = selectedConn.GetCurveWaypoint(wp).HasValue;
-                    var isHover = wp == _hoverWaypoint || (_dragMode == CanvasDragMode.MoveWaypoint && wp == _dragWaypoint);
+                    var isHover = wp == adorners.HoverWaypoint || wp == adorners.DragWaypoint;
                     var wpBounds = Hit.WaypointBounds(selectedConn, wp);
 
                     IBrush brush;
@@ -1573,26 +1031,18 @@ public class MapCanvasControl : Control
             }
 
             // 8. Render Selection Resize Handles
-            if (_selectedSet.Count == 1 && _selectedSet.First() is ISizeable sizeable)
+            foreach (var handle in adorners.Handles)
             {
-                foreach (var cp in _handlePoints)
-                {
-                    var handle = new ResizeHandle(cp, sizeable);
-                    var rect = handle.Bounds;
-                    var isHover = _hoverHandle != null && _hoverHandle.CompassPoint == cp;
-                    var brush = isHover ? _hoverHandleBrush : _handleBrush;
-                    context.DrawRectangle(brush, _handlePen, rect.ToRect());
-                }
+                var rect = handle.Bounds;
+                var isHover = adorners.HoverHandle != null && adorners.HoverHandle.CompassPoint == handle.CompassPoint;
+                var brush = isHover ? _hoverHandleBrush : _handleBrush;
+                context.DrawRectangle(brush, _handlePen, rect.ToRect());
             }
 
             // 9. Render Marquee Box
-            if (_dragMode == CanvasDragMode.Marquee)
+            if (adorners.Marquee is { } marquee)
             {
-                var minX = Math.Min(_dragMarqueeStart.X, _dragMarqueeCurrent.X);
-                var maxX = Math.Max(_dragMarqueeStart.X, _dragMarqueeCurrent.X);
-                var minY = Math.Min(_dragMarqueeStart.Y, _dragMarqueeCurrent.Y);
-                var maxY = Math.Max(_dragMarqueeStart.Y, _dragMarqueeCurrent.Y);
-                var marqueeRect = new AvaloniaRect(minX, minY, Math.Max(0.01, maxX - minX), Math.Max(0.01, maxY - minY));
+                var marqueeRect = new AvaloniaRect(marquee.X, marquee.Y, marquee.Width, marquee.Height);
                 context.DrawRectangle(_marqueeFillBrush, _marqueeBorderPen, marqueeRect);
             }
         }

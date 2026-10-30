@@ -15,6 +15,7 @@ using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using Vector = Trizbort.Domain.Misc.Vector;
+using CanvasDragMode = Trizbort.Editor.CanvasDragMode;
 
 namespace Trizbort.Avalonia.Tests.Smoke;
 
@@ -304,7 +305,6 @@ public class EditKeyboardSmokeTests
 
     /// <summary>Step 33: Start dragging a room, then press Esc before releasing. Expected: the drag is cancelled and the room returns to its start position.</summary>
     [AvaloniaTest]
-    [Ignore("known gap: I-010 (Esc does not restore a dragged room)")]
     public void S4_33_EscDuringRoomDrag_CancelsAndRestoresPosition()
     {
         var (window, canvas, service) = CreateHarness();
@@ -320,15 +320,20 @@ public class EditKeyboardSmokeTests
             window.MouseMove(moved);
             canvas.DragMode.ShouldBe(CanvasDragMode.MoveElement);
             room.Position.X.ShouldNotBe(0f);
+            var roomId = room.Id;
 
             window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
 
             canvas.DragMode.ShouldBe(CanvasDragMode.None);
-            room.Position.X.ShouldBe(0f, 0.5f);
-            room.Position.Y.ShouldBe(0f, 0.5f);
+            // Cancelling restores the whole map, which replaces the room object: find it again by id.
+            var restored = Project.Current.Elements.OfType<Room>().Single(r => r.Id == roomId);
+            restored.Position.X.ShouldBe(0f, 0.5f);
+            restored.Position.Y.ShouldBe(0f, 0.5f);
+            service.Session.Undo.CanUndo.ShouldBeFalse();
 
             window.MouseUp(moved, MouseButton.Left);
-            room.Position.X.ShouldBe(0f, 0.5f);
+            Project.Current.Elements.OfType<Room>().Single(r => r.Id == roomId).Position.X.ShouldBe(0f, 0.5f);
+            service.Session.Undo.CanUndo.ShouldBeFalse();
         }
         finally { window.Close(); }
     }
