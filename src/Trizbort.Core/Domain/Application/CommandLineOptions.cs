@@ -49,4 +49,10 @@ public class CommandLineOptions
 
   [Option("quest rooms", HelpText = "Export to Quest section.")]
   public string QuestRooms { get; set; }
-}
+
+  [Option("debug", HelpText = "Enable debug features.")]
+  public bool Debug { get; set; }
+
+  [Option("config-dir", HelpText = "Use this folder for per-user settings.")]
+  public string ConfigDir { get; set; }
+}

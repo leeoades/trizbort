@@ -43,6 +43,39 @@ public class StorageService(IDialogService dialogService) : IStorageService
         return null;
     }
 
+    /// <summary>
+    ///   Remembers a map as the last/recent project and persists settings (best effort).
+    /// </summary>
+    public static void RecordProjectOpened(string fileName)
+    {
+        try
+        {
+            ApplicationSettingsController.OpenProject(fileName);
+        }
+        catch (Exception)
+        {
+            // settings are best effort; never fail an open/save because of them
+        }
+    }
+
+    private static async Task<IStorageFolder?> GetProjectStartFolderAsync(TopLevel topLevel)
+    {
+        try
+        {
+            var fileName = Project.Current?.FileName;
+            if (string.IsNullOrEmpty(fileName)) fileName = ApplicationSettingsController.AppSettings.LastProjectFileName;
+            if (string.IsNullOrEmpty(fileName)) return null;
+
+            var dir = Path.GetDirectoryName(fileName);
+            if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) return null;
+            return await topLevel.StorageProvider.TryGetFolderFromPathAsync(dir);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     public async Task<bool> OpenMapAsync(TopLevel? topLevel)
     {
         if (topLevel == null) return false;
@@ -51,6 +84,7 @@ public class StorageService(IDialogService dialogService) : IStorageService
         {
             Title = "Open Trizbort Map",
             AllowMultiple = false,
+            SuggestedStartLocation = await GetProjectStartFolderAsync(topLevel),
             FileTypeFilter = [TrizbortFileType, FilePickerFileTypes.All]
         });
 
@@ -66,6 +100,7 @@ public class StorageService(IDialogService dialogService) : IStorageService
                 project.FileName = filePath;
                 project.IsDirty = false;
                 Project.Current = project;
+                RecordProjectOpened(filePath);
                 return true;
             }
 
@@ -81,6 +116,37 @@ public class StorageService(IDialogService dialogService) : IStorageService
                 GetWindow(topLevel),
                 "Open Map Error",
                 $"Error opening map file '{Path.GetFileName(filePath)}':\n{ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> OpenMapFromPathAsync(string path, TopLevel? topLevel)
+    {
+        try
+        {
+            var project = new Project();
+            var loader = new MapLoader(project);
+            if (loader.LoadMap(path))
+            {
+                project.FileName = path;
+                project.IsDirty = false;
+                Project.Current = project;
+                RecordProjectOpened(path);
+                return true;
+            }
+
+            await _dialogService.ShowMessageAsync(
+                GetWindow(topLevel),
+                "Open Map Failed",
+                $"Unable to load map file '{Path.GetFileName(path)}'. The file format may be invalid or corrupt.");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            await _dialogService.ShowMessageAsync(
+                GetWindow(topLevel),
+                "Open Map Error",
+                $"Error opening map file '{Path.GetFileName(path)}':\n{ex.Message}");
             return false;
         }
     }
@@ -105,6 +171,7 @@ public class StorageService(IDialogService dialogService) : IStorageService
                 Title = "Save Trizbort Map",
                 DefaultExtension = "trizbort",
                 SuggestedFileName = suggestedName,
+                SuggestedStartLocation = await GetProjectStartFolderAsync(topLevel),
                 FileTypeChoices = [TrizbortFileType, FilePickerFileTypes.All]
             });
 
@@ -132,6 +199,7 @@ public class StorageService(IDialogService dialogService) : IStorageService
             currentProject.FileName = filePath;
             if (currentProject.Save())
             {
+                RecordProjectOpened(filePath);
                 return true;
             }
 

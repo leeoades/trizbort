@@ -1,5 +1,9 @@
+using System;
 using Avalonia.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 
 namespace Trizbort.Avalonia.Views;
@@ -12,6 +16,32 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Closing += OnWindowClosing;
+        Opened += OnWindowOpened;
+    }
+
+    private bool _startupActionsRun;
+
+    private async void OnWindowOpened(object? sender, EventArgs e)
+    {
+        if (_startupActionsRun) return;
+        _startupActionsRun = true;
+
+        var services = App.Services;
+        if (services == null || DataContext is not MainWindowViewModel vm) return;
+
+        try
+        {
+            await StartupActions.RunAsync(
+                vm,
+                AppOptions.Current,
+                services.GetRequiredService<IStorageService>(),
+                services.GetRequiredService<IDialogService>(),
+                this);
+        }
+        catch (Exception)
+        {
+            // startup actions must never crash the app
+        }
     }
 
     private async void OnWindowClosing(object? sender, WindowClosingEventArgs e)
@@ -30,6 +60,7 @@ public partial class MainWindow : Window
                     {
                         vm.StopAutomap();
                     }
+                    SaveSettingsOnExit();
                     _isClosingConfirmed = true;
                     Close();
                 }
@@ -40,7 +71,20 @@ public partial class MainWindow : Window
                 {
                     vm.StopAutomap();
                 }
+                SaveSettingsOnExit();
             }
+        }
+    }
+
+    private static void SaveSettingsOnExit()
+    {
+        try
+        {
+            ApplicationSettingsController.SaveSettings();
+        }
+        catch (Exception)
+        {
+            // never block closing because settings could not be written
         }
     }
 }
