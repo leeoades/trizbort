@@ -26,7 +26,7 @@ $out = Join-Path $repo "artifacts\windows-checks\$stamp"
 New-Item -ItemType Directory -Force $out | Out-Null
 $summary = Join-Path $out 'summary.txt'
 
-function Log([string]$text) { $text | Tee-Object -FilePath $summary -Append }
+function Log([string]$text) { Write-Host $text; Add-Content -Path $summary -Value $text -Encoding UTF8 }
 
 function Step([string]$name, [string[]]$dotnetArgs) {
   $logFile = Join-Path $out "$name.log"

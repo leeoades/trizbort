@@ -119,7 +119,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
 
 ### Phase 0 — Setup
 
-- [ ] **T0.1 Record build and test baseline** · Cheap · Depends: none
+- [x] **T0.1 Record build and test baseline** · Cheap · Depends: none
   - Read: `AGENTS.md`.
   - Steps:
     1. `git rev-parse --short HEAD`; `dotnet --version`; OS.
@@ -129,7 +129,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
     4. `dotnet run --project src/Trizbort.Avalonia`, open each `samples/*.trizbort`; note exceptions/console output.
   - Output: `avalonia-parity/baseline.md`. No source changes.
 
-- [ ] **T0.2 Split into legacy and new solutions** · Mid · Windows for step 6 · Depends: T0.1 · Approved by Lee 2026-10-30
+- [x] **T0.2 Split into legacy and new solutions** · Mid · Windows for step 6 · Depends: T0.1 · Approved by Lee 2026-10-30
   - Context: the original app at `v2.3.1-beta.2` is two projects (`src/Trizbort`, `src/Trizbort.Tests`), `net8.0-windows`, NuGet packages only,
     no dependency on `Trizbort.Core`. On this branch nothing references the refactored `src/Trizbort` except `src/Trizbort.Tests`.
     CI (`.github/workflows/tests.yml`, `release.yml`) currently builds, tests and publishes WinForms on `windows-latest`.
