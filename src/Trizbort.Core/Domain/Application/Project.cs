@@ -142,6 +142,24 @@ public class Project : IDisposable
     return false;
   }
 
+  /// <summary>
+  ///   Carry over the state that is not part of the map file when a snapshot is restored into a fresh project:
+  ///   the file name (and its reload subscription) and the validation flags.
+  /// </summary>
+  internal void CopyTransientStateFrom(Project other)
+  {
+    FileName = other.FileName;
+    MustHaveDescription = other.MustHaveDescription;
+    MustHaveNoDanglingConnectors = other.MustHaveNoDanglingConnectors;
+    MustHaveSubtitle = other.MustHaveSubtitle;
+    MustHaveUniqueNames = other.MustHaveUniqueNames;
+    if (HasFileName)
+    {
+      FileWatcher.ReloadMap -= ReloadMap;
+      FileWatcher.ReloadMap += ReloadMap;
+    }
+  }
+
   public void InitFileWWatcher(string fileName)
   {
     FileWatcher.ReloadMap -= ReloadMap;

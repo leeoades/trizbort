@@ -55,67 +55,7 @@ public class LegacyMapFileEngine : MapFileEngine
 
       var doc = new XmlDocument();
       doc.Load(fileName);
-      var root = new XmlElementReader(doc.DocumentElement);
-
-      if (!root.HasName("trizbort"))
-        throw new InvalidDataException("Not a Trizbort map file.");
-
-      //reset checks: we may make this into a function if we ever wish to verify a Trizbort file first.
-      Settings.StartRoomLoaded = false;
-      Settings.EndRoomLoaded = false;
-
-      // file version
-      var versionNumber = root.Attribute("version").Text;
-      _project.SetVersion(versionNumber);
-      _checkVersion(_project);
-
-      // load info
-      _project.Title = root["info"]["title"].Text;
-      _project.Author = root["info"]["author"].Text;
-      _project.Description = root["info"]["description"].Text;
-      _project.History = root["info"]["history"].Text;
-
-      // load all elements
-      var map = root["map"];
-      var mapConnectionToLoadState = new Dictionary<Connection, object>();
-      foreach (var element in map.Children)
-        if (element.HasName("room"))
-        {
-          // Changed the constructor used for elements when loading a file for a significant speed increase
-          var room = new Room(_project, _project.Elements.Count + 1);
-          room.Id = element.Attribute("id").ToInt(room.Id);
-          room.Load(element, _reportWarning);
-          _project.Elements.Add(room);
-        }
-        else if (element.HasName("label"))
-        {
-          var label = new MapLabel(_project, _project.Elements.Count + 1);
-          label.Id = element.Attribute("id").ToInt(label.Id);
-          label.Load(element);
-          _project.Elements.Add(label);
-        }
-        else if (element.HasName("line") || element.HasName("labelLine"))
-        {
-          // Changed the constructor used for elements when loading a file for a significant speed increase
-          var connection = new Connection(_project, _project.Elements.Count + 1);
-          connection.Id = element.Attribute("id").ToInt(connection.Id);
-          var loadState = connection.BeginLoad(element);
-          if (loadState != null)
-            mapConnectionToLoadState.Add(connection, loadState);
-          _project.Elements.Add(connection);
-        }
-
-      // connect them together
-      foreach (var pair in mapConnectionToLoadState)
-      {
-        var connection = pair.Key;
-        var state = pair.Value;
-        connection.EndLoad(state);
-      }
-
-      // load settings last, since their load can't be undone
-      Settings.Reset(false);
-      Settings.Load(root["settings"]);
+      LoadDocument(doc);
 
       // setup filewatcher.
       if (isLocalFile)
@@ -130,9 +70,104 @@ public class LegacyMapFileEngine : MapFileEngine
     }
   }
 
+  /// <summary>Load a map from a stream (for example an in-memory snapshot). Does not watch any file.</summary>
+  public bool Load(Stream stream)
+  {
+    try
+    {
+      var doc = new XmlDocument();
+      doc.Load(stream);
+      LoadDocument(doc);
+      return true;
+    }
+    catch (Exception ex)
+    {
+      _reportError(ex);
+      return false;
+    }
+  }
+
+  private void LoadDocument(XmlDocument doc)
+  {
+    var root = new XmlElementReader(doc.DocumentElement);
+
+    if (!root.HasName("trizbort"))
+      throw new InvalidDataException("Not a Trizbort map file.");
+
+    //reset checks: we may make this into a function if we ever wish to verify a Trizbort file first.
+    Settings.StartRoomLoaded = false;
+    Settings.EndRoomLoaded = false;
+
+    // file version
+    var versionNumber = root.Attribute("version").Text;
+    _project.SetVersion(versionNumber);
+    _checkVersion(_project);
+
+    // load info
+    _project.Title = root["info"]["title"].Text;
+    _project.Author = root["info"]["author"].Text;
+    _project.Description = root["info"]["description"].Text;
+    _project.History = root["info"]["history"].Text;
+
+    // load all elements
+    var map = root["map"];
+    var mapConnectionToLoadState = new Dictionary<Connection, object>();
+    foreach (var element in map.Children)
+      if (element.HasName("room"))
+      {
+        // Changed the constructor used for elements when loading a file for a significant speed increase
+        var room = new Room(_project, _project.Elements.Count + 1);
+        room.Id = element.Attribute("id").ToInt(room.Id);
+        room.Load(element, _reportWarning);
+        _project.Elements.Add(room);
+      }
+      else if (element.HasName("label"))
+      {
+        var label = new MapLabel(_project, _project.Elements.Count + 1);
+        label.Id = element.Attribute("id").ToInt(label.Id);
+        label.Load(element);
+        _project.Elements.Add(label);
+      }
+      else if (element.HasName("line") || element.HasName("labelLine"))
+      {
+        // Changed the constructor used for elements when loading a file for a significant speed increase
+        var connection = new Connection(_project, _project.Elements.Count + 1);
+        connection.Id = element.Attribute("id").ToInt(connection.Id);
+        var loadState = connection.BeginLoad(element);
+        if (loadState != null)
+          mapConnectionToLoadState.Add(connection, loadState);
+        _project.Elements.Add(connection);
+      }
+
+    // connect them together
+    foreach (var pair in mapConnectionToLoadState)
+    {
+      var connection = pair.Key;
+      var state = pair.Value;
+      connection.EndLoad(state);
+    }
+
+    // load settings last, since their load can't be undone
+    Settings.Reset(false);
+    Settings.Load(root["settings"]);
+  }
+
   public override bool Save(string fileName)
   {
     using var scribe = XmlScribe.Create(fileName);
+    SaveDocument(scribe);
+    return true;
+  }
+
+  /// <summary>Save the map to a stream in the same format as <see cref="Save(string)" />. The stream stays open.</summary>
+  public void Save(Stream stream)
+  {
+    using var scribe = XmlScribe.Create(stream);
+    SaveDocument(scribe);
+  }
+
+  private void SaveDocument(XmlScribe scribe)
+  {
     scribe.StartElement("trizbort");
     scribe.Attribute("version", typeof(Project).Assembly.GetName().Version.ToString());
     scribe.StartElement("info");
@@ -152,7 +187,6 @@ public class LegacyMapFileEngine : MapFileEngine
     scribe.StartElement("settings");
     Settings.Save(scribe);
     scribe.EndElement();
-    return true;
   }
 
   private void SaveElement(XmlScribe scribe, Element element)

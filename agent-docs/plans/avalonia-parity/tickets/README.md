@@ -3,7 +3,7 @@
 Written 2026-10-30 (T3.1) from the feature matrix, dialog reviews, issues and the accepted decisions D1–D4.
 Each ticket follows the template in `../../avalonia-parity-review.md` §8 and is sized for one agent session.
 
-**Done so far:** 001, 002, 005, 009, 011, 012, 070 (style + Label dialog), 071, 074, 077, 080, 081, 082, 083, 084, 085, 100, 101, 104, 106, 112, 117, 118 — marked ✅.
+**Done so far:** 001, 002, 003, 005, 009, 011, 012, 070 (style + Label dialog), 071, 074, 077, 080, 081, 082, 083, 084, 085, 100, 101, 104, 106, 112, 117, 118 — marked ✅.
 
 **How to pick one:** take the lowest wave whose dependencies are all done; within a wave, P1 first. Mark a ticket done by
 adding `Status: Done (<commit>)` under its title and updating the matrix rows it lists.
@@ -20,7 +20,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 |---|---|---|---|---|---|---|---|
 | 001 ✅ | [Add Selection and Viewport types to Core](001-selection-and-viewport-types-in-core.md) | 1 | P1 | S | mid | — | X010, X047–X049 |
 | 002 ✅ | [Add EditorSession to Core; CommandService becomes a thin adapter](002-editor-session-in-core.md) | 2 | P1 | M | mid | 001 | X010, X048, X052, X053 |
-| 003 | [Add UndoStack with gzip snapshot mementos, transactions and dirty flag](003-undostack-snapshot-mementos.md) | 3 | P1 | L | mid + strong review | 002 | undo/redo, X052 |
+| 003 ✅ | [Add UndoStack with gzip snapshot mementos, transactions and dirty flag](003-undostack-snapshot-mementos.md) | 3 | P1 | L | mid + strong review | 002 | undo/redo, X052 |
 | 004 | [Route existing mutations through the EditorSession; remove hand-set IsDirty](004-route-mutations-through-session.md) | 4 | P1 | M | mid | 003 | X012–X015, X021, X022, X052, M024, M026–M030 |
 | 005 ✅ | [Move canvas hit-testing to Core (ZOrder-aware)](005-hit-testing-to-core.md) | 3 | P1 | M | mid | 002 | X034–X036, X046, G001, G013, G016 |
 | 006 | [Move the pointer/key drag state machine to Core (CanvasInteraction)](006-drag-state-machine-to-core.md) | 5 | P1 | L | mid + strong review | 004, 005, 009 | X037–X044, X046, X051, G001–G021, I-010 |

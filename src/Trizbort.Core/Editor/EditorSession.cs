@@ -24,10 +24,18 @@ public sealed class EditorSession : IDisposable
   private bool _lastDirty;
   private bool _disposed;
 
-  public EditorSession()
+  public EditorSession() : this(new UndoStack())
+  {
+  }
+
+  /// <summary>Create a session around a specific undo stack (for example one with a smaller capacity).</summary>
+  public EditorSession(UndoStack undoStack)
   {
     Selection = new Selection();
     Viewport = new Viewport();
+    Undo = undoStack ?? throw new ArgumentNullException(nameof(undoStack));
+    Undo.Attach(this);
+    Undo.Changed += OnUndoChanged;
 
     Selection.Changed += OnSelectionChanged;
     Viewport.Changed += OnViewportChanged;
@@ -53,6 +61,9 @@ public sealed class EditorSession : IDisposable
 
   public Viewport Viewport { get; }
 
+  /// <summary>Undo/redo history. Edits should run inside <see cref="Execute" /> or <see cref="BeginTransaction" />.</summary>
+  public UndoStack Undo { get; }
+
   public bool ShowGrid
   {
     get => _showGrid;
@@ -74,6 +85,78 @@ public sealed class EditorSession : IDisposable
     Selection.Changed -= OnSelectionChanged;
     Viewport.Changed -= OnViewportChanged;
     Project.ProjectChanged -= OnProjectChanged;
+    Undo.Changed -= OnUndoChanged;
+  }
+
+  /// <summary>
+  ///   Open an undo transaction; disposing the handle records one step if the map changed. Call
+  ///   <see cref="UndoTransaction.Cancel" /> to roll back without recording.
+  /// </summary>
+  public UndoTransaction BeginTransaction(string title, IEnumerable<Element> touched = null)
+  {
+    return Undo.Begin(title, touched);
+  }
+
+  /// <summary>
+  ///   Run <paramref name="edit" /> as one undo step. If it throws, the map is rolled back, nothing is recorded and
+  ///   the exception is rethrown. (The ticket sketched an <c>IDisposable</c> return value; there is nothing left
+  ///   to dispose once the step is recorded, so this returns nothing.)
+  /// </summary>
+  public void Execute(string title, Action edit, IEnumerable<Element> touched = null)
+  {
+    if (edit == null) throw new ArgumentNullException(nameof(edit));
+
+    var transaction = Undo.Begin(title, touched);
+    try
+    {
+      edit();
+    }
+    catch
+    {
+      transaction.Cancel();
+      transaction.Dispose();
+      throw;
+    }
+    transaction.Dispose();
+  }
+
+  /// <summary>
+  ///   Undo the last step. (Named <c>PerformUndo</c> because C# does not allow a method called <c>Undo</c> next to
+  ///   the <see cref="Undo" /> property.)
+  /// </summary>
+  public void PerformUndo()
+  {
+    Undo.Undo(this);
+  }
+
+  /// <summary>Redo the last undone step.</summary>
+  public void PerformRedo()
+  {
+    Undo.Redo(this);
+  }
+
+  /// <summary>Record that the current state has been saved to disk.</summary>
+  public void MarkSaved()
+  {
+    Undo.MarkSaved();
+  }
+
+  /// <summary>
+  ///   Swap the current project for <paramref name="project" /> (which becomes <c>Project.Current</c>). Raises
+  ///   <see cref="EditorChange.Model" /> and clears the selection. Does not touch the undo history.
+  /// </summary>
+  public void ReplaceProject(Project project)
+  {
+    if (project == null) throw new ArgumentNullException(nameof(project));
+
+    if (ReferenceEquals(Project, project))
+    {
+      RaiseChanged(EditorChange.Model);
+      return;
+    }
+
+    // The Project.Current setter raises ProjectChanged, so OnProjectChanged raises Model | Selection.
+    Project.Current = project;
   }
 
   /// <summary>Raise <see cref="Changed" /> for a change made outside the session.</summary>
@@ -341,6 +424,14 @@ public sealed class EditorSession : IDisposable
     }
     if (_suppressSelectionEvents) return;
     RaiseChanged(EditorChange.Selection);
+  }
+
+  private void OnUndoChanged(object sender, EventArgs e)
+  {
+    // The stack position is the single source of truth for the dirty flag.
+    if (Project != null) Project.IsDirty = Undo.IsDirty;
+    _lastDirty = Undo.IsDirty;
+    RaiseChanged(EditorChange.Dirty);
   }
 
   private void OnViewportChanged(object sender, EventArgs e)

@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Xml;
 using Trizbort.Domain.Misc;
@@ -27,12 +28,22 @@ public class XmlScribe : IDisposable
 
   public static XmlScribe Create(string fileName)
   {
+    return new XmlScribe(XmlWriter.Create(fileName, CreateSettings()));
+  }
+
+  /// <summary>Write to a stream with the same settings as the file overload. The stream is left open.</summary>
+  public static XmlScribe Create(Stream stream)
+  {
+    return new XmlScribe(XmlWriter.Create(stream, CreateSettings()));
+  }
+
+  private static XmlWriterSettings CreateSettings()
+  {
     var settings = new XmlWriterSettings();
     settings.Encoding = Encoding.UTF8;
     settings.Indent = true;
     settings.IndentChars = "\t";
-
-    return new XmlScribe(XmlWriter.Create(fileName, settings));
+    return settings;
   }
 
   protected virtual void Dispose(bool disposing)
