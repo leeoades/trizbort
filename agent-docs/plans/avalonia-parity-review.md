@@ -1,6 +1,6 @@
 # Avalonia Feature Parity Review — Plan
 
-Status: Draft 3 (2026-10-30). Owner: Lee. Working folder: `agent-docs/plans/avalonia-parity/`.
+Status: Draft 3 (2026-10-30). Progress: Phase 0 and Phase 1 done except the dialog reviews (T1.4a–g). Owner: Lee. Working folder: `agent-docs/plans/avalonia-parity/`.
 
 ## 1. Goal and direction
 
@@ -180,7 +180,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
 
 ### Phase 1 — Inventory (fill `feature-matrix.md`)
 
-- [ ] **T1.1 Main menu and toolbar** · Cheap · Section M · Depends: T0.2
+- [x] **T1.1 Main menu and toolbar** · Cheap · Section M · Depends: T0.2
   - Read:
     - Reference menu text: `grep -oE 'this\._[A-Za-z0-9]+\.Text = "[^"]*"' $REF/src/Trizbort/UI/MainForm.Designer.cs`
     - Reference shortcuts: `grep -nE -A1 'ShortcutKeys =' $REF/src/Trizbort/UI/MainForm.Designer.cs`
@@ -192,7 +192,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
     Note enable/disable differences (reference: grep `Enabled =` in `MainForm.cs`).
   - Done when: section M has no `Suspected-*` in "Verified status" and no `?`.
 
-- [ ] **T1.2 Canvas keyboard** · Cheap · Section K · Depends: T0.2
+- [x] **T1.2 Canvas keyboard** · Cheap · Section K · Depends: T0.2
   - Read: `$REF/src/Trizbort/UI/Controls/Canvas.cs` lines 1067–1429 (`OnKeyDown`) and 2677–2681 (`OnPreviewKeyDown`); `CtrlArrowHandler`,
     `ShiftArrowHandler`, `MoveArrowKeyHandler` (grep, read only those). Avalonia: `grep -n 'Key\.' src/Trizbort.Avalonia/Controls/MapCanvasControl.cs`,
     then only `OnKeyDown`/`HandleArrowKey`; and `Window.KeyBindings` in `MainWindow.axaml`.
@@ -201,7 +201,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
     Reference `Ctrl+E` sets `SquareCorners` — probable reference bug: flag, don't copy.
   - Done when: section K complete with evidence.
 
-- [ ] **T1.3 Canvas mouse gestures and context menu** · Mid · Sections C and G · Depends: T0.2
+- [x] **T1.3 Canvas mouse gestures and context menu** · Mid · Sections C and G · Depends: T0.2
   - Read: `$REF/src/Trizbort/UI/Controls/Canvas.Designer.cs` (grep `Text =` and `Click +=` only); in `$REF/…/Canvas.cs`: `OnMouseClick` (1431),
     `OnMouseDoubleClick` (1445), `OnMouseDown` (1465), `OnMouseMove` (1495), `OnMouseUp` (1505), `OnMouseWheel` (1518), `CtxCanvasMenuOpening` (1830),
     `BeginDrag*`/`DoDrag*`/`EndDrag` (grep). Avalonia: `MapCanvasControl.cs` `OnPointerPressed/Moved/Released/WheelChanged`, `ShowContextMenuAt`;
@@ -224,13 +224,13 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
     3. **Recommendation** for Lee: keep reference layout, keep Avalonia layout, or a specific merge (one paragraph).
   - Done when: every labelled reference control is in the table and every checklist item has a verdict; D row updated.
 
-- [ ] **T1.5 Application behaviour** · Mid · Section A · Depends: T0.2
+- [x] **T1.5 Application behaviour** · Mid · Section A · Depends: T0.2
   - Read: `$REF/src/Trizbort/Program.cs`, `$REF/src/Trizbort/Domain/Application/CommandLineOptions.cs`, `$REF/src/Trizbort/UI/MainForm.cs`
     (non-menu methods via grep: load/closing, title, recent files, file watcher, drag-drop, themes), `$REF/src/Trizbort/Domain/StatusBar/*`,
     `agent-docs/08-cli-and-entry-point.md`; Avalonia `Program.cs`, `App.axaml.cs`, `Views/MainWindow.axaml.cs`, `ViewModels/MainWindowViewModel.cs`.
   - Steps: Verify each A row; add rows for anything else at startup/shutdown (settings, window geometry, single instance, backup, CLI export).
 
-- [ ] **T1.6 Editing and interaction logic outside Core** · Mid · Section X · Depends: T0.2
+- [x] **T1.6 Editing and interaction logic outside Core** · Mid · Section X · Depends: T0.2
   - Read: `$REF/src/Trizbort/Domain/Controllers/*.cs`, `$REF/src/Trizbort/Domain/Commands/*.cs`; in `$REF/…/Canvas.cs` only methods matching
     `Select*`, `Swap*`, `Join*`, `*Handler`, `Paste*`, `ReverseLineDirection`, `ToggleText`, `CopySelectedColor`, `ApplyNewPlainConnectionSettings`,
     `AddOrConnectRoomRelativeToSelectedRoom`, `GetRoomIn*Direction*`, `ResizeRoom`, `DeleteSelection` (grep -n). This branch: `src/Trizbort.Core`
@@ -241,13 +241,13 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
     abstract (`Keys`, text measurement, `MessageBox`, dialogs).
   - Done when: section X complete. Main input to D1.
 
-- [ ] **T1.7 Export and Automap behaviour** · Mid · rows in M/A · Depends: T0.2
+- [x] **T1.7 Export and Automap behaviour** · Mid · rows in M/A · Depends: T0.2
   - Read: `agent-docs/06-automap.md`, `agent-docs/07-export-subsystem.md`, `src/Trizbort.Avalonia/Services/StorageService.cs`; reference
     `$REF/src/Trizbort/UI/MainForm.cs` (grep `Export`) and `$REF/src/Trizbort/Export/*.cs`.
   - Steps: Default file names / folder memory per language, overwrite prompts, clipboard variants, PDF (reference uses PdfSharp — is a
     cross-platform PDFsharp usable, or should PDF come from Skia?), image options, automap start/stop, disambiguation, same-direction, status messages.
 
-- [ ] **T1.8 Consolidate** · Cheap · Depends: T1.1–T1.7
+- [x] **T1.8 Consolidate** · Cheap · Depends: T1.1–T1.7
   - Fill Summary counts; list open questions and remaining `Suspected-*` under "Open questions" at the top of `feature-matrix.md`.
 
 ### Phase 2 — Verification
