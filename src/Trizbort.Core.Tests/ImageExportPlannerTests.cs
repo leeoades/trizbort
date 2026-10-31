@@ -206,4 +206,22 @@ public class ImageExportPlannerTests
     subset.ShouldNotContain(bc);
     subset.ShouldNotContain(c);
   }
+
+  [Test]
+  public void DefaultPaddingUsesTheMeasuredLineHeightWhenAvailable()
+  {
+    try
+    {
+      ImageExportPlanner.LineHeightMeasurer = font => font.Size * 1.5f;
+      var objects = Settings.ObjectFontMetadata?.Size ?? 11f;
+      ImageExportPlanner.DefaultPadding().ShouldBe(objects * 1.5f * 4, 0.01f);
+
+      ImageExportPlanner.LineHeightMeasurer = _ => 0f;
+      ImageExportPlanner.DefaultPadding().ShouldBe(objects * ImageExportPlanner.LineHeightFactor * 4, 0.01f);
+    }
+    finally
+    {
+      ImageExportPlanner.LineHeightMeasurer = null;
+    }
+  }
 }

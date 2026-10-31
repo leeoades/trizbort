@@ -91,6 +91,7 @@ public class MapExportCaptureTests
         {
             Project.Current = project;
             Settings.Reset();
+            ImageExportPlanner.LineHeightMeasurer = Trizbort.Avalonia.Drawing.DrawingAdapters.MeasureLineHeight;
             if (!new MapLoader(project).LoadMap(mapPath))
             {
                 errors.AppendLine("load: MapLoader returned false");
@@ -170,6 +171,7 @@ public class MapExportCaptureTests
         finally
         {
             Settings.Reset();
+            ImageExportPlanner.LineHeightMeasurer = null;
             Project.Current = previous;
             project.Dispose();
             if (errors.Length > 0) File.WriteAllText(Path.Combine(outDir, "errors.txt"), errors.ToString());

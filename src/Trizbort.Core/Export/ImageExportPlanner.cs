@@ -47,6 +47,12 @@ public static class ImageExportPlanner
   /// <summary>Approximation of the legacy <c>Font.GetHeight()</c> line height relative to the font size.</summary>
   public const float LineHeightFactor = 1.2f;
 
+  /// <summary>
+  /// Measures a font's real line spacing (the legacy <c>Font.GetHeight()</c>), supplied by the UI layer which knows the
+  /// font files. When unset, or when it returns zero or less, <see cref="LineHeightFactor"/> is used.
+  /// </summary>
+  public static Func<ThemeFont, float> LineHeightMeasurer { get; set; }
+
   public const string EmptySelectionMessage = "Nothing is selected, so the whole map was exported.";
 
   public static ImageExportPlan Plan(
@@ -185,8 +191,19 @@ public static class ImageExportPlanner
   /// <summary>The legacy overhang allowance: the larger of the subtitle line height and four object line heights.</summary>
   public static float DefaultPadding()
   {
-    var subtitle = (Settings.SubtitleFontMetadata?.Size ?? 9f) * LineHeightFactor;
-    var objects = (Settings.ObjectFontMetadata?.Size ?? 11f) * LineHeightFactor * 4;
+    var subtitle = LineHeight(Settings.SubtitleFontMetadata, 9f);
+    var objects = LineHeight(Settings.ObjectFontMetadata, 11f) * 4;
     return Math.Max(subtitle, objects);
+  }
+
+  private static float LineHeight(ThemeFont font, float fallbackSize)
+  {
+    if (font != null && LineHeightMeasurer != null)
+    {
+      var measured = LineHeightMeasurer(font);
+      if (measured > 0) return measured;
+    }
+
+    return (font?.Size ?? fallbackSize) * LineHeightFactor;
   }
 }

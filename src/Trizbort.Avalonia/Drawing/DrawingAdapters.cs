@@ -97,6 +97,26 @@ public static class DrawingAdapters
         });
     }
 
+    /// <summary>
+    /// The font's line spacing in pixels (ascent + descent + line gap), the equivalent of GDI+ <c>Font.GetHeight()</c>.
+    /// Returns 0 when the font cannot be resolved.
+    /// </summary>
+    public static float MeasureLineHeight(ThemeFont font)
+    {
+        if (font == null || font.Size <= 0) return 0;
+        try
+        {
+            var metrics = font.ToTypeface().GlyphTypeface.Metrics;
+            if (metrics.DesignEmHeight <= 0) return 0;
+            var designSpacing = metrics.Descent - metrics.Ascent + metrics.LineGap;
+            return font.Size * designSpacing / metrics.DesignEmHeight;
+        }
+        catch (System.InvalidOperationException)
+        {
+            return 0;
+        }
+    }
+
     public static StreamGeometry ToPolygonGeometry(IReadOnlyList<CoreVector> vertices, bool isClosed = true)
     {
         var geometry = new StreamGeometry();

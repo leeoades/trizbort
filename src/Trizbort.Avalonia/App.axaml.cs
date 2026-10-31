@@ -28,6 +28,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        Trizbort.Export.ImageExportPlanner.LineHeightMeasurer = Trizbort.Avalonia.Drawing.DrawingAdapters.MeasureLineHeight;
         var services = ConfigureServices();
         Services = services;
 
