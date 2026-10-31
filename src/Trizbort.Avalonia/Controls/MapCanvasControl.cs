@@ -756,11 +756,12 @@ public class MapCanvasControl : Control
             return;
         }
 
-        var isCtrl = (e.KeyModifiers & KeyModifiers.Control) != 0;
+        // Primary is Cmd on macOS and Ctrl elsewhere (Reset Zoom is Primary+0, shortcut-map K030).
+        var isPrimary = (e.KeyModifiers & AvaloniaKeyMapper.ToKeyModifiers(CoreModifierKeys.Primary, AvaloniaKeyMapper.IsMacOS)) != 0;
 
         switch (e.Key)
         {
-            case Key.D0 or Key.NumPad0 when isCtrl:
+            case Key.D0 or Key.NumPad0 when isPrimary:
                 CommandService?.ResetZoom();
                 e.Handled = true;
                 break;
