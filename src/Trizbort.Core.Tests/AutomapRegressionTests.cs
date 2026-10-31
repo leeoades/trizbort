@@ -530,6 +530,9 @@ public class AutomapRegressionTests : IsolatedProjectTests
       replacement = replacementMode == 0 || replacementMode == 2
         ? parser.Start(canvas, next)
         : parser.StartCl(canvas, next);
+      // A single-step replacement moves on from "has started" to "waiting for you to step" by itself, sooner or later
+      // depending on the machine. Let it settle first, so the check below only catches the old run's cleanup.
+      if (replacementMode == 4) await WaitForSingleStep(parser, replacement, deadline.Token);
       var status = parser.Status;
       var running = parser.Running;
       await oldRun.WaitAsync(TimeSpan.FromSeconds(5));
