@@ -188,6 +188,7 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Reported: 2026-10-31 by integrator (manual run on Windows)   OS: all   Category: behaviour
 - Added two rooms with R: the status bar still read "Rooms: 0 | Connections: 0". The counts only refresh on project change.
 - Severity: low     Flags: —
+- **Fixed** 2026-10-31: MainWindowViewModel recounts on EditorChange.Model (StatusBarCountsTests).
 - Ticket: 132
 
 ## I-023 Room context menu groups are interleaved
@@ -196,12 +197,14 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   End Room, "Application Settings…" after End Room. Commands from different partials share ContextOrder/ContextGroup values.
   Expected: the reference grouping (room edits, then map/app settings together at the end).
 - Severity: medium     Flags: —
+- **Fixed** 2026-10-31: settings commands use context group 9-settings, after the room groups (ContextMenuSettingsOrderTests).
 - Ticket: 132
 
 ## I-024 Room tooltip shows "NoRegion" for rooms in the default region
 - Reported: 2026-10-31 by integrator (manual run)   OS: all   Category: tooltip
 - The reference header shows the region only when it is not the default (`GetToolTipHeader`, `!IsDefaultRegion()`).
 - Severity: low     Flags: —
+- **Fixed** 2026-10-31: the tooltip footer omits the default region (RoomTooltipRegionTests).
 - Ticket: 132
 
 ## I-025 Map rendering differs from the reference (GitHub #22) — found by the export comparison
@@ -216,6 +219,15 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - R8 Maps containing only connections export nothing ("map is empty"); the reference draws them (horizontal/vertical-connector-only).
 - Evidence: run the capture tests and `scripts/compare/compare_exports.py`; report index sorted by score (worst: dark-tab-96 18.5%).
 - Severity: high (visible on every map)     Flags: —
+- **Fixed** 2026-10-31: R1–R8 fixed (RenderingParityTests, ImageExportPlannerTests; R2/R7: removed a port-only special case in Connection.GetSegments that split stalks through their midpoints — segments now match the reference). Re-run of the comparison: worst 18.5% → 15.1%, mean 4.9% → 4.3%, 22 maps better, code-export files differing 636 → 137 (only Unicode and the random Quest game id remain). Remaining systematic offset: I-026.
 - Ticket: 132
 
-<!-- Next ID: I-026 -->
+## I-026 Exported images are 17 px smaller than the reference on most maps
+- Reported: 2026-10-31 by integrator (export comparison: 78 of 123 maps differ by exactly 17 px each way)   OS: all   Category: export
+- The overhang margin (`ImageExportPlanner.DefaultPadding`) estimates line height as size × 1.2; the reference uses the real
+  GDI line height (`Font.GetHeight()`, legacy Canvas.cs:523-526). Measure the actual font line spacing (pass a measurer from
+  Avalonia) so exports keep the reference margins. Also shifts the whole picture, inflating comparison scores.
+- Severity: low     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-027 -->

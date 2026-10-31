@@ -87,6 +87,8 @@ public partial class MainWindowViewModel : ViewModelBase
             // status text and failures come from the engine's events, not from polling it
             _commandService.Session.AutomapStatusChanged += OnAutomapStatusChanged;
             _commandService.Session.AutomapFailed += OnAutomapFailed;
+            // adding/removing elements raises EditorChange.Model on the same project, which ProjectChanged does not report (I-022)
+            _commandService.Session.Changed += OnSessionChanged;
         }
 
         UpdateState();
@@ -95,6 +97,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnProjectChanged(object? sender, EventArgs e)
     {
         UpdateState();
+    }
+
+    private void OnSessionChanged(EditorChange change)
+    {
+        if ((change & EditorChange.Model) != 0) UpdateElementCount();
     }
 
     private void OnDirtyChanged(object? sender, EventArgs e)
@@ -156,9 +163,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public void UpdateState()
     {
-        var project = Project.Current;
         UpdateWindowTitle();
+        UpdateElementCount();
+    }
 
+    private void UpdateElementCount()
+    {
+        var project = Project.Current;
         var roomCount = project.Elements.OfType<Room>().Count();
         var connectionCount = project.Elements.OfType<Connection>().Count();
         var labelCount = project.Elements.OfType<MapLabel>().Count();

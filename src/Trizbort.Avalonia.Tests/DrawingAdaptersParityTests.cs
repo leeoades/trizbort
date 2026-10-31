@@ -161,7 +161,7 @@ public class DrawingAdaptersParityTests
 
         Assert.That(penDash.DashStyle?.Dashes, Is.EqualTo(new double[] { 4, 2 }));
         Assert.That(penDot.DashStyle?.Dashes, Is.EqualTo(new double[] { 1, 2 }));
-        Assert.That(penConn.DashStyle?.Dashes, Is.EqualTo(new double[] { 2, 2 }));
+        Assert.That(penConn.DashStyle?.Dashes, Is.EqualTo(new double[] { 1, 1 }));
     }
 
     [Test]
@@ -879,11 +879,11 @@ public class DrawingAdaptersParityTests
         }
 
         var chevronsForward = groupForward.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
-        // 4 segments of lengths 16, 56, 56, 16 > arrowSize(12) -> 4 chevrons
-        Assert.That(chevronsForward.Count, Is.EqualTo(4));
+        // Reference segments: stalk 32, line 80, stalk 32, each longer than arrowSize(12) -> 3 chevrons
+        Assert.That(chevronsForward.Count, Is.EqualTo(3));
 
-        var expectedForwardX = new[] { 104.0, 140.0, 196.0, 232.0 };
-        for (var i = 0; i < 4; i++)
+        var expectedForwardX = new[] { 112.0, 168.0, 224.0 };
+        for (var i = 0; i < 3; i++)
         {
             var bounds = chevronsForward[i].Geometry!.Bounds;
             Assert.That(bounds.Center.X, Is.EqualTo(expectedForwardX[i]).Within(0.5));
@@ -909,10 +909,10 @@ public class DrawingAdaptersParityTests
         }
 
         var chevronsReverse = groupReverse.Children.OfType<global::Avalonia.Media.GeometryDrawing>().Where(d => d.Brush != null).ToList();
-        Assert.That(chevronsReverse.Count, Is.EqualTo(4));
+        Assert.That(chevronsReverse.Count, Is.EqualTo(3));
 
-        var expectedReverseX = new[] { 232.0, 196.0, 140.0, 104.0 };
-        for (var i = 0; i < 4; i++)
+        var expectedReverseX = new[] { 224.0, 168.0, 112.0 };
+        for (var i = 0; i < 3; i++)
         {
             var bounds = chevronsReverse[i].Geometry!.Bounds;
             Assert.That(bounds.Center.X, Is.EqualTo(expectedReverseX[i]).Within(0.5));
@@ -1013,35 +1013,35 @@ public class DrawingAdaptersParityTests
                 Assert.That(centerScreen.Y, Is.EqualTo(150).Within(0.01));
 
                 // 1. OneWay at Zoom 1.0:
-                // Chevron at (140, 32) spans world X [134..146], Y [26..38].
+                // Middle chevron at (168, 32) spans world X [162..174], Y [26..38] (reference segments: stalk 32, line 80, stalk 32).
                 // Centerline is at Y=32 (line width 2px -> Y [31..33]).
-                // Off-center points at world (136, 29) and (136, 35) are exclusively inside the chevron wing.
-                var wingTopScreen1 = canvas.CanvasToClient(new CoreVector(136, 29));
+                // Off-center points at world (164, 29) and (164, 35) are exclusively inside the chevron wing.
+                var wingTopScreen1 = canvas.CanvasToClient(new CoreVector(164, 29));
                 var (bTop1, gTop1, rTop1, aTop1) = ReadPixel(bmp, (int)wingTopScreen1.X, (int)wingTopScreen1.Y);
-                Assert.That(rTop1, Is.GreaterThan(180), "Upper chevron wing at world (136, 29) should be red in OneWay");
+                Assert.That(rTop1, Is.GreaterThan(180), "Upper chevron wing at world (164, 29) should be red in OneWay");
                 Assert.That(gTop1, Is.LessThan(100));
                 Assert.That(bTop1, Is.LessThan(100));
 
-                var wingBotScreen1 = canvas.CanvasToClient(new CoreVector(136, 35));
+                var wingBotScreen1 = canvas.CanvasToClient(new CoreVector(164, 35));
                 var (bBot1, gBot1, rBot1, aBot1) = ReadPixel(bmp, (int)wingBotScreen1.X, (int)wingBotScreen1.Y);
-                Assert.That(rBot1, Is.GreaterThan(180), "Lower chevron wing at world (136, 35) should be red in OneWay");
+                Assert.That(rBot1, Is.GreaterThan(180), "Lower chevron wing at world (164, 35) should be red in OneWay");
                 Assert.That(gBot1, Is.LessThan(100));
                 Assert.That(bBot1, Is.LessThan(100));
 
-                // Point just past the apex off the line at world (147, 29) should be background (white)
-                var pastApexScreen1 = canvas.CanvasToClient(new CoreVector(147, 29));
+                // Point just past the apex off the line at world (175, 29) should be background (white)
+                var pastApexScreen1 = canvas.CanvasToClient(new CoreVector(175, 29));
                 var (bPast1, gPast1, rPast1, _) = ReadPixel(bmp, (int)pastApexScreen1.X, (int)pastApexScreen1.Y);
                 AssertPixelIsCanvasBackground(bPast1, gPast1, rPast1, "Point past apex off line should be canvas background");
 
-                // Last chevron is at (232, 32); apex at x=238, Room B border at x=240.
+                // Last chevron is at (224, 32); apex at x=230, Room B border at x=240.
                 // Off-line wing of the last chevron must be red, and the gap between the chevron
                 // and the room border, off the line, must stay canvas background.
-                var lastWingScreen = canvas.CanvasToClient(new CoreVector(228, 29));
+                var lastWingScreen = canvas.CanvasToClient(new CoreVector(220, 29));
                 var (bLastWing, gLastWing, rLastWing, _) = ReadPixel(bmp, (int)lastWingScreen.X, (int)lastWingScreen.Y);
-                AssertPixelIsConnectionRed(bLastWing, gLastWing, rLastWing, "Last chevron off-line wing at world (228, 29) should be red in OneWay");
+                AssertPixelIsConnectionRed(bLastWing, gLastWing, rLastWing, "Last chevron off-line wing at world (220, 29) should be red in OneWay");
 
                 // Room B's 2px border is centred on x=240, so x=239 is inside the stroke.
-                // (236, 29) sits past the last chevron (which only reaches x≈232 at y=29) and short of the border.
+                // (236, 29) sits past the last chevron (which only reaches x≈226 at y=29) and short of the border.
                 var clearanceScreen = canvas.CanvasToClient(new CoreVector(236, 29));
                 var (bClear, gClear, rClear, _) = ReadPixel(bmp, (int)clearanceScreen.X, (int)clearanceScreen.Y);
                 AssertPixelIsCanvasBackground(bClear, gClear, rClear, "Off-line pixel between last chevron and Room B border should be canvas background");
@@ -1049,7 +1049,7 @@ public class DrawingAdaptersParityTests
                 // 2. OneWay at Zoom 0.5:
                 canvas.ZoomFactor = 0.5f;
                 bmp.Render(canvas);
-                var arrowCenterZoomed = canvas.CanvasToClient(new CoreVector(140, 32));
+                var arrowCenterZoomed = canvas.CanvasToClient(new CoreVector(168, 32));
                 // Pixel (x-2, y-2) has its centre 1.5 px above the line; (x-2, y+1) mirrors that below.
                 var (bTopZ, gTopZ, rTopZ, _) = ReadPixel(bmp, (int)arrowCenterZoomed.X - 2, (int)arrowCenterZoomed.Y - 2);
                 AssertPixelIsConnectionRed(bTopZ, gTopZ, rTopZ, "Upper chevron wing at zoom 0.5 should be red in OneWay");

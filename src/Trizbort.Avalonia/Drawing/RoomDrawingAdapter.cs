@@ -20,7 +20,6 @@ namespace Trizbort.Avalonia.Drawing;
 public static class RoomDrawingAdapter
 {
     private static readonly IBrush _selHaloBrush = new SolidColorBrush(AvaloniaColor.FromArgb(120, 255, 255, 0));
-    private static readonly IBrush _darkBrush = new SolidColorBrush(AvaloniaColor.FromArgb(180, 20, 20, 20));
 
     private record struct GeometryKey(CoreRect Bounds, RoomShape Shape, double Tl, double Tr, double Br, double Bl, bool HandDrawn);
 
@@ -56,6 +55,8 @@ public static class RoomDrawingAdapter
         public FormattedText? CachedName;
         public FormattedText? CachedSubtitle;
         public double CachedStartY;
+        public double CachedNameX;
+        public double CachedSubtitleX;
 
         public string? LastObjectsText;
         public CompassPoint LastObjectsPos;
@@ -171,10 +172,13 @@ public static class RoomDrawingAdapter
         var borderPen = borderColor.ToPen(Settings.LineWidth, dashStyle);
 
         // 6. Draw Primary Fill & Base Geometry
-        context.DrawGeometry(fillBrush, borderPen, geometry);
+        // Legacy Room.cs:803 `BorderStyle != BorderDashStyle.None` guards the whole fill/second fill/dark/border block,
+        // so a room with no border style draws only its text (I-025 R4, spiral "Fall to Carriage").
+        var drawBody = room.BorderStyle != BorderDashStyle.None;
+        if (drawBody) context.DrawGeometry(fillBrush, borderPen, geometry);
 
         // 7. Draw Second Fill (if configured)
-        if (room.SecondFillColor != CoreColor.Transparent && !string.IsNullOrEmpty(room.SecondFillLocation))
+        if (drawBody && room.SecondFillColor != CoreColor.Transparent && !string.IsNullOrEmpty(room.SecondFillLocation))
         {
             if (cache.CachedSecondFillGeometry == null
                 || cache.LastSecondFillLoc != room.SecondFillLocation
@@ -203,25 +207,21 @@ public static class RoomDrawingAdapter
         }
 
         // 8. Draw Darkness Indicator
-        if (room.IsDark)
+        if (drawBody && room.IsDark)
         {
             using (context.PushGeometryClip(geometry))
             {
-                if (cache.CachedDarkGeometry == null || !cache.LastDarkBounds.Equals(bounds))
+                var tri = GetDarknessTriangle(bounds, room.Shape, corners, Settings.DarknessStripeSize);
+                var darkGeo = new StreamGeometry();
+                using (var darkCtx = darkGeo.Open())
                 {
-                    var darkSize = Math.Min(16f, Math.Min(bounds.Width, bounds.Height) * 0.4f);
-                    var darkGeo = new StreamGeometry();
-                    using (var darkCtx = darkGeo.Open())
-                    {
-                        darkCtx.BeginFigure(new AvaloniaPoint(bounds.Left, bounds.Top), true);
-                        darkCtx.LineTo(new AvaloniaPoint(bounds.Left + darkSize, bounds.Top));
-                        darkCtx.LineTo(new AvaloniaPoint(bounds.Left, bounds.Top + darkSize));
-                        darkCtx.EndFigure(true);
-                    }
-                    cache.CachedDarkGeometry = darkGeo;
-                    cache.LastDarkBounds = bounds;
+                    darkCtx.BeginFigure(tri[0].ToAvaloniaPoint(), true);
+                    darkCtx.LineTo(tri[1].ToAvaloniaPoint());
+                    darkCtx.LineTo(tri[2].ToAvaloniaPoint());
+                    darkCtx.EndFigure(true);
                 }
-                context.DrawGeometry(_darkBrush, null, cache.CachedDarkGeometry);
+                // Legacy fills with palette.BorderBrush (Room.cs:893-895).
+                context.DrawGeometry(Settings.Color[CoreColors.Border].ToBrush(), null, darkGeo);
             }
         }
 
@@ -273,6 +273,144 @@ public static class RoomDrawingAdapter
         };
     }
 
+    /// <summary>
+    /// The dark-room marker triangle in the top-right corner, sized as in legacy Room.cs:889-917
+    /// (stripe size, or shape-specific fractions for ellipse, rounded and octagonal rooms).
+    /// </summary>
+    internal static CoreVector[] GetDarknessTriangle(CoreRect bounds, RoomShape shape, CornerRadii? corners, float stripeSize)
+    {
+        var dx = stripeSize;
+        var dy = stripeSize;
+        if (shape == RoomShape.Ellipse)
+        {
+            dy = 2 * bounds.Height / 5;
+            dx = 2 * bounds.Width / 5;
+        }
+        else if (shape == RoomShape.RoundedCorners)
+        {
+            if (corners != null && corners.TopRight > 2 * stripeSize)
+                dy = dx = (float)corners.TopRight / 2;
+        }
+        else if (shape == RoomShape.Octagonal)
+        {
+            dx = bounds.Width * 7 / 20;
+            dy = bounds.Height * 7 / 20;
+        }
+
+        var topRight = bounds.GetCorner(CompassPoint.NorthEast);
+        return
+        [
+            topRight,
+            new CoreVector(topRight.X - dx, topRight.Y),
+            new CoreVector(topRight.X, topRight.Y + dy)
+        ];
+    }
+
+    private static Region? ResolveRegion(Room room)
+    {
+        var regionName = string.IsNullOrWhiteSpace(room.Region) ? Region.DefaultRegion : room.Region;
+        return Settings.Regions.Find(r =>
+            string.Equals(r.RegionName, regionName, StringComparison.OrdinalIgnoreCase)) ??
+            Settings.Regions.Find(r => string.Equals(r.RegionName, Region.DefaultRegion, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Room name colour: the room's own colour, otherwise the region's text colour (legacy Room.cs:913-916).
+    /// </summary>
+    internal static CoreColor ResolveRoomNameColor(Room room)
+    {
+        if (room.RoomNameColor != CoreColor.Transparent) return room.RoomNameColor;
+        var region = ResolveRegion(room);
+        return region != null ? region.TextColor : Settings.Color[CoreColors.SmallText];
+    }
+
+    /// <summary>
+    /// Legacy TextBlock.RebuildCachedLayout (TextBlock.cs:131-205): single-line text wraps only at spaces
+    /// (and at dashes when <paramref name="splitDashes"/>); a word wider than the box stays on one line.
+    /// </summary>
+    internal static string WrapLikeLegacy(string text, double maxWidth, Func<string, double> measure, bool splitDashes)
+    {
+        text = text.Replace("\r\n", "\n").Replace('\r', '\n');
+        if (text.IndexOf('\n') != -1 || maxWidth <= 0 || measure(text) <= maxWidth) return text;
+
+        var spaceLength = (float)(measure("M M") - measure("M") * 2);
+        var hyphenLength = (float)measure("-");
+
+        var step1 = new List<(string Text, float Length)>();
+        foreach (var word in text.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (step1.Count != 0) step1.Add((" ", spaceLength));
+            step1.Add((word, (float)measure(word)));
+        }
+
+        var words = new List<(string Text, float Length)>();
+        foreach (var item in step1.Where(p => !string.IsNullOrWhiteSpace(p.Text)))
+        {
+            var splits = splitDashes ? item.Text.Split('-') : new[] { item.Text };
+            if (splits.Length > 1)
+            {
+                var list = new List<(string Text, float Length)>();
+                foreach (var part in splits)
+                {
+                    if (words.Count != 0 && list.Count == 0) list.Add((" ", spaceLength));
+                    else if (list.Count != 0 && splitDashes) list.Add(("-", hyphenLength));
+                    list.Add((part, (float)measure(part)));
+                }
+                words.AddRange(list);
+            }
+            else
+            {
+                if (words.Count != 0) words.Add((" ", spaceLength));
+                words.Add((splits[0], (float)measure(splits[0])));
+            }
+        }
+
+        var lineLength = 0.0f;
+        var total = string.Empty;
+        var line = string.Empty;
+        foreach (var word in words)
+        {
+            if (word.Text != " " && word.Length > Math.Max(0, maxWidth - lineLength) && lineLength > 0)
+            {
+                if (line.Length > 0)
+                {
+                    if (total.Length > 0) total += "\n";
+                    total += line;
+                    lineLength = word.Length + spaceLength;
+                    line = word.Text;
+                }
+            }
+            else
+            {
+                line += word.Text;
+                lineLength += word.Length + spaceLength;
+            }
+        }
+
+        if (line.Length > 0)
+        {
+            if (total.Length > 0) total += "\n";
+            total += line;
+        }
+
+        return total;
+    }
+
+    private static FormattedText BuildWrappedText(string text, double maxWidth, Typeface typeface, double size, IBrush brush, bool splitDashes)
+    {
+        double Measure(string s) => new FormattedText(s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, size, Brushes.Black).WidthIncludingTrailingWhitespace;
+
+        var wrapped = WrapLikeLegacy(text, maxWidth, Measure, splitDashes);
+        var lines = wrapped.Split('\n').Select(l => l.TrimEnd(' '));
+        var formatted = new FormattedText(string.Join("\n", lines), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, size, brush)
+        {
+            TextAlignment = TextAlignment.Center
+        };
+        // No wrapping inside the layout: width is the widest line so each line is centred on it.
+        formatted.MaxTextWidth = formatted.WidthIncludingTrailingWhitespace + 1;
+        return formatted;
+    }
+
     internal static IBrush ResolveRoomFillBrush(Room room)
     {
         return ResolveRoomFillColor(room).ToBrush();
@@ -285,10 +423,7 @@ public static class RoomDrawingAdapter
             return room.RoomFillColor;
         }
 
-        var regionName = string.IsNullOrWhiteSpace(room.Region) ? Region.DefaultRegion : room.Region;
-        var regionObj = Settings.Regions.Find(r =>
-            string.Equals(r.RegionName, regionName, StringComparison.OrdinalIgnoreCase)) ??
-            Settings.Regions.Find(r => string.Equals(r.RegionName, Region.DefaultRegion, StringComparison.OrdinalIgnoreCase));
+        var regionObj = ResolveRegion(room);
 
         if (regionObj != null && regionObj.RColor != CoreColor.Transparent)
         {
@@ -312,9 +447,8 @@ public static class RoomDrawingAdapter
         var subtitleText = room.IsReference ? (room.ReferenceRoom?.Name ?? string.Empty) : (room.SubTitle ?? string.Empty);
 
         var nameFont = Settings.RoomFontMetadata;
-        var nameColor = room.IsReference
-            ? Settings.Color[CoreColors.SmallText]
-            : (room.RoomNameColor != CoreColor.Transparent ? room.RoomNameColor : Settings.Color[CoreColors.SmallText]);
+        // Legacy Room.cs:912-916: name (and, for reference rooms, subtitle) colour is the room colour or the region text colour.
+        var nameColor = ResolveRoomNameColor(room);
 
         var hasSubtitle = !string.IsNullOrWhiteSpace(subtitleText);
         var subFont = Settings.SubtitleFontMetadata;
@@ -353,50 +487,39 @@ public static class RoomDrawingAdapter
             var subTypeface = subFont.ToTypeface();
             var subBrush = subColor.ToBrush();
 
+            // Legacy TextBlock.Draw wraps only at word boundaries and clips to the box (TextBlock.cs:84-86, 131-205).
+            var splitDashes = Settings.WrapTextAtDashes;
             cache.CachedName = !string.IsNullOrEmpty(nameText)
-                ? new FormattedText(
-                    nameText,
-                    CultureInfo.CurrentCulture,
-                    FlowDirection.LeftToRight,
-                    nameTypeface,
-                    nameFont.Size,
-                    nameBrush)
-                {
-                    TextAlignment = TextAlignment.Center,
-                    MaxTextWidth = textBounds.Width,
-                    MaxTextHeight = textBounds.Height
-                }
+                ? BuildWrappedText(nameText, textBounds.Width, nameTypeface, nameFont.Size, nameBrush, splitDashes)
                 : null;
 
             cache.CachedSubtitle = hasSubtitle
-                ? new FormattedText(
-                    subtitleText,
-                    CultureInfo.CurrentCulture,
-                    FlowDirection.LeftToRight,
-                    subTypeface,
-                    subFont.Size,
-                    subBrush)
-                {
-                    TextAlignment = TextAlignment.Center,
-                    MaxTextWidth = textBounds.Width,
-                    MaxTextHeight = textBounds.Height
-                }
+                ? BuildWrappedText(subtitleText, textBounds.Width, subTypeface, subFont.Size, subBrush, splitDashes)
                 : null;
 
             var totalTextHeight = (cache.CachedName?.Height ?? 0) + (cache.CachedSubtitle?.Height ?? 0);
             cache.CachedStartY = textBounds.Top + Math.Max(0, (textBounds.Height - totalTextHeight) / 2.0);
+            cache.CachedNameX = cache.CachedName != null
+                ? textBounds.Left + (textBounds.Width - cache.CachedName.MaxTextWidth) / 2.0
+                : textBounds.Left;
+            cache.CachedSubtitleX = cache.CachedSubtitle != null
+                ? textBounds.Left + (textBounds.Width - cache.CachedSubtitle.MaxTextWidth) / 2.0
+                : textBounds.Left;
         }
 
         var startY = cache.CachedStartY;
-        if (cache.CachedName != null)
+        using (context.PushClip(new global::Avalonia.Rect(textBounds.Left, textBounds.Top, textBounds.Width, textBounds.Height)))
         {
-            if (TextRenderingGate.IsEnabled) context.DrawText(cache.CachedName, new AvaloniaPoint(textBounds.Left, startY));
-            startY += cache.CachedName.Height;
-        }
+            if (cache.CachedName != null)
+            {
+                if (TextRenderingGate.IsEnabled) context.DrawText(cache.CachedName, new AvaloniaPoint(cache.CachedNameX, startY));
+                startY += cache.CachedName.Height;
+            }
 
-        if (cache.CachedSubtitle != null)
-        {
-            if (TextRenderingGate.IsEnabled) context.DrawText(cache.CachedSubtitle, new AvaloniaPoint(textBounds.Left, startY));
+            if (cache.CachedSubtitle != null)
+            {
+                if (TextRenderingGate.IsEnabled) context.DrawText(cache.CachedSubtitle, new AvaloniaPoint(cache.CachedSubtitleX, startY));
+            }
         }
 
         // Draw Objects List

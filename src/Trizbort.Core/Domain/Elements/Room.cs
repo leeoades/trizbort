@@ -732,7 +732,13 @@ public class Room : Element, ISizeable
 
   public override string GetToolTipFooter()
   {
-    return Region;
+    // Legacy Room.GetToolTipHeader shows the region only when !IsDefaultRegion() (Room.cs:1134, 1563-1566).
+    return IsDefaultRegion() ? string.Empty : Region;
+  }
+
+  private bool IsDefaultRegion()
+  {
+    return string.IsNullOrEmpty(Region) || Region == Misc.Region.DefaultRegion;
   }
 
   public override string GetToolTipHeader()

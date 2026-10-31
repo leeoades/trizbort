@@ -131,7 +131,7 @@ public static class AppCommands
             Group = "4-settings",
             Gestures = new[] { new KeyGesture(InputKey.OemComma, primary | ModifierKeys.Shift) },
             ContextTargets = ContextTargets.Any,
-            ContextOrder = 50, ContextGroup = "5-settings",
+            ContextOrder = 90, ContextGroup = "9-settings",
             ShowInToolbar = true, ToolbarOrder = 120, ToolbarGroup = "4-tools", IconKey = "IconSettings",
             ExecuteAsyncFunc = Run(() => vm!.ShowMapSettingsAsync())
         });
@@ -142,7 +142,7 @@ public static class AppCommands
             MenuPath = "Edit",
             Group = "4-settings",
             ContextTargets = ContextTargets.Any,
-            ContextOrder = 51, ContextGroup = "5-settings",
+            ContextOrder = 91, ContextGroup = "9-settings",
             ExecuteAsyncFunc = Run(() => vm!.ShowMapThemeAsync())
         });
         c.Register(new EditorCommand
@@ -153,7 +153,7 @@ public static class AppCommands
             Group = "4-settings",
             Gestures = new[] { new KeyGesture(InputKey.OemComma, primary) },
             ContextTargets = ContextTargets.Any,
-            ContextOrder = 52, ContextGroup = "5-settings",
+            ContextOrder = 92, ContextGroup = "9-settings",
             ExecuteAsyncFunc = Run(() => vm!.ShowAppSettingsAsync())
         });
 

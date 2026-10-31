@@ -661,26 +661,15 @@ public class Connection : Element
       var bPos = b.Position;
       var bStalkPos = bHasStalk ? b.Port.StalkPosition : bPos;
 
-      if (aHasStalk && bHasStalk && index == 0 && index == VertexList.Count - 2)
-      {
-        var mid = (aStalkPos + bStalkPos) / 2;
-        var aStalkMid = (aPos + aStalkPos) / 2;
-        var bStalkMid = (bPos + bStalkPos) / 2;
-        list.Add(new LineSegment(aPos, aStalkMid));
-        list.Add(new LineSegment(aStalkMid, mid));
-        list.Add(new LineSegment(mid, bStalkMid));
-        list.Add(new LineSegment(bStalkMid, bPos));
-      }
-      else
-      {
-        if (aHasStalk)
-          list.Add(new LineSegment(aPos, aStalkPos));
+      // Same segments as the reference (legacy Connection.GetSegments): stalk, straight line, stalk. An earlier
+      // special case through the stalk midpoints added extra arrowheads and bent routes (issue I-025 R2/R7).
+      if (aHasStalk)
+        list.Add(new LineSegment(aPos, aStalkPos));
 
-        list.Add(new LineSegment(aStalkPos, bStalkPos));
+      list.Add(new LineSegment(aStalkPos, bStalkPos));
 
-        if (bHasStalk)
-          list.Add(new LineSegment(bStalkPos, bPos));
-      }
+      if (bHasStalk)
+        list.Add(new LineSegment(bStalkPos, bPos));
     }
 
     return list;

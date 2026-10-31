@@ -45,7 +45,8 @@ public static class DrawingAdapters
     private static readonly DashStyle _dotStyle = new(new double[] { 1, 2 }, 0);
     private static readonly DashStyle _dashDotStyle = new(new double[] { 4, 2, 1, 2 }, 0);
     private static readonly DashStyle _dashDotDotStyle = new(new double[] { 4, 2, 1, 2, 1, 2 }, 0);
-    private static readonly DashStyle _connectionDashedStyle = new(new double[] { 2, 2 }, 0);
+    // Legacy Palette.DashedLinePen (Palette.cs:55-61) uses DashStyle.Dot, i.e. 1 pen-width on / 1 off (I-025 R3).
+    private static readonly DashStyle _connectionDashedStyle = new(new double[] { 1, 1 }, 0);
 
     public static DashStyle? ToDashStyle(this BorderDashStyle style) => style switch
     {
@@ -81,7 +82,7 @@ public static class DrawingAdapters
         var dashKey = GetDashStyleKey(dashStyle);
         var key = ((uint)c.ToArgb(), thicknessKey, dashKey);
 
-        return _penCache.GetOrAdd(key, _ => new Pen(c.ToBrush(), clampedThickness, dashStyle, PenLineCap.Round, PenLineJoin.Round));
+        return _penCache.GetOrAdd(key, _ => new Pen(c.ToBrush(), clampedThickness, dashStyle, dashStyle == null ? PenLineCap.Round : PenLineCap.Flat, PenLineJoin.Round));
     }
 
     public static Typeface ToTypeface(this ThemeFont font)

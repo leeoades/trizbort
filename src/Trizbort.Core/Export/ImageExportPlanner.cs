@@ -75,7 +75,9 @@ public static class ImageExportPlanner
 
     var elements = subset ?? (IEnumerable<Element>)project.Elements;
     var bounds = PadBounds(UnionBounds(elements), settings);
-    if (bounds == Rect.Empty || bounds.Width <= 0 || bounds.Height <= 0) return plan;
+    // Legacy Canvas.cs:314-317 never rejects a flat extent: it clamps each side to at least MinDimension, so a map
+    // holding only a horizontal or vertical connection (zero margins) still exports (I-025 R8).
+    if (bounds == Rect.Empty || (bounds.Width <= 0 && bounds.Height <= 0)) return plan;
 
     var requested = options.Scale;
     if (requested <= 0)

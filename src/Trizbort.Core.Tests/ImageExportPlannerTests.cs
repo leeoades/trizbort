@@ -65,6 +65,23 @@ public class ImageExportPlannerTests
   }
 
   [Test]
+  public void ConnectionOnlyMap_ZeroMargins_FlatExtentStillExportsAtMinimumThickness()
+  {
+    // I-025 R8; legacy Canvas.cs:314-317 clamps each side to at least 16 rather than rejecting a flat extent.
+    Settings.DocumentSpecificMargins = true;
+    Settings.DocHorizontalMargin = 0;
+    Settings.DocVerticalMargin = 0;
+    _project.Elements.Add(new Connection(_project, new Vertex(new Vector(-100, 64)), new Vertex(new Vector(300, 64))));
+
+    var plan = ImageExportPlanner.Plan(_project, new Selection(), null, new ImageExportOptions { Scale = 1.0 }, Margins(10, 10));
+
+    plan.IsEmpty.ShouldBeFalse();
+    plan.Width.ShouldBe(400);
+    plan.Height.ShouldBe(ImageExportPlanner.MinDimension);
+    plan.Scale.ShouldBe(1.0, 0.001);
+  }
+
+  [Test]
   public void ExplicitScale_IsUsed()
   {
     AddRoom(0, 0);
