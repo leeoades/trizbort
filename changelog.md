@@ -12,7 +12,7 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
-## [0.9.0-beta.1]
+## [0.9.0-beta.1] - 2026-10-31
 
 This is the **first beta of Trizbort Recast**, for testing. It has everything the Windows app has, and more, but it has
 not been used much yet. Keep backups of your maps. The Windows-only Trizbort 2.x is still available from the
@@ -109,5 +109,6 @@ These were added to the Windows app after the fork (versions 2.0 to 2.3) and are
 
 ### Under the hood
 - The map model, editing, automap, exporters and file handling are a separate, UI-free library (`Trizbort.Core`), so
-  the app's behaviour can be tested without a screen. About 1,700 automated tests run on Windows and Linux.
+  the app's behaviour can be tested without a screen. About 1,700 automated tests run on Windows, Linux and macOS
+  for every change, with code coverage recorded.
 - Rendering and exports are checked side by side against the Windows app on 123 test maps.
