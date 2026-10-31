@@ -476,13 +476,21 @@ public class MapCanvasControl : Control
 
     internal StandardCursorType CursorType { get; private set; } = StandardCursorType.Arrow;
 
+    /// <summary>The cursor kind last applied (custom draw-line / move-line cursors map to the nearest standard type in <see cref="CursorType"/>).</summary>
+    internal CursorKind CursorKind { get; private set; } = CursorKind.Default;
+
+    private bool _cursorOnDarkCanvas;
+
     private void UpdateCursor()
     {
-        var type = InputMapper.ToCursor(_interaction?.Adorners.Cursor ?? CursorKind.Default);
-        if (type == CursorType && Cursor != null) return;
+        var kind = _interaction?.Adorners.Cursor ?? CursorKind.Default;
+        var dark = CanvasCursors.IsDark(Settings.Color[CoreColors.Canvas]);
+        if (kind == CursorKind && dark == _cursorOnDarkCanvas && Cursor != null) return;
 
-        CursorType = type;
-        Cursor = new Cursor(type);
+        CursorKind = kind;
+        _cursorOnDarkCanvas = dark;
+        CursorType = InputMapper.ToCursor(kind);
+        Cursor = CanvasCursors.Get(kind, dark);
     }
 
     private void UpdateToolTip()

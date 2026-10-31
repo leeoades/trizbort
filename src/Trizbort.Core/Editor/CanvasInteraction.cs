@@ -689,7 +689,7 @@ public sealed class CanvasInteraction : IDisposable
       return CursorKind.SizeAll;
     if (_mode == CanvasDragMode.MovePort || (_hoverPort != null && _hoverPort is not MoveablePort))
       return CursorKind.DrawLine;
-    if (_hoverPort is MoveablePort) return CursorKind.Hand;
+    if (_hoverPort is MoveablePort) return CursorKind.MoveLine;
     if (_hoverHandle != null)
     {
       switch (_hoverHandle.CompassPoint)

@@ -175,4 +175,13 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - **Decided** 2026-10-31 (Lee): keep Backspace and Primary+Backspace on every platform; shortcut map updated (K047). No code change.
 - Ticket: —
 
-<!-- Next ID: I-021 -->
+## I-021 17 build warnings to clean up
+- Reported: 2026-10-31 by integrator (full rebuild)   OS: all   Category: code quality
+- CA1416 on System.Drawing FontStyle.Bold/Italic in MapSettingsViewModel and DialogViewModelTests (harmless enum values, but
+  noisy on Linux/macOS builds); CS0618 PdfDocumentOpenMode.ReadOnly in PdfExportTests (use Import); CA2024 reader.EndOfStream
+  in async Automap code; CS0219 unused `primary` in CommandCatalogue.View.cs; NUnit1033 in ShortcutMapConformanceTests;
+  CS8604 in two smoke tests. Fix them and consider TreatWarningsAsErrors for src/ so agents catch them.
+- Severity: low     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-022 -->

@@ -41,6 +41,7 @@ internal static class InputMapper
             CursorKind.ResizeNS => StandardCursorType.SizeNorthSouth,
             CursorKind.ResizeEW => StandardCursorType.SizeWestEast,
             CursorKind.DrawLine => StandardCursorType.Cross,
+            CursorKind.MoveLine => StandardCursorType.SizeAll,
             CursorKind.NoMove => StandardCursorType.No,
             _ => StandardCursorType.Arrow
         };

@@ -14,6 +14,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- Canvas cursors converted from the reference .cur files (see Controls/CanvasCursors.cs). -->
+		<AvaloniaResource Include="Assets\**" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="Avalonia" Version="11.3.22" />
 		<PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />

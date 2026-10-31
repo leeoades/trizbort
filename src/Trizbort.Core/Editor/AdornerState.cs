@@ -23,6 +23,8 @@ public enum CursorKind
   ResizeNS,
   ResizeEW,
   DrawLine,
+  /// <summary>Over a movable connection end: the reference's "move line" cursor.</summary>
+  MoveLine,
   NoMove
 }
 

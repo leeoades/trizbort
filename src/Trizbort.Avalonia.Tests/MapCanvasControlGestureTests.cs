@@ -1120,7 +1120,8 @@ public class MapCanvasControlGestureTests
             var endClient = canvas.CanvasToClient(conn.VertexList[1].Position);
             window.MouseMove(endClient);
             canvas.HoverPort.ShouldBeAssignableTo<MoveablePort>();
-            canvas.CursorType.ShouldBe(StandardCursorType.Hand);
+            // Reference "move line" cursor (custom bitmap; nearest standard type is SizeAll).
+            canvas.CursorKind.ShouldBe(Trizbort.Editor.CursorKind.MoveLine);
 
             window.MouseDown(endClient, MouseButton.Left);
             canvas.DragMode.ShouldBe(CanvasDragMode.MovePort);
