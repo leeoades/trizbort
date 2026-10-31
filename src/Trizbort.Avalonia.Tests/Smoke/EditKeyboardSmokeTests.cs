@@ -120,7 +120,7 @@ public class EditKeyboardSmokeTests
             var a = AddRoom(0, 0, "A");
             var b = AddRoom(200, 0, "B");
 
-            window.KeyPressQwerty(PhysicalKey.A, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.A, TestKeys.Primary);
 
             service.SelectedElements.Count.ShouldBe(2);
             service.SelectedElements.ShouldContain(a);
@@ -159,9 +159,9 @@ public class EditKeyboardSmokeTests
             var room = AddRoom(0, 0, "Original");
             service.Select(room);
 
-            window.KeyPressQwerty(PhysicalKey.C, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.C, TestKeys.Primary);
             Dispatcher.UIThread.RunJobs();
-            window.KeyPressQwerty(PhysicalKey.V, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.V, TestKeys.Primary);
             PumpUntil(() => Project.Current.Elements.OfType<Room>().Count() >= 2);
 
             var rooms = Project.Current.Elements.OfType<Room>().ToList();
@@ -277,7 +277,7 @@ public class EditKeyboardSmokeTests
             var room = AddRoom(0, 0);
             service.Select(room);
 
-            window.KeyPressQwerty(PhysicalKey.ArrowRight, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.ArrowRight, TestKeys.Primary);
 
             room.Position.X.ShouldBe(2f, 0.1f);
             room.Position.Y.ShouldBe(0f, 0.1f);
@@ -373,7 +373,7 @@ public class EditKeyboardSmokeTests
         {
             service.SetView(Vector.Zero, 2.0f);
 
-            window.KeyPressQwerty(PhysicalKey.Digit0, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.Digit0, TestKeys.Primary);
 
             service.ZoomFactor.ShouldBe(1.0f, 0.001f);
         }
@@ -395,7 +395,7 @@ public class EditKeyboardSmokeTests
             b1.Region = "South";
             service.Select(a1);
 
-            window.KeyPressQwerty(PhysicalKey.A, RawInputModifiers.Control | RawInputModifiers.Shift);
+            window.KeyPressQwerty(PhysicalKey.A, TestKeys.Primary | RawInputModifiers.Shift);
 
             service.SelectedElements.ShouldContain(a1);
             service.SelectedElements.ShouldContain(a2);

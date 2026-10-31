@@ -322,19 +322,7 @@ public class DrawingAdaptersParityTests
     }
 
     private static (byte B, byte G, byte R, byte A) ReadPixel(global::Avalonia.Media.Imaging.RenderTargetBitmap bmp, int x, int y)
-    {
-        var buf = new byte[4];
-        var handle = System.Runtime.InteropServices.GCHandle.Alloc(buf, System.Runtime.InteropServices.GCHandleType.Pinned);
-        try
-        {
-            bmp.CopyPixels(new PixelRect(x, y, 1, 1), handle.AddrOfPinnedObject(), buf.Length, 4);
-        }
-        finally
-        {
-            handle.Free();
-        }
-        return (buf[0], buf[1], buf[2], buf[3]);
-    }
+        => TestPixels.Read(bmp, x, y);
 
     private static void AssertPixelIsConnectionRed(byte b, byte g, byte r, string because)
     {

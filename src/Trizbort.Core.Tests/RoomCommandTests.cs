@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using NUnit.Framework;
 using Shouldly;
@@ -178,7 +179,9 @@ public class RoomCommandTests : RoomTestBase
   [Test]
   public void StartEndGestures_AreExact()
   {
-    Find(InputKey.F5, ModifierKeys.Primary, CommandScope.Window).Id.ShouldBe("room.setStart");
+    // macOS: Cmd+F5 toggles VoiceOver, so Start Room is Cmd+Shift+F5 there (CommandCatalogue.MacVariants).
+    var startModifiers = OperatingSystem.IsMacOS() ? ModifierKeys.Primary | ModifierKeys.Shift : ModifierKeys.Primary;
+    Find(InputKey.F5, startModifiers, CommandScope.Window).Id.ShouldBe("room.setStart");
     Find(InputKey.F5, ModifierKeys.Shift, CommandScope.Canvas).Id.ShouldBe("room.setEnd");
     // Plain F5 is "run automap to completion" (shortcut-map, K068), enabled only while automapping.
     Find(InputKey.F5, ModifierKeys.None, CommandScope.Canvas).Id.ShouldBe("automap.run");
@@ -226,7 +229,9 @@ public class RoomCommandTests : RoomTestBase
   [Test]
   public void ShapeGestures_AreExact()
   {
-    Find(InputKey.H, ModifierKeys.Primary, CommandScope.Window).Id.ShouldBe("room.shape.square");
+    // macOS: Cmd+H hides the app, so Square is Ctrl+H there (CommandCatalogue.MacVariants).
+    var squareModifiers = OperatingSystem.IsMacOS() ? ModifierKeys.Control : ModifierKeys.Primary;
+    Find(InputKey.H, squareModifiers, CommandScope.Window).Id.ShouldBe("room.shape.square");
     Find(InputKey.E, ModifierKeys.Primary, CommandScope.Window).Id.ShouldBe("room.shape.ellipse");
     Find(InputKey.R, ModifierKeys.Primary, CommandScope.Window).Id.ShouldBe("room.shape.rounded");
     Find(InputKey.D8, ModifierKeys.Primary, CommandScope.Window).Id.ShouldBe("room.shape.octagonal");
@@ -335,7 +340,9 @@ public class RoomCommandTests : RoomTestBase
   public void SwapGestures_AreDistinguishedByExactModifiers()
   {
     Find(InputKey.W, ModifierKeys.None, CommandScope.Canvas).Id.ShouldBe("room.swap.objects");
-    Find(InputKey.W, ModifierKeys.Primary, CommandScope.Window).Id.ShouldBe("room.swap.names");
+    // macOS: Cmd+W closes the window, so Swap Names is Ctrl+W there (CommandCatalogue.MacVariants).
+    var swapNamesModifiers = OperatingSystem.IsMacOS() ? ModifierKeys.Control : ModifierKeys.Primary;
+    Find(InputKey.W, swapNamesModifiers, CommandScope.Window).Id.ShouldBe("room.swap.names");
     Find(InputKey.W, ModifierKeys.Shift, CommandScope.Canvas).Id.ShouldBe("room.swap.formats");
     Find(InputKey.W, ModifierKeys.Alt, CommandScope.Canvas).Id.ShouldBe("room.swap.regions");
     Find(InputKey.W, ModifierKeys.Primary, CommandScope.Canvas).ShouldBeNull();

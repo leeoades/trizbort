@@ -96,20 +96,7 @@ public class DebugRenderingTests
     }
 
     private static (byte B, byte G, byte R, byte A) ReadPixel(RenderTargetBitmap bitmap, int x, int y)
-    {
-        var buffer = new byte[4];
-        var handle = System.Runtime.InteropServices.GCHandle.Alloc(buffer, System.Runtime.InteropServices.GCHandleType.Pinned);
-        try
-        {
-            bitmap.CopyPixels(new PixelRect(x, y, 1, 1), handle.AddrOfPinnedObject(), buffer.Length, 4);
-        }
-        finally
-        {
-            handle.Free();
-        }
-
-        return (buffer[0], buffer[1], buffer[2], buffer[3]);
-    }
+        => TestPixels.Read(bitmap, x, y);
 
     [AvaloniaTest]
     public void ElementRenderingOff_WithoutDebug_StillDrawsRoom()

@@ -514,7 +514,7 @@ public class MapCanvasControlGestureTests
             Project.Current.Elements.Add(room2);
 
             // Ctrl+A
-            window.KeyPressQwerty(PhysicalKey.A, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.A, TestKeys.Primary);
             service.SelectedElements.Count.ShouldBe(2);
 
             // Escape
@@ -1090,7 +1090,7 @@ public class MapCanvasControlGestureTests
             service.ZoomFactor.ShouldBeLessThan(1.0f);
 
             service.Origin = new Vector(100, 100);
-            window.KeyPressQwerty(PhysicalKey.Digit0, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.Digit0, TestKeys.Primary);
             service.ZoomFactor.ShouldBe(1.0f, 0.001f);
             service.Origin.ShouldBe(Vector.Zero);
         }
@@ -1485,11 +1485,11 @@ public class MapCanvasControlGestureTests
             Project.Current.Elements.Add(conn);
             service.Select([roomA, roomB, conn], clearExisting: true);
 
-            window.KeyPressQwerty(PhysicalKey.C, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.C, TestKeys.Primary);
             ReadClipboardText(canvas).ShouldNotBeNullOrWhiteSpace();
             Project.Current.Elements.OfType<Room>().Count().ShouldBe(2);
 
-            window.KeyPressQwerty(PhysicalKey.V, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.V, TestKeys.Primary);
             PumpUntil(() => Project.Current.Elements.OfType<Room>().Count() >= 4);
 
             Project.Current.Elements.OfType<Room>().Count().ShouldBe(4);
@@ -1514,12 +1514,12 @@ public class MapCanvasControlGestureTests
             Project.Current.Elements.Add(room);
             service.Select(room);
 
-            window.KeyPressQwerty(PhysicalKey.X, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.X, TestKeys.Primary);
             PumpUntil(() => ReadClipboardText(canvas) != null && Project.Current.Elements.Count == 0);
             ReadClipboardText(canvas).ShouldNotBeNull().ShouldContain("Cut Me");
             Project.Current.Elements.OfType<Room>().ShouldBeEmpty();
 
-            window.KeyPressQwerty(PhysicalKey.V, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.V, TestKeys.Primary);
             PumpUntil(() => Project.Current.Elements.OfType<Room>().Any());
             var pasted = Project.Current.Elements.OfType<Room>().Single();
             pasted.Name.ShouldBe("Cut Me");

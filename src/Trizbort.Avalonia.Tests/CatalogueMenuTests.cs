@@ -179,7 +179,7 @@ public class CatalogueMenuTests
         window.Show();
         try
         {
-            window.KeyPressQwerty(PhysicalKey.A, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.A, TestKeys.Primary);
             _service.SelectedElements.Count.ShouldBe(2);
         }
         finally

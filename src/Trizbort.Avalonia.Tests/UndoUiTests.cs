@@ -100,7 +100,7 @@ public class UndoUiTests
         var window = ShowWindowWithBindings();
         try
         {
-            window.KeyPressQwerty(PhysicalKey.Z, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.Z, TestKeys.Primary);
 
             RoomCount().ShouldBe(0);
         }
@@ -117,16 +117,20 @@ public class UndoUiTests
         var window = ShowWindowWithBindings();
         try
         {
-            window.KeyPressQwerty(PhysicalKey.Z, RawInputModifiers.Control);
+            window.KeyPressQwerty(PhysicalKey.Z, TestKeys.Primary);
             RoomCount().ShouldBe(0);
 
-            window.KeyPressQwerty(PhysicalKey.Y, RawInputModifiers.Control);
-            RoomCount().ShouldBe(1);
+            // macOS has no Cmd+Y redo (Cmd+Shift+Z only), so the Y step only runs elsewhere.
+            if (!OperatingSystem.IsMacOS())
+            {
+                window.KeyPressQwerty(PhysicalKey.Y, TestKeys.Primary);
+                RoomCount().ShouldBe(1);
 
-            window.KeyPressQwerty(PhysicalKey.Z, RawInputModifiers.Control);
-            RoomCount().ShouldBe(0);
+                window.KeyPressQwerty(PhysicalKey.Z, TestKeys.Primary);
+                RoomCount().ShouldBe(0);
+            }
 
-            window.KeyPressQwerty(PhysicalKey.Z, RawInputModifiers.Control | RawInputModifiers.Shift);
+            window.KeyPressQwerty(PhysicalKey.Z, TestKeys.Primary | RawInputModifiers.Shift);
             RoomCount().ShouldBe(1);
         }
         finally

@@ -42,6 +42,9 @@ public class ElementsAddPerformanceTests
 
     stopwatch.Stop();
     project.Elements.Count.ShouldBe(side * side + 2 * side * (side - 1));
-    stopwatch.Elapsed.TotalSeconds.ShouldBeLessThan(2.0);
+    // Guards against the O(n^3) id allocation fixed in I-009, which made this take minutes. Well under a second on a
+    // desktop PC; GitHub runners with code coverage switched on take nearly 3 s, so allow 4x the 2 s target.
+    TestContext.Out.WriteLine("Grid build: " + stopwatch.Elapsed.TotalMilliseconds + " ms");
+    stopwatch.Elapsed.TotalSeconds.ShouldBeLessThan(2.0 * 4);
   }
 }

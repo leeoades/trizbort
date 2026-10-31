@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using NUnit.Framework;
 using Shouldly;
@@ -123,8 +124,12 @@ public class ViewCommandTests
   {
     var gestures = Command("edit.redo").Gestures;
 
-    gestures.ShouldContain(new KeyGesture(InputKey.Y, ModifierKeys.Primary));
     gestures.ShouldContain(new KeyGesture(InputKey.Z, ModifierKeys.Primary | ModifierKeys.Shift));
+    // macOS: Cmd+Y is History in many apps, so Redo is Cmd+Shift+Z only there (CommandCatalogue.MacVariants).
+    if (OperatingSystem.IsMacOS())
+      gestures.ShouldNotContain(new KeyGesture(InputKey.Y, ModifierKeys.Primary));
+    else
+      gestures.ShouldContain(new KeyGesture(InputKey.Y, ModifierKeys.Primary));
   }
 
   [Test]

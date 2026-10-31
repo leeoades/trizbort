@@ -270,19 +270,7 @@ public class ImageExportTests
     }
 
     private static (byte B, byte G, byte R, byte A) ReadPixel(RenderTargetBitmap bmp, int x, int y)
-    {
-        var buf = new byte[4];
-        var handle = GCHandle.Alloc(buf, GCHandleType.Pinned);
-        try
-        {
-            bmp.CopyPixels(new PixelRect(x, y, 1, 1), handle.AddrOfPinnedObject(), buf.Length, 4);
-        }
-        finally
-        {
-            handle.Free();
-        }
-        return (buf[0], buf[1], buf[2], buf[3]);
-    }
+        => TestPixels.Read(bmp, x, y);
 
     private static Region CloneRegion(Region region)
     {
