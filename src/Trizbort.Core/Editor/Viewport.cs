@@ -15,6 +15,9 @@ public sealed class Viewport
   private const float ZoomFactorStep = 1.25f;
   private const float MicroZoomStep = 0.01f;
 
+  /// <summary>Client pixels a trackpad scroll delta of 1.0 pans the view.</summary>
+  public const float ScrollPanPixelsPerUnit = 40f;
+
   private readonly CanvasTransform _transform = new()
   {
     ViewportWidth = 800,
@@ -113,6 +116,23 @@ public sealed class Viewport
   public void ZoomBy(float factor, Vector clientPoint)
   {
     ZoomTo(_transform.ZoomFactor * factor, clientPoint);
+  }
+
+  /// <summary>
+  ///   Smooth zoom about <paramref name="clientPoint" />: the zoom changes by 1.25 to the power of the delta, which is
+  ///   clamped to +/-1 per event (a whole wheel notch is one step, a 0.1 trackpad tick a tenth of a step).
+  /// </summary>
+  public void ZoomSmooth(double wheelDelta, Vector clientPoint)
+  {
+    if (double.IsNaN(wheelDelta) || wheelDelta == 0) return;
+    var delta = Math.Clamp(wheelDelta, -1.0, 1.0);
+    ZoomBy((float)Math.Pow(ZoomFactorStep, delta), clientPoint);
+  }
+
+  /// <summary>Pan by a trackpad scroll delta; the content follows the fingers (the OS already applies natural direction).</summary>
+  public void ScrollPan(double deltaX, double deltaY)
+  {
+    PanClient(new Vector((float)(-deltaX * ScrollPanPixelsPerUnit), (float)(-deltaY * ScrollPanPixelsPerUnit)));
   }
 
   public void ZoomWheel(int direction, Vector clientPoint, bool micro, bool invertWheel)

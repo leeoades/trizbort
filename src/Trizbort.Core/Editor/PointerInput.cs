@@ -18,5 +18,8 @@ public enum PointerButton
 /// </summary>
 public readonly record struct PointerInput(PointerButton Button, ModifierKeys Modifiers, Vector Client, int ClickCount);
 
-/// <summary>A mouse wheel event; positive <see cref="DeltaY" /> is "away from the user" (zoom in).</summary>
-public readonly record struct WheelInput(float DeltaY, ModifierKeys Modifiers, Vector Client);
+/// <summary>
+///   A mouse wheel or trackpad scroll event; positive <see cref="DeltaY" /> is "away from the user" (zoom in for a
+///   wheel). <see cref="DeltaX" /> is the horizontal scroll (trackpads only) and defaults to 0.
+/// </summary>
+public readonly record struct WheelInput(float DeltaY, ModifierKeys Modifiers, Vector Client, float DeltaX = 0);

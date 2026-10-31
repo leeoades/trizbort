@@ -25,6 +25,9 @@ public sealed class CanvasInteraction : IDisposable
   // A right click that moves no further than this many pixels opens the context menu instead of panning.
   private const float ClickTolerance = 2;
 
+  // A wheel delta further than this from a whole number is treated as a trackpad scroll.
+  private const float WholeNotchTolerance = 0.001f;
+
   private readonly EditorSession _session;
   private readonly HitTester _hit;
 
@@ -347,11 +350,66 @@ public sealed class CanvasInteraction : IDisposable
     Refresh();
   }
 
+  /// <summary>
+  ///   True when a wheel event looks like a trackpad scroll: any horizontal delta, or a vertical delta that is not a
+  ///   whole number of notches.
+  /// </summary>
+  public static bool IsTrackpadLike(WheelInput input)
+  {
+    if (Math.Abs(input.DeltaX) > 0) return true;
+    var y = input.DeltaY;
+    return Math.Abs(y - Math.Round(y)) > WholeNotchTolerance;
+  }
+
   public void OnWheel(WheelInput input)
   {
-    var direction = input.DeltaY > 0 ? 1 : input.DeltaY < 0 ? -1 : 0;
-    _session.Viewport.ZoomWheel(direction, input.Client, IsCtrl(input.Modifiers),
-      ApplicationSettingsController.AppSettings.InvertMouseWheel);
+    var settings = ApplicationSettingsController.AppSettings;
+    var ctrl = IsCtrl(input.Modifiers);
+    var trackpadLike = IsTrackpadLike(input);
+    var mode = settings.ScrollWheelBehavior;
+    var pan = !ctrl && (mode == ScrollWheelMode.AlwaysPan || (mode == ScrollWheelMode.Automatic && trackpadLike));
+
+    if (pan)
+    {
+      _session.Viewport.ScrollPan(input.DeltaX, input.DeltaY);
+    }
+    else if (trackpadLike)
+    {
+      // Fractional delta (Ctrl + trackpad scroll, or "Always zoom"): proportional zoom, no jumps.
+      _session.Viewport.ZoomSmooth(settings.InvertMouseWheel ? -input.DeltaY : input.DeltaY, input.Client);
+    }
+    else
+    {
+      var direction = input.DeltaY > 0 ? 1 : input.DeltaY < 0 ? -1 : 0;
+      _session.Viewport.ZoomWheel(direction, input.Client, ctrl, settings.InvertMouseWheel);
+    }
+
+    _tooltipSuppressed = true;
+    Refresh();
+  }
+
+  /// <summary>
+  ///   A trackpad pinch (magnify) event: <paramref name="magnification" /> is the relative size change (0.05 = 5% bigger).
+  ///   Zooms smoothly about <paramref name="client" />.
+  /// </summary>
+  public void OnMagnify(double magnification, Vector client)
+  {
+    if (double.IsNaN(magnification) || magnification == 0) return;
+    var factor = (float)Math.Clamp(1.0 + magnification, 0.5, 2.0);
+    _session.Viewport.ZoomBy(factor, client);
+    _tooltipSuppressed = true;
+    Refresh();
+  }
+
+  /// <summary>
+  ///   A multi-finger touch gesture step (see <see cref="MultiTouchTracker" />): cancels any gesture the first finger
+  ///   started (nothing is recorded), then pans by the centroid movement and zooms by the spread change about the centroid.
+  /// </summary>
+  public void OnTouchGesture(Vector centroidDelta, float scale, Vector centroid)
+  {
+    Cancel();
+    _session.Viewport.PanClient(new Vector(-centroidDelta.X, -centroidDelta.Y));
+    if (scale > 0 && Math.Abs(scale - 1f) > 0.0001f) _session.Viewport.ZoomBy(scale, centroid);
     _tooltipSuppressed = true;
     Refresh();
   }

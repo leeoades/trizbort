@@ -1,3 +1,4 @@
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Trizbort.Domain.AppSettings;
 
@@ -7,6 +8,10 @@ public partial class AppSettingsViewModel : ViewModelBase
 {
     [ObservableProperty]
     private bool _invertMouseWheel;
+
+    /// <summary>Index of <see cref="ScrollWheelMode" />: 0 Automatic, 1 Always zoom, 2 Always pan.</summary>
+    [ObservableProperty]
+    private int _scrollWheelBehavior;
 
     [ObservableProperty]
     private bool _showFullPathInTitleBar;
@@ -117,6 +122,7 @@ public partial class AppSettingsViewModel : ViewModelBase
     {
         var settings = ApplicationSettingsController.AppSettings;
         InvertMouseWheel = settings.InvertMouseWheel;
+        ScrollWheelBehavior = (int)settings.ScrollWheelBehavior;
         ShowFullPathInTitleBar = settings.ShowFullPathInTitleBar;
         LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
         SpecifyGenMargins = settings.SpecifyGenMargins;
@@ -147,6 +153,9 @@ public partial class AppSettingsViewModel : ViewModelBase
     {
         var settings = ApplicationSettingsController.AppSettings;
         settings.InvertMouseWheel = InvertMouseWheel;
+        settings.ScrollWheelBehavior = Enum.IsDefined(typeof(ScrollWheelMode), ScrollWheelBehavior)
+            ? (ScrollWheelMode)ScrollWheelBehavior
+            : ScrollWheelMode.Automatic;
         settings.ShowFullPathInTitleBar = ShowFullPathInTitleBar;
         settings.LoadLastProjectOnStart = LoadLastProjectOnStart;
         settings.SpecifyGenMargins = SpecifyGenMargins;

@@ -253,6 +253,25 @@ movement (`_panMoved` false) opens the context menu (Properties...). Double-clic
 Room/Connection/MapLabel calls `ShowElementPropertiesAsync`. Space+drag also pans.
 Gesture tests: `MapCanvasControlGestureTests`, `MapCanvasControlSyncTests`.
 
+Scroll, pinch and touch navigation (ticket 131, issue #21). `WheelInput` carries `DeltaX` and `DeltaY`;
+`CanvasInteraction.OnWheel` picks zoom or pan, using `ApplicationSettings.ScrollWheelBehavior`
+(`ScrollWheelMode`: Automatic / AlwaysZoom / AlwaysPan). An event is "trackpad-like" when
+`|DeltaX| > 0` or `DeltaY` is not a whole number (tolerance 0.001); see `CanvasInteraction.IsTrackpadLike`.
+
+| Input | Result |
+|---|---|
+| Mouse wheel (whole notches, Y only) | `Viewport.ZoomWheel`: one 1.25x step per notch about the pointer (`InvertMouseWheel` applies) |
+| Trackpad two-finger scroll (fractional or X delta) | `Viewport.ScrollPan`: content follows the fingers, 40 px per delta unit (`ScrollPanPixelsPerUnit`); `InvertMouseWheel` does not apply |
+| Ctrl + trackpad scroll | `Viewport.ZoomSmooth`: `1.25^delta`, delta clamped to +/-1 per event |
+| Ctrl + mouse wheel | Micro zoom (+/-0.01) |
+| Trackpad pinch | `Gestures.PointerTouchPadGestureMagnifyEvent` to `CanvasInteraction.OnMagnify` (factor `1 + magnification`); on platforms that send pinch as Ctrl + wheel the row above applies |
+| Touch, one finger | Treated as the left mouse button |
+| Touch, two or more fingers | `MultiTouchTracker` (Core) yields centroid delta and spread ratio; `CanvasInteraction.OnTouchGesture` cancels any active gesture (no undo step), then pans and zooms about the centroid. After a second finger lands, touch input is ignored as mouse input until every finger has lifted. |
+
+Settings: Automatic (default) uses the heuristic; Always zoom zooms for every event; Always pan pans
+for every event (Ctrl + scroll still zooms). Already available for pointer-only users: Space +
+left-drag, middle-drag, arrow keys with no selection. Tests: `TrackpadNavigationTests` (Core and Avalonia).
+
 Rendering: `Render` sorts visible elements once (cached) and calls the shared static
 `DrawElements(context, sortedElements, ...)` (Z-order, spatial line index, `DrawRoom`/
 `DrawMapLabel`/`DrawConnection`); adorners (handles, ports, waypoints, marquee) are drawn on top.

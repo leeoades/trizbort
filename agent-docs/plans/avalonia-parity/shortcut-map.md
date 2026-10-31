@@ -16,6 +16,19 @@ Status: Draft 1 (2026-10-30). Inputs: plan `avalonia-parity-review.md` section 1
 
 Mouse-only gestures (wheel zoom, double-click, drag) belong to matrix section G and are not mapped here, except the two pan rows for continuity.
 
+Trackpad and touchscreen gestures (new, issue #21, ticket 131). "Scroll wheel / trackpad scroll" in App Settings > General can force Always zoom or Always pan; Automatic is described here.
+
+| Gesture | Result | Change? |
+|---|---|---|
+| Mouse wheel (whole notches) | Zoom about the pointer, one step per notch | keep |
+| Two-finger trackpad scroll (fractional or horizontal deltas) | Pan in both axes | new, issue #21 |
+| Ctrl + trackpad scroll | Smooth zoom about the pointer, proportional to the delta | new, issue #21 |
+| Trackpad pinch (magnify event, or Ctrl + wheel where the platform sends it) | Smooth zoom about the pointer | new, issue #21 |
+| Ctrl + mouse wheel | Micro zoom (1%) | keep |
+| Touchscreen, one finger | Same as the left mouse button | keep |
+| Touchscreen, two or more fingers | Pan by centroid movement and zoom by spread change; cancels any gesture the first finger started | new, issue #21 |
+| Space + left-drag, middle-drag, arrow keys (no selection) | Pan (already available) | keep |
+
 ## 2. Table
 
 Change values: keep = reference gesture unchanged; modernise = convention replaces the reference gesture; new = no reference gesture; conflict-fix = the gesture changes or is corrected to resolve a clash or an Avalonia bug.

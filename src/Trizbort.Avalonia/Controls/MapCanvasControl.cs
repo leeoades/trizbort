@@ -61,6 +61,9 @@ public class MapCanvasControl : Control
     private EditorSession? _hitSession;
     private EditorSession? _fallbackSession;
     private bool _isSecondaryButtonRelease;
+    private readonly MultiTouchTracker _touches = new();
+    // Set when a second finger lands: the rest of the touch sequence is never a click/drag, until all fingers lift.
+    private bool _touchGestureOwnsInput;
     private Element? _toolTipTarget;
 
     internal CanvasDragMode DragMode => _interaction?.Mode ?? CanvasDragMode.None;
@@ -137,6 +140,7 @@ public class MapCanvasControl : Control
     {
         ClipToBounds = true;
         Focusable = true;
+        AddHandler(Gestures.PointerTouchPadGestureMagnifyEvent, OnTouchPadMagnify);
     }
 
     public new void InvalidateVisual()
@@ -540,6 +544,26 @@ public class MapCanvasControl : Control
         Focus();
 
         var point = e.GetCurrentPoint(this);
+        if (e.Pointer.Type == PointerType.Touch)
+        {
+            _touches.Press(e.Pointer.Id, point.Position.ToVector());
+            if (_touches.IsMultiTouch)
+            {
+                // Second finger: abandon whatever the first finger started (nothing is recorded).
+                _touchGestureOwnsInput = true;
+                Interaction.Cancel();
+                _spatialVersion++;
+                InvalidateVisual();
+                AfterInteraction();
+            }
+
+            if (_touchGestureOwnsInput)
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+
         var button = point.Properties.IsMiddleButtonPressed ? PointerButton.Middle
             : point.Properties.IsRightButtonPressed ? PointerButton.Right
             : PointerButton.Left;
@@ -563,6 +587,18 @@ public class MapCanvasControl : Control
         if (CommandService?.Session?.ShowMouseCoordinates == true)
         {
             InvalidateVisual();
+        }
+
+        if (e.Pointer.Type == PointerType.Touch)
+        {
+            var moved = _touches.Move(e.Pointer.Id, clientPos.ToVector(), out var step);
+            if (moved) Interaction.OnTouchGesture(step.CentroidDelta, step.Scale, step.Centroid);
+            if (moved || _touchGestureOwnsInput)
+            {
+                AfterInteraction();
+                e.Handled = true;
+                return;
+            }
         }
 
         var interaction = Interaction;
@@ -592,6 +628,18 @@ public class MapCanvasControl : Control
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+
+        if (e.Pointer.Type == PointerType.Touch)
+        {
+            _touches.Release(e.Pointer.Id);
+            if (_touchGestureOwnsInput)
+            {
+                // Never a click: ignore the lifts, and re-arm normal input once the last finger is up.
+                if (_touches.Count == 0) _touchGestureOwnsInput = false;
+                e.Handled = true;
+                return;
+            }
+        }
 
         var interaction = Interaction;
         var releasedButton = InputMapper.ToButton(e.GetCurrentPoint(this).Properties.PointerUpdateKind.GetMouseButton());
@@ -626,6 +674,13 @@ public class MapCanvasControl : Control
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
+        // A touch the OS cancels (no release) must not stay "down", or later single taps would look like multi-touch.
+        if (e.Pointer.Type == PointerType.Touch)
+        {
+            _touches.Release(e.Pointer.Id);
+            if (_touches.Count == 0) _touchGestureOwnsInput = false;
+        }
+
         if (_isSecondaryButtonRelease)
         {
             _isSecondaryButtonRelease = false;
@@ -644,7 +699,15 @@ public class MapCanvasControl : Control
     {
         base.OnPointerWheelChanged(e);
 
-        Interaction.OnWheel(new WheelInput((float)e.Delta.Y, InputMapper.ToModifiers(e.KeyModifiers), e.GetPosition(this).ToVector()));
+        Interaction.OnWheel(new WheelInput((float)e.Delta.Y, InputMapper.ToModifiers(e.KeyModifiers),
+            e.GetPosition(this).ToVector(), (float)e.Delta.X));
+        e.Handled = true;
+    }
+
+    private void OnTouchPadMagnify(object? sender, PointerDeltaEventArgs e)
+    {
+        // The magnification is carried in Delta.X (relative size change, e.g. 0.02 = 2% bigger).
+        Interaction.OnMagnify(e.Delta.X, e.GetPosition(this).ToVector());
         e.Handled = true;
     }
 

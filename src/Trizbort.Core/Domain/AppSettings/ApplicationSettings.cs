@@ -28,6 +28,9 @@ public class ApplicationSettings
   public int GenVerticalMargin { get; set; }
   public bool InfiniteScrollBounds { get; set; }
   public bool InvertMouseWheel { get; set; }
+
+  /// <summary>How the scroll wheel / trackpad scroll is interpreted (issue #21). Defaults to Automatic.</summary>
+  public ScrollWheelMode ScrollWheelBehavior { get; set; } = ScrollWheelMode.Automatic;
   public string LastExportAdventuronFileName { get; set; }
   public string LastExportAlanFileName { get; set; }
   public string LastExportHugoFileName { get; set; }
