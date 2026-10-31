@@ -172,6 +172,7 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - `edit.deleteBackspace` binds Backspace and Primary+Backspace everywhere. Harmless (Ctrl+Backspace is unused on the
   canvas), but it differs from the approved map. Decide: keep everywhere, or restrict Primary+Backspace to macOS.
 - Severity: low     Flags: needs-decision
+- **Decided** 2026-10-31 (Lee): keep Backspace and Primary+Backspace on every platform; shortcut map updated (K047). No code change.
 - Ticket: —
 
 <!-- Next ID: I-021 -->

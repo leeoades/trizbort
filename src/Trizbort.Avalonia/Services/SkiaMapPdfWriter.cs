@@ -1,9 +1,15 @@
 using Avalonia.Skia.Helpers;
+using PdfSharp.Drawing;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.Annotations;
+using PdfSharp.Pdf.IO;
 using SkiaSharp;
 using Trizbort.Avalonia.Controls;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Export;
+
+using PdfMetadata = Trizbort.Export.PdfMetadata;
 
 namespace Trizbort.Avalonia.Services;
 
@@ -30,9 +36,56 @@ public sealed class SkiaMapPdfWriter : IMapPdfWriter
             ApplicationSettingsController.AppSettings);
         if (plan.IsEmpty) throw new InvalidOperationException("Cannot export an empty map.");
 
-        using var stream = new FileStream(path, FileMode.Create, FileAccess.Write);
-        Write(project, plan, stream, metadata ?? PdfMetadata.FromProject(project));
+        using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write))
+        {
+            Write(project, plan, stream, metadata ?? PdfMetadata.FromProject(project));
+        }
+
+        AddAnnotations(project, plan, path);
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    ///   Re-opens the PDF at <paramref name="path"/> with PDFsharp and adds one note annotation per room that has a
+    ///   description (ticket 124, as the legacy exporter did). The result replaces the original file.
+    /// </summary>
+    private static void AddAnnotations(Project project, ImageExportPlan plan, string path)
+    {
+        var pageHeight = Math.Min(plan.Height, MaxPageSize);
+        // If the page was shrunk to the PDF size limit, the note rectangles shrink with it.
+        var capFactor = Math.Min(1.0, Math.Min((double)MaxPageSize / plan.Width, (double)MaxPageSize / plan.Height));
+        var entries = PdfAnnotationPlan.Build(project, plan.Bounds, plan.Scale * capFactor, pageHeight);
+        if (entries.Count == 0) return;
+
+        var tempPath = Path.Combine(
+            Path.GetDirectoryName(Path.GetFullPath(path)) ?? ".",
+            Path.GetFileName(path) + "." + Guid.NewGuid().ToString("N") + ".tmp");
+        try
+        {
+            using (var document = PdfReader.Open(path, PdfDocumentOpenMode.Modify))
+            {
+                var page = document.Pages[0];
+                foreach (var entry in entries)
+                {
+                    page.Annotations.Add(new PdfTextAnnotation
+                    {
+                        Contents = entry.Text,
+                        Color = XColors.Orange,
+                        Icon = PdfTextAnnotationIcon.Note,
+                        Open = false,
+                        Rectangle = new PdfRectangle(new XRect(entry.X, entry.Y, entry.Width, entry.Height))
+                    });
+                }
+
+                document.Save(tempPath);
+            }
+
+            File.Move(tempPath, path, true);
+        }
+        finally
+        {
+            if (File.Exists(tempPath)) File.Delete(tempPath);
+        }
     }
 
     /// <summary>Writes the PDF for <paramref name="plan"/> to <paramref name="stream"/>.</summary>

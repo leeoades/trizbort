@@ -38,7 +38,7 @@
         <!-- Third-party notices -->
         <HeaderedContentControl Grid.Row="2" Classes="group" Header="Third-party software" Margin="0,12,0,0">
             <TextBlock Classes="hint"
-                       Text="Avalonia UI, Avalonia Fonts (Inter), CommunityToolkit.Mvvm, Microsoft.Extensions.DependencyInjection, CommandLineParser, Newtonsoft.Json and System.Drawing.Common are used under their own licences (MIT, except the Inter font under the SIL Open Font License 1.1)."/>
+                       Text="Avalonia UI, Avalonia Fonts (Inter), SkiaSharp, PDFsharp (copyright empira Software GmbH), CommunityToolkit.Mvvm, Microsoft.Extensions.DependencyInjection, CommandLineParser, Newtonsoft.Json and System.Drawing.Common are used under their own licences (MIT, including PDFsharp and SkiaSharp, except the Inter font under the SIL Open Font License 1.1)."/>
         </HeaderedContentControl>
 
         <!-- Licence (read-only) -->

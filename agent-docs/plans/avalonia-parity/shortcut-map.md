@@ -59,7 +59,7 @@ Change values: keep = reference gesture unchanged; modernise = convention replac
 | Paste | M026, K043 | Primary+V | Ctrl+V | Primary+V | keep | Universal. | |
 | Copy Color | M025 | Primary+Alt+C | none | Primary+Alt+C | keep | No clash. | |
 | Delete | M028, K046 | Delete | Delete (window and canvas) | Delete | keep | Convention. | |
-| Delete (Backspace alias) | K047 | none | Backspace (canvas) | Backspace (macOS also Cmd+Backspace) | new | macOS users expect Backspace; harmless on Windows. Canvas only, never in a text box. | |
+| Delete (Backspace alias) | K047 | none | Backspace (canvas) | Backspace and Primary+Backspace (all platforms) | new | Not in the reference (it only used Delete). Backspace/Cmd+Backspace is the macOS delete convention; Ctrl+Backspace has no other canvas meaning on Windows/Linux, so it stays on every platform. Canvas only, never in a text box. | approved (Lee, 2026-10-31, I-020) |
 | Add Room at cursor | M030, K008 | R | none (menu and toolbar only) | R | keep | Reference. | |
 | Add Label at cursor | M075, K037 | L | none | L | keep | Reference. | |
 | Rename room | M031 | F2 | none | F2 | keep | Matches the Explorer/Excel convention. | |

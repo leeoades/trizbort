@@ -149,4 +149,10 @@ File > Export > PDF (`file.export.pdf`) writes a single-page vector PDF through 
 `Trizbort.Avalonia/Services/SkiaMapPdfWriter`: `SKDocument.CreatePdf` (SkiaSharp 2.88.9, pinned in the csproj), page =
 `ImageExportPlanner` bounds at 100%, drawn by `MapCanvasControl.RenderMap` through
 `Avalonia.Skia.Helpers.DrawingContextHelper.WrapSkiaCanvas`. Metadata comes from `PdfMetadata.FromProject`.
-Room-description annotations are not included (ticket 124).
+Room-description annotations (ticket 124): after Skia writes the file, `SkiaMapPdfWriter.AddAnnotations` re-opens it with
+the **PDFsharp 6.2.4** NuGet package (`PDFsharp`, MIT, empira Software GmbH; referenced only by `Trizbort.Avalonia`), adds
+one orange `PdfTextAnnotation` (Note icon, closed) per room with a description, saves to a temp file in the same folder and
+replaces the original. This is inside the writer, so File > Export > PDF and Smart Save PDF both get it. Rectangle maths
+is pure Core: `Trizbort.Export.PdfAnnotationPlan.Build(project, mapBounds, scale, pageHeight)` (same formula as legacy
+`MapPdfExporter`: side = min(w,h)/4, centred horizontally unless `SquareCorners`, Y flipped, scaled by the plan scale and
+the 14,400 pt page cap). PDFsharp and SkiaSharp are credited in the About dialog "Third-party software" text.

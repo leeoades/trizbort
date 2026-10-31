@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Avalonia.Headless.NUnit;
 using NUnit.Framework;
+using PdfSharp.Pdf.IO;
 using Shouldly;
 using Trizbort.Avalonia.Services;
 using Trizbort.Domain.Application;
@@ -85,6 +86,56 @@ public class PdfExportTests
     }
 
     [AvaloniaTest]
+    public void WriteAsync_RoomsWithDescriptions_AddNoteAnnotationsInsideThePage()
+    {
+        var project = Project.Current;
+        var first = new Room(project) { Name = "Hall", Position = new CoreVector(0, 0), Size = new CoreVector(64, 48) };
+        first.AddDescription("A grand hall");
+        var second = new Room(project) { Name = "Cellar", Position = new CoreVector(200, 120), Size = new CoreVector(64, 48) };
+        second.AddDescription("A damp cellar");
+        var third = new Room(project) { Name = "Attic", Position = new CoreVector(400, 0), Size = new CoreVector(64, 48) };
+        project.Elements.Add(first);
+        project.Elements.Add(second);
+        project.Elements.Add(third);
+
+        var path = Path.Combine(_folder, "notes.pdf");
+        new SkiaMapPdfWriter().WriteAsync(project, path, PdfMetadata.FromProject(project)).GetAwaiter().GetResult();
+
+        Directory.GetFiles(_folder).Length.ShouldBe(1);
+        using var document = PdfReader.Open(path, PdfDocumentOpenMode.ReadOnly);
+        document.PageCount.ShouldBe(1);
+        var page = document.Pages[0];
+        var notes = new List<string>();
+        for (var i = 0; i < page.Annotations.Count; i++)
+        {
+            var annotation = page.Annotations[i];
+            notes.Add(annotation.Contents);
+            var rectangle = annotation.Rectangle;
+            rectangle.X1.ShouldBeGreaterThanOrEqualTo(0);
+            rectangle.Y1.ShouldBeGreaterThanOrEqualTo(0);
+            rectangle.X2.ShouldBeLessThanOrEqualTo(page.MediaBox.Width + 0.01);
+            rectangle.Y2.ShouldBeLessThanOrEqualTo(page.MediaBox.Height + 0.01);
+        }
+
+        notes.Count.ShouldBe(2);
+        notes.ShouldContain("A grand hall");
+        notes.ShouldContain("A damp cellar");
+    }
+
+    [AvaloniaTest]
+    public void WriteAsync_NoDescriptions_AddsNoAnnotations()
+    {
+        var project = Project.Current;
+        project.Elements.Add(new Room(project) { Name = "Hall", Position = new CoreVector(0, 0), Size = new CoreVector(64, 48) });
+
+        var path = Path.Combine(_folder, "plain.pdf");
+        new SkiaMapPdfWriter().WriteAsync(project, path, PdfMetadata.FromProject(project)).GetAwaiter().GetResult();
+
+        using var document = PdfReader.Open(path, PdfDocumentOpenMode.ReadOnly);
+        document.Pages[0].Annotations.Count.ShouldBe(0);
+    }
+
+    [AvaloniaTest]
     public void WriteAsync_EmptyMap_Throws()
     {
         var path = Path.Combine(_folder, "empty.pdf");
@@ -111,5 +162,21 @@ public class PdfExportTests
         new MapLoader(Project.Current).LoadMap(sample!).ShouldBeTrue();
         Directory.CreateDirectory(root!);
         await new SkiaMapPdfWriter().WriteAsync(Project.Current, Path.Combine(root!, "sample-zork.pdf"), PdfMetadata.FromProject(Project.Current));
+
+        // A map with room descriptions, so the PDF also carries the orange note annotations (ticket 124).
+        var spiral = Path.Combine(Path.GetDirectoryName(sample!)!, "spiral.trizbort");
+        var withDescriptions = new Project();
+        var previous = Project.Current;
+        Project.Current = withDescriptions;
+        try
+        {
+            new MapLoader(withDescriptions).LoadMap(spiral).ShouldBeTrue();
+            await new SkiaMapPdfWriter().WriteAsync(withDescriptions, Path.Combine(root!, "sample-spiral.pdf"), PdfMetadata.FromProject(withDescriptions));
+        }
+        finally
+        {
+            Project.Current = previous;
+            withDescriptions.Dispose();
+        }
     }
 }

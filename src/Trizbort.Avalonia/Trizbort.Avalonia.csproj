@@ -20,6 +20,9 @@
 		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.22" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.22" />
 		<PackageReference Include="SkiaSharp" Version="2.88.9" />
+		<PackageReference Include="PDFsharp" Version="6.2.4" />
+		<!-- PDFsharp 6.2.4 pulls in System.Security.Cryptography.Pkcs 8.0.1 (known vulnerabilities, e.g. GHSA-846f-f764-76mx); pin a patched version. -->
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
 	</ItemGroup>
