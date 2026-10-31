@@ -124,7 +124,7 @@ public static class OpenFromUrl
     project.FileName = url;
     project.IsDirty = false;
     session.ReplaceProject(project);
-    session.Undo.Clear();
+    session.OnMapLoaded();
     recordOpened?.Invoke(url);
     return true;
   }

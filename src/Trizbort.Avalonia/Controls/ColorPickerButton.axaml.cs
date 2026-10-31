@@ -43,7 +43,11 @@ public partial class ColorPickerButton : UserControl
         InitializeComponent();
         if (PickerButton.Flyout != null)
         {
-            PickerButton.Flyout.Opened += (_, _) => _colorAtOpen = SelectedColor;
+            PickerButton.Flyout.Opened += (_, _) =>
+            {
+                _colorAtOpen = SelectedColor;
+                OkButton.Focus(); // keyboard focus inside the flyout so Enter = OK and Esc = Cancel stay in it
+            };
         }
         UpdateVisuals();
     }
@@ -110,6 +114,8 @@ public partial class ColorPickerButton : UserControl
     }
 
     private void OnColorViewChanged(object? sender, ColorChangedEventArgs e) => ApplyColorViewColor(e.NewColor);
+
+    private void OnOkClick(object? sender, RoutedEventArgs e) => PickerButton.Flyout?.Hide();
 
     private void OnCancelClick(object? sender, RoutedEventArgs e)
     {

@@ -439,7 +439,8 @@ public sealed partial class EditorSession
       Style = NewConnection.Style,
       Flow = NewConnection.Flow
     };
-    connection.SetText(NewConnection.Label);
+    // A keypad / Ctrl+arrow connection runs between compass points (never up or down), so it carries no end text
+    // even when an Up / Down / In / Out label was chosen earlier as the default for connections drawn by hand (I-029).
     Project.Elements.Add(connection);
     return connection;
   }

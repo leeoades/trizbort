@@ -96,7 +96,7 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
             {
                 project.FileName = filePath;
                 Project.Current = project;
-                _commandService?.Session.Undo.Clear();
+                _commandService?.Session.OnMapLoaded();
                 RecordProjectOpened(filePath);
                 return true;
             }
@@ -127,7 +127,7 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
             {
                 project.FileName = path;
                 Project.Current = project;
-                _commandService?.Session.Undo.Clear();
+                _commandService?.Session.OnMapLoaded();
                 RecordProjectOpened(path);
                 return true;
             }
@@ -156,6 +156,7 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
         var originalFileName = currentProject.FileName;
         var filePath = originalFileName;
         var pickedPath = filePath;
+        var viaPicker = false;
 
         // A map opened from the web has a URL as its name: Save redirects to Save As.
         if (saveAs || string.IsNullOrEmpty(filePath) || RecentFiles.IsUrl(filePath))
@@ -170,12 +171,14 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
                 DefaultExtension = "trizbort",
                 SuggestedFileName = suggestedName,
                 SuggestedStartLocation = await GetProjectStartFolderAsync(topLevel),
+                ShowOverwritePrompt = true,
                 FileTypeChoices = [TrizbortFileType, FilePickerFileTypes.All]
             });
 
             if (file == null) return false;
             filePath = file.Path.LocalPath;
             pickedPath = filePath;
+            viaPicker = true;
         }
 
         if (!string.Equals(Path.GetExtension(filePath), ".trizbort", StringComparison.Ordinal))
@@ -183,7 +186,7 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
             filePath = Path.ChangeExtension(filePath, ".trizbort");
         }
 
-        if (!string.Equals(filePath, pickedPath, StringComparison.Ordinal) && File.Exists(filePath))
+        if ((!string.Equals(filePath, pickedPath, StringComparison.Ordinal) || (viaPicker && OverwriteGuard.PickerMayNotConfirm)) && File.Exists(filePath))
         {
             var replace = await _dialogService.ShowConfirmationAsync(
                 GetWindow(topLevel),
@@ -283,6 +286,7 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
             SuggestedFileName = suggestedName,
             DefaultExtension = defaultExtension.TrimStart('.'),
             SuggestedStartLocation = startFolder,
+            ShowOverwritePrompt = true,
             FileTypeChoices = filters
         };
         if (preselected != null) options.SuggestedFileType = preselected;
@@ -469,6 +473,7 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
             SuggestedFileName = suggestedName,
             SuggestedStartLocation = startFolder,
             SuggestedFileType = filters[defaultFormat],
+            ShowOverwritePrompt = true,
             FileTypeChoices = [.. ImageFormatOrder(defaultFormat).Select(f => filters[f]), FilePickerFileTypes.All]
         });
 
@@ -478,7 +483,7 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
         var exportPath = ResolveImageExportPath(pickedPath, defaultFormat, out var chosenFormat);
         try
         {
-            if (!string.Equals(exportPath, pickedPath, StringComparison.Ordinal) && File.Exists(exportPath))
+            if ((!string.Equals(exportPath, pickedPath, StringComparison.Ordinal) || OverwriteGuard.PickerMayNotConfirm) && File.Exists(exportPath))
             {
                 var replace = await _dialogService.ShowConfirmationAsync(
                     GetWindow(topLevel),
@@ -576,6 +581,7 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
             SuggestedFileName = suggestedName,
             SuggestedStartLocation = startFolder,
             SuggestedFileType = pdfType,
+            ShowOverwritePrompt = true,
             FileTypeChoices = [pdfType]
         });
         if (file == null) return false;
@@ -586,7 +592,7 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
             : pickedPath + ".pdf";
         try
         {
-            if (!string.Equals(exportPath, pickedPath, StringComparison.Ordinal) && File.Exists(exportPath))
+            if ((!string.Equals(exportPath, pickedPath, StringComparison.Ordinal) || OverwriteGuard.PickerMayNotConfirm) && File.Exists(exportPath))
             {
                 var replace = await _dialogService.ShowConfirmationAsync(
                     GetWindow(topLevel),
@@ -673,10 +679,13 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
             Title = "Export Trizbort Theme",
             DefaultExtension = "trizbort-theme",
             SuggestedFileName = suggestedName,
+            ShowOverwritePrompt = true,
             FileTypeChoices = [ThemeFileType, FilePickerFileTypes.All]
         });
 
-        return file?.Path.LocalPath;
+        if (file == null) return null;
+        var themePath = file.Path.LocalPath;
+        return await OverwriteGuard.ConfirmAsync(_dialogService, GetWindow(topLevel), themePath) ? themePath : null;
     }
 
     public async Task<string?> OpenTranscriptFileAsync(TopLevel? topLevel, string? initialPath = null)

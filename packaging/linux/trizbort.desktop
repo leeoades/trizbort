@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=Trizbort
+Name=Trizbort Recast
+GenericName=Interactive fiction map editor
 Comment=Map editor for interactive fiction
 Exec=trizbort %f
 Icon=trizbort

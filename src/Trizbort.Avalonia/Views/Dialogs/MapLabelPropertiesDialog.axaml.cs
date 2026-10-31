@@ -8,6 +8,7 @@ public partial class MapLabelPropertiesDialog : Window
     public MapLabelPropertiesDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
     }
 
     protected override void OnOpened(EventArgs e)

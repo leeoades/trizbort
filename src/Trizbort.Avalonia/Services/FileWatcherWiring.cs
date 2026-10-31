@@ -21,7 +21,7 @@ public static class FileWatcherWiring
     {
         TrizbortFileWatcher.UIThreadInvoker = action => Dispatcher.UIThread.Post(action);
         TrizbortFileWatcher.ConfirmReloadPromptAsync = dirty =>
-            dialogService.ShowConfirmationAsync(getOwner(), "Trizbort", dirty ? ReloadDirtyMessage : ReloadMessage);
+            dialogService.ShowConfirmationAsync(getOwner(), AppInfo.ProductName, dirty ? ReloadDirtyMessage : ReloadMessage);
         Project.MapReloader = path =>
         {
             Reload(path, dialogService, getOwner, session);
@@ -40,7 +40,7 @@ public static class FileWatcherWiring
             if (!loader.LoadMap(path)) return false;
             project.FileName = path;
             Project.Current = project;
-            session?.Undo.Clear();
+            session?.OnMapLoaded();
             return true;
         }
         catch (Exception ex)

@@ -9,6 +9,7 @@ public partial class MapSettingsDialog : Window
     public MapSettingsDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
     }
 
     private void OnOkClick(object? sender, RoutedEventArgs e)

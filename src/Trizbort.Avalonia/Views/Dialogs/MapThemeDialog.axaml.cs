@@ -12,6 +12,7 @@ public partial class MapThemeDialog : Window
     public MapThemeDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
         DataContextChanged += (_, _) =>
         {
             if (DataContext is MapThemeViewModel vm)

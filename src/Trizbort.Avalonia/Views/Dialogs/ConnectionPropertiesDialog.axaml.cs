@@ -9,6 +9,7 @@ public partial class ConnectionPropertiesDialog : Window
     public ConnectionPropertiesDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
     }
 
     private void OnClearTextClick(object? sender, RoutedEventArgs e)

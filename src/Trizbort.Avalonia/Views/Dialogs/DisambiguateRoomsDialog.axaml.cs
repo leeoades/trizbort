@@ -11,6 +11,7 @@ public partial class DisambiguateRoomsDialog : Window
     public DisambiguateRoomsDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
     }
 
     protected override void OnDataContextChanged(EventArgs e)

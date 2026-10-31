@@ -13,6 +13,7 @@ public partial class AutomapSameDirectionDialog : Window
     public AutomapSameDirectionDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
     }
 
     protected override void OnDataContextChanged(EventArgs e)

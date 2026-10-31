@@ -59,12 +59,15 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         {
             Content = "OK",
             HorizontalAlignment = HorizontalAlignment.Right,
-            Width = 80
+            Width = 80,
+            IsDefault = true,
+            IsCancel = true
         };
         okButton.Click += (_, _) => dialog.Close();
         panel.Children.Add(okButton);
 
         dialog.Content = panel;
+        DialogFocus.Prepare(dialog);
 
         if (owner != null)
         {
@@ -113,7 +116,8 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         var okButton = new Button
         {
             Content = "Yes",
-            Width = 75
+            Width = 75,
+            IsDefault = true
         };
         okButton.Click += (_, _) =>
         {
@@ -124,7 +128,8 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         var cancelButton = new Button
         {
             Content = "No",
-            Width = 75
+            Width = 75,
+            IsCancel = true
         };
         cancelButton.Click += (_, _) =>
         {
@@ -137,6 +142,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         grid.Children.Add(buttonPanel);
 
         dialog.Content = grid;
+        DialogFocus.Prepare(dialog);
 
         if (owner != null)
         {
@@ -184,7 +190,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         };
         Grid.SetRow(buttonPanel, 1);
 
-        var saveButton = new Button { Content = "Save", Width = 80 };
+        var saveButton = new Button { Content = "Save", Width = 80, IsDefault = true };
         saveButton.Click += (_, _) =>
         {
             result = ConfirmationResult.Save;
@@ -198,7 +204,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
             dialog.Close();
         };
 
-        var cancelButton = new Button { Content = "Cancel", Width = 80 };
+        var cancelButton = new Button { Content = "Cancel", Width = 80, IsCancel = true };
         cancelButton.Click += (_, _) =>
         {
             result = ConfirmationResult.Cancel;
@@ -211,6 +217,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         grid.Children.Add(buttonPanel);
 
         dialog.Content = grid;
+        DialogFocus.Prepare(dialog);
 
         if (owner != null)
         {

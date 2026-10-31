@@ -150,3 +150,15 @@ from the specs in `dialogs/Automap.md`.
 
 **Accepted** — see `shortcut-map.md` section 5 for Lee's answers. Policy L4: keep reference gestures unless an obvious modern
 convention exists.
+
+---
+
+## D5 — Product name: Trizbort Recast 0.9
+
+**Accepted** (Lee, 2026-10-31). The Avalonia app is **Trizbort Recast**, version **0.9** until it is ready for release.
+It names its roots: the About box credits Genstein (original) and Jason Lautzenheiser (enhancements) with links, and says
+it is a cross-platform rebuild of Trizbort that opens and saves the same `.trizbort` maps. The name comes from
+`AppInfo.ProductName` (window title, prompts, PDF Creator/Producer) and `<Product>`/`<Version>` in
+`Trizbort.Avalonia.csproj`. Unchanged on purpose: code namespaces and assembly names, the `.trizbort` file format and
+MIME type, and the per-user settings folder (`Trizbort`) so existing settings carry over. "Trizbort" on its own, or
+"the reference", means the WinForms app (v2.3.1-beta.2) in `legacy/`.

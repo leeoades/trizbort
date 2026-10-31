@@ -2,8 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Trizbort.Avalonia.Views.Dialogs.ImageExportOptionsDialog"
         Title="Export Image"
-        Width="360" Height="300"
-        MinWidth="306" MinHeight="255"
+        Width="420" Height="310"
+        MinWidth="357" MinHeight="264"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
@@ -11,7 +11,7 @@
         <HeaderedContentControl Grid.Row="0" Classes="group" Header="Scale">
             <StackPanel Spacing="8">
                 <RadioButton x:Name="ActualSizeRadio" GroupName="Scale" Content="_Actual size (100%)" />
-                <RadioButton x:Name="CurrentZoomRadio" GroupName="Scale" Content="Current _zoom" />
+                <RadioButton x:Name="CurrentZoomRadio" GroupName="Scale" Content="Whole map at current _zoom" ToolTip.Tip="Scales the whole map by the current zoom factor. It does not export only what is visible on screen." />
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <RadioButton x:Name="CustomRadio" GroupName="Scale" Content="C_ustom:" VerticalAlignment="Center" />
                     <NumericUpDown x:Name="CustomPercent" Minimum="1" Maximum="800" Increment="10" FormatString="0"

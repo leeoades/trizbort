@@ -125,7 +125,7 @@ public partial class MainWindowViewModel : ViewModelBase
             project.FileName,
             project.IsDirty,
             ApplicationSettingsController.AppSettings.ShowFullPathInTitleBar,
-            "Trizbort",
+            AppInfo.ProductName,
             _appVersion);
     }
 
@@ -217,7 +217,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var result = await _dialogService.ShowSaveDiscardCancelAsync(
             GetActiveWindow(),
-            "Trizbort",
+            AppInfo.ProductName,
             "Save changes to current map before continuing?");
 
         return result switch

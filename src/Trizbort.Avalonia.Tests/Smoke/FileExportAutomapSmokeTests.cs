@@ -327,7 +327,7 @@ public class FileExportAutomapSmokeTests
     {
         var vm = CreateVm(new RecordingDialogService(), new StubStorageService());
 
-        vm.WindowTitle.ShouldStartWith("Untitled - Trizbort - ");
+        vm.WindowTitle.ShouldStartWith("Untitled - Trizbort Recast - ");
         vm.ElementCount.ShouldStartWith("Rooms: 0 | Connections: 0");
         Project.Current.Elements.Count.ShouldBe(0);
     }
@@ -362,7 +362,7 @@ public class FileExportAutomapSmokeTests
 
         storage.OpenCalls.ShouldBe(1);
         Project.Current.Elements.OfType<Room>().Any().ShouldBeTrue();
-        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort - ");
+        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort Recast - ");
     }
 
     /// <summary>Smoke step 1.3 (reference part): reference title is "&lt;name&gt; - Trizbort - &lt;version&gt;".</summary>
@@ -374,7 +374,7 @@ public class FileExportAutomapSmokeTests
 
         await vm.OpenMapAsync();
 
-        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort - ");
+        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort Recast - ");
     }
 
     /// <summary>Smoke step 1.4: moving a room gives the title a dirty marker.</summary>
@@ -395,7 +395,7 @@ public class FileExportAutomapSmokeTests
 
         room.Position.ShouldNotBe(before);
         Project.Current.IsDirty.ShouldBeTrue();
-        vm.WindowTitle.ShouldContain("basics-1570* - Trizbort - ");
+        vm.WindowTitle.ShouldContain("basics-1570* - Trizbort Recast - ");
     }
 
     /// <summary>Smoke step 1.4b: undoing the move back to the saved state removes the dirty marker again.</summary>
@@ -409,12 +409,12 @@ public class FileExportAutomapSmokeTests
 
         commandService.Select(Project.Current.Elements.OfType<Room>().First());
         commandService.NudgeSelected(new CoreVector(40, 40));
-        vm.WindowTitle.ShouldContain("basics-1570* - Trizbort - ");
+        vm.WindowTitle.ShouldContain("basics-1570* - Trizbort Recast - ");
 
         commandService.Session.PerformUndo();
 
         Project.Current.IsDirty.ShouldBeFalse();
-        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort - ");
+        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort Recast - ");
         vm.WindowTitle.ShouldNotContain("*");
     }
 
@@ -431,7 +431,7 @@ public class FileExportAutomapSmokeTests
         commandService.Select(Project.Current.Elements.OfType<Room>().First());
         commandService.NudgeSelected(new CoreVector(40, 40));
         vm.UpdateState();
-        vm.WindowTitle.ShouldContain("basics-1570* - Trizbort - ");
+        vm.WindowTitle.ShouldContain("basics-1570* - Trizbort Recast - ");
         var writtenBefore = File.GetLastWriteTimeUtc(path);
         await Task.Delay(20);
 
@@ -440,7 +440,7 @@ public class FileExportAutomapSmokeTests
         storage.SaveCalls.ShouldBe(new[] { false });
         storage.SavePickerShown.ShouldBe(0);
         Project.Current.IsDirty.ShouldBeFalse();
-        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort - ");
+        vm.WindowTitle.ShouldStartWith("basics-1570 - Trizbort Recast - ");
         vm.WindowTitle.ShouldNotContain("*");
         File.GetLastWriteTimeUtc(path).ShouldBeGreaterThanOrEqualTo(writtenBefore);
     }
@@ -467,7 +467,7 @@ public class FileExportAutomapSmokeTests
         storage.SaveCalls.ShouldBe(new[] { true });
         storage.SavePickerShown.ShouldBe(1);
         File.Exists(saveAsPath).ShouldBeTrue();
-        vm.WindowTitle.ShouldStartWith("saved-as - Trizbort - ");
+        vm.WindowTitle.ShouldStartWith("saved-as - Trizbort Recast - ");
     }
 
     /// <summary>Smoke step 1.7: dirty map then Ctrl+O prompts Yes/No/Cancel; Cancel keeps the map and the move.</summary>
@@ -490,7 +490,7 @@ public class FileExportAutomapSmokeTests
         await vm.OpenMapAsync();
 
         dialog.SaveDiscardCancelCalls.ShouldBe(1);
-        dialog.LastPromptTitle.ShouldBe("Trizbort");
+        dialog.LastPromptTitle.ShouldBe(AppInfo.ProductName);
         dialog.LastPromptMessage.ShouldContain("current map");
         storage.OpenCalls.ShouldBe(1);
         ReferenceEquals(Project.Current, project).ShouldBeTrue();
@@ -526,7 +526,7 @@ public class FileExportAutomapSmokeTests
             await WaitUntilAsync(() => dialog.ConfirmationCalls > 0, 5);
 
             dialog.ConfirmationCalls.ShouldBeGreaterThan(0);
-            dialog.LastPromptTitle.ShouldBe("Trizbort");
+            dialog.LastPromptTitle.ShouldBe(AppInfo.ProductName);
             dialog.LastPromptMessage.ShouldContain("modified by another program");
         }
         finally

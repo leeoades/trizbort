@@ -13,6 +13,7 @@ public partial class ImageExportOptionsDialog : Window
     public ImageExportOptionsDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
     }
 
     /// <summary>The chosen scale mode (<see cref="ModeActualSize" />, <see cref="ModeCurrentZoom" />, <see cref="ModeCustom" />).</summary>
@@ -44,7 +45,7 @@ public partial class ImageExportOptionsDialog : Window
     /// <summary>Sets the current zoom shown on its radio button and whether there is a selection to export.</summary>
     public void Configure(double zoom, bool hasSelection)
     {
-        CurrentZoomRadio.Content = $"Current _zoom ({zoom:P0})";
+        CurrentZoomRadio.Content = $"Whole map at current _zoom ({zoom:P0})";
         SelectionOnlyCheck.IsEnabled = hasSelection;
         NoSelectionHint.IsVisible = !hasSelection;
     }

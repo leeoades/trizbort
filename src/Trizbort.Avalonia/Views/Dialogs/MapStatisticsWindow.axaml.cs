@@ -2,6 +2,8 @@ using System.Text;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Microsoft.Extensions.DependencyInjection;
+using Trizbort.Avalonia.Services;
 
 namespace Trizbort.Avalonia.Views.Dialogs;
 
@@ -11,6 +13,7 @@ public partial class MapStatisticsWindow : Window
     public MapStatisticsWindow()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
         CopyAction = CopyToClipboardAsync;
     }
 
@@ -45,9 +48,16 @@ public partial class MapStatisticsWindow : Window
             Title = "Save Map Statistics",
             DefaultExtension = "txt",
             SuggestedFileName = "map-statistics.txt",
+            ShowOverwritePrompt = true,
             FileTypeChoices = [FilePickerFileTypes.TextPlain, FilePickerFileTypes.All]
         });
         if (file == null)
+        {
+            return;
+        }
+
+        var dialogService = App.Services?.GetService<IDialogService>();
+        if (!await OverwriteGuard.ConfirmAsync(dialogService, this, file.Path.LocalPath))
         {
             return;
         }

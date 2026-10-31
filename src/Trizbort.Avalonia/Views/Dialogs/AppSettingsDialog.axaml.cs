@@ -8,6 +8,7 @@ public partial class AppSettingsDialog : Window
     public AppSettingsDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
     }
 
     private void OnOkClick(object? sender, RoutedEventArgs e)

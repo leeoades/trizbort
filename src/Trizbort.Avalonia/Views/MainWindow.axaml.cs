@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Avalonia.Controls;
 using Trizbort.Avalonia.Services;
@@ -22,12 +24,37 @@ public partial class MainWindow : Window
         InitializeComponent();
         Closing += OnWindowClosing;
         Opened += OnWindowOpened;
+        AddHandler(InputElement.KeyDownEvent, OnModalKeyGuard, RoutingStrategies.Tunnel);
+        AddHandler(InputElement.KeyDownEvent, OnCancelGestureKey, RoutingStrategies.Tunnel);
         PositionChanged += (_, _) => CaptureNormalBounds();
         PropertyChanged += (_, e) =>
         {
             if (e.Property == ClientSizeProperty) CaptureNormalBounds();
         };
         RestoreGeometry();
+    }
+
+    /// <summary>
+    ///   While a modal dialog is open the main window must not act on keys (some window managers leave the
+    ///   keyboard focus on the owner). Swallow them and bring the dialog forward so it receives the next ones.
+    /// </summary>
+    private void OnModalKeyGuard(object? sender, KeyEventArgs e)
+    {
+        var owned = OwnedWindows;
+        if (owned.Count == 0 || e.Handled) return;
+        e.Handled = true;
+        owned[owned.Count - 1].Activate();
+    }
+
+    /// <summary>
+    ///   Esc during a canvas drag cancels it even when keyboard focus is not on the canvas (a drag started with the
+    ///   pointer must not need a second press to reach the canvas). Runs before any control sees the key.
+    /// </summary>
+    private void OnCancelGestureKey(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || e.Key != Key.Escape) return;
+        var canvas = this.FindControl<MapCanvasControl>("CanvasControl");
+        if (canvas != null && canvas.TryCancelGesture()) e.Handled = true;
     }
 
     private WindowGeometry? _normalGeometry;

@@ -711,6 +711,18 @@ public class MapCanvasControl : Control
         e.Handled = true;
     }
 
+    /// <summary>Cancels a running drag (Esc): restores the map, records nothing. False when no drag is running.</summary>
+    internal bool TryCancelGesture()
+    {
+        if (_interaction == null || !_interaction.IsGestureActive) return false;
+
+        _interaction.Cancel();
+        _spatialVersion++;
+        InvalidateVisual();
+        AfterInteraction();
+        return true;
+    }
+
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
@@ -813,6 +825,8 @@ public class MapCanvasControl : Control
             session,
             target,
             command => CanvasCommandBridge.ContextCommandFor(this, command, worldPos, activeElement));
+        // The menu's Cursor is inherited from the canvas (its placement target), which would show the move / draw-line cursor.
+        menu.Cursor = new Cursor(StandardCursorType.Arrow);
         LastContextMenu = menu;
         menu.Open(this);
     }

@@ -1,6 +1,6 @@
 # File association
 
-Double-clicking a `.trizbort` file should start Trizbort with that file (it is passed as the first argument).
+Double-clicking a `.trizbort` file should start Trizbort Recast with that file (it is passed as the first argument).
 
 ## Linux
 ```

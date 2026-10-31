@@ -9,7 +9,7 @@ using Trizbort.Avalonia.Views.Dialogs;
 
 namespace Trizbort.Avalonia.Tests;
 
-/// <summary>Ticket 073: Tab / Shift+Tab / Enter editing in the Room dialog's Objects box.</summary>
+/// <summary>Ticket 073: Enter editing (Tab moves focus) in the Room dialog's Objects box.</summary>
 [TestFixture]
 [Category("Unit")]
 public class ObjectsBoxTests
@@ -27,32 +27,17 @@ public class ObjectsBoxTests
     }
 
     [AvaloniaTest]
-    public void Tab_IndentsCurrentLine()
+    public void Tab_IsNotInterceptedSoFocusMoves()
     {
         var dialog = ShowDialog("Chest\nPouch");
         try
         {
             var box = dialog.ObjectsBox;
             box.CaretIndex = 8;
-            Press(box, Key.Tab);
-            box.Text.ShouldBe("Chest\n- Pouch");
-        }
-        finally
-        {
-            dialog.Close();
-        }
-    }
-
-    [AvaloniaTest]
-    public void ShiftTab_OutdentsSelectedLines()
-    {
-        var dialog = ShowDialog("Chest\n- Pouch\n- Gem");
-        try
-        {
-            var box = dialog.ObjectsBox;
-            box.SelectAll();
-            Press(box, Key.Tab, KeyModifiers.Shift);
-            box.Text.ShouldBe("Chest\nPouch\nGem");
+            var args = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Tab };
+            box.RaiseEvent(args);
+            box.Text.ShouldBe("Chest\nPouch");
+            box.AcceptsTab.ShouldBeFalse();
         }
         finally
         {
@@ -79,12 +64,20 @@ public class ObjectsBoxTests
     }
 
     [AvaloniaTest]
-    public void ObjectSyntaxHelp_IsCollapsedByDefault()
+    public void ObjectSyntaxHelp_IsClosedByDefault_AndEscClosesOnlyTheHint()
     {
         var dialog = ShowDialog(string.Empty);
         try
         {
-            dialog.ObjectSyntaxExpander.IsExpanded.ShouldBeFalse();
+            dialog.SyntaxPopup.IsOpen.ShouldBeFalse();
+            dialog.SyntaxToggle.IsChecked = true;
+            dialog.SyntaxPopup.IsOpen.ShouldBeTrue();
+
+            var args = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
+            dialog.RaiseEvent(args); // the Objects box sits on a tab that is not selected, so raise on the dialog
+            args.Handled.ShouldBeTrue();
+            dialog.SyntaxPopup.IsOpen.ShouldBeFalse();
+            dialog.IsVisible.ShouldBeTrue();
         }
         finally
         {

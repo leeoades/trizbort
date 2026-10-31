@@ -96,8 +96,8 @@ public sealed class SkiaMapPdfWriter : IMapPdfWriter
             Title = metadata.Title,
             Author = metadata.Author,
             Subject = metadata.Subject,
-            Creator = "Trizbort",
-            Producer = "Trizbort (Skia)"
+            Creator = AppInfo.ProductName,
+            Producer = AppInfo.ProductName + " (Skia, PDFsharp)"
         };
 
         // The plan is already clamped (8192 px), so the page limit is a safeguard rather than an expected case.

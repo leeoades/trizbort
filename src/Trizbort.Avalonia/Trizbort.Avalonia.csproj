@@ -6,6 +6,9 @@
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Trizbort.Avalonia</RootNamespace>
 		<AssemblyName>Trizbort.Avalonia</AssemblyName>
+		<Product>Trizbort Recast</Product>
+		<Version>0.9</Version>
+		<Description>Trizbort Recast: a cross-platform rebuild of the Trizbort interactive fiction map editor.</Description>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>

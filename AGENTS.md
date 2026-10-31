@@ -12,6 +12,7 @@ settings system, restructured controllers, etc.), update the relevant sub-docume
 the same change.
 
 ## Quick facts
+- The Avalonia app is **Trizbort Recast** (v0.9); the WinForms app in `legacy/` is "Trizbort" / the reference. See decision D5 in `agent-docs/plans/avalonia-parity/decisions.md`.
 - Projects:
   - `src/Trizbort.Core/` (`net10.0`): Portable domain logic, automap, geometry, exporters, settings, and persistence without WinForms or GDI+ dependencies. Cross-platform.
   - `src/Trizbort.Core.Tests/` (`net10.0`): Headless cross-platform unit tests. Run with `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`.

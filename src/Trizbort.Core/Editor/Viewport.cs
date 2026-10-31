@@ -36,6 +36,33 @@ public sealed class Viewport
 
   public event EventHandler Changed;
 
+  private Func<IEnumerable<Element>> _fitSource;
+  private bool _fitting;
+
+  /// <summary>
+  ///   Fit the map to the view now, and again whenever the viewport is resized until the view is changed by anything
+  ///   else (pan, zoom, centre). A map opened at start up is loaded before the window has its real size.
+  /// </summary>
+  public void FitToMapAndKeepFitting(Func<IEnumerable<Element>> elements)
+  {
+    if (elements == null) throw new ArgumentNullException(nameof(elements));
+    ApplyFit(elements);
+    _fitSource = elements;
+  }
+
+  private void ApplyFit(Func<IEnumerable<Element>> elements)
+  {
+    _fitting = true;
+    try
+    {
+      FitToMap(elements());
+    }
+    finally
+    {
+      _fitting = false;
+    }
+  }
+
   public Vector CanvasToClient(Vector world)
   {
     return _transform.CanvasToClient(world);
@@ -54,10 +81,12 @@ public sealed class Viewport
     _transform.ViewportWidth = width;
     _transform.ViewportHeight = height;
     RaiseChanged();
+    if (_fitSource != null) ApplyFit(_fitSource);
   }
 
   public void SetView(Vector origin, float zoom)
   {
+    if (!_fitting) _fitSource = null;
     var clamped = Math.Clamp(zoom, MinZoom, MaxZoom);
     if (_transform.Origin == origin && Math.Abs(_transform.ZoomFactor - clamped) <= 0.0001f) return;
 

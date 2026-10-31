@@ -235,30 +235,35 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: interaction
 - Esc needs pressing twice to cancel a room drag or a connection drag
 - Severity: medium     Flags: —
+- **Fixed** 2026-10-31: tunnel-phase Esc handler on the main window cancels a running drag wherever keyboard focus is (MapCanvasControl.TryCancelGesture). Root cause not proven (likely focus not on the canvas on COSMIC) — needs a Linux re-check.
 - Ticket: 133
 
 ## I-028 Selected dotted/dashed connections draw solid, hiding the style change
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: rendering
 - Selected dotted/dashed connections draw solid, hiding the style change
 - Severity: low     Flags: —
+- **Fixed** 2026-10-31: highlight pen keeps the connection dash pattern (ConnectionDrawingAdapter.HighlightPen).
 - Ticket: 133
 
 ## I-029 Ctrl+arrow (add room/connect in a direction) labels every new connection up/down
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: interaction
 - Ctrl+arrow (add room/connect in a direction) labels every new connection up/down
 - Severity: medium     Flags: —
+- **Fixed** 2026-10-31: cause was the sticky new-connection label (Up/Down/In/Out) set earlier and kept across New/Open. Keyboard add/connect now makes unlabelled connections, and the sticky defaults reset on New/Open. Differs from the reference (which applied the sticky label) — user to confirm.
 - Ticket: 133
 
 ## I-030 Map view starts at the top-left on load; reference zooms to fit (Canvas.OnProjectChanged → ZoomToFit)
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: viewport
 - Map view starts at the top-left on load; reference zooms to fit (Canvas.OnProjectChanged → ZoomToFit)
 - Severity: low     Flags: —
+- **Fixed** 2026-10-31: EditorSession.OnMapLoaded fits the map on open/reload, re-fitting on resize until the user pans or zooms.
 - Ticket: 133
 
 ## I-031 Context menus show the canvas cursor (e.g. move/draw-line) instead of the standard arrow
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: interaction
 - Context menus show the canvas cursor (e.g. move/draw-line) instead of the standard arrow
 - Severity: low     Flags: —
+- **Fixed** 2026-10-31: context menus use the arrow cursor.
 - Ticket: 133
 
 ## I-032 Pinch on a Linux touchpad does nothing (touchscreen pinch and Ctrl+two-finger scroll work). Avalonia only repo
@@ -271,41 +276,48 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: dialogs
 - Keys reach the main window while a properties dialog is open (Enter opened a second dialog, Esc did not close it) — seen on COSMIC after Ctrl+Up; dialogs must take focus and the main window must ignore keys while a modal is open
 - Severity: medium     Flags: —
+- **Fixed** 2026-10-31: DialogFocus.Prepare activates dialogs and focuses the first input; main window swallows keys while a modal is open.
 - Ticket: 134
 
 ## I-034 Room dialog Objects box: the syntax hint popup shifts the box and Esc closes the whole dialog instead of the h
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: dialogs
 - Room dialog Objects box: the syntax hint popup shifts the box and Esc closes the whole dialog instead of the hint; Tab-to-indent traps focus — decided (user, 2026-10-31): drop Tab indent, Tab moves focus, users type dashes
 - Severity: medium     Flags: —
+- **Fixed** 2026-10-31: syntax hint is a popup (no layout shift); Esc closes the hint first; Tab indent removed.
 - Ticket: 134
 
 ## I-035 App Settings: tabs cannot be reached from the keyboard; Tab from the last field cycles OK/Cancel/last field in
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: dialogs
 - App Settings: tabs cannot be reached from the keyboard; Tab from the last field cycles OK/Cancel/last field instead of back to the top
 - Severity: low     Flags: —
+- **Fixed** 2026-10-31: tab headers are Tab stops; Tab order wraps top to bottom.
 - Ticket: 134
 
 ## I-036 Colour chooser: text clipped, the More/HSV view too narrow for its controls, only a Cancel button
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: dialogs
 - Colour chooser: text clipped, the More/HSV view too narrow for its controls, only a Cancel button
 - Severity: medium     Flags: —
+- **Fixed** 2026-10-31: colour chooser 340 px wide with OK and Cancel.
 - Ticket: 134
 
 ## I-037 App Settings still labels six working settings "(not active yet)"
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: dialogs
 - App Settings still labels six working settings "(not active yet)"
 - Severity: low     Flags: —
+- **Fixed** 2026-10-31: "(not active yet)" hints removed.
 - Ticket: 134
 
 ## I-038 PDF export overwrote an existing file without asking (Linux/COSMIC portal); make sure every save picker asks b
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: export
 - PDF export overwrote an existing file without asking (Linux/COSMIC portal); make sure every save picker asks before overwriting
 - Severity: medium     Flags: —
+- **Fixed** 2026-10-31: ShowOverwritePrompt on every save picker, plus an in-app confirm on Linux (OverwriteGuard).
 - Ticket: 134
 
 ## I-039 Image export "Current zoom" scales the whole map by the zoom factor (same as the reference) but reads as "expo
 - Reported: 2026-10-31 by user (manual checklist, Linux laptop, COSMIC)   OS: linux   Category: export
 - Image export "Current zoom" scales the whole map by the zoom factor (same as the reference) but reads as "export what is on screen"; relabel
 - Severity: low     Flags: —
+- **Fixed** 2026-10-31: label now "Whole map at current zoom (N%)" with a tooltip.
 - Ticket: 134
 <!-- Next ID: I-040 -->

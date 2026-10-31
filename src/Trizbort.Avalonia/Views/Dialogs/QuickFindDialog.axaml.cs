@@ -16,6 +16,7 @@ public partial class QuickFindDialog : Window
     public QuickFindDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
         Activated += OnWindowActivated;
         Deactivated += OnWindowDeactivated;
     }

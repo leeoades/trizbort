@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Trizbort.Avalonia.Views.AboutDialog"
-        Title="About Trizbort"
+        Title="About Trizbort Recast"
         Width="560" Height="640"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
@@ -12,9 +12,11 @@
 
         <!-- Product header -->
         <StackPanel Grid.Row="0" Spacing="2" HorizontalAlignment="Center">
-            <TextBlock Text="Trizbort" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
+            <TextBlock Text="Trizbort Recast" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
             <TextBlock Text="Interactive Fiction Map Editor" FontSize="14" Opacity="0.8" HorizontalAlignment="Center"/>
-            <TextBlock Text="Modern Cross-Platform Desktop Edition" FontSize="12" Opacity="0.6" HorizontalAlignment="Center"/>
+            <TextBlock FontSize="12" Opacity="0.7" TextWrapping="Wrap" TextAlignment="Center"
+                       MaxWidth="460" HorizontalAlignment="Center"
+                       Text="A cross-platform rebuild of Trizbort, the interactive fiction map editor. It opens and saves the same .trizbort maps."/>
             <TextBlock x:Name="VersionText" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
         </StackPanel>
 
@@ -29,7 +31,7 @@
                 <HyperlinkButton Grid.Row="1" Grid.Column="2" Content="github.com/JasonLautzenheiser/trizbort" Padding="0"
                                  Tag="https://github.com/JasonLautzenheiser/trizbort" Click="OnLinkClick"/>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Further Enhancements by Lee Oades" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Trizbort Recast by Lee Oades" VerticalAlignment="Center"/>
                 <HyperlinkButton Grid.Row="2" Grid.Column="2" Content="github.com/LeeOades/trizbort" Padding="0"
                                  Tag="https://github.com/LeeOades/trizbort" Click="OnLinkClick"/>
             </Grid>

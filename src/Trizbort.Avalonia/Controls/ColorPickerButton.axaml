@@ -12,7 +12,7 @@
     <Button x:Name="PickerButton" MinWidth="110" Height="30" Padding="4,2">
         <Button.Flyout>
             <Flyout Placement="Bottom">
-                <StackPanel x:Name="FlyoutPanel" Width="220" Spacing="8" KeyDown="OnFlyoutKeyDown">
+                <StackPanel x:Name="FlyoutPanel" Width="340" Spacing="8" KeyDown="OnFlyoutKeyDown">
                     <StackPanel.Styles>
                         <Style Selector="WrapPanel > Button">
                             <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
@@ -25,13 +25,13 @@
                     <Button Content="Default / Transparent"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Center"
-                            Height="26"
+                            Height="28"
                             Click="OnTransparentClick" />
 
                     <Separator Margin="0,2" />
 
                     <!-- Preset Palette Grid -->
-                    <WrapPanel Width="220" Margin="0,2">
+                    <WrapPanel Width="340" Margin="0,2">
                         <Button Width="24" Height="24" Margin="2" Background="Black" Click="OnPaletteColorClick" Tag="Black" ToolTip.Tip="Black" />
                         <Button Width="24" Height="24" Margin="2" Background="White" Click="OnPaletteColorClick" Tag="White" ToolTip.Tip="White" />
                         <Button Width="24" Height="24" Margin="2" Background="Gray" Click="OnPaletteColorClick" Tag="Gray" ToolTip.Tip="Gray" />
@@ -66,12 +66,18 @@
                     <ToggleButton x:Name="MoreToggle" Content="More..."
                                   HorizontalAlignment="Stretch"
                                   HorizontalContentAlignment="Center"
-                                  Height="26" />
+                                  Height="28" />
                     <StackPanel IsVisible="{Binding IsChecked, ElementName=MoreToggle}" Spacing="6">
-                        <ColorView x:Name="FullColorView" Width="220" IsAlphaVisible="False"
+                        <ColorView x:Name="FullColorView" Width="340" IsAlphaVisible="False"
                                    IsColorPaletteVisible="False" IsColorSpectrumVisible="True"
                                    ColorChanged="OnColorViewChanged" />
-                        <Button Content="Cancel" HorizontalAlignment="Right" Height="26" Click="OnCancelClick" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                        <Button x:Name="OkButton" Content="OK" MinWidth="80" MinHeight="28"
+                                HorizontalContentAlignment="Center" Click="OnOkClick" />
+                        <Button x:Name="CancelButton" Content="Cancel" MinWidth="80" MinHeight="28"
+                                HorizontalContentAlignment="Center" Click="OnCancelClick" />
                     </StackPanel>
                 </StackPanel>
             </Flyout>

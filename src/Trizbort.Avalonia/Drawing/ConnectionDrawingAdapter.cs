@@ -171,6 +171,28 @@ public static class ConnectionDrawingAdapter
         return connection.GetSegments() ?? new List<CoreLineSegment>();
     }
 
+    /// <summary>
+    ///   The selection / hover highlight pen. It is wider than the line, so a dashed connection gets the same dash
+    ///   pattern in absolute length (Avalonia dashes are multiples of the pen thickness); a solid pen would hide the gaps.
+    /// </summary>
+    internal static IPen HighlightPen(int colorKey, double extraWidth, ConnectionStyle style)
+    {
+        var width = Settings.LineWidth + extraWidth;
+        var dash = style.ToDashStyle();
+        if (dash == null || dash.Dashes == null || dash.Dashes.Count == 0)
+        {
+            return Settings.Color[colorKey].ToPen(width);
+        }
+
+        var ratio = Math.Max(0.5, Settings.LineWidth) / Math.Max(0.5, width);
+        var scaled = new List<double>(dash.Dashes.Count);
+        foreach (var d in dash.Dashes)
+        {
+            scaled.Add(d * ratio);
+        }
+        return Settings.Color[colorKey].ToPen(width, new DashStyle(scaled, dash.Offset));
+    }
+
     public static void DrawConnection(
         this Connection connection,
         AvaloniaDrawingContext context,
@@ -216,12 +238,12 @@ public static class ConnectionDrawingAdapter
 
                     if (isSelected)
                     {
-                        var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(Settings.LineWidth + 1.5);
+                        var selPen = HighlightPen(CoreColors.SelectedLine, 1.5, connection.Style);
                         context.DrawGeometry(null, selPen, curveGeo);
                     }
                     else if (isHover)
                     {
-                        var hoverPen = Settings.Color[CoreColors.HoverLine].ToPen(Settings.LineWidth + 1.0);
+                        var hoverPen = HighlightPen(CoreColors.HoverLine, 1.0, connection.Style);
                         context.DrawGeometry(null, hoverPen, curveGeo);
                     }
                 }
@@ -232,12 +254,12 @@ public static class ConnectionDrawingAdapter
 
                     if (isSelected)
                     {
-                        var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(Settings.LineWidth + 1.5);
+                        var selPen = HighlightPen(CoreColors.SelectedLine, 1.5, connection.Style);
                         context.DrawGeometry(null, selPen, curveGeo);
                     }
                     else if (isHover)
                     {
-                        var hoverPen = Settings.Color[CoreColors.HoverLine].ToPen(Settings.LineWidth + 1.0);
+                        var hoverPen = HighlightPen(CoreColors.HoverLine, 1.0, connection.Style);
                         context.DrawGeometry(null, hoverPen, curveGeo);
                     }
                 }
@@ -311,12 +333,12 @@ public static class ConnectionDrawingAdapter
 
                     if (isSelected)
                     {
-                        var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(Settings.LineWidth + 1.5);
+                        var selPen = HighlightPen(CoreColors.SelectedLine, 1.5, connection.Style);
                         context.DrawGeometry(null, selPen, lineGeo);
                     }
                     else if (isHover)
                     {
-                        var hoverPen = Settings.Color[CoreColors.HoverLine].ToPen(Settings.LineWidth + 1.0);
+                        var hoverPen = HighlightPen(CoreColors.HoverLine, 1.0, connection.Style);
                         context.DrawGeometry(null, hoverPen, lineGeo);
                     }
                 }
@@ -328,12 +350,12 @@ public static class ConnectionDrawingAdapter
 
                     if (isSelected)
                     {
-                        var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(Settings.LineWidth + 1.5);
+                        var selPen = HighlightPen(CoreColors.SelectedLine, 1.5, connection.Style);
                         context.DrawLine(selPen, p1, p2);
                     }
                     else if (isHover)
                     {
-                        var hoverPen = Settings.Color[CoreColors.HoverLine].ToPen(Settings.LineWidth + 1.0);
+                        var hoverPen = HighlightPen(CoreColors.HoverLine, 1.0, connection.Style);
                         context.DrawLine(hoverPen, p1, p2);
                     }
                 }

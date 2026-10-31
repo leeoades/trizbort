@@ -9,6 +9,7 @@ public partial class AutomapSettingsDialog : Window
     public AutomapSettingsDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
     }
 
     private void OnStartClick(object? sender, RoutedEventArgs e)

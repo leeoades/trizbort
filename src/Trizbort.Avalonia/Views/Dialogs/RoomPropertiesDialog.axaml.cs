@@ -13,15 +13,31 @@ public partial class RoomPropertiesDialog : Window
     public RoomPropertiesDialog()
     {
         InitializeComponent();
-        // Tunnel so AcceptsTab / focus traversal does not consume Tab before we see it.
+        DialogFocus.Prepare(this);
+        // Tunnel (and bubble, for events raised on a child) so Esc closes the open syntax hint before Cancel sees it.
+        AddHandler(KeyDownEvent, OnDialogKeyDown, RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
         ObjectsBox.AddHandler(InputElement.KeyDownEvent, OnObjectsKeyDown, RoutingStrategies.Tunnel);
+    }
+
+    private void OnDialogKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && SyntaxToggle.IsChecked == true)
+        {
+            SyntaxToggle.IsChecked = false;
+            e.Handled = true;
+        }
+    }
+
+    private void OnSyntaxToggleChanged(object? sender, RoutedEventArgs e)
+    {
+        SyntaxPopup.IsOpen = SyntaxToggle.IsChecked == true;
     }
 
     private void OnObjectsKeyDown(object? sender, KeyEventArgs e) => HandleObjectsKey(ObjectsBox, e);
 
     /// <summary>
-    ///   Tab / Shift+Tab indent or outdent the selected lines and Enter continues the bullet list, as in the
-    ///   reference dialog. Marks the event handled when it applied an edit.
+    ///   Enter continues the bullet list, as in the reference dialog. Tab is not intercepted (it moves focus; users
+    ///   type the dashes). Marks the event handled when it applied an edit.
     /// </summary>
     internal static void HandleObjectsKey(TextBox box, KeyEventArgs e)
     {
@@ -33,22 +49,14 @@ public partial class RoomPropertiesDialog : Window
         var start = Math.Min(box.SelectionStart, box.SelectionEnd);
         var length = Math.Abs(box.SelectionEnd - box.SelectionStart);
         var text = box.Text ?? string.Empty;
-        ObjectListEditor.EditResult? result = null;
-        if (e.Key == Key.Tab)
+        if (e.Key != Key.Enter || (e.KeyModifiers & KeyModifiers.Shift) != 0)
         {
-            result = ObjectListEditor.ChangeIndent(text, start, length, (e.KeyModifiers & KeyModifiers.Shift) != 0);
-        }
-        else if (e.Key == Key.Enter && (e.KeyModifiers & KeyModifiers.Shift) == 0)
-        {
-            result = ObjectListEditor.NewLine(text, start, length, LineEndingOf(text, box.NewLine));
+            return;
         }
 
+        var result = ObjectListEditor.NewLine(text, start, length, LineEndingOf(text, box.NewLine));
         if (result == null)
         {
-            if (e.Key == Key.Tab)
-            {
-                e.Handled = true; // never insert a tab character or leave the box
-            }
             return;
         }
 

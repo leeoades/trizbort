@@ -199,6 +199,7 @@ public sealed partial class EditorSession : IDisposable
     Project.Current = new Project();
     // A new document starts with no history and counts as saved.
     Undo.Clear();
+    ResetNewConnectionDefaults();
   }
 
   public MapLabel AddMapLabel(Vector? position)

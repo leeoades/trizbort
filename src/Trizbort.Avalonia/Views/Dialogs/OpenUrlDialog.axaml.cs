@@ -13,6 +13,7 @@ public partial class OpenUrlDialog : Window
     public OpenUrlDialog()
     {
         InitializeComponent();
+        DialogFocus.Prepare(this);
     }
 
     /// <summary>The text in the URL box.</summary>

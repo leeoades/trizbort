@@ -193,6 +193,7 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
                 Title = title,
                 DefaultExtension = extension.TrimStart('.'),
                 SuggestedFileName = Path.GetFileName(suggestedPath),
+                ShowOverwritePrompt = true,
                 FileTypeChoices =
                 [
                     new global::Avalonia.Platform.Storage.FilePickerFileType("Log files") { Patterns = ["*" + extension] },
@@ -206,7 +207,14 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
             }
 
             var file = await owner.StorageProvider.SaveFilePickerAsync(options);
-            return file?.Path.LocalPath;
+            if (file == null)
+            {
+                return null;
+            }
+
+            var chosen = file.Path.LocalPath;
+            var guardService = _dialogService ?? App.Services?.GetService<IDialogService>();
+            return await OverwriteGuard.ConfirmAsync(guardService, owner, chosen) ? chosen : null;
         });
     }
 
@@ -291,6 +299,7 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Content = panel
         };
+        DialogFocus.Prepare(dialog);
         ok.Click += (_, _) => dialog.Close(list.SelectedItem as string);
         cancel.Click += (_, _) => dialog.Close(null);
         list.DoubleTapped += (_, _) =>
