@@ -33,6 +33,7 @@ public class ApplicationSettings
   public string LastExportHugoFileName { get; set; }
   public string LastExportImageFileName { get; set; }
   public string LastExportInform6FileName { get; set; }
+  public string LastExportPdfFileName { get; set; }
   public string LastExportInform7FileName { get; set; }
   public string LastExportTadsFileName { get; set; }
   public string LastExportZilFileName { get; set; }

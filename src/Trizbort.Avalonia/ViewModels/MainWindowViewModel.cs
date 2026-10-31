@@ -304,6 +304,13 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public async Task ExportPdfAsync()
+    {
+        var success = await _storageService.ExportPdfAsync(GetActiveTopLevel());
+        if (success) StatusText = "Exported PDF";
+    }
+
+    [RelayCommand]
     public async Task ExportInform7Async()
     {
         var success = await _storageService.ExportCodeAsync(GetActiveTopLevel(), new Inform7Exporter());

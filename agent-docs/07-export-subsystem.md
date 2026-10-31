@@ -143,3 +143,10 @@ word conversion, ZIL's object-word formatting). `Domain\Misc\TextBlock.cs` (word
 dash-splitting controlled by `Settings.WrapTextAtDashes`) exists but is used for on-canvas room/
 connection text rendering, **not** for generated export source — don't assume exporters reuse
 it.
+
+## PDF export (ticket 123)
+File > Export > PDF (`file.export.pdf`) writes a single-page vector PDF through `IMapPdfWriter` (Core) implemented by
+`Trizbort.Avalonia/Services/SkiaMapPdfWriter`: `SKDocument.CreatePdf` (SkiaSharp 2.88.9, pinned in the csproj), page =
+`ImageExportPlanner` bounds at 100%, drawn by `MapCanvasControl.RenderMap` through
+`Avalonia.Skia.Helpers.DrawingContextHelper.WrapSkiaCanvas`. Metadata comes from `PdfMetadata.FromProject`.
+Room-description annotations are not included (ticket 124).

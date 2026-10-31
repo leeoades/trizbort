@@ -535,6 +535,90 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
         }
     }
 
+    /// <summary>File &gt; Export &gt; PDF (ticket 123): single-page vector PDF of the whole map.</summary>
+    public async Task<bool> ExportPdfAsync(TopLevel? topLevel)
+    {
+        if (topLevel == null) return false;
+
+        var currentProject = Project.Current;
+        if (currentProject == null || currentProject.Elements.Count == 0)
+        {
+            await _dialogService.ShowMessageAsync(GetWindow(topLevel), "Export PDF", "Cannot export an empty map.");
+            return false;
+        }
+
+        var settings = ApplicationSettingsController.AppSettings;
+        var remembered = ExportPathMemory.Split(settings.LastExportPdfFileName);
+        var suggestedName = remembered.FileName.Length > 0
+            ? remembered.FileName
+            : string.IsNullOrEmpty(currentProject.Title)
+                ? (string.IsNullOrEmpty(currentProject.FileName) ? "map" : Path.GetFileNameWithoutExtension(currentProject.FileName))
+                : currentProject.Title;
+
+        IStorageFolder? startFolder = null;
+        if (remembered.Folder.Length > 0 && Directory.Exists(remembered.Folder))
+        {
+            try
+            {
+                startFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(remembered.Folder);
+            }
+            catch
+            {
+                // ignore an unusable remembered folder
+            }
+        }
+
+        var pdfType = new FilePickerFileType("PDF Files (*.pdf)") { Patterns = ["*.pdf"] };
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Export PDF",
+            DefaultExtension = "pdf",
+            SuggestedFileName = suggestedName,
+            SuggestedStartLocation = startFolder,
+            SuggestedFileType = pdfType,
+            FileTypeChoices = [pdfType]
+        });
+        if (file == null) return false;
+
+        var pickedPath = file.Path.LocalPath;
+        var exportPath = string.Equals(Path.GetExtension(pickedPath), ".pdf", StringComparison.OrdinalIgnoreCase)
+            ? pickedPath
+            : pickedPath + ".pdf";
+        try
+        {
+            if (!string.Equals(exportPath, pickedPath, StringComparison.Ordinal) && File.Exists(exportPath))
+            {
+                var replace = await _dialogService.ShowConfirmationAsync(
+                    GetWindow(topLevel),
+                    "Confirm Overwrite",
+                    $"'{Path.GetFileName(exportPath)}' already exists. Replace it?");
+                if (!replace) return false;
+            }
+
+            await new SkiaMapPdfWriter().WriteAsync(currentProject, exportPath, PdfMetadata.FromProject(currentProject));
+
+            settings.LastExportPdfFileName = exportPath;
+            try
+            {
+                ApplicationSettingsController.SaveSettings();
+            }
+            catch
+            {
+                // remembering the folder is best effort
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await _dialogService.ShowMessageAsync(
+                GetWindow(topLevel),
+                "Export Error",
+                $"Error exporting PDF to '{Path.GetFileName(exportPath)}':\n{ex.Message}");
+            return false;
+        }
+    }
+
     /// <summary>
     ///   The path an image is written to and the format it is encoded in. The extension decides the format, so the
     ///   bytes always match the name; a missing or unknown extension gets the default format's extension appended.

@@ -19,6 +19,7 @@
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
 		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.22" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.22" />
+		<PackageReference Include="SkiaSharp" Version="2.88.9" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
 	</ItemGroup>

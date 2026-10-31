@@ -13,6 +13,10 @@ public interface IStorageService
     Task<bool> SaveMapAsync(TopLevel? topLevel, bool saveAs = false);
     Task<bool> ExportCodeAsync(TopLevel? topLevel, CodeExporter exporter);
     Task<bool> ExportImageAsync(TopLevel? topLevel);
+
+    /// <summary>File &gt; Export &gt; PDF (ticket 123): picks a file and writes the single-page vector PDF.</summary>
+    Task<bool> ExportPdfAsync(TopLevel? topLevel) => Task.FromResult(false);
+
     Task<string?> OpenThemeFileAsync(TopLevel? topLevel);
     Task<string?> SaveThemeFileAsync(TopLevel? topLevel, string suggestedName);
     Task<string?> OpenTranscriptFileAsync(TopLevel? topLevel, string? initialPath = null);

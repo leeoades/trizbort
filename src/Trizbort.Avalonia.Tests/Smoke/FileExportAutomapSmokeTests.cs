@@ -507,7 +507,7 @@ public class FileExportAutomapSmokeTests
     public void S6_49_ExportMenu_HasOneItemPerLanguage()
     {
         var languageItems = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null).All
-            .Where(c => c.MenuPath == "File/Export" && c.Id != "file.export.png")
+            .Where(c => c.MenuPath == "File/Export" && c.Id != "file.export.png" && c.Id != "file.export.pdf")
             .ToList();
 
         languageItems.Count.ShouldBe(8);

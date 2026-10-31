@@ -95,6 +95,7 @@ public static class AppCommands
 
         // Group is "<group in File menu>/<group in Export submenu>".
         RegisterExport(c, "file.export.png", "_Image...", "2-export/1-image", Run(() => vm!.ExportImageAsync()));
+        RegisterExport(c, "file.export.pdf", "_PDF...", "2-export/1-image", Run(() => vm!.ExportPdfAsync()));
         ExportCommands.Register(
             c,
             language => vm == null ? Task.CompletedTask : RunFileExportAsync(vm, language),

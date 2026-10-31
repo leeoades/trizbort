@@ -3,7 +3,7 @@
 Written 2026-10-30 (T3.1) from the feature matrix, dialog reviews, issues and the accepted decisions D1–D4.
 Each ticket follows the template in `../../avalonia-parity-review.md` §8 and is sized for one agent session.
 
-**Done so far (103):** 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 033, 034, 035, 036, 037, 038, 039, 040, 041, 042, 043, 044, 045, 046, 047, 048, 049, 050, 051, 052, 053, 054, 055, 056, 057, 058, 059, 060, 061, 062, 063, 064, 065, 066, 067, 070, 071, 072, 073, 074, 075, 076, 077, 078, 079, 080, 081, 082, 083, 084, 085, 086, 087, 088, 089, 090, 100, 101, 102, 103, 104, 105, 106, 108, 109, 111, 112, 114, 115, 116, 117, 118, 120, 121, 122, 126, 127, 128 — marked ✅. Remaining: 123 (PDF, needs Lee's engine decision), then 124, 110, 107. Follow-ups are in `../issues.md`.
+**Done so far (104):** 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030, 031, 032, 033, 034, 035, 036, 037, 038, 039, 040, 041, 042, 043, 044, 045, 046, 047, 048, 049, 050, 051, 052, 053, 054, 055, 056, 057, 058, 059, 060, 061, 062, 063, 064, 065, 066, 067, 070, 071, 072, 073, 074, 075, 076, 077, 078, 079, 080, 081, 082, 083, 084, 085, 086, 087, 088, 089, 090, 100, 101, 102, 103, 104, 105, 106, 108, 109, 111, 112, 114, 115, 116, 117, 118, 120, 121, 122, 123, 126, 127, 128 — marked ✅. Remaining: 110 and 107 (unblocked by 123), 124 (PDF annotations: needs Lee's go-ahead for PDFsharp). Follow-ups are in `../issues.md`.
 
 **How to pick one:** take the lowest wave whose dependencies are all done; within a wave, P1 first. Mark a ticket done by
 adding `Status: Done (<commit>)` under its title and updating the matrix rows it lists.
@@ -120,7 +120,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 120 ✅ | [Image export formats (PNG, JPEG, BMP) and default image type](120-image-export-formats.md) | 3 | P2 | M | mid | 100, 118 | E016, E017, E024 |
 | 121 ✅ | [Image export scale and selection-only option](121-image-export-scale-and-selection.md) | 4 | P2 | M | mid | 002, 120 | E018, E019, E022 |
 | 122 ✅ | [Verify and fix image export background and margins](122-image-export-fidelity-background-margins.md) | 4 | P2 | S | mid | 120 | E020, E021 |
-| 123 | [Export PDF (single page, vector, metadata), includes engine decision](123-pdf-export.md) | 5 | P2 | L | mid | 011, 120, 121, 122 | M007, E027, E029 |
+| 123 ✅ | [Export PDF (single page, vector, metadata), includes engine decision](123-pdf-export.md) | 5 | P2 | L | mid | 011, 120, 121, 122 | M007, E027, E029 |
 | 124 | [PDF room-description annotations](124-pdf-room-description-annotations.md) | 6 | P3 | M | mid | 123 | E028 |
 | 126 ✅ | [Automap start/stop/status UX gaps and single-step](126-automap-start-stop-ux-and-single-step.md) | 7 | P2 | M | mid | 009, 010, 011, 012, 055 | E037, E038, E040, E041, M063 |
 | 127 ✅ | [Automap error reporting and recovery](127-automap-error-handling-and-recovery.md) | 4 | P2 | S | mid | 003, 011 | E046–E049 |

@@ -8,6 +8,8 @@ File > Export > PDF writes a single-page vector PDF sized to the map bounds with
 
 ## Decision: PDF engine (Lee to confirm)
 
+**Implemented 2026-10-31 as option A** (Skia PDF, SkiaSharp 2.88.9 pinned): the map is drawn by `MapCanvasControl.RenderMap` inside a throw-away visual rendered onto the PDF page with `Avalonia.Skia.Helpers.DrawingContextHelper.RenderAsync` (vector, fonts embedded; verified on the Zork sample). Annotations (124, PDFsharp) await Lee.
+
 Options compared (E029). None was built or measured here; verify items in step 1 before committing to code.
 
 | | A. Skia PDF (`SKDocument.CreatePdf`) | B. PDFsharp "core" build | C. Hybrid: Skia page + PDFsharp annotations |
