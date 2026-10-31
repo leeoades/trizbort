@@ -184,4 +184,38 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: low     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-022 -->
+## I-022 Status bar room and connection counts stay at 0
+- Reported: 2026-10-31 by integrator (manual run on Windows)   OS: all   Category: behaviour
+- Added two rooms with R: the status bar still read "Rooms: 0 | Connections: 0". The counts only refresh on project change.
+- Severity: low     Flags: —
+- Ticket: 132
+
+## I-023 Room context menu groups are interleaved
+- Reported: 2026-10-31 by integrator (manual run)   OS: all   Category: menu
+- Right-click on a room: "Map Settings…" sits between Toggle Darkness and Start Room, "Map Theme…" between Start Room and
+  End Room, "Application Settings…" after End Room. Commands from different partials share ContextOrder/ContextGroup values.
+  Expected: the reference grouping (room edits, then map/app settings together at the end).
+- Severity: medium     Flags: —
+- Ticket: 132
+
+## I-024 Room tooltip shows "NoRegion" for rooms in the default region
+- Reported: 2026-10-31 by integrator (manual run)   OS: all   Category: tooltip
+- The reference header shows the region only when it is not the default (`GetToolTipHeader`, `!IsDefaultRegion()`).
+- Severity: low     Flags: —
+- Ticket: 132
+
+## I-025 Map rendering differs from the reference (GitHub #22) — found by the export comparison
+- Reported: 2026-10-31 by integrator (scripts/compare, 123 maps, legacy vs new PNG/PDF)   OS: all   Category: render
+- R1 Region text colour not applied: room text in a region keeps the default colour (e.g. dark blue on blue; basics-159x).
+- R2 One-way connections draw several arrowheads (">>>>"); the reference draws one (basics-1591 "1-way from S, to E").
+- R3 Dotted connections are drawn dashed; the reference draws fine dots (spiral, basics).
+- R4 Map labels get a white box and border by default; the reference draws plain text (spiral "Fall to Carriage").
+- R5 Dark-room marker: ignores the map's dark-tab size (dark-tab-48/96) and sits in the wrong corner (top-left vs top-right).
+- R6 Room names wrap inside narrow rooms ("Cav / e"); the reference keeps them on one line (dark-tab-96).
+- R7 Some connection routes differ (spiral Carriage → Mountainside: reference vertical with square corners, new slanted).
+- R8 Maps containing only connections export nothing ("map is empty"); the reference draws them (horizontal/vertical-connector-only).
+- Evidence: run the capture tests and `scripts/compare/compare_exports.py`; report index sorted by score (worst: dark-tab-96 18.5%).
+- Severity: high (visible on every map)     Flags: —
+- Ticket: 132
+
+<!-- Next ID: I-026 -->

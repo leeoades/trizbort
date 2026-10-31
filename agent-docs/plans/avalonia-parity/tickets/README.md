@@ -128,5 +128,6 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 129 ✅ | [Restore Default Map Settings](129-restore-default-map-settings.md) | 5 | P2 | S | mid | 003 | M067 |
 | 130 ✅ | [Room validation indicators on the map and in tooltips](130-room-validation-indicators.md) | 5 | P1 | S | mid | 036, 065 | A011 |
 | 131 ✅ | [Trackpad and touchscreen navigation (GitHub issue #21)](131-trackpad-and-touch-navigation.md) | 6 | P1 | M | mid + strong review | 006, 050, 051 | issue #21 |
+| 132 | [Rendering parity fixes from the export comparison (GitHub #22) + three UI bugs](132-rendering-parity-fixes.md) | 6 | P1 | L | mid + strong review | — | I-022..I-025 |
 
 Totals: 107 tickets — P1 53, P2 41, P3 13. Waves: 1: 6, 2: 13, 3: 17, 4: 11, 5: 36, 6: 18, 7: 5, 8: 1.
