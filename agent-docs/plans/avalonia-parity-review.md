@@ -151,7 +151,7 @@ Phase 4  Implementation     editor-model foundation first, then feature tickets,
        - `legacy.yml`: on push/PR with `paths: legacy/**`, `windows-latest`, set up .NET 8, `dotnet test legacy/Trizbort.Legacy.sln -c Release`.
        - `tests.yml`: `paths-ignore: legacy/**`; matrix `ubuntu-latest` + `windows-latest`; `dotnet test Trizbort.sln -c Release`.
        - `release.yml` → `release-legacy.yml` triggered by tags `legacy-v*`, paths updated to `legacy/src/Trizbort/...` (version stamping,
-         publish). New `release.yml` triggered by tags `v*`: `dotnet publish src/Trizbort.Avalonia -c Release -r win-x64` and `-r linux-x64`
+         publish). New `release.yml` triggered by tags `v*` (since renamed to `recast-v*`, decision D5): `dotnet publish src/Trizbort.Avalonia -c Release -r win-x64` and `-r linux-x64`
          (self-contained), version from project properties.
     6. Verify on Windows: `dotnet test legacy/Trizbort.Legacy.sln -c Debug` (needs the .NET 8 runtime) and `dotnet test Trizbort.sln -c Debug`;
        on Linux: `dotnet test Trizbort.sln`. Record counts in `avalonia-parity/baseline.md`.

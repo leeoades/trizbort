@@ -1,6 +1,6 @@
 Windows Registry Editor Version 5.00
 
-; Per-user (HKCU) association of .trizbort with Trizbort. Edit the exe path below first.
+; Per-user (HKCU) association of .trizbort with Trizbort Recast. Edit the exe path below first.
 [HKEY_CURRENT_USER\Software\Classes\.trizbort]
 @="Trizbort.Map"
 
@@ -8,4 +8,4 @@ Windows Registry Editor Version 5.00
 @="Trizbort map"
 
 [HKEY_CURRENT_USER\Software\Classes\Trizbort.Map\shell\open\command]
-@="\"C:\\Program Files\\Trizbort\\Trizbort.Avalonia.exe\" \"%1\""
+@="\"C:\\Program Files\\Trizbort Recast\\TrizbortRecast.exe\" \"%1\""

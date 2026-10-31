@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 # Legacy hotfix releases. Tag format: legacy-vMAJOR.MINOR.PATCH[.REVISION][-beta.N], e.g. legacy-v2.3.2
-# Changelog headings for legacy releases omit the prefix: ## [2.3.2]
+# Changelog headings in legacy/changelog.md omit the prefix: ## [2.3.2]
 
 jobs:
   release:
@@ -124,7 +124,7 @@ jobs:
             '--generate-notes')
           if ($env:RELEASE_PRERELEASE -eq 'true') {
             $heading = "## [$($env:RELEASE_TAG.Substring(8))]"
-            $changelog = Get-Content 'changelog.md' -Raw
+            $changelog = Get-Content 'legacy\changelog.md' -Raw
             $pattern = '(?ms)^' + [regex]::Escape($heading) + '[^\r\n]*\r?\n(.*?)(?=^## |\z)'
             $notes = [regex]::Match($changelog, $pattern)
             if (-not $notes.Success) { throw "No changelog entry found for $env:RELEASE_TAG." }

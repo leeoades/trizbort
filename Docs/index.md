@@ -133,7 +133,7 @@ Trizbort 2 is a modernised fork of Trizbort 1.7. Your existing maps open as befo
 - **Smarter Room Properties focus** - the dialog opens where you are most likely to type next. See [Editing Rooms](#help_rooms_edit).
 - **.NET 10** - Trizbort now runs on .NET 10 (LTS) and is distributed as a self-contained download.
 
-The full list of changes is in the [changelog](../changelog.md).
+The full list of changes is in the [changelog](../legacy/changelog.md).
 
 <a name="install_2"></a>
 
@@ -1400,7 +1400,7 @@ Authors involved with other changes include Tymian and Matt Watkins. Trizbort 2 
 
 #### Versions
 
-The [changelog](../changelog.md) has the full history. The big changes are listed here.
+The [changelog](../legacy/changelog.md) has the full history. The big changes are listed here.
 
 - 1.5.5: added region and color support to Trizbort. Forked to https://github.com/jasonlautzenheiser/trizbort
 - 1.5.7: largely bug fixes

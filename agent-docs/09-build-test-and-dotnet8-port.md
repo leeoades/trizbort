@@ -233,23 +233,23 @@ and scoped/headless repro harnesses (as described above) instead.
 ## Release process
 
 The legacy ClickOnce distribution (`Trizbort.application` pointing at `trizbort.com`) is dead
-and is **not** produced any more. Releases are built by `.github/workflows/release.yml`:
+and is **not** produced any more. Pushing a tag starts a release; the prefix picks the app:
 
-1. Push the workflow/app changes, then an increasing tag `vMAJOR.MINOR.PATCH[.REVISION]`
-   (e.g. `git tag v1.8.0`, then `git push leeoades v1.8.0`). Beta tags append `-beta.N`
-   with a positive integer, for example `v2.3.0-beta.1`. Other prerelease suffixes are rejected.
-2. The workflow (windows-latest) stamps `AssemblyVersion`/`AssemblyFileVersion` in
-   `src/Trizbort/Properties/AssemblyInfo.cs` from the tag (padded to 4 parts) — the committed
-   version remains the version used for local builds; release stamping is not committed.
-   `AssemblyInformationalVersion` records the full tag version, including the beta suffix.
-3. Runs `dotnet test`, then `dotnet publish` as a self-contained, compressed single-file
-   `win-x64` `Trizbort.exe` (no .NET install required).
-4. Zips it (plus `Trizbort.dll.config` and licence files) as `Trizbort-<version>-win-x64.zip`
-   and creates a GitHub Release with the zip asset and generated notes.
-   Beta ZIP names retain the suffix (e.g. `Trizbort-2.3.0-beta.1-win-x64.zip`); beta releases
-   are marked prerelease, never replace the latest stable release, and include their matching
-   changelog section as testing guidance. A beta can be tagged from an unmerged branch for
-   testing without promoting those changes to `master`.
+| Tag | Workflow | Runner | Assets | Changelog |
+|---|---|---|---|---|
+| `recast-vX.Y.Z[.R][-beta.N]` | `.github/workflows/release.yml` | ubuntu-latest | `TrizbortRecast-<v>-win-x64.zip` (`TrizbortRecast.exe`), `TrizbortRecast-<v>-linux-x64.tar.gz` (`trizbort-recast` plus the `packaging/linux` files) | root `changelog.md` |
+| `legacy-vX.Y.Z[.R][-beta.N]` | `.github/workflows/release-legacy.yml` | windows-latest | `Trizbort-<v>-win-x64.zip` (`Trizbort.exe`) | `legacy/changelog.md` |
+
+The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefixes. Both workflows:
+
+1. Check the tag format (`-beta.N` needs a positive integer; other prerelease suffixes are rejected).
+2. Stamp the version from the tag without committing it (Recast passes `-p:Version` /
+   `-p:InformationalVersion` to `dotnet publish`; legacy rewrites `AssemblyInfo.cs`).
+3. Run the tests, then publish self-contained single-file builds (no .NET install required).
+4. Create a GitHub Release ("Trizbort Recast 0.9.0-beta.1" / "Trizbort (legacy) legacy-v2.3.2").
+   Betas are marked prerelease, never replace the latest stable release, and use their changelog
+   section (heading without the prefix, e.g. `## [0.9.0-beta.1]`) as the notes; the build fails if
+   it is missing. A beta can be tagged from an unmerged branch for testing.
 
 There is no in-app update checker or update manifest. Help → Online Help (F1) links to the
 v2 user guide (`Docs/index.md` on GitHub) and the original v1 help; users download releases

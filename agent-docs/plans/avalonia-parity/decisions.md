@@ -162,3 +162,8 @@ it is a cross-platform rebuild of Trizbort that opens and saves the same `.trizb
 `Trizbort.Avalonia.csproj`. Unchanged on purpose: code namespaces and assembly names, the `.trizbort` file format and
 MIME type, and the per-user settings folder (`Trizbort`) so existing settings carry over. "Trizbort" on its own, or
 "the reference", means the WinForms app (v2.3.1-beta.2) in `legacy/`.
+
+Release tags (Lee, 2026-10-31): both apps use prefixed tags, `recast-v*` for Trizbort Recast and `legacy-v*` for the
+WinForms app. Recast's change log is the root `changelog.md` (changes since Trizbort 1.7.4.1); the WinForms history
+moved to `legacy/changelog.md`. Release downloads are `TrizbortRecast-<version>-<rid>` with `TrizbortRecast.exe` /
+`trizbort-recast`.
