@@ -70,8 +70,13 @@ Key facts:
   **`LegacyMapFileEngine` is the only engine implemented and is used for both load and save**
   despite the "Legacy" name — there is no newer/alternate current engine.
 - `MapSaver`/`MapLoader` only accept the `.trizbort` extension; anything else is rejected.
-- An empty/new local file is treated as a blank map and calls `Settings.Reset()` rather than
-  attempting to parse XML.
+- An empty/new local file is treated as a blank map: reset drawing settings with
+  `Settings.Reset(false)` and clear the supplied project's metadata rather than parsing XML.
+  `MapLoader` dispatches by extension before any file access and leaves empty-file handling
+  to the engine, so public loading succeeds without clearing the old current project's metadata.
+  Unsupported or missing files report failure without resetting the current map's settings.
+  Normal loading also uses `Reset(false)` so resetting settings does not erase newly loaded
+  title/author/description/history. Public `Settings.Reset()` retains new-document behavior.
 - The root element must literally be `<trizbort>`; the `version` attribute feeds
   `Project.SetVersion()` → `Project.CheckDocVersion()`, the hook for any version-specific
   migration behavior (consult that method if you need to introduce a breaking format change —
@@ -81,6 +86,37 @@ Key facts:
 - After opening a *local* file, `Project` installs a `TrizbortFileWatcher`
   (`Domain\Watchers\TrizbortFileWatcher.cs`) that prompts to reload if the file changes on disk
   outside the app (and warns if there are unsaved in-memory changes).
+  This includes zero-length maps and relative paths, resolved to an absolute watcher path.
+  The engine distinguishes existing local files from URL inputs using `File.Exists`, not
+  relative-URI syntax (a plain local filename is also a valid relative URI).
+
+Internal constructors on `LegacyMapFileEngine` accept load-error, version-decision and
+duplicate-start/end-warning callbacks; `Room.Load` has the corresponding internal warning
+overload. `MapLoader` accepts an internal unknown-extension notification callback and optional
+file engine; tests supply the real `LegacyMapFileEngine` with non-interactive callbacks for
+supported files too. This avoids test-runner product versions and modal load-error dialogs. Public
+entry points still show the existing dialogs. `DocumentVersionPolicy.Compare` contains only
+warning classification, preserving the original major/minor/build/**MinorRevision** precedence.
+These seams allow negative/legacy tests without blocking UI.
+
+Saved map versions and `Project.CheckDocVersion` use `typeof(Project).Assembly.GetName().Version`,
+not `Application.ProductVersion` (which describes the entry/test-runner executable and may
+contain a nonnumeric informational build hash). Default load/error/warning dialogs now delegate
+to `UI\UserInteraction`; tests can exercise public save/load paths without visible UI.
+
+Clipboard reconstruction uses `CopyController.PasteConnections` to resolve docks only against
+copied nodes, leaving omitted endpoints free at their translated positions. Door/corner data
+is cloned; Canvas remaps copied room-reference IDs and selects the newly pasted graph. Tests
+exercise DTO JSON round-trips and production paste without reading the Windows clipboard.
+Room references are retained only when their target room is included in the copied selection.
+Otherwise paste clears the reference (including same-map pastes): clipboard data carries no
+source-map identity, so retaining source IDs could bind to unrelated or newly created rooms.
+
+Colour clipboard data keeps the existing `Colors` list of `{ Name, Color }` entries and
+`SecondFillLocation`. `CopyController` uses an explicit, strongly typed mapping of the six
+room colour properties for both capture and `SetRoomColors`, not reflective property access.
+Unknown colour keys are ignored for compatibility; partial lists leave unspecified colours
+alone, and duplicate entries apply in order.
 
 ## Three separate settings systems — don't conflate them
 
@@ -94,7 +130,7 @@ Things worth remembering:
 
 - `ApplicationSettingsController` also knows how to **migrate a legacy settings file**:
   `%LOCALAPPDATA%\Genstein\Trizbort\Settings.xml`. If `appsettings.json` doesn't exist yet but
-  that legacy XML does, it's imported once (`loadLegacyAppSettings()`) and then written out as
+  that legacy XML does, it's imported once (`LoadLegacyAppSettings()`) and then written out as
   the new `appsettings.json`. Don't delete that migration path without a deliberate decision —
   users upgrading from old installs depend on it.
 - `appsettings.json` is written relative to the **current working directory**, not

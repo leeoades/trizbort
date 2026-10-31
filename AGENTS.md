@@ -12,9 +12,28 @@ settings system, restructured controllers, etc.), update the relevant sub-docume
 the same change.
 
 ## Quick facts
-- WinForms, `net8.0-windows`, Windows-only (not cross-platform).
-- Build: `dotnet build Trizbort.sln -c Debug`
-- Test: `dotnet test Trizbort.sln -c Debug`
-- Layout: application and automated-test projects under `src/` (`src/Trizbort/` and
-  `src/Trizbort.Tests/`), manual map fixtures and runners in `tests/manual/`.
-- No undo/redo exists anywhere in the codebase — don't assume one.
+- The Avalonia app is **Trizbort Recast** (v0.9); the WinForms app in `legacy/` is "Trizbort" / the reference. See decision D5 in `agent-docs/plans/avalonia-parity/decisions.md`.
+- Projects:
+  - `src/Trizbort.Core/` (`net10.0`): Portable domain logic, automap, geometry, exporters, settings, and persistence without WinForms or GDI+ dependencies. Cross-platform.
+  - `src/Trizbort.Core.Tests/` (`net10.0`): Headless cross-platform unit tests. Run with `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`.
+  - `legacy/` — the **original WinForms app** (tag `v2.3.1-beta.2`) with its own `legacy/Trizbort.Legacy.sln`
+    (`net8.0-windows`, Windows-only). Used for hotfixes and as the reference for the Avalonia port. Independent of
+    everything under `src/`. Read `legacy/README.md` before changing anything there.
+  - `src/Trizbort.Avalonia/` (`net10.0`): Cross-platform Avalonia UI client (Linux/macOS/Windows).
+  - `src/Trizbort.Avalonia.Tests/` (`net10.0`): Headless Avalonia unit tests. Run with `dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`.
+- Build:
+  - Core only (cross-platform): `dotnet build src/Trizbort.Core/Trizbort.Core.csproj`
+  - New app (cross-platform): `dotnet build Trizbort.sln -c Debug`
+  - Legacy app (Windows): `dotnet build legacy/Trizbort.Legacy.sln -c Debug`
+- Test:
+  - Core tests (cross-platform): `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`
+  - Avalonia tests (cross-platform): `dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj`
+  - New app, all tests (any OS): `dotnet test Trizbort.sln -c Debug`
+  - Legacy app tests (Windows): `dotnet test legacy/Trizbort.Legacy.sln -c Debug`
+- Immediate Commit Rule:
+  - When making a change, once it is fixed up, building, and tests pass, **commit those changes immediately**.
+  - **Do NOT** accumulate a working directory of unrelated changes across different components or domains.
+  - Exclude `.junie/` and user-specific files (`*.DotSettings.user`) from git commits.
+- Layout: new-app projects under `src/` (`Trizbort.Core`, `Trizbort.Core.Tests`, `Trizbort.Avalonia`, `Trizbort.Avalonia.Tests`), legacy app under `legacy/`, manual map fixtures and runners in `tests/manual/` (shared).
+- Avalonia parity work: follow `agent-docs/plans/avalonia-parity-review.md` (one task card per session).
+- Undo/redo: `UndoStack` (Core, `EditorSession.Undo`). All map edits must go through `EditorSession.Execute`/`BeginTransaction` so each is one undo step; keep to the undo performance gate in `UndoPerformanceTests`.

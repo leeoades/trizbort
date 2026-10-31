@@ -1,0 +1,97 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="700"
+        x:Class="Trizbort.Avalonia.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding WindowTitle}"
+        Width="1024" Height="700"
+        MinWidth="640" MinHeight="480"
+        WindowStartupLocation="CenterScreen">
+
+    <DockPanel LastChildFill="True">
+        <!-- Top Menu & Toolbar Area -->
+        <StackPanel DockPanel.Dock="Top">
+            <!-- Menu, toolbar and key bindings are generated from the command catalogue (MainWindow.axaml.cs) -->
+            <Menu x:Name="MainMenu" />
+
+            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="0,0,0,1"
+                    Padding="4,2">
+                <StackPanel x:Name="Toolbar" Orientation="Horizontal" Spacing="2" />
+            </Border>
+        </StackPanel>
+
+        <!-- Bottom Status Bar -->
+        <Border DockPanel.Dock="Bottom"
+                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="8,4"
+                Height="28">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding StatusText}" VerticalAlignment="Center" FontSize="11" />
+                <TextBlock Grid.Column="1" Text=" | " VerticalAlignment="Center" FontSize="11" Opacity="0.5" Margin="4,0" />
+                <TextBlock Grid.Column="2" Text="{Binding ElementCount}" VerticalAlignment="Center" FontSize="11" Opacity="0.8" />
+
+                <!-- Automap Status Indicator -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" Margin="8,0"
+                            IsVisible="{Binding IsAutomapActive}" VerticalAlignment="Center">
+                    <Ellipse Width="8" Height="8" Fill="#4CAF50" />
+                    <TextBlock Text="Automap Running" FontSize="11" FontWeight="SemiBold" Foreground="#4CAF50" />
+                </StackPanel>
+
+                <TextBlock Grid.Column="4" Text="{Binding CursorPositionText}" VerticalAlignment="Center" FontSize="11" Opacity="0.7" Margin="8,0" />
+                <TextBlock Grid.Column="5" Text=" | " VerticalAlignment="Center" FontSize="11" Opacity="0.5" />
+
+                <!-- Zoom Controls -->
+                <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="4" Margin="4,0" VerticalAlignment="Center">
+                    <Button Command="{Binding ZoomOutCommand}" Content="-" Padding="4,0" FontSize="12" MinWidth="20" Height="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                    <Slider Value="{Binding ZoomFactor}" Minimum="0.1" Maximum="10.0" Width="80" Height="20" VerticalAlignment="Center" />
+                    <Button Command="{Binding ZoomInCommand}" Content="+" Padding="4,0" FontSize="12" MinWidth="20" Height="20" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                </StackPanel>
+
+                <TextBlock Grid.Column="7" Text="{Binding ZoomText}" VerticalAlignment="Center" FontSize="11" MinWidth="40" TextAlignment="Right" />
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area / Canvas Container -->
+        <Grid Background="{DynamicResource SystemControlBackgroundAltMediumBrush}">
+            <controls:MapCanvasControl x:Name="CanvasControl"
+                                       CommandService="{Binding CommandService}"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch" />
+
+            <!-- MinimapControl overlay -->
+            <controls:MinimapControl x:Name="Minimap"
+                                     HorizontalAlignment="Right"
+                                     VerticalAlignment="Top"
+                                     Margin="0,10,10,0"
+                                     Width="200"
+                                     Height="130"
+                                     CanvasControl="{Binding #CanvasControl}"
+                                     CommandService="{Binding CommandService}" />
+
+            <!-- Current zoom, bottom-left corner of the canvas -->
+            <TextBlock x:Name="ZoomLabel"
+                       Text="{Binding ZoomText}"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom"
+                       Margin="8,0,0,6"
+                       FontSize="11"
+                       Foreground="Gray"
+                       IsHitTestVisible="False" />
+
+            <!-- AutomapBar overlay -->
+            <controls:AutomapBar VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Stretch"
+                                 IsVisible="{Binding IsAutomapActive}"
+                                 Status="{Binding AutomapStatusText}"
+                                 StopCommand="{Binding StopAutomapCommand}" />
+        </Grid>
+    </DockPanel>
+</Window>

@@ -1,0 +1,65 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Trizbort.Avalonia.Views.AboutDialog"
+        Title="About Trizbort Recast"
+        Width="560" Height="640"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Opened="OnOpened">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="16">
+
+        <!-- Product header -->
+        <StackPanel Grid.Row="0" Spacing="2" HorizontalAlignment="Center">
+            <TextBlock Text="Trizbort Recast" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"/>
+            <TextBlock Text="Interactive Fiction Map Editor" FontSize="14" Opacity="0.8" HorizontalAlignment="Center"/>
+            <TextBlock FontSize="12" Opacity="0.7" TextWrapping="Wrap" TextAlignment="Center"
+                       MaxWidth="460" HorizontalAlignment="Center"
+                       Text="A cross-platform rebuild of Trizbort, the interactive fiction map editor. It opens and saves the same .trizbort maps."/>
+            <TextBlock x:Name="VersionText" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Credits with repository links -->
+        <HeaderedContentControl Grid.Row="1" Classes="group" Header="Credits" Margin="0,12,0,0">
+            <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="6">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Original by Genstein" VerticalAlignment="Center"/>
+                <HyperlinkButton Grid.Row="0" Grid.Column="2" Content="github.com/genstein/trizbort" Padding="0"
+                                 Tag="https://github.com/genstein/trizbort" Click="OnLinkClick"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Enhancements by Jason Lautzenheiser" VerticalAlignment="Center"/>
+                <HyperlinkButton Grid.Row="1" Grid.Column="2" Content="github.com/JasonLautzenheiser/trizbort" Padding="0"
+                                 Tag="https://github.com/JasonLautzenheiser/trizbort" Click="OnLinkClick"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Trizbort Recast by Lee Oades" VerticalAlignment="Center"/>
+                <HyperlinkButton Grid.Row="2" Grid.Column="2" Content="github.com/LeeOades/trizbort" Padding="0"
+                                 Tag="https://github.com/LeeOades/trizbort" Click="OnLinkClick"/>
+            </Grid>
+        </HeaderedContentControl>
+
+        <!-- Third-party notices -->
+        <HeaderedContentControl Grid.Row="2" Classes="group" Header="Third-party software" Margin="0,12,0,0">
+            <TextBlock Classes="hint"
+                       Text="Avalonia UI, Avalonia Fonts (Inter), SkiaSharp, PDFsharp (copyright empira Software GmbH), CommunityToolkit.Mvvm, Microsoft.Extensions.DependencyInjection, CommandLineParser, Newtonsoft.Json and System.Drawing.Common are used under their own licences (MIT, including PDFsharp and SkiaSharp, except the Inter font under the SIL Open Font License 1.1)."/>
+        </HeaderedContentControl>
+
+        <!-- Licence (read-only) -->
+        <HeaderedContentControl Grid.Row="3" Classes="group" Header="Licence" Margin="0,12,0,0">
+            <TextBox x:Name="LicenceBox"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     FontSize="12"
+                     Height="140"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+        </HeaderedContentControl>
+
+        <!-- Link failure message -->
+        <TextBlock x:Name="StatusText" Grid.Row="4" Classes="error" IsVisible="False" Margin="0,8,0,0"/>
+
+        <!-- OK closes on Enter (IsDefault) and Esc (IsCancel) -->
+        <Button x:Name="OkButton" Grid.Row="5" Classes="dialog-button" Content="_OK"
+                HorizontalAlignment="Right" Margin="0,12,0,0"
+                IsDefault="True" IsCancel="True" Click="OnOkClick"/>
+    </Grid>
+</Window>

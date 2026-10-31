@@ -1,0 +1,135 @@
+name: Release (legacy WinForms)
+
+on:
+  push:
+    tags:
+      - 'legacy-v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-legacy-${{ github.ref }}
+  cancel-in-progress: false
+
+# Legacy hotfix releases. Tag format: legacy-vMAJOR.MINOR.PATCH[.REVISION][-beta.N], e.g. legacy-v2.3.2
+# Changelog headings in legacy/changelog.md omit the prefix: ## [2.3.2]
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Determine version from tag
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ($env:RELEASE_TAG -notmatch '^legacy-v(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(-beta\.[1-9]\d*)?$') {
+            throw "Release tag must be legacy-vMAJOR.MINOR.PATCH[.REVISION], optionally followed by -beta.N (N >= 1)."
+          }
+          $prerelease = [bool]$Matches[5]
+          $parts = @($Matches[1], $Matches[2], $Matches[3], $(if ($Matches[4]) { $Matches[4] } else { '0' }))
+          foreach ($part in $parts) {
+            if ([long]$part -gt 65534) { throw "Version components must be between 0 and 65534." }
+          }
+          $version = ($parts | ForEach-Object { [int]$_ }) -join '.'
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "prerelease=$($prerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
+      - name: Stamp assembly version
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $file = 'legacy\src\Trizbort\Properties\AssemblyInfo.cs'
+          $content = Get-Content $file -Raw
+          foreach ($attribute in 'AssemblyVersion', 'AssemblyFileVersion') {
+            $pattern = "(?m)^\[assembly:\s*$attribute\(`"[^`"]*`"\)\]"
+            if ([regex]::Matches($content, $pattern).Count -ne 1) {
+              throw "Expected exactly one $attribute in $file."
+            }
+            $content = $content -replace $pattern, "[assembly: $attribute(`"$env:RELEASE_VERSION`")]"
+          }
+          $content += "`n[assembly: AssemblyInformationalVersion(`"$($env:RELEASE_TAG.Substring(8))`")]`n"
+          Set-Content $file $content -NoNewline -Encoding utf8
+
+      - name: Test
+        run: dotnet test legacy\Trizbort.Legacy.sln -c Release
+
+      - name: Publish
+        run: >-
+          dotnet publish legacy\src\Trizbort\Trizbort.csproj -c Release -r win-x64 -o publish
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none
+
+      - name: Smoke test published app
+        run: |
+          $workDir = Join-Path $env:RUNNER_TEMP 'trizbort-smoke'
+          New-Item -ItemType Directory -Path $workDir -Force | Out-Null
+          $exe = (Resolve-Path 'publish\Trizbort.exe').Path
+          $process = Start-Process $exe -ArgumentList '--exit' -WorkingDirectory $workDir -PassThru
+          if (-not $process.WaitForExit(30000)) {
+            Stop-Process -Id $process.Id
+            throw "Published app did not exit after --exit."
+          }
+          if ($process.ExitCode -ne 0) {
+            throw "Published app exited with code $($process.ExitCode)."
+          }
+
+      - name: Package
+        id: package
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          $exe = 'publish\Trizbort.exe'
+          if ((Get-Item $exe).VersionInfo.FileVersion -ne $env:RELEASE_VERSION) {
+            throw "Published executable version does not match the release tag."
+          }
+          if (Test-Path 'publish\appsettings.json') {
+            throw "User settings must not be included in the release package."
+          }
+          Copy-Item LICENSE.txt, PdfSharp.License.txt -Destination publish
+          $packageVersion = if ($env:RELEASE_PRERELEASE -eq 'true') { $env:RELEASE_TAG.Substring(8) } else { $env:RELEASE_VERSION }
+          $zipName = "Trizbort-$packageVersion-win-x64.zip"
+          Compress-Archive -Path publish\* -DestinationPath $zipName
+          "zip=$zipName" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_REPO: ${{ github.repository }}
+          RELEASE_ZIP: ${{ steps.package.outputs.zip }}
+          RELEASE_PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          $releaseArgs = @('release', 'create', $env:RELEASE_TAG, $env:RELEASE_ZIP,
+            '--repo', $env:RELEASE_REPO, '--verify-tag', '--title', "Trizbort (legacy) $env:RELEASE_TAG",
+            '--generate-notes')
+          if ($env:RELEASE_PRERELEASE -eq 'true') {
+            $heading = "## [$($env:RELEASE_TAG.Substring(8))]"
+            $changelog = Get-Content 'legacy\changelog.md' -Raw
+            $pattern = '(?ms)^' + [regex]::Escape($heading) + '[^\r\n]*\r?\n(.*?)(?=^## |\z)'
+            $notes = [regex]::Match($changelog, $pattern)
+            if (-not $notes.Success) { throw "No changelog entry found for $env:RELEASE_TAG." }
+            Set-Content 'release-notes.md' $notes.Groups[1].Value.Trim() -Encoding utf8
+            $releaseArgs += @('--prerelease', '--latest=false', '--notes-file', 'release-notes.md')
+          }
+          & gh @releaseArgs
+          if ($LASTEXITCODE -ne 0) { throw "GitHub Release creation failed." }

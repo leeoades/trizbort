@@ -1,0 +1,249 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.MapSettingsDialog"
+        x:DataType="vm:MapSettingsViewModel"
+        Title="Map Settings"
+        Width="640" Height="700"
+        MinWidth="544" MinHeight="595"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="*,Auto" Margin="16" Grid.IsSharedSizeScope="True">
+        <TabControl Grid.Row="0" x:Name="Tabs" SelectedIndex="{Binding SelectedTabIndex}">
+            <!-- Map Details -->
+            <TabItem Header="Map Details">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8" Grid.IsSharedSizeScope="True">
+                        <HeaderedContentControl Classes="group" Header="Map">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="hint" Text="These details help identify your map to others." />
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Title:" Target="{Binding #TitleBox}" />
+                                    <TextBox Grid.Row="0" Grid.Column="2" x:Name="TitleBox" Text="{Binding Title}" />
+                                    <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="_Author:" Target="{Binding #AuthorBox}" />
+                                    <TextBox Grid.Row="1" Grid.Column="2" x:Name="AuthorBox" Text="{Binding Author}" />
+                                    <Label Grid.Row="2" Grid.ColumnSpan="3" Classes="field-label" Content="_Description:" Target="{Binding #DescriptionBox}" />
+                                    <TextBox Grid.Row="3" Grid.ColumnSpan="3" x:Name="DescriptionBox" Text="{Binding Description}"
+                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" Height="80" />
+                                    <Label Grid.Row="4" Grid.ColumnSpan="3" Classes="field-label" Content="_History:" Target="{Binding #HistoryBox}" />
+                                    <TextBox Grid.Row="5" Grid.ColumnSpan="3" x:Name="HistoryBox" Text="{Binding History}"
+                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" Height="80" />
+                                </Grid>
+                            </StackPanel>
+                        </HeaderedContentControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Lines & Grid -->
+            <TabItem Header="Lines &amp; Grid">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="12" Margin="8" Grid.IsSharedSizeScope="True">
+                        <HeaderedContentControl Classes="group" Header="Lines">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" x:Name="HandDrawnBox" Content="_Hand-drawn style" IsChecked="{Binding HandDrawn}" />
+                            <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="_Width:" Target="{Binding #LineWidthBox}" />
+                            <NumericUpDown Grid.Row="1" Grid.Column="2" x:Name="LineWidthBox" Value="{Binding LineWidth}" Minimum="0.5" Maximum="20" FormatString="0.0" Increment="0.5" HorizontalAlignment="Left" Width="120" />
+                            <Label Grid.Row="2" Grid.Column="0" Classes="field-label" Content="_Arrow Size:" Target="{Binding #ArrowSizeBox}" />
+                            <NumericUpDown Grid.Row="2" Grid.Column="2" x:Name="ArrowSizeBox" Value="{Binding ConnectionArrowSize}" Minimum="2" Maximum="64" FormatString="0.0" Increment="0.5" HorizontalAlignment="Left" Width="120" />
+                            <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="_Room Arrow Stalk Length:" Target="{Binding #StalkBox}" />
+                            <NumericUpDown Grid.Row="3" Grid.Column="2" x:Name="StalkBox" Value="{Binding ConnectionStalkLength}" Minimum="0" Maximum="128" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
+                            <Label Grid.Row="4" Grid.Column="0" Classes="field-label" Content="_Text Offset From Line:" Target="{Binding #TextOffsetBox}" />
+                            <NumericUpDown Grid.Row="4" Grid.Column="2" x:Name="TextOffsetBox" Value="{Binding TextOffsetFromConnection}" Minimum="0" Maximum="64" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
+                            <Label Grid.Row="5" Grid.Column="0" Classes="field-label" Content="_Preferred Distance Between Rooms:" Target="{Binding #PreferredDistanceBox}" />
+                            <NumericUpDown Grid.Row="5" Grid.Column="2" x:Name="PreferredDistanceBox" Value="{Binding PreferredDistanceBetweenRooms}" Minimum="16" Maximum="512" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
+                        </Grid>
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Classes="group" Header="Grid">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Content="_Visible" IsChecked="{Binding IsGridVisible}" />
+                            <CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Content="Show _Origin" IsChecked="{Binding ShowOrigin}" />
+                            <CheckBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Content="S_nap To" IsChecked="{Binding SnapToGrid}" />
+                            <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="_Size:" Target="{Binding #GridSizeBox}" />
+                            <NumericUpDown Grid.Row="3" Grid.Column="2" x:Name="GridSizeBox" Value="{Binding GridSize}" Minimum="4" Maximum="256" FormatString="0.0" Increment="0.5" HorizontalAlignment="Left" Width="120" />
+                        </Grid>
+                        </HeaderedContentControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Rooms & Editing -->
+            <TabItem Header="Rooms &amp; Editing">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="12" Margin="8" Grid.IsSharedSizeScope="True">
+                        <HeaderedContentControl Classes="group" Header="Room">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Default Room _Text:" Target="{Binding #DefaultRoomNameBox}" />
+                            <TextBox Grid.Row="0" Grid.Column="2" x:Name="DefaultRoomNameBox" Text="{Binding DefaultRoomName}" />
+                            <TextBlock Grid.Row="1" Grid.Column="2" Classes="error" Text="{Binding DefaultRoomNameError}" IsVisible="{Binding HasDefaultRoomNameError}" />
+                            <Label Grid.Row="2" Grid.Column="0" Classes="field-label" Content="Default _Shape:" Target="{Binding #ShapeCombo}" />
+                            <ComboBox Grid.Row="2" Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding ShapeChoices}"
+                                      SelectedValueBinding="{Binding Value}" SelectedValue="{Binding DefaultRoomShape}" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ShapeChoice">
+                                        <TextBlock Text="{Binding Display}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="_Darkness Stripe Size:" Target="{Binding #DarknessBox}" />
+                            <NumericUpDown Grid.Row="3" Grid.Column="2" x:Name="DarknessBox" Value="{Binding DarknessStripeSize}" Minimum="4" Maximum="128" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
+                            <Label Grid.Row="4" Grid.Column="0" Classes="field-label" Content="_Object List Offset:" Target="{Binding #ObjectOffsetBox}" />
+                            <NumericUpDown Grid.Row="4" Grid.Column="2" x:Name="ObjectOffsetBox" Value="{Binding ObjectListOffsetFromRoom}" Minimum="0" Maximum="64" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
+                        </Grid>
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Classes="group" Header="Advanced">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="hint" Text="These settings adjust the ease of clicking and dragging." />
+                        <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Resize/Drag _Handle Size:" Target="{Binding #HandleSizeBox}" />
+                            <NumericUpDown Grid.Row="0" Grid.Column="2" x:Name="HandleSizeBox" Value="{Binding HandleSize}" Minimum="2" Maximum="64" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
+                            <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="S_nap to Element Distance:" Target="{Binding #SnapDistanceBox}" />
+                            <NumericUpDown Grid.Row="1" Grid.Column="2" x:Name="SnapDistanceBox" Value="{Binding SnapToElementDistance}" Minimum="0" Maximum="128" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
+                        </Grid>
+                            </StackPanel>
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Classes="group" Header="Margins">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Content="_Wrap Text at Dashes" IsChecked="{Binding WrapTextAtDashes}" />
+                            <CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" x:Name="DocMarginsBox" Content="Document-Specific _Margins" IsChecked="{Binding DocumentSpecificMargins}" />
+                            <Label Grid.Row="2" Grid.Column="0" Classes="field-label" Content="Hori_zontal margins:" Target="{Binding #HorizontalMarginBox}" />
+                            <NumericUpDown Grid.Row="2" Grid.Column="2" x:Name="HorizontalMarginBox" Value="{Binding DocHorizontalMargin}" Minimum="0" Maximum="1000" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" IsEnabled="{Binding DocumentSpecificMargins}" />
+                            <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="_Vertical margins:" Target="{Binding #VerticalMarginBox}" />
+                            <NumericUpDown Grid.Row="3" Grid.Column="2" x:Name="VerticalMarginBox" Value="{Binding DocVerticalMargin}" Minimum="0" Maximum="1000" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" IsEnabled="{Binding DocumentSpecificMargins}" />
+                        </Grid>
+                        </HeaderedContentControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Colours -->
+            <TabItem Header="Colours">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8">
+                        <HeaderedContentControl Classes="group" Header="Colors">
+                            <ItemsControl ItemsSource="{Binding ColorSettings}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ColorSettingItemViewModel">
+                                        <Grid ColumnDefinitions="Auto,12,*" Margin="0,3">
+                                            <TextBlock Grid.Column="0" Classes="field-label" Text="{Binding DisplayName}" MinWidth="150" />
+                                            <controls:ColorPickerButton Grid.Column="2" SelectedColor="{Binding Color}" HorizontalAlignment="Left"
+                                                                        AutomationProperties.Name="{Binding DisplayName}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </HeaderedContentControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Fonts -->
+            <TabItem Header="Fonts">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8">
+                        <HeaderedContentControl Classes="group" Header="Fonts">
+                            <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+                                <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Room Name:" Target="{Binding #RoomFontButton}" />
+                                <controls:FontPickerButton Grid.Row="0" Grid.Column="2" x:Name="RoomFontButton" SelectedFont="{Binding RoomFont}" HorizontalAlignment="Left" />
+                                <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="_Objects:" Target="{Binding #ObjectFontButton}" />
+                                <controls:FontPickerButton Grid.Row="1" Grid.Column="2" x:Name="ObjectFontButton" SelectedFont="{Binding ObjectFont}" HorizontalAlignment="Left" />
+                                <Label Grid.Row="2" Grid.Column="0" Classes="field-label" Content="_Line:" Target="{Binding #LineFontButton}" />
+                                <controls:FontPickerButton Grid.Row="2" Grid.Column="2" x:Name="LineFontButton" SelectedFont="{Binding LineFont}" HorizontalAlignment="Left" />
+                                <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="_Subtitle:" Target="{Binding #SubtitleFontButton}" />
+                                <controls:FontPickerButton Grid.Row="3" Grid.Column="2" x:Name="SubtitleFontButton" SelectedFont="{Binding SubtitleFont}" HorizontalAlignment="Left" />
+                            </Grid>
+                        </HeaderedContentControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Regions -->
+            <TabItem Header="Regions">
+                <Grid ColumnDefinitions="*,260" Margin="8">
+                    <!-- Region List -->
+                    <DockPanel Grid.Column="0" Margin="0,0,12,0">
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                            <Button Content="_Add Region" Command="{Binding AddRegionCommand}" />
+                            <Button Content="_Delete Region" Command="{Binding DeleteSelectedRegionCommand}" />
+                        </StackPanel>
+                        <ListBox x:Name="RegionList" ItemsSource="{Binding Regions}" SelectedItem="{Binding SelectedRegion}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RegionItemViewModel">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Border Width="40" Height="20" CornerRadius="2" BorderThickness="1"
+                                                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                                Background="{Binding FillBrush}">
+                                            <TextBlock Text="123" Foreground="{Binding TextBrush}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+
+                    <!-- Selected Region Details -->
+                    <HeaderedContentControl Grid.Column="1" Classes="group" Header="Region Properties">
+                        <StackPanel Spacing="8" DataContext="{Binding SelectedRegion}" x:DataType="vm:RegionItemViewModel">
+                            <Label Classes="field-label" Content="_Name:" Target="{Binding #RegionNameBox}" />
+                            <TextBox x:Name="RegionNameBox" Text="{Binding Name}" IsReadOnly="{Binding IsDefaultRegion}" />
+                            <TextBlock Classes="error" Text="{Binding NameError}" IsVisible="{Binding HasNameError}" />
+
+                            <Label Classes="field-label" Content="Background Fill:" />
+                            <controls:ColorPickerButton SelectedColor="{Binding FillColor}" HorizontalAlignment="Left" />
+
+                            <Label Classes="field-label" Content="Text Colour:" />
+                            <controls:ColorPickerButton SelectedColor="{Binding TextColor}" HorizontalAlignment="Left" />
+
+                            <Border Padding="8" CornerRadius="2" BorderThickness="1"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                    Background="{Binding FillBrush}">
+                                <TextBlock x:Name="RegionSample" Text="Sample" Foreground="{Binding TextBrush}"
+                                           HorizontalAlignment="Center" />
+                            </Border>
+                        </StackPanel>
+                    </HeaderedContentControl>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- OK / Cancel Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+            <Button Classes="dialog-button" Content="OK" IsDefault="True" Click="OnOkClick" />
+            <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>

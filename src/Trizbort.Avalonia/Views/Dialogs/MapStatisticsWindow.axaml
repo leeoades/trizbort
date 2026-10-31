@@ -1,0 +1,22 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.MapStatisticsWindow"
+        Title="Map Statistics"
+        Width="850" Height="666"
+        MinWidth="722" MinHeight="566"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="*,Auto" RowSpacing="8" Margin="16">
+        <TextBox Grid.Row="0" x:Name="ReportBox" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                 FontFamily="Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
+            <Button x:Name="CopyButton" Classes="dialog-button" Content="_Copy" Click="OnCopyClick" />
+            <Button x:Name="SaveButton" Classes="dialog-button" Content="_Save as..." Click="OnSaveClick" />
+            <Button x:Name="CloseButton" Classes="dialog-button" Content="C_lose" IsDefault="True" IsCancel="True"
+                    Click="OnCloseClick" />
+        </StackPanel>
+    </Grid>
+</Window>

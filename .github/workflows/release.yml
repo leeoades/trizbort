@@ -1,9 +1,17 @@
-name: Release
+name: Release (Trizbort Recast)
+
+# Releases of Trizbort Recast, the cross-platform Avalonia app.
+# Tag format: recast-vMAJOR.MINOR.PATCH[.REVISION][-beta.N], e.g. recast-v0.9.0-beta.1.
+# Changelog headings in the root changelog.md omit the prefix: ## [0.9.0-beta.1]
+# Legacy WinForms hotfix releases use legacy-v* tags and release-legacy.yml.
+#
+# Assets: Windows x64 zip, Linux x64 tar.gz, and macOS zips for Apple Silicon (arm64) and Intel (x64).
+# The macOS apps are signed ad hoc only (no Apple Developer ID), so Gatekeeper asks before the first run.
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'recast-v*'
 
 permissions:
   contents: read
@@ -13,8 +21,67 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      informational: ${{ steps.version.outputs.informational }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      package: ${{ steps.version.outputs.package }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Determine version from tag
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ($env:RELEASE_TAG -notmatch '^recast-v(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(-beta\.[1-9]\d*)?$') {
+            throw "Release tag must be recast-vMAJOR.MINOR.PATCH[.REVISION], optionally followed by -beta.N (N >= 1)."
+          }
+          $prerelease = [bool]$Matches[5]
+          $parts = @($Matches[1], $Matches[2], $Matches[3], $(if ($Matches[4]) { $Matches[4] } else { '0' }))
+          foreach ($part in $parts) {
+            if ([long]$part -gt 65534) { throw "Version components must be between 0 and 65534." }
+          }
+          $version = ($parts | ForEach-Object { [int]$_ }) -join '.'
+          $informational = $env:RELEASE_TAG.Substring(8)
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "informational=$informational" >> $env:GITHUB_OUTPUT
+          "prerelease=$($prerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "package=$(if ($prerelease) { $informational } else { $version })" >> $env:GITHUB_OUTPUT
+
+  macos:
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build app bundles
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          RELEASE_INFO: ${{ needs.version.outputs.informational }}
+          PACKAGE_VERSION: ${{ needs.version.outputs.package }}
+        run: |
+          for rid in osx-arm64 osx-x64; do
+            bash packaging/macos/make-app.sh "$rid" "$RELEASE_VERSION" "$RELEASE_INFO" "TrizbortRecast-$PACKAGE_VERSION-$rid.zip"
+          done
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: macos-apps
+          path: TrizbortRecast-*.zip
+          if-no-files-found: error
+          retention-days: 7
+
   release:
-    runs-on: windows-latest
+    needs: [version, macos]
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     defaults:
@@ -22,92 +89,72 @@ jobs:
         shell: pwsh
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 8.0.x
-
-      - name: Determine version from tag
-        id: version
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          if ($env:RELEASE_TAG -notmatch '^v(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$') {
-            throw "Release tag must be vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH.REVISION."
-          }
-          $parts = @($Matches[1], $Matches[2], $Matches[3], $(if ($Matches[4]) { $Matches[4] } else { '0' }))
-          foreach ($part in $parts) {
-            if ([long]$part -gt 65534) { throw "Version components must be between 0 and 65534." }
-          }
-          $version = ($parts | ForEach-Object { [int]$_ }) -join '.'
-          "version=$version" >> $env:GITHUB_OUTPUT
-
-      - name: Stamp assembly version
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          $file = 'src\Trizbort\Properties\AssemblyInfo.cs'
-          $content = Get-Content $file -Raw
-          foreach ($attribute in 'AssemblyVersion', 'AssemblyFileVersion') {
-            $pattern = "(?m)^\[assembly:\s*$attribute\(`"[^`"]*`"\)\]"
-            if ([regex]::Matches($content, $pattern).Count -ne 1) {
-              throw "Expected exactly one $attribute in $file."
-            }
-            $content = $content -replace $pattern, "[assembly: $attribute(`"$env:RELEASE_VERSION`")]"
-          }
-          Set-Content $file $content -NoNewline -Encoding utf8
+          dotnet-version: 10.0.x
 
       - name: Test
         run: dotnet test Trizbort.sln -c Release
 
-      - name: Publish
-        run: >-
-          dotnet publish src\Trizbort\Trizbort.csproj -c Release -r win-x64 -o publish
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
-          -p:EnableCompressionInSingleFile=true
-          -p:DebugType=none
-
-      - name: Smoke test published app
-        run: |
-          $workDir = Join-Path $env:RUNNER_TEMP 'trizbort-smoke'
-          New-Item -ItemType Directory -Path $workDir -Force | Out-Null
-          $exe = (Resolve-Path 'publish\Trizbort.exe').Path
-          $process = Start-Process $exe -ArgumentList '--exit' -WorkingDirectory $workDir -PassThru
-          if (-not $process.WaitForExit(30000)) {
-            Stop-Process -Id $process.Id
-            throw "Published app did not exit after --exit."
-          }
-          if ($process.ExitCode -ne 0) {
-            throw "Published app exited with code $($process.ExitCode)."
-          }
-
-      - name: Package
+      - name: Publish and package
         id: package
         env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          RELEASE_INFO: ${{ needs.version.outputs.informational }}
+          PACKAGE_VERSION: ${{ needs.version.outputs.package }}
         run: |
-          $exe = 'publish\Trizbort.exe'
-          if ((Get-Item $exe).VersionInfo.FileVersion -ne $env:RELEASE_VERSION) {
-            throw "Published executable version does not match the release tag."
+          $assets = @()
+          foreach ($rid in 'win-x64', 'linux-x64') {
+            $out = "publish/$rid"
+            dotnet publish src/Trizbort.Avalonia/Trizbort.Avalonia.csproj -c Release -r $rid -o $out `
+              --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+              -p:DebugType=none -p:Version=$env:RELEASE_VERSION -p:InformationalVersion=$env:RELEASE_INFO
+            if ($LASTEXITCODE -ne 0) { throw "Publish failed for $rid." }
+            Copy-Item LICENSE.txt, PdfSharp.License.txt -Destination $out
+            if ($rid -like 'win-*') {
+              Move-Item "$out/Trizbort.Avalonia.exe" "$out/TrizbortRecast.exe"
+              $name = "TrizbortRecast-$env:PACKAGE_VERSION-$rid.zip"
+              Compress-Archive -Path "$out/*" -DestinationPath $name
+            } else {
+              Move-Item "$out/Trizbort.Avalonia" "$out/trizbort-recast"
+              chmod +x "$out/trizbort-recast"
+              Copy-Item packaging/linux/trizbort.desktop, packaging/linux/trizbort-mime.xml -Destination $out
+              Copy-Item packaging/icons/trizbort-recast-256.png -Destination "$out/trizbort-recast.png"
+              $name = "TrizbortRecast-$env:PACKAGE_VERSION-$rid.tar.gz"
+              tar -czf $name -C $out .
+            }
+            $assets += $name
           }
-          if (Test-Path 'publish\appsettings.json') {
-            throw "User settings must not be included in the release package."
-          }
-          Copy-Item LICENSE.txt, PdfSharp.License.txt -Destination publish
-          $zipName = "Trizbort-$env:RELEASE_VERSION-win-x64.zip"
-          Compress-Archive -Path publish\* -DestinationPath $zipName
-          "zip=$zipName" >> $env:GITHUB_OUTPUT
+          "assets=$($assets -join ' ')" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: macos-apps
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_REPO: ${{ github.repository }}
-          RELEASE_ZIP: ${{ steps.package.outputs.zip }}
-        run: >-
-          gh release create "$env:RELEASE_TAG" "$env:RELEASE_ZIP"
-          --repo "$env:RELEASE_REPO"
-          --verify-tag --title "Trizbort $env:RELEASE_TAG" --generate-notes
+          RELEASE_ASSETS: ${{ steps.package.outputs.assets }}
+          RELEASE_INFO: ${{ needs.version.outputs.informational }}
+          RELEASE_PRERELEASE: ${{ needs.version.outputs.prerelease }}
+          PACKAGE_VERSION: ${{ needs.version.outputs.package }}
+        run: |
+          $macAssets = @("TrizbortRecast-$env:PACKAGE_VERSION-osx-arm64.zip", "TrizbortRecast-$env:PACKAGE_VERSION-osx-x64.zip")
+          foreach ($asset in $macAssets) { if (-not (Test-Path $asset)) { throw "Missing macOS asset $asset." } }
+          $releaseArgs = @('release', 'create', $env:RELEASE_TAG) + ($env:RELEASE_ASSETS -split ' ') + $macAssets + @(
+            '--repo', $env:RELEASE_REPO, '--verify-tag', '--title', "Trizbort Recast $env:RELEASE_INFO", '--generate-notes')
+          if ($env:RELEASE_PRERELEASE -eq 'true') {
+            $heading = "## [$env:RELEASE_INFO]"
+            $changelog = Get-Content 'changelog.md' -Raw
+            $pattern = '(?ms)^' + [regex]::Escape($heading) + '[^\r\n]*\r?\n(.*?)(?=^## |\z)'
+            $notes = [regex]::Match($changelog, $pattern)
+            if (-not $notes.Success) { throw "No changelog entry found for $env:RELEASE_TAG." }
+            Set-Content 'release-notes.md' $notes.Groups[1].Value.Trim() -Encoding utf8
+            $releaseArgs += @('--prerelease', '--latest=false', '--notes-file', 'release-notes.md')
+          }
+          & gh @releaseArgs
+          if ($LASTEXITCODE -ne 0) { throw "GitHub Release creation failed." }

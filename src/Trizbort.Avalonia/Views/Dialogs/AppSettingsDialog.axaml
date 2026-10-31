@@ -1,0 +1,148 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.AppSettingsDialog"
+        x:DataType="vm:AppSettingsViewModel"
+        Title="Application Settings"
+        Width="520" Height="820"
+        MinWidth="460" MinHeight="700"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        KeyboardNavigation.TabNavigation="Cycle">
+
+    <Grid RowDefinitions="*,Auto" Margin="16" KeyboardNavigation.TabNavigation="Continue">
+        <TabControl Grid.Row="0" KeyboardNavigation.TabNavigation="Continue">
+            <!-- General -->
+            <TabItem Header="General">
+                <StackPanel Spacing="12" Margin="8">
+                    <HeaderedContentControl Classes="group" Header="Preferences">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="_Save images at 100%" IsChecked="{Binding SaveAt100}" ToolTip.Tip="If this is unchecked, images will be saved at their current zoom %" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="_Open last project on start" IsChecked="{Binding LoadLastProjectOnStart}" ToolTip.Tip="If this is checked, Trizbort will load the last project on startup" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="Invert Mouse Wheel _Zoom" IsChecked="{Binding InvertMouseWheel}" />
+                            </StackPanel>
+                            <Grid ColumnDefinitions="Auto,12,*">
+                                <Label Grid.Column="0" Classes="field-label" Content="Scroll wheel / trac_kpad scroll:" Target="{Binding #ScrollWheelCombo}" />
+                                <ComboBox Grid.Column="2" x:Name="ScrollWheelCombo" SelectedIndex="{Binding ScrollWheelBehavior}" HorizontalAlignment="Left" MinWidth="140"
+                                          ToolTip.Tip="Automatic: a mouse wheel zooms, a trackpad two-finger scroll pans. Ctrl + scroll or a pinch always zooms.">
+                                    <ComboBoxItem Content="Automatic" />
+                                    <ComboBoxItem Content="Always zoom" />
+                                    <ComboBoxItem Content="Always pan" />
+                                </ComboBox>
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="Show Full _Path in Title Bar" IsChecked="{Binding ShowFullPathInTitleBar}" />
+                            </StackPanel>
+                            <Grid ColumnDefinitions="Auto,12,*">
+                                <Label Grid.Column="0" Classes="field-label" Content="Port Ad_just Detail:" Target="{Binding #PortAdjustCombo}" />
+                                <ComboBox Grid.Column="2" x:Name="PortAdjustCombo" SelectedIndex="{Binding PortAdjustDetail}" HorizontalAlignment="Left" MinWidth="140">
+                                    <ComboBoxItem Content="NSEW (4)" />
+                                    <ComboBoxItem Content="Diagonals (8)" />
+                                    <ComboBoxItem Content="All ports (16)" />
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl Classes="group" Header="Smart Save">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="Save to _PDF" IsChecked="{Binding SaveToPdf}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="Save to _Image" IsChecked="{Binding SaveToImage}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="Save _TADS to ADV3Lite" IsChecked="{Binding SaveTadsToAdv3Lite}" />
+                            </StackPanel>
+                            <Grid ColumnDefinitions="Auto,12,*">
+                                <Label Grid.Column="0" Classes="field-label" Content="_Default Image Save Type:" Target="{Binding #ImageTypeCombo}" />
+                                <ComboBox Grid.Column="2" x:Name="ImageTypeCombo" SelectedIndex="{Binding DefaultImageType}" HorizontalAlignment="Left" MinWidth="140">
+                                    <ComboBoxItem Content="PNG" />
+                                    <ComboBoxItem Content="JPEG" />
+                                    <ComboBoxItem Content="BMP" />
+                                </ComboBox>
+                            </Grid>
+                            <TextBlock Classes="hint" Text="Smart Save options are stored but not used by export yet." VerticalAlignment="Center" />
+                        </StackPanel>
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl Classes="group" Header="App defaults">
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="Auto,12,*">
+                                <Label Grid.Column="0" Classes="field-label" Content="Default _Font Name:" Target="{Binding #FontNameBox}" />
+                                <TextBox Grid.Column="2" x:Name="FontNameBox" Text="{Binding DefaultFontName}" />
+                            </Grid>
+                            <CheckBox Content="Specify _margins" IsChecked="{Binding SpecifyGenMargins}" />
+                            <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto" RowSpacing="8"
+                                  IsEnabled="{Binding SpecifyGenMargins}" Margin="16,0,0,0">
+                                <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Horizontal:" Target="{Binding #HorizontalMarginBox}" />
+                                <NumericUpDown Grid.Row="0" Grid.Column="2" x:Name="HorizontalMarginBox" Value="{Binding GenHorizontalMargin}" Minimum="0" Maximum="4096" HorizontalAlignment="Left" Width="120" />
+                                <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="_Vertical:" Target="{Binding #VerticalMarginBox}" />
+                                <NumericUpDown Grid.Row="1" Grid.Column="2" x:Name="VerticalMarginBox" Value="{Binding GenVerticalMargin}" Minimum="0" Maximum="4096" HorizontalAlignment="Left" Width="120" />
+                            </Grid>
+                        </StackPanel>
+                    </HeaderedContentControl>
+                </StackPanel>
+            </TabItem>
+
+            <!-- Tooltips -->
+            <TabItem Header="Tooltips">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="12" Margin="8">
+                        <CheckBox Content="Show _Canvas Tooltips" IsChecked="{Binding ShowTooltips}" />
+
+                        <StackPanel Spacing="8" Margin="16,0,0,0">
+                            <CheckBox Content="Show _Objects in Tooltip" IsChecked="{Binding ShowObjectsInTooltips}" IsEnabled="{Binding CanEditTooltipOptions}" />
+
+                            <HeaderedContentControl Classes="group" Header="Descriptions">
+                                <StackPanel Spacing="8">
+                                    <CheckBox Content="Show _Descriptions in Tooltip" IsChecked="{Binding ShowDescriptionsInTooltips}" IsEnabled="{Binding CanEditTooltipOptions}" />
+
+                                    <WrapPanel Margin="16,0,0,0">
+                                        <CheckBox Content="Limit Characters of _Room Description to" IsChecked="{Binding LimitRoomDescriptionCharactersInTooltip}" IsEnabled="{Binding CanEditDescriptionLimits}" Margin="0,0,8,8" />
+                                        <NumericUpDown Value="{Binding ToolTipRoomDescriptionCharactersToShow}" Minimum="0" Maximum="4096" Width="100" IsEnabled="{Binding CanEditRoomCharacterCount}" Margin="0,0,8,8" />
+                                        <TextBlock Text="characters" VerticalAlignment="Center" Margin="0,0,0,8" IsEnabled="{Binding CanEditRoomCharacterCount}" />
+                                    </WrapPanel>
+
+                                    <WrapPanel Margin="16,0,0,0">
+                                        <CheckBox Content="Limit Characters of Co_nnection Description to" IsChecked="{Binding LimitConnectionDescriptionCharactersInTooltip}" IsEnabled="{Binding CanEditDescriptionLimits}" Margin="0,0,8,0" />
+                                        <NumericUpDown Value="{Binding ToolTipConnectionDescriptionCharactersToShow}" Minimum="0" Maximum="4096" Width="100" IsEnabled="{Binding CanEditConnectionCharacterCount}" Margin="0,0,8,0" />
+                                        <TextBlock Text="characters" VerticalAlignment="Center" IsEnabled="{Binding CanEditConnectionCharacterCount}" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </HeaderedContentControl>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Map -->
+            <TabItem Header="Map">
+                <StackPanel Spacing="12" Margin="8">
+                    <HeaderedContentControl Classes="group" Header="Preferences">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="Apply _style to new rooms" IsChecked="{Binding ApplyStyleToNewRooms}" ToolTip.Tip="If this is checked, new rooms adopt the style of the last selected room" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="Double _click to add room" IsChecked="{Binding DoubleClickToAddRoom}" ToolTip.Tip="If this is checked, double clicking on an empty space on the map creates a new room" />
+                            </StackPanel>
+                        </StackPanel>
+                    </HeaderedContentControl>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <!-- OK / Cancel Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,12,0,0" KeyboardNavigation.TabNavigation="Continue">
+            <Button Content="OK" Width="80" IsDefault="True" Click="OnOkClick" />
+            <Button Content="Cancel" Width="80" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>

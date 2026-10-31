@@ -1,0 +1,92 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.AutomapSettingsDialog"
+        x:DataType="vm:AutomapSettingsViewModel"
+        x:Name="DialogWindow"
+        Title="Automapping"
+        Width="520" Height="640"
+        MinWidth="442" MinHeight="600"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="*,Auto" Margin="16" Grid.IsSharedSizeScope="True">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12">
+                <TextBlock Classes="hint"
+                           Text="Trizbort can automatically generate a map from a transcript of a game, even while the game is in progress." />
+
+                <!-- Transcript File Selection -->
+                <StackPanel Spacing="4">
+                    <Grid ColumnDefinitions="Auto,12,*,8,Auto">
+                        <Label Grid.Column="0" Classes="field-label" Content="_Transcript File:" Target="{Binding #FileNameBox}" />
+                        <TextBox Grid.Column="2" x:Name="FileNameBox" Text="{Binding FileName}" Watermark="Path to transcript file..." />
+                        <Button Grid.Column="4" Classes="dialog-button" Content="_Browse..."
+                                Command="{Binding BrowseTranscriptCommand}"
+                                CommandParameter="{Binding #DialogWindow}" />
+                    </Grid>
+                    <TextBlock Classes="error" Text="Choose a transcript file"
+                               IsVisible="{Binding IsFileNameMissing}" />
+                </StackPanel>
+
+                <!-- Options -->
+                <HeaderedContentControl Classes="group">
+                    <HeaderedContentControl.Header>
+                        <Label Content="_Options" Target="{Binding #VerboseCheck}" Padding="0" />
+                    </HeaderedContentControl.Header>
+                    <StackPanel Spacing="8">
+                        <CheckBox x:Name="VerboseCheck" Content="Treat transcript as _VERBOSE; expect room descriptions."
+                                  IsChecked="{Binding VerboseTranscript}" />
+
+                        <CheckBox Content="_Assume no two rooms have the same name."
+                                  Margin="16,0,0,0"
+                                  IsEnabled="{Binding IsAssumeRoomsWithSameNameEnabled}"
+                                  IsChecked="{Binding AssumeRoomsWithSameNameAreSameRoom}" />
+
+                        <CheckBox Content="_Guess possible exits from a room by reading its initial description."
+                                  IsChecked="{Binding GuessExits}" />
+
+                        <CheckBox Content="_Start processing from the end of the transcript file."
+                                  IsChecked="{Binding ContinueTranscript}" />
+
+                        <CheckBox Content="Always assume two-way connections."
+                                  IsChecked="{Binding AssumeTwoWayConnections}" />
+
+                        <CheckBox Content="Single step through the transcript with F11 (debug)."
+                                  IsVisible="{Binding IsDebugEnabled}"
+                                  IsChecked="{Binding SingleStep}" />
+                    </StackPanel>
+                </HeaderedContentControl>
+
+                <!-- Commands -->
+                <HeaderedContentControl Classes="group">
+                    <HeaderedContentControl.Header>
+                        <Label Content="_Commands" Target="{Binding #AddObjectBox}" Padding="0" />
+                    </HeaderedContentControl.Header>
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="At the in-game prompt:" />
+                        <Grid ColumnDefinitions="Auto,6,110,8,*" RowDefinitions="Auto,Auto" RowSpacing="8">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="&gt;" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="0" Grid.Column="2" x:Name="AddObjectBox" Text="{Binding AddObjectCommand}"
+                                     ToolTip.Tip="Command typed in the game to add an object to the map, for example: tb see lamp" />
+                            <TextBlock Grid.Row="0" Grid.Column="4" Classes="hint" VerticalAlignment="Center"
+                                       Text="followed by an object name adds it to the map." />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="&gt;" VerticalAlignment="Center" />
+                            <TextBox Grid.Row="1" Grid.Column="2" x:Name="AddRegionBox" Text="{Binding AddRegionCommand}"
+                                     ToolTip.Tip="Command typed in the game to put the current room in a region, for example: tb region Cellar" />
+                            <TextBlock Grid.Row="1" Grid.Column="4" Classes="hint" VerticalAlignment="Center"
+                                       Text="followed by region name to add room to region." />
+                        </Grid>
+                    </StackPanel>
+                </HeaderedContentControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Start / Cancel Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+            <Button Classes="dialog-button" Content="Start Auto_mapping" IsDefault="True" IsEnabled="{Binding CanStart}" Click="OnStartClick" />
+            <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>

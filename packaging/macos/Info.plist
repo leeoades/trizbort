@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>Trizbort Recast</string>
+    <key>CFBundleDisplayName</key>
+    <string>Trizbort Recast</string>
+    <key>CFBundleIdentifier</key>
+    <string>io.github.leeoades.trizbort-recast</string>
+    <key>CFBundleExecutable</key>
+    <string>TrizbortRecast</string>
+    <key>CFBundleIconFile</key>
+    <string>trizbort-recast.icns</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>@VERSION@</string>
+    <key>CFBundleVersion</key>
+    <string>@VERSION@</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>Trizbort Recast by Lee Oades, based on Trizbort by Genstein and Jason Lautzenheiser. MIT licence.</string>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Trizbort map</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSHandlerRank</key>
+            <string>Owner</string>
+            <key>CFBundleTypeIconFile</key>
+            <string>trizbort-recast.icns</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>io.github.leeoades.trizbort.map</string>
+            </array>
+        </dict>
+    </array>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>io.github.leeoades.trizbort.map</string>
+            <key>UTTypeDescription</key>
+            <string>Trizbort map</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.xml</string>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>trizbort</string>
+                </array>
+            </dict>
+        </dict>
+    </array>
+</dict>
+</plist>

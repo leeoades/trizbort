@@ -1,0 +1,380 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Microsoft.Extensions.DependencyInjection;
+using Trizbort.Automap;
+using Trizbort.Avalonia.ViewModels;
+using Trizbort.Avalonia.Views;
+using Trizbort.Avalonia.Views.Dialogs;
+using Trizbort.Domain.Application;
+using Trizbort.Domain.AppSettings;
+using Trizbort.Domain.Elements;
+
+namespace Trizbort.Avalonia.Services;
+
+public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandService commandService) : IDialogService
+{
+    private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
+    private readonly ICommandService _commandService = commandService;
+
+    public async Task ShowAboutDialogAsync(Window? owner)
+    {
+        var dialog = new AboutDialog();
+        if (owner != null)
+        {
+            await dialog.ShowDialog(owner);
+        }
+        else
+        {
+            dialog.Show();
+        }
+    }
+
+    public async Task ShowMessageAsync(Window? owner, string title, string message)
+    {
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 420,
+            Height = 180,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            ShowInTaskbar = false
+        };
+
+        var panel = new StackPanel
+        {
+            Margin = new Thickness(20),
+            Spacing = 16
+        };
+
+        panel.Children.Add(new TextBlock
+        {
+            Text = message,
+            TextWrapping = TextWrapping.Wrap
+        });
+
+        var okButton = new Button
+        {
+            Content = "OK",
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Width = 80,
+            IsDefault = true,
+            IsCancel = true
+        };
+        okButton.Click += (_, _) => dialog.Close();
+        panel.Children.Add(okButton);
+
+        dialog.Content = panel;
+        DialogFocus.Prepare(dialog);
+
+        if (owner != null)
+        {
+            await dialog.ShowDialog(owner);
+        }
+        else
+        {
+            dialog.Show();
+        }
+    }
+
+    public async Task<bool> ShowConfirmationAsync(Window? owner, string title, string message)
+    {
+        var result = false;
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 420,
+            Height = 180,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            ShowInTaskbar = false
+        };
+
+        var grid = new Grid
+        {
+            Margin = new Thickness(20),
+            RowDefinitions = new RowDefinitions("*,Auto")
+        };
+
+        grid.Children.Add(new TextBlock
+        {
+            Text = message,
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Center
+        });
+
+        var buttonPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Spacing = 10
+        };
+        Grid.SetRow(buttonPanel, 1);
+
+        var okButton = new Button
+        {
+            Content = "Yes",
+            Width = 75,
+            IsDefault = true
+        };
+        okButton.Click += (_, _) =>
+        {
+            result = true;
+            dialog.Close();
+        };
+
+        var cancelButton = new Button
+        {
+            Content = "No",
+            Width = 75,
+            IsCancel = true
+        };
+        cancelButton.Click += (_, _) =>
+        {
+            result = false;
+            dialog.Close();
+        };
+
+        buttonPanel.Children.Add(okButton);
+        buttonPanel.Children.Add(cancelButton);
+        grid.Children.Add(buttonPanel);
+
+        dialog.Content = grid;
+        DialogFocus.Prepare(dialog);
+
+        if (owner != null)
+        {
+            await dialog.ShowDialog(owner);
+        }
+        else
+        {
+            dialog.Show();
+        }
+
+        return result;
+    }
+
+    public async Task<ConfirmationResult> ShowSaveDiscardCancelAsync(Window? owner, string title, string message)
+    {
+        var result = ConfirmationResult.Cancel;
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 440,
+            Height = 160,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            ShowInTaskbar = false
+        };
+
+        var grid = new Grid
+        {
+            Margin = new Thickness(20),
+            RowDefinitions = new RowDefinitions("*,Auto")
+        };
+
+        grid.Children.Add(new TextBlock
+        {
+            Text = message,
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Center
+        });
+
+        var buttonPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Spacing = 8
+        };
+        Grid.SetRow(buttonPanel, 1);
+
+        var saveButton = new Button { Content = "Save", Width = 80, IsDefault = true };
+        saveButton.Click += (_, _) =>
+        {
+            result = ConfirmationResult.Save;
+            dialog.Close();
+        };
+
+        var discardButton = new Button { Content = "Don't Save", Width = 95 };
+        discardButton.Click += (_, _) =>
+        {
+            result = ConfirmationResult.Discard;
+            dialog.Close();
+        };
+
+        var cancelButton = new Button { Content = "Cancel", Width = 80, IsCancel = true };
+        cancelButton.Click += (_, _) =>
+        {
+            result = ConfirmationResult.Cancel;
+            dialog.Close();
+        };
+
+        buttonPanel.Children.Add(saveButton);
+        buttonPanel.Children.Add(discardButton);
+        buttonPanel.Children.Add(cancelButton);
+        grid.Children.Add(buttonPanel);
+
+        dialog.Content = grid;
+        DialogFocus.Prepare(dialog);
+
+        if (owner != null)
+        {
+            await dialog.ShowDialog(owner);
+        }
+        else
+        {
+            dialog.Show();
+        }
+
+        return result;
+    }
+
+    public Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room)
+    {
+        return ShowRoomPropertiesAsync(owner, room, null);
+    }
+
+    /// <summary>Shows the room dialog; <paramref name="startTab" /> (e.g. the Region tab) overrides the remembered tab.</summary>
+    public async Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room, int? startTab)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<RoomPropertiesViewModel>();
+        viewModel.Initialize(room, startTab);
+
+        var dialog = new RoomPropertiesDialog { DataContext = viewModel };
+        dialog.Prompts = new DialogConfirmPrompts(this, dialog);
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            _commandService.Session.Apply("Edit room properties", room, () => viewModel.ApplyTo(room));
+        }
+        return result;
+    }
+
+    /// <summary>Routes the confirmation prompt of a dialog to a modal yes/no box owned by that dialog.</summary>
+    private sealed class DialogConfirmPrompts(IDialogService dialogService, Window dialog) : Trizbort.Editor.IEditorPrompts
+    {
+        public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, CancellationToken token = default)
+            => Trizbort.Editor.NonInteractiveEditorPrompts.Instance.ChooseSameDirectionAsync(existing, newRoomName, token);
+
+        public Task<Trizbort.Editor.RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, CancellationToken token = default)
+            => Trizbort.Editor.NonInteractiveEditorPrompts.Instance.DisambiguateRoomAsync(transcriptLine, roomDescription, candidates, token);
+
+        public Task<bool> ConfirmAsync(string message, string title, CancellationToken token = default)
+            => dialogService.ShowConfirmationAsync(dialog, title, message);
+    }
+
+    public async Task<bool> ShowConnectionPropertiesAsync(Window? owner, Connection connection)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<ConnectionPropertiesViewModel>();
+        viewModel.Initialize(connection);
+
+        var dialog = new ConnectionPropertiesDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            _commandService.Session.Apply("Edit connection properties", connection, () => viewModel.ApplyTo(connection));
+        }
+        return result;
+    }
+
+    public async Task<bool> ShowMapLabelPropertiesAsync(Window? owner, MapLabel label)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<MapLabelPropertiesViewModel>();
+        viewModel.Initialize(label);
+
+        var dialog = new MapLabelPropertiesDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            _commandService.Session.Apply("Edit label properties", label, () => viewModel.ApplyTo(label));
+        }
+        return result;
+    }
+
+    public Task<bool> ShowElementPropertiesAsync(Window? owner, Element element)
+    {
+        return element switch
+        {
+            Room room => ShowRoomPropertiesAsync(owner, room),
+            Connection connection => ShowConnectionPropertiesAsync(owner, connection),
+            MapLabel label => ShowMapLabelPropertiesAsync(owner, label),
+            _ => Task.FromResult(false)
+        };
+    }
+
+    public async Task<bool> ShowMapSettingsAsync(Window? owner)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<MapSettingsViewModel>();
+        viewModel.Initialize();
+
+        var dialog = new MapSettingsDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            _commandService.Session.Execute("Edit map settings", viewModel.ApplyToSettings);
+        }
+        return result;
+    }
+
+    public async Task<bool> ShowMapThemeAsync(Window? owner)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<MapThemeViewModel>();
+        viewModel.Initialize();
+
+        var dialog = new MapThemeDialog
+        {
+            DataContext = viewModel,
+            ApplyInference = inference => _commandService.Session.ApplyRoomStyleInference(inference)
+        };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result && viewModel.SelectedTheme != null)
+        {
+            _commandService.Session.ApplyTheme(viewModel.SelectedTheme, viewModel.ReplaceIndividualStyles);
+        }
+        return result;
+    }
+
+    public async Task<bool> ShowAppSettingsAsync(Window? owner)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<AppSettingsViewModel>();
+        viewModel.Initialize();
+
+        var dialog = new AppSettingsDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            viewModel.ApplyToSettings();
+        }
+        return result;
+    }
+
+    public async Task<AutomapSettings?> ShowAutomapSettingsAsync(Window? owner)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<AutomapSettingsViewModel>();
+        var currentSettings = ApplicationSettingsController.AppSettings.Automap;
+        viewModel.Initialize(currentSettings);
+
+        var dialog = new AutomapSettingsDialog { DataContext = viewModel };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result)
+        {
+            var settings = viewModel.GetSettings();
+            if (!string.IsNullOrWhiteSpace(settings.FileName))
+            {
+                ApplicationSettingsController.AppSettings.Automap = settings;
+                ApplicationSettingsController.SaveSettings();
+            }
+            return settings;
+        }
+        return null;
+    }
+}

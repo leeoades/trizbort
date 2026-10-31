@@ -1,0 +1,96 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="using:System"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.MapLabelPropertiesDialog"
+        x:DataType="vm:MapLabelPropertiesViewModel"
+        Title="Label Properties"
+        Width="440" Height="560"
+        MinWidth="374" MinHeight="520"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <!-- No ScrollViewer: every group fits at the default size; only the Text box grows. -->
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" Margin="16"
+          Grid.IsSharedSizeScope="True">
+
+        <!-- Text (no group box, as in the reference dialog) -->
+        <Label Grid.Row="0" Classes="field-label" Content="_Text:" Target="{Binding #LabelText}" />
+        <TextBox Grid.Row="1" x:Name="LabelText" Text="{Binding Text}"
+                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="36"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto" />
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,12,*">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0" Classes="field-label" Content="Text Colo_ur:" Target="{Binding #TextColorButton}" />
+            <controls:ColorPickerButton Grid.Column="2" x:Name="TextColorButton"
+                                        SelectedColor="{Binding TextColor}" HorizontalAlignment="Left" />
+        </Grid>
+
+        <!-- Outline -->
+        <HeaderedContentControl Grid.Row="3" Classes="group" Header="Outline">
+            <StackPanel Spacing="8">
+                <CheckBox Content="_Enabled" IsChecked="{Binding HasOutline}" />
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="8" Margin="16,0,0,0" IsEnabled="{Binding HasOutline}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Line st_yle:" Target="{Binding #LineStyleCombo}" />
+                    <ComboBox Grid.Row="0" Grid.Column="2" x:Name="LineStyleCombo" ItemsSource="{Binding AvailableBorderStyles}"
+                              SelectedItem="{Binding BorderStyle}" HorizontalAlignment="Stretch" />
+
+                    <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Co_lour:" Target="{Binding #BorderColorButton}" />
+                    <controls:ColorPickerButton Grid.Row="1" Grid.Column="2" x:Name="BorderColorButton"
+                                                SelectedColor="{Binding BorderColor}" HorizontalAlignment="Left" />
+                </Grid>
+            </StackPanel>
+        </HeaderedContentControl>
+
+        <!-- Background -->
+        <HeaderedContentControl Grid.Row="4" Classes="group" Header="Background">
+            <StackPanel Spacing="8">
+                <CheckBox Content="E_nabled" IsChecked="{Binding HasBackground}" />
+                <Grid ColumnDefinitions="Auto,12,*" Margin="16,0,0,0" IsEnabled="{Binding HasBackground}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Classes="field-label" Content="Colou_r:" Target="{Binding #FillColorButton}" />
+                    <controls:ColorPickerButton Grid.Column="2" x:Name="FillColorButton"
+                                                SelectedColor="{Binding BackgroundColor}" HorizontalAlignment="Left" />
+                </Grid>
+            </StackPanel>
+        </HeaderedContentControl>
+
+        <!-- Shape: applies to the outline and the fill, so it is enabled when either is on. -->
+        <Grid Grid.Row="5" ColumnDefinitions="Auto,12,*" IsEnabled="{Binding ShapeEnabled}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0" Classes="field-label" Content="_Shape:" Target="{Binding #ShapeCombo}" />
+            <ComboBox Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding AvailableShapes}"
+                      SelectedItem="{Binding Shape}" HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+        <TextBlock Grid.Row="6" Classes="hint" Text="Shape applies to outline and background." />
+
+        <!-- OK / Cancel Buttons -->
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
+            <Button Classes="dialog-button" Content="_OK" IsDefault="True" Click="OnOkClick" />
+            <Button Classes="dialog-button" Content="_Cancel" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:elements="using:Trizbort.Domain.Elements"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.DisambiguateRoomsDialog"
+        x:DataType="vm:DisambiguateRoomsViewModel"
+        Title="Disambiguate Rooms"
+        Width="620" Height="560"
+        MinWidth="520" MinHeight="420"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,12,Auto,4,*,12,Auto,4,2*,12,Auto" Margin="16">
+        <TextBlock Grid.Row="0" Text="{Binding IntroText}" TextWrapping="Wrap" />
+
+        <Label Grid.Row="2" Classes="field-label" Content="When the transcript says:" Target="{Binding #ContextBox}" />
+        <TextBox Grid.Row="4" x:Name="ContextBox" Text="{Binding ContextText, Mode=OneWay}" IsReadOnly="True"
+                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto" />
+
+        <Label Grid.Row="6" Classes="field-label" Content="Which room does it mean?" />
+
+        <Grid Grid.Row="8" ColumnDefinitions="*,12,*" RowDefinitions="Auto,4,*">
+            <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Room" Target="{Binding #RoomList}" />
+            <ListBox Grid.Row="2" Grid.Column="0" x:Name="RoomList" ItemsSource="{Binding Candidates}"
+                     SelectedItem="{Binding SelectedRoom}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="elements:Room">
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Label Grid.Row="0" Grid.Column="2" Classes="field-label" Content="_Description" Target="{Binding #DescriptionBox}" />
+            <TextBox Grid.Row="2" Grid.Column="2" x:Name="DescriptionBox" Text="{Binding SelectedDescription, Mode=OneWay}"
+                     IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto" />
+        </Grid>
+
+        <StackPanel Grid.Row="10" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Classes="dialog-button" Content="_This Room" IsDefault="True" Command="{Binding ThisRoomCommand}" />
+            <Button Classes="dialog-button" Content="A _New Room" Command="{Binding NewRoomCommand}" />
+            <Button Classes="dialog-button" Content="_Auto-Choose the Rest" Command="{Binding AutoChooseRestCommand}" />
+        </StackPanel>
+    </Grid>
+</Window>

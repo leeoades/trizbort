@@ -1,36 +1,97 @@
-# Trizbort 
+# Trizbort Recast
 
-Trizbort is a tool for creating maps for interactive fiction. It was first developed by [genstein](https://github.com/genstein) and later continued by [Jason Lautzenheiser](https://github.com/JasonLautzenheiser). This repository is my continuation of the project, forked from [Jason's Trizbort repository](https://github.com/JasonLautzenheiser/trizbort), with thanks to Jason and all of his collaborators for their work.
+Trizbort Recast is a map editor for interactive fiction. Draw rooms and connections as you play, let Automap build the
+map from a game transcript, and export it as an image, a PDF, or a starting point for your own game in Inform 7,
+Inform 6, TADS, Hugo, ZIL, Quest, Alan or Adventuron.
+
+Recast is a cross-platform rebuild of **Trizbort**. It runs on Windows, Linux and macOS, and opens and saves the same
+`.trizbort` maps.
+
+> **Status: beta (0.9).** Recast does everything the Windows app does, and more, but it is new. Keep backups of your
+> maps and please [report anything that goes wrong](https://github.com/leeoades/trizbort/issues).
+
+## Where it comes from
+Trizbort was first written by [Genstein](https://github.com/genstein) and continued by
+[Jason Lautzenheiser](https://github.com/JasonLautzenheiser) and many collaborators, whose work this builds on with
+thanks. This repository is forked from [Jason's Trizbort repository](https://github.com/JasonLautzenheiser/trizbort).
+
+The fork first released Trizbort 2.x, a Windows-only update of the original app with map labels, curved connections,
+themes and more. Recast carries all of that over to a new, cross-platform app and adds undo and redo, trackpad and
+touch support, vector PDF export and much more. The [changelog](changelog.md) lists what is new compared with
+Trizbort 1.7.4.1.
+
+## Download
+Get the latest release from the [GitHub Releases page](https://github.com/leeoades/trizbort/releases). Downloads are
+self-contained, so no separate .NET install is needed. They are unsigned, so Windows may show a SmartScreen warning.
+
+- **Windows x64:** extract `TrizbortRecast-<version>-win-x64.zip` into a writable folder and run `TrizbortRecast.exe`.
+- **Linux x64:** extract `TrizbortRecast-<version>-linux-x64.tar.gz` and run `trizbort-recast`. To open `.trizbort`
+  files from your file manager, see [packaging/README.md](packaging/README.md).
+- **macOS:** download `…-osx-arm64.zip` for Apple Silicon (M1 and later) or `…-osx-x64.zip` for Intel Macs, unzip it
+  and drag **Trizbort Recast** to Applications. The app isn't signed with an Apple Developer ID, so the first time macOS
+  refuses to open it: go to **System Settings > Privacy & Security** and choose **Open Anyway**. The macOS build is
+  new and hasn't been tested on a Mac yet; reports are very welcome.
+
+Releases of the Windows-only Trizbort 2.x are still there too (`legacy-v*` tags and the older `v2.*` tags).
 
 ## Links
-- [Documentation](Docs/index.md)
+- [User guide](Docs/index.md) (written for Trizbort 2; Recast works the same way except where the changelog says)
 - [Issues](https://github.com/leeoades/trizbort/issues)
 - [Releases](https://github.com/leeoades/trizbort/releases)
-- [Release Notes](changelog.md)
-- [Developer/architecture reference](agent-docs/README.md) — technical docs for contributors and AI coding agents working on the codebase
+- [Recast changelog](changelog.md) and [Trizbort 1.x and 2.x changelog](legacy/changelog.md)
+- [Developer and architecture reference](agent-docs/README.md): technical docs for contributors and AI coding agents
 
 ## Acknowledgments
 Thanks to [DeadFleshRetro](https://github.com/DeadFleshRetro) for testing and feature requests.
 
 ## Contribute
-Contributions and bug reports are welcome. [Open an issue](https://github.com/leeoades/trizbort/issues/new) or submit a pull request.
+Contributions and bug reports are welcome. [Open an issue](https://github.com/leeoades/trizbort/issues/new) or submit a
+pull request.
 
-Trizbort follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Repository layout
-- `Trizbort.sln` — solution at the repository root.
-- `src/Trizbort/` — WinForms application source and project.
-- `src/Trizbort.Tests/` — automated NUnit tests.
-- `tests/manual/` — manual map fixtures and test scripts (not run by `dotnet test`).
-- `samples/` — sample maps and transcripts.
-- `Docs/` — user documentation and related assets.
-- `agent-docs/` — technical reference for contributors and coding agents.
+- `Trizbort.sln`: Trizbort Recast (Core + Avalonia + tests), **.NET 10 LTS**.
+- `src/Trizbort.Core/`: the map model, editing, Automap, exporters, geometry and file handling, with no UI (`net10.0`).
+- `src/Trizbort.Core.Tests/`: headless unit tests (`net10.0`).
+- `src/Trizbort.Avalonia/`: the Avalonia app (`net10.0`).
+- `src/Trizbort.Avalonia.Tests/`: headless Avalonia tests (`net10.0`).
+- `legacy/`: the Windows Forms Trizbort 2.x (`v2.3.1-beta.2`) with its own `Trizbort.Legacy.sln`, kept for hotfixes
+  and as the reference for Recast's behaviour; see [legacy/README.md](legacy/README.md).
+- `packaging/`: app icon, macOS app bundle, and file association for Linux and Windows.
+- `scripts/`: developer scripts, including the export comparison between the two apps.
+- `tests/manual/`: manual map fixtures and test scripts (not run by `dotnet test`).
+- `samples/`: sample maps and transcripts.
+- `Docs/`: user documentation and related assets.
+- `agent-docs/`: technical reference for contributors and coding agents.
 
-## Download & releases
-Download the latest `Trizbort-<version>-win-x64.zip` from the [GitHub Releases page](https://github.com/leeoades/trizbort/releases), extract it into a writable folder (not Program Files), and run `Trizbort.exe`. These are Windows x64, self-contained builds, so no separate .NET install is required. Keep the accompanying configuration and licence files. The downloads are unsigned, so Windows may display a SmartScreen warning.
+## Building and testing
+Prerequisites: **.NET 10 SDK** (10.0.x or later).
+
+### Trizbort Recast (Windows, Linux, macOS)
+```bash
+dotnet build Trizbort.sln -c Debug
+dotnet test Trizbort.sln -c Debug
+dotnet run --project src/Trizbort.Avalonia
+```
+
+### Trizbort 2.x, the Windows Forms app (Windows only, .NET 8)
+```bash
+dotnet test legacy/Trizbort.Legacy.sln -c Debug
+dotnet run --project legacy/src/Trizbort
+```
+
+## Releasing
+Pushing a tag starts a release build on GitHub Actions. Both apps need a changelog entry for a beta (`-beta.N`) tag,
+under a heading without the prefix, such as `## [0.9.0-beta.1]`.
+
+| Tag | Builds | Changelog |
+|---|---|---|
+| `recast-v0.9.0-beta.1` | Trizbort Recast for Windows x64, Linux x64 and macOS (Apple Silicon and Intel) | [changelog.md](changelog.md) |
+| `legacy-v2.3.2` | Trizbort 2.x for Windows x64 | [legacy/changelog.md](legacy/changelog.md) |
 
 ## License
 [MIT](LICENSE.txt)
 
 ## Special notes
-This software uses PdfSharp, copyright (c) 2005-2007 empira Software GmbH, Cologne (Germany). See PdfSharp.License.txt.
+This software uses PDFsharp, copyright (c) 2005-2007 empira Software GmbH, Cologne (Germany). See PdfSharp.License.txt.

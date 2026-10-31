@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.QuickFindDialog"
+        Title="Quick Find"
+        Width="420"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8" Margin="16">
+        <Label Grid.Row="0" Classes="field-label" Content="_Enter room name, description, or objects:"
+               Target="{Binding #FindBox}" />
+        <AutoCompleteBox Grid.Row="1" x:Name="FindBox" FilterMode="Contains" MinimumPrefixLength="1"
+                         HorizontalAlignment="Stretch" />
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
+            <Button x:Name="FindButton" Classes="dialog-button" Content="_Find" Click="OnFindClick" />
+            <Button x:Name="CancelButton" Classes="dialog-button" Content="_Cancel" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>
