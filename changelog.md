@@ -18,13 +18,16 @@ This is the **first beta of Trizbort Recast**, for testing. It has everything th
 not been used much yet. Keep backups of your maps. The Windows-only Trizbort 2.x is still available from the
 [releases page](https://github.com/leeoades/trizbort/releases) (tags `legacy-v*` and the older `v2.*`).
 
-### Runs on Windows and Linux
-- Rebuilt on .NET 10 and [Avalonia](https://avaloniaui.net/), so the same app runs on Windows and Linux. Downloads are
-  self-contained: Windows x64 (`TrizbortRecast.exe`) and Linux x64 (`trizbort-recast`). No separate .NET install is needed.
-- It should also build and run on macOS from source, but this hasn't been tested and there is no macOS download yet.
+### Runs on Windows, Linux and macOS
+- Rebuilt on .NET 10 and [Avalonia](https://avaloniaui.net/), so the same app runs on Windows, Linux and macOS.
+  Downloads are self-contained, so no separate .NET install is needed: Windows x64 (`TrizbortRecast.exe`), Linux x64
+  (`trizbort-recast`), and macOS for Apple Silicon and for Intel (`Trizbort Recast.app`).
+- The macOS app opens `.trizbort` files from Finder. It is new and hasn't been tested on a Mac yet.
+- A new app icon, based on the original's rooms and connections.
 - Linux: a desktop entry and MIME type are included so `.trizbort` files open in Recast from your file manager. A
   Windows registry file for the file association is in the repository (`packaging/`).
-- Settings are kept in your per-user folder: `%APPDATA%\Trizbort` on Windows, `~/.config/trizbort` on Linux. A damaged
+- Settings are kept in your per-user folder: `%APPDATA%\Trizbort` on Windows, `~/.config/trizbort` on Linux and
+  `~/Library/Application Support/Trizbort` on macOS. A damaged
   settings file no longer stops the app from starting; it is set aside and the defaults are used.
 
 ### New in Recast
@@ -89,7 +92,8 @@ These were added to the Windows app after the fork (versions 2.0 to 2.3) and are
 ### Known limitations
 - Pinch on a Linux touchpad does nothing, because the UI toolkit doesn't pass touchpad pinches through on Linux yet.
   Use Ctrl + two-finger scroll to zoom. Pinch works on touchscreens.
-- No macOS download yet.
+- The macOS app isn't signed with an Apple Developer ID or notarised, so the first time you open it macOS refuses: go
+  to **System Settings > Privacy & Security** and choose **Open Anyway**.
 - Downloads are unsigned, so Windows may show a SmartScreen warning.
 - Recast keeps its own settings, so preferences from Trizbort 2.x may need setting again.
 - Older versions of Trizbort open Recast maps but ignore labels and draw curved connections straight, as with 2.x.

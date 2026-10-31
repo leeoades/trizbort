@@ -4,7 +4,7 @@ Trizbort Recast is a map editor for interactive fiction. Draw rooms and connecti
 map from a game transcript, and export it as an image, a PDF, or a starting point for your own game in Inform 7,
 Inform 6, TADS, Hugo, ZIL, Quest, Alan or Adventuron.
 
-Recast is a cross-platform rebuild of **Trizbort**. It runs on Windows and Linux, and opens and saves the same
+Recast is a cross-platform rebuild of **Trizbort**. It runs on Windows, Linux and macOS, and opens and saves the same
 `.trizbort` maps.
 
 > **Status: beta (0.9).** Recast does everything the Windows app does, and more, but it is new. Keep backups of your
@@ -27,7 +27,10 @@ self-contained, so no separate .NET install is needed. They are unsigned, so Win
 - **Windows x64:** extract `TrizbortRecast-<version>-win-x64.zip` into a writable folder and run `TrizbortRecast.exe`.
 - **Linux x64:** extract `TrizbortRecast-<version>-linux-x64.tar.gz` and run `trizbort-recast`. To open `.trizbort`
   files from your file manager, see [packaging/README.md](packaging/README.md).
-- **macOS:** no download yet; it may build from source (see below).
+- **macOS:** download `…-osx-arm64.zip` for Apple Silicon (M1 and later) or `…-osx-x64.zip` for Intel Macs, unzip it
+  and drag **Trizbort Recast** to Applications. The app isn't signed with an Apple Developer ID, so the first time macOS
+  refuses to open it: go to **System Settings > Privacy & Security** and choose **Open Anyway**. The macOS build is
+  new and hasn't been tested on a Mac yet; reports are very welcome.
 
 Releases of the Windows-only Trizbort 2.x are still there too (`legacy-v*` tags and the older `v2.*` tags).
 
@@ -55,7 +58,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 - `src/Trizbort.Avalonia.Tests/`: headless Avalonia tests (`net10.0`).
 - `legacy/`: the Windows Forms Trizbort 2.x (`v2.3.1-beta.2`) with its own `Trizbort.Legacy.sln`, kept for hotfixes
   and as the reference for Recast's behaviour; see [legacy/README.md](legacy/README.md).
-- `packaging/`: file association for Linux and Windows.
+- `packaging/`: app icon, macOS app bundle, and file association for Linux and Windows.
 - `scripts/`: developer scripts, including the export comparison between the two apps.
 - `tests/manual/`: manual map fixtures and test scripts (not run by `dotnet test`).
 - `samples/`: sample maps and transcripts.
@@ -84,7 +87,7 @@ under a heading without the prefix, such as `## [0.9.0-beta.1]`.
 
 | Tag | Builds | Changelog |
 |---|---|---|
-| `recast-v0.9.0-beta.1` | Trizbort Recast for Windows x64 and Linux x64 | [changelog.md](changelog.md) |
+| `recast-v0.9.0-beta.1` | Trizbort Recast for Windows x64, Linux x64 and macOS (Apple Silicon and Intel) | [changelog.md](changelog.md) |
 | `legacy-v2.3.2` | Trizbort 2.x for Windows x64 | [legacy/changelog.md](legacy/changelog.md) |
 
 ## License

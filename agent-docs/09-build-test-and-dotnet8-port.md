@@ -237,7 +237,7 @@ and is **not** produced any more. Pushing a tag starts a release; the prefix pic
 
 | Tag | Workflow | Runner | Assets | Changelog |
 |---|---|---|---|---|
-| `recast-vX.Y.Z[.R][-beta.N]` | `.github/workflows/release.yml` | ubuntu-latest | `TrizbortRecast-<v>-win-x64.zip` (`TrizbortRecast.exe`), `TrizbortRecast-<v>-linux-x64.tar.gz` (`trizbort-recast` plus the `packaging/linux` files) | root `changelog.md` |
+| `recast-vX.Y.Z[.R][-beta.N]` | `.github/workflows/release.yml` | ubuntu-latest + macos-latest | `TrizbortRecast-<v>-win-x64.zip` (`TrizbortRecast.exe`), `TrizbortRecast-<v>-linux-x64.tar.gz` (`trizbort-recast`, icon and the `packaging/linux` files), `TrizbortRecast-<v>-osx-arm64.zip` and `-osx-x64.zip` (`Trizbort Recast.app`, built and ad-hoc signed by `packaging/macos/make-app.sh`) | root `changelog.md` |
 | `legacy-vX.Y.Z[.R][-beta.N]` | `.github/workflows/release-legacy.yml` | windows-latest | `Trizbort-<v>-win-x64.zip` (`Trizbort.exe`) | `legacy/changelog.md` |
 
 The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefixes. Both workflows:
