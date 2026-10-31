@@ -47,11 +47,9 @@
                         <StackPanel Spacing="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <CheckBox Content="Save to _PDF" IsChecked="{Binding SaveToPdf}" />
-                                <TextBlock Classes="hint" Text="(not active yet)" VerticalAlignment="Center" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <CheckBox Content="Save to _Image" IsChecked="{Binding SaveToImage}" />
-                                <TextBlock Classes="hint" Text="(not active yet)" VerticalAlignment="Center" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <CheckBox Content="Save _TADS to ADV3Lite" IsChecked="{Binding SaveTadsToAdv3Lite}" />

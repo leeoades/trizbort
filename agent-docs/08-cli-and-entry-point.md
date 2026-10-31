@@ -86,3 +86,12 @@ Trizbort.exe mygame.trizbort
 Trizbort.exe --automap transcript.txt --quicksave mygame.trizbort --exit
 Trizbort.exe mygame.trizbort --inform7 story.ni --exit
 ```
+
+### Avalonia client (tickets 107, 110)
+
+`StartupActions.RunCommandLineActionsAsync` runs after the map is loaded, in this order: `--automap`
+(`HeadlessAutomap`, project marked not dirty afterwards), the code export flags, `--quicksave`
+(`HeadlessSave.QuickSave`), `--smartsave` (`SmartSaveService.Plan`/`RunAsync`, silent, needs a saved map),
+then `--exit` (clears the dirty flag first so there is no unsaved-changes prompt). Each step is isolated:
+failures go to stderr and set `App.ExitCode = 1`. `--name` is parsed and ignored. Smart Save writes
+`<map>.pdf` (`IMapPdfWriter`) and `<map>.<image ext>` (`IMapImageWriter`) per the `SaveToPDF`/`SaveToImage` settings.
