@@ -17,6 +17,8 @@ internal static class ElementToolTipFactory
     internal static readonly Color ConnectionBackground = Color.FromRgb(255, 250, 205); // LemonChiffon
     internal static readonly Color RoomBackground = Color.FromRgb(173, 216, 230); // LightBlue
 
+    internal static readonly Color InvalidRoomBackground = Color.FromRgb(255, 0, 0);
+
     internal static Color BackgroundFor(TooltipElementKind kind)
     {
         return kind == TooltipElementKind.Connection ? ConnectionBackground : RoomBackground;
@@ -42,7 +44,9 @@ internal static class ElementToolTipFactory
 
         return new Border
         {
-            Background = new SolidColorBrush(BackgroundFor(model.Kind)),
+            Background = new SolidColorBrush(model.Element is Trizbort.Domain.Elements.Room { } room && !room.Valid()
+                ? InvalidRoomBackground
+                : BackgroundFor(model.Kind)),
             CornerRadius = new global::Avalonia.CornerRadius(3),
             Padding = new global::Avalonia.Thickness(6, 4),
             Child = panel

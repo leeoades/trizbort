@@ -719,9 +719,15 @@ public class Room : Element, ISizeable
     return bounds.GetCorner(compassPort.CompassPoint);
   }
 
+  /// <summary>True when no validation rule is broken (call <see cref="CheckValidation" /> first for fresh results).</summary>
+  public bool Valid()
+  {
+    return ValidationState == null || ValidationState.Count == 0;
+  }
+
   public override Color GetToolTipColor()
   {
-    return Color.LightBlue;
+    return !Valid() ? Color.Red : Color.LightBlue;
   }
 
   public override string GetToolTipFooter()
@@ -731,11 +737,25 @@ public class Room : Element, ISizeable
 
   public override string GetToolTipHeader()
   {
-    return $"{Name}{(IsDark ? " (Dark)" : string.Empty)}";
+    var text = $"{Name}{(IsDark ? " (Dark)" : string.Empty)}";
+    if (!Valid())
+    {
+      if (text.Length > 0) text += " - ";
+      text += "Room validation issues:";
+    }
+
+    return text;
   }
 
   public override string GetToolTipText()
   {
+    if (!Valid())
+    {
+      return ValidationState.Aggregate(
+        string.Empty,
+        (current, roomValidationState) => current + roomValidationState.Message + Environment.NewLine);
+    }
+
     var desc = string.Empty;
     var objects = string.Empty;
     var charsToShow = ApplicationSettingsController.AppSettings.ToolTipRoomDescriptionCharactersToShow;

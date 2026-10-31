@@ -45,6 +45,8 @@ public sealed record TooltipModel(string Title, string Body, string Footer, Tool
   {
     if (element == null || !ApplicationSettingsController.AppSettings.ShowTooltips || !element.HasTooltip()) return null;
 
+    if (element is Room room) room.CheckValidation();
+
     var title = element.GetToolTipHeader() ?? string.Empty;
     var body = element.GetToolTipText() ?? string.Empty;
     if (title.Length == 0 && body.Length == 0) return null;

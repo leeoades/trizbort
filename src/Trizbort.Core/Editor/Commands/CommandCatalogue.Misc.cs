@@ -43,5 +43,13 @@ public sealed partial class CommandCatalogue
       CanExecuteFunc = s => s.CanBackup,
       ExecuteAsyncFunc = s => s.BackupProjectAsync()
     });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "project.restoreDefaultSettings",
+      Title = "_Restore Default Map Settings",
+      MenuPath = "Edit",
+      Group = "4-settings",
+      ExecuteAsyncFunc = s => s.RestoreDefaultMapSettingsAsync()
+    });
   }
 }

@@ -234,6 +234,15 @@ public static class RoomDrawingAdapter
 
         // 10. Draw Room Text (Name, Subtitle, Objects)
         DrawRoomText(room, context, bounds, cache);
+
+        // 11. Validation: red cross through the room when it breaks a project rule.
+        room.CheckValidation();
+        if (!room.Valid())
+        {
+            var crossPen = new Pen(Brushes.Red, 2.0);
+            context.DrawLine(crossPen, new AvaloniaPoint(bounds.Left, bounds.Top), new AvaloniaPoint(bounds.Right, bounds.Bottom));
+            context.DrawLine(crossPen, new AvaloniaPoint(bounds.Right, bounds.Top), new AvaloniaPoint(bounds.Left, bounds.Bottom));
+        }
     }
 
     public static CoreVector[]? GetSecondFillPolygon(CoreRect bounds, string? location)
