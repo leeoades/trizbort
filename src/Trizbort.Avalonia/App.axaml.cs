@@ -15,6 +15,12 @@ public partial class App : Application
 {
     public static IServiceProvider Services { get; private set; } = null!;
 
+    /// <summary>Process exit code: 0 = ok, 1 = a command-line action failed (ticket 105).</summary>
+    public static int ExitCode { get; set; }
+
+    /// <summary>Opens files the OS activates us with while running (macOS); null elsewhere.</summary>
+    public static FileActivationHandler? FileActivation { get; private set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -39,6 +45,17 @@ public partial class App : Application
             session.Prompts = prompts;
             session.DebugEnabled = AppOptions.Debug;
             session.Clipboard = new AvaloniaClipboard(() => desktop.MainWindow);
+            if (OperatingSystem.IsMacOS())
+            {
+                // not verifiable without a Mac
+                var lifetime = TryGetFeature(typeof(global::Avalonia.Controls.ApplicationLifetimes.IActivatableLifetime))
+                    as global::Avalonia.Controls.ApplicationLifetimes.IActivatableLifetime;
+                if (lifetime != null)
+                {
+                    FileActivation = new FileActivationHandler(path => StartupActions.OpenAsync(mainWindowViewModel, path));
+                    FileActivation.Attach(new AvaloniaFileActivationSource(lifetime));
+                }
+            }
             FileWatcherWiring.Wire(dialogService, () => desktop.MainWindow, mainWindowViewModel.UpdateState,
                 mainWindowViewModel.CommandService.Session);
         }

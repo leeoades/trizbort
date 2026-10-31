@@ -130,6 +130,7 @@ public sealed partial class CommandCatalogue
   {
     var shift = ModifierKeys.Shift;
     var creation = KeypadModifier(Settings.KeypadNavigationCreationModifier);
+    var unexplored = UnexploredKeypadModifier(creation);
     foreach (var direction in _directions)
     {
       var compass = direction.Compass;
@@ -174,7 +175,38 @@ public sealed partial class CommandCatalogue
         CanExecuteFunc = s => s.CanNavigateFromSelection,
         ExecuteAsyncFunc = s => s.NavigateOrAddRoomAsync(compass)
       });
+
+      // (setting-dependent modifier, Alt by default)+keypad: select, else add an unexplored loopback connection.
+      if (unexplored.HasValue)
+      {
+        catalogue.Register(new EditorCommand
+        {
+          Id = "room.addUnexplored." + direction.Name,
+          Title = "Add Unexplored Connection " + direction.Name,
+          Hidden = true,
+          Scope = CommandScope.Canvas,
+          Gestures = new[] { new KeyGesture(direction.Keypad, unexplored.Value) },
+          CanExecuteFunc = s => s.HasSingleSelectedRoom,
+          ExecuteAsyncFunc = s => Run(() => s.AddUnexploredConnection(compass))
+        });
+      }
     }
+  }
+
+  /// <summary>
+  ///   The catalogue modifier for the unexplored keypad row, or null when the setting is unusable (none, Shift only,
+  ///   or the same as the creation row), in which case the command has no keypad binding.
+  /// </summary>
+  private static ModifierKeys? UnexploredKeypadModifier(ModifierKeys creation)
+  {
+    var setting = Settings.KeypadNavigationUnexploredModifier;
+    var modifiers = ModifierKeys.None;
+    if ((setting & (ModifierKeys.Control | ModifierKeys.Primary)) != 0) modifiers |= ModifierKeys.Primary;
+    if ((setting & ModifierKeys.Alt) != 0) modifiers |= ModifierKeys.Alt;
+    if ((setting & ModifierKeys.Shift) != 0) modifiers |= ModifierKeys.Shift;
+
+    if (modifiers == ModifierKeys.None || modifiers == ModifierKeys.Shift || modifiers == creation) return null;
+    return modifiers;
   }
 
   /// <summary>

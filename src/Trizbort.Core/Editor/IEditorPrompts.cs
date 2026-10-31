@@ -67,6 +67,15 @@ public interface IEditorPrompts
     return Task.FromResult<string>(null);
   }
 
+  /// <summary>
+  ///   Asks for a web address (Open Map from Web). The dialog validates that it is an http or https URL. Returns the
+  ///   entered text, or null when cancelled. Default implementation cancels.
+  /// </summary>
+  Task<string> PromptUrlAsync(string title, string label, CancellationToken token = default)
+  {
+    return Task.FromResult<string>(null);
+  }
+
   /// <summary>Shows a read-only text report in a window. Default implementation does nothing.</summary>
   Task ShowTextReportAsync(string title, string text, CancellationToken token = default)
   {

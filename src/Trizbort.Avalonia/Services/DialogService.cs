@@ -321,11 +321,15 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         var viewModel = scope.ServiceProvider.GetRequiredService<MapThemeViewModel>();
         viewModel.Initialize();
 
-        var dialog = new MapThemeDialog { DataContext = viewModel };
-        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
-        if (result)
+        var dialog = new MapThemeDialog
         {
-            _commandService.Session.Execute("Map theme", viewModel.ApplySelectedTheme);
+            DataContext = viewModel,
+            ApplyInference = inference => _commandService.Session.ApplyRoomStyleInference(inference)
+        };
+        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
+        if (result && viewModel.SelectedTheme != null)
+        {
+            _commandService.Session.ApplyTheme(viewModel.SelectedTheme, viewModel.ReplaceIndividualStyles);
         }
         return result;
     }

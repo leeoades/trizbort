@@ -40,7 +40,7 @@ public static class AppCommands
             Id = "file.new",
             Title = "_New Map",
             MenuPath = "File",
-            Group = "1-file",
+            Group = "1-a-new",
             Gestures = new[] { new KeyGesture(InputKey.N, primary) },
             ShowInToolbar = true, ToolbarOrder = 10, ToolbarGroup = "1-file", IconKey = "IconNew",
             ExecuteAsyncFunc = Run(() => vm!.NewMapAsync())
@@ -50,7 +50,7 @@ public static class AppCommands
             Id = "file.open",
             Title = "_Open Map...",
             MenuPath = "File",
-            Group = "1-file",
+            Group = "1-b-open",
             Gestures = new[] { new KeyGesture(InputKey.O, primary) },
             ShowInToolbar = true, ToolbarOrder = 20, ToolbarGroup = "1-file", IconKey = "IconOpen",
             ExecuteAsyncFunc = Run(() => vm!.OpenMapAsync())
@@ -60,7 +60,7 @@ public static class AppCommands
             Id = "file.save",
             Title = "_Save Map",
             MenuPath = "File",
-            Group = "1-file",
+            Group = "1-c-save",
             Gestures = new[] { new KeyGesture(InputKey.S, primary) },
             ShowInToolbar = true, ToolbarOrder = 30, ToolbarGroup = "1-file", IconKey = "IconSave",
             ExecuteAsyncFunc = Run(() => vm!.SaveMapAsync())
@@ -70,9 +70,27 @@ public static class AppCommands
             Id = "file.saveAs",
             Title = "Save Map _As...",
             MenuPath = "File",
-            Group = "1-file",
+            Group = "1-c-save",
             Gestures = new[] { new KeyGesture(InputKey.S, primary | ModifierKeys.Shift) },
             ExecuteAsyncFunc = Run(() => vm!.SaveMapAsAsync())
+        });
+        c.Register(new EditorCommand
+        {
+            Id = "file.openWeb",
+            Title = "Open Map from _Web...",
+            MenuPath = "File",
+            Group = "1-b-open",
+            Gestures = new[] { new KeyGesture(InputKey.O, primary | ModifierKeys.Shift) },
+            ExecuteAsyncFunc = s => vm == null ? Task.CompletedTask : WebAndSmartSaveCommands.OpenFromWebAsync(s, vm)
+        });
+        c.Register(new EditorCommand
+        {
+            Id = "file.smartSave",
+            Title = "Sma_rt Save",
+            MenuPath = "File",
+            Group = "1-c-save",
+            Gestures = new[] { new KeyGesture(InputKey.S, primary | ModifierKeys.Alt) },
+            ExecuteAsyncFunc = s => vm == null ? Task.CompletedTask : WebAndSmartSaveCommands.SmartSaveAsync(s, vm)
         });
 
         // Group is "<group in File menu>/<group in Export submenu>".

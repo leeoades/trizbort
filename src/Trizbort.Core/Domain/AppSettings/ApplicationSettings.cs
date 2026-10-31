@@ -46,6 +46,19 @@ public class ApplicationSettings
   public int PortAdjustDetail { get; set; }
   public List<string> RecentProjects { get; } = new();
   public bool SaveAt100 { get; set; }
+
+  /// <summary>
+  ///   Scale chosen in the image export options prompt: 0 = 100%, 1 = current zoom, 2 = custom percent.
+  ///   -1 means not chosen yet (the prompt then starts from <see cref="SaveAt100" />).
+  /// </summary>
+  public int ExportImageScaleMode { get; set; } = -1;
+
+  /// <summary>Custom scale percent chosen in the image export options prompt.</summary>
+  public int ExportImageCustomScalePercent { get; set; } = 100;
+
+  /// <summary>Whether the image export options prompt last had "Selection only" ticked.</summary>
+  public bool ExportImageSelectionOnly { get; set; }
+
   public bool SaveTadstoAdv3Lite { get; set; }
   public bool SaveToImage { get; set; }
   public bool SaveToPDF { get; set; }

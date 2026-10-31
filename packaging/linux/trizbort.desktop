@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Trizbort
+Comment=Map editor for interactive fiction
+Exec=trizbort %f
+Icon=trizbort
+Terminal=false
+Categories=Graphics;Utility;
+MimeType=application/x-trizbort;

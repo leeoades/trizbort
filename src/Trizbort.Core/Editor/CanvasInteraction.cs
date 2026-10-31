@@ -29,6 +29,7 @@ public sealed class CanvasInteraction : IDisposable
   private readonly HitTester _hit;
 
   private CanvasDragMode _mode = CanvasDragMode.None;
+  private bool _tooltipSuppressed;
   private PointerButton _gestureButton = PointerButton.None;
   private AdornerState _adorners = AdornerState.Empty;
   private IReadOnlyList<ResizeHandle> _handles = new List<ResizeHandle>();
@@ -109,6 +110,7 @@ public sealed class CanvasInteraction : IDisposable
     if (IsGestureActive) return true;
     if (input.Button == PointerButton.None) return false;
 
+    _tooltipSuppressed = true;
     _gestureProject = _session.Project;
     var world = _session.Viewport.ClientToCanvas(input.Client);
     _lastWorld = world;
@@ -254,6 +256,7 @@ public sealed class CanvasInteraction : IDisposable
     var world = _session.Viewport.ClientToCanvas(input.Client);
     _lastWorld = world;
     _referenceJumpHeld = IsReferenceJumpModifier(input.Modifiers);
+    if (_mode == CanvasDragMode.None && _pendingPort == null) _tooltipSuppressed = false;
 
     if (_pendingPort != null)
     {
@@ -349,6 +352,8 @@ public sealed class CanvasInteraction : IDisposable
     var direction = input.DeltaY > 0 ? 1 : input.DeltaY < 0 ? -1 : 0;
     _session.Viewport.ZoomWheel(direction, input.Client, IsCtrl(input.Modifiers),
       ApplicationSettingsController.AppSettings.InvertMouseWheel);
+    _tooltipSuppressed = true;
+    Refresh();
   }
 
   #endregion
@@ -721,7 +726,10 @@ public sealed class CanvasInteraction : IDisposable
     else if (_pendingPort != null)
       pending = new PendingLine(_pendingPort, _lastWorld);
 
-    var tooltip = _mode == CanvasDragMode.None && _pendingPort == null ? _hoverElement : null;
+    // No tooltip while a button is down, the wheel was just used, or a drag is under way (legacy hid it on mouse down/wheel).
+    var tooltip = _mode == CanvasDragMode.None && _pendingPort == null && !_tooltipSuppressed
+      ? TooltipModel.Create(_hoverElement)
+      : null;
 
     var state = new AdornerState(
       _hoverElement,
@@ -751,6 +759,7 @@ public sealed class CanvasInteraction : IDisposable
            && a.DragWaypoint == b.DragWaypoint
            && a.Cursor == b.Cursor
            && ReferenceEquals(a.TooltipTarget, b.TooltipTarget)
+           && a.Tooltip?.Kind == b.Tooltip?.Kind
            && Equals(a.Marquee, b.Marquee)
            && Equals(a.PendingConnection, b.PendingConnection)
            && SameHandles(a.Handles, b.Handles)

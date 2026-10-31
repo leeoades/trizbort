@@ -24,20 +24,9 @@ public static class MinimapTransform
 
         if (includePadding)
         {
-            if (Trizbort.Setup.Settings.DocumentSpecificMargins)
-            {
-                bounds.Inflate(Trizbort.Setup.Settings.DocHorizontalMargin, Trizbort.Setup.Settings.DocVerticalMargin);
-            }
-            else if (Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.SpecifyGenMargins)
-            {
-                bounds.Inflate(
-                    Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.GenHorizontalMargin,
-                    Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.GenVerticalMargin);
-            }
-            else
-            {
-                bounds.Inflate(30f);
-            }
+            // Same margins as the reference canvas (map margins, general margins, or the text overhang allowance).
+            bounds = Trizbort.Export.ImageExportPlanner.PadBounds(
+                bounds, Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings);
         }
 
         return bounds;

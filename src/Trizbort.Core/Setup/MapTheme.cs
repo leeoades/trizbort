@@ -80,6 +80,25 @@ public sealed class MapTheme
     };
   }
 
+  /// <summary>True when two themes describe the same look (names are ignored).</summary>
+  public static bool SameLook(MapTheme a, MapTheme b)
+  {
+    if (a == null || b == null) return false;
+    var first = a.Name;
+    var second = b.Name;
+    try
+    {
+      a.Name = string.Empty;
+      b.Name = string.Empty;
+      return JsonConvert.SerializeObject(a) == JsonConvert.SerializeObject(b);
+    }
+    finally
+    {
+      a.Name = first;
+      b.Name = second;
+    }
+  }
+
   public static MapTheme Load(string fileName)
   {
     var theme = JsonConvert.DeserializeObject<MapTheme>(File.ReadAllText(fileName));

@@ -487,11 +487,13 @@ public class MapCanvasControl : Control
 
     private void UpdateToolTip()
     {
-        var target = _interaction?.Adorners.TooltipTarget;
+        var model = _interaction?.Adorners.Tooltip;
+        var target = model?.Element;
         if (ReferenceEquals(target, _toolTipTarget)) return;
 
+        // The model is null while a drag or the wheel is active, which also closes any open tooltip.
         _toolTipTarget = target;
-        ToolTip.SetTip(this, BuildToolTipText(target));
+        ToolTip.SetTip(this, model == null ? null : ElementToolTipFactory.Build(model));
     }
 
     internal static string? BuildToolTipText(Element? element)
@@ -1129,7 +1131,8 @@ public class MapCanvasControl : Control
         CoreVector origin,
         double zoomFactor,
         double width,
-        double height)
+        double height,
+        IReadOnlyCollection<Element>? onlyElements = null)
     {
         if (project == null || width <= 0 || height <= 0) return;
 
@@ -1146,7 +1149,7 @@ public class MapCanvasControl : Control
 
         using (context.PushTransform(transformMatrix))
         {
-            var sorted = project.Elements.ToList();
+            var sorted = (onlyElements ?? (IReadOnlyCollection<Element>)project.Elements).ToList();
             sorted.Sort();
             DrawElements(context, sorted);
         }
@@ -1160,30 +1163,27 @@ public class MapCanvasControl : Control
     {
         if (project == null || project.Elements.Count == 0) return null;
 
-        var bounds = MinimapTransform.ComputeCanvasBounds(project.Elements, includePadding: true);
-        if (bounds == CoreRect.Empty || bounds.Width <= 0 || bounds.Height <= 0) return null;
+        var plan = Trizbort.Export.ImageExportPlanner.Plan(
+            project,
+            null,
+            null,
+            new Trizbort.Export.ImageExportOptions { Scale = scale > 0 ? scale : 1.0 },
+            Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings);
+        return RenderToBitmap(project, plan);
+    }
 
-        const int maxDimension = 8192;
-        const int minDimension = 16;
+    /// <summary>
+    /// Renders the area and elements described by an image export plan (see <c>ImageExportPlanner</c>).
+    /// Returns null when the plan is empty.
+    /// </summary>
+    public static RenderTargetBitmap? RenderToBitmap(Project? project, Trizbort.Export.ImageExportPlan? plan)
+    {
+        if (project == null || plan == null || plan.IsEmpty) return null;
 
-        var requestedScale = scale > 0 ? scale : 1.0;
-        var targetW = bounds.Width * requestedScale;
-        var targetH = bounds.Height * requestedScale;
-
-        // Scale down to fit within maxDimension if either axis exceeds it
-        var fitScale = Math.Min(1.0, Math.Min((double)maxDimension / targetW, (double)maxDimension / targetH));
-        var effectiveScale = requestedScale * fitScale;
-
-        var width = Math.Clamp((int)Math.Ceiling(bounds.Width * effectiveScale), minDimension, maxDimension);
-        var height = Math.Clamp((int)Math.Ceiling(bounds.Height * effectiveScale), minDimension, maxDimension);
-
-        // Recompute effectiveScale against actual clamped dimensions to ensure everything fits inside
-        effectiveScale = Math.Min((double)width / bounds.Width, (double)height / bounds.Height);
-
-        var bitmap = new RenderTargetBitmap(new PixelSize(width, height), new AvaloniaVector(96, 96));
+        var bitmap = new RenderTargetBitmap(new PixelSize(plan.Width, plan.Height), new AvaloniaVector(96, 96));
         using (var ctx = bitmap.CreateDrawingContext())
         {
-            RenderMap(ctx, project, bounds.Center, effectiveScale, width, height);
+            RenderMap(ctx, project, plan.Bounds.Center, plan.Scale, plan.Width, plan.Height, plan.Elements);
         }
 
         return bitmap;

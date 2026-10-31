@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.OpenUrlDialog"
+        Title="Load from Web"
+        Width="480" Height="170"
+        MinWidth="408" MinHeight="170" MaxHeight="170"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <!-- Fixed height: the error row is always reserved so the dialog does not jump when a message appears. -->
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="8" Margin="16">
+        <Label Grid.Row="0" Classes="field-label" Content="_URL:" Target="{Binding #UrlBox}" />
+        <TextBox Grid.Row="1" x:Name="UrlBox" Watermark="https://example.com/map.trizbort"
+                 ToolTip.Tip="The web address (http or https) of a Trizbort map." />
+        <TextBlock Grid.Row="2" x:Name="ErrorText" Classes="error" MinHeight="18" />
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button x:Name="OkButton" Classes="dialog-button" Content="OK" IsDefault="True" Click="OnOkClick" />
+            <Button x:Name="CancelButton" Classes="dialog-button" Content="Cancel" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>

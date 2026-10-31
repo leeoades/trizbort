@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.ImageExportOptionsDialog"
+        Title="Export Image"
+        Width="360" Height="300"
+        MinWidth="306" MinHeight="255"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12" Margin="16">
+        <HeaderedContentControl Grid.Row="0" Classes="group" Header="Scale">
+            <StackPanel Spacing="8">
+                <RadioButton x:Name="ActualSizeRadio" GroupName="Scale" Content="_Actual size (100%)" />
+                <RadioButton x:Name="CurrentZoomRadio" GroupName="Scale" Content="Current _zoom" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <RadioButton x:Name="CustomRadio" GroupName="Scale" Content="C_ustom:" VerticalAlignment="Center" />
+                    <NumericUpDown x:Name="CustomPercent" Minimum="1" Maximum="800" Increment="10" FormatString="0"
+                                   Value="100" Width="120" IsEnabled="{Binding #CustomRadio.IsChecked}"
+                                   AutomationProperties.Name="Custom scale percent" />
+                    <TextBlock Text="%" VerticalAlignment="Center" />
+                </StackPanel>
+            </StackPanel>
+        </HeaderedContentControl>
+
+        <HeaderedContentControl Grid.Row="1" Classes="group" Header="Content">
+            <StackPanel Spacing="4">
+                <CheckBox x:Name="SelectionOnlyCheck" Content="_Selection only"
+                          ToolTip.Tip="Export only the selected rooms, labels and connections." />
+                <TextBlock x:Name="NoSelectionHint" Classes="hint" Text="Nothing is selected." />
+            </StackPanel>
+        </HeaderedContentControl>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Classes="dialog-button" Content="_OK" IsDefault="True" Click="OnOkClick" />
+            <Button Classes="dialog-button" Content="_Cancel" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>

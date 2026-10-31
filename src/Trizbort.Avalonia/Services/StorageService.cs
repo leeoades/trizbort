@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using Trizbort.Avalonia.Controls;
+using Trizbort.Avalonia.Views.Dialogs;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Export;
@@ -156,7 +157,8 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
         var filePath = originalFileName;
         var pickedPath = filePath;
 
-        if (saveAs || string.IsNullOrEmpty(filePath))
+        // A map opened from the web has a URL as its name: Save redirects to Save As.
+        if (saveAs || string.IsNullOrEmpty(filePath) || RecentFiles.IsUrl(filePath))
         {
             var suggestedName = string.IsNullOrEmpty(currentProject.FileName)
                 ? (string.IsNullOrEmpty(currentProject.Title) ? "Untitled" : currentProject.Title)
@@ -358,6 +360,59 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
         return true;
     }
 
+    /// <summary>
+    ///   Turns the choices of the image export options prompt into export options. Scale mode 0 is 100%, 1 the
+    ///   current zoom, 2 a custom percentage.
+    /// </summary>
+    public static ImageExportOptions BuildImageExportOptions(int mode, int customPercent, bool selectionOnly, double zoom)
+    {
+        double scale;
+        switch (mode)
+        {
+            case 1:
+                scale = zoom > 0 ? zoom : 1.0;
+                break;
+            case 2:
+                scale = Math.Clamp(customPercent, 1, 800) / 100.0;
+                break;
+            default:
+                scale = 1.0;
+                break;
+        }
+
+        return new ImageExportOptions { Scale = scale, SelectionOnly = selectionOnly };
+    }
+
+    /// <summary>
+    ///   Asks for the image export scale and selection-only option, remembering the answer in the settings.
+    ///   Returns null when cancelled. Without a window the settings-driven behaviour applies (no prompt).
+    /// </summary>
+    protected virtual async Task<ImageExportOptions?> PromptImageExportOptionsAsync(
+        Window? owner,
+        ApplicationSettings settings,
+        bool hasSelection,
+        double zoom)
+    {
+        if (owner == null) return new ImageExportOptions();
+
+        var mode = settings.ExportImageScaleMode;
+        if (mode < 0 || mode > 2) mode = settings.SaveAt100 ? 0 : 1;
+
+        var dialog = new ImageExportOptionsDialog
+        {
+            Mode = mode,
+            CustomScalePercent = settings.ExportImageCustomScalePercent,
+            SelectionOnly = settings.ExportImageSelectionOnly && hasSelection
+        };
+        dialog.Configure(zoom, hasSelection);
+        if (!await dialog.ShowDialog<bool>(owner)) return null;
+
+        settings.ExportImageScaleMode = dialog.Mode;
+        settings.ExportImageCustomScalePercent = dialog.CustomScalePercent;
+        if (hasSelection) settings.ExportImageSelectionOnly = dialog.SelectionOnly;
+        return BuildImageExportOptions(dialog.Mode, dialog.CustomScalePercent, dialog.SelectionOnly, zoom);
+    }
+
     public async Task<bool> ExportImageAsync(TopLevel? topLevel)
     {
         if (topLevel == null) return false;
@@ -375,6 +430,15 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
         var suggestedName = string.IsNullOrEmpty(currentProject.Title)
             ? (string.IsNullOrEmpty(currentProject.FileName) ? "map" : Path.GetFileNameWithoutExtension(currentProject.FileName))
             : currentProject.Title;
+
+        // E018/E022: scale and selection-only options, asked before the file picker.
+        var session = _commandService?.Session;
+        var exportOptions = await PromptImageExportOptionsAsync(
+            GetWindow(topLevel),
+            ApplicationSettingsController.AppSettings,
+            session != null && session.Selection.Count > 0,
+            session?.Viewport.ZoomFactor ?? 1.0);
+        if (exportOptions == null) return false;
 
         var defaultFormat = ImageFormats.FromSetting(ApplicationSettingsController.AppSettings.DefaultImageType);
         var filters = new Dictionary<ImageFormat, FilePickerFileType>();
@@ -423,7 +487,14 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
                 if (!replace) return false;
             }
 
-            using var bitmap = MapCanvasControl.RenderToBitmap(currentProject);
+            exportOptions.Format = chosenFormat;
+            var plan = ImageExportPlanner.Plan(
+                currentProject,
+                session?.Selection,
+                session?.Viewport,
+                exportOptions,
+                ApplicationSettingsController.AppSettings);
+            using var bitmap = MapCanvasControl.RenderToBitmap(currentProject, plan);
             if (bitmap == null)
             {
                 await _dialogService.ShowMessageAsync(
@@ -446,6 +517,11 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
             catch
             {
                 // remembering the folder is best effort
+            }
+
+            if (plan.Message != null)
+            {
+                await _dialogService.ShowMessageAsync(GetWindow(topLevel), "Export Image", plan.Message);
             }
             return true;
         }

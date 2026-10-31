@@ -47,12 +47,15 @@ public class CommandLineOptions
   [Option("quest", HelpText = "Export to Quest.")]
   public string Quest { get; set; }
 
-  [Option("quest rooms", HelpText = "Export to Quest section.")]
+  [Option("questrooms", HelpText = "Export to Quest section (rooms only, no header).")]
   public string QuestRooms { get; set; }
+
+  [Option("adventuron", HelpText = "Export to Adventuron.")]
+  public string Adventuron { get; set; }
 
   [Option("debug", HelpText = "Enable debug features.")]
   public bool Debug { get; set; }
 
   [Option("config-dir", HelpText = "Use this folder for per-user settings.")]
   public string ConfigDir { get; set; }
-}
+}

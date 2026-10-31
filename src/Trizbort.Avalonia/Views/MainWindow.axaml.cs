@@ -218,6 +218,7 @@ public partial class MainWindow : Window
                 services.GetRequiredService<IStorageService>(),
                 services.GetRequiredService<IDialogService>(),
                 this);
+            if (App.FileActivation != null) await App.FileActivation.MarkReady();
         }
         catch (Exception)
         {

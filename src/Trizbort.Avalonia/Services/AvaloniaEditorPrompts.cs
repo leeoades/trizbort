@@ -139,6 +139,30 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         });
     }
 
+    public Task<string?> PromptUrlAsync(string title, string label, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            if (owner == null)
+            {
+                return null;
+            }
+
+            var dialog = new OpenUrlDialog { Title = title };
+            return await dialog.ShowDialog<string?>(owner);
+        });
+    }
+
+    public Task<bool> ConfirmAsync(string message, string title, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var service = _dialogService ?? App.Services?.GetService<IDialogService>();
+            return service != null && await service.ShowConfirmationAsync(_getOwner(), title, message);
+        });
+    }
+
     public Task ShowTextReportAsync(string title, string text, CancellationToken token = default)
     {
         return OnUiThreadAsync<object?>(async () =>

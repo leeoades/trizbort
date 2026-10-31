@@ -3,6 +3,7 @@ using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
+using Trizbort.Export;
 
 namespace Trizbort.Avalonia;
 
@@ -28,10 +29,43 @@ public static class StartupActions
         {
             // a file named on the command line always wins over "load last project"
             await OpenNamedFileAsync(vm, options, storage, dialogs, owner);
-            return;
+        }
+        else
+        {
+            await OpenLastProjectAsync(vm, options, storage, settings ?? ApplicationSettingsController.AppSettings, owner);
         }
 
-        await OpenLastProjectAsync(vm, options, storage, settings ?? ApplicationSettingsController.AppSettings, owner);
+        RunExports(options, Console.Out, Console.Error);
+    }
+
+    /// <summary>
+    ///   Opens a map the OS asked us to open (prompts about unsaved changes first). Safe to route through
+    ///   <see cref="FileActivationHandler" />, which queues requests until the window is shown.
+    /// </summary>
+    public static Task OpenAsync(MainWindowViewModel vm, string path)
+    {
+        return vm.OpenRecentMapAsync(path);
+    }
+
+    /// <summary>
+    ///   Runs the code export flags against the current map (ticket 105). Writes "Exported ..." lines to
+    ///   <paramref name="output" />, errors to <paramref name="error" />, and sets <see cref="App.ExitCode" /> to 1 on any failure.
+    /// </summary>
+    public static void RunExports(CommandLineOptions options, TextWriter output, TextWriter error)
+    {
+        if (!HeadlessExport.HasExportFlags(options)) return;
+        foreach (var result in HeadlessExport.Run(options, Project.Current))
+        {
+            if (result.Error == null)
+            {
+                output.WriteLine($"Exported {result.Flag} to {result.File}");
+            }
+            else
+            {
+                error.WriteLine($"Could not export {result.Flag} to {result.File}: {result.Error}");
+                App.ExitCode = 1;
+            }
+        }
     }
 
     private static async Task OpenLastProjectAsync(

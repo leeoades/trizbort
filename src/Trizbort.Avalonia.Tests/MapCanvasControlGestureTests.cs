@@ -490,7 +490,8 @@ public class MapCanvasControlGestureTests
             window.MouseMove(centerClient);
 
             canvas.HoverElement.ShouldBe(room);
-            var tip = ToolTip.GetTip(canvas) as string;
+            // The tooltip is a styled control now (ticket 065); read its plain text.
+            var tip = ElementToolTipFactory.PlainText(ToolTip.GetTip(canvas) as Control);
             tip.ShouldNotBeNull();
             tip.ShouldContain("Grand Hall");
             tip.ShouldContain("Hall description");
@@ -1439,7 +1440,7 @@ public class MapCanvasControlGestureTests
             MapCanvasControl.BuildToolTipText(conn).ShouldNotBeNull();
 
             window.MouseMove(canvas.CanvasToClient(new Vector(48, 32)));
-            (ToolTip.GetTip(canvas) as string).ShouldNotBeNull().ShouldContain("Cellar");
+            ElementToolTipFactory.PlainText(ToolTip.GetTip(canvas) as Control).ShouldContain("Cellar");
 
             settings.ShowDescriptionsInTooltips = false;
             settings.ShowObjectsInTooltips = false;

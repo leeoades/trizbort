@@ -4,68 +4,71 @@
         x:Class="Trizbort.Avalonia.Views.Dialogs.MapThemeDialog"
         x:DataType="vm:MapThemeViewModel"
         Title="Map Themes"
-        Width="480" Height="420"
-        MinWidth="400" MinHeight="360"
+        Width="640" Height="520"
+        MinWidth="544" MinHeight="442"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
     <Grid RowDefinitions="*,Auto" Margin="16">
-        <Grid Grid.Row="0" ColumnDefinitions="160,*">
-            <!-- Theme List -->
-            <DockPanel Grid.Column="0" Margin="0,0,12,0">
-                <TextBlock DockPanel.Dock="Top" Text="Available Themes:" FontWeight="SemiBold" Margin="0,0,0,6" />
-                <ListBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" FontWeight="Medium" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </DockPanel>
+        <Grid Grid.Row="0" ColumnDefinitions="200,12,*">
+            <!-- Theme list -->
+            <HeaderedContentControl Grid.Column="0" Classes="group" Header="Theme">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Bottom" Classes="hint" Margin="0,8,0,0" Text="{Binding CurrentMatchText}" />
+                    <Label DockPanel.Dock="Top" Classes="field-label" Content="_Available themes:" Target="{Binding #ThemeList}" />
+                    <ListBox x:Name="ThemeList" ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" FontWeight="Medium" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </HeaderedContentControl>
 
-            <!-- Theme Details & Options -->
-            <Border Grid.Column="1" Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
-                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                    BorderThickness="1" CornerRadius="4" Padding="12">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Theme Details" FontWeight="SemiBold" FontSize="14" />
-
-                    <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto,Auto" Margin="0,4" DataContext="{Binding SelectedTheme}">
+            <Grid Grid.Column="2" RowDefinitions="Auto,12,*">
+                <!-- Details -->
+                <HeaderedContentControl Grid.Row="0" Classes="group" Header="Details">
+                    <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="4"
+                          DataContext="{Binding SelectedTheme}">
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Opacity="0.8" />
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Name}" FontWeight="SemiBold" />
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Default Shape:" Opacity="0.8" Margin="0,4,0,0" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DefaultRoomShape}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Default shape:" Opacity="0.8" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding DefaultRoomShape}" />
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Room Font:" Opacity="0.8" Margin="0,4,0,0" />
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RoomFont.Name}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Room font:" Opacity="0.8" />
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding RoomFont.Name}" />
                     </Grid>
+                </HeaderedContentControl>
 
-                    <Separator Margin="0,6" />
+                <!-- Options -->
+                <HeaderedContentControl Grid.Row="2" Classes="group" Header="Options">
+                    <StackPanel Spacing="8">
+                        <CheckBox Content="_Reset individual room/line styles"
+                                  IsChecked="{Binding ReplaceIndividualStyles}"
+                                  ToolTip.Tip="Overrides any custom colors and shapes set on individual rooms/connections to match the theme." />
 
-                    <CheckBox Content="Reset individual room/line styles"
-                              IsChecked="{Binding ReplaceIndividualStyles}"
-                              ToolTip.Tip="Overrides any custom colors and shapes set on individual rooms/connections to match the theme." />
+                        <TextBlock x:Name="WarningText" Classes="hint" />
 
-                    <TextBlock Text="Warning: Some rooms or connections have custom styling. Checking this box will reset them."
-                               IsVisible="{Binding HasIndividualStyles}"
-                               Foreground="#E65100"
-                               FontSize="11" TextWrapping="Wrap" />
+                        <Separator />
 
-                    <Separator Margin="0,6" />
-
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Import Theme..." Click="OnImportThemeClick" />
-                        <Button Content="Export Theme..." Click="OnExportThemeClick" />
+                        <WrapPanel Orientation="Horizontal">
+                            <Button Content="_Import Theme..." Margin="0,0,8,8" Click="OnImportThemeClick" />
+                            <Button x:Name="ExportSelectedButton" Content="E_xport Selected Theme..." Margin="0,0,8,8" Click="OnExportThemeClick" />
+                            <Button Content="Export _Current Map Theme..." Margin="0,0,8,8" Click="OnExportCurrentThemeClick"
+                                    ToolTip.Tip="Saves the map's current look as a theme file." />
+                            <Button Content="Infer _Default Room Style..." Margin="0,0,8,8" Click="OnInferStyleClick"
+                                    ToolTip.Tip="Promotes room styling shared by most rooms to the map default." />
+                        </WrapPanel>
                     </StackPanel>
-                </StackPanel>
-            </Border>
+                </HeaderedContentControl>
+            </Grid>
         </Grid>
 
-        <!-- OK / Cancel Buttons -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,12,0,0">
-            <Button Content="Apply Theme" Width="100" IsDefault="True" Click="OnApplyClick" />
-            <Button Content="Cancel" Width="80" IsCancel="True" Click="OnCancelClick" />
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+            <Button Classes="dialog-button" Content="_Apply Theme" IsDefault="True" Click="OnApplyClick" />
+            <Button Classes="dialog-button" Content="_Cancel" IsCancel="True" Click="OnCancelClick" />
         </StackPanel>
     </Grid>
 </Window>

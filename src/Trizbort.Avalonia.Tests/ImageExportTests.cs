@@ -29,6 +29,9 @@ public class ImageExportTests
     {
         _previousProject = Project.Current;
         Project.Current = new Project();
+        // Pixel and size assertions assume default map settings (white canvas, default fonts and margins);
+        // other fixtures change these globals, so start from the defaults.
+        Trizbort.Setup.Settings.Reset();
     }
 
     [TearDown]
@@ -37,6 +40,7 @@ public class ImageExportTests
         var created = Project.Current;
         Project.Current = _previousProject!;
         created.Dispose();
+        Trizbort.Setup.Settings.Reset();
     }
 
     [Test]
@@ -232,8 +236,9 @@ public class ImageExportTests
         // Dimensions must be capped at 8192
         width.ShouldBeLessThanOrEqualTo(8192);
         height.ShouldBeLessThanOrEqualTo(8192);
-        width.ShouldBe(8192);
-        height.ShouldBe(8192);
+        // The longer side is capped exactly; the other keeps the aspect ratio (names overhang the rooms, so the bounds
+        // are not quite square).
+        Math.Max(width, height).ShouldBe(8192);
 
         var bounds = MinimapTransform.ComputeCanvasBounds(Project.Current.Elements, includePadding: true);
         var effectiveScale = Math.Min((double)width / bounds.Width, (double)height / bounds.Height);

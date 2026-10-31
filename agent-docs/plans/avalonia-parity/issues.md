@@ -165,4 +165,11 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: low     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-020 -->
+## I-020 Primary+Backspace deletes on every OS; the shortcut map lists it for macOS only
+- Reported: 2026-10-31 by agent (ticket 067 conformance tests)   OS: Windows/Linux   Category: keys
+- `edit.deleteBackspace` binds Backspace and Primary+Backspace everywhere. Harmless (Ctrl+Backspace is unused on the
+  canvas), but it differs from the approved map. Decide: keep everywhere, or restrict Primary+Backspace to macOS.
+- Severity: low     Flags: needs-decision
+- Ticket: —
+
+<!-- Next ID: I-021 -->

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 
@@ -25,6 +26,36 @@ public enum CursorKind
   NoMove
 }
 
+/// <summary>The kind of element a tooltip describes; hosts colour the tooltip by it (rooms light blue, connections pale yellow).</summary>
+public enum TooltipElementKind
+{
+  Other,
+  Room,
+  Connection
+}
+
+/// <summary>What the canvas tooltip shows: title, body and footer are styled separately by the host.</summary>
+public sealed record TooltipModel(string Title, string Body, string Footer, TooltipElementKind Kind, Element Element)
+{
+  /// <summary>
+  ///   The tooltip for <paramref name="element" />, or null when tooltips are off, the element has none, or it has
+  ///   neither a title nor a body.
+  /// </summary>
+  public static TooltipModel Create(Element element)
+  {
+    if (element == null || !ApplicationSettingsController.AppSettings.ShowTooltips || !element.HasTooltip()) return null;
+
+    var title = element.GetToolTipHeader() ?? string.Empty;
+    var body = element.GetToolTipText() ?? string.Empty;
+    if (title.Length == 0 && body.Length == 0) return null;
+
+    var kind = element is Room ? TooltipElementKind.Room
+      : element is Connection ? TooltipElementKind.Connection
+      : TooltipElementKind.Other;
+    return new TooltipModel(title, body, element.GetToolTipFooter() ?? string.Empty, kind, element);
+  }
+}
+
 /// <summary>A connection being dragged out of <see cref="From" />, currently ending at world point <see cref="End" />.</summary>
 public readonly record struct PendingLine(Port From, Vector End);
 
@@ -43,8 +74,11 @@ public sealed record AdornerState(
   Rect? Marquee,
   PendingLine? PendingConnection,
   CursorKind Cursor,
-  Element TooltipTarget)
+  TooltipModel Tooltip)
 {
+  /// <summary>The element the tooltip describes, or null when no tooltip is shown.</summary>
+  public Element TooltipTarget => Tooltip?.Element;
+
   public static AdornerState Empty { get; } = new(
     null, null, null, null, null,
     new List<ResizeHandle>(), new List<Port>(),

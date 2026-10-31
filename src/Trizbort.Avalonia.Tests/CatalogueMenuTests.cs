@@ -61,7 +61,8 @@ public class CatalogueMenuTests
         var entries = file.Items.OfType<Control>()
             .Select(c => c is Separator ? "-" : Plain((c as MenuItem)!.Header))
             .ToList();
-        entries.ShouldBe(new[] { "New Map", "Open Map...", "Save Map", "Save Map As...", "-", "Export", "-", "Exit" });
+        // Reference grouping (legacy MainForm File menu): New | Open, Open from Web | Save, Save As, Smart Save | Backup (new) | Export | Exit.
+        entries.ShouldBe(new[] { "New Map", "-", "Open Map...", "Open Map from Web...", "-", "Save Map", "Save Map As...", "Smart Save", "-", "Backup", "-", "Export", "-", "Exit" });
 
         var export = Find(file.Items, "Export");
         export.Items.OfType<Control>()

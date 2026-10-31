@@ -44,7 +44,7 @@ public class DialogViewModelTests
         created.Dispose();
     }
 
-    [Test]
+    [AvaloniaTest]
     public void ServiceScope_ChildScopeDisposal_LeavesRootProviderUsable()
     {
         var rootProvider = App.ConfigureServices();
@@ -86,7 +86,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void RoomPropertiesViewModel_ReferenceRoomById_HandlesDuplicateNames()
     {
         var room1 = new Room(Project.Current) { Name = "Cave", Id = 1 };
@@ -113,7 +113,7 @@ public class DialogViewModelTests
         target.ReferenceRoomId.ShouldBe(room1.Id);
     }
 
-    [Test]
+    [AvaloniaTest]
     public void RoomPropertiesViewModel_SelfNameCollision_KeepsReferenceAndExcludesSelf()
     {
         // The edited room is first in Elements and shares the referenced room's name.
@@ -133,7 +133,7 @@ public class DialogViewModelTests
         editing.ReferenceRoomId.ShouldBe(other.Id);
     }
 
-    [Test]
+    [AvaloniaTest]
     public void RoomPropertiesViewModel_InitializeAndApplyTo_RoundTripsValuesCorrectly()
     {
         var room = new Room(Project.Current)
@@ -216,7 +216,7 @@ public class DialogViewModelTests
         room.RoomFillColor.ShouldBe(Color.Silver);
     }
 
-    [Test]
+    [AvaloniaTest]
     public void RoomPropertiesViewModel_CustomPositionAndBorderNone_RoundTrip()
     {
         var room = new Room(Project.Current)
@@ -270,7 +270,7 @@ public class DialogViewModelTests
         room.SecondFillLocation.ShouldBe(location);
     }
 
-    [Test]
+    [AvaloniaTest]
     public void EnumDisplay_ProducesFriendlyNames()
     {
         EnumDisplay.For(RoomShape.SquareCorners).ShouldBe("Straight Edges");
@@ -285,7 +285,7 @@ public class DialogViewModelTests
         EnumDisplay.For(HandDrawnStyle.MapDefault).ShouldStartWith("Map setting (");
     }
 
-    [Test]
+    [AvaloniaTest]
     public void ConnectionPropertiesViewModel_InitializeAndApplyTo_RoundTripsValuesCorrectly()
     {
         var v1 = new Vertex(new Vector(0, 0));
@@ -351,7 +351,7 @@ public class DialogViewModelTests
         connection.Door.ShouldBeNull();
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapLabelPropertiesViewModel_InitializeAndApplyTo_RoundTripsValuesCorrectly()
     {
         var label = new MapLabel(Project.Current)
@@ -394,7 +394,7 @@ public class DialogViewModelTests
         label.HasBackground.ShouldBeFalse();
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapLabelPropertiesViewModel_ShapeEnabled_WhenOutlineOrBackgroundIsOn()
     {
         var label = new MapLabel(Project.Current) { BorderStyle = BorderDashStyle.None, HasBackground = false };
@@ -416,7 +416,7 @@ public class DialogViewModelTests
         vm.ShapeEnabled.ShouldBeFalse();
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapLabelPropertiesViewModel_ShapeEnabled_RaisesChangeNotification()
     {
         var vm = new MapLabelPropertiesViewModel();
@@ -428,7 +428,7 @@ public class DialogViewModelTests
         raised.ShouldContain(nameof(MapLabelPropertiesViewModel.ShapeEnabled));
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapLabelPropertiesViewModel_EditEverySetting_RoundTripsThroughLabel()
     {
         var label = new MapLabel(Project.Current) { Text = "Old", BorderStyle = BorderDashStyle.None, HasBackground = false };
@@ -518,7 +518,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapSettingsViewModel_NewFields_RoundTripThroughSettings()
     {
         var savedHandle = Settings.HandleSize;
@@ -563,7 +563,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapSettingsViewModel_Validate_RejectsEmptyAndLetterlessRoomName()
     {
         var vm = new MapSettingsViewModel();
@@ -583,7 +583,7 @@ public class DialogViewModelTests
         vm.HasDefaultRoomNameError.ShouldBeFalse();
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapSettingsViewModel_ColorSettings_UseFriendlyNamesInOrder()
     {
         var vm = new MapSettingsViewModel();
@@ -601,7 +601,7 @@ public class DialogViewModelTests
         });
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapSettingsViewModel_FontStyle_RoundTripsToSettings()
     {
         var savedRoom = Settings.RoomFontMetadata.Clone();
@@ -674,7 +674,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapSettingsViewModel_ShapeChoices_UseLegacyNames()
     {
         var vm = new MapSettingsViewModel();
@@ -683,7 +683,7 @@ public class DialogViewModelTests
         vm.ShapeChoices.Select(c => c.Value).Distinct().Count().ShouldBe(4);
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapSettingsViewModel_RenameAndDeleteRegion_UpdatesRooms()
     {
         var savedRegions = Settings.Regions.ToList();
@@ -717,7 +717,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapSettingsViewModel_SwappedRegionNames_MoveRoomsCorrectly()
     {
         var savedRegions = Settings.Regions.ToList();
@@ -749,7 +749,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapSettingsViewModel_RegionValidation_ReportsMessagesAndSanitizes()
     {
         var savedRegions = Settings.Regions.ToList();
@@ -791,7 +791,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapSettingsViewModel_DefaultRegion_CannotBeDeletedOrRenamed_AndNewRegionsAreNumbered()
     {
         var savedRegions = Settings.Regions.ToList();
@@ -819,7 +819,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void MapSettingsViewModel_ApplyInsideSession_IsOneUndoStep()
     {
         var savedRegions = Settings.Regions.ToList();
@@ -855,7 +855,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void AppSettings_PortAdjustAndSmartSave_RoundTrip()
     {
         var settings = ApplicationSettingsController.AppSettings;
@@ -894,7 +894,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void AppSettings_TooltipMasterUntickedAndOk_TurnsBothChildrenOff()
     {
         var settings = ApplicationSettingsController.AppSettings;
@@ -923,7 +923,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void AppSettings_TooltipMasterReticked_RestoresPreviousChildren()
     {
         var settings = ApplicationSettingsController.AppSettings;
@@ -952,7 +952,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void AppSettings_TooltipMasterTickedWithBothChildrenOff_OkTurnsBothOn()
     {
         var settings = ApplicationSettingsController.AppSettings;
@@ -979,7 +979,7 @@ public class DialogViewModelTests
         }
     }
 
-    [Test]
+    [AvaloniaTest]
     public void AppSettings_TooltipDependencies_FollowMasterDescriptionsAndLimits()
     {
         var vm = new AppSettingsViewModel();
@@ -1010,7 +1010,7 @@ public class DialogViewModelTests
         vm.CanEditConnectionCharacterCount.ShouldBeTrue();
     }
 
-    [Test]
+    [AvaloniaTest]
     public void ConnectionPropertiesViewModel_SelectingPreset_FillsStartAndEnd_LeavesMiddle()
     {
         var vm = new ConnectionPropertiesViewModel { MidText = "through" };
@@ -1035,7 +1035,7 @@ public class DialogViewModelTests
         vm.MidText.ShouldBe("through");
     }
 
-    [Test]
+    [AvaloniaTest]
     public void ConnectionPropertiesViewModel_TypingText_TracksPreset()
     {
         var vm = new ConnectionPropertiesViewModel();
@@ -1055,7 +1055,7 @@ public class DialogViewModelTests
         vm.SelectedPreset.ShouldBe(TextPreset.Custom);
     }
 
-    [Test]
+    [AvaloniaTest]
     public void ConnectionPropertiesViewModel_ClearText_EmptiesAllAndSelectsCustom()
     {
         var vm = new ConnectionPropertiesViewModel();

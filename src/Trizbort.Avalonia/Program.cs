@@ -9,10 +9,11 @@ public static class Program
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
-    public static void Main(string[] args)
+    public static int Main(string[] args)
     {
         AppOptions.Initialize(CommandLineParsing.Parse(args));
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        var code = BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        return code != 0 ? code : App.ExitCode;
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.
