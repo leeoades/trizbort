@@ -12,6 +12,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="Avalonia.Headless.NUnit" Version="11.3.22" />
+		<!-- Code coverage (XPlat Code Coverage data collector); CI passes coverage.runsettings. -->
+		<PackageReference Include="coverlet.collector" Version="10.1.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
 		<PackageReference Include="NUnit" Version="3.14.0" />
 		<PackageReference Include="NUnit.Analyzers" Version="4.3.0">

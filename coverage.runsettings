@@ -5,7 +5,8 @@
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
           <Format>cobertura</Format>
-          <Include>[Trizbort]*</Include>
+          <!-- The app's own assemblies only (Trizbort.Core and Trizbort.Avalonia), not the tests or packages. -->
+          <Include>[Trizbort.Core]*,[Trizbort.Avalonia]*</Include>
           <ExcludeByFile>**/*.Designer.cs,**/obj/**</ExcludeByFile>
           <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
         </Configuration>
