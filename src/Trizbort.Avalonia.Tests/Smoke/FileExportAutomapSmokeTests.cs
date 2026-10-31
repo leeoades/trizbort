@@ -10,6 +10,7 @@ using Trizbort.Avalonia.ViewModels;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
+using Trizbort.Domain.Watchers;
 using Trizbort.Domain.Misc;
 using Trizbort.Editor;
 using Trizbort.Export;
@@ -252,17 +253,30 @@ public class FileExportAutomapSmokeTests
         public List<bool> SaveCalls { get; } = new();
         public int SavePickerShown { get; private set; }
 
+        public List<string> OpenedPaths { get; } = new();
+
         public Task<bool> OpenMapAsync(TopLevel? topLevel)
         {
             OpenCalls++;
             if (OpenPath == null) return Task.FromResult(false);
 
+            return Task.FromResult(LoadInto(OpenPath));
+        }
+
+        public Task<bool> OpenMapFromPathAsync(string path, TopLevel? topLevel)
+        {
+            OpenedPaths.Add(path);
+            return Task.FromResult(LoadInto(path));
+        }
+
+        private static bool LoadInto(string path)
+        {
             var project = new Project();
-            if (!new MapLoader(project).LoadMap(OpenPath)) return Task.FromResult(false);
-            project.FileName = OpenPath;
+            if (!new MapLoader(project).LoadMap(path)) return false;
+            project.FileName = path;
             project.IsDirty = false;
             Project.Current = project;
-            return Task.FromResult(true);
+            return true;
         }
 
         public Task<bool> SaveMapAsync(TopLevel? topLevel, bool saveAs = false)
@@ -284,6 +298,25 @@ public class FileExportAutomapSmokeTests
         public Task<string?> OpenThemeFileAsync(TopLevel? topLevel) => Task.FromResult<string?>(null);
         public Task<string?> SaveThemeFileAsync(TopLevel? topLevel, string suggestedName) => Task.FromResult<string?>(null);
         public Task<string?> OpenTranscriptFileAsync(TopLevel? topLevel, string? initialPath = null) => Task.FromResult<string?>(null);
+    }
+
+    /// <summary>Records disambiguation prompts and answers "new room" (as closing the dialog does).</summary>
+    private sealed class CountingPrompts : IEditorPrompts
+    {
+        public int DisambiguationCalls { get; private set; }
+        public int LastCandidateCount { get; private set; }
+
+        public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
+            Room existing, string newRoomName, CancellationToken token = default)
+            => Task.FromResult(AutomapSameDirectionResult.KeepRoom1);
+
+        public Task<RoomDisambiguation> DisambiguateRoomAsync(
+            string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, CancellationToken token = default)
+        {
+            DisambiguationCalls++;
+            LastCandidateCount = candidates.Count;
+            return Task.FromResult(RoomDisambiguation.CreateNew());
+        }
     }
 
     // ================================================================== 1. Start-up & File
@@ -466,37 +499,61 @@ public class FileExportAutomapSmokeTests
     }
 
     /// <summary>Smoke step 1.8: file changed by another program prompts to reload (known gap: A005 / I-003).</summary>
-    [Ignore("covered by Core FileWatcherTests; smoke harness still fakes the old dialog service (I-019)")]
     [Test]
     public async Task S1_08_ExternalFileChange_PromptsToReload()
     {
         var path = CopyFixtureToTemp(ManualFixture(Fixture1570));
+        File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddMinutes(-5));
         var dialog = new RecordingDialogService();
         var storage = new StubStorageService { OpenPath = path };
         var vm = CreateVm(dialog, storage);
-        await vm.OpenMapAsync();
 
-        File.AppendAllText(path, Environment.NewLine);
-        File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(5));
-        await WaitUntilAsync(() => dialog.TotalPrompts > 0, 3);
+        var previousDebounce = TrizbortFileWatcher.DebounceMilliseconds;
+        var previousInvoker = TrizbortFileWatcher.UIThreadInvoker;
+        var previousPrompt = TrizbortFileWatcher.ConfirmReloadPromptAsync;
+        var previousReloader = Project.MapReloader;
+        try
+        {
+            TrizbortFileWatcher.DebounceMilliseconds = 50;
+            await vm.OpenMapAsync();
+            FileWatcherWiring.Wire(dialog, () => null);
+            // no UI loop in this test: run the prompt on the watcher's own thread
+            TrizbortFileWatcher.UIThreadInvoker = null;
+            Project.Current.InitFileWWatcher(path);
 
-        dialog.TotalPrompts.ShouldBeGreaterThan(0);
+            File.AppendAllText(path, Environment.NewLine);
+            File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddMinutes(5));
+            await WaitUntilAsync(() => dialog.ConfirmationCalls > 0, 5);
+
+            dialog.ConfirmationCalls.ShouldBeGreaterThan(0);
+            dialog.LastPromptTitle.ShouldBe("Trizbort");
+            dialog.LastPromptMessage.ShouldContain("modified by another program");
+        }
+        finally
+        {
+            Project.FileWatcher.StopWatcher();
+            TrizbortFileWatcher.DebounceMilliseconds = previousDebounce;
+            TrizbortFileWatcher.UIThreadInvoker = previousInvoker;
+            TrizbortFileWatcher.ConfirmReloadPromptAsync = previousPrompt;
+            Project.MapReloader = previousReloader;
+        }
     }
 
     /// <summary>Smoke step 1.9: "Load Last Opened Project on Startup" reopens the last map (known gap: A014 / I-001).</summary>
-    [Ignore("covered by StartupLastProjectTests; smoke harness predates StartupActions settings parameter (I-019)")]
     [Test]
-    public void S1_09_LoadLastProjectOnStartup_ReopensLastMap()
+    public async Task S1_09_LoadLastProjectOnStartup_ReopensLastMap()
     {
         var path = CopyFixtureToTemp(ManualFixture(Fixture1570));
-        var app = ApplicationSettingsController.AppSettings;
-        app.LoadLastProjectOnStart = true;
-        app.LastProjectFileName = path;
+        var settings = new ApplicationSettings { LoadLastProjectOnStart = true, LastProjectFileName = path };
         Project.Current = new Project();
 
-        // "Relaunch": build a fresh view model the way App does at start-up.
-        _ = CreateVm(new RecordingDialogService(), new StubStorageService());
+        // "Relaunch": run the start-up actions the way App does once the main window is open.
+        var dialog = new RecordingDialogService();
+        var storage = new StubStorageService();
+        var vm = CreateVm(dialog, storage);
+        await StartupActions.RunAsync(vm, CommandLineParsing.Parse(Array.Empty<string>()), storage, dialog, null, settings);
 
+        storage.OpenedPaths.ShouldBe(new[] { path });
         Project.Current.FileName.ShouldBe(path);
     }
 
@@ -668,25 +725,31 @@ public class FileExportAutomapSmokeTests
     }
 
     /// <summary>Smoke step 7.62: a transcript naming a room ambiguously asks which room was meant (known gap: I-008).</summary>
-    [Ignore("covered by AutomapPromptDialogTests; smoke harness counts the old dialog service, prompts now go through IEditorPrompts (I-019)")]
     [Test]
     public async Task S7_62_AmbiguousRoomName_AsksWhichRoomWasMeant()
     {
         var first = new Room(Project.Current) { Name = "Cave", Id = 1 };
+        first.AddDescription("Alpha cave.");
         var second = new Room(Project.Current) { Name = "Cave", Id = 2 };
+        second.AddDescription("Beta cave.");
         Project.Current.Elements.Add(first);
         Project.Current.Elements.Add(second);
 
+        var prompts = new CountingPrompts();
+        AutomapEngine.Instance.Prompts = prompts;
+
         var settings = AutomapSettings.Default;
-        settings.FileName = await WriteTranscriptAsync("Game\n\nCave\nA damp cave.\n\n>look\n\n");
-        var dialog = new RecordingDialogService();
-        var vm = CreateVm(dialog, new StubStorageService());
+        settings.FileName = await WriteTranscriptAsync("Game\n\nCave\nZulu cave.\n\n>look\n\n");
+        settings.VerboseTranscript = true;
+        settings.AssumeRoomsWithSameNameAreSameRoom = false;
+        var vm = CreateVm(new RecordingDialogService(), new StubStorageService());
 
         await vm.StartAutomapAsync(settings);
-        await WaitUntilAsync(() => dialog.TotalPrompts > 0, 3);
+        await WaitUntilAsync(() => prompts.DisambiguationCalls > 0, 5);
         await StopAndAwaitAsync(vm);
 
-        dialog.TotalPrompts.ShouldBeGreaterThan(0);
+        prompts.DisambiguationCalls.ShouldBeGreaterThan(0);
+        prompts.LastCandidateCount.ShouldBe(2);
     }
 
     /// <summary>Smoke step 7.63: two rooms claiming the same exit asks what to do (known gap: I-008).</summary>

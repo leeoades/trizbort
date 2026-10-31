@@ -251,10 +251,15 @@ public static class RoomDrawingAdapter
 
         return location.ToLowerInvariant() switch
         {
+            // Vertex order follows the legacy Room.Draw segment start points.
             "bottom" => [leftCenter, rightCenter, bottomRight, bottomLeft],
-            "bottomright" => [topRight, bottomLeft, bottomRight],
-            "topright" => [topLeft, topRight, bottomRight],
+            "bottomright" => [bottomLeft, topRight, bottomRight],
+            "bottomleft" => [bottomRight, topLeft, bottomLeft],
+            "left" => [topCenter, topLeft, bottomLeft, bottomCenter],
             "right" => [topCenter, topRight, bottomRight, bottomCenter],
+            "topright" => [topLeft, topRight, bottomRight],
+            "topleft" => [topLeft, topRight, bottomLeft],
+            "top" => [leftCenter, rightCenter, topRight, topLeft],
             _ => null
         };
     }

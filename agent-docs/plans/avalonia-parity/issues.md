@@ -106,6 +106,7 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   `src/Trizbort.Avalonia/Drawing/RoomDrawingAdapter.cs` `GetSecondFillPolygon` only builds polygons for 4 of them, so the
   other 4 render with no second fill. Compare with the reference `legacy/src/Trizbort/Domain/Elements/RoomDrawingExtensions.cs`.
 - Severity: medium     Flags: —
+- **Fixed** 2026-10-31: `RoomDrawingAdapter.GetSecondFillPolygon` builds all 8 locations from the reference geometry (`legacy/src/Trizbort/Domain/Elements/Room.cs`); tests in `DrawingAdaptersParityTests`.
 - Ticket: —
 
 ## I-013 Label dialog Shape list shows raw enum names
@@ -163,6 +164,7 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   or startup path, so they fail although the features work (covered by FileWatcherTests, StartupLastProjectTests and
   AutomapPromptDialogTests). Rewrite them against IEditorPrompts / StartupActions(settings) and remove the [Ignore].
 - Severity: low     Flags: —
+- **Fixed** 2026-10-31: S1_08, S1_09 and S7_62 rewritten against FileWatcherWiring, StartupActions(settings) and IEditorPrompts; [Ignore] removed.
 - Ticket: —
 
 ## I-020 Primary+Backspace deletes on every OS; the shortcut map lists it for macOS only

@@ -52,8 +52,8 @@ public class DrawingAdaptersParityTests
         var bottomRight = RoomDrawingAdapter.GetSecondFillPolygon(bounds, "BottomRight");
         Assert.That(bottomRight, Is.Not.Null);
         Assert.That(bottomRight!.Length, Is.EqualTo(3)); // Diagonal triangle
-        Assert.That(bottomRight[0], Is.EqualTo(bounds.GetCorner(CompassPoint.NorthEast)));
-        Assert.That(bottomRight[1], Is.EqualTo(bounds.GetCorner(CompassPoint.SouthWest)));
+        Assert.That(bottomRight[0], Is.EqualTo(bounds.GetCorner(CompassPoint.SouthWest)));
+        Assert.That(bottomRight[1], Is.EqualTo(bounds.GetCorner(CompassPoint.NorthEast)));
         Assert.That(bottomRight[2], Is.EqualTo(bounds.GetCorner(CompassPoint.SouthEast)));
 
         var topRight = RoomDrawingAdapter.GetSecondFillPolygon(bounds, "TopRight");
@@ -72,6 +72,50 @@ public class DrawingAdaptersParityTests
 
         var empty = RoomDrawingAdapter.GetSecondFillPolygon(bounds, "");
         Assert.That(empty, Is.Null);
+    }
+
+    [TestCase("Bottom")]
+    [TestCase("BottomRight")]
+    [TestCase("BottomLeft")]
+    [TestCase("Left")]
+    [TestCase("Right")]
+    [TestCase("TopRight")]
+    [TestCase("TopLeft")]
+    [TestCase("Top")]
+    public void SecondFillPolygon_AllEightLocations_NonEmptyAndInsideBounds(string location)
+    {
+        var bounds = new CoreRect(10, 20, 100, 50);
+        var poly = RoomDrawingAdapter.GetSecondFillPolygon(bounds, location);
+        Assert.That(poly, Is.Not.Null);
+        Assert.That(poly!.Length, Is.GreaterThanOrEqualTo(3));
+        foreach (var p in poly)
+        {
+            Assert.That(p.X, Is.InRange(10f, 110f));
+            Assert.That(p.Y, Is.InRange(20f, 70f));
+        }
+    }
+
+    [Test]
+    public void SecondFillPolygon_AllEightLocations_MatchLegacyGeometry()
+    {
+        var b = new CoreRect(10, 20, 100, 50);
+        var tl = b.GetCorner(CompassPoint.NorthWest);
+        var tr = b.GetCorner(CompassPoint.NorthEast);
+        var bl = b.GetCorner(CompassPoint.SouthWest);
+        var br = b.GetCorner(CompassPoint.SouthEast);
+        var tc = b.GetCorner(CompassPoint.North);
+        var bc = b.GetCorner(CompassPoint.South);
+        var lc = b.GetCorner(CompassPoint.West);
+        var rc = b.GetCorner(CompassPoint.East);
+
+        Assert.That(RoomDrawingAdapter.GetSecondFillPolygon(b, "Bottom"), Is.EqualTo(new[] { lc, rc, br, bl }));
+        Assert.That(RoomDrawingAdapter.GetSecondFillPolygon(b, "BottomRight"), Is.EqualTo(new[] { bl, tr, br }));
+        Assert.That(RoomDrawingAdapter.GetSecondFillPolygon(b, "BottomLeft"), Is.EqualTo(new[] { br, tl, bl }));
+        Assert.That(RoomDrawingAdapter.GetSecondFillPolygon(b, "Left"), Is.EqualTo(new[] { tc, tl, bl, bc }));
+        Assert.That(RoomDrawingAdapter.GetSecondFillPolygon(b, "Right"), Is.EqualTo(new[] { tc, tr, br, bc }));
+        Assert.That(RoomDrawingAdapter.GetSecondFillPolygon(b, "TopRight"), Is.EqualTo(new[] { tl, tr, br }));
+        Assert.That(RoomDrawingAdapter.GetSecondFillPolygon(b, "TopLeft"), Is.EqualTo(new[] { tl, tr, bl }));
+        Assert.That(RoomDrawingAdapter.GetSecondFillPolygon(b, "Top"), Is.EqualTo(new[] { lc, rc, tr, tl }));
     }
 
     [AvaloniaTest]
