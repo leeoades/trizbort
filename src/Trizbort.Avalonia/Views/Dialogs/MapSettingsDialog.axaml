@@ -217,24 +217,28 @@
 
                     <!-- Selected Region Details -->
                     <HeaderedContentControl Grid.Column="1" Classes="group" Header="Region Properties">
-                        <StackPanel Spacing="8" DataContext="{Binding SelectedRegion}" x:DataType="vm:RegionItemViewModel">
-                            <Label Classes="field-label" Content="_Name:" Target="{Binding #RegionNameBox}" />
-                            <TextBox x:Name="RegionNameBox" Text="{Binding Name}" IsReadOnly="{Binding IsDefaultRegion}" />
-                            <TextBlock Classes="error" Text="{Binding NameError}" IsVisible="{Binding HasNameError}" />
+                        <!-- DataContext is bound here, in the dialog's scope (MapSettingsViewModel.SelectedRegion);
+                             the panel inside declares the region type for its own bindings. -->
+                        <Panel DataContext="{Binding SelectedRegion}">
+                            <StackPanel Spacing="8" x:DataType="vm:RegionItemViewModel">
+                                <Label Classes="field-label" Content="_Name:" Target="{Binding #RegionNameBox}" />
+                                <TextBox x:Name="RegionNameBox" Text="{Binding Name}" IsReadOnly="{Binding IsDefaultRegion}" />
+                                <TextBlock Classes="error" Text="{Binding NameError}" IsVisible="{Binding HasNameError}" />
 
-                            <Label Classes="field-label" Content="Background Fill:" />
-                            <controls:ColorPickerButton SelectedColor="{Binding FillColor}" HorizontalAlignment="Left" />
+                                <Label Classes="field-label" Content="Background Fill:" />
+                                <controls:ColorPickerButton SelectedColor="{Binding FillColor}" HorizontalAlignment="Left" />
 
-                            <Label Classes="field-label" Content="Text Colour:" />
-                            <controls:ColorPickerButton SelectedColor="{Binding TextColor}" HorizontalAlignment="Left" />
+                                <Label Classes="field-label" Content="Text Colour:" />
+                                <controls:ColorPickerButton SelectedColor="{Binding TextColor}" HorizontalAlignment="Left" />
 
-                            <Border Padding="8" CornerRadius="2" BorderThickness="1"
-                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                                    Background="{Binding FillBrush}">
-                                <TextBlock x:Name="RegionSample" Text="Sample" Foreground="{Binding TextBrush}"
-                                           HorizontalAlignment="Center" />
-                            </Border>
-                        </StackPanel>
+                                <Border Padding="8" CornerRadius="2" BorderThickness="1"
+                                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                        Background="{Binding FillBrush}">
+                                    <TextBlock x:Name="RegionSample" Text="Sample" Foreground="{Binding TextBrush}"
+                                               HorizontalAlignment="Center" />
+                                </Border>
+                            </StackPanel>
+                        </Panel>
                     </HeaderedContentControl>
                 </Grid>
             </TabItem>

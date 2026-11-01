@@ -1080,8 +1080,11 @@ public sealed class Automap : IAutomapController
       var lastline = "";
 
       if (_settings.ContinueTranscript)
-        while (!reader.EndOfStream)
-          lastline = await reader.ReadLineAsync();
+      {
+        string next;
+        while ((next = await reader.ReadLineAsync(tokenSource.Token)) != null)
+          lastline = next;
+      }
 
       // keep track of lines we read between here and the next prompt
       var linesBetweenPrompts = new List<string>();
@@ -1103,7 +1106,7 @@ public sealed class Automap : IAutomapController
         {
           // ...read a line of text
           line = await WaitForNewLine(reader, tokenSource.Token);
-          atFileEnd = reader.EndOfStream; // store this now so that it's still valid when we use it below
+          atFileEnd = await reader.IsAtEndAsync(tokenSource.Token); // store this now so that it's still valid when we use it below
         }
 
         //Trace("[" + line + "]");
@@ -1119,8 +1122,10 @@ public sealed class Automap : IAutomapController
           // we've now dealt with all lines to this point
           linesBetweenPrompts.Clear();
 
-          // handle the case where we're at the end of the file, waiting for user input
-          if (atFileEnd)
+          // handle the case where we're at the end of the file, waiting for user input: the prompt has been
+          // written but the command hasn't. When the prompt line already holds the command (">north"), keep it: an
+          // interpreter writes that before the game's reply, so the next line is the reply, not the command.
+          if (atFileEnd && string.IsNullOrWhiteSpace(command))
             // we've already read the prompt, now just read the command when the player enters it
             command = (await WaitForNewLine(reader, tokenSource.Token)).Trim();
 

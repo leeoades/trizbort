@@ -491,7 +491,7 @@ public class FileExportAutomapSmokeTests
 
         dialog.SaveDiscardCancelCalls.ShouldBe(1);
         dialog.LastPromptTitle.ShouldBe(AppInfo.ProductName);
-        dialog.LastPromptMessage.ShouldContain("current map");
+        dialog.LastPromptMessage.ShouldNotBeNull().ShouldContain("current map");
         storage.OpenCalls.ShouldBe(1);
         ReferenceEquals(Project.Current, project).ShouldBeTrue();
         Project.Current.IsDirty.ShouldBeTrue();
@@ -527,7 +527,7 @@ public class FileExportAutomapSmokeTests
 
             dialog.ConfirmationCalls.ShouldBeGreaterThan(0);
             dialog.LastPromptTitle.ShouldBe(AppInfo.ProductName);
-            dialog.LastPromptMessage.ShouldContain("modified by another program");
+            dialog.LastPromptMessage.ShouldNotBeNull().ShouldContain("modified by another program");
         }
         finally
         {

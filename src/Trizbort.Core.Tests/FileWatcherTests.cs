@@ -54,7 +54,25 @@ public class FileWatcherTests
     TrizbortFileWatcher.ConfirmReloadPromptAsync = null;
     TrizbortFileWatcher.UIThreadInvoker = null;
     TrizbortFileWatcher.DebounceMilliseconds = _previousDebounce;
+    if (Directory.Exists(_directory)) Directory.Delete(_directory, true);
+  }
+
+  [Test]
+  public void StartWatcher_AfterTheFolderIsDeleted_DoesNotThrowAndStaysOff()
+  {
+    _watcher.StopWatcher();
     Directory.Delete(_directory, true);
+
+    Should.NotThrow(() => _watcher.StartWatcher());
+    _watcher.IsWatching.ShouldBeFalse();
+  }
+
+  [Test]
+  public void IsSetTo_ComparesTheWatchedFile()
+  {
+    _watcher.IsSetTo(_file).ShouldBeTrue();
+    _watcher.IsSetTo(Path.Combine(_directory, "other.trizbort")).ShouldBeFalse();
+    _watcher.IsSetTo(null).ShouldBeFalse();
   }
 
   private void ModifyExternally()

@@ -160,6 +160,51 @@ public class AutomapRegressionTests : IsolatedProjectTests
     connection.IsDangling.ShouldBeFalse();
   }
 
+  /// <summary>
+  ///   While a game is being played, the interpreter writes the prompt and command (">east") before the game's reply.
+  ///   Automap used to read the prompt at the end of the file, assume the command was still to come, and take the
+  ///   next line (the blank line before the reply) as the command, so the move was lost and the next room placed
+  ///   unconnected. The same code was in the reference app.
+  /// </summary>
+  [Test]
+  public async Task LiveTranscript_CommandWrittenBeforeTheReply_StillConnectsTheRooms()
+  {
+    var canvas = new AutomapCanvas();
+    var parser = CreateParser();
+    var settings = SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>east\n");
+    using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+    var run = parser.Start(canvas, settings);
+    try
+    {
+      while (parser.Status != "Automapping is waiting for more text.")
+      {
+        deadline.Token.ThrowIfCancellationRequested();
+        run.IsCompleted.ShouldBeFalse();
+        await Task.Delay(10, deadline.Token);
+      }
+
+      // The game's reply arrives, then the next prompt with nothing typed yet.
+      File.AppendAllText(settings.FileName, "\nSecond Room\nAnother room.\n\n>");
+
+      while (Project.Current.Elements.OfType<Room>().Count() < 2)
+      {
+        deadline.Token.ThrowIfCancellationRequested();
+        run.IsCompleted.ShouldBeFalse();
+        await Task.Delay(10, deadline.Token);
+      }
+
+      var connection = Project.Current.Elements.OfType<Connection>().Single();
+      connection.GetSourceRoom(out var port).Name.ShouldBe("First Room");
+      port.ShouldBe(CompassPoint.East);
+      connection.GetTargetRoom().Name.ShouldBe("Second Room");
+    }
+    finally
+    {
+      parser.Stop();
+      await run.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+  }
+
   [TestCase(false)]
   [TestCase(true)]
   public async Task RevisitingRooms_DoesNotDuplicateGraph_AndReturnTravelMakesConnectionTwoWay(bool twoWay)

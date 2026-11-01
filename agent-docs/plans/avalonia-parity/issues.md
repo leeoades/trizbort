@@ -182,6 +182,7 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   in async Automap code; CS0219 unused `primary` in CommandCatalogue.View.cs; NUnit1033 in ShortcutMapConformanceTests;
   CS8604 in two smoke tests. Fix them and consider TreatWarningsAsErrors for src/ so agents catch them.
 - Severity: low     Flags: —
+- **Fixed** 2026-11-01: build is warning-free (0 warnings). Real problems found on the way: I-045, I-046, and unused dark-marker cache fields in RoomDrawingAdapter (removed).
 - Ticket: —
 
 ## I-022 Status bar room and connection counts stay at 0
@@ -352,4 +353,15 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - With "process only new text" off, automap reads the transcript from the start and adds to the open map (rooms matched by name and description). Renamed rooms no longer match. Needs the user's examples of corrections that were lost.
 - Severity: low     Flags: —
 - Ticket: —
-<!-- Next ID: I-045 -->
+## I-045 Automap loses a move when the command is written before the game's reply (live play)
+- Reported: 2026-11-01 by integrator (warning clean-up)   OS: all   Category: automap/files
+- Reading `>north` at the end of the transcript, automap assumed the command was still to come and took the next line (the blank line before the reply) as the command, so the move was lost and the next room placed unconnected. Same code in the reference. Found via warning CA2024 (EndOfStream in async code). **Fixed** 2026-11-01: only a prompt with no command waits for the next line; end-of-file is checked without blocking (PeekingStreamReader.IsAtEndAsync). Test: AutomapRegressionTests.LiveTranscript_CommandWrittenBeforeTheReply_StillConnectsTheRooms.
+- Severity: high     Flags: —
+- Ticket: —
+
+## I-046 Save to a new file keeps watching the old file, and fails if the old folder is gone
+- Reported: 2026-11-01 by integrator (warning clean-up)   OS: all   Category: automap/files
+- Save As / quick save restarted the file watcher on the previous file, so outside changes to the new file were missed, and a missing previous folder made a successful save report "Error reading the ... directory". Found via a test-order failure in HeadlessAutomapTests. **Fixed** 2026-11-01: Save watches the file it wrote; StartWatcher ignores a missing folder. Tests: SaveWatchesSavedFileTests, FileWatcherTests.
+- Severity: medium     Flags: —
+- Ticket: —
+<!-- Next ID: I-047 -->

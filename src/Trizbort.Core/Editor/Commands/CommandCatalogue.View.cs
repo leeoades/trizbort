@@ -9,7 +9,6 @@ public sealed partial class CommandCatalogue
   /// <summary>Zoom presets and keys, and the plain/Primary+Alt arrow keys. (Undo/redo live in CreateDefault.)</summary>
   private static void RegisterViewCommands(CommandCatalogue catalogue)
   {
-    var primary = ModifierKeys.Primary;
     var shift = ModifierKeys.Shift;
     var none = ModifierKeys.None;
 

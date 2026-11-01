@@ -102,7 +102,7 @@ public class PdfExportTests
         new SkiaMapPdfWriter().WriteAsync(project, path, PdfMetadata.FromProject(project)).GetAwaiter().GetResult();
 
         Directory.GetFiles(_folder).Length.ShouldBe(1);
-        using var document = PdfReader.Open(path, PdfDocumentOpenMode.ReadOnly);
+        using var document = PdfReader.Open(path, PdfDocumentOpenMode.Import);
         document.PageCount.ShouldBe(1);
         var page = document.Pages[0];
         var notes = new List<string>();
@@ -131,7 +131,7 @@ public class PdfExportTests
         var path = Path.Combine(_folder, "plain.pdf");
         new SkiaMapPdfWriter().WriteAsync(project, path, PdfMetadata.FromProject(project)).GetAwaiter().GetResult();
 
-        using var document = PdfReader.Open(path, PdfDocumentOpenMode.ReadOnly);
+        using var document = PdfReader.Open(path, PdfDocumentOpenMode.Import);
         document.Pages[0].Annotations.Count.ShouldBe(0);
     }
 

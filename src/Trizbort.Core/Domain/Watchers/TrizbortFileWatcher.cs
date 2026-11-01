@@ -66,11 +66,33 @@ public class TrizbortFileWatcher : IDisposable
 
   public event EventHandler ReloadMap;
 
+  /// <summary>True when the watcher is set to the given file (it may be stopped).</summary>
+  public bool IsSetTo(string file)
+  {
+    if (string.IsNullOrEmpty(file) || string.IsNullOrEmpty(_watcher.Path)) return false;
+    var comparison = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+      ? StringComparison.OrdinalIgnoreCase
+      : StringComparison.Ordinal;
+    return string.Equals(Path.Combine(_watcher.Path, _watcher.Filter), Path.GetFullPath(file), comparison);
+  }
+
+  /// <summary>
+  ///   Starts watching again. Does nothing if the watched folder no longer exists (deleted, renamed, drive removed):
+  ///   that must not turn a successful save into an error.
+  /// </summary>
   public void StartWatcher()
   {
     if (string.IsNullOrEmpty(_watcher.Path)) return;
+    if (!Directory.Exists(_watcher.Path)) return;
     _lastWriteUtc = GetWriteTime();
-    _watcher.EnableRaisingEvents = true;
+    try
+    {
+      _watcher.EnableRaisingEvents = true;
+    }
+    catch (Exception ex) when (ex is IOException or ArgumentException or UnauthorizedAccessException)
+    {
+      // The folder went away between the check and the call; nothing to watch.
+    }
   }
 
   public void StopWatcher()

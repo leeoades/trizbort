@@ -294,6 +294,9 @@ public partial class MapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private FontSpec _lineFont = new("Arial", 9, false, false);
 
+    // System.Drawing.FontStyle is the map model's plain flags enum; no Windows-only API is called (CA1416 is a false
+    // positive for its constants). Same as Trizbort.Core, which suppresses CA1416 project-wide.
+#pragma warning disable CA1416
     private static FontSpec ToFontSpec(ThemeFont font, string fallbackFamily, float fallbackSize) =>
         font == null
             ? new FontSpec(fallbackFamily, fallbackSize, false, false)
@@ -315,6 +318,7 @@ public partial class MapSettingsViewModel : ViewModelBase
         font.Style = style;
         return font;
     }
+#pragma warning restore CA1416
 
     public ObservableCollection<ColorSettingItemViewModel> ColorSettings { get; } = [];
     public ObservableCollection<RegionItemViewModel> Regions { get; } = [];
