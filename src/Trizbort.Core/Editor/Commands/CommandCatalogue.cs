@@ -90,7 +90,7 @@ public sealed partial class CommandCatalogue
       MenuPath = "Edit",
       Group = "0-undo",
       Gestures = new[] { new KeyGesture(InputKey.Z, primary) },
-      CanExecuteFunc = s => s.Undo.CanUndo && !s.IsInteractionActive,
+      CanExecuteFunc = s => s.Undo.CanUndo && !s.Undo.IsRecording && !s.IsInteractionActive,
       ExecuteAsyncFunc = s => Run(() => s.PerformUndo())
     });
     catalogue.Register(new EditorCommand
@@ -102,7 +102,7 @@ public sealed partial class CommandCatalogue
       MenuPath = "Edit",
       Group = "0-undo",
       Gestures = new[] { new KeyGesture(InputKey.Y, primary), new KeyGesture(InputKey.Z, primary | ModifierKeys.Shift) },
-      CanExecuteFunc = s => s.Undo.CanRedo && !s.IsInteractionActive,
+      CanExecuteFunc = s => s.Undo.CanRedo && !s.Undo.IsRecording && !s.IsInteractionActive,
       ExecuteAsyncFunc = s => Run(() => s.PerformRedo())
     });
     catalogue.Register(new EditorCommand

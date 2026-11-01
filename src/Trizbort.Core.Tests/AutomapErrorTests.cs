@@ -104,6 +104,16 @@ public class AutomapErrorTests : IsolatedProjectTests
     {
       _inner.RemoveRoom(otherRoom);
     }
+
+    public IDisposable BeginBatch(string title)
+    {
+      return _inner.BeginBatch(title);
+    }
+
+    public Room ResolveRoom(Room room)
+    {
+      return _inner.ResolveRoom(room);
+    }
   }
 
   private AutomapSettings SettingsFor(string fileName)

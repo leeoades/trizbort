@@ -20,6 +20,9 @@ public partial class AppSettingsViewModel : ViewModelBase
     private bool _loadLastProjectOnStart;
 
     [ObservableProperty]
+    private bool _keepRecoveryCopy = true;
+
+    [ObservableProperty]
     private bool _specifyGenMargins;
 
     [ObservableProperty]
@@ -125,6 +128,7 @@ public partial class AppSettingsViewModel : ViewModelBase
         ScrollWheelBehavior = (int)settings.ScrollWheelBehavior;
         ShowFullPathInTitleBar = settings.ShowFullPathInTitleBar;
         LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
+        KeepRecoveryCopy = settings.KeepRecoveryCopy;
         SpecifyGenMargins = settings.SpecifyGenMargins;
         GenHorizontalMargin = settings.GenHorizontalMargin;
         GenVerticalMargin = settings.GenVerticalMargin;
@@ -158,6 +162,7 @@ public partial class AppSettingsViewModel : ViewModelBase
             : ScrollWheelMode.Automatic;
         settings.ShowFullPathInTitleBar = ShowFullPathInTitleBar;
         settings.LoadLastProjectOnStart = LoadLastProjectOnStart;
+        settings.KeepRecoveryCopy = KeepRecoveryCopy;
         settings.SpecifyGenMargins = SpecifyGenMargins;
         settings.GenHorizontalMargin = GenHorizontalMargin;
         settings.GenVerticalMargin = GenVerticalMargin;

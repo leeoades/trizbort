@@ -8,6 +8,7 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Trizbort.Avalonia.Services;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -45,15 +46,29 @@ internal sealed class CatalogueCommandAdapter : ICommand
     {
         if (!CanExecute(parameter)) return;
 
-        if (_inner != null)
+        try
         {
-            _inner.Execute(parameter);
-            return;
-        }
+            if (_inner != null)
+            {
+                _inner.Execute(parameter);
+                return;
+            }
 
-        _command.ExecuteAsync(_session).ContinueWith(
-            t => Debug.WriteLine($"Command '{_command.Id}' failed: {t.Exception}"),
-            TaskContinuationOptions.OnlyOnFaulted);
+            _command.ExecuteAsync(_session).ContinueWith(
+                t => Dispatcher.UIThread.Post(() => ReportFailure(t.Exception?.GetBaseException())),
+                TaskContinuationOptions.OnlyOnFaulted);
+        }
+        catch (Exception ex)
+        {
+            ReportFailure(ex);
+        }
+    }
+
+    /// <summary>A failed command goes through the same path as any other error: work kept, crash log, message.</summary>
+    private void ReportFailure(Exception? exception)
+    {
+        Debug.WriteLine($"Command '{_command.Id}' failed: {exception}");
+        if (exception != null) CrashReporter.ReportUiThreadError(exception);
     }
 
     public void RaiseCanExecuteChanged()

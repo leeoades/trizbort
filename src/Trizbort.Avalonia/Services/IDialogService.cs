@@ -11,12 +11,20 @@ public enum ConfirmationResult
     Cancel
 }
 
+public enum RecoveryChoice
+{
+    Recover,
+    Discard,
+    DecideLater
+}
+
 public interface IDialogService
 {
     Task ShowAboutDialogAsync(Window? owner);
     Task ShowMessageAsync(Window? owner, string title, string message);
     Task<bool> ShowConfirmationAsync(Window? owner, string title, string message);
     Task<ConfirmationResult> ShowSaveDiscardCancelAsync(Window? owner, string title, string message);
+    Task<RecoveryChoice> ShowRecoverDiscardLaterAsync(Window? owner, string title, string message);
 
     Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room);
     Task<bool> ShowConnectionPropertiesAsync(Window? owner, Connection connection);

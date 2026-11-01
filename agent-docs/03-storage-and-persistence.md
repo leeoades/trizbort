@@ -218,3 +218,10 @@ converters and is just hygiene in case anything *does* serialize the domain type
    and load/save it through `ApplicationSettingsController`.
 4. **Transient/session-only state** (search index, UI hover state): don't persist it at all —
    follow the pattern in `Domain\Cache\Indexer.cs`.
+
+## Recovery copy and crash log (ticket 135)
+`Trizbort.Domain.Recovery.RecoveryStore` (Core) keeps `<config>/recovery/<session>.trizbort` + `.json` while the map is
+dirty (written atomically, ~2s after the last change by `RecoveryService` in the Avalonia app) and holds
+`<session>.lock` exclusively; a copy whose lock is free is an orphan. `RecoveryStartup` offers Recover / Discard /
+Decide later at start-up (before reopening a file). `CrashReporter` handles unhandled exceptions: recovery copy now,
+crash log in `<config>/crash-logs/`, message, carry on. Setting: `ApplicationSettings.KeepRecoveryCopy` (default on).

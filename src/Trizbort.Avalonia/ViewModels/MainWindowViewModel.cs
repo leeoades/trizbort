@@ -48,7 +48,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _automapStatusText = "Automap is not running.";
 
     private Task? _automapTask;
-    private UndoTransaction? _automapTransaction;
     private object? _currentRunToken;
 
     internal Task? CurrentAutomapTask => _automapTask;
@@ -454,17 +453,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _currentRunToken = null;
 
         AutomapEngine.Instance.Stop();
-        EndAutomapTransaction();
         IsAutomapActive = false;
         AutomapStatusText = "Automap is not running.";
-    }
-
-    // One undo step for the whole automap run (plan section 7).
-    private void EndAutomapTransaction()
-    {
-        var transaction = _automapTransaction;
-        _automapTransaction = null;
-        transaction?.Dispose();
     }
 
     public Task StartAutomapAsync(AutomapSettings settings)
@@ -477,7 +467,6 @@ public partial class MainWindowViewModel : ViewModelBase
         IsAutomapActive = true;
         AutomapStatusText = "Automapping has started.";
 
-        _automapTransaction = _commandService.Session.BeginTransaction("Automap");
         _automapTask = RunAutomapLoopAsync(settings, runToken);
         return Task.CompletedTask;
     }
@@ -496,7 +485,6 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             if (ReferenceEquals(_currentRunToken, runToken))
             {
-                EndAutomapTransaction();
                 AutomapStatusText = AutomapEngine.Instance.Status;
                 IsAutomapActive = false;
                 UpdateState();
@@ -532,7 +520,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
             }
 
-            EndAutomapTransaction();
             AutomapStatusText = AutomapEngine.Instance.Status;
             IsAutomapActive = false;
             UpdateState();

@@ -286,12 +286,16 @@ public class UndoStackTests
   }
 
   [Test]
-  public void Undo_InsideTransaction_Throws()
+  public void Undo_InsideTransaction_StackThrows_SessionIgnores()
   {
     AddRoomStep();
     using (_session.BeginTransaction("Open"))
     {
-      Should.Throw<InvalidOperationException>(() => _session.PerformUndo());
+      // The stack itself still refuses (a programming error if code calls it directly)...
+      Should.Throw<InvalidOperationException>(() => _session.Undo.Undo(_session));
+      // ...but the user's Undo is ignored while a step is being recorded (GitHub #24 crashed here).
+      Should.NotThrow(() => _session.PerformUndo());
+      _session.Undo.CanUndo.ShouldBeTrue();
     }
   }
 

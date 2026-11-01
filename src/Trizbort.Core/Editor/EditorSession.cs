@@ -140,6 +140,8 @@ public sealed partial class EditorSession : IDisposable
   /// </summary>
   public void PerformUndo()
   {
+    // A step is still being recorded (e.g. automap is part-way through a move): ignore rather than throw (GitHub #24).
+    if (Undo.IsRecording) return;
     _selectedWaypoint = null;
     Undo.Undo(this);
   }
@@ -147,6 +149,7 @@ public sealed partial class EditorSession : IDisposable
   /// <summary>Redo the last undone step.</summary>
   public void PerformRedo()
   {
+    if (Undo.IsRecording) return;
     _selectedWaypoint = null;
     Undo.Redo(this);
   }

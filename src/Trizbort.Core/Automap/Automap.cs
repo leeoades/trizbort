@@ -364,6 +364,13 @@ public sealed class Automap : IAutomapController
     return null;
   }
 
+  // Undo and redo replace room objects and the user may delete rooms, so look the remembered room up again by id.
+  private void RefreshLastKnownRoom()
+  {
+    if (_lastKnownRoom == null || _canvas == null) return;
+    _lastKnownRoom = _canvas.ResolveRoom(_lastKnownRoom);
+  }
+
   private void NowInRoom(Room room)
   {
     _lastKnownRoom = room;
@@ -418,50 +425,116 @@ public sealed class Automap : IAutomapController
         string roomDescription;
         ExtractParagraph(lines, index + 1, out roomDescription);
 
-        // work out which room the transcript is referring to here, asking them if necessary
+        // work out which room the transcript is referring to here, asking them if necessary.
+        // All prompts happen before the batch below opens: the user can't undo while a batch is open.
+        RefreshLastKnownRoom();
         var room = await FindRoomAsync(roomName, roomDescription, line, token);
         token.ThrowIfCancellationRequested();
-        if (room == null)
+        RefreshLastKnownRoom();
+        if (room != null) room = _canvas.ResolveRoom(room);
+
+        AutomapSameDirectionResult? decision = null;
+        Room otherRoom = null;
+        if (room == null && _lastKnownRoom != null && _lastMoveDirection != null)
         {
-          // new room
-          if (_lastKnownRoom != null && _lastMoveDirection != null)
+          // is there already a connection in that direction?
+          otherRoom = _lastKnownRoom
+                      .GetConnections(CompassPointHelper.GetCompassDirection(_lastMoveDirection.Value))
+                      .FirstOrDefault()?.GetTargetRoom();
+          if (otherRoom != null)
           {
-            // player moved to new room
-            // is there already a connection in that direction?
-            var otherRoom = _lastKnownRoom
-                            .GetConnections(CompassPointHelper.GetCompassDirection(_lastMoveDirection.Value))
-                            .FirstOrDefault()?.GetTargetRoom();
-            if (otherRoom != null)
+            decision = await Prompts.ChooseSameDirectionAsync(otherRoom, roomName, token);
+            token.ThrowIfCancellationRequested();
+            if (decision == AutomapSameDirectionResult.Cancel)
             {
-              var decision = await Prompts.ChooseSameDirectionAsync(otherRoom, roomName, token);
+              // treat like a cancelled run
+              Stop();
               token.ThrowIfCancellationRequested();
-              switch (decision)
+              throw new OperationCanceledException(token);
+            }
+
+            // the user may have changed the map while the prompt was open
+            RefreshLastKnownRoom();
+            otherRoom = _canvas.ResolveRoom(otherRoom);
+          }
+        }
+
+        var waits = 0;
+        using (_canvas.BeginBatch("Automap: " + roomName))
+        {
+          if (room == null)
+          {
+            // new room
+            if (_lastKnownRoom != null && _lastMoveDirection != null)
+            {
+              // player moved to new room
+              if (otherRoom != null && decision.HasValue)
               {
-                case AutomapSameDirectionResult.KeepRoom1:
-                  room = otherRoom;
-                  break;
-                case AutomapSameDirectionResult.KeepRoom2:
-                  room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
-                  _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
-                  _canvas.RemoveRoom(otherRoom);
-                  break;
-                case AutomapSameDirectionResult.KeepBoth:
-                  room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
-                  _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
-                  break;
-                case AutomapSameDirectionResult.Cancel:
-                  // treat like a cancelled run
-                  Stop();
-                  token.ThrowIfCancellationRequested();
-                  throw new OperationCanceledException(token);
-                default:
-                  throw new ArgumentOutOfRangeException();
+                switch (decision.Value)
+                {
+                  case AutomapSameDirectionResult.KeepRoom1:
+                    room = otherRoom;
+                    break;
+                  case AutomapSameDirectionResult.KeepRoom2:
+                    room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
+                    _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    _canvas.RemoveRoom(otherRoom);
+                    break;
+                  case AutomapSameDirectionResult.KeepBoth:
+                    room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
+                    _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    break;
+                  default:
+                    throw new ArgumentOutOfRangeException();
+                }
+              }
+              else
+              {
+                // if not added already, add room to map; and join it up to the previous one
+                room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
+                _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                Trace(
+                  "{0}: {1} is now {2} from {3}.",
+                  FormatTranscriptLineForDisplay(line),
+                  roomName,
+                  _lastMoveDirection.Value.ToString().ToLower(),
+                  _lastKnownRoom.Name);
               }
             }
             else
             {
-              // if not added already, add room to map; and join it up to the previous one
-              room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
+              if (_firstRoom || _gameName == roomName)
+              {
+                // most likely this is the game title
+                _firstRoom = false;
+                _gameName = roomName;
+                waits++;
+              }
+              else
+              {
+                // player teleported to new room;
+                // don't connect it up, as we don't know how they got there
+                room = _canvas.CreateRoom(_lastKnownRoom, roomName);
+                if (_lastKnownRoom == null) room.IsStartRoom = true;
+                Trace("{0}: teleported to new room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
+                waits++;
+              }
+            }
+
+            if (room != null)
+            {
+              DeduceExitsFromDescription(room, roomDescription);
+              NowInRoom(room);
+            }
+
+            waits++;
+          }
+          else if (room != _lastKnownRoom)
+          {
+            // player moved to existing room
+            if (_lastKnownRoom != null && _lastMoveDirection != null)
+            {
+              // player moved sensibly; ensure rooms are connected up
               _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
               Trace(
                 "{0}: {1} is now {2} from {3}.",
@@ -470,61 +543,22 @@ public sealed class Automap : IAutomapController
                 _lastMoveDirection.Value.ToString().ToLower(),
                 _lastKnownRoom.Name);
             }
+
+            NowInRoom(room);
+            waits++;
           }
           else
           {
-            if (_firstRoom || _gameName == roomName)
-            {
-              // most likely this is the game title
-              _firstRoom = false;
-              _gameName = roomName;
-              await WaitForStep(token);
-            }
-            else
-            {
-              // player teleported to new room;
-              // don't connect it up, as we don't know how they got there
-              room = _canvas.CreateRoom(_lastKnownRoom, roomName);
-              if (_lastKnownRoom == null) room.IsStartRoom = true;
-              Trace("{0}: teleported to new room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
-              await WaitForStep(token);
-            }
+            // player didn't change rooms
+            Trace("{0}: still in {1}.", FormatTranscriptLineForDisplay(line), _lastKnownRoom.Name);
           }
 
-          if (room != null)
-          {
-            DeduceExitsFromDescription(room, roomDescription);
-            NowInRoom(room);
-          }
-
-          await WaitForStep(token);
-        }
-        else if (room != _lastKnownRoom)
-        {
-          // player moved to existing room
-          if (_lastKnownRoom != null && _lastMoveDirection != null)
-          {
-            // player moved sensibly; ensure rooms are connected up
-            _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
-            Trace(
-              "{0}: {1} is now {2} from {3}.",
-              FormatTranscriptLineForDisplay(line),
-              roomName,
-              _lastMoveDirection.Value.ToString().ToLower(),
-              _lastKnownRoom.Name);
-          }
-
-          NowInRoom(room);
-          await WaitForStep(token);
-        }
-        else
-        {
-          // player didn't change rooms
-          Trace("{0}: still in {1}.", FormatTranscriptLineForDisplay(line), _lastKnownRoom.Name);
+          // add this description if the room doesn't have it already
+          if (room != null) room.AddDescription(roomDescription);
         }
 
-        // add this description if the room doesn't have it already
-        if (room != null) room.AddDescription(roomDescription);
+        // single stepping waits outside the batch, so the user can undo while we wait
+        for (var wait = 0; wait < waits; wait++) await WaitForStep(token);
 
         // now forget the last movement direction we saw.
         // we'll still place any rooms we see before we see a movement direction,
@@ -558,6 +592,16 @@ public sealed class Automap : IAutomapController
   }
 
   private void ProcessPromptCommand(string command)
+  {
+    RefreshLastKnownRoom();
+    var title = _lastKnownRoom != null ? "Automap: " + _lastKnownRoom.Name : "Automap";
+    using (_canvas.BeginBatch(title))
+    {
+      ProcessPromptCommandCore(command);
+    }
+  }
+
+  private void ProcessPromptCommandCore(string command)
   {
     // unless we find one, this command does not involve moving in a given direction
     _lastMoveDirection = null;
@@ -664,6 +708,7 @@ public sealed class Automap : IAutomapController
         foreach (var wordForDirection in wordsForDirection)
           if (StringComparer.InvariantCultureIgnoreCase.Compare(words[1], wordForDirection) == 0)
           {
+            if (_lastKnownRoom == null) continue;
             var delta = CompassPointHelper.GetAutomapDirectionVector(CompassPointHelper.GetCompassDirection(direction));
             delta.X *= _lastKnownRoom.Width + Settings.PreferredDistanceBetweenRooms;
             delta.X += _lastKnownRoom.X;

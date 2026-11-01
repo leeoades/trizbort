@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Trizbort.Editor;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
@@ -213,6 +215,27 @@ public class AutomapCanvas : IAutomapCanvas
 
     _session.Selection.Set(new List<Element> { room });
     _session.EnsureVisible(room);
+  }
+
+  public IDisposable BeginBatch(string title)
+  {
+    if (_session == null) return NoBatch.Instance;
+    return _session.BeginTransaction(title);
+  }
+
+  public Room ResolveRoom(Room room)
+  {
+    if (room == null) return null;
+    return CurrentProject.Elements.OfType<Room>().FirstOrDefault(candidate => candidate.Id == room.Id);
+  }
+
+  private sealed class NoBatch : IDisposable
+  {
+    public static readonly NoBatch Instance = new();
+
+    public void Dispose()
+    {
+    }
   }
 
   private Connection AddConnection(

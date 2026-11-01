@@ -346,6 +346,7 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
 - The app opens one "Automap" transaction for the whole run, so Undo removes everything automap did since Start. Wanted (Lee): one step per move. Also: undo restores a whole-map snapshot with new objects, so the engine's remembered current room must be looked up again (by id) after undo/redo.
 - Severity: medium     Flags: —
+- **Fixed** 2026-11-01 (ticket 136, GitHub #24): one undo step per automap move ("Automap: <room>"); Undo/Redo greyed out and ignored while a step is being recorded; automap looks its current room up again by id after undo or deletion.
 - Ticket: —
 
 ## I-044 Automap and manual corrections: re-running from the start merges into the open map

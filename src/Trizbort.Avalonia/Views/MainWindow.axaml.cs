@@ -244,7 +244,10 @@ public partial class MainWindow : Window
                 AppOptions.Current,
                 services.GetRequiredService<IStorageService>(),
                 services.GetRequiredService<IDialogService>(),
-                this);
+                this,
+                null,
+                RecoveryService.Current?.Store,
+                RecoveryService.Current);
             if (App.FileActivation != null) await App.FileActivation.MarkReady();
         }
         catch (Exception)

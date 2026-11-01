@@ -1,3 +1,4 @@
+using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -57,11 +58,41 @@ public partial class App : Application
                     FileActivation.Attach(new AvaloniaFileActivationSource(lifetime));
                 }
             }
+            InstallCrashSafety(desktop, session, dialogService);
             FileWatcherWiring.Wire(dialogService, () => desktop.MainWindow, mainWindowViewModel.UpdateState,
                 mainWindowViewModel.CommandService.Session);
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>Recovery copy of unsaved work and the global error handlers (ticket 135).</summary>
+    private static void InstallCrashSafety(
+        IClassicDesktopStyleApplicationLifetime desktop,
+        Trizbort.Editor.EditorSession session,
+        IDialogService dialogService)
+    {
+        try
+        {
+            var version = typeof(App).Assembly
+                              .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                          ?? typeof(App).Assembly.GetName().Version?.ToString()
+                          ?? string.Empty;
+            var recovery = new RecoveryService(
+                session,
+                Trizbort.Domain.Recovery.RecoveryStore.CreateDefault(),
+                () => Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.KeepRecoveryCopy,
+                version);
+            RecoveryService.Current = recovery;
+            // a normal exit removes this instance's copy and releases its lock
+            desktop.Exit += (_, _) => recovery.Dispose();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Recovery service could not start: {ex.Message}");
+        }
+
+        CrashReporter.Install(dialogService, () => desktop.MainWindow);
     }
 
     public static Trizbort.Editor.IEditorPrompts WireAutomapPrompts(Func<Window?> getOwner)

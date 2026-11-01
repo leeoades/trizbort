@@ -231,6 +231,8 @@ public class FileExportAutomapSmokeTests
             return Task.FromResult(SaveDiscardCancelResult);
         }
 
+        public Task<RecoveryChoice> ShowRecoverDiscardLaterAsync(Window? owner, string title, string message) => Task.FromResult(RecoveryChoice.DecideLater);
+
         public Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room) => Task.FromResult(true);
         public Task<bool> ShowConnectionPropertiesAsync(Window? owner, Connection connection) => Task.FromResult(true);
         public Task<bool> ShowMapLabelPropertiesAsync(Window? owner, MapLabel label) => Task.FromResult(true);
