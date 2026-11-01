@@ -1,0 +1,11 @@
+The Test Game
+An Interactive Fiction by A. Tester
+Release 1 / Serial number 261101
+
+Cottage
+A small cottage. A door leads east.
+
+>east
+
+Lane
+A muddy lane. The cottage is to the west.

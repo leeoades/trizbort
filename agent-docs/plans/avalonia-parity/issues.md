@@ -329,4 +329,27 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: low     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-041 -->
+## I-041 Automap merges rooms whose names contain a comma ("Garden, East", "Garden, North" become one "Garden")
+- Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
+- Everything after `,` (also `(`, `[`, `{`, ` - `) is stripped as decoration, as in "Bedroom, on the bed". Inherited from the reference. Proposal: only strip a `,` or ` - ` suffix that starts with a lower-case word. Scenario: tests/automap/comma-room-names.
+- Severity: medium     Flags: —
+- Ticket: —
+
+## I-042 Automap skips the first room when the game banner has no title-like heading, even after the player types "look"
+- Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
+- The first room-like heading is always taken as the game title and that name is ignored for the whole run. Inherited from the reference. Proposal: only headings before the first command can be the title, and only when followed by banner text (Release, Serial number, Copyright, "by ..."). Scenario: tests/automap/look-before-first-room.
+- Severity: medium     Flags: —
+- Ticket: —
+
+## I-043 Automap changes are one undo step per run, not per move
+- Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
+- The app opens one "Automap" transaction for the whole run, so Undo removes everything automap did since Start. Wanted (Lee): one step per move. Also: undo restores a whole-map snapshot with new objects, so the engine's remembered current room must be looked up again (by id) after undo/redo.
+- Severity: medium     Flags: —
+- Ticket: —
+
+## I-044 Automap and manual corrections: re-running from the start merges into the open map
+- Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
+- With "process only new text" off, automap reads the transcript from the start and adds to the open map (rooms matched by name and description). Renamed rooms no longer match. Needs the user's examples of corrections that were lost.
+- Severity: low     Flags: —
+- Ticket: —
+<!-- Next ID: I-045 -->

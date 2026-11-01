@@ -1,0 +1,23 @@
+The Garden Game
+An Interactive Fiction by A. Tester
+Release 1 / Serial number 261101
+
+>look
+
+Garden, East
+The eastern end of a walled garden. Paths lead north and west.
+
+>north
+
+Garden, North
+The northern side of the garden. A path leads south.
+
+>south
+
+Garden, East
+The eastern end of a walled garden. Paths lead north and west.
+
+>west
+
+Garden, West
+The western end of the garden. A path leads east.
