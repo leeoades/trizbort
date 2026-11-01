@@ -1,2 +1,0 @@
-The first room heading in a transcript is always taken to be the game's title and skipped (and that name is ignored for
-the rest of the run), even when it follows the player's first command (here "look"). Reported by Lee, 2026-11-01.

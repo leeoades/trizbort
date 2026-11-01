@@ -95,10 +95,27 @@ public class AutomapRegressionTests : IsolatedProjectTests
   [TestCase("Bedroom [on the bed]", "Bedroom")]
   [TestCase("Bedroom - on the bed", "Bedroom")]
   [TestCase("Room 12", "Room 12")]
+  // GitHub #25 / I-041: a comma or dash followed by a capital is part of the name.
+  [TestCase("Garden, East", "Garden, East")]
+  [TestCase("Garden, North (by the pond)", "Garden, North")]
+  [TestCase("Hall - Upstairs", "Hall - Upstairs")]
+  [TestCase("Deck 2, Aft", "Deck 2, Aft")]
+  [TestCase("Garden, East, by the roses", "Garden, East")]
   public void RoomTitle_StripsDecorationsButKeepsRoomIdentity(string line, string expected)
   {
     CreateParser().ExtractRoomName(line, "", out var name).ShouldBeTrue();
     name.ShouldBe(expected);
+  }
+
+  [TestCase("Release 37 / Serial Number 861215", true)]
+  [TestCase("An Interactive Fiction by A. Tester", true)]
+  [TestCase("Copyright (C) 1986 Infocom, Inc. All rights reserved.", true)]
+  [TestCase("A small cottage. A door leads east.", false)]
+  [TestCase("A path winds by the river.", false)]
+  [TestCase("", false)]
+  public void LooksLikeBanner_RecognisesOpeningText(string paragraph, bool expected)
+  {
+    Parser.LooksLikeBanner(paragraph).ShouldBe(expected);
   }
 
   [TestCase(" bedroom")]

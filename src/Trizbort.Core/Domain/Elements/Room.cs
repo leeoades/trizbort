@@ -909,6 +909,13 @@ public class Room : Element, ISizeable
 
   public bool MatchDescription(string description, out float matchStrength)
   {
+    // a brief revisit prints only the room name: nothing to compare
+    if (string.IsNullOrEmpty(description))
+    {
+      matchStrength = 0;
+      return false;
+    }
+
     var matchingLength = 0;
     var totalLength = 0;
     foreach (var ourDescription in _descriptions)

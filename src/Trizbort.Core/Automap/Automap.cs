@@ -133,7 +133,7 @@ public sealed class Automap : IAutomapController
       strippedSuffix = false;
       foreach (var decorativeSuffixMarker in _roomDecorativeSuffixMarkers)
       {
-        var indexOfMarker = line.IndexOf(decorativeSuffixMarker, StringComparison.Ordinal);
+        var indexOfMarker = FindDecorativeSuffix(line, decorativeSuffixMarker);
         if (indexOfMarker >= 0)
         {
           var suffixLength = line.Length - indexOfMarker;
@@ -194,6 +194,9 @@ public sealed class Automap : IAutomapController
     var wordCountWithAllCaps = 0;
     foreach (var word in words)
     {
+      // a dash between words, as in "Hall - Upstairs", kept because the text after it is capitalised
+      if (word == "-") continue;
+
       if (!IsRoomDescriptionWord(word))
       {
         // all words must look room description esque for this to be a room name
@@ -257,6 +260,38 @@ public sealed class Automap : IAutomapController
 
     ClearFailureReason();
     return true;
+  }
+
+  /// <summary>
+  ///   Where a decorative suffix starts, or -1. A comma or " - " only starts one when the text after it begins in lower
+  ///   case ("Bedroom, on the bed"); "Garden, East" or "Hall - Upstairs" are names (GitHub #25, I-041).
+  /// </summary>
+  private static int FindDecorativeSuffix(string line, string marker)
+  {
+    var lowerCaseOnly = marker == "," || marker == " - ";
+    var index = line.IndexOf(marker, StringComparison.Ordinal);
+    while (index >= 0 && lowerCaseOnly)
+    {
+      var after = line.Substring(index + marker.Length).TrimStart();
+      if (after.Length == 0 || !(char.IsUpper(after[0]) || char.IsDigit(after[0]))) break;
+      index = line.IndexOf(marker, index + marker.Length, StringComparison.Ordinal);
+    }
+
+    return index;
+  }
+
+  /// <summary>
+  ///   True when the paragraph after a heading reads like a game's opening banner rather than a room description
+  ///   (release, serial number, copyright, "interactive fiction", "by Author").
+  /// </summary>
+  internal static bool LooksLikeBanner(string paragraph)
+  {
+    if (string.IsNullOrWhiteSpace(paragraph)) return false;
+    return System.Text.RegularExpressions.Regex.IsMatch(
+      paragraph,
+      @"\b(release|serial number|copyright|interactive fiction|trademark|inform)\b|\(c\)|©",
+      System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant) ||
+      System.Text.RegularExpressions.Regex.IsMatch(paragraph, @"\bby [A-Z]");
   }
 
   private bool StartsWithCapitalOrNonLetter(string word)
@@ -355,6 +390,10 @@ public sealed class Automap : IAutomapController
     if (_settings.AssumeRoomsWithSameNameAreSameRoom)
       // ignore the description
       return true;
+
+    if (string.IsNullOrEmpty(description))
+      // a brief revisit (name only): it may be this room; a single candidate is taken as it
+      return null;
 
     if (room.MatchDescription(description))
       // the descriptions match; they're the same room
@@ -503,10 +542,15 @@ public sealed class Automap : IAutomapController
             }
             else
             {
-              if (_firstRoom || _gameName == roomName)
+              // The game's title: a heading before the player's first command with no description or with banner
+              // text under it, or the same title shown again later (a restart). Anything else is a room, including
+              // the first heading after "look" (GitHub #25, I-042).
+              var isTitle = !_seenCommand
+                ? string.IsNullOrWhiteSpace(roomDescription) || LooksLikeBanner(roomDescription)
+                : _gameName.Length > 0 && _gameName == roomName;
+              if (isTitle)
               {
                 // most likely this is the game title
-                _firstRoom = false;
                 _gameName = roomName;
                 waits++;
               }
@@ -593,6 +637,7 @@ public sealed class Automap : IAutomapController
 
   private void ProcessPromptCommand(string command)
   {
+    if (!string.IsNullOrWhiteSpace(command)) _seenCommand = true;
     RefreshLastKnownRoom();
     var title = _lastKnownRoom != null ? "Automap: " + _lastKnownRoom.Name : "Automap";
     using (_canvas.BeginBatch(title))
@@ -791,7 +836,7 @@ public sealed class Automap : IAutomapController
   #region Private Member Variables
 
   private Room _lastKnownRoom;
-  private bool _firstRoom = true;
+  private bool _seenCommand;
   private string _gameName = string.Empty;
 
   private MappableDirection? _lastMoveDirection;
@@ -898,7 +943,7 @@ public sealed class Automap : IAutomapController
   {
     _canvas = canvas;
     _settings = settings;
-    _firstRoom = true;
+    _seenCommand = false;
     _lastKnownRoom = null;
     _lastMoveDirection = null;
     _gameName = string.Empty;

@@ -334,12 +334,14 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
 - Everything after `,` (also `(`, `[`, `{`, ` - `) is stripped as decoration, as in "Bedroom, on the bed". Inherited from the reference. Proposal: only strip a `,` or ` - ` suffix that starts with a lower-case word. Scenario: tests/automap/comma-room-names.
 - Severity: medium     Flags: —
+- **Fixed** 2026-11-01 (GitHub #25): a `,` or ` - ` suffix is only stripped when the text after it starts in lower case ("Bedroom, on the bed"); "Garden, East" and "Hall - Upstairs" are names. Scenarios comma-room-names and hollywood-hijinx-opening.
 - Ticket: —
 
 ## I-042 Automap skips the first room when the game banner has no title-like heading, even after the player types "look"
 - Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
 - The first room-like heading is always taken as the game title and that name is ignored for the whole run. Inherited from the reference. Proposal: only headings before the first command can be the title, and only when followed by banner text (Release, Serial number, Copyright, "by ..."). Scenario: tests/automap/look-before-first-room.
 - Severity: medium     Flags: —
+- **Fixed** 2026-11-01 (GitHub #25): only a heading before the first command, with no description or banner text under it (release, serial number, copyright, "by Author"), is the game title; the first heading after "look" is a room. Scenarios look-before-first-room and hollywood-hijinx-opening.
 - Ticket: —
 
 ## I-043 Automap changes are one undo step per run, not per move
@@ -365,4 +367,10 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Save As / quick save restarted the file watcher on the previous file, so outside changes to the new file were missed, and a missing previous folder made a successful save report "Error reading the ... directory". Found via a test-order failure in HeadlessAutomapTests. **Fixed** 2026-11-01: Save watches the file it wrote; StartWatcher ignores a missing folder. Tests: SaveWatchesSavedFileTests, FileWatcherTests.
 - Severity: medium     Flags: —
 - Ticket: —
-<!-- Next ID: I-047 -->
+## I-047 Automap crashed on a brief revisit (room name printed without a description)
+- Reported: 2026-11-01 by integrator (Hollywood Hijinx transcript from Lee)   OS: all   Category: automap
+- With "verbose transcript" on and "same name = same room" off, a name-only revisit passed a null description to Room.MatchDescription, which threw. Same in the reference. **Fixed** 2026-11-01: an empty description makes the room a possible match (a single candidate is taken); MatchDescription is null-safe. Scenario hollywood-hijinx-opening (last move back to "Garden, North").
+- Severity: high     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-048 -->

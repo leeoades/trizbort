@@ -1,2 +1,0 @@
-Text after a comma is stripped as decoration ("Bedroom, on the bed"), so "Garden, East", "Garden, North" and
-"Garden, West" all become "Garden". Reported by Lee, 2026-11-01.

@@ -1,0 +1,96 @@
+Here begins a transcript of interaction with
+
+HOLLYWOOD HIJINX
+Infocom interactive fiction -- a zany treasure hunt
+Copyright (C) 1986 Infocom, Inc. All rights reserved.
+HOLLYWOOD HIJINX is a trademark of Infocom, Inc.
+Release 37 / Serial Number 861215
+
+>look
+South Junction
+You're standing in front of the house where you spent many of your summers as a
+youngster. The old place is not as big as it seemed to you then, but it is still
+quite large. Stone pathways wind east and west around the house, and a larger
+main walkway leads north.
+
+A life-size statue of Buck Palace, one of the stars of Uncle Buddy's talent
+stables, stands here. He's holding a bazooka pointing north.
+
+>e
+You follow the stone walkway as it turns north around the corner of the house,
+arriving at...
+
+Southeast Junction
+This is the southeastern corner of a large backyard whose main feature is an
+elaborate garden. The stone walkway splits in three directions here: north,
+along the perimeter of the garden; south, around the side of the house; and
+west, where the walkway ends at a couple of steps leading up.
+
+>n
+Northeast Junction
+In this corner of the backyard you can make out the enormous hedge, which is
+part of the estate's hedge maze. The stone walkway splits in three directions
+here: north, along the dark and towering hedge; south, past the fragrant and
+inviting garden; and west, where the walkway cuts a straight and narrow path
+between the hedge and the garden. A slightly worn path in the grass heads east.
+
+>w
+Entrance to Hedge Maze
+This is the entrance to the hedge maze. Aunt Hildegarde told you never to go
+into the maze without the map, and of course you would go in anyway and she
+would have to come in and find you.
+
+Guests were forever getting lost in the maze at parties. Sometimes you wished
+Cousin Herman would go in and never come out. But you always had the feeling he
+was thinking the same about you, only more seriously. Tall hedges, thick and
+green, stretch along paths leading to the east and west and a grass path north
+enters the maze. A stone walkway leads south.
+
+>s
+Garden, North
+You are in the orchid section of the garden. Tender orchid petals of every color
+surround a small pond here. The stone walkway leads north, southeast and
+southwest.
+
+>se
+Garden, East
+You are in the overpoweringly fragrant rose bush section of the garden. As you
+admire the roses you notice one somewhat sickly rose bush. Something about the
+sight of this particular rose bush makes you feel a bit queasy. The stone
+walkway leads northwest and southwest.
+
+>sw
+Garden, South
+You're standing on a stone walkway in Aunt Hildegarde's much envied garden where
+she would spend hours tending to her flowers, bushes and trees. The garden was
+off limits to you as a child because of an incident one summer when you and
+Cousin Herman were playing in the garden. You suggested pretending to be wild
+African animals and climbed a tree and began to screech as if a baboon while
+Cousin Herman ran off toward the roses shouting something about being a
+rhinoceros.
+
+After howling until your throat felt like you had puffed on one of Uncle Buddy's
+Hollywood cigars, you went to find Cousin Herman. When you arrived you couldn't
+believe your eyes -- Cousin Herman had pulled all the thorns off of all of Aunt
+Hildegarde's rose bushes in a quest to find the biggest thorn possible so he
+could be a rhino. Of course when Aunt Hildegarde saw her naked rose bushes,
+Cousin Herman blamed it all on you. The walkway leads south, northeast and
+northwest.
+
+>nw
+Garden, West
+You're standing on a stone walkway in the tulip section of the garden. The
+walkway leads northeast and southeast.
+
+A small shovel is lying amongst the flower beds.
+
+>ne
+Garden, North
+
+>quit
+Your score is 0 points out of 150, in 9 moves.
+Are you sure you want to leave the story now?
+
+(Please type YES or NO.) >y
+
+Cut! That's a take.
