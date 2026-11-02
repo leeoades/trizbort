@@ -7,7 +7,7 @@ Inform 6, TADS, Hugo, ZIL, Quest, Alan or Adventuron.
 Recast is a cross-platform rebuild of **Trizbort**. It runs on Windows, Linux and macOS, and opens and saves the same
 `.trizbort` maps.
 
-> **Status: beta (0.9).** Recast does everything the Windows app does, and more, but it is new. Keep backups of your
+> **Status: beta (0.10).** Recast does everything the Windows app does, and more, but it is new. Keep backups of your
 > maps and please [report anything that goes wrong](https://github.com/leeoades/trizbort/issues).
 
 ## Where it comes from
@@ -82,12 +82,13 @@ dotnet run --project legacy/src/Trizbort
 ```
 
 ## Releasing
-Pushing a tag starts a release build on GitHub Actions. Both apps need a changelog entry for a beta (`-beta.N`) tag,
-under a heading without the prefix, such as `## [0.9.0-beta.1]`.
+Pushing a tag starts a release build on GitHub Actions. Both apps need a changelog entry for a beta tag,
+under a heading without the prefix. Recast accepts `-beta` or `-beta.N`, such as `## [0.10.0-beta]`;
+the legacy app accepts `-beta.N`.
 
 | Tag | Builds | Changelog |
 |---|---|---|
-| `recast-v0.9.0-beta.1` | Trizbort Recast for Windows x64, Linux x64 and macOS (Apple Silicon and Intel) | [changelog.md](changelog.md) |
+| `recast-v0.10.0-beta` | Trizbort Recast for Windows x64, Linux x64 and macOS (Apple Silicon and Intel) | [changelog.md](changelog.md) |
 | `legacy-v2.3.2` | Trizbort 2.x for Windows x64 | [legacy/changelog.md](legacy/changelog.md) |
 
 ## License
