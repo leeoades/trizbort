@@ -12,6 +12,30 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Added
+
+- **Automap joins teleports.** When a command that isn't a direction takes you somewhere (a magic word such as
+  `xyzzy`, or `enter boat`), automap joins the two rooms with a dotted one-way line labelled with what you typed. Using
+  the same command back makes the join two-way. Undo, restore, restart and `look` don't create joins.
+- **Recovery copies.** Recast keeps a recovery copy of the open map and offers to restore it after a crash or power
+  cut. It is on by default; turn it off in Application Settings.
+- **Error logs.** When something goes wrong, Recast writes a log you can send in, and shows a plain message saying
+  where it is, instead of a technical error.
+- Automap opens `.scr` transcripts (the Frotz default) as well as `.txt` and `.log`.
+
+### Fixed
+
+- Automap mapped the first room of a game, including when the first command is `look`.
+- Automap keeps room names with a comma or dash (`Garden, East`, `Hall - Upstairs`) as separate rooms.
+- Each automap move is one undo step, and Undo while automap is running no longer crashes (GitHub #24).
+- Automap no longer crashes with "Sequence contains no matching element" when it re-routes an exit.
+- With "assume two-way connections" off, automap no longer asks about a room in the way, or moves exits it already
+  knows.
+- Automap carries on correctly when a transcript holds more than one play session.
+- Automap no longer loses a move typed while you play live.
+- Room names such as `Y2` are no longer mistaken for shouted text.
+- All compiler warnings are fixed, including a broken binding in Map Settings.
+
 ## [0.9.0-beta.1] - 2026-10-31
 
 This is the **first beta of Trizbort Recast**, for testing. It has everything the Windows app has, and more, but it has

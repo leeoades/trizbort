@@ -101,6 +101,11 @@ public class AutomapErrorTests : IsolatedProjectTests
       _inner.SelectRoom(room);
     }
 
+    public void ConnectByCommand(Room source, Room target, string command)
+    {
+      _inner.ConnectByCommand(source, target, command);
+    }
+
     public void RemoveRoom(Room otherRoom)
     {
       _inner.RemoveRoom(otherRoom);

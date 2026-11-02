@@ -90,7 +90,8 @@ public static class AutomapMapSummary
 
     var arrow = connection.Flow == ConnectionFlow.OneWay ? "->" : "<->";
     var dotted = connection.Style == ConnectionStyle.Dashed ? " (dotted)" : string.Empty;
-    return $"{sourceName} [{sourcePort}] {arrow} [{targetPort}] {targetName}{dotted}";
+    var label = string.IsNullOrEmpty(connection.MidText) ? string.Empty : $" \"{connection.MidText}\"";
+    return $"{sourceName} [{sourcePort}] {arrow} [{targetPort}] {targetName}{label}{dotted}";
   }
 
   private static string Port(CompassPoint point, string label)

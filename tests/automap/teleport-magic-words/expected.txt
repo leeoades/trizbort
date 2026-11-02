@@ -1,0 +1,16 @@
+current: Low Passage
+
+rooms:
+Debris Room
+Inside Building (start)
+Low Passage
+Y2
+
+connections:
+Debris Room [west] stub
+Inside Building [east] -> [west] Y2 "plugh" (dotted)
+Inside Building [west] <-> [east] Debris Room "xyzzy" (dotted)
+Inside Building [west] stub
+Low Passage [north] stub
+Y2 [east] stub
+Y2 [south] <-> [north] Low Passage

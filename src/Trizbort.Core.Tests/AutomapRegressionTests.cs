@@ -313,7 +313,7 @@ public class AutomapRegressionTests : IsolatedProjectTests
   }
 
   [Test]
-  public async Task FailedMoveAndDisconnectedTravel_DoNotInventConnections()
+  public async Task FailedMoveDoesNotInventAConnection_TeleportIsJoinedByItsCommand()
   {
     var canvas = new AutomapCanvas();
     await CreateParser().StartCl(
@@ -321,7 +321,12 @@ public class AutomapRegressionTests : IsolatedProjectTests
       SettingsFor(
         "Example Game\n\nFirst Room\nA small room.\n\n>e\nYou cannot go that way.\n\n>look\n\nFirst Room\nA small room.\n\n>teleport\n\nDistant Room\nFar away.\n"));
     Project.Current.Elements.OfType<Room>().Select(room => room.Name).ShouldBe(new[] { "First Room", "Distant Room" });
-    Project.Current.Elements.OfType<Connection>().ShouldBeEmpty();
+    // I-052: no join for the failed "e"; the teleport is joined, one-way and labelled with the command
+    var join = Project.Current.Elements.OfType<Connection>().ShouldHaveSingleItem();
+    join.MidText.ShouldBe("teleport");
+    join.Flow.ShouldBe(ConnectionFlow.OneWay);
+    join.GetSourceRoom().Name.ShouldBe("First Room");
+    join.GetTargetRoom().Name.ShouldBe("Distant Room");
   }
 
   [Test]

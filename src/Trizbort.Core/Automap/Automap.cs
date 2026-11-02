@@ -294,6 +294,7 @@ public sealed class Automap : IAutomapController
   {
     Trace("Automap: the game started again; back in the first room.");
     _lastMoveDirection = null;
+    _lastJourneyCommand = null;
     _seenCommand = false;
     var start = _startRoom != null ? _canvas.ResolveRoom(_startRoom) : null;
     _lastKnownRoom = start;
@@ -327,6 +328,8 @@ public sealed class Automap : IAutomapController
 
   private bool IsAllCaps(string word)
   {
+    // a grid reference such as "Y2" (Colossal Cave) is a name, not shouting
+    if (word.Count(char.IsLetter) == 1 && word.Any(char.IsDigit)) return false;
     return word.ToUpper() == word;
   }
 
@@ -594,15 +597,25 @@ public sealed class Automap : IAutomapController
               }
               else
               {
-                // player teleported to new room;
-                // don't connect it up, as we don't know how they got there
+                // player arrived somewhere new without a compass direction: a teleport, a magic word, "enter
+                // boat"... Join it from where they were, labelled with what they typed, if we know.
                 room = _canvas.CreateRoom(_lastKnownRoom, roomName);
                 if (_lastKnownRoom == null)
                 {
                   room.IsStartRoom = true;
                   _startRoom ??= room;
+                  Trace("{0}: first room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
                 }
-                Trace("{0}: teleported to new room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
+                else if (_lastJourneyCommand != null)
+                {
+                  _canvas.ConnectByCommand(_lastKnownRoom, room, _lastJourneyCommand);
+                  Trace("{0}: {1} reached from {2} by \"{3}\".", FormatTranscriptLineForDisplay(line), roomName,
+                    _lastKnownRoom.Name, _lastJourneyCommand);
+                }
+                else
+                {
+                  Trace("{0}: teleported to new room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
+                }
                 waits++;
               }
             }
@@ -629,6 +642,13 @@ public sealed class Automap : IAutomapController
                 _lastMoveDirection.Value.ToString().ToLower(),
                 _lastKnownRoom.Name);
             }
+            else if (_lastKnownRoom != null && _lastJourneyCommand != null)
+            {
+              // back to a known room by something other than a direction ("xyzzy" again)
+              _canvas.ConnectByCommand(_lastKnownRoom, room, _lastJourneyCommand);
+              Trace("{0}: {1} reached from {2} by \"{3}\".", FormatTranscriptLineForDisplay(line), roomName,
+                _lastKnownRoom.Name, _lastJourneyCommand);
+            }
 
             NowInRoom(room);
             waits++;
@@ -652,6 +672,7 @@ public sealed class Automap : IAutomapController
         // we might end up caring if, for example, the user gives multiple commands at one prompt,
         // or they're moved to one room and then teleported to another.
         _lastMoveDirection = null;
+        _lastJourneyCommand = null;
       }
       else
       {
@@ -686,6 +707,30 @@ public sealed class Automap : IAutomapController
     {
       ProcessPromptCommandCore(command);
     }
+
+    // a command that isn't a direction may still take the player somewhere ("xyzzy", "enter boat")
+    _lastJourneyCommand = _lastMoveDirection == null && IsPossibleJourney(command) ? command.Trim() : null;
+  }
+
+  private static readonly string[] _notJourneys =
+  {
+    "undo", "restore", "load", "restart", "quit", "q", "save", "look", "l", "again", "g", "oops", "script", "unscript",
+    "transcript"
+  };
+
+  /// <summary>
+  ///   A command that could take the player to another room without a compass direction. Not the automap commands,
+  ///   and not undo/restore/restart and the like, which move the player without a journey.
+  /// </summary>
+  private bool IsPossibleJourney(string command)
+  {
+    if (string.IsNullOrWhiteSpace(command)) return false;
+    var trimmed = command.Trim();
+    if (trimmed.StartsWith(_settings.AddRegionCommand, StringComparison.OrdinalIgnoreCase) ||
+        trimmed.StartsWith(_settings.AddObjectCommand, StringComparison.OrdinalIgnoreCase))
+      return false;
+    var firstWord = trimmed.Split(_wordSeparators, StringSplitOptions.RemoveEmptyEntries)[0];
+    return !_notJourneys.Contains(firstWord, StringComparer.OrdinalIgnoreCase);
   }
 
   private void ProcessPromptCommandCore(string command)
@@ -879,6 +924,7 @@ public sealed class Automap : IAutomapController
 
   private Room _lastKnownRoom;
   private bool _seenCommand;
+  private string _lastJourneyCommand;
   private Room _startRoom;
   private string _gameName = string.Empty;
 
@@ -990,6 +1036,7 @@ public sealed class Automap : IAutomapController
     _startRoom = null;
     _lastKnownRoom = null;
     _lastMoveDirection = null;
+    _lastJourneyCommand = null;
     _gameName = string.Empty;
     _stepNow = false;
     _dontAskAboutAmbiguities = false;

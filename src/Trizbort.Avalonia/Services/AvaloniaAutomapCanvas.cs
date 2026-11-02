@@ -87,6 +87,18 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         }
     }
 
+    public void ConnectByCommand(Room source, Room target, string command)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            _innerCanvas.ConnectByCommand(source, target, command);
+        }
+        else
+        {
+            Dispatcher.UIThread.Invoke(() => _innerCanvas.ConnectByCommand(source, target, command));
+        }
+    }
+
     public void RemoveRoom(Room otherRoom)
     {
         if (Dispatcher.UIThread.CheckAccess())

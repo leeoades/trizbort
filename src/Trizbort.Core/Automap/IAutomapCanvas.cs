@@ -19,6 +19,13 @@ public interface IAutomapCanvas
 
   void Connect(Room source, MappableDirection directionFromSource, Room target, bool assumeTwoWayConnections);
 
+  /// <summary>
+  ///   Join two rooms the player travelled between by something other than a compass direction (a magic word, "enter
+  ///   boat"). The join is one-way and dotted, labelled with <paramref name="command" />, and leaves each room on the
+  ///   side facing the other. Using the same command the other way makes it two-way.
+  /// </summary>
+  void ConnectByCommand(Room source, Room target, string command);
+
   void AddExitStub(Room room, MappableDirection direction);
 
   void RemoveExitStub(Room room, MappableDirection direction);

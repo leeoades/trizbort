@@ -120,6 +120,56 @@ public class AutomapCanvas : IAutomapCanvas
     }
   }
 
+  public void ConnectByCommand(Room source, Room target, string command)
+  {
+    if (source == null || target == null || source == target || string.IsNullOrWhiteSpace(command)) return;
+    if (!CurrentProject.Elements.Contains(source) || !CurrentProject.Elements.Contains(target)) return;
+    command = command.Trim();
+
+    foreach (var connection in CurrentProject.Elements.OfType<Connection>())
+    {
+      if (!string.Equals(connection.MidText, command, StringComparison.OrdinalIgnoreCase)) continue;
+      var from = connection.GetSourceRoom();
+      var to = connection.GetTargetRoom();
+      if (from == source && to == target) return;
+      if (from == target && to == source)
+      {
+        connection.Flow = ConnectionFlow.TwoWay;
+        return;
+      }
+    }
+
+    var sourcePoint = FacingPoint(source, target);
+    var added = AddConnection(source, sourcePoint, target, CompassPointHelper.GetOpposite(sourcePoint));
+    added.Style = ConnectionStyle.Dashed;
+    added.Flow = ConnectionFlow.OneWay;
+    added.MidText = command;
+  }
+
+  /// <summary>The side of <paramref name="from" /> (one of the eight main points) that faces <paramref name="to" />.</summary>
+  private static CompassPoint FacingPoint(Room from, Room to)
+  {
+    var a = from.InnerBounds.Center;
+    var b = to.InnerBounds.Center;
+    var dx = b.X - a.X;
+    var dy = b.Y - a.Y;
+    if (dx == 0 && dy == 0) return CompassPoint.East;
+    // screen y grows downwards, so flip it to get a compass angle: 0 = east, 90 = north
+    var angle = Math.Atan2(-dy, dx) * 180.0 / Math.PI;
+    var sector = (int)Math.Round(angle / 45.0);
+    return sector switch
+    {
+      0 => CompassPoint.East,
+      1 => CompassPoint.NorthEast,
+      2 => CompassPoint.North,
+      3 => CompassPoint.NorthWest,
+      4 or -4 => CompassPoint.West,
+      -3 => CompassPoint.SouthWest,
+      -2 => CompassPoint.South,
+      _ => CompassPoint.SouthEast
+    };
+  }
+
   public Room CreateRoom(Room existing, string name)
   {
     var room = new Room(CurrentProject) { Name = name };

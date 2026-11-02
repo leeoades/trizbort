@@ -396,4 +396,10 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: medium     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-052 -->
+## I-052 Automap didn't join rooms reached without a compass direction
+- Reported: 2026-11-02 by user ("are teleports supported? ... XYZZY and PLOUGH ... at least it can create the join and the user can add the description")   OS: all   Category: automap
+- A command that isn't a direction ("xyzzy", "plugh", "enter boat") made the new room but left it unjoined, as the legacy app did. Colossal Cave's "Y2" also wasn't taken as a room name (the all-caps rule). **Fixed** 2026-11-02: automap remembers the command and joins the rooms with a dotted one-way line labelled with it, leaving each room on the side facing the other; the same command the other way makes it two-way. undo/restore/restart/look/save and the `tb` commands are not journeys. A word of one letter plus digits counts as a name, not shouting. Scenario `tests/automap/teleport-magic-words`, unit tests in `AutomapConnectByCommandTests`.
+- Severity: low     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-053 -->
