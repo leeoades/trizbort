@@ -52,6 +52,18 @@ public static class CrashReporter
     /// <summary>How long a crash on another thread waits for the UI thread to copy the map.</summary>
     public static TimeSpan UiThreadWait { get; set; } = TimeSpan.FromSeconds(2);
 
+    /// <summary>
+    ///   Runs work on the UI thread and waits up to the given time; null if it didn't finish. Test hook: replaced to
+    ///   act out a UI thread that is stuck, which a test can't arrange the same way on every platform.
+    /// </summary>
+    public static Func<Func<bool>, TimeSpan, bool?> RunOnUiThread { get; set; } = RunOnUiThreadAndWait;
+
+    private static bool? RunOnUiThreadAndWait(Func<bool> work, TimeSpan wait)
+    {
+        var task = Dispatcher.UIThread.InvokeAsync(work).GetTask();
+        return task.Wait(wait) ? task.Result : null;
+    }
+
     private static UnsavedWork KeepWork(RecoveryService? service)
     {
         try
@@ -64,8 +76,9 @@ public static class CrashReporter
 
             // The map is edited on the UI thread, so the copy is made there. If the UI thread can't do it in time,
             // the last copy written stays as it is rather than being replaced by one read mid-edit.
-            var write = Dispatcher.UIThread.InvokeAsync(() => service.WriteNow(false)).GetTask();
-            return write.Wait(UiThreadWait) && write.Result ? UnsavedWork.Kept : UnsavedWork.NotKept;
+            return RunOnUiThread(() => service.WriteNow(false), UiThreadWait) == true
+                ? UnsavedWork.Kept
+                : UnsavedWork.NotKept;
         }
         catch (Exception ex)
         {

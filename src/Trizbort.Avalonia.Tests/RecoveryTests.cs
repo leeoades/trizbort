@@ -204,21 +204,27 @@ public class RecoveryTests
     [AvaloniaTest]
     public void Crash_OnAnotherThread_WhenTheUiThreadIsBusy_LeavesTheLastCopyAlone()
     {
-        var previousWait = CrashReporter.UiThreadWait;
-        CrashReporter.UiThreadWait = TimeSpan.FromMilliseconds(50);
+        var previousRun = CrashReporter.RunOnUiThread;
+        var asked = 0;
+        // a UI thread that doesn't answer in time
+        CrashReporter.RunOnUiThread = (_, _) =>
+        {
+            asked++;
+            return null;
+        };
         try
         {
             RecoveryService.Current = _service;
             AddRoom("Cellar");
 
-            // this (UI) thread is blocked waiting, as it would be if it were stuck
             var capture = Task.Run(() => CrashReporter.Capture(new InvalidOperationException("boom"))).Result;
 
+            asked.ShouldBe(1);
             capture.Work.ShouldBe(UnsavedWork.NotKept);
         }
         finally
         {
-            CrashReporter.UiThreadWait = previousWait;
+            CrashReporter.RunOnUiThread = previousRun;
         }
     }
 
