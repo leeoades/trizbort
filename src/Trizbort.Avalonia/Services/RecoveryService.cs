@@ -75,6 +75,16 @@ public sealed class RecoveryService : IDisposable
         }
     }
 
+    /// <summary>
+    ///   Looks at the map again, for when something other than an edit changes what should happen: turning recovery
+    ///   copies on copies an unsaved map, turning them off removes the copy.
+    /// </summary>
+    public void Reevaluate()
+    {
+        if (Dispatcher.UIThread.CheckAccess()) Settle();
+        else Dispatcher.UIThread.Post(Settle);
+    }
+
     /// <summary>Acts on the map's final state after a change: write a copy later if it is unsaved, else clean up.</summary>
     private void Settle()
     {

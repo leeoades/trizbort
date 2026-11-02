@@ -219,6 +219,86 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
   }
 
   [Test]
+  public void UpThenSouthBack_ReplacesTheAssumedDownInsteadOfAddingNorth()
+  {
+    // PR #26 review: the "down" automap wrote as the assumed way back counted as a direction someone had seen
+    var canvas = new AutomapCanvas();
+    var hall = AddRoomAt("Hall", 0, 0);
+    var attic = canvas.CreateRoom(hall, MappableDirection.Up, "Attic", "Attic");
+    canvas.Connect(hall, MappableDirection.Up, attic, true);
+
+    canvas.Connect(attic, MappableDirection.South, hall, true);
+
+    var join = TheJoin();
+    join.StartText.ShouldBe("up");
+    join.EndText.ShouldBeNullOrEmpty();
+    EndSide(join).ShouldBe(CompassPoint.South);
+  }
+
+  [Test]
+  public void UndoingAReturnJourney_UndoesKnowingThatEndToo()
+  {
+    // PR #26 review: undo put the guessed exit back but automap still thought that end had been travelled
+    using var session = new Trizbort.Editor.EditorSession();
+    var canvas = new AutomapCanvas(null, null, session);
+    var a = AddRoomAt("A", 0, 0);
+    var b = canvas.CreateRoom(a, MappableDirection.East, "B", "B");
+    session.Execute("Automap: B", () => canvas.Connect(a, MappableDirection.East, b, true));
+    session.Execute("Automap: A", () => canvas.Connect(b, MappableDirection.South, a, true));
+    session.PerformUndo();
+
+    canvas.Connect(canvas.ResolveRoom(b), MappableDirection.South, canvas.ResolveRoom(a), true);
+
+    var join = TheJoin();
+    EndSide(join).ShouldBe(CompassPoint.South);
+    join.StartText.ShouldBeNullOrEmpty();
+    join.EndText.ShouldBeNullOrEmpty();
+  }
+
+  [Test]
+  public void TravelledDirections_AreKeptOnTheConnection()
+  {
+    var canvas = new AutomapCanvas();
+    var cliff = AddRoomAt("Cliff Top", 0, 0);
+    var beach = canvas.CreateRoom(cliff, MappableDirection.Down, "Beach", "Beach");
+    canvas.Connect(cliff, MappableDirection.Down, beach, true);
+    canvas.Connect(cliff, MappableDirection.North, beach, true);
+    canvas.Connect(beach, MappableDirection.Up, cliff, true);
+
+    var join = TheJoin();
+    join.StartTravelled.ShouldBe("down north");
+    join.EndTravelled.ShouldBe("up");
+    join.Reverse();
+    join.StartTravelled.ShouldBe("up");
+    join.EndTravelled.ShouldBe("down north");
+  }
+
+  [Test]
+  public void ResolveRoom_ANewRoomThatReusedADeletedRoomsId_IsNotThatRoom()
+  {
+    // PR #26 review: ids are reused, so a deleted room's id could lead automap to an unrelated room
+    var canvas = new AutomapCanvas();
+    var hall = AddRoomAt("Hall", 0, 0);
+    var remembered = canvas.CreateRoom(hall, MappableDirection.East, "Garden", "Garden");
+    Project.Current.Elements.Remove(remembered);
+    var cupboard = AddRoomAt("Cupboard", 900, 0);
+    cupboard.Id.ShouldBe(remembered.Id);
+
+    canvas.ResolveRoom(remembered).ShouldBeNull();
+    canvas.ResolveRoom(hall).ShouldBeSameAs(hall);
+  }
+
+  [Test]
+  public void ResolveRoom_ARenamedRoom_IsStillFound()
+  {
+    var canvas = new AutomapCanvas();
+    var hall = AddRoomAt("Hall", 0, 0);
+    hall.Name = "Great Hall";
+
+    canvas.ResolveRoom(hall).ShouldBeSameAs(hall);
+  }
+
+  [Test]
   public void UpOnItsOwn_StillLabelledUpAndDown()
   {
     var canvas = new AutomapCanvas();

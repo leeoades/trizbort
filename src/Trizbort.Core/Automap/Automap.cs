@@ -470,10 +470,33 @@ public sealed class Automap : IAutomapController
   }
 
   /// <summary>A tried direction that led nowhere: remove its stub as a step of its own.</summary>
-  private void FlushPendingStubRemoval()
+  private async Task FlushPendingStubRemoval(CancellationToken token)
   {
     if (_pendingStubRemoval is not { } pending) return;
-    using (_canvas.BeginBatch("Automap: " + pending.Room.Name)) RemovePendingStub();
+    using (await BeginBatchAsync("Automap: " + pending.Room.Name, token)) RemovePendingStub();
+  }
+
+  /// <summary>
+  ///   Opens an undo step for automap's changes, waiting while the user is part-way through a change of their own
+  ///   (a drag), so automap's work never becomes part of the user's step.
+  /// </summary>
+  private async Task<IDisposable> BeginBatchAsync(string title, CancellationToken token)
+  {
+    var waited = false;
+    while (true)
+    {
+      token.ThrowIfCancellationRequested();
+      var batch = _canvas.BeginBatch(title);
+      if (batch != null)
+      {
+        if (waited) Trace("Automap: carried on after the user's change.");
+        return batch;
+      }
+
+      if (!waited) Trace("Automap: waiting for the user to finish a change.");
+      waited = true;
+      await Task.Delay(50, token);
+    }
   }
 
   private void NowInRoom(Room room)
@@ -583,8 +606,12 @@ public sealed class Automap : IAutomapController
         }
 
         var waits = 0;
-        using (_canvas.BeginBatch("Automap: " + roomName))
+        using (await BeginBatchAsync("Automap: " + roomName, token))
         {
+          // the user may have undone something while automap waited for them to finish a change
+          RefreshLastKnownRoom();
+          if (room != null) room = _canvas.ResolveRoom(room);
+          otherRoom = _canvas.ResolveRoom(otherRoom);
           RemovePendingStub();
           if (room == null)
           {
@@ -742,15 +769,16 @@ public sealed class Automap : IAutomapController
     return "|" + displayLine;
   }
 
-  private void ProcessPromptCommand(string command)
+  private async Task ProcessPromptCommand(string command, CancellationToken token)
   {
     if (!string.IsNullOrWhiteSpace(command)) _seenCommand = true;
     _lastCommand = command;
     RefreshLastKnownRoom();
-    FlushPendingStubRemoval();
+    await FlushPendingStubRemoval(token);
     var title = _lastKnownRoom != null ? "Automap: " + _lastKnownRoom.Name : "Automap";
-    using (_canvas.BeginBatch(title))
+    using (await BeginBatchAsync(title, token))
     {
+      RefreshLastKnownRoom();
       ProcessPromptCommandCore(command);
     }
 
@@ -1269,7 +1297,7 @@ public sealed class Automap : IAutomapController
           linesBetweenPrompts.Clear();
 
           // process the next command
-          ProcessPromptCommand(command);
+          await ProcessPromptCommand(command, tokenSource.Token);
 
           Trace(
             "{0}: {1}{2}",
@@ -1406,7 +1434,7 @@ public sealed class Automap : IAutomapController
 
           // process the next command
           tokenSource.Token.ThrowIfCancellationRequested();
-          ProcessPromptCommand(command);
+          await ProcessPromptCommand(command, tokenSource.Token);
 
           //                  if (command.ToUpper().Equals("EXITS"))
           //                  {

@@ -170,7 +170,12 @@ public sealed class UndoStack
     CloseTransaction();
 
     // Hash the after-state instead of compressing it: only "did anything change" matters here.
-    if (before.HasSameMap(SnapshotMemento.ComputeHash(_session))) return;
+    if (before.HasSameMap(SnapshotMemento.ComputeHash(_session)))
+    {
+      // nothing to record, but recording has stopped: Undo and Redo can be used again
+      RaiseChanged();
+      return;
+    }
 
     // Recording a step discards the redo list; a saved position inside it is gone for good.
     var position = _undo.Count;

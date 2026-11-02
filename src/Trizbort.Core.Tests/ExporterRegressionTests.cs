@@ -177,6 +177,69 @@ public class ExporterRegressionTests : IsolatedProjectTests
     (target.GetBestExit(MappableDirection.West) != null).ShouldBe(reciprocal);
   }
 
+  private static Connection Join(Room from, CompassPoint fromSide, Room to, CompassPoint toSide)
+  {
+    var connection = new Connection(Project.Current, new Vertex(from.PortAt(fromSide)), new Vertex(to.PortAt(toSide)));
+    Project.Current.Elements.Add(connection);
+    return connection;
+  }
+
+  [Test]
+  public void Preparation_ExportsEveryDirectionAJoinLists()
+  {
+    // PR #26 review: automap labels a join "north / down" when both lead there; export kept only north
+    var cliff = ProjectRegressionTests.AddRoom("Cliff");
+    var beach = ProjectRegressionTests.AddRoom("Beach");
+    var join = Join(cliff, CompassPoint.North, beach, CompassPoint.South);
+    join.Flow = ConnectionFlow.TwoWay;
+    join.StartText = "north / down";
+    join.EndText = "south / up";
+    using var exporter = new PreparationExporter();
+    exporter.Export();
+    var cliffLocation = exporter.Locations.Single(l => l.Room == cliff);
+    var beachLocation = exporter.Locations.Single(l => l.Room == beach);
+
+    cliffLocation.GetBestExit(MappableDirection.North).Target.ShouldBeSameAs(beachLocation);
+    cliffLocation.GetBestExit(MappableDirection.Down).Target.ShouldBeSameAs(beachLocation);
+    beachLocation.GetBestExit(MappableDirection.South).Target.ShouldBeSameAs(cliffLocation);
+    beachLocation.GetBestExit(MappableDirection.Up).Target.ShouldBeSameAs(cliffLocation);
+    Exit.IsReciprocated(cliffLocation, MappableDirection.Down, beachLocation).ShouldBeTrue();
+  }
+
+  [Test]
+  public void Preparation_ASingleUpLabelStillMeansUp()
+  {
+    var hall = ProjectRegressionTests.AddRoom("Hall");
+    var attic = ProjectRegressionTests.AddRoom("Attic");
+    var join = Join(hall, CompassPoint.NorthNorthWest, attic, CompassPoint.SouthSouthEast);
+    join.Flow = ConnectionFlow.TwoWay;
+    join.StartText = "up";
+    join.EndText = "down";
+    using var exporter = new PreparationExporter();
+    exporter.Export();
+    var hallLocation = exporter.Locations.Single(l => l.Room == hall);
+
+    hallLocation.GetBestExit(MappableDirection.Up).Target.Room.ShouldBeSameAs(attic);
+  }
+
+  [Test]
+  public void Preparation_TeleportJoinsAreNotCompassExits()
+  {
+    // PR #26 review: an automap "xyzzy" join was exported as an exit in whatever direction it was drawn
+    var building = ProjectRegressionTests.AddRoom("Building");
+    var debris = ProjectRegressionTests.AddRoom("Debris");
+    var join = Join(building, CompassPoint.West, debris, CompassPoint.East);
+    join.Flow = ConnectionFlow.TwoWay;
+    join.Style = ConnectionStyle.Dashed;
+    join.MidText = "xyzzy";
+    join.AutomapCommand = "xyzzy";
+    using var exporter = new PreparationExporter();
+    exporter.Export();
+
+    exporter.Locations.Single(l => l.Room == building).GetBestExit(MappableDirection.West).ShouldBeNull();
+    exporter.Locations.Single(l => l.Room == debris).GetBestExit(MappableDirection.East).ShouldBeNull();
+  }
+
   [Test]
   public void ExitChoice_PrefersExactCompassPortOverNearbyPort()
   {

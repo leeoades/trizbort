@@ -144,4 +144,29 @@ public class FileWatcherTests
     TrizbortFileWatcher.ConfirmReloadPrompt = null;
     TrizbortFileWatcher.ConfirmReloadPromptAsync.ShouldBeNull();
   }
+
+  [Test]
+  public void ARelativeFileName_IsWatchedFromTheCurrentFolder()
+  {
+    // PR #26 review: saving as "map.trizbort" gave the watcher no folder, which threw after the file was written
+    using var watcher = new TrizbortFileWatcher();
+
+    Should.NotThrow(() => watcher.InitializeWatcher("map.trizbort"));
+
+    watcher.IsSetTo(Path.GetFullPath("map.trizbort")).ShouldBeTrue();
+  }
+
+  [Test]
+  public void WatchingNothing_StaysStoppedWhenStartedAgain()
+  {
+    using var watcher = new TrizbortFileWatcher();
+    watcher.InitializeWatcher(Path.Combine(Path.GetTempPath(), "watched.trizbort"));
+    watcher.IsWatching.ShouldBeTrue();
+
+    watcher.InitializeWatcher(null);
+    watcher.StartWatcher();
+
+    watcher.IsWatching.ShouldBeFalse();
+    watcher.IsSetTo(Path.Combine(Path.GetTempPath(), "watched.trizbort")).ShouldBeFalse();
+  }
 }

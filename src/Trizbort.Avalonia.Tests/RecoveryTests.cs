@@ -324,6 +324,49 @@ public class RecoveryTests
     }
 
     [AvaloniaTest]
+    public async Task Startup_Recover_WatchesTheOriginalFileNotTheCopy()
+    {
+        // PR #26 review: loading the copy left the watcher on the copy, which is then deleted
+        var original = Path.Combine(_folder, "lost.trizbort");
+        File.WriteAllText(original, "<trizbort/>");
+        var (_, copy) = MakeOrphan("Lost Map", original);
+        var dialogs = Dialogs(RecoveryChoice.Recover);
+
+        (await RecoveryStartup.RunAsync(_session!, _store!, _service, (IDialogService)(object)dialogs, null))
+            .ShouldBeTrue();
+
+        Project.FileWatcher.IsSetTo(original).ShouldBeTrue();
+        Project.FileWatcher.IsSetTo(copy).ShouldBeFalse();
+    }
+
+    [AvaloniaTest]
+    public async Task Startup_Recover_WhenTheOriginalIsGone_WatchesNothing()
+    {
+        var (_, copy) = MakeOrphan("Lost Map", Path.Combine(_folder, "missing.trizbort"));
+        var dialogs = Dialogs(RecoveryChoice.Recover);
+
+        (await RecoveryStartup.RunAsync(_session!, _store!, _service, (IDialogService)(object)dialogs, null))
+            .ShouldBeTrue();
+
+        Project.FileWatcher.IsWatching.ShouldBeFalse();
+        Project.FileWatcher.IsSetTo(copy).ShouldBeFalse();
+    }
+
+    [AvaloniaTest]
+    public void TurningCopiesOn_CopiesAMapThatIsAlreadyUnsaved()
+    {
+        // PR #26 review: nothing was written until the next edit
+        _enabled = false;
+        AddRoom("Cellar");
+        WaitFor(() => _store!.HasCopy).ShouldBeFalse();
+
+        _enabled = true;
+        _service!.Reevaluate();
+
+        WaitFor(() => _store!.HasCopy).ShouldBeTrue();
+    }
+
+    [AvaloniaTest]
     public async Task Startup_Discard_DeletesCopy()
     {
         var (_, copy) = MakeOrphan("Lost Map", "");

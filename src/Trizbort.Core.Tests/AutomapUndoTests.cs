@@ -140,6 +140,40 @@ public class AutomapUndoTests : IsolatedProjectTests
   private static int Stubs() => Project.Current.Elements.OfType<Connection>().Count();
 
   [Test]
+  public async Task AMoveDuringADrag_WaitsForTheDrag_AndCancellingTheDragKeepsIt()
+  {
+    // PR #26 review: automap's step joined the user's drag, and Escape threw it away
+    using var session = new EditorSession();
+    var canvas = new AutomapCanvas(null, null, session);
+    var parser = CreateParser();
+    var settings = SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>east\n");
+    using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+    var run = parser.Start(canvas, settings);
+    try
+    {
+      await WaitUntil(() => parser.Status == WaitingStatus, run, deadline.Token);
+
+      var drag = session.BeginTransaction("Move");
+      File.AppendAllText(settings.FileName, "\nSecond Room\nAnother room.\n\n>");
+      await Task.Delay(400, deadline.Token);
+      Rooms().Count.ShouldBe(1); // waiting for the drag
+
+      drag.Cancel();
+      await WaitUntil(() => Rooms().Count == 2, run, deadline.Token);
+      await Task.Delay(150, deadline.Token);
+
+      session.Undo.UndoTitle.ShouldBe("Automap: Second Room");
+      Rooms().Select(room => room.Name).ShouldBe(new[] { "First Room", "Second Room" }, ignoreOrder: true);
+    }
+    finally
+    {
+      parser.Stop();
+      parser.RunToCompletion();
+      await run.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+  }
+
+  [Test]
   public async Task UndoWhileRunning_DoesNotThrow_AndTheNextMoveDoesNotUseTheDeletedRoom()
   {
     using var session = new EditorSession();

@@ -70,6 +70,9 @@ public static class RecoveryStartup
             // the map is unsaved: Save writes to the original file, or asks for a name if there was none
             project.FileName = entry.OriginalFileName ?? string.Empty;
             Project.Current = project;
+            // loading watched the recovery copy, which is about to go: watch the original file if it is still there
+            if (project.HasFileName && File.Exists(project.FileName)) project.InitFileWWatcher(project.FileName);
+            else Project.FileWatcher.InitializeWatcher(null);
             session.OnMapLoaded();
             session.Undo.MarkUnsaved();
             project.IsDirty = true;

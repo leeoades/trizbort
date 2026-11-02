@@ -1,5 +1,6 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Trizbort.Avalonia.Services;
 using Trizbort.Domain.AppSettings;
 
 namespace Trizbort.Avalonia.ViewModels;
@@ -162,7 +163,9 @@ public partial class AppSettingsViewModel : ViewModelBase
             : ScrollWheelMode.Automatic;
         settings.ShowFullPathInTitleBar = ShowFullPathInTitleBar;
         settings.LoadLastProjectOnStart = LoadLastProjectOnStart;
+        var recoveryChanged = settings.KeepRecoveryCopy != KeepRecoveryCopy;
         settings.KeepRecoveryCopy = KeepRecoveryCopy;
+        if (recoveryChanged) RecoveryService.Current?.Reevaluate();
         settings.SpecifyGenMargins = SpecifyGenMargins;
         settings.GenHorizontalMargin = GenHorizontalMargin;
         settings.GenVerticalMargin = GenVerticalMargin;

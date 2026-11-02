@@ -46,6 +46,14 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - The error message only says your unsaved changes were kept when a copy was actually written; otherwise it asks you
   to save. A recovered map's copy is kept until the map is saved, even with recovery copies turned off.
 - Show Grid is saved with the map, so turning it on or off now marks the map as changed and can be undone.
+- Code export includes every direction of a join labelled with several ("north / down"), and doesn't turn
+  teleport joins into compass exits.
+- An automap move that arrives while you are dragging waits for the drag to finish, so cancelling the drag no
+  longer loses it.
+- Saving to a file name without a folder no longer reports a failure after saving, and Undo and Redo are no
+  longer left greyed out after an automap step that changed nothing.
+- After recovering unsaved changes, Recast watches the original file for changes made elsewhere; turning
+  recovery copies on now copies a map that already has unsaved changes.
 - All compiler warnings are fixed, including a broken binding in Map Settings.
 
 ## [0.9.0-beta.1] - 2026-10-31

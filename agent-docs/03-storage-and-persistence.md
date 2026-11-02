@@ -39,6 +39,13 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
 - A `<line>` that automap made for a move by command rather than direction (a teleport such as
   `xyzzy`) carries `automapCommand="xyzzy"` (`Connection.AutomapCommand`). Automap uses it to tell
   these joins from ordinary exits, whatever their style or labels; older versions ignore it.
+- Automap also records on a `<line>` which directions it saw the player take from each end:
+  `automapStartTravelled="east down"` and `automapEndTravelled="up"` (`Connection.StartTravelled` /
+  `EndTravelled`, space-separated). An end with none is an exit automap only assumed, which it replaces
+  when the player is seen going back another way. Code export ignores them.
+- A connection label listing several directions separated by `/` (`"north / down"`, written by automap
+  when several ways lead along one connection) is exported as one exit per direction
+  (`DirectionWords.ListedDirections`); a single word such as `"up"` keeps its usual meaning.
 - `<settings>` holds per-map drawing/document settings (fonts, colors, grid, validation rules)
   — separate again from the two settings systems below.
 - Labels use `<label id="..." text="..." x="..." y="..." w="..." h="..." shape="..."

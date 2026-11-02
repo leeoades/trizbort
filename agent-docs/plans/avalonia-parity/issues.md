@@ -430,4 +430,13 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: high     Flags: —
 - Ticket: —
 
+- Third review round (1 new comment, 9 "previously missed"; all real), **fixed** 2026-11-02:
+  - Which directions were travelled from each end is now stored on the connection (`StartTravelled`/`EndTravelled`, optional `automapStartTravelled`/`automapEndTravelled` attributes), so undo restores it with the move and it survives save/reload. Replaces the in-memory set and `Project.DocumentId` (removed). Labels no longer count as travelled, so automap's own assumed "down" is replaced by the first real return ("south") instead of gaining a false "north"; travelling an assumed direction confirms it.
+  - Code export: labels listing several directions ("north / down") export one exit per direction (`DirectionWords`, shared with automap); teleport joins (`AutomapCommand`) are not exported as compass exits.
+  - Recovery: after recovering, the file watcher watches the original file if it exists, otherwise nothing (`InitializeWatcher(null)` now means watch nothing); turning recovery copies on copies an already-unsaved map (`RecoveryService.Reevaluate`).
+  - Automap waits for a user's open change (a drag) before opening its own undo step (`IAutomapCanvas.BeginBatch` returns null while the user is recording) and re-resolves its rooms afterwards, so cancelling the drag can't discard the move.
+  - `ResolveRoom` doesn't treat a new room that reused a deleted room's id as that room (a different object must also have the same name; renaming a room keeps the same object).
+  - The file watcher takes the full path of a relative file name, so saving as `map.trizbort` no longer fails after writing.
+  - A transaction that changes nothing still raises `UndoStack.Changed`, so Undo/Redo are re-enabled.
+
 <!-- Next ID: I-055 -->

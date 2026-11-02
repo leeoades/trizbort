@@ -55,21 +55,32 @@ public class TrizbortFileWatcher : IDisposable
     _watcher?.Dispose();
   }
 
+  /// <summary>
+  ///   Watches <paramref name="fileToWatch" />, or nothing when it is null or empty (until the next call). A relative
+  ///   name is taken from the current folder.
+  /// </summary>
   public void InitializeWatcher(string fileToWatch)
   {
     StopWatcher();
+    _hasFile = false;
     if (string.IsNullOrEmpty(fileToWatch)) return;
+    // FileSystemWatcher needs a folder, and a bare file name ("map.trizbort") has none
+    fileToWatch = Path.GetFullPath(fileToWatch);
     _watcher.Path = Path.GetDirectoryName(fileToWatch);
     _watcher.Filter = Path.GetFileName(fileToWatch);
+    _hasFile = true;
     StartWatcher();
   }
+
+  /// <summary>False after <see cref="InitializeWatcher" /> was told to watch nothing.</summary>
+  private bool _hasFile;
 
   public event EventHandler ReloadMap;
 
   /// <summary>True when the watcher is set to the given file (it may be stopped).</summary>
   public bool IsSetTo(string file)
   {
-    if (string.IsNullOrEmpty(file) || string.IsNullOrEmpty(_watcher.Path)) return false;
+    if (!_hasFile || string.IsNullOrEmpty(file) || string.IsNullOrEmpty(_watcher.Path)) return false;
     var comparison = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
       ? StringComparison.OrdinalIgnoreCase
       : StringComparison.Ordinal;
@@ -82,7 +93,7 @@ public class TrizbortFileWatcher : IDisposable
   /// </summary>
   public void StartWatcher()
   {
-    if (string.IsNullOrEmpty(_watcher.Path)) return;
+    if (!_hasFile || string.IsNullOrEmpty(_watcher.Path)) return;
     if (!Directory.Exists(_watcher.Path)) return;
     _lastWriteUtc = GetWriteTime();
     try

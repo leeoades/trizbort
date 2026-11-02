@@ -260,4 +260,20 @@ public class EditorSessionUndoTests
     _session.Undo.CanUndo.ShouldBeFalse();
     Project.Current.IsDirty.ShouldBeFalse();
   }
+
+  [Test]
+  public void ATransactionThatChangesNothing_StillTellsListenersRecordingStopped()
+  {
+    // PR #26 review: menus disabled Undo/Redo while recording and weren't told when it stopped
+    var raised = 0;
+    _session.Undo.Changed += (_, _) => raised++;
+
+    using (_session.BeginTransaction("Nothing"))
+    {
+      _session.Undo.IsRecording.ShouldBeTrue();
+    }
+
+    _session.Undo.IsRecording.ShouldBeFalse();
+    raised.ShouldBeGreaterThan(0);
+  }
 }

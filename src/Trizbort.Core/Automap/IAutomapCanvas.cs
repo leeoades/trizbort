@@ -36,13 +36,15 @@ public interface IAutomapCanvas
   /// <summary>
   ///   Start a group of map changes that is recorded as one undo step titled <paramref name="title" />. Dispose the
   ///   result to end the step. Keep it short: do not await anything while it is open, because the user cannot undo
-  ///   or redo while a step is open.
+  ///   or redo while a step is open. Returns null, starting nothing, while the user is part-way through a change of
+  ///   their own (such as a drag); try again shortly.
   /// </summary>
   IDisposable BeginBatch(string title);
 
   /// <summary>
-  ///   Find the room in the current project that has the same element id as <paramref name="room" />, or null when
-  ///   it no longer exists. Undo and redo replace room objects, so remembered rooms must be looked up again.
+  ///   Find the room in the current project that is <paramref name="room" />, or null when it no longer exists. Undo
+  ///   and redo replace room objects, so remembered rooms must be looked up again; a new room that reused a deleted
+  ///   room's id doesn't count.
   /// </summary>
   Room ResolveRoom(Room room);
 }

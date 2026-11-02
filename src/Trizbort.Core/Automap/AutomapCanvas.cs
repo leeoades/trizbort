@@ -83,11 +83,13 @@ public class AutomapCanvas : IAutomapCanvas
     else
     {
       sourceIsStart = connection.GetSourceRoom() == source;
-      sourceEndIsGuess = IsGuessedEnd(connection, sourceIsStart);
+      // a guessed end is replaced when the player goes another way, and simply confirmed when they go that way
+      sourceEndIsGuess = IsGuessedEnd(connection, sourceIsStart) &&
+                         !ListsDirection(EndWords(connection, sourceIsStart), directionFromSource);
       if (wrongWay) connection.Flow = ConnectionFlow.TwoWay;
     }
 
-    MarkTravelled(connection, sourceIsStart);
+    MarkTravelled(connection, sourceIsStart, directionFromSource);
 
     RecordDirection(connection, source, sourceIsStart, directionFromSource, sourceEndIsGuess, target,
       assumeTwoWayConnections);
@@ -111,8 +113,9 @@ public class AutomapCanvas : IAutomapCanvas
     List<string> hereWords;
     if (hereIsGuess)
     {
+      // the guessed directions go; anything the user typed there stays
       DockEnd(connection, hereIsStart, here, CompassPointHelper.GetCompassDirection(direction));
-      hereWords = new List<string>();
+      hereWords = EndWords(connection, hereIsStart).Where(word => !DirectionWords.TryParse(word, out _)).ToList();
     }
     else
     {
@@ -153,43 +156,40 @@ public class AutomapCanvas : IAutomapCanvas
   }
 
   /// <summary>
-  ///   Ends of joins the player has set off from: (document, connection id, start end?). Keyed by the document's
-  ///   <see cref="Project.DocumentId" /> and the connection's id so the knowledge survives undo and redo, which
-  ///   rebuild the map, while another map's ids don't match. An id is forgotten when a new join is made with it (ids
-  ///   are handed out again after undo).
+  ///   Record that the player set off from one end of a join in <paramref name="direction" />. Kept on the connection
+  ///   (<see cref="Connection.StartTravelled" />), so it is saved with the map and undone with the move that made it.
   /// </summary>
-  private readonly HashSet<(Guid Document, int Id, bool AtStart)> _travelledEnds = new();
-
-  private void MarkTravelled(Connection connection, bool atStart)
+  private static void MarkTravelled(Connection connection, bool atStart, MappableDirection direction)
   {
-    // only the open document matters
-    var document = CurrentProject.DocumentId;
-    _travelledEnds.RemoveWhere(end => end.Document != document);
-    _travelledEnds.Add((document, connection.Id, atStart));
+    var words = TravelledWords(connection, atStart);
+    var word = DirectionWord(direction);
+    if (words.Contains(word)) return;
+    words.Add(word);
+    var text = string.Join(" ", words);
+    if (atStart) connection.StartTravelled = text;
+    else connection.EndTravelled = text;
   }
 
-  private bool WasTravelled(Connection connection, bool atStart) =>
-    _travelledEnds.Contains((CurrentProject.DocumentId, connection.Id, atStart));
-
-  private void ForgetTravelled(Connection connection)
+  private static List<string> TravelledWords(Connection connection, bool atStart)
   {
-    _travelledEnds.Remove((CurrentProject.DocumentId, connection.Id, true));
-    _travelledEnds.Remove((CurrentProject.DocumentId, connection.Id, false));
+    var text = atStart ? connection.StartTravelled : connection.EndTravelled;
+    return string.IsNullOrWhiteSpace(text)
+      ? new List<string>()
+      : text.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
   }
+
+  private static bool WasTravelled(Connection connection, bool atStart) => TravelledWords(connection, atStart).Count > 0;
 
   /// <summary>
-  ///   Whether the exit drawn at one end of an existing join is only a guess: nobody has set off from that end this
-  ///   run and it has no label, so it is the far end of a one-way join or the assumed way back of a two-way join.
-  ///   Travelling from a guessed end another way replaces the guess; travelling from a known end adds a direction.
+  ///   Whether the exit drawn at one end of an existing join is only a guess: nobody has set off from that end, and it
+  ///   is the far end of a one-way join or the assumed way back of a two-way join automap made. Travelling from a
+  ///   guessed end another way replaces the guess; travelling from a known end adds a direction. Labels don't count:
+  ///   automap writes the assumed way back ("down") itself.
   /// </summary>
-  private bool IsGuessedEnd(Connection connection, bool atStart)
+  private static bool IsGuessedEnd(Connection connection, bool atStart)
   {
     if (WasTravelled(connection, atStart)) return false;
-    var text = atStart ? connection.StartText : connection.EndText;
-    if (!string.IsNullOrWhiteSpace(text)) return false;
-    return connection.Flow == ConnectionFlow.OneWay
-      ? !atStart
-      : WasTravelled(connection, !atStart);
+    return connection.Flow == ConnectionFlow.OneWay ? !atStart : WasTravelled(connection, !atStart);
   }
 
   private static bool IsCompass(MappableDirection direction)
@@ -220,36 +220,24 @@ public class AutomapCanvas : IAutomapCanvas
 
   private static string DirectionWord(MappableDirection direction) => direction.ToString().ToLowerInvariant();
 
-  private static readonly Dictionary<string, MappableDirection> _directionWords = new(StringComparer.OrdinalIgnoreCase)
-  {
-    ["north"] = MappableDirection.North, ["n"] = MappableDirection.North,
-    ["northeast"] = MappableDirection.NorthEast, ["ne"] = MappableDirection.NorthEast,
-    ["east"] = MappableDirection.East, ["e"] = MappableDirection.East,
-    ["southeast"] = MappableDirection.SouthEast, ["se"] = MappableDirection.SouthEast,
-    ["south"] = MappableDirection.South, ["s"] = MappableDirection.South,
-    ["southwest"] = MappableDirection.SouthWest, ["sw"] = MappableDirection.SouthWest,
-    ["west"] = MappableDirection.West, ["w"] = MappableDirection.West,
-    ["northwest"] = MappableDirection.NorthWest, ["nw"] = MappableDirection.NorthWest,
-    ["up"] = MappableDirection.Up, ["u"] = MappableDirection.Up,
-    ["down"] = MappableDirection.Down, ["d"] = MappableDirection.Down,
-    ["in"] = MappableDirection.In, ["out"] = MappableDirection.Out
-  };
-
   private static bool IsCompassWord(string word) =>
-    _directionWords.TryGetValue(word, out var direction) && IsCompass(direction);
+    DirectionWords.TryParse(word, out var direction) && IsCompass(direction);
 
   private static MappableDirection? FirstCompass(IEnumerable<string> words)
   {
     foreach (var word in words)
-      if (_directionWords.TryGetValue(word, out var direction) && IsCompass(direction))
+      if (DirectionWords.TryParse(word, out var direction) && IsCompass(direction))
         return direction;
     return null;
   }
 
+  private static bool ListsDirection(IEnumerable<string> words, MappableDirection direction) =>
+    words.Any(word => DirectionWords.TryParse(word, out var listed) && listed == direction);
+
   private static bool AddWord(List<string> words, string word)
   {
-    if (_directionWords.TryGetValue(word, out var direction) &&
-        words.Any(w => _directionWords.TryGetValue(w, out var existing) && existing == direction))
+    if (DirectionWords.TryParse(word, out var direction) &&
+        words.Any(w => DirectionWords.TryParse(w, out var existing) && existing == direction))
       return false;
     if (words.Contains(word, StringComparer.OrdinalIgnoreCase)) return false;
     words.Add(word);
@@ -300,7 +288,7 @@ public class AutomapCanvas : IAutomapCanvas
     var ordered = words.Where(IsCompassWord).Concat(words.Where(word => !IsCompassWord(word))).ToList();
     var point = EndPoint(connection, atStart);
     var sideSaysIt = ordered.Count == 1 && IsMainPoint(point) &&
-                     _directionWords.TryGetValue(ordered[0], out var only) && only == DirectionOfMainPoint(point);
+                     DirectionWords.TryParse(ordered[0], out var only) && only == DirectionOfMainPoint(point);
     var text = sideSaysIt ? string.Empty : string.Join(" / ", ordered);
 
     if (atStart)
@@ -555,13 +543,20 @@ public class AutomapCanvas : IAutomapCanvas
   public IDisposable BeginBatch(string title)
   {
     if (_session == null) return NoBatch.Instance;
+    // the user is part-way through a change of their own (a drag): joining it would put automap's work in the
+    // user's undo step, and cancelling the drag would throw it away
+    if (_session.Undo.IsRecording) return null;
     return _session.BeginTransaction(title);
   }
 
   public Room ResolveRoom(Room room)
   {
     if (room == null) return null;
-    return CurrentProject.Elements.OfType<Room>().FirstOrDefault(candidate => candidate.Id == room.Id);
+    var candidate = CurrentProject.Elements.OfType<Room>().FirstOrDefault(element => element.Id == room.Id);
+    if (candidate == null || ReferenceEquals(candidate, room)) return candidate;
+    // Undo and redo rebuild rooms as new objects with the same id and name. A different room with the same id is a
+    // new room that took the id of one that was deleted (ids are reused), not the room automap remembers.
+    return candidate.Name == room.Name ? candidate : null;
   }
 
   private sealed class NoBatch : IDisposable
@@ -583,7 +578,6 @@ public class AutomapCanvas : IAutomapCanvas
     var b = new Vertex(target.PortAt(targetCompassPoint));
     var connection = new Connection(CurrentProject, a, b);
     CurrentProject.Elements.Add(connection);
-    ForgetTravelled(connection);
     return connection;
   }
 
