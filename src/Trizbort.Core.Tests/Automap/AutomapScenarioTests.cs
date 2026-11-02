@@ -33,6 +33,7 @@ public class AutomapScenarioTests : IsolatedProjectTests
   private const string ActualFile = "actual.txt";
   private const string SettingsFile = "settings.txt";
   private const string KnownIssueFile = "known-issue.txt";
+  private const string TraceFile = "trace.txt";
 
   public static IEnumerable<TestCaseData> Scenarios()
   {
@@ -50,13 +51,34 @@ public class AutomapScenarioTests : IsolatedProjectTests
     var project = new Project();
     Project.Current = project;
 
-    var result = await HeadlessAutomap.RunAsync(
-      project, Path.Combine(folder, TranscriptFile), LoadSettings(folder), NonInteractiveEditorPrompts.Instance);
+    // The engine explains each transcript line (room or not, and why) through Debug/Trace output; keep it so a
+    // failing scenario can be read alongside its trace.txt.
+    var trace = new StringWriter();
+    var listener = new System.Diagnostics.TextWriterTraceListener(trace);
+    System.Diagnostics.Trace.Listeners.Add(listener);
+    HeadlessAutomapResult result;
+    try
+    {
+      var settings = LoadSettings(folder, out var sameDirectionAnswer);
+      result = await HeadlessAutomap.RunAsync(
+        project, Path.Combine(folder, TranscriptFile), settings, new ScenarioPrompts(sameDirectionAnswer));
+    }
+    finally
+    {
+      listener.Flush();
+      System.Diagnostics.Trace.Listeners.Remove(listener);
+    }
     var actual = AutomapMapSummary.Describe(project);
-    if (!result.Succeeded) actual = "error: " + result.Error + "\n\n" + actual;
+    if (!result.Succeeded)
+    {
+      actual = "error: " + result.Error + "\n\n" + actual;
+      if (result.Failure != null) TestContext.Out.WriteLine(result.Failure);
+    }
 
     var expectedPath = Path.Combine(folder, ExpectedFile);
     var actualPath = Path.Combine(folder, ActualFile);
+    var tracePath = Path.Combine(folder, TraceFile);
+    DeleteIfPresent(tracePath);
     if (Environment.GetEnvironmentVariable("TRIZBORT_APPROVE_AUTOMAP") == "1")
     {
       File.WriteAllText(expectedPath, actual);
@@ -67,6 +89,7 @@ public class AutomapScenarioTests : IsolatedProjectTests
     if (!File.Exists(expectedPath))
     {
       File.WriteAllText(actualPath, actual);
+      File.WriteAllText(tracePath, trace.ToString());
       Assert.Inconclusive($"No {ExpectedFile} in tests/automap/{name}. The map automap made is in {ActualFile}:\n\n{actual}");
     }
 
@@ -84,6 +107,7 @@ public class AutomapScenarioTests : IsolatedProjectTests
     }
 
     File.WriteAllText(actualPath, actual);
+    File.WriteAllText(tracePath, trace.ToString());
     var report = Difference(expectedLines, actualLines);
     if (File.Exists(knownIssuePath))
       Assert.Ignore($"Known issue: {File.ReadAllText(knownIssuePath).Trim()}\n\n{report}");
@@ -99,9 +123,13 @@ public class AutomapScenarioTests : IsolatedProjectTests
     return directory == null ? null : Path.Combine(directory.FullName, "tests", "automap");
   }
 
-  /// <summary>Defaults as in the app's Automap Settings dialog, overridden by "Name = value" lines in settings.txt.</summary>
-  private static AutomapSettings LoadSettings(string folder)
+  /// <summary>
+  ///   Defaults as in the app's Automap Settings dialog, overridden by "Name = value" lines in settings.txt.
+  ///   <c>SameDirectionAnswer</c> (KeepRoom1, KeepRoom2, KeepBoth) is the answer to "there's already a room that way".
+  /// </summary>
+  private static AutomapSettings LoadSettings(string folder, out AutomapSameDirectionResult sameDirectionAnswer)
   {
+    sameDirectionAnswer = AutomapSameDirectionResult.KeepRoom1;
     object settings = AutomapSettings.Default;
     var path = Path.Combine(folder, SettingsFile);
     if (!File.Exists(path)) return (AutomapSettings)settings;
@@ -114,12 +142,41 @@ public class AutomapScenarioTests : IsolatedProjectTests
       if (equals < 0) throw new FormatException($"{SettingsFile}: expected 'Name = value' but found '{raw}'.");
       var key = line[..equals].Trim();
       var value = line[(equals + 1)..].Trim();
+      if (string.Equals(key, "SameDirectionAnswer", StringComparison.OrdinalIgnoreCase))
+      {
+        sameDirectionAnswer = Enum.Parse<AutomapSameDirectionResult>(value, true);
+        continue;
+      }
+
       var field = typeof(AutomapSettings).GetField(key, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase)
                   ?? throw new FormatException($"{SettingsFile}: unknown setting '{key}'.");
       field.SetValue(settings, Convert.ChangeType(value, field.FieldType));
     }
 
     return (AutomapSettings)settings;
+  }
+
+  /// <summary>The app's non-interactive answers, except "there's already a room that way", which a scenario may set.</summary>
+  private sealed class ScenarioPrompts : IEditorPrompts
+  {
+    private readonly AutomapSameDirectionResult _sameDirection;
+
+    public ScenarioPrompts(AutomapSameDirectionResult sameDirection)
+    {
+      _sameDirection = sameDirection;
+    }
+
+    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
+      Trizbort.Domain.Elements.Room existing, string newRoomName, System.Threading.CancellationToken token = default)
+      => Task.FromResult(_sameDirection);
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(
+      string transcriptLine, string roomDescription, IReadOnlyList<Trizbort.Domain.Elements.Room> candidates,
+      System.Threading.CancellationToken token = default)
+      => NonInteractiveEditorPrompts.Instance.DisambiguateRoomAsync(transcriptLine, roomDescription, candidates, token);
+
+    public Task<bool> ConfirmAsync(string message, string title, System.Threading.CancellationToken token = default)
+      => NonInteractiveEditorPrompts.Instance.ConfirmAsync(message, title, token);
   }
 
   private static string Difference(IReadOnlyList<string> expected, IReadOnlyList<string> actual)

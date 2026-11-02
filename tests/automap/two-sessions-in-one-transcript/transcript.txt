@@ -1,0 +1,29 @@
+Here begins a transcript of interaction with
+
+TEST GAME
+An Interactive Fiction by A. Tester
+Release 1 / Serial Number 261101
+
+>look
+Cottage
+A small cottage. A door leads east and a path north.
+
+>n
+Garden
+A small garden. The cottage is south.
+
+>quit
+Your score is 0 points out of 10, in 2 moves.
+Are you sure you want to leave the story now?
+
+(Please type YES or NO.) >yes
+
+Here begins a transcript of interaction with
+
+TEST GAME
+An Interactive Fiction by A. Tester
+Release 1 / Serial Number 261101
+
+>e
+Lane
+A muddy lane. The cottage is to the west.

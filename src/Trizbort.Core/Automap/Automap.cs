@@ -280,6 +280,26 @@ public sealed class Automap : IAutomapController
     return index;
   }
 
+  /// <summary>A line that only appears when a game (or its transcript) starts: Infocom/Frotz and Inform banners.</summary>
+  internal static bool IsSessionStartLine(string line)
+  {
+    if (string.IsNullOrWhiteSpace(line)) return false;
+    return System.Text.RegularExpressions.Regex.IsMatch(
+      line,
+      @"^\s*(Here begins a transcript of interaction with|Start of a transcript of)\b|\bRelease \d+ / Serial number \d+",
+      System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+  }
+
+  private void StartedAgain()
+  {
+    Trace("Automap: the game started again; back in the first room.");
+    _lastMoveDirection = null;
+    _seenCommand = false;
+    var start = _startRoom != null ? _canvas.ResolveRoom(_startRoom) : null;
+    _lastKnownRoom = start;
+    if (start != null) _canvas.SelectRoom(start);
+  }
+
   /// <summary>
   ///   True when the paragraph after a heading reads like a game's opening banner rather than a room description
   ///   (release, serial number, copyright, "interactive fiction", "by Author").
@@ -403,6 +423,13 @@ public sealed class Automap : IAutomapController
     return null;
   }
 
+  private static Room OtherEnd(Connection connection, Room room)
+  {
+    var source = connection.GetSourceRoom();
+    var target = connection.GetTargetRoom();
+    return source == room ? target : source;
+  }
+
   // Undo and redo replace room objects and the user may delete rooms, so look the remembered room up again by id.
   private void RefreshLastKnownRoom()
   {
@@ -453,6 +480,10 @@ public sealed class Automap : IAutomapController
 
   private async Task ProcessTranscriptText(List<string> lines, CancellationToken token)
   {
+    // A new game session in the same transcript (Frotz appends each session to the file): after the player has
+    // typed commands, a fresh opening banner means the game started again, so the player is back in the first room.
+    if (_seenCommand && lines.Any(IsSessionStartLine)) StartedAgain();
+
     string previousLine = null;
     for (var index = 0; index < lines.Count; ++index)
     {
@@ -477,9 +508,16 @@ public sealed class Automap : IAutomapController
         if (room == null && _lastKnownRoom != null && _lastMoveDirection != null)
         {
           // is there already a connection in that direction?
+          // The room at the other end of a connection already leaving this way. (The reference took the
+          // connection's target, which is this very room when the connection arrived here from elsewhere.)
+          // A one-way connection that only arrives here says nothing about where this exit leads (two-way
+          // connections off: going east to here is not a promise that west leads back), so it doesn't count.
           otherRoom = _lastKnownRoom
                       .GetConnections(CompassPointHelper.GetCompassDirection(_lastMoveDirection.Value))
-                      .FirstOrDefault()?.GetTargetRoom();
+                      .Where(connection => connection.Flow != ConnectionFlow.OneWay ||
+                                           connection.GetSourceRoom() == _lastKnownRoom)
+                      .Select(connection => OtherEnd(connection, _lastKnownRoom))
+                      .FirstOrDefault(room => room != null && room != _lastKnownRoom);
           if (otherRoom != null)
           {
             decision = await Prompts.ChooseSameDirectionAsync(otherRoom, roomName, token);
@@ -559,7 +597,11 @@ public sealed class Automap : IAutomapController
                 // player teleported to new room;
                 // don't connect it up, as we don't know how they got there
                 room = _canvas.CreateRoom(_lastKnownRoom, roomName);
-                if (_lastKnownRoom == null) room.IsStartRoom = true;
+                if (_lastKnownRoom == null)
+                {
+                  room.IsStartRoom = true;
+                  _startRoom ??= room;
+                }
                 Trace("{0}: teleported to new room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
                 waits++;
               }
@@ -837,6 +879,7 @@ public sealed class Automap : IAutomapController
 
   private Room _lastKnownRoom;
   private bool _seenCommand;
+  private Room _startRoom;
   private string _gameName = string.Empty;
 
   private MappableDirection? _lastMoveDirection;
@@ -944,6 +987,7 @@ public sealed class Automap : IAutomapController
     _canvas = canvas;
     _settings = settings;
     _seenCommand = false;
+    _startRoom = null;
     _lastKnownRoom = null;
     _lastMoveDirection = null;
     _gameName = string.Empty;

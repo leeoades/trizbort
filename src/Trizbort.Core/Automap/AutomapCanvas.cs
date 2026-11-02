@@ -297,18 +297,19 @@ public class AutomapCanvas : IAutomapCanvas
           return connection;
         }
 
+        // Already connected, but the player went another way: move this connection's end on the source room to
+        // the port for that direction. (The reference renamed the room's shared port instead, which left the room
+        // with two ports for one direction and none for another, and crashed the next connection that needed it.)
         if (fromRoom == target && toRoom == source)
         {
-          var r1 = (Room.CompassPort)connection.VertexList[1].Port;
-          if (directionFromSource != null) r1.CompassPoint = (CompassPoint)directionFromSource;
+          if (directionFromSource != null) connection.VertexList[1].Port = source.PortAt(directionFromSource.Value);
           wrongWay = connection.Flow == ConnectionFlow.OneWay;
           return connection;
         }
 
         if (fromRoom == source && toRoom == target)
         {
-          var r1 = (Room.CompassPort)connection.VertexList[0].Port;
-          if (directionFromSource != null) r1.CompassPoint = (CompassPoint)directionFromSource;
+          if (directionFromSource != null) connection.VertexList[0].Port = source.PortAt(directionFromSource.Value);
           wrongWay = false;
           return connection;
         }

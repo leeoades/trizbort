@@ -28,13 +28,16 @@ git. To accept the current maps as correct, run the tests with `TRIZBORT_APPROVE
 | `settings.txt` | Optional. Automap settings that differ from the defaults, one `Name = value` per line. |
 | `known-issue.txt` | Optional. Marks a scenario that is known to fail, and says why. |
 | `actual.txt` | Written by the test when the map differs or there is no `expected.txt`. |
+| `trace.txt` | Written with `actual.txt`: automap's reasoning for every transcript line (Debug builds). |
 
 Settings names (defaults in brackets): `VerboseTranscript` (true), `AssumeRoomsWithSameNameAreSameRoom` (false),
 `GuessExits` (true: adds unexplored exits mentioned in room descriptions), `AssumeTwoWayConnections` (true),
-`AddObjectCommand` (`tb see`), `AddRegionCommand` (`tb region`). Lines starting with `#` are comments.
+`AddObjectCommand` (`tb see`), `AddRegionCommand` (`tb region`). `SameDirectionAnswer` (`KeepRoom1`) answers "there's
+already a room that way": `KeepRoom1` (keep the existing room), `KeepRoom2` (replace it) or `KeepBoth`. Lines
+starting with `#` are comments.
 
-Questions automap would ask in the app (which of several rooms you meant, what to do when a direction is already
-taken) get the app's non-interactive answers: the first match, and keep the existing room.
+Questions automap would ask in the app get the non-interactive answers: the first match when several rooms could be
+meant, and `SameDirectionAnswer` when a direction is already taken.
 
 ## The map format
 

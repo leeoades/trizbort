@@ -1,0 +1,83 @@
+Here begins a transcript of interaction with
+
+HOLLYWOOD HIJINX
+Infocom interactive fiction -- a zany treasure hunt
+Copyright (C) 1986 Infocom, Inc. All rights reserved.
+HOLLYWOOD HIJINX is a trademark of Infocom, Inc.
+Release 37 / Serial Number 861215
+
+>look
+South Junction
+You're standing in front of the house where you spent many of your summers as a
+youngster. The old place is not as big as it seemed to you then, but it is still
+quite large. Stone pathways wind east and west around the house, and a larger
+main walkway leads north.
+
+A life-size statue of Buck Palace, one of the stars of Uncle Buddy's talent
+stables, stands here. He's holding a bazooka pointing north.
+
+>e
+You follow the stone walkway as it turns north around the corner of the house,
+arriving at...
+
+Southeast Junction
+This is the southeastern corner of a large backyard whose main feature is an
+elaborate garden. The stone walkway splits in three directions here: north,
+along the perimeter of the garden; south, around the side of the house; and
+west, where the walkway ends at a couple of steps leading up.
+
+>w
+Patio
+This is a large fieldstone patio spanning the entire width of the back of the
+house. In the daytime you can look out onto Aunt Hildegarde's beautiful garden,
+said to be the envy of the Malibu colony. This is where Uncle Buddy and Aunt
+Hildegarde would often entertain.
+
+Standing here you remember the time at one of their parties when you swiped one
+of Uncle Buddy's big Hollywood cigars and smoked it, then got sick on a rose
+bush in the garden. You snicker a little bit thinking about that poor rose bush
+now and the goofy things you did as a child. To the north a stone pathway leads
+to the garden. Steps lead down off to the east and west, and there is a closed
+door to the south.
+
+You can see an orange punch card here.
+
+>e
+Southeast Junction
+
+>s
+You follow the stone walkway as it turns west around the corner of the house,
+arriving at...
+
+South Junction
+
+A life-size statue of Buck Palace, one of the stars of Uncle Buddy's talent
+stables, stands here. He's holding a bazooka pointing south. Hmmm. It looks as
+if the statue of Buck Palace, the fighting letter carrier, has changed position.
+
+>e
+You follow the stone walkway as it turns north around the corner of the house,
+arriving at...
+
+Southeast Junction
+
+>se
+You can't go that way.
+
+>n
+Northeast Junction
+In this corner of the backyard you can make out the enormous hedge, which is
+part of the estate's hedge maze. The stone walkway splits in three directions
+here: north, along the dark and towering hedge; south, past the fragrant and
+inviting garden; and west, where the walkway cuts a straight and narrow path
+between the hedge and the garden. A slightly worn path in the grass heads east.
+
+>s
+Southeast Junction
+
+>w
+Patio
+
+You can see an orange punch card here.
+
+>

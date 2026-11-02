@@ -118,3 +118,4 @@ UpgradeLog*.XML
 
 # Automap scenario test output (see tests/automap/README.md)
 tests/automap/*/actual.txt
+tests/automap/*/trace.txt

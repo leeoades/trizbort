@@ -940,7 +940,10 @@ public class Room : Element, ISizeable
 
   public Port PortAt(CompassPoint point)
   {
-    return PortList.Cast<CompassPort>().First(port => port.CompassPoint == point);
+    return PortList.OfType<CompassPort>().FirstOrDefault(port => port.CompassPoint == point)
+           ?? throw new InvalidOperationException(
+             $"Room '{Name}' (id {Id}) has no {point} port ({PortList.Count} ports: " +
+             string.Join(", ", PortList.Select(p => p.GetType().Name + ":" + (p as CompassPort)?.CompassPoint)) + ").");
   }
 
   public void RemoveDescription(string description)

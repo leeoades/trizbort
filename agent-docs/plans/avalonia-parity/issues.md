@@ -373,4 +373,21 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: high     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-048 -->
+## I-048 Automap renamed a room's port when re-pointing a connection, then crashed ("Sequence contains no matching element")
+- Reported: 2026-11-02 by user (Hollywood Hijinx transcripts)   OS: all   Category: automap
+- When rooms were already connected and the player travelled between them another way, the reference set the room's shared CompassPort.CompassPoint to the new direction, so the room had two ports for one direction and none for another: every connection on that port moved (Lee: the Patio exit jumped south with the return route), and the next connection needing the lost direction crashed in Room.PortAt. **Fixed** 2026-11-02: only that connection's end is re-docked. Test Connect_SameRoomsInANewDirection_MovesTheConnectionEnd_AndKeepsEveryPort; scenarios hollywood-hijinx-old and hollywood-hijinx-one-way.
+- Severity: high     Flags: —
+- Ticket: —
+
+## I-049 Automap asked "a room is already that way" about the room the player was standing in, or about a one-way arrival
+- Reported: 2026-11-02 by user (Hollywood Hijinx transcripts)   OS: all   Category: automap
+- It took the existing connection's target end, which is the current room when the connection arrived from elsewhere, so a winding path (South Junction east to Southeast Junction) swallowed the next room (Patio). With two-way connections off, a one-way connection that only arrives here also counted. **Fixed** 2026-11-02: the other room is the far end; one-way arrivals don't claim the exit. Scenarios hollywood-hijinx-old and hollywood-hijinx-one-way (Lee, two-way off).
+- Severity: high     Flags: —
+- Ticket: —
+
+## I-050 Automap kept the last session's room when one transcript holds several play sessions
+- Reported: 2026-11-02 by user (Hollywood Hijinx transcripts)   OS: all   Category: automap
+- Frotz appends sessions to one file; after quit the next session starts in the first room without printing it. **Fixed** 2026-11-02: a new banner ("Here begins a transcript of interaction with", "Release N / Serial number N") after commands puts automap back in the start room. Scenario two-sessions-in-one-transcript.
+- Severity: medium     Flags: —
+- Ticket: —
+<!-- Next ID: I-051 -->

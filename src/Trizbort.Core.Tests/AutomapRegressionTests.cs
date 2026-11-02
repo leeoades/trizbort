@@ -118,6 +118,16 @@ public class AutomapRegressionTests : IsolatedProjectTests
     Parser.LooksLikeBanner(paragraph).ShouldBe(expected);
   }
 
+  [TestCase("Here begins a transcript of interaction with", true)]
+  [TestCase("Start of a transcript of", true)]
+  [TestCase("Release 37 / Serial Number 861215", true)]
+  [TestCase("Garden, North", false)]
+  [TestCase("You release the rope.", false)]
+  public void IsSessionStartLine_RecognisesAGameStarting(string line, bool expected)
+  {
+    Parser.IsSessionStartLine(line).ShouldBe(expected);
+  }
+
   [TestCase(" bedroom")]
   [TestCase("bedroom")]
   [TestCase("GAME OVER")]
@@ -219,6 +229,33 @@ public class AutomapRegressionTests : IsolatedProjectTests
     {
       parser.Stop();
       await run.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+  }
+
+  /// <summary>
+  ///   Rooms already connected, then the player travels between them another way (here: east, then north). The
+  ///   reference re-pointed the connection by renaming the room's shared port, leaving the room with two ports for
+  ///   one direction and none for another; the next connection needing that direction crashed with "Sequence
+  ///   contains no matching element" (Lee's Hollywood Hijinx transcript).
+  /// </summary>
+  [Test]
+  public void Connect_SameRoomsInANewDirection_MovesTheConnectionEnd_AndKeepsEveryPort()
+  {
+    var canvas = new AutomapCanvas();
+    var a = canvas.CreateRoom(null, "A");
+    var b = canvas.CreateRoom(a, MappableDirection.East, "B", "B");
+    canvas.Connect(a, MappableDirection.East, b, true);
+
+    canvas.Connect(a, MappableDirection.North, b, true);
+
+    var connection = Project.Current.Elements.OfType<Connection>().Single();
+    connection.GetSourceRoom(out var port).ShouldBe(a);
+    port.ShouldBe(CompassPoint.North);
+    foreach (var room in new[] { a, b })
+    {
+      var points = room.PortList.OfType<Room.CompassPort>().Select(p => p.CompassPoint).ToList();
+      points.Distinct().Count().ShouldBe(16, room.Name + " lost a port");
+      Should.NotThrow(() => room.PortAt(CompassPoint.East));
     }
   }
 
