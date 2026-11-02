@@ -64,7 +64,7 @@ public sealed partial class EditorSession : IDisposable
 
   /// <summary>
   ///   Whether the grid is drawn. This is the map's own grid setting (<see cref="Settings.IsGridVisible" />, saved in
-  ///   the map and also set in Map Settings), as View &gt; Show Grid was in Trizbort.
+  ///   the map and also set in Map Settings), as View &gt; Show Grid was in Trizbort. Changing it is an undo step.
   /// </summary>
   public bool ShowGrid
   {
@@ -72,7 +72,8 @@ public sealed partial class EditorSession : IDisposable
     set
     {
       if (Settings.IsGridVisible == value) return;
-      Settings.IsGridVisible = value;
+      // a setting saved in the map: an undoable edit that leaves the map unsaved
+      Execute(value ? "Show grid" : "Hide grid", () => Settings.IsGridVisible = value);
       RaiseChanged(EditorChange.Viewport);
     }
   }

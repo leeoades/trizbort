@@ -1,0 +1,10 @@
+current: Field
+
+rooms:
+Cottage (start)
+Field
+Lane
+
+connections:
+Cottage [east] <-> [west] Lane
+Lane [east] <-> [west] Field

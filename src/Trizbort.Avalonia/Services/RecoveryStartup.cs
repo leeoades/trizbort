@@ -75,9 +75,10 @@ public static class RecoveryStartup
             project.IsDirty = true;
             session.CheckDirty();
 
-            // our own copy first, so the work is never without one
-            if (service != null) service.WriteNow(true);
-            store.Delete(entry);
+            // our own copy first, so the work is never without one: the orphan goes only once that copy exists,
+            // otherwise (recovery off, or the write failed) when the map is saved or discarded
+            if (service != null && service.WriteNow(true)) store.Delete(entry);
+            else service?.DeleteWhenSafe(entry);
             return true;
         }
         catch (Exception ex)

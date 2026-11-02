@@ -87,7 +87,7 @@ public class AutomapCanvas : IAutomapCanvas
       if (wrongWay) connection.Flow = ConnectionFlow.TwoWay;
     }
 
-    _travelledEnds.Add((connection.Id, sourceIsStart));
+    MarkTravelled(connection, sourceIsStart);
 
     RecordDirection(connection, source, sourceIsStart, directionFromSource, sourceEndIsGuess, target,
       assumeTwoWayConnections);
@@ -152,8 +152,29 @@ public class AutomapCanvas : IAutomapCanvas
     SetEndText(connection, !hereIsStart, thereWords);
   }
 
-  /// <summary>Ends of joins (connection id, start end?) the player has set off from during this run.</summary>
-  private readonly HashSet<(int Id, bool AtStart)> _travelledEnds = new();
+  /// <summary>
+  ///   Ends of joins the player has set off from: (map, connection id, start end?). Keyed by id so the knowledge
+  ///   survives undo, which replaces the connection objects, and by map so another map's ids don't match. An id is
+  ///   forgotten when a new join is made with it (ids are handed out again after undo).
+  /// </summary>
+  private readonly HashSet<(Project Map, int Id, bool AtStart)> _travelledEnds = new();
+
+  private void MarkTravelled(Connection connection, bool atStart)
+  {
+    // only the open map matters; don't keep closed maps alive
+    var map = CurrentProject;
+    _travelledEnds.RemoveWhere(end => !ReferenceEquals(end.Map, map));
+    _travelledEnds.Add((map, connection.Id, atStart));
+  }
+
+  private bool WasTravelled(Connection connection, bool atStart) =>
+    _travelledEnds.Contains((CurrentProject, connection.Id, atStart));
+
+  private void ForgetTravelled(Connection connection)
+  {
+    _travelledEnds.Remove((CurrentProject, connection.Id, true));
+    _travelledEnds.Remove((CurrentProject, connection.Id, false));
+  }
 
   /// <summary>
   ///   Whether the exit drawn at one end of an existing join is only a guess: nobody has set off from that end this
@@ -162,12 +183,12 @@ public class AutomapCanvas : IAutomapCanvas
   /// </summary>
   private bool IsGuessedEnd(Connection connection, bool atStart)
   {
-    if (_travelledEnds.Contains((connection.Id, atStart))) return false;
+    if (WasTravelled(connection, atStart)) return false;
     var text = atStart ? connection.StartText : connection.EndText;
     if (!string.IsNullOrWhiteSpace(text)) return false;
     return connection.Flow == ConnectionFlow.OneWay
       ? !atStart
-      : _travelledEnds.Contains((connection.Id, !atStart));
+      : WasTravelled(connection, !atStart);
   }
 
   private static bool IsCompass(MappableDirection direction)
@@ -235,7 +256,7 @@ public class AutomapCanvas : IAutomapCanvas
   }
 
   /// <summary>A dotted join labelled in the middle: one made by <see cref="ConnectByCommand" /> ("xyzzy").</summary>
-  private static bool IsCommandJoin(Connection connection) =>
+  internal static bool IsCommandJoin(Connection connection) =>
     connection.Style == ConnectionStyle.Dashed && !string.IsNullOrEmpty(connection.MidText);
 
   private static CompassPoint EndPoint(Connection connection, bool atStart)
@@ -558,6 +579,7 @@ public class AutomapCanvas : IAutomapCanvas
     var b = new Vertex(target.PortAt(targetCompassPoint));
     var connection = new Connection(CurrentProject, a, b);
     CurrentProject.Elements.Add(connection);
+    ForgetTravelled(connection);
     return connection;
   }
 

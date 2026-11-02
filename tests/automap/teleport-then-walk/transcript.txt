@@ -1,0 +1,19 @@
+ADVENTURE
+The Interactive Original
+Release 1 / Serial number 1
+
+>look
+Inside Building
+You are inside a small brick building over a spring.
+
+>xyzzy
+Debris Room
+You are in a low room littered with rubble.
+
+>xyzzy
+Inside Building
+You are inside a small brick building over a spring.
+
+>west
+End of Road
+You are standing at the end of a road before a small brick building.

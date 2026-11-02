@@ -408,4 +408,21 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: medium     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-054 -->
+## I-054 PR #26 review: recovery, automap and grid defects
+- Reported: 2026-11-02 by Copilot code review on PR #26 (11 comments), checked one by one   OS: all   Category: recovery, automap, editor
+- All 11 were real. **Fixed** 2026-11-02:
+  - Crash on another thread: the map is copied on the UI thread (2 s wait); if it can't be, the last copy stays rather than one read mid-edit.
+  - The crash message promised kept work regardless: `CrashReporter.Capture` now returns the outcome (`UnsavedWork`); the message says kept only when a copy was written, asks the player to save when changes weren't kept, and says nothing when there were none.
+  - Recovering at start-up deleted the orphan even when our own copy wasn't written (recovery off, or a failed write): the orphan now stays until our copy exists or the map is saved/discarded (`RecoveryService.DeleteWhenSafe`).
+  - After a recovery, command-line actions (export, quick save, `--exit`) ran on the recovered map: they are skipped.
+  - `version`/`about`/`credits`/`info`/`help` print the banner: a banner alone no longer means a new session after those (the "Here begins a transcript" line still always does). Before, the next room could be lost entirely (scenario `version-command-mid-game`).
+  - The "room already that way?" check counted teleport joins as exits, dropping the next room walked into (scenario `teleport-then-walk`).
+  - A first room found already on the map wasn't remembered as the start room, so a second session lost its place.
+  - Confirmed-direction memory was keyed by connection id across maps: now by map and id, forgotten when a new join takes an id (ids are reused after undo), and closed maps are dropped.
+  - `PeekingStreamReader` derived from StreamReader and called base async reads from overrides (fragile; Copilot reported recursion): it now wraps a StreamReader.
+  - A move's exit-stub removal was its own undo step before the move's: it now goes with the response, or as its own step when the move is blocked.
+  - Show Grid changed a saved map setting without an undo step or marking the map changed: it is now an undoable edit.
+- Severity: high     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-055 -->

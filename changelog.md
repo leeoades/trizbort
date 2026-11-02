@@ -39,6 +39,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - Room names such as `Y2` are no longer mistaken for shouted text.
 - Automap puts a new room in a clear spot nearby when its usual place is taken, instead of on top of an existing
   join.
+- Automap no longer thinks the game started again when you type `version` (or `about`, `credits`...), which
+  printed the opening banner and could lose the next room.
+- Walking out of a room you teleported into no longer clashes with the teleport's join and drops the new room.
+- Undoing an automap move also brings back the unexplored-exit stub it used.
+- The error message only says your unsaved changes were kept when a copy was actually written; otherwise it asks you
+  to save. A recovered map's copy is kept until the map is saved, even with recovery copies turned off.
+- Show Grid is saved with the map, so turning it on or off now marks the map as changed and can be undone.
 - All compiler warnings are fixed, including a broken binding in Map Settings.
 
 ## [0.9.0-beta.1] - 2026-10-31

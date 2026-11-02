@@ -199,4 +199,26 @@ public class EditorSessionTests
       Settings.IsGridVisible = original;
     }
   }
+
+  [Test]
+  public void ShowGrid_IsAnUndoStepThatLeavesTheMapUnsaved()
+  {
+    var original = Settings.IsGridVisible;
+    try
+    {
+      Settings.IsGridVisible = true;
+      _project.IsDirty = false;
+
+      _session.ShowGrid = false;
+
+      _project.IsDirty.ShouldBeTrue();
+      _session.Undo.CanUndo.ShouldBeTrue();
+      _session.PerformUndo();
+      Settings.IsGridVisible.ShouldBeTrue();
+    }
+    finally
+    {
+      Settings.IsGridVisible = original;
+    }
+  }
 }

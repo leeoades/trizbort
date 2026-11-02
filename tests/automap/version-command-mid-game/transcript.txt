@@ -1,0 +1,23 @@
+The Test Game
+An Interactive Fiction by A. Tester
+Release 1 / Serial number 261101
+
+>look
+
+Cottage
+A small cottage.
+
+>e
+
+Lane
+A muddy lane.
+
+>version
+The Test Game
+An Interactive Fiction by A. Tester
+Release 1 / Serial number 261101 / Inform 7 build 6M62
+
+>e
+
+Field
+A wide field.

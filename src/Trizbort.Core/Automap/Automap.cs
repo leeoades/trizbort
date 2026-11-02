@@ -42,7 +42,7 @@ public sealed class Automap : IAutomapController
   }
 
   private async Task<string> WaitForNewLine(
-    StreamReader reader,
+    TextReader reader,
     CancellationToken cancellationToken)
   {
     while (true)
@@ -290,11 +290,32 @@ public sealed class Automap : IAutomapController
       System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
   }
 
+  /// <summary>The line a transcript file starts with (Infocom/Frotz, Inform).</summary>
+  internal static bool IsTranscriptStartLine(string line)
+  {
+    if (string.IsNullOrWhiteSpace(line)) return false;
+    return System.Text.RegularExpressions.Regex.IsMatch(
+      line,
+      @"^\s*(Here begins a transcript of interaction with|Start of a transcript of)\b",
+      System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+  }
+
+  private static readonly string[] _bannerCommands = { "version", "about", "info", "credits", "help", "license", "licence" };
+
+  /// <summary>Commands that print the game's banner without starting the game again.</summary>
+  internal static bool PrintsBanner(string command)
+  {
+    if (string.IsNullOrWhiteSpace(command)) return false;
+    var firstWord = command.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries)[0];
+    return _bannerCommands.Contains(firstWord, StringComparer.OrdinalIgnoreCase);
+  }
+
   private void StartedAgain()
   {
     Trace("Automap: the game started again; back in the first room.");
     _lastMoveDirection = null;
     _lastJourneyCommand = null;
+    _pendingStubRemoval = null;
     _seenCommand = false;
     var start = _startRoom != null ? _canvas.ResolveRoom(_startRoom) : null;
     _lastKnownRoom = start;
@@ -440,8 +461,25 @@ public sealed class Automap : IAutomapController
     _lastKnownRoom = _canvas.ResolveRoom(_lastKnownRoom);
   }
 
+  private void RemovePendingStub()
+  {
+    if (_pendingStubRemoval is not { } pending) return;
+    _pendingStubRemoval = null;
+    var stubRoom = _canvas.ResolveRoom(pending.Room);
+    if (stubRoom != null) _canvas.RemoveExitStub(stubRoom, pending.Direction);
+  }
+
+  /// <summary>A tried direction that led nowhere: remove its stub as a step of its own.</summary>
+  private void FlushPendingStubRemoval()
+  {
+    if (_pendingStubRemoval is not { } pending) return;
+    using (_canvas.BeginBatch("Automap: " + pending.Room.Name)) RemovePendingStub();
+  }
+
   private void NowInRoom(Room room)
   {
+    // the first room of the run, whether automap made it or found it already on the map
+    _startRoom ??= room;
     _lastKnownRoom = room;
     _canvas.SelectRoom(room);
   }
@@ -485,7 +523,11 @@ public sealed class Automap : IAutomapController
   {
     // A new game session in the same transcript (Frotz appends each session to the file): after the player has
     // typed commands, a fresh opening banner means the game started again, so the player is back in the first room.
-    if (_seenCommand && lines.Any(IsSessionStartLine)) StartedAgain();
+    // "version" (and the like) prints the release banner too without starting again, so a banner alone only counts
+    // after other commands; the transcript's own "Here begins a transcript" line always counts.
+    if (_seenCommand && (lines.Any(IsTranscriptStartLine) ||
+                         (lines.Any(IsSessionStartLine) && !PrintsBanner(_lastCommand))))
+      StartedAgain();
 
     string previousLine = null;
     for (var index = 0; index < lines.Count; ++index)
@@ -517,6 +559,7 @@ public sealed class Automap : IAutomapController
           // connections off: going east to here is not a promise that west leads back), so it doesn't count.
           otherRoom = _lastKnownRoom
                       .GetConnections(CompassPointHelper.GetCompassDirection(_lastMoveDirection.Value))
+                      .Where(connection => !AutomapCanvas.IsCommandJoin(connection))
                       .Where(connection => connection.Flow != ConnectionFlow.OneWay ||
                                            connection.GetSourceRoom() == _lastKnownRoom)
                       .Select(connection => OtherEnd(connection, _lastKnownRoom))
@@ -542,6 +585,7 @@ public sealed class Automap : IAutomapController
         var waits = 0;
         using (_canvas.BeginBatch("Automap: " + roomName))
         {
+          RemovePendingStub();
           if (room == null)
           {
             // new room
@@ -701,7 +745,9 @@ public sealed class Automap : IAutomapController
   private void ProcessPromptCommand(string command)
   {
     if (!string.IsNullOrWhiteSpace(command)) _seenCommand = true;
+    _lastCommand = command;
     RefreshLastKnownRoom();
+    FlushPendingStubRemoval();
     var title = _lastKnownRoom != null ? "Automap: " + _lastKnownRoom.Name : "Automap";
     using (_canvas.BeginBatch(title))
     {
@@ -894,9 +940,9 @@ public sealed class Automap : IAutomapController
           // aha, we know which direction it was
           _lastMoveDirection = direction;
 
-          // remove any stub exit in this direction;
-          // we'll either add a proper connection shortly, or they player can't go that way
-          _canvas.RemoveExitStub(_lastKnownRoom, _lastMoveDirection.Value);
+          // remove any stub exit in this direction: we'll either add a proper connection shortly, or the player
+          // can't go that way. Done with the response, so the move is one undo step.
+          if (_lastKnownRoom != null) _pendingStubRemoval = (_lastKnownRoom, _lastMoveDirection.Value);
 
           return;
         }
@@ -926,6 +972,15 @@ public sealed class Automap : IAutomapController
   private bool _seenCommand;
   private string _lastJourneyCommand;
   private Room _startRoom;
+
+  /// <summary>The last command typed at a prompt.</summary>
+  private string _lastCommand;
+
+  /// <summary>
+  ///   The exit stub to remove for the direction the player just tried. It is removed with the response, so a move
+  ///   and its stub are one undo step; if no room follows (the way is blocked) it goes at the next command.
+  /// </summary>
+  private (Room Room, MappableDirection Direction)? _pendingStubRemoval;
   private string _gameName = string.Empty;
 
   private MappableDirection? _lastMoveDirection;
@@ -1034,6 +1089,8 @@ public sealed class Automap : IAutomapController
     _settings = settings;
     _seenCommand = false;
     _startRoom = null;
+    _lastCommand = null;
+    _pendingStubRemoval = null;
     _lastKnownRoom = null;
     _lastMoveDirection = null;
     _lastJourneyCommand = null;

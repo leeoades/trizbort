@@ -588,6 +588,34 @@ public class AutomapRegressionTests : IsolatedProjectTests
     }
   }
 
+  [TestCase("version", true)]
+  [TestCase("VERSION", true)]
+  [TestCase("about", true)]
+  [TestCase("e", false)]
+  [TestCase("restart", false)]
+  [TestCase("", false)]
+  public void PrintsBanner_KnowsTheCommandsThatShowTheBanner(string command, bool expected)
+  {
+    Parser.PrintsBanner(command).ShouldBe(expected);
+  }
+
+  [Test]
+  public async Task SecondSession_StartsFromAFirstRoomThatWasAlreadyOnTheMap()
+  {
+    // PR #26 review: the first room was only remembered when automap made it
+    var cottage = ProjectRegressionTests.AddRoom("Cottage");
+    cottage.AddDescription("A small cottage.");
+    var canvas = new AutomapCanvas();
+    await CreateParser().StartCl(
+      canvas,
+      SettingsFor(
+        "Here begins a transcript of interaction with\n\nTest Game\nRelease 1 / Serial number 1\n\n>look\n\nCottage\nA small cottage.\n\n>e\n\nLane\nA muddy lane.\n\n>quit\n\nHere begins a transcript of interaction with\n\nTest Game\nRelease 1 / Serial number 1\n\n>n\n\nGarden\nA small garden.\n"));
+
+    var garden = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "Garden");
+    Project.Current.Elements.OfType<Connection>().ShouldContain(connection =>
+      connection.GetSourceRoom() == cottage && connection.GetTargetRoom() == garden);
+  }
+
   [Test]
   public async Task PeekingReader_PreservesLookaheadOrderAndEOF_ForSyncAndAsyncReads()
   {
@@ -600,6 +628,20 @@ public class AutomapRegressionTests : IsolatedProjectTests
     reader.ReadLine().ShouldBe("third");
     reader.PeekReadLine().ShouldBeNull();
     reader.ReadLine().ShouldBeNull();
+  }
+
+  [Test]
+  public async Task PeekingReader_AsyncReadsWithNothingQueued_ReadTheStream()
+  {
+    // PR #26 review: an override calling base.ReadLineAsync with nothing queued could recurse
+    using var stream = new MemoryStream(Encoding.UTF8.GetBytes("first\nsecond\nthird"));
+    using var reader = new PeekingStreamReader(stream);
+    (await reader.ReadLineAsync(CancellationToken.None)).ShouldBe("first");
+    (await reader.ReadLineAsync()).ShouldBe("second");
+    (await reader.IsAtEndAsync()).ShouldBeFalse();
+    (await reader.ReadLineAsync(CancellationToken.None)).ShouldBe("third");
+    (await reader.IsAtEndAsync()).ShouldBeTrue();
+    (await reader.ReadLineAsync(CancellationToken.None)).ShouldBeNull();
   }
 
   private static IEnumerable<TestCaseData> ReplacementCases()

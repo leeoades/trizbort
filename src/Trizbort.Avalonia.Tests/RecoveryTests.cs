@@ -144,11 +144,82 @@ public class RecoveryTests
         message.ShouldNotBeNull();
         message.ShouldContain("Something went wrong");
         message.ShouldNotContain("boom"); // the .NET message stays in the log
-        message.ShouldContain("Your unsaved work has been kept.");
+        message.ShouldContain("A copy of your unsaved changes has been kept.");
         message.ShouldContain("The details are saved in");
         var logs = Directory.GetFiles(Path.Combine(AppPaths.ConfigFolder, RecoveryStore.CrashLogFolderName));
         logs.Length.ShouldBe(1);
         message.ShouldContain(logs[0]);
+    }
+
+    [AvaloniaTest]
+    public void Crash_WithRecoveryOff_AsksToSaveInsteadOfPromising()
+    {
+        // PR #26 review: don't say the work was kept when no copy was written
+        string? message = null;
+        CrashReporter.MessageSink = text => message = text;
+        RecoveryService.Current = _service;
+        _enabled = false;
+        AddRoom("Cellar");
+
+        CrashReporter.ReportUiThreadError(new InvalidOperationException("boom"));
+
+        _store!.HasCopy.ShouldBeFalse();
+        message.ShouldNotBeNull();
+        message.ShouldNotContain("has been kept");
+        message.ShouldContain("Please save your map now.");
+    }
+
+    [AvaloniaTest]
+    public void Crash_WithNothingUnsaved_SaysNothingAboutWork()
+    {
+        string? message = null;
+        CrashReporter.MessageSink = text => message = text;
+        RecoveryService.Current = _service;
+
+        CrashReporter.ReportUiThreadError(new InvalidOperationException("boom"));
+
+        message.ShouldNotBeNull();
+        message.ShouldNotContain("kept");
+        message.ShouldNotContain("save your map");
+    }
+
+    [AvaloniaTest]
+    public void Crash_OnAnotherThread_CopiesTheMapOnTheUiThread()
+    {
+        RecoveryService.Current = _service;
+        AddRoom("Cellar");
+
+        var capture = Task.Run(() => CrashReporter.Capture(new InvalidOperationException("boom")));
+        for (var i = 0; i < 250 && !capture.IsCompleted; i++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(10);
+        }
+
+        capture.IsCompleted.ShouldBeTrue();
+        capture.Result.Work.ShouldBe(UnsavedWork.Kept);
+        _store!.HasCopy.ShouldBeTrue();
+    }
+
+    [AvaloniaTest]
+    public void Crash_OnAnotherThread_WhenTheUiThreadIsBusy_LeavesTheLastCopyAlone()
+    {
+        var previousWait = CrashReporter.UiThreadWait;
+        CrashReporter.UiThreadWait = TimeSpan.FromMilliseconds(50);
+        try
+        {
+            RecoveryService.Current = _service;
+            AddRoom("Cellar");
+
+            // this (UI) thread is blocked waiting, as it would be if it were stuck
+            var capture = Task.Run(() => CrashReporter.Capture(new InvalidOperationException("boom"))).Result;
+
+            capture.Work.ShouldBe(UnsavedWork.NotKept);
+        }
+        finally
+        {
+            CrashReporter.UiThreadWait = previousWait;
+        }
     }
 
     private (string Id, string Copy) MakeOrphan(string title, string originalFile)
@@ -190,6 +261,27 @@ public class RecoveryTests
         _store!.HasCopy.ShouldBeTrue();
         // Unsaved at every point in its history: undoing back to the recovered state must not look saved.
         _session!.Undo.IsDirty.ShouldBeTrue();
+    }
+
+    [AvaloniaTest]
+    public async Task Startup_Recover_WithRecoveryOff_KeepsTheCopyUntilTheMapIsSaved()
+    {
+        // PR #26 review: the recovered copy is the only copy of the work until it is saved
+        _enabled = false;
+        var (_, copy) = MakeOrphan("Lost Map", "/maps/lost.trizbort");
+        var dialogs = Dialogs(RecoveryChoice.Recover);
+
+        var recovered = await RecoveryStartup.RunAsync(_session!, _store!, _service, (IDialogService)(object)dialogs, null);
+
+        recovered.ShouldBeTrue();
+        File.Exists(copy).ShouldBeTrue();
+        AddRoom("Another room"); // edits don't remove it either
+        File.Exists(copy).ShouldBeTrue();
+
+        Project.Current.IsDirty = false; // saved
+        _session!.CheckDirty();
+
+        File.Exists(copy).ShouldBeFalse();
     }
 
     [AvaloniaTest]

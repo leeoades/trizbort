@@ -97,6 +97,49 @@ public class AutomapUndoTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task UndoingAMove_BringsBackTheExitStubItUsed()
+  {
+    // PR #26 review: the stub went in the command's step and the new room in the response's, so one Undo left the
+    // stub missing
+    using var session = new EditorSession();
+    var canvas = new AutomapCanvas(null, null, session);
+    var settings = SettingsFor(
+      "Example Game\n\nFirst Room\nA small room. A door leads east.\n\n>e\n\nSecond Room\nAnother room.\n");
+    settings.GuessExits = true;
+
+    await CreateParser().StartCl(canvas, settings);
+
+    Rooms().Count.ShouldBe(2);
+    session.Undo.UndoTitle.ShouldBe("Automap: Second Room");
+    session.PerformUndo();
+
+    Rooms().Select(room => room.Name).ShouldBe(new[] { "First Room" });
+    var stub = Project.Current.Elements.OfType<Connection>().ShouldHaveSingleItem();
+    stub.GetSourceRoom().ShouldBeSameAs(stub.GetTargetRoom());
+  }
+
+  [Test]
+  public async Task ABlockedMove_RemovesTheStubAsAStepOfItsOwn()
+  {
+    using var session = new EditorSession();
+    var canvas = new AutomapCanvas(null, null, session);
+    var settings = SettingsFor(
+      "Example Game\n\nFirst Room\nA small room. A door leads east.\n\n>e\nThe door is locked.\n\n>wait\nTime passes.\n");
+    settings.GuessExits = true;
+
+    await CreateParser().StartCl(canvas, settings);
+
+    // the blocked move removed the stub, as a step of its own that undo brings back
+    Stubs().ShouldBe(0);
+    session.Undo.UndoTitle.ShouldBe("Automap: First Room");
+    session.PerformUndo();
+    Stubs().ShouldBe(1);
+    Rooms().Count.ShouldBe(1);
+  }
+
+  private static int Stubs() => Project.Current.Elements.OfType<Connection>().Count();
+
+  [Test]
   public async Task UndoWhileRunning_DoesNotThrow_AndTheNextMoveDoesNotUseTheDeletedRoom()
   {
     using var session = new EditorSession();

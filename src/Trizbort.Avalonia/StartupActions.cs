@@ -47,9 +47,12 @@ public static class StartupActions
 
         if (recovered)
         {
-            // keep the recovered map
+            // Keep the recovered map, and skip the command-line actions: they were meant for the file named on the
+            // command line, and export, save or --exit would act on (or throw away) the recovered work instead.
+            return;
         }
-        else if (!string.IsNullOrWhiteSpace(options.FileName))
+
+        if (!string.IsNullOrWhiteSpace(options.FileName))
         {
             // a file named on the command line always wins over "load last project"
             await OpenNamedFileAsync(vm, options, storage, dialogs, owner);

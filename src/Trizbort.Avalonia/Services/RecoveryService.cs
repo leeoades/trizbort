@@ -102,6 +102,34 @@ public sealed class RecoveryService : IDisposable
     {
         CancelTimer();
         Store.DeleteCopy();
+        var project = Project.Current;
+        if (project == null || !project.IsDirty) DeleteAdopted();
+    }
+
+    private RecoveryEntry? _adopted;
+
+    /// <summary>
+    ///   A recovered copy whose work is now in the open map but not yet in a copy of ours: it is deleted once our own
+    ///   copy is written, or when the map is saved or discarded, so the work always has a copy until then.
+    /// </summary>
+    public void DeleteWhenSafe(RecoveryEntry entry)
+    {
+        _adopted = entry;
+    }
+
+    private void DeleteAdopted()
+    {
+        var entry = _adopted;
+        if (entry == null) return;
+        _adopted = null;
+        try
+        {
+            Store.Delete(entry);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Deleting a recovered copy failed: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -118,7 +146,9 @@ public sealed class RecoveryService : IDisposable
             if (!IsEnabled()) return false;
             if (!force && !project.IsDirty) return false;
             CancelTimer();
-            return Store.WriteCopy(project, _appVersion);
+            if (!Store.WriteCopy(project, _appVersion)) return false;
+            DeleteAdopted();
+            return true;
         }
         catch (Exception ex)
         {
