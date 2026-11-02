@@ -402,4 +402,10 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: low     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-053 -->
+## I-053 Automap: several directions to one room, and new rooms placed on joins
+- Reported: 2026-11-02 by user ("Down from the cliff to the beach and North also ... add to the label on the join"; "prioritise N,E,S,W over Up/Down"; Hollywood Hijinx: "it just added room so that it overlapped the existing join")   OS: all   Category: automap
+- A second direction between the same rooms moved the join's end to the new side, forgetting the first. A room reached by a direction whose usual place was taken was put there anyway and the map shifted apart, so with two-way joins off the Patio (west of Southeast Junction) landed on the South Junction - Southeast Junction join. **Fixed** 2026-11-02: each end of a join lists every direction travelled from it ("north / down"; the assumed way back is added at the other end when assuming two-way); the first compass direction decides the side, beating up/down/in/out, and the far room moves to that side when it is joined to nothing else and the spot is clear. Ends nobody has set off from this run (the assumed way back, or the far end of a one-way join) are still replaced, not added to, so curved paths keep working. New rooms try the usual spot, then spots up to 45 degrees either side and further out, clear of rooms and joins, before shifting the map. Scenario summaries now list overlaps; Hollywood Hijinx (old) still has 4 (5 before), from the garden paths that curve round the maze. Scenario `tests/automap/two-directions-same-room`, `AutomapJoinDirectionsTests`.
+- Severity: medium     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-054 -->

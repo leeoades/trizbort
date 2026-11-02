@@ -62,6 +62,10 @@ Hall [west] stub
   the order automap made them: `Maze #1`, `Maze #2`.
 - `connections:` one line per connection, in alphabetical order: room, the compass point the line leaves from, `<->`
   for two-way or `->` for one-way, the compass point it arrives at, and the other room. Up, down, in and out are drawn
-  from a compass point with a label, shown in quotes. `(dotted)` marks a dotted line. `stub` is an unexplored exit.
+  from a compass point with a label, shown in quotes; when several directions lead along one connection, the label
+  lists them all (`"north / down"`). A label in the middle, such as the command for a teleport, follows the second
+  room (`"xyzzy"`). `(dotted)` marks a dotted line. `stub` is an unexplored exit.
+- `overlaps:` only there when the layout has problems a player would notice: a room on top of another
+  (`A overlaps B`), or a room sitting on a connection that isn't its own (`Patio is on the join A - B`).
 
-Positions on the canvas are not compared: a scenario is about what is connected to what.
+Positions on the canvas are not compared otherwise: a scenario is about what is connected to what.

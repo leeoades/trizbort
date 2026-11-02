@@ -239,7 +239,7 @@ public class AutomapRegressionTests : IsolatedProjectTests
   ///   contains no matching element" (Lee's Hollywood Hijinx transcript).
   /// </summary>
   [Test]
-  public void Connect_SameRoomsInANewDirection_MovesTheConnectionEnd_AndKeepsEveryPort()
+  public void Connect_SameRoomsInANewDirection_ListsBothDirections_AndKeepsEveryPort()
   {
     var canvas = new AutomapCanvas();
     var a = canvas.CreateRoom(null, "A");
@@ -248,9 +248,11 @@ public class AutomapRegressionTests : IsolatedProjectTests
 
     canvas.Connect(a, MappableDirection.North, b, true);
 
+    // I-053: both ways from A lead to B, so the join lists both; it stays on the side of the first
     var connection = Project.Current.Elements.OfType<Connection>().Single();
     connection.GetSourceRoom(out var port).ShouldBe(a);
-    port.ShouldBe(CompassPoint.North);
+    port.ShouldBe(CompassPoint.East);
+    connection.StartText.ShouldBe("east / north");
     foreach (var room in new[] { a, b })
     {
       var points = room.PortList.OfType<Room.CompassPort>().Select(p => p.CompassPoint).ToList();

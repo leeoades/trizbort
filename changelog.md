@@ -22,6 +22,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Error logs.** When something goes wrong, Recast writes a log you can send in, and shows a plain message saying
   where it is, instead of a technical error.
 - Automap opens `.scr` transcripts (the Frotz default) as well as `.txt` and `.log`.
+- **Several ways to the same room.** When more than one direction leads from one room to another (down to the beach,
+  and north too), automap lists them all on one join ("north / down") instead of moving it. Compass directions decide
+  where the join and the room go: a room first placed below by `down` moves above when `north` also leads there.
 
 ### Fixed
 
@@ -34,6 +37,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - Automap carries on correctly when a transcript holds more than one play session.
 - Automap no longer loses a move typed while you play live.
 - Room names such as `Y2` are no longer mistaken for shouted text.
+- Automap puts a new room in a clear spot nearby when its usual place is taken, instead of on top of an existing
+  join.
 - All compiler warnings are fixed, including a broken binding in Map Settings.
 
 ## [0.9.0-beta.1] - 2026-10-31

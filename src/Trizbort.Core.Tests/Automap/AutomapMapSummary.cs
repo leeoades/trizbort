@@ -27,7 +27,11 @@ namespace Trizbort.Core.Tests.Automap;
 ///   Cellar [north "up"] &lt;-&gt; [south "down"] Hall
 ///   Pantry [east] -&gt; [west] Kitchen
 ///   Hall [west] stub
+///
+///   overlaps:
+///   Patio is on the join South Junction - Southeast Junction
 ///   </code>
+///   The overlaps section only appears when there are overlaps.
 ///   Rooms with the same name are numbered in the order they were created ("Maze #1", "Maze #2").
 /// </remarks>
 public static class AutomapMapSummary
@@ -52,7 +56,44 @@ public static class AutomapMapSummary
     lines.Sort(StringComparer.Ordinal);
     foreach (var line in lines) builder.Append(line).Append('\n');
 
+    var overlaps = Overlaps(project, rooms, names);
+    if (overlaps.Count > 0)
+    {
+      builder.Append('\n');
+      builder.Append("overlaps:\n");
+      foreach (var line in overlaps) builder.Append(line).Append('\n');
+    }
+
     return builder.ToString();
+  }
+
+  /// <summary>
+  ///   Layout problems a player would notice: rooms on top of each other, and rooms sitting on a join that isn't
+  ///   theirs. Exit stubs are left out.
+  /// </summary>
+  private static List<string> Overlaps(Project project, List<Room> rooms, Dictionary<Room, string> names)
+  {
+    var lines = new List<string>();
+    for (var i = 0; i < rooms.Count; i++)
+      for (var j = i + 1; j < rooms.Count; j++)
+        if (rooms[i].InnerBounds.IntersectsWith(rooms[j].InnerBounds))
+        {
+          var pair = new[] { names[rooms[i]], names[rooms[j]] }.OrderBy(n => n, StringComparer.Ordinal).ToArray();
+          lines.Add($"{pair[0]} overlaps {pair[1]}");
+        }
+
+    foreach (var connection in project.Elements.OfType<Connection>())
+    {
+      var a = connection.GetSourceRoom();
+      var b = connection.GetTargetRoom();
+      if (a == null || b == null || a == b) continue;
+      foreach (var room in rooms)
+        if (room != a && room != b && connection.Intersects(room.InnerBounds))
+          lines.Add($"{names[room]} is on the join {names[a]} - {names[b]}");
+    }
+
+    lines.Sort(StringComparer.Ordinal);
+    return lines;
   }
 
   /// <summary>Lines of a summary with trailing spaces and blank lines at the end removed, for comparing.</summary>

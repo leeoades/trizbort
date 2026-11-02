@@ -1,0 +1,8 @@
+current: Beach
+
+rooms:
+Beach
+Cliff Top (start)
+
+connections:
+Cliff Top [north "north / down"] <-> [south "south / up"] Beach
