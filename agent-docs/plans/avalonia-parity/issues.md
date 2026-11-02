@@ -390,4 +390,10 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Frotz appends sessions to one file; after quit the next session starts in the first room without printing it. **Fixed** 2026-11-02: a new banner ("Here begins a transcript of interaction with", "Release N / Serial number N") after commands puts automap back in the start room. Scenario two-sessions-in-one-transcript.
 - Severity: medium     Flags: —
 - Ticket: —
-<!-- Next ID: I-051 -->
+## I-051 Errors showed the player a raw .NET message and left nothing to send in
+- Reported: 2026-11-02 by user ("it showed the C# error ... meaningless. It should log the error somewhere into a file so that they can send it to me")   OS: all   Category: errors
+- Automap's own error message showed ex.Message ("Sequence contains no matching element") and wrote no log; its trace was [Conditional("DEBUG")], so release builds had nothing. **Fixed** 2026-11-02: automap errors write a log to the crash-logs folder (error and stack, transcript, settings, current room, automap's reasoning for the last 200 lines, kept in every build) and show a plain message with the log's path and the issues page. The app-wide error message no longer shows the .NET message either. Future: send logs automatically (opt-in upload).
+- Severity: medium     Flags: —
+- Ticket: —
+
+<!-- Next ID: I-052 -->

@@ -1055,9 +1055,44 @@ public sealed class Automap : IAutomapController
     "Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
     "or with scripting off in your interpreter.\n\nAutomapping halted.";
 
-  private static string UnexpectedErrorMessage(Exception ex)
+  /// <summary>
+  ///   Writes an error log (the error, the transcript, the settings and automap's reasoning for the last lines) and
+  ///   returns a plain message for the player that says where the log is. No .NET wording: it means nothing to them.
+  /// </summary>
+  private string UnexpectedErrorMessage(Exception ex)
   {
-    return "An unexpected error occurred during automapping:\n" + ex.Message + "\n\nAutomapping halted.";
+    var details = new System.Text.StringBuilder();
+    details.AppendLine("Automap error");
+    details.AppendLine("Transcript: " + _settings.FileName);
+    details.AppendLine(
+      $"Settings: verbose transcript {_settings.VerboseTranscript}, same name = same room {_settings.AssumeRoomsWithSameNameAreSameRoom}, " +
+      $"two-way connections {_settings.AssumeTwoWayConnections}, guess exits {_settings.GuessExits}, " +
+      $"continue transcript {_settings.ContinueTranscript}, single step {_settings.SingleStep}");
+    details.AppendLine("Current room: " + (_lastKnownRoom?.Name ?? "(none)"));
+    details.AppendLine();
+    details.AppendLine($"Automap's reasoning for the last {RecentTraceLines} lines (most recent last):");
+    details.AppendLine(RecentTrace());
+
+    var logPath = Trizbort.Domain.Recovery.RecoveryStore.WriteCrashLog(ex, AppVersion(), details: details.ToString());
+    var message = "Automap hit a problem it couldn't handle and has stopped. Your map is fine up to this point.";
+    return logPath == null
+      ? message + "\n\nThe details could not be saved."
+      : message + "\n\nThe details are saved in:\n" + logPath +
+        "\n\nPlease send that file (and your transcript if you can) to " + IssuesUrl + " so it can be fixed.";
+  }
+
+  private const string IssuesUrl = "https://github.com/leeoades/trizbort/issues";
+
+  private static string AppVersion()
+  {
+    var assembly = System.Reflection.Assembly.GetEntryAssembly() ?? typeof(Automap).Assembly;
+    var version = System.Reflection.CustomAttributeExtensions
+                    .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(assembly)
+                    ?.InformationalVersion
+                  ?? assembly.GetName().Version?.ToString()
+                  ?? "unknown";
+    var plus = version.IndexOf('+');
+    return (plus > 0 ? version[..plus] : version) + " (" + assembly.GetName().Name + ")";
   }
 
   /// <summary>
@@ -1339,10 +1374,40 @@ public sealed class Automap : IAutomapController
     return !string.IsNullOrEmpty(_failureReason);
   }
 
-  [Conditional("DEBUG")]
+  private const int RecentTraceLines = 200;
+  private static readonly Queue<string> _recentTrace = new();
+
+  /// <summary>
+  ///   Explains what automap made of each transcript line. Written to debug output in Debug builds, and the last
+  ///   <see cref="RecentTraceLines" /> lines are always kept for the error log, in every build.
+  /// </summary>
   private static void Trace(string format, params object[] args)
   {
-    Debug.WriteLine(format, args);
+    string text;
+    try
+    {
+      text = args == null || args.Length == 0 ? format : string.Format(format, args);
+    }
+    catch (FormatException)
+    {
+      text = format;
+    }
+
+    lock (_recentTrace)
+    {
+      _recentTrace.Enqueue(text);
+      while (_recentTrace.Count > RecentTraceLines) _recentTrace.Dequeue();
+    }
+
+    Debug.WriteLine(text);
+  }
+
+  private static string RecentTrace()
+  {
+    lock (_recentTrace)
+    {
+      return string.Join(Environment.NewLine, _recentTrace);
+    }
   }
 
   #endregion

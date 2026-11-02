@@ -142,8 +142,10 @@ public class RecoveryTests
 
         _store!.HasCopy.ShouldBeTrue();
         message.ShouldNotBeNull();
-        message.ShouldContain("Something went wrong: boom");
-        message.ShouldContain("Your unsaved work has been kept and a crash log written to");
+        message.ShouldContain("Something went wrong");
+        message.ShouldNotContain("boom"); // the .NET message stays in the log
+        message.ShouldContain("Your unsaved work has been kept.");
+        message.ShouldContain("The details are saved in");
         var logs = Directory.GetFiles(Path.Combine(AppPaths.ConfigFolder, RecoveryStore.CrashLogFolderName));
         logs.Length.ShouldBe(1);
         message.ShouldContain(logs[0]);

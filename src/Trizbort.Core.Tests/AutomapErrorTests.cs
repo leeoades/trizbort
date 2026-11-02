@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Automap;
+using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
@@ -175,12 +176,25 @@ public class AutomapErrorTests : IsolatedProjectTests
     var parser = new Parser(null, prompts);
     Exception failure = null;
     parser.AutomapFailed += e => failure = e;
+    var logFolder = Path.Combine(AppPaths.ConfigFolder, Trizbort.Domain.Recovery.RecoveryStore.CrashLogFolderName);
+    var logsBefore = Directory.Exists(logFolder) ? Directory.GetFiles(logFolder) : Array.Empty<string>();
 
     await parser.StartCl(new ThrowingCanvas(parser), SettingsFor(WriteTranscript(TwoRooms)));
 
     prompts.Messages.Count.ShouldBe(1);
     prompts.Messages[0].Title.ShouldBe("Automap Error");
-    prompts.Messages[0].Message.ShouldContain("canvas exploded");
+    // The player sees plain words and where the log is; the .NET message and stack trace go into the log,
+    // with automap's reasoning for the last transcript lines.
+    var message = prompts.Messages[0].Message;
+    message.ShouldNotContain("canvas exploded");
+    message.ShouldContain("Automap hit a problem");
+    var logs = Directory.GetFiles(logFolder).Except(logsBefore).ToArray();
+    logs.Length.ShouldBe(1);
+    message.ShouldContain(logs[0]);
+    var log = File.ReadAllText(logs[0]);
+    log.ShouldContain("canvas exploded");
+    log.ShouldContain("Transcript: ");
+    log.ShouldContain("Automap's reasoning");
     parser.Status.ShouldBe("Automapping halted.");
     parser.Running.ShouldBeFalse();
     failure.ShouldBeOfType<InvalidOperationException>();

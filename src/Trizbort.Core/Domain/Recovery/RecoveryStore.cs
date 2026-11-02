@@ -201,7 +201,7 @@ public sealed class RecoveryStore : IDisposable
   ///   Writes a crash log to <paramref name="folder" /> (default: the config folder's crash-logs) and returns its
   ///   path, or null if it could not be written.
   /// </summary>
-  public static string WriteCrashLog(Exception exception, string appVersion, string folder = null)
+  public static string WriteCrashLog(Exception exception, string appVersion, string folder = null, string details = null)
   {
     try
     {
@@ -219,6 +219,11 @@ public sealed class RecoveryStore : IDisposable
       text.AppendLine("Runtime: " + RuntimeInformation.FrameworkDescription);
       text.AppendLine();
       text.AppendLine(exception?.ToString() ?? "(no exception)");
+      if (!string.IsNullOrEmpty(details))
+      {
+        text.AppendLine();
+        text.AppendLine(details);
+      }
       File.WriteAllText(path, text.ToString(), new UTF8Encoding(false));
       return path;
     }

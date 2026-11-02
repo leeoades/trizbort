@@ -57,9 +57,12 @@ public static class CrashReporter
 
     public static string BuildMessage(string exceptionMessage, string? logPath)
     {
+        // The .NET message (exceptionMessage) is only in the log: it means nothing to the player.
+        const string issues = "https://github.com/leeoades/trizbort/issues";
         return logPath == null
-            ? $"Something went wrong: {exceptionMessage}. Your unsaved work has been kept."
-            : $"Something went wrong: {exceptionMessage}. Your unsaved work has been kept and a crash log written to {logPath}.";
+            ? $"Something went wrong and {AppInfo.ProductName} couldn't finish what it was doing. Your unsaved work has been kept."
+            : $"Something went wrong and {AppInfo.ProductName} couldn't finish what it was doing. Your unsaved work has been kept.\n\n" +
+              $"The details are saved in:\n{logPath}\n\nPlease send that file to {issues} so it can be fixed.";
     }
 
     /// <summary>The error path for UI-thread exceptions and for failed commands: capture, tell the user, carry on.</summary>
