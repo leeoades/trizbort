@@ -189,7 +189,7 @@ public class RecoveryTests
         RecoveryService.Current = _service;
         AddRoom("Cellar");
 
-        var capture = Task.Run(() => CrashReporter.Capture(new InvalidOperationException("boom")));
+        var capture = Task.Run(() => CrashReporter.Capture(new InvalidOperationException("boom"), onUiThread: false));
         for (var i = 0; i < 250 && !capture.IsCompleted; i++)
         {
             Dispatcher.UIThread.RunJobs();
@@ -217,7 +217,7 @@ public class RecoveryTests
             RecoveryService.Current = _service;
             AddRoom("Cellar");
 
-            var capture = Task.Run(() => CrashReporter.Capture(new InvalidOperationException("boom"))).Result;
+            var capture = Task.Run(() => CrashReporter.Capture(new InvalidOperationException("boom"), onUiThread: false)).Result;
 
             asked.ShouldBe(1);
             capture.Work.ShouldBe(UnsavedWork.NotKept);

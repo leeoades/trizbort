@@ -39,12 +39,14 @@ public static class CrashReporter
     }
 
     /// <summary>
-    ///   Keeps the work if it can and logs the exception. Never throws.
+    ///   Keeps the work if it can and logs the exception. Never throws. <paramref name="onUiThread" /> says whether
+    ///   this is the UI thread; by default the dispatcher is asked (tests say so explicitly, because the headless
+    ///   test platform answers yes on every thread on some systems).
     /// </summary>
-    public static CrashCapture Capture(Exception exception)
+    public static CrashCapture Capture(Exception exception, bool? onUiThread = null)
     {
         var service = RecoveryService.Current;
-        var work = KeepWork(service);
+        var work = KeepWork(service, onUiThread);
         var logPath = RecoveryStore.WriteCrashLog(exception, service?.AppVersion ?? string.Empty);
         return new CrashCapture(logPath, work);
     }
@@ -64,7 +66,7 @@ public static class CrashReporter
         return task.Wait(wait) ? task.Result : null;
     }
 
-    private static UnsavedWork KeepWork(RecoveryService? service)
+    private static UnsavedWork KeepWork(RecoveryService? service, bool? onUiThread)
     {
         try
         {
@@ -72,7 +74,8 @@ public static class CrashReporter
             if (project == null || !project.IsDirty) return UnsavedWork.None;
             if (service == null) return UnsavedWork.NotKept;
 
-            if (Dispatcher.UIThread.CheckAccess()) return service.WriteNow(false) ? UnsavedWork.Kept : UnsavedWork.NotKept;
+            if (onUiThread ?? Dispatcher.UIThread.CheckAccess())
+                return service.WriteNow(false) ? UnsavedWork.Kept : UnsavedWork.NotKept;
 
             // The map is edited on the UI thread, so the copy is made there. If the UI thread can't do it in time,
             // the last copy written stays as it is rather than being replaced by one read mid-edit.
