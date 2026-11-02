@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Threading;
 using Trizbort.Automap;
 using Trizbort.Domain.Application;
@@ -86,6 +87,18 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         }
     }
 
+    public void ConnectByCommand(Room source, Room target, string command)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            _innerCanvas.ConnectByCommand(source, target, command);
+        }
+        else
+        {
+            Dispatcher.UIThread.Invoke(() => _innerCanvas.ConnectByCommand(source, target, command));
+        }
+    }
+
     public void RemoveRoom(Room otherRoom)
     {
         if (Dispatcher.UIThread.CheckAccess())
@@ -96,5 +109,19 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         {
             Dispatcher.UIThread.Invoke(() => _innerCanvas.RemoveRoom(otherRoom));
         }
+    }
+
+    public IDisposable BeginBatch(string title)
+    {
+        return Dispatcher.UIThread.CheckAccess()
+            ? _innerCanvas.BeginBatch(title)
+            : Dispatcher.UIThread.Invoke(() => _innerCanvas.BeginBatch(title));
+    }
+
+    public Room ResolveRoom(Room room)
+    {
+        return Dispatcher.UIThread.CheckAccess()
+            ? _innerCanvas.ResolveRoom(room)
+            : Dispatcher.UIThread.Invoke(() => _innerCanvas.ResolveRoom(room));
     }
 }

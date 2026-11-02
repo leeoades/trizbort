@@ -131,5 +131,7 @@ Related pairs (don't duplicate): 044 Quick Find command ↔ 086 Quick Find dialo
 | 132 ✅ | [Rendering parity fixes from the export comparison (GitHub #22) + three UI bugs](132-rendering-parity-fixes.md) | 6 | P1 | L | mid + strong review | — | I-022..I-025 |
 | 133 ✅ | [Canvas fixes from the manual checklist](133-checklist-canvas-fixes.md) | 6 | P1 | M | mid | — | I-027..I-031 |
 | 134 ✅ | [Dialog fixes from the manual checklist](134-checklist-dialog-fixes.md) | 6 | P1 | M | mid | — | I-033..I-039 |
+| 135 ✅ | [Crash safety: recovery copy, crash log, no silent crashes](135-crash-safety-and-recovery.md) | 7 | P1 | M | mid + strong review | — | user request, GitHub #24 |
+| 136 ✅ | [Automap: one undo step per move; Undo while automapping](136-automap-undo-per-move.md) | 7 | P1 | M | mid | — | GitHub #24, I-043 |
 
 Totals: 107 tickets — P1 53, P2 41, P3 13. Waves: 1: 6, 2: 13, 3: 17, 4: 11, 5: 36, 6: 18, 7: 5, 8: 1.

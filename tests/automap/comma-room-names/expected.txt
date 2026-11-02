@@ -1,0 +1,10 @@
+current: Garden, West
+
+rooms:
+Garden, East (start)
+Garden, North
+Garden, West
+
+connections:
+Garden, East [north] <-> [south] Garden, North
+Garden, East [west] <-> [east] Garden, West

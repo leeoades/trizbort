@@ -288,7 +288,7 @@ public class ShortcutMapConformanceTests
   {
     var catalogue = Build(false);
     var missing = _rows.Where(r => r.Pending && catalogue.Find(r.Id) == null).Select(r => r.Id).ToList();
-    TestContext.WriteLine("Map commands not registered yet: " + string.Join(", ", missing));
+    TestContext.Out.WriteLine("Map commands not registered yet: " + string.Join(", ", missing));
     foreach (var row in _rows.Where(r => r.Pending && catalogue.Find(r.Id) != null))
       CheckRow(row, false);
   }

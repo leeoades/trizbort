@@ -12,6 +12,50 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Added
+
+- **Automap joins teleports.** When a command that isn't a direction takes you somewhere (a magic word such as
+  `xyzzy`, or `enter boat`), automap joins the two rooms with a dotted one-way line labelled with what you typed. Using
+  the same command back makes the join two-way. Undo, restore, restart and `look` don't create joins.
+- **Recovery copies.** Recast keeps a recovery copy of the open map and offers to restore it after a crash or power
+  cut. It is on by default; turn it off in Application Settings.
+- **Error logs.** When something goes wrong, Recast writes a log you can send in, and shows a plain message saying
+  where it is, instead of a technical error.
+- Automap opens `.scr` transcripts (the Frotz default) as well as `.txt` and `.log`.
+- **Several ways to the same room.** When more than one direction leads from one room to another (down to the beach,
+  and north too), automap lists them all on one join ("north / down") instead of moving it. Compass directions decide
+  where the join and the room go: a room first placed below by `down` moves above when `north` also leads there.
+
+### Fixed
+
+- Automap mapped the first room of a game, including when the first command is `look`.
+- Automap keeps room names with a comma or dash (`Garden, East`, `Hall - Upstairs`) as separate rooms.
+- Each automap move is one undo step, and Undo while automap is running no longer crashes (GitHub #24).
+- Automap no longer crashes with "Sequence contains no matching element" when it re-routes an exit.
+- With "assume two-way connections" off, automap no longer asks about a room in the way, or moves exits it already
+  knows.
+- Automap carries on correctly when a transcript holds more than one play session.
+- Automap no longer loses a move typed while you play live.
+- Room names such as `Y2` are no longer mistaken for shouted text.
+- Automap puts a new room in a clear spot nearby when its usual place is taken, instead of on top of an existing
+  join.
+- Automap no longer thinks the game started again when you type `version` (or `about`, `credits`...), which
+  printed the opening banner and could lose the next room.
+- Walking out of a room you teleported into no longer clashes with the teleport's join and drops the new room.
+- Undoing an automap move also brings back the unexplored-exit stub it used.
+- The error message only says your unsaved changes were kept when a copy was actually written; otherwise it asks you
+  to save. A recovered map's copy is kept until the map is saved, even with recovery copies turned off.
+- Show Grid is saved with the map, so turning it on or off now marks the map as changed and can be undone.
+- Code export includes every direction of a join labelled with several ("north / down"), and doesn't turn
+  teleport joins into compass exits.
+- An automap move that arrives while you are dragging waits for the drag to finish, so cancelling the drag no
+  longer loses it.
+- Saving to a file name without a folder no longer reports a failure after saving, and Undo and Redo are no
+  longer left greyed out after an automap step that changed nothing.
+- After recovering unsaved changes, Recast watches the original file for changes made elsewhere; turning
+  recovery copies on now copies a map that already has unsaved changes.
+- All compiler warnings are fixed, including a broken binding in Map Settings.
+
 ## [0.9.0-beta.1] - 2026-10-31
 
 This is the **first beta of Trizbort Recast**, for testing. It has everything the Windows app has, and more, but it has

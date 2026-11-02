@@ -16,7 +16,7 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
 <trizbort version="...">
   <info>...</info>
   <map>
-    <room id="1" name="West of House" x="-3200" y="-640" w="96" h="64" description="...">
+    <room id="1" stableId="..." name="West of House" x="-3200" y="-640" w="96" h="64" description="...">
       <objects>Small window</objects>
     </room>
     <line id="3">
@@ -29,6 +29,9 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
 ```
 
 - Room geometry is stored as plain XML attributes (`x`, `y`, `w`, `h`).
+- Rooms persist a `stableId` GUID independent of their reusable numeric `id`; undo snapshots preserve it so
+  automap can resolve a room after snapshot restoration, even if it was renamed. Older maps without this
+  attribute receive a new identity when loaded.
 - A connection is a `<line>` with two (or more) `<dock>` children identifying the room ID and
   compass port it attaches to — this is the on-disk form of the in-memory `Vertex.Port.Owner`
   relationship described in [`02-domain-model.md`](02-domain-model.md).
@@ -36,6 +39,16 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
   `curveThreeQuarter` with invariant-culture `"x,y"` values. They are deliberately attributes,
   not child elements, because `EndLoad` matches child elements to `VertexList` by position and
   older Trizbort versions ignore unknown attributes (they simply draw the line straight).
+- A `<line>` that automap made for a move by command rather than direction (a teleport such as
+  `xyzzy`) carries `automapCommand="xyzzy"` (`Connection.AutomapCommand`). Automap uses it to tell
+  these joins from ordinary exits, whatever their style or labels; older versions ignore it.
+- Automap also records on a `<line>` which directions it saw the player take from each end:
+  `automapStartTravelled="east down"` and `automapEndTravelled="up"` (`Connection.StartTravelled` /
+  `EndTravelled`, space-separated). An end with none is an exit automap only assumed, which it replaces
+  when the player is seen going back another way. Code export ignores them.
+- A connection label listing several directions separated by `/` (`"north / down"`, written by automap
+  when several ways lead along one connection) is exported as one exit per direction
+  (`DirectionWords.ListedDirections`); a single word such as `"up"` keeps its usual meaning.
 - `<settings>` holds per-map drawing/document settings (fonts, colors, grid, validation rules)
   — separate again from the two settings systems below.
 - Labels use `<label id="..." text="..." x="..." y="..." w="..." h="..." shape="..."
@@ -218,3 +231,10 @@ converters and is just hygiene in case anything *does* serialize the domain type
    and load/save it through `ApplicationSettingsController`.
 4. **Transient/session-only state** (search index, UI hover state): don't persist it at all —
    follow the pattern in `Domain\Cache\Indexer.cs`.
+
+## Recovery copy and crash log (ticket 135)
+`Trizbort.Domain.Recovery.RecoveryStore` (Core) keeps `<config>/recovery/<session>.trizbort` + `.json` while the map is
+dirty (written atomically, ~2s after the last change by `RecoveryService` in the Avalonia app) and holds
+`<session>.lock` exclusively; a copy whose lock is free is an orphan. `RecoveryStartup` offers Recover / Discard /
+Decide later at start-up (before reopening a file). `CrashReporter` handles unhandled exceptions: recovery copy now,
+crash log in `<config>/crash-logs/`, message, carry on. Setting: `ApplicationSettings.KeepRecoveryCopy` (default on).

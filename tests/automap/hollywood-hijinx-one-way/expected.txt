@@ -1,0 +1,12 @@
+current: Patio
+
+rooms:
+Northeast Junction
+Patio
+South Junction (start)
+Southeast Junction
+
+connections:
+South Junction [east] <-> [south] Southeast Junction
+Southeast Junction [north] <-> [south] Northeast Junction
+Southeast Junction [west] <-> [east] Patio

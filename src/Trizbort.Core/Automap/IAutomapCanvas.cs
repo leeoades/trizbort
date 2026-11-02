@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
@@ -18,12 +19,34 @@ public interface IAutomapCanvas
 
   void Connect(Room source, MappableDirection directionFromSource, Room target, bool assumeTwoWayConnections);
 
+  /// <summary>
+  ///   Join two rooms the player travelled between by something other than a compass direction (a magic word, "enter
+  ///   boat"). The join is one-way and dotted, labelled with <paramref name="command" />, and leaves each room on the
+  ///   side facing the other. Using the same command the other way makes it two-way.
+  /// </summary>
+  void ConnectByCommand(Room source, Room target, string command);
+
   void AddExitStub(Room room, MappableDirection direction);
 
   void RemoveExitStub(Room room, MappableDirection direction);
 
   void SelectRoom(Room room);
   void RemoveRoom(Room otherRoom);
+
+  /// <summary>
+  ///   Start a group of map changes that is recorded as one undo step titled <paramref name="title" />. Dispose the
+  ///   result to end the step. Keep it short: do not await anything while it is open, because the user cannot undo
+  ///   or redo while a step is open. Returns null, starting nothing, while the user is part-way through a change of
+  ///   their own (such as a drag); try again shortly.
+  /// </summary>
+  IDisposable BeginBatch(string title);
+
+  /// <summary>
+  ///   Find the room in the current project that is <paramref name="room" />, or null when it no longer exists. Undo
+  ///   and redo replace room objects, so remembered rooms must be looked up again; a new room that reused a deleted
+  ///   room's id doesn't count.
+  /// </summary>
+  Room ResolveRoom(Room room);
 }
 
 public delegate bool? RoomMatcher(string roomName, string roomDescription, Room room);

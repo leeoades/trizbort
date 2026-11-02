@@ -54,7 +54,25 @@ public class FileWatcherTests
     TrizbortFileWatcher.ConfirmReloadPromptAsync = null;
     TrizbortFileWatcher.UIThreadInvoker = null;
     TrizbortFileWatcher.DebounceMilliseconds = _previousDebounce;
+    if (Directory.Exists(_directory)) Directory.Delete(_directory, true);
+  }
+
+  [Test]
+  public void StartWatcher_AfterTheFolderIsDeleted_DoesNotThrowAndStaysOff()
+  {
+    _watcher.StopWatcher();
     Directory.Delete(_directory, true);
+
+    Should.NotThrow(() => _watcher.StartWatcher());
+    _watcher.IsWatching.ShouldBeFalse();
+  }
+
+  [Test]
+  public void IsSetTo_ComparesTheWatchedFile()
+  {
+    _watcher.IsSetTo(_file).ShouldBeTrue();
+    _watcher.IsSetTo(Path.Combine(_directory, "other.trizbort")).ShouldBeFalse();
+    _watcher.IsSetTo(null).ShouldBeFalse();
   }
 
   private void ModifyExternally()
@@ -125,5 +143,30 @@ public class FileWatcherTests
     TrizbortFileWatcher.ConfirmReloadPromptAsync(false).Result.ShouldBeTrue();
     TrizbortFileWatcher.ConfirmReloadPrompt = null;
     TrizbortFileWatcher.ConfirmReloadPromptAsync.ShouldBeNull();
+  }
+
+  [Test]
+  public void ARelativeFileName_IsWatchedFromTheCurrentFolder()
+  {
+    // PR #26 review: saving as "map.trizbort" gave the watcher no folder, which threw after the file was written
+    using var watcher = new TrizbortFileWatcher();
+
+    Should.NotThrow(() => watcher.InitializeWatcher("map.trizbort"));
+
+    watcher.IsSetTo(Path.GetFullPath("map.trizbort")).ShouldBeTrue();
+  }
+
+  [Test]
+  public void WatchingNothing_StaysStoppedWhenStartedAgain()
+  {
+    using var watcher = new TrizbortFileWatcher();
+    watcher.InitializeWatcher(Path.Combine(Path.GetTempPath(), "watched.trizbort"));
+    watcher.IsWatching.ShouldBeTrue();
+
+    watcher.InitializeWatcher(null);
+    watcher.StartWatcher();
+
+    watcher.IsWatching.ShouldBeFalse();
+    watcher.IsSetTo(Path.Combine(Path.GetTempPath(), "watched.trizbort")).ShouldBeFalse();
   }
 }

@@ -38,9 +38,6 @@ public static class RoomDrawingAdapter
         public CoreRect LastSecondFillBounds;
         public StreamGeometry? CachedSecondFillGeometry;
 
-        public CoreRect LastDarkBounds;
-        public StreamGeometry? CachedDarkGeometry;
-
         public string? LastName;
         public string? LastSubtitle;
         public string? LastNameFontName;

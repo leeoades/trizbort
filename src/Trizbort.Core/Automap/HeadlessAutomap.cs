@@ -7,7 +7,7 @@ using Trizbort.Editor;
 namespace Trizbort.Automap;
 
 /// <summary>The outcome of a headless automap run: Error is null on success.</summary>
-public sealed record HeadlessAutomapResult(string Transcript, string Error)
+public sealed record HeadlessAutomapResult(string Transcript, string Error, Exception Failure = null)
 {
   public bool Succeeded => Error == null;
 }
@@ -34,8 +34,13 @@ public static class HeadlessAutomap
       return new HeadlessAutomapResult(transcriptPath, "Transcript file not found: " + transcriptPath);
 
     string error = null;
+    Exception failure = null;
     var engine = new Automap((message, title) => error ??= message, prompts ?? NonInteractiveEditorPrompts.Instance);
-    engine.AutomapFailed += ex => error ??= ex.Message;
+    engine.AutomapFailed += ex =>
+    {
+      error ??= ex.Message;
+      failure ??= ex;
+    };
 
     settings.FileName = transcriptPath;
     settings.SingleStep = false;
@@ -50,12 +55,13 @@ public static class HeadlessAutomap
     catch (Exception ex)
     {
       error ??= ex.Message;
+      failure ??= ex;
     }
     finally
     {
       project.IsDirty = false;
     }
 
-    return new HeadlessAutomapResult(transcriptPath, error);
+    return new HeadlessAutomapResult(transcriptPath, error, failure);
   }
 }

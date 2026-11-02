@@ -1,0 +1,4 @@
+# Keep the scenario about rooms and connections: no exit stubs guessed from descriptions.
+GuessExits = false
+# The paths around the house bend, so "a room is already that way" means a different room here.
+SameDirectionAnswer = KeepBoth

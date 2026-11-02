@@ -1,0 +1,27 @@
+ADVENTURE
+The Interactive Original
+By Will Crowther and Don Woods
+Release 1 / Serial number 1
+
+>look
+Inside Building
+You are inside a small brick building over a spring. A door leads out to the west.
+
+>inventory
+You are empty-handed.
+
+>xyzzy
+Debris Room
+You are in a low room littered with rubble. A passage leads west.
+
+>xyzzy
+Inside Building
+You are inside a small brick building over a spring. A door leads out to the west.
+
+>plugh
+Y2
+You are in a large chamber. A hollow voice says "Plugh". Passages lead south and east.
+
+>south
+Low Passage
+A low passage runs north.

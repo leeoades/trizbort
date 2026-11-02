@@ -37,6 +37,12 @@ public sealed class UndoStack
 
   public bool CanUndo => _undo.Count > 0;
 
+  /// <summary>
+  ///   True while a step is being recorded (a transaction is open), for example between the changes of one automap
+  ///   move, which reach the UI thread one at a time. Undo and redo must wait until it closes.
+  /// </summary>
+  public bool IsRecording => _isOpen;
+
   public bool CanRedo => _redo.Count > 0;
 
   public string UndoTitle => _undo.Count > 0 ? _undo[_undo.Count - 1].Title : null;
@@ -52,6 +58,16 @@ public sealed class UndoStack
   public void MarkSaved()
   {
     _savedIndex = _undo.Count;
+    RaiseChanged();
+  }
+
+  /// <summary>
+  ///   Treat the document as unsaved at every point in its history until the next <see cref="MarkSaved" />, e.g. a map
+  ///   recovered after a crash: undoing back to the recovered state must not make it look saved.
+  /// </summary>
+  public void MarkUnsaved()
+  {
+    _savedIndex = -1;
     RaiseChanged();
   }
 
@@ -154,7 +170,12 @@ public sealed class UndoStack
     CloseTransaction();
 
     // Hash the after-state instead of compressing it: only "did anything change" matters here.
-    if (before.HasSameMap(SnapshotMemento.ComputeHash(_session))) return;
+    if (before.HasSameMap(SnapshotMemento.ComputeHash(_session)))
+    {
+      // nothing to record, but recording has stopped: Undo and Redo can be used again
+      RaiseChanged();
+      return;
+    }
 
     // Recording a step discards the redo list; a saved position inside it is gone for good.
     var position = _undo.Count;

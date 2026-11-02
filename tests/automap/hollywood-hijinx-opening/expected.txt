@@ -1,0 +1,21 @@
+current: Garden, North
+
+rooms:
+Entrance to Hedge Maze
+Garden, East
+Garden, North
+Garden, South
+Garden, West
+Northeast Junction
+South Junction (start)
+Southeast Junction
+
+connections:
+Entrance to Hedge Maze [south] <-> [north] Garden, North
+Garden, East [southwest] <-> [northeast] Garden, South
+Garden, North [southeast] <-> [northwest] Garden, East
+Garden, South [northwest] <-> [southeast] Garden, West
+Garden, West [northeast] <-> [southwest] Garden, North
+Northeast Junction [west] <-> [east] Entrance to Hedge Maze
+South Junction [east] <-> [west] Southeast Junction
+Southeast Junction [north] <-> [south] Northeast Junction

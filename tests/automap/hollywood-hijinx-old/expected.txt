@@ -1,0 +1,47 @@
+current: Patio
+
+rooms:
+Cannon Emplacement
+Cliff
+Entrance to Hedge Maze
+Front Porch
+Garden, East
+Garden, North
+Garden, South
+Garden, West
+Middle of Beach Stairs
+Northeast Junction
+Northwest Junction
+Patio
+South Junction (start)
+Southeast Junction
+Southwest Junction
+Top Landing
+
+connections:
+Cannon Emplacement [north "north / down"] <-> [south "south / up"] Cliff
+Entrance to Hedge Maze [south] <-> [north] Garden, North
+Garden, East [southwest] <-> [northeast] Garden, South
+Garden, North [southeast] <-> [northwest] Garden, East
+Garden, South [northwest] <-> [southeast] Garden, West
+Garden, West [northeast] <-> [southwest] Garden, North
+Northeast Junction [east] <-> [west] Top Landing
+Northeast Junction [north] <-> [east] Cannon Emplacement
+Northeast Junction [west] <-> [east] Entrance to Hedge Maze
+Northwest Junction [east] <-> [west] Entrance to Hedge Maze
+Northwest Junction [north] <-> [west] Cannon Emplacement
+Patio [north] <-> [south] Garden, South
+Patio [west] <-> [east] Southwest Junction
+South Junction [east] <-> [south] Southeast Junction
+South Junction [north] <-> [south] Front Porch
+Southeast Junction [north] <-> [south] Northeast Junction
+Southeast Junction [west] <-> [east] Patio
+Southwest Junction [north] <-> [south] Northwest Junction
+Southwest Junction [south] <-> [west] South Junction
+Top Landing [southsouthwest "down"] <-> [northnorthwest "up"] Middle of Beach Stairs
+
+overlaps:
+Entrance to Hedge Maze is on the join Northwest Junction - Cannon Emplacement
+Front Porch is on the join Garden, East - Garden, South
+Garden, North is on the join Northwest Junction - Cannon Emplacement
+Northeast Junction is on the join Garden, East - Garden, South

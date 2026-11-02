@@ -1,0 +1,10 @@
+current: End of Road
+
+rooms:
+Debris Room
+End of Road
+Inside Building (start)
+
+connections:
+Inside Building [west] <-> [east] Debris Room "xyzzy" (dotted)
+Inside Building [west] <-> [east] End of Road

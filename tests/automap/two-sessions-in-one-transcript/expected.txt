@@ -1,0 +1,10 @@
+current: Lane
+
+rooms:
+Cottage (start)
+Garden
+Lane
+
+connections:
+Cottage [east] <-> [west] Lane
+Cottage [north] <-> [south] Garden

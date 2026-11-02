@@ -1,0 +1,12 @@
+Welcome to the test game!
+Copyright (c) 2026 A. Tester. All rights reserved.
+
+>look
+
+Cottage
+A small cottage. A door leads east.
+
+>east
+
+Lane
+A muddy lane. The cottage is to the west.

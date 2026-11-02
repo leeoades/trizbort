@@ -54,6 +54,31 @@ public class EditorSessionUndoTests
     return connection;
   }
 
+  /// <summary>
+  ///   GitHub #24: pressing Undo while automap was part-way through recording a step crashed the app with
+  ///   "Cannot undo or redo inside a transaction". Undo and redo are now unavailable, and ignored, until it closes.
+  /// </summary>
+  [Test]
+  public void UndoAndRedo_WhileAStepIsBeingRecorded_AreUnavailableAndIgnored()
+  {
+    _session.AddRoom(new Vector(0, 0));
+    var undo = Trizbort.Editor.Commands.CommandCatalogue.CreateDefault().Find("edit.undo");
+
+    using (_session.BeginTransaction("Automap: Garden"))
+    {
+      _session.Undo.IsRecording.ShouldBeTrue();
+      undo.CanExecute(_session).ShouldBeFalse();
+      Should.NotThrow(() => _session.PerformUndo());
+      Should.NotThrow(() => _session.PerformRedo());
+      RoomCount().ShouldBe(1);
+    }
+
+    _session.Undo.IsRecording.ShouldBeFalse();
+    undo.CanExecute(_session).ShouldBeTrue();
+    _session.PerformUndo();
+    RoomCount().ShouldBe(0);
+  }
+
   [Test]
   public void AddRoom_IsUndoable()
   {
@@ -234,5 +259,21 @@ public class EditorSessionUndoTests
 
     _session.Undo.CanUndo.ShouldBeFalse();
     Project.Current.IsDirty.ShouldBeFalse();
+  }
+
+  [Test]
+  public void ATransactionThatChangesNothing_StillTellsListenersRecordingStopped()
+  {
+    // PR #26 review: menus disabled Undo/Redo while recording and weren't told when it stopped
+    var raised = 0;
+    _session.Undo.Changed += (_, _) => raised++;
+
+    using (_session.BeginTransaction("Nothing"))
+    {
+      _session.Undo.IsRecording.ShouldBeTrue();
+    }
+
+    _session.Undo.IsRecording.ShouldBeFalse();
+    raised.ShouldBeGreaterThan(0);
   }
 }

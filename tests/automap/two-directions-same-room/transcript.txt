@@ -1,0 +1,23 @@
+Seaside
+An Interactive Fiction by A. Tester
+Release 1 / Serial number 261102
+
+>look
+
+Cliff Top
+A windswept cliff top. A path winds down to the shore.
+
+>down
+
+Beach
+A pebbly beach at the foot of the cliffs. A path climbs up.
+
+>up
+
+Cliff Top
+A windswept cliff top. A path winds down to the shore.
+
+>north
+
+Beach
+A pebbly beach at the foot of the cliffs. A path climbs up.

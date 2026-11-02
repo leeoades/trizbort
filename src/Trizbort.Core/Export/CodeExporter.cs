@@ -140,27 +140,40 @@ public abstract class CodeExporter : IDisposable
 
       if (sourceRoom == targetRoom && sourceCompassPoint == targetCompassPoint) continue;
 
+      // A join automap made for a command such as "xyzzy" has no direction: the side it is drawn from is only
+      // where it fits on the map, so it would be a made-up exit. Its command is on the map for the author.
+      if (!string.IsNullOrEmpty(connection.AutomapCommand)) continue;
+
       if (_mapRoomToLocation.TryGetValue(sourceRoom, out var sourceLocation) &&
           _mapRoomToLocation.TryGetValue(targetRoom, out var targetLocation))
       {
-        sourceLocation.AddExit(
-          new Exit(
-            sourceLocation,
-            targetLocation,
-            sourceCompassPoint,
-            connection.StartText,
-            connection));
+        AddExits(sourceLocation, targetLocation, sourceCompassPoint, connection.StartText, connection);
 
         if (connection.Flow == ConnectionFlow.TwoWay)
-          targetLocation.AddExit(
-            new Exit(
-              targetLocation,
-              sourceLocation,
-              targetCompassPoint,
-              connection.EndText,
-              connection));
+          AddExits(targetLocation, sourceLocation, targetCompassPoint, connection.EndText, connection);
       }
     }
+  }
+
+  /// <summary>
+  ///   The exits for one end of a connection: one for each direction when the label lists several ("north / down"),
+  ///   otherwise one, from the side it is drawn and a single up/down/in/out label.
+  /// </summary>
+  private static void AddExits(
+    Location from,
+    Location to,
+    CompassPoint compassPoint,
+    string label,
+    Connection connection)
+  {
+    var listed = DirectionWords.ListedDirections(label);
+    if (listed.Count == 0)
+    {
+      from.AddExit(new Exit(from, to, compassPoint, label, connection));
+      return;
+    }
+
+    foreach (var direction in listed) from.AddExit(new Exit(from, to, compassPoint, direction, connection));
   }
 
   private void FindRegions()

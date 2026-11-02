@@ -231,6 +231,8 @@ public class FileExportAutomapSmokeTests
             return Task.FromResult(SaveDiscardCancelResult);
         }
 
+        public Task<RecoveryChoice> ShowRecoverDiscardLaterAsync(Window? owner, string title, string message) => Task.FromResult(RecoveryChoice.DecideLater);
+
         public Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room) => Task.FromResult(true);
         public Task<bool> ShowConnectionPropertiesAsync(Window? owner, Connection connection) => Task.FromResult(true);
         public Task<bool> ShowMapLabelPropertiesAsync(Window? owner, MapLabel label) => Task.FromResult(true);
@@ -491,7 +493,7 @@ public class FileExportAutomapSmokeTests
 
         dialog.SaveDiscardCancelCalls.ShouldBe(1);
         dialog.LastPromptTitle.ShouldBe(AppInfo.ProductName);
-        dialog.LastPromptMessage.ShouldContain("current map");
+        dialog.LastPromptMessage.ShouldNotBeNull().ShouldContain("current map");
         storage.OpenCalls.ShouldBe(1);
         ReferenceEquals(Project.Current, project).ShouldBeTrue();
         Project.Current.IsDirty.ShouldBeTrue();
@@ -527,7 +529,7 @@ public class FileExportAutomapSmokeTests
 
             dialog.ConfirmationCalls.ShouldBeGreaterThan(0);
             dialog.LastPromptTitle.ShouldBe(AppInfo.ProductName);
-            dialog.LastPromptMessage.ShouldContain("modified by another program");
+            dialog.LastPromptMessage.ShouldNotBeNull().ShouldContain("modified by another program");
         }
         finally
         {

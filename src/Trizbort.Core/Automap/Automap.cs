@@ -42,7 +42,7 @@ public sealed class Automap : IAutomapController
   }
 
   private async Task<string> WaitForNewLine(
-    StreamReader reader,
+    TextReader reader,
     CancellationToken cancellationToken)
   {
     while (true)
@@ -133,7 +133,7 @@ public sealed class Automap : IAutomapController
       strippedSuffix = false;
       foreach (var decorativeSuffixMarker in _roomDecorativeSuffixMarkers)
       {
-        var indexOfMarker = line.IndexOf(decorativeSuffixMarker, StringComparison.Ordinal);
+        var indexOfMarker = FindDecorativeSuffix(line, decorativeSuffixMarker);
         if (indexOfMarker >= 0)
         {
           var suffixLength = line.Length - indexOfMarker;
@@ -194,6 +194,9 @@ public sealed class Automap : IAutomapController
     var wordCountWithAllCaps = 0;
     foreach (var word in words)
     {
+      // a dash between words, as in "Hall - Upstairs", kept because the text after it is capitalised
+      if (word == "-") continue;
+
       if (!IsRoomDescriptionWord(word))
       {
         // all words must look room description esque for this to be a room name
@@ -259,6 +262,80 @@ public sealed class Automap : IAutomapController
     return true;
   }
 
+  /// <summary>
+  ///   Where a decorative suffix starts, or -1. A comma or " - " only starts one when the text after it begins in lower
+  ///   case ("Bedroom, on the bed"); "Garden, East" or "Hall - Upstairs" are names (GitHub #25, I-041).
+  /// </summary>
+  private static int FindDecorativeSuffix(string line, string marker)
+  {
+    var lowerCaseOnly = marker == "," || marker == " - ";
+    var index = line.IndexOf(marker, StringComparison.Ordinal);
+    while (index >= 0 && lowerCaseOnly)
+    {
+      var after = line.Substring(index + marker.Length).TrimStart();
+      if (after.Length == 0 || !(char.IsUpper(after[0]) || char.IsDigit(after[0]))) break;
+      index = line.IndexOf(marker, index + marker.Length, StringComparison.Ordinal);
+    }
+
+    return index;
+  }
+
+  /// <summary>A line that only appears when a game (or its transcript) starts: Infocom/Frotz and Inform banners.</summary>
+  internal static bool IsSessionStartLine(string line)
+  {
+    if (string.IsNullOrWhiteSpace(line)) return false;
+    return System.Text.RegularExpressions.Regex.IsMatch(
+      line,
+      @"^\s*(Here begins a transcript of interaction with|Start of a transcript of)\b|\bRelease \d+ / Serial number \d+",
+      System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+  }
+
+  /// <summary>The line a transcript file starts with (Infocom/Frotz, Inform).</summary>
+  internal static bool IsTranscriptStartLine(string line)
+  {
+    if (string.IsNullOrWhiteSpace(line)) return false;
+    return System.Text.RegularExpressions.Regex.IsMatch(
+      line,
+      @"^\s*(Here begins a transcript of interaction with|Start of a transcript of)\b",
+      System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+  }
+
+  private static readonly string[] _bannerCommands = { "version", "about", "info", "credits", "help", "license", "licence" };
+
+  /// <summary>Commands that print the game's banner without starting the game again.</summary>
+  internal static bool PrintsBanner(string command)
+  {
+    if (string.IsNullOrWhiteSpace(command)) return false;
+    var firstWord = command.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries)[0];
+    return _bannerCommands.Contains(firstWord, StringComparer.OrdinalIgnoreCase);
+  }
+
+  private void StartedAgain()
+  {
+    Trace("Automap: the game started again; back in the first room.");
+    _lastMoveDirection = null;
+    _lastJourneyCommand = null;
+    _pendingStubRemoval = null;
+    _seenCommand = false;
+    var start = _startRoom != null ? _canvas.ResolveRoom(_startRoom) : null;
+    _lastKnownRoom = start;
+    if (start != null) _canvas.SelectRoom(start);
+  }
+
+  /// <summary>
+  ///   True when the paragraph after a heading reads like a game's opening banner rather than a room description
+  ///   (release, serial number, copyright, "interactive fiction", "by Author").
+  /// </summary>
+  internal static bool LooksLikeBanner(string paragraph)
+  {
+    if (string.IsNullOrWhiteSpace(paragraph)) return false;
+    return System.Text.RegularExpressions.Regex.IsMatch(
+      paragraph,
+      @"\b(release|serial number|copyright|interactive fiction|trademark|inform)\b|\(c\)|©",
+      System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant) ||
+      System.Text.RegularExpressions.Regex.IsMatch(paragraph, @"\bby [A-Z]");
+  }
+
   private bool StartsWithCapitalOrNonLetter(string word)
   {
     if (string.IsNullOrEmpty(word))
@@ -272,6 +349,8 @@ public sealed class Automap : IAutomapController
 
   private bool IsAllCaps(string word)
   {
+    // a grid reference such as "Y2" (Colossal Cave) is a name, not shouting
+    if (word.Count(char.IsLetter) == 1 && word.Any(char.IsDigit)) return false;
     return word.ToUpper() == word;
   }
 
@@ -356,6 +435,10 @@ public sealed class Automap : IAutomapController
       // ignore the description
       return true;
 
+    if (string.IsNullOrEmpty(description))
+      // a brief revisit (name only): it may be this room; a single candidate is taken as it
+      return null;
+
     if (room.MatchDescription(description))
       // the descriptions match; they're the same room
       return true;
@@ -364,8 +447,62 @@ public sealed class Automap : IAutomapController
     return null;
   }
 
+  private static Room OtherEnd(Connection connection, Room room)
+  {
+    var source = connection.GetSourceRoom();
+    var target = connection.GetTargetRoom();
+    return source == room ? target : source;
+  }
+
+  // Undo and redo replace room objects and the user may delete rooms, so look the remembered room up again by id.
+  private void RefreshLastKnownRoom()
+  {
+    if (_lastKnownRoom == null || _canvas == null) return;
+    _lastKnownRoom = _canvas.ResolveRoom(_lastKnownRoom);
+  }
+
+  private void RemovePendingStub()
+  {
+    if (_pendingStubRemoval is not { } pending) return;
+    _pendingStubRemoval = null;
+    var stubRoom = _canvas.ResolveRoom(pending.Room);
+    if (stubRoom != null) _canvas.RemoveExitStub(stubRoom, pending.Direction);
+  }
+
+  /// <summary>A tried direction that led nowhere: remove its stub as a step of its own.</summary>
+  private async Task FlushPendingStubRemoval(CancellationToken token)
+  {
+    if (_pendingStubRemoval is not { } pending) return;
+    using (await BeginBatchAsync("Automap: " + pending.Room.Name, token)) RemovePendingStub();
+  }
+
+  /// <summary>
+  ///   Opens an undo step for automap's changes, waiting while the user is part-way through a change of their own
+  ///   (a drag), so automap's work never becomes part of the user's step.
+  /// </summary>
+  private async Task<IDisposable> BeginBatchAsync(string title, CancellationToken token)
+  {
+    var waited = false;
+    while (true)
+    {
+      token.ThrowIfCancellationRequested();
+      var batch = _canvas.BeginBatch(title);
+      if (batch != null)
+      {
+        if (waited) Trace("Automap: carried on after the user's change.");
+        return batch;
+      }
+
+      if (!waited) Trace("Automap: waiting for the user to finish a change.");
+      waited = true;
+      await Task.Delay(50, token);
+    }
+  }
+
   private void NowInRoom(Room room)
   {
+    // the first room of the run, whether automap made it or found it already on the map
+    _startRoom ??= room;
     _lastKnownRoom = room;
     _canvas.SelectRoom(room);
   }
@@ -407,6 +544,14 @@ public sealed class Automap : IAutomapController
 
   private async Task ProcessTranscriptText(List<string> lines, CancellationToken token)
   {
+    // A new game session in the same transcript (Frotz appends each session to the file): after the player has
+    // typed commands, a fresh opening banner means the game started again, so the player is back in the first room.
+    // "version" (and the like) prints the release banner too without starting again, so a banner alone only counts
+    // after other commands; the transcript's own "Here begins a transcript" line always counts.
+    if (_seenCommand && (lines.Any(IsTranscriptStartLine) ||
+                         (lines.Any(IsSessionStartLine) && !PrintsBanner(_lastCommand))))
+      StartedAgain();
+
     string previousLine = null;
     for (var index = 0; index < lines.Count; ++index)
     {
@@ -418,50 +563,148 @@ public sealed class Automap : IAutomapController
         string roomDescription;
         ExtractParagraph(lines, index + 1, out roomDescription);
 
-        // work out which room the transcript is referring to here, asking them if necessary
+        // work out which room the transcript is referring to here, asking them if necessary.
+        // All prompts happen before the batch below opens: the user can't undo while a batch is open.
+        RefreshLastKnownRoom();
         var room = await FindRoomAsync(roomName, roomDescription, line, token);
         token.ThrowIfCancellationRequested();
-        if (room == null)
+        RefreshLastKnownRoom();
+        if (room != null) room = _canvas.ResolveRoom(room);
+
+        AutomapSameDirectionResult? decision = null;
+        Room otherRoom = null;
+        if (room == null && _lastKnownRoom != null && _lastMoveDirection != null)
         {
-          // new room
-          if (_lastKnownRoom != null && _lastMoveDirection != null)
+          // is there already a connection in that direction?
+          // The room at the other end of a connection already leaving this way. (The reference took the
+          // connection's target, which is this very room when the connection arrived here from elsewhere.)
+          // A one-way connection that only arrives here says nothing about where this exit leads (two-way
+          // connections off: going east to here is not a promise that west leads back), so it doesn't count.
+          otherRoom = _lastKnownRoom
+                      .GetConnections(CompassPointHelper.GetCompassDirection(_lastMoveDirection.Value))
+                      .Where(connection => !AutomapCanvas.IsCommandJoin(connection))
+                      .Where(connection => connection.Flow != ConnectionFlow.OneWay ||
+                                           connection.GetSourceRoom() == _lastKnownRoom)
+                      .Select(connection => OtherEnd(connection, _lastKnownRoom))
+                      .FirstOrDefault(room => room != null && room != _lastKnownRoom);
+          if (otherRoom != null)
           {
-            // player moved to new room
-            // is there already a connection in that direction?
-            var otherRoom = _lastKnownRoom
-                            .GetConnections(CompassPointHelper.GetCompassDirection(_lastMoveDirection.Value))
-                            .FirstOrDefault()?.GetTargetRoom();
-            if (otherRoom != null)
+            decision = await Prompts.ChooseSameDirectionAsync(otherRoom, roomName, token);
+            token.ThrowIfCancellationRequested();
+            if (decision == AutomapSameDirectionResult.Cancel)
             {
-              var decision = await Prompts.ChooseSameDirectionAsync(otherRoom, roomName, token);
+              // treat like a cancelled run
+              Stop();
               token.ThrowIfCancellationRequested();
-              switch (decision)
+              throw new OperationCanceledException(token);
+            }
+
+            // the user may have changed the map while the prompt was open
+            RefreshLastKnownRoom();
+            otherRoom = _canvas.ResolveRoom(otherRoom);
+          }
+        }
+
+        var waits = 0;
+        using (await BeginBatchAsync("Automap: " + roomName, token))
+        {
+          // the user may have undone something while automap waited for them to finish a change
+          RefreshLastKnownRoom();
+          if (room != null) room = _canvas.ResolveRoom(room);
+          otherRoom = _canvas.ResolveRoom(otherRoom);
+          RemovePendingStub();
+          if (room == null)
+          {
+            // new room
+            if (_lastKnownRoom != null && _lastMoveDirection != null)
+            {
+              // player moved to new room
+              if (otherRoom != null && decision.HasValue)
               {
-                case AutomapSameDirectionResult.KeepRoom1:
-                  room = otherRoom;
-                  break;
-                case AutomapSameDirectionResult.KeepRoom2:
-                  room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
-                  _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
-                  _canvas.RemoveRoom(otherRoom);
-                  break;
-                case AutomapSameDirectionResult.KeepBoth:
-                  room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
-                  _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
-                  break;
-                case AutomapSameDirectionResult.Cancel:
-                  // treat like a cancelled run
-                  Stop();
-                  token.ThrowIfCancellationRequested();
-                  throw new OperationCanceledException(token);
-                default:
-                  throw new ArgumentOutOfRangeException();
+                switch (decision.Value)
+                {
+                  case AutomapSameDirectionResult.KeepRoom1:
+                    room = otherRoom;
+                    break;
+                  case AutomapSameDirectionResult.KeepRoom2:
+                    room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
+                    _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    _canvas.RemoveRoom(otherRoom);
+                    break;
+                  case AutomapSameDirectionResult.KeepBoth:
+                    room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
+                    _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    break;
+                  default:
+                    throw new ArgumentOutOfRangeException();
+                }
+              }
+              else
+              {
+                // if not added already, add room to map; and join it up to the previous one
+                room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
+                _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                Trace(
+                  "{0}: {1} is now {2} from {3}.",
+                  FormatTranscriptLineForDisplay(line),
+                  roomName,
+                  _lastMoveDirection.Value.ToString().ToLower(),
+                  _lastKnownRoom.Name);
               }
             }
             else
             {
-              // if not added already, add room to map; and join it up to the previous one
-              room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
+              // The game's title: a heading before the player's first command with no description or with banner
+              // text under it, or the same title shown again later (a restart). Anything else is a room, including
+              // the first heading after "look" (GitHub #25, I-042).
+              var isTitle = !_seenCommand
+                ? string.IsNullOrWhiteSpace(roomDescription) || LooksLikeBanner(roomDescription)
+                : _gameName.Length > 0 && _gameName == roomName;
+              if (isTitle)
+              {
+                // most likely this is the game title
+                _gameName = roomName;
+                waits++;
+              }
+              else
+              {
+                // player arrived somewhere new without a compass direction: a teleport, a magic word, "enter
+                // boat"... Join it from where they were, labelled with what they typed, if we know.
+                room = _canvas.CreateRoom(_lastKnownRoom, roomName);
+                if (_lastKnownRoom == null)
+                {
+                  room.IsStartRoom = true;
+                  _startRoom ??= room;
+                  Trace("{0}: first room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
+                }
+                else if (_lastJourneyCommand != null)
+                {
+                  _canvas.ConnectByCommand(_lastKnownRoom, room, _lastJourneyCommand);
+                  Trace("{0}: {1} reached from {2} by \"{3}\".", FormatTranscriptLineForDisplay(line), roomName,
+                    _lastKnownRoom.Name, _lastJourneyCommand);
+                }
+                else
+                {
+                  Trace("{0}: teleported to new room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
+                }
+                waits++;
+              }
+            }
+
+            if (room != null)
+            {
+              DeduceExitsFromDescription(room, roomDescription);
+              NowInRoom(room);
+            }
+
+            waits++;
+          }
+          else if (room != _lastKnownRoom)
+          {
+            // player moved to existing room
+            if (_lastKnownRoom != null && _lastMoveDirection != null)
+            {
+              // player moved sensibly; ensure rooms are connected up
               _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
               Trace(
                 "{0}: {1} is now {2} from {3}.",
@@ -470,61 +713,29 @@ public sealed class Automap : IAutomapController
                 _lastMoveDirection.Value.ToString().ToLower(),
                 _lastKnownRoom.Name);
             }
+            else if (_lastKnownRoom != null && _lastJourneyCommand != null)
+            {
+              // back to a known room by something other than a direction ("xyzzy" again)
+              _canvas.ConnectByCommand(_lastKnownRoom, room, _lastJourneyCommand);
+              Trace("{0}: {1} reached from {2} by \"{3}\".", FormatTranscriptLineForDisplay(line), roomName,
+                _lastKnownRoom.Name, _lastJourneyCommand);
+            }
+
+            NowInRoom(room);
+            waits++;
           }
           else
           {
-            if (_firstRoom || _gameName == roomName)
-            {
-              // most likely this is the game title
-              _firstRoom = false;
-              _gameName = roomName;
-              await WaitForStep(token);
-            }
-            else
-            {
-              // player teleported to new room;
-              // don't connect it up, as we don't know how they got there
-              room = _canvas.CreateRoom(_lastKnownRoom, roomName);
-              if (_lastKnownRoom == null) room.IsStartRoom = true;
-              Trace("{0}: teleported to new room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
-              await WaitForStep(token);
-            }
+            // player didn't change rooms
+            Trace("{0}: still in {1}.", FormatTranscriptLineForDisplay(line), _lastKnownRoom.Name);
           }
 
-          if (room != null)
-          {
-            DeduceExitsFromDescription(room, roomDescription);
-            NowInRoom(room);
-          }
-
-          await WaitForStep(token);
-        }
-        else if (room != _lastKnownRoom)
-        {
-          // player moved to existing room
-          if (_lastKnownRoom != null && _lastMoveDirection != null)
-          {
-            // player moved sensibly; ensure rooms are connected up
-            _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
-            Trace(
-              "{0}: {1} is now {2} from {3}.",
-              FormatTranscriptLineForDisplay(line),
-              roomName,
-              _lastMoveDirection.Value.ToString().ToLower(),
-              _lastKnownRoom.Name);
-          }
-
-          NowInRoom(room);
-          await WaitForStep(token);
-        }
-        else
-        {
-          // player didn't change rooms
-          Trace("{0}: still in {1}.", FormatTranscriptLineForDisplay(line), _lastKnownRoom.Name);
+          // add this description if the room doesn't have it already
+          if (room != null) room.AddDescription(roomDescription);
         }
 
-        // add this description if the room doesn't have it already
-        if (room != null) room.AddDescription(roomDescription);
+        // single stepping waits outside the batch, so the user can undo while we wait
+        for (var wait = 0; wait < waits; wait++) await WaitForStep(token);
 
         // now forget the last movement direction we saw.
         // we'll still place any rooms we see before we see a movement direction,
@@ -532,6 +743,7 @@ public sealed class Automap : IAutomapController
         // we might end up caring if, for example, the user gives multiple commands at one prompt,
         // or they're moved to one room and then teleported to another.
         _lastMoveDirection = null;
+        _lastJourneyCommand = null;
       }
       else
       {
@@ -557,7 +769,45 @@ public sealed class Automap : IAutomapController
     return "|" + displayLine;
   }
 
-  private void ProcessPromptCommand(string command)
+  private async Task ProcessPromptCommand(string command, CancellationToken token)
+  {
+    if (!string.IsNullOrWhiteSpace(command)) _seenCommand = true;
+    _lastCommand = command;
+    RefreshLastKnownRoom();
+    await FlushPendingStubRemoval(token);
+    var title = _lastKnownRoom != null ? "Automap: " + _lastKnownRoom.Name : "Automap";
+    using (await BeginBatchAsync(title, token))
+    {
+      RefreshLastKnownRoom();
+      ProcessPromptCommandCore(command);
+    }
+
+    // a command that isn't a direction may still take the player somewhere ("xyzzy", "enter boat")
+    _lastJourneyCommand = _lastMoveDirection == null && IsPossibleJourney(command) ? command.Trim() : null;
+  }
+
+  private static readonly string[] _notJourneys =
+  {
+    "undo", "restore", "load", "restart", "quit", "q", "save", "look", "l", "again", "g", "oops", "script", "unscript",
+    "transcript"
+  };
+
+  /// <summary>
+  ///   A command that could take the player to another room without a compass direction. Not the automap commands,
+  ///   and not undo/restore/restart and the like, which move the player without a journey.
+  /// </summary>
+  private bool IsPossibleJourney(string command)
+  {
+    if (string.IsNullOrWhiteSpace(command)) return false;
+    var trimmed = command.Trim();
+    if (trimmed.StartsWith(_settings.AddRegionCommand, StringComparison.OrdinalIgnoreCase) ||
+        trimmed.StartsWith(_settings.AddObjectCommand, StringComparison.OrdinalIgnoreCase))
+      return false;
+    var firstWord = trimmed.Split(_wordSeparators, StringSplitOptions.RemoveEmptyEntries)[0];
+    return !_notJourneys.Contains(firstWord, StringComparer.OrdinalIgnoreCase);
+  }
+
+  private void ProcessPromptCommandCore(string command)
   {
     // unless we find one, this command does not involve moving in a given direction
     _lastMoveDirection = null;
@@ -664,6 +914,7 @@ public sealed class Automap : IAutomapController
         foreach (var wordForDirection in wordsForDirection)
           if (StringComparer.InvariantCultureIgnoreCase.Compare(words[1], wordForDirection) == 0)
           {
+            if (_lastKnownRoom == null) continue;
             var delta = CompassPointHelper.GetAutomapDirectionVector(CompassPointHelper.GetCompassDirection(direction));
             delta.X *= _lastKnownRoom.Width + Settings.PreferredDistanceBetweenRooms;
             delta.X += _lastKnownRoom.X;
@@ -717,9 +968,9 @@ public sealed class Automap : IAutomapController
           // aha, we know which direction it was
           _lastMoveDirection = direction;
 
-          // remove any stub exit in this direction;
-          // we'll either add a proper connection shortly, or they player can't go that way
-          _canvas.RemoveExitStub(_lastKnownRoom, _lastMoveDirection.Value);
+          // remove any stub exit in this direction: we'll either add a proper connection shortly, or the player
+          // can't go that way. Done with the response, so the move is one undo step.
+          if (_lastKnownRoom != null) _pendingStubRemoval = (_lastKnownRoom, _lastMoveDirection.Value);
 
           return;
         }
@@ -746,7 +997,18 @@ public sealed class Automap : IAutomapController
   #region Private Member Variables
 
   private Room _lastKnownRoom;
-  private bool _firstRoom = true;
+  private bool _seenCommand;
+  private string _lastJourneyCommand;
+  private Room _startRoom;
+
+  /// <summary>The last command typed at a prompt.</summary>
+  private string _lastCommand;
+
+  /// <summary>
+  ///   The exit stub to remove for the direction the player just tried. It is removed with the response, so a move
+  ///   and its stub are one undo step; if no room follows (the way is blocked) it goes at the next command.
+  /// </summary>
+  private (Room Room, MappableDirection Direction)? _pendingStubRemoval;
   private string _gameName = string.Empty;
 
   private MappableDirection? _lastMoveDirection;
@@ -853,9 +1115,13 @@ public sealed class Automap : IAutomapController
   {
     _canvas = canvas;
     _settings = settings;
-    _firstRoom = true;
+    _seenCommand = false;
+    _startRoom = null;
+    _lastCommand = null;
+    _pendingStubRemoval = null;
     _lastKnownRoom = null;
     _lastMoveDirection = null;
+    _lastJourneyCommand = null;
     _gameName = string.Empty;
     _stepNow = false;
     _dontAskAboutAmbiguities = false;
@@ -921,9 +1187,44 @@ public sealed class Automap : IAutomapController
     "Could not gain access to the transcript file. Your interpreter may be restricting access to it. Try again in a few minutes " +
     "or with scripting off in your interpreter.\n\nAutomapping halted.";
 
-  private static string UnexpectedErrorMessage(Exception ex)
+  /// <summary>
+  ///   Writes an error log (the error, the transcript, the settings and automap's reasoning for the last lines) and
+  ///   returns a plain message for the player that says where the log is. No .NET wording: it means nothing to them.
+  /// </summary>
+  private string UnexpectedErrorMessage(Exception ex)
   {
-    return "An unexpected error occurred during automapping:\n" + ex.Message + "\n\nAutomapping halted.";
+    var details = new System.Text.StringBuilder();
+    details.AppendLine("Automap error");
+    details.AppendLine("Transcript: " + _settings.FileName);
+    details.AppendLine(
+      $"Settings: verbose transcript {_settings.VerboseTranscript}, same name = same room {_settings.AssumeRoomsWithSameNameAreSameRoom}, " +
+      $"two-way connections {_settings.AssumeTwoWayConnections}, guess exits {_settings.GuessExits}, " +
+      $"continue transcript {_settings.ContinueTranscript}, single step {_settings.SingleStep}");
+    details.AppendLine("Current room: " + (_lastKnownRoom?.Name ?? "(none)"));
+    details.AppendLine();
+    details.AppendLine($"Automap's reasoning for the last {RecentTraceLines} lines (most recent last):");
+    details.AppendLine(RecentTrace());
+
+    var logPath = Trizbort.Domain.Recovery.RecoveryStore.WriteCrashLog(ex, AppVersion(), details: details.ToString());
+    var message = "Automap hit a problem it couldn't handle and has stopped. Your map is fine up to this point.";
+    return logPath == null
+      ? message + "\n\nThe details could not be saved."
+      : message + "\n\nThe details are saved in:\n" + logPath +
+        "\n\nPlease send that file (and your transcript if you can) to " + IssuesUrl + " so it can be fixed.";
+  }
+
+  private const string IssuesUrl = "https://github.com/leeoades/trizbort/issues";
+
+  private static string AppVersion()
+  {
+    var assembly = System.Reflection.Assembly.GetEntryAssembly() ?? typeof(Automap).Assembly;
+    var version = System.Reflection.CustomAttributeExtensions
+                    .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(assembly)
+                    ?.InformationalVersion
+                  ?? assembly.GetName().Version?.ToString()
+                  ?? "unknown";
+    var plus = version.IndexOf('+');
+    return (plus > 0 ? version[..plus] : version) + " (" + assembly.GetName().Name + ")";
   }
 
   /// <summary>
@@ -996,7 +1297,7 @@ public sealed class Automap : IAutomapController
           linesBetweenPrompts.Clear();
 
           // process the next command
-          ProcessPromptCommand(command);
+          await ProcessPromptCommand(command, tokenSource.Token);
 
           Trace(
             "{0}: {1}{2}",
@@ -1080,8 +1381,11 @@ public sealed class Automap : IAutomapController
       var lastline = "";
 
       if (_settings.ContinueTranscript)
-        while (!reader.EndOfStream)
-          lastline = await reader.ReadLineAsync();
+      {
+        string next;
+        while ((next = await reader.ReadLineAsync(tokenSource.Token)) != null)
+          lastline = next;
+      }
 
       // keep track of lines we read between here and the next prompt
       var linesBetweenPrompts = new List<string>();
@@ -1103,7 +1407,7 @@ public sealed class Automap : IAutomapController
         {
           // ...read a line of text
           line = await WaitForNewLine(reader, tokenSource.Token);
-          atFileEnd = reader.EndOfStream; // store this now so that it's still valid when we use it below
+          atFileEnd = await reader.IsAtEndAsync(tokenSource.Token); // store this now so that it's still valid when we use it below
         }
 
         //Trace("[" + line + "]");
@@ -1119,8 +1423,10 @@ public sealed class Automap : IAutomapController
           // we've now dealt with all lines to this point
           linesBetweenPrompts.Clear();
 
-          // handle the case where we're at the end of the file, waiting for user input
-          if (atFileEnd)
+          // handle the case where we're at the end of the file, waiting for user input: the prompt has been
+          // written but the command hasn't. When the prompt line already holds the command (">north"), keep it: an
+          // interpreter writes that before the game's reply, so the next line is the reply, not the command.
+          if (atFileEnd && string.IsNullOrWhiteSpace(command))
             // we've already read the prompt, now just read the command when the player enters it
             command = (await WaitForNewLine(reader, tokenSource.Token)).Trim();
 
@@ -1128,7 +1434,7 @@ public sealed class Automap : IAutomapController
 
           // process the next command
           tokenSource.Token.ThrowIfCancellationRequested();
-          ProcessPromptCommand(command);
+          await ProcessPromptCommand(command, tokenSource.Token);
 
           //                  if (command.ToUpper().Equals("EXITS"))
           //                  {
@@ -1200,10 +1506,40 @@ public sealed class Automap : IAutomapController
     return !string.IsNullOrEmpty(_failureReason);
   }
 
-  [Conditional("DEBUG")]
+  private const int RecentTraceLines = 200;
+  private static readonly Queue<string> _recentTrace = new();
+
+  /// <summary>
+  ///   Explains what automap made of each transcript line. Written to debug output in Debug builds, and the last
+  ///   <see cref="RecentTraceLines" /> lines are always kept for the error log, in every build.
+  /// </summary>
   private static void Trace(string format, params object[] args)
   {
-    Debug.WriteLine(format, args);
+    string text;
+    try
+    {
+      text = args == null || args.Length == 0 ? format : string.Format(format, args);
+    }
+    catch (FormatException)
+    {
+      text = format;
+    }
+
+    lock (_recentTrace)
+    {
+      _recentTrace.Enqueue(text);
+      while (_recentTrace.Count > RecentTraceLines) _recentTrace.Dequeue();
+    }
+
+    Debug.WriteLine(text);
+  }
+
+  private static string RecentTrace()
+  {
+    lock (_recentTrace)
+    {
+      return string.Join(Environment.NewLine, _recentTrace);
+    }
   }
 
   #endregion

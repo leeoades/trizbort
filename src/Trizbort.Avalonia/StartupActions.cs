@@ -23,12 +23,35 @@ public static class StartupActions
         IStorageService storage,
         IDialogService dialogs,
         Window? owner,
-        ApplicationSettings? settings = null)
+        ApplicationSettings? settings = null,
+        Trizbort.Domain.Recovery.RecoveryStore? recoveryStore = null,
+        RecoveryService? recoveryService = null)
     {
         if (options == null) return;
         // the debug commands and rendering toggles only work when started with --debug
         var session = vm.CommandService?.Session;
         if (session != null) session.DebugEnabled = options.Debug;
+        // unsaved work from an instance that did not close properly (ticket 135) comes first; once a map is
+        // recovered, reopening another file would replace it, so the reopen steps are skipped
+        var recovered = false;
+        if (recoveryStore != null && session != null)
+        {
+            recovered = await RecoveryStartup.RunAsync(session, recoveryStore, recoveryService, dialogs, owner);
+            if (recovered)
+            {
+                vm.UpdateState();
+                vm.CommandService?.ResetZoom();
+                vm.StatusText = "Recovered unsaved changes";
+            }
+        }
+
+        if (recovered)
+        {
+            // Keep the recovered map, and skip the command-line actions: they were meant for the file named on the
+            // command line, and export, save or --exit would act on (or throw away) the recovered work instead.
+            return;
+        }
+
         if (!string.IsNullOrWhiteSpace(options.FileName))
         {
             // a file named on the command line always wins over "load last project"

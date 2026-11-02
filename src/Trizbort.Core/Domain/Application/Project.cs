@@ -184,9 +184,11 @@ public class Project : IDisposable
       var saver = new MapSaver(this);
       if (saver.SaveMap(FileName))
       {
-        if (reload) InitFileWWatcher(FileName);
         IsDirty = false;
-        FileWatcher.StartWatcher();
+        // Watch the file just written. Save As and quick save change FileName first, and restarting the watcher on
+        // the previous file would miss changes to this one (and fail if that file's folder is gone).
+        if (reload || !FileWatcher.IsSetTo(FileName)) InitFileWWatcher(FileName);
+        else FileWatcher.StartWatcher();
         return true;
       }
 

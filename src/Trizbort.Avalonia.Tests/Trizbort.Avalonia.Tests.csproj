@@ -7,6 +7,8 @@
 		<AssemblyName>Trizbort.Avalonia.Tests</AssemblyName>
 		<IsPackable>false</IsPackable>
 		<Nullable>enable</Nullable>
+		<!-- System.Drawing.FontStyle/Color are the map model's plain types; tests use their constants on every OS (as Trizbort.Core.Tests). -->
+		<NoWarn>$(NoWarn);CA1416</NoWarn>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 

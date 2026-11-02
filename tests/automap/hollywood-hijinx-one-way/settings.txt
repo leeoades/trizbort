@@ -1,0 +1,3 @@
+# As Lee played it: two-way connections off.
+AssumeTwoWayConnections = false
+GuessExits = false

@@ -77,5 +77,8 @@ public class ApplicationSettings
   public bool SpecifyWrapping { get; set; }
   public bool ShowFullPathInTitleBar { get; set; }
 
+  /// <summary>Keep a recovery copy of unsaved changes in the config folder (ticket 135).</summary>
+  public bool KeepRecoveryCopy { get; set; } = true;
+
   public bool ShowTooltips => ShowDescriptionsInTooltips || ShowObjectsInTooltips;
 }

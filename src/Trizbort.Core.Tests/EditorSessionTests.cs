@@ -174,4 +174,51 @@ public class EditorSessionTests
     room.ShouldNotBeNull();
     changes.ShouldContain(c => (c & EditorChange.Model) != 0);
   }
+
+  [Test]
+  public void ShowGrid_IsTheMapsGridSetting()
+  {
+    var original = Settings.IsGridVisible;
+    try
+    {
+      Settings.IsGridVisible = true;
+      _session.ShowGrid.ShouldBeTrue();
+
+      var changes = new List<EditorChange>();
+      _session.Changed += changes.Add;
+      _session.ShowGrid = false;
+
+      Settings.IsGridVisible.ShouldBeFalse();
+      changes.ShouldContain(change => (change & EditorChange.Viewport) != 0);
+
+      Settings.IsGridVisible = true;
+      _session.ShowGrid.ShouldBeTrue();
+    }
+    finally
+    {
+      Settings.IsGridVisible = original;
+    }
+  }
+
+  [Test]
+  public void ShowGrid_IsAnUndoStepThatLeavesTheMapUnsaved()
+  {
+    var original = Settings.IsGridVisible;
+    try
+    {
+      Settings.IsGridVisible = true;
+      _project.IsDirty = false;
+
+      _session.ShowGrid = false;
+
+      _project.IsDirty.ShouldBeTrue();
+      _session.Undo.CanUndo.ShouldBeTrue();
+      _session.PerformUndo();
+      Settings.IsGridVisible.ShouldBeTrue();
+    }
+    finally
+    {
+      Settings.IsGridVisible = original;
+    }
+  }
 }

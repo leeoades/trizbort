@@ -95,10 +95,37 @@ public class AutomapRegressionTests : IsolatedProjectTests
   [TestCase("Bedroom [on the bed]", "Bedroom")]
   [TestCase("Bedroom - on the bed", "Bedroom")]
   [TestCase("Room 12", "Room 12")]
+  // GitHub #25 / I-041: a comma or dash followed by a capital is part of the name.
+  [TestCase("Garden, East", "Garden, East")]
+  [TestCase("Garden, North (by the pond)", "Garden, North")]
+  [TestCase("Hall - Upstairs", "Hall - Upstairs")]
+  [TestCase("Deck 2, Aft", "Deck 2, Aft")]
+  [TestCase("Garden, East, by the roses", "Garden, East")]
   public void RoomTitle_StripsDecorationsButKeepsRoomIdentity(string line, string expected)
   {
     CreateParser().ExtractRoomName(line, "", out var name).ShouldBeTrue();
     name.ShouldBe(expected);
+  }
+
+  [TestCase("Release 37 / Serial Number 861215", true)]
+  [TestCase("An Interactive Fiction by A. Tester", true)]
+  [TestCase("Copyright (C) 1986 Infocom, Inc. All rights reserved.", true)]
+  [TestCase("A small cottage. A door leads east.", false)]
+  [TestCase("A path winds by the river.", false)]
+  [TestCase("", false)]
+  public void LooksLikeBanner_RecognisesOpeningText(string paragraph, bool expected)
+  {
+    Parser.LooksLikeBanner(paragraph).ShouldBe(expected);
+  }
+
+  [TestCase("Here begins a transcript of interaction with", true)]
+  [TestCase("Start of a transcript of", true)]
+  [TestCase("Release 37 / Serial Number 861215", true)]
+  [TestCase("Garden, North", false)]
+  [TestCase("You release the rope.", false)]
+  public void IsSessionStartLine_RecognisesAGameStarting(string line, bool expected)
+  {
+    Parser.IsSessionStartLine(line).ShouldBe(expected);
   }
 
   [TestCase(" bedroom")]
@@ -160,6 +187,80 @@ public class AutomapRegressionTests : IsolatedProjectTests
     connection.IsDangling.ShouldBeFalse();
   }
 
+  /// <summary>
+  ///   While a game is being played, the interpreter writes the prompt and command (">east") before the game's reply.
+  ///   Automap used to read the prompt at the end of the file, assume the command was still to come, and take the
+  ///   next line (the blank line before the reply) as the command, so the move was lost and the next room placed
+  ///   unconnected. The same code was in the reference app.
+  /// </summary>
+  [Test]
+  public async Task LiveTranscript_CommandWrittenBeforeTheReply_StillConnectsTheRooms()
+  {
+    var canvas = new AutomapCanvas();
+    var parser = CreateParser();
+    var settings = SettingsFor("Example Game\n\nFirst Room\nA small room.\n\n>east\n");
+    using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+    var run = parser.Start(canvas, settings);
+    try
+    {
+      while (parser.Status != "Automapping is waiting for more text.")
+      {
+        deadline.Token.ThrowIfCancellationRequested();
+        run.IsCompleted.ShouldBeFalse();
+        await Task.Delay(10, deadline.Token);
+      }
+
+      // The game's reply arrives, then the next prompt with nothing typed yet.
+      File.AppendAllText(settings.FileName, "\nSecond Room\nAnother room.\n\n>");
+
+      while (Project.Current.Elements.OfType<Room>().Count() < 2)
+      {
+        deadline.Token.ThrowIfCancellationRequested();
+        run.IsCompleted.ShouldBeFalse();
+        await Task.Delay(10, deadline.Token);
+      }
+
+      var connection = Project.Current.Elements.OfType<Connection>().Single();
+      connection.GetSourceRoom(out var port).Name.ShouldBe("First Room");
+      port.ShouldBe(CompassPoint.East);
+      connection.GetTargetRoom().Name.ShouldBe("Second Room");
+    }
+    finally
+    {
+      parser.Stop();
+      await run.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+  }
+
+  /// <summary>
+  ///   Rooms already connected, then the player travels between them another way (here: east, then north). The
+  ///   reference re-pointed the connection by renaming the room's shared port, leaving the room with two ports for
+  ///   one direction and none for another; the next connection needing that direction crashed with "Sequence
+  ///   contains no matching element" (Lee's Hollywood Hijinx transcript).
+  /// </summary>
+  [Test]
+  public void Connect_SameRoomsInANewDirection_ListsBothDirections_AndKeepsEveryPort()
+  {
+    var canvas = new AutomapCanvas();
+    var a = canvas.CreateRoom(null, "A");
+    var b = canvas.CreateRoom(a, MappableDirection.East, "B", "B");
+    canvas.Connect(a, MappableDirection.East, b, true);
+
+    canvas.Connect(a, MappableDirection.North, b, true);
+
+    // I-053: both ways from A lead to B, so the join lists both; it stays on the side of the first
+    var connection = Project.Current.Elements.OfType<Connection>().Single();
+    connection.GetSourceRoom(out var port).ShouldBe(a);
+    port.ShouldBe(CompassPoint.East);
+    connection.StartText.ShouldBe("east / north");
+    foreach (var room in new[] { a, b })
+    {
+      var points = room.PortList.OfType<Room.CompassPort>().Select(p => p.CompassPoint).ToList();
+      points.Distinct().Count().ShouldBe(16, room.Name + " lost a port");
+      Should.NotThrow(() => room.PortAt(CompassPoint.East));
+    }
+  }
+
   [TestCase(false)]
   [TestCase(true)]
   public async Task RevisitingRooms_DoesNotDuplicateGraph_AndReturnTravelMakesConnectionTwoWay(bool twoWay)
@@ -214,7 +315,7 @@ public class AutomapRegressionTests : IsolatedProjectTests
   }
 
   [Test]
-  public async Task FailedMoveAndDisconnectedTravel_DoNotInventConnections()
+  public async Task FailedMoveDoesNotInventAConnection_TeleportIsJoinedByItsCommand()
   {
     var canvas = new AutomapCanvas();
     await CreateParser().StartCl(
@@ -222,7 +323,12 @@ public class AutomapRegressionTests : IsolatedProjectTests
       SettingsFor(
         "Example Game\n\nFirst Room\nA small room.\n\n>e\nYou cannot go that way.\n\n>look\n\nFirst Room\nA small room.\n\n>teleport\n\nDistant Room\nFar away.\n"));
     Project.Current.Elements.OfType<Room>().Select(room => room.Name).ShouldBe(new[] { "First Room", "Distant Room" });
-    Project.Current.Elements.OfType<Connection>().ShouldBeEmpty();
+    // I-052: no join for the failed "e"; the teleport is joined, one-way and labelled with the command
+    var join = Project.Current.Elements.OfType<Connection>().ShouldHaveSingleItem();
+    join.MidText.ShouldBe("teleport");
+    join.Flow.ShouldBe(ConnectionFlow.OneWay);
+    join.GetSourceRoom().Name.ShouldBe("First Room");
+    join.GetTargetRoom().Name.ShouldBe("Distant Room");
   }
 
   [Test]
@@ -482,6 +588,34 @@ public class AutomapRegressionTests : IsolatedProjectTests
     }
   }
 
+  [TestCase("version", true)]
+  [TestCase("VERSION", true)]
+  [TestCase("about", true)]
+  [TestCase("e", false)]
+  [TestCase("restart", false)]
+  [TestCase("", false)]
+  public void PrintsBanner_KnowsTheCommandsThatShowTheBanner(string command, bool expected)
+  {
+    Parser.PrintsBanner(command).ShouldBe(expected);
+  }
+
+  [Test]
+  public async Task SecondSession_StartsFromAFirstRoomThatWasAlreadyOnTheMap()
+  {
+    // PR #26 review: the first room was only remembered when automap made it
+    var cottage = ProjectRegressionTests.AddRoom("Cottage");
+    cottage.AddDescription("A small cottage.");
+    var canvas = new AutomapCanvas();
+    await CreateParser().StartCl(
+      canvas,
+      SettingsFor(
+        "Here begins a transcript of interaction with\n\nTest Game\nRelease 1 / Serial number 1\n\n>look\n\nCottage\nA small cottage.\n\n>e\n\nLane\nA muddy lane.\n\n>quit\n\nHere begins a transcript of interaction with\n\nTest Game\nRelease 1 / Serial number 1\n\n>n\n\nGarden\nA small garden.\n"));
+
+    var garden = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "Garden");
+    Project.Current.Elements.OfType<Connection>().ShouldContain(connection =>
+      connection.GetSourceRoom() == cottage && connection.GetTargetRoom() == garden);
+  }
+
   [Test]
   public async Task PeekingReader_PreservesLookaheadOrderAndEOF_ForSyncAndAsyncReads()
   {
@@ -494,6 +628,20 @@ public class AutomapRegressionTests : IsolatedProjectTests
     reader.ReadLine().ShouldBe("third");
     reader.PeekReadLine().ShouldBeNull();
     reader.ReadLine().ShouldBeNull();
+  }
+
+  [Test]
+  public async Task PeekingReader_AsyncReadsWithNothingQueued_ReadTheStream()
+  {
+    // PR #26 review: an override calling base.ReadLineAsync with nothing queued could recurse
+    using var stream = new MemoryStream(Encoding.UTF8.GetBytes("first\nsecond\nthird"));
+    using var reader = new PeekingStreamReader(stream);
+    (await reader.ReadLineAsync(CancellationToken.None)).ShouldBe("first");
+    (await reader.ReadLineAsync()).ShouldBe("second");
+    (await reader.IsAtEndAsync()).ShouldBeFalse();
+    (await reader.ReadLineAsync(CancellationToken.None)).ShouldBe("third");
+    (await reader.IsAtEndAsync()).ShouldBeTrue();
+    (await reader.ReadLineAsync(CancellationToken.None)).ShouldBeNull();
   }
 
   private static IEnumerable<TestCaseData> ReplacementCases()

@@ -198,6 +198,8 @@ public class Room : Element, ISizeable
 
   public int OldId { get; set; }
 
+  public Guid StableId { get; private set; } = Guid.NewGuid();
+
   public bool IsReference => ReferenceRoom != null;
 
   public bool IsStartRoom {
@@ -811,6 +813,9 @@ public class Room : Element, ISizeable
 
   public void Load(XmlElementReader element, Action<string, string> reportWarning)
   {
+    if (Guid.TryParse(element.Attribute("stableId").Text, out var stableId) && stableId != Guid.Empty)
+      StableId = stableId;
+
     Name = element.Attribute("name").Text;
     SubTitle = element.Attribute("subtitle").Text;
     ClearDescriptions();
@@ -909,6 +914,13 @@ public class Room : Element, ISizeable
 
   public bool MatchDescription(string description, out float matchStrength)
   {
+    // a brief revisit prints only the room name: nothing to compare
+    if (string.IsNullOrEmpty(description))
+    {
+      matchStrength = 0;
+      return false;
+    }
+
     var matchingLength = 0;
     var totalLength = 0;
     foreach (var ourDescription in _descriptions)
@@ -933,7 +945,10 @@ public class Room : Element, ISizeable
 
   public Port PortAt(CompassPoint point)
   {
-    return PortList.Cast<CompassPort>().First(port => port.CompassPoint == point);
+    return PortList.OfType<CompassPort>().FirstOrDefault(port => port.CompassPoint == point)
+           ?? throw new InvalidOperationException(
+             $"Room '{Name}' (id {Id}) has no {point} port ({PortList.Count} ports: " +
+             string.Join(", ", PortList.Select(p => p.GetType().Name + ":" + (p as CompassPort)?.CompassPoint)) + ").");
   }
 
   public void RemoveDescription(string description)
@@ -949,6 +964,7 @@ public class Room : Element, ISizeable
 
   public void Save(XmlScribe scribe)
   {
+    scribe.Attribute("stableId", StableId.ToString("D"));
     scribe.Attribute("name", Name);
     scribe.Attribute("subtitle", SubTitle);
     scribe.Attribute("x", Position.X);

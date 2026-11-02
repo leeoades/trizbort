@@ -33,6 +33,8 @@ public class Inform6Exporter : CodeExporter
 
   protected override void ExportContent(TextWriter writer)
   {
+    var exportedDoors = new HashSet<Connection>(ReferenceEqualityComparer.Instance);
+
     if (RegionsInExportOrder.Count > 0)
     {
       foreach (var region in RegionsInExportOrder) writer.WriteLine("Class {0};", region.ExportName);
@@ -51,7 +53,7 @@ public class Inform6Exporter : CodeExporter
         if (exit?.Door == null || exit.Exported) continue;
         // remember we've exported this exit
         exit.Exported = true;
-        WriteDoor(writer, location, direction, exit);
+        if (exportedDoors.Add(exit.Connection)) WriteDoor(writer, location, direction, exit);
       }
 
       // export the objects in this location

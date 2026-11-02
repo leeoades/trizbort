@@ -182,6 +182,7 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   in async Automap code; CS0219 unused `primary` in CommandCatalogue.View.cs; NUnit1033 in ShortcutMapConformanceTests;
   CS8604 in two smoke tests. Fix them and consider TreatWarningsAsErrors for src/ so agents catch them.
 - Severity: low     Flags: —
+- **Fixed** 2026-11-01: build is warning-free (0 warnings). Real problems found on the way: I-045, I-046, and unused dark-marker cache fields in RoomDrawingAdapter (removed).
 - Ticket: —
 
 ## I-022 Status bar room and connection counts stay at 0
@@ -329,4 +330,113 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
 - Severity: low     Flags: —
 - Ticket: —
 
-<!-- Next ID: I-041 -->
+## I-041 Automap merges rooms whose names contain a comma ("Garden, East", "Garden, North" become one "Garden")
+- Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
+- Everything after `,` (also `(`, `[`, `{`, ` - `) is stripped as decoration, as in "Bedroom, on the bed". Inherited from the reference. Proposal: only strip a `,` or ` - ` suffix that starts with a lower-case word. Scenario: tests/automap/comma-room-names.
+- Severity: medium     Flags: —
+- **Fixed** 2026-11-01 (GitHub #25): a `,` or ` - ` suffix is only stripped when the text after it starts in lower case ("Bedroom, on the bed"); "Garden, East" and "Hall - Upstairs" are names. Scenarios comma-room-names and hollywood-hijinx-opening.
+- Ticket: —
+
+## I-042 Automap skips the first room when the game banner has no title-like heading, even after the player types "look"
+- Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
+- The first room-like heading is always taken as the game title and that name is ignored for the whole run. Inherited from the reference. Proposal: only headings before the first command can be the title, and only when followed by banner text (Release, Serial number, Copyright, "by ..."). Scenario: tests/automap/look-before-first-room.
+- Severity: medium     Flags: —
+- **Fixed** 2026-11-01 (GitHub #25): only a heading before the first command, with no description or banner text under it (release, serial number, copyright, "by Author"), is the game title; the first heading after "look" is a room. Scenarios look-before-first-room and hollywood-hijinx-opening.
+- Ticket: —
+
+## I-043 Automap changes are one undo step per run, not per move
+- Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
+- The app opens one "Automap" transaction for the whole run, so Undo removes everything automap did since Start. Wanted (Lee): one step per move. Also: undo restores a whole-map snapshot with new objects, so the engine's remembered current room must be looked up again (by id) after undo/redo.
+- Severity: medium     Flags: —
+- **Fixed** 2026-11-01 (ticket 136, GitHub #24): one undo step per automap move ("Automap: <room>"); Undo/Redo greyed out and ignored while a step is being recorded; automap looks its current room up again by id after undo or deletion.
+- Ticket: —
+
+## I-044 Automap and manual corrections: re-running from the start merges into the open map
+- Reported: 2026-11-01 by user (playing with automap on Linux)   OS: all   Category: automap
+- With "process only new text" off, automap reads the transcript from the start and adds to the open map (rooms matched by name and description). Renamed rooms no longer match. Needs the user's examples of corrections that were lost.
+- Severity: low     Flags: —
+- Ticket: —
+## I-045 Automap loses a move when the command is written before the game's reply (live play)
+- Reported: 2026-11-01 by integrator (warning clean-up)   OS: all   Category: automap/files
+- Reading `>north` at the end of the transcript, automap assumed the command was still to come and took the next line (the blank line before the reply) as the command, so the move was lost and the next room placed unconnected. Same code in the reference. Found via warning CA2024 (EndOfStream in async code). **Fixed** 2026-11-01: only a prompt with no command waits for the next line; end-of-file is checked without blocking (PeekingStreamReader.IsAtEndAsync). Test: AutomapRegressionTests.LiveTranscript_CommandWrittenBeforeTheReply_StillConnectsTheRooms.
+- Severity: high     Flags: —
+- Ticket: —
+
+## I-046 Save to a new file keeps watching the old file, and fails if the old folder is gone
+- Reported: 2026-11-01 by integrator (warning clean-up)   OS: all   Category: automap/files
+- Save As / quick save restarted the file watcher on the previous file, so outside changes to the new file were missed, and a missing previous folder made a successful save report "Error reading the ... directory". Found via a test-order failure in HeadlessAutomapTests. **Fixed** 2026-11-01: Save watches the file it wrote; StartWatcher ignores a missing folder. Tests: SaveWatchesSavedFileTests, FileWatcherTests.
+- Severity: medium     Flags: —
+- Ticket: —
+## I-047 Automap crashed on a brief revisit (room name printed without a description)
+- Reported: 2026-11-01 by integrator (Hollywood Hijinx transcript from Lee)   OS: all   Category: automap
+- With "verbose transcript" on and "same name = same room" off, a name-only revisit passed a null description to Room.MatchDescription, which threw. Same in the reference. **Fixed** 2026-11-01: an empty description makes the room a possible match (a single candidate is taken); MatchDescription is null-safe. Scenario hollywood-hijinx-opening (last move back to "Garden, North").
+- Severity: high     Flags: —
+- Ticket: —
+
+## I-048 Automap renamed a room's port when re-pointing a connection, then crashed ("Sequence contains no matching element")
+- Reported: 2026-11-02 by user (Hollywood Hijinx transcripts)   OS: all   Category: automap
+- When rooms were already connected and the player travelled between them another way, the reference set the room's shared CompassPort.CompassPoint to the new direction, so the room had two ports for one direction and none for another: every connection on that port moved (Lee: the Patio exit jumped south with the return route), and the next connection needing the lost direction crashed in Room.PortAt. **Fixed** 2026-11-02: only that connection's end is re-docked. Test Connect_SameRoomsInANewDirection_MovesTheConnectionEnd_AndKeepsEveryPort; scenarios hollywood-hijinx-old and hollywood-hijinx-one-way.
+- Severity: high     Flags: —
+- Ticket: —
+
+## I-049 Automap asked "a room is already that way" about the room the player was standing in, or about a one-way arrival
+- Reported: 2026-11-02 by user (Hollywood Hijinx transcripts)   OS: all   Category: automap
+- It took the existing connection's target end, which is the current room when the connection arrived from elsewhere, so a winding path (South Junction east to Southeast Junction) swallowed the next room (Patio). With two-way connections off, a one-way connection that only arrives here also counted. **Fixed** 2026-11-02: the other room is the far end; one-way arrivals don't claim the exit. Scenarios hollywood-hijinx-old and hollywood-hijinx-one-way (Lee, two-way off).
+- Severity: high     Flags: —
+- Ticket: —
+
+## I-050 Automap kept the last session's room when one transcript holds several play sessions
+- Reported: 2026-11-02 by user (Hollywood Hijinx transcripts)   OS: all   Category: automap
+- Frotz appends sessions to one file; after quit the next session starts in the first room without printing it. **Fixed** 2026-11-02: a new banner ("Here begins a transcript of interaction with", "Release N / Serial number N") after commands puts automap back in the start room. Scenario two-sessions-in-one-transcript.
+- Severity: medium     Flags: —
+- Ticket: —
+## I-051 Errors showed the player a raw .NET message and left nothing to send in
+- Reported: 2026-11-02 by user ("it showed the C# error ... meaningless. It should log the error somewhere into a file so that they can send it to me")   OS: all   Category: errors
+- Automap's own error message showed ex.Message ("Sequence contains no matching element") and wrote no log; its trace was [Conditional("DEBUG")], so release builds had nothing. **Fixed** 2026-11-02: automap errors write a log to the crash-logs folder (error and stack, transcript, settings, current room, automap's reasoning for the last 200 lines, kept in every build) and show a plain message with the log's path and the issues page. The app-wide error message no longer shows the .NET message either. Future: send logs automatically (opt-in upload).
+- Severity: medium     Flags: —
+- Ticket: —
+
+## I-052 Automap didn't join rooms reached without a compass direction
+- Reported: 2026-11-02 by user ("are teleports supported? ... XYZZY and PLOUGH ... at least it can create the join and the user can add the description")   OS: all   Category: automap
+- A command that isn't a direction ("xyzzy", "plugh", "enter boat") made the new room but left it unjoined, as the legacy app did. Colossal Cave's "Y2" also wasn't taken as a room name (the all-caps rule). **Fixed** 2026-11-02: automap remembers the command and joins the rooms with a dotted one-way line labelled with it, leaving each room on the side facing the other; the same command the other way makes it two-way. undo/restore/restart/look/save and the `tb` commands are not journeys. A word of one letter plus digits counts as a name, not shouting. Scenario `tests/automap/teleport-magic-words`, unit tests in `AutomapConnectByCommandTests`.
+- Severity: low     Flags: —
+- Ticket: —
+
+## I-053 Automap: several directions to one room, and new rooms placed on joins
+- Reported: 2026-11-02 by user ("Down from the cliff to the beach and North also ... add to the label on the join"; "prioritise N,E,S,W over Up/Down"; Hollywood Hijinx: "it just added room so that it overlapped the existing join")   OS: all   Category: automap
+- A second direction between the same rooms moved the join's end to the new side, forgetting the first. A room reached by a direction whose usual place was taken was put there anyway and the map shifted apart, so with two-way joins off the Patio (west of Southeast Junction) landed on the South Junction - Southeast Junction join. **Fixed** 2026-11-02: each end of a join lists every direction travelled from it ("north / down"; the assumed way back is added at the other end when assuming two-way); the first compass direction decides the side, beating up/down/in/out, and the far room moves to that side when it is joined to nothing else and the spot is clear. Ends nobody has set off from this run (the assumed way back, or the far end of a one-way join) are still replaced, not added to, so curved paths keep working. New rooms try the usual spot, then spots up to 45 degrees either side and further out, clear of rooms and joins, before shifting the map. Scenario summaries now list overlaps; Hollywood Hijinx (old) still has 4 (5 before), from the garden paths that curve round the maze. Scenario `tests/automap/two-directions-same-room`, `AutomapJoinDirectionsTests`.
+- Severity: medium     Flags: —
+- Ticket: —
+
+## I-054 PR #26 review: recovery, automap and grid defects
+- Reported: 2026-11-02 by Copilot code review on PR #26 (11 comments), checked one by one   OS: all   Category: recovery, automap, editor
+- All 11 were real. **Fixed** 2026-11-02:
+  - Crash on another thread: the map is copied on the UI thread (2 s wait); if it can't be, the last copy stays rather than one read mid-edit.
+  - The crash message promised kept work regardless: `CrashReporter.Capture` now returns the outcome (`UnsavedWork`); the message says kept only when a copy was written, asks the player to save when changes weren't kept, and says nothing when there were none.
+  - Recovering at start-up deleted the orphan even when our own copy wasn't written (recovery off, or a failed write): the orphan now stays until our copy exists or the map is saved/discarded (`RecoveryService.DeleteWhenSafe`).
+  - After a recovery, command-line actions (export, quick save, `--exit`) ran on the recovered map: they are skipped.
+  - `version`/`about`/`credits`/`info`/`help` print the banner: a banner alone no longer means a new session after those (the "Here begins a transcript" line still always does). Before, the next room could be lost entirely (scenario `version-command-mid-game`).
+  - The "room already that way?" check counted teleport joins as exits, dropping the next room walked into (scenario `teleport-then-walk`).
+  - A first room found already on the map wasn't remembered as the start room, so a second session lost its place.
+  - Confirmed-direction memory was keyed by connection id across maps: now by map and id, forgotten when a new join takes an id (ids are reused after undo), and closed maps are dropped.
+  - `PeekingStreamReader` derived from StreamReader and called base async reads from overrides (fragile; Copilot reported recursion): it now wraps a StreamReader.
+  - A move's exit-stub removal was its own undo step before the move's: it now goes with the response, or as its own step when the move is blocked.
+  - Show Grid changed a saved map setting without an undo step or marking the map changed: it is now an undoable edit.
+- Second review round (4 comments, all real), **fixed** 2026-11-02:
+  - Undo/redo reports the rebuilt map as clean before setting its saved state, so recovery clean-up deleted a recovered copy (and our own) on undo while the map was still unsaved: clean-up now runs after the change has settled (posted to the UI thread) and re-checks.
+  - A recovered copy waiting for save/discard survived closing with Discard and was offered again: normal shutdown (service dispose) deletes it.
+  - Undo rebuilds the map as a new `Project`, so keying confirmed join ends by project lost them: they are keyed by `Project.DocumentId`, which undo/redo copy across and new/opened maps don't share.
+  - Teleport joins were recognised by look (dotted + middle label), which the user can give any connection: they are now marked by `Connection.AutomapCommand`, saved as the optional `automapCommand` attribute and kept by copy/paste.
+- Severity: high     Flags: —
+- Ticket: —
+
+- Third review round (1 new comment, 9 "previously missed"; all real), **fixed** 2026-11-02:
+  - Which directions were travelled from each end is now stored on the connection (`StartTravelled`/`EndTravelled`, optional `automapStartTravelled`/`automapEndTravelled` attributes), so undo restores it with the move and it survives save/reload. Replaces the in-memory set and `Project.DocumentId` (removed). Labels no longer count as travelled, so automap's own assumed "down" is replaced by the first real return ("south") instead of gaining a false "north"; travelling an assumed direction confirms it.
+  - Code export: labels listing several directions ("north / down") export one exit per direction (`DirectionWords`, shared with automap); teleport joins (`AutomapCommand`) are not exported as compass exits.
+  - Recovery: after recovering, the file watcher watches the original file if it exists, otherwise nothing (`InitializeWatcher(null)` now means watch nothing); turning recovery copies on copies an already-unsaved map (`RecoveryService.Reevaluate`).
+  - Automap waits for a user's open change (a drag) before opening its own undo step (`IAutomapCanvas.BeginBatch` returns null while the user is recording) and re-resolves its rooms afterwards, so cancelling the drag can't discard the move.
+  - `ResolveRoom` doesn't treat a new room that reused a deleted room's id as that room (a different object must also have the same name; renaming a room keeps the same object).
+  - The file watcher takes the full path of a relative file name, so saving as `map.trizbort` no longer fails after writing.
+  - A transaction that changes nothing still raises `UndoStack.Changed`, so Undo/Redo are re-enabled.
+
+<!-- Next ID: I-055 -->

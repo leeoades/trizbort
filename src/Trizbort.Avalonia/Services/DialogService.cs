@@ -231,6 +231,81 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         return result;
     }
 
+    public async Task<RecoveryChoice> ShowRecoverDiscardLaterAsync(Window? owner, string title, string message)
+    {
+        var result = RecoveryChoice.DecideLater;
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 480,
+            Height = 190,
+            CanResize = false,
+            WindowStartupLocation = owner != null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen,
+            ShowInTaskbar = false
+        };
+
+        var grid = new Grid
+        {
+            Margin = new Thickness(20),
+            RowDefinitions = new RowDefinitions("*,Auto")
+        };
+
+        grid.Children.Add(new TextBlock
+        {
+            Text = message,
+            TextWrapping = TextWrapping.Wrap,
+            VerticalAlignment = VerticalAlignment.Center
+        });
+
+        var buttonPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Spacing = 8
+        };
+        Grid.SetRow(buttonPanel, 1);
+
+        var recoverButton = new Button { Content = "Recover", Width = 90, IsDefault = true };
+        recoverButton.Click += (_, _) =>
+        {
+            result = RecoveryChoice.Recover;
+            dialog.Close();
+        };
+
+        var discardButton = new Button { Content = "Discard", Width = 90 };
+        discardButton.Click += (_, _) =>
+        {
+            result = RecoveryChoice.Discard;
+            dialog.Close();
+        };
+
+        var laterButton = new Button { Content = "Decide later", Width = 110, IsCancel = true };
+        laterButton.Click += (_, _) =>
+        {
+            result = RecoveryChoice.DecideLater;
+            dialog.Close();
+        };
+
+        buttonPanel.Children.Add(recoverButton);
+        buttonPanel.Children.Add(discardButton);
+        buttonPanel.Children.Add(laterButton);
+        grid.Children.Add(buttonPanel);
+
+        dialog.Content = grid;
+        DialogFocus.Prepare(dialog);
+
+        if (owner != null)
+        {
+            await dialog.ShowDialog(owner);
+        }
+        else
+        {
+            dialog.Show();
+        }
+
+        return result;
+    }
+
     public Task<bool> ShowRoomPropertiesAsync(Window? owner, Room room)
     {
         return ShowRoomPropertiesAsync(owner, room, null);

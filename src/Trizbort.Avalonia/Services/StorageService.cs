@@ -25,9 +25,11 @@ public class StorageService(IDialogService dialogService, ICommandService? comma
         Patterns = ["*.trizbort-theme", "*.json"]
     };
 
-    private static readonly FilePickerFileType TranscriptFileType = new("Text and Log Files (*.txt; *.log)")
+    // .scr is what Frotz (and other Infocom-era interpreters) call a transcript ("script") file. Upper-case
+    // patterns too: Linux file pickers match case-sensitively and DOS-era interpreters write .SCR.
+    private static readonly FilePickerFileType TranscriptFileType = new("Transcripts (*.txt; *.scr; *.log)")
     {
-        Patterns = ["*.txt", "*.log"]
+        Patterns = ["*.txt", "*.scr", "*.log", "*.TXT", "*.SCR", "*.LOG"]
     };
 
     private static Window? GetWindow(TopLevel? topLevel)

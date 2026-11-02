@@ -1,0 +1,2 @@
+# Keep the scenario about rooms and connections: no exit stubs guessed from descriptions.
+GuessExits = false

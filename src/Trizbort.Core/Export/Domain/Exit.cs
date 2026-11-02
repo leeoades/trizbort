@@ -28,6 +28,7 @@ public class Exit
     Source = source;
     Target = target;
     VisualCompassPoint = visualCompassPoint;
+    Connection = connection;
     Door = connection.Door;
     ConnectionName = connection.Name;
     ConnectionDescription = connection.Description;
@@ -41,8 +42,36 @@ public class Exit
       AssignPrimaryDirection();
   }
 
+  /// <summary>
+  ///   An exit in a direction stated by the connection's label, for labels that list several ("north / down"): each
+  ///   listed direction is an exit of its own, as good as one drawn exactly that way.
+  /// </summary>
+  public Exit(
+    Location source,
+    Location target,
+    CompassPoint visualCompassPoint,
+    MappableDirection direction,
+    Connection connection)
+  {
+    Source = source;
+    Target = target;
+    VisualCompassPoint = visualCompassPoint;
+    Connection = connection;
+    Door = connection.Door;
+    ConnectionName = connection.Name;
+    ConnectionDescription = connection.Description;
+    Conditional = connection.Style == ConnectionStyle.Dashed;
+
+    // The label states this direction, so it is as good as an exit drawn exactly that way. (It must also beat the
+    // -1 every exit scores for a direction it doesn't go, or "down" could lose to the join's own "north" exit.)
+    PrimaryDirection = direction;
+    _primaryPriority = 4;
+    if (!DirectionWords.IsCompass(direction)) SecondaryDirection = direction;
+  }
+
   //   True if this exit requires some in-game action from the player to be used; false otherwise.
   public bool Conditional { get; }
+  public Connection Connection { get; }
   public string ConnectionDescription { get; }
   public string ConnectionName { get; }
 
