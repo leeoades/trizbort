@@ -1103,54 +1103,51 @@ public class MapCanvasControl : Control
     private StreamGeometry? _cachedGridGeometry;
     private CoreRect _cachedGridBounds;
     private float _cachedGridSize;
-    private float _cachedGridZoom;
 
+    /// <summary>Grid lines every <see cref="Settings.GridSize" />, as Trizbort drew them; hidden when they would be closer than 10 pixels.</summary>
     private void DrawGrid(AvaloniaDrawingContext context, CoreRect visibleWorld)
     {
         var gridSize = Settings.GridSize;
         if (gridSize <= 0) return;
 
-        var minX = (float)(Math.Floor(visibleWorld.Left / gridSize) * gridSize);
-        var maxX = (float)(Math.Ceiling(visibleWorld.Right / gridSize) * gridSize);
-        var minY = (float)(Math.Floor(visibleWorld.Top / gridSize) * gridSize);
-        var maxY = (float)(Math.Ceiling(visibleWorld.Bottom / gridSize) * gridSize);
-
-        var gridBrush = DrawingAdapters.ToBrush(CoreColors.Grid);
-
-        if (gridSize * ZoomFactor >= 4)
+        if (gridSize * ZoomFactor > 10)
         {
+            var minX = (float)(Math.Floor(visibleWorld.Left / gridSize) * gridSize);
+            var maxX = (float)(Math.Ceiling(visibleWorld.Right / gridSize) * gridSize);
+            var minY = (float)(Math.Floor(visibleWorld.Top / gridSize) * gridSize);
+            var maxY = (float)(Math.Ceiling(visibleWorld.Bottom / gridSize) * gridSize);
             var boundsRounded = new CoreRect(minX, minY, maxX - minX, maxY - minY);
+
             if (_cachedGridGeometry == null
                 || Math.Abs(_cachedGridSize - gridSize) > 0.01f
-                || Math.Abs(_cachedGridZoom - ZoomFactor) > 0.1f
                 || !_cachedGridBounds.Equals(boundsRounded))
             {
                 var geometry = new StreamGeometry();
                 using (var ctx = geometry.Open())
                 {
-                    const double halfDot = 0.75;
                     for (var x = minX; x <= maxX; x += gridSize)
                     {
-                        for (var y = minY; y <= maxY; y += gridSize)
-                        {
-                            ctx.BeginFigure(new Point(x - halfDot, y - halfDot), true);
-                            ctx.LineTo(new Point(x + halfDot, y - halfDot));
-                            ctx.LineTo(new Point(x + halfDot, y + halfDot));
-                            ctx.LineTo(new Point(x - halfDot, y + halfDot));
-                            ctx.EndFigure(true);
-                        }
+                        ctx.BeginFigure(new Point(x, minY), false);
+                        ctx.LineTo(new Point(x, maxY));
+                        ctx.EndFigure(false);
+                    }
+
+                    for (var y = minY; y <= maxY; y += gridSize)
+                    {
+                        ctx.BeginFigure(new Point(minX, y), false);
+                        ctx.LineTo(new Point(maxX, y));
+                        ctx.EndFigure(false);
                     }
                 }
+
                 _cachedGridGeometry = geometry;
                 _cachedGridBounds = boundsRounded;
                 _cachedGridSize = gridSize;
-                _cachedGridZoom = ZoomFactor;
             }
 
-            if (_cachedGridGeometry != null)
-            {
-                context.DrawGeometry(gridBrush, null, _cachedGridGeometry);
-            }
+            // one screen pixel wide at any zoom
+            var gridPen = Settings.Color[CoreColors.Grid].ToPen(1.0 / ZoomFactor);
+            context.DrawGeometry(null, gridPen, _cachedGridGeometry);
         }
 
         if (Settings.ShowOrigin)

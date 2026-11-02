@@ -16,7 +16,6 @@ namespace Trizbort.Editor;
 /// </summary>
 public sealed partial class EditorSession : IDisposable
 {
-  private bool _showGrid = true;
   private Vector? _pointerMapPosition;
   private bool _suppressSelectionEvents;
   private bool _lastDirty;
@@ -63,13 +62,17 @@ public sealed partial class EditorSession : IDisposable
   /// <summary>Undo/redo history. Edits should run inside <see cref="Execute" /> or <see cref="BeginTransaction" />.</summary>
   public UndoStack Undo { get; }
 
+  /// <summary>
+  ///   Whether the grid is drawn. This is the map's own grid setting (<see cref="Settings.IsGridVisible" />, saved in
+  ///   the map and also set in Map Settings), as View &gt; Show Grid was in Trizbort.
+  /// </summary>
   public bool ShowGrid
   {
-    get => _showGrid;
+    get => Settings.IsGridVisible;
     set
     {
-      if (_showGrid == value) return;
-      _showGrid = value;
+      if (Settings.IsGridVisible == value) return;
+      Settings.IsGridVisible = value;
       RaiseChanged(EditorChange.Viewport);
     }
   }
