@@ -237,18 +237,19 @@ and is **not** produced any more. Pushing a tag starts a release; the prefix pic
 
 | Tag | Workflow | Runner | Assets | Changelog |
 |---|---|---|---|---|
-| `recast-vX.Y.Z[.R][-beta.N]` | `.github/workflows/release.yml` | ubuntu-latest + macos-latest | `TrizbortRecast-<v>-win-x64.zip` (`TrizbortRecast.exe`), `TrizbortRecast-<v>-linux-x64.tar.gz` (`trizbort-recast`, icon and the `packaging/linux` files), `TrizbortRecast-<v>-osx-arm64.zip` and `-osx-x64.zip` (`Trizbort Recast.app`, built and ad-hoc signed by `packaging/macos/make-app.sh`) | root `changelog.md` |
+| `recast-vX.Y.Z[.R][-beta[.N]]` | `.github/workflows/release.yml` | ubuntu-latest + macos-latest | `TrizbortRecast-<v>-win-x64.zip` (`TrizbortRecast.exe`), `TrizbortRecast-<v>-linux-x64.tar.gz` (`trizbort-recast`, icon and the `packaging/linux` files), `TrizbortRecast-<v>-osx-arm64.zip` and `-osx-x64.zip` (`Trizbort Recast.app`, built and ad-hoc signed by `packaging/macos/make-app.sh`) | root `changelog.md` |
 | `legacy-vX.Y.Z[.R][-beta.N]` | `.github/workflows/release-legacy.yml` | windows-latest | `Trizbort-<v>-win-x64.zip` (`Trizbort.exe`) | `legacy/changelog.md` |
 
 The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefixes. Both workflows:
 
-1. Check the tag format (`-beta.N` needs a positive integer; other prerelease suffixes are rejected).
+1. Check the tag format (Recast accepts `-beta` or `-beta.N`; legacy accepts `-beta.N` only.
+   `N` must be a positive integer; other prerelease suffixes are rejected).
 2. Stamp the version from the tag without committing it (Recast passes `-p:Version` /
    `-p:InformationalVersion` to `dotnet publish`; legacy rewrites `AssemblyInfo.cs`).
 3. Run the tests, then publish self-contained single-file builds (no .NET install required).
-4. Create a GitHub Release ("Trizbort Recast 0.9.0-beta.1" / "Trizbort (legacy) legacy-v2.3.2").
+4. Create a GitHub Release ("Trizbort Recast 0.10.0-beta" / "Trizbort (legacy) legacy-v2.3.2").
    Betas are marked prerelease, never replace the latest stable release, and use their changelog
-   section (heading without the prefix, e.g. `## [0.9.0-beta.1]`) as the notes; the build fails if
+   section (heading without the prefix, e.g. `## [0.10.0-beta]`) as the notes; the build fails if
    it is missing. A beta can be tagged from an unmerged branch for testing.
 
 There is no in-app update checker or update manifest. Help → Online Help (F1) links to the

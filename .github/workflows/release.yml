@@ -1,7 +1,7 @@
 name: Release (Trizbort Recast)
 
 # Releases of Trizbort Recast, the cross-platform Avalonia app.
-# Tag format: recast-vMAJOR.MINOR.PATCH[.REVISION][-beta.N], e.g. recast-v0.9.0-beta.1.
+# Tag format: recast-vMAJOR.MINOR.PATCH[.REVISION][-beta[.N]], e.g. recast-v0.10.0-beta.
 # Changelog headings in the root changelog.md omit the prefix: ## [0.9.0-beta.1]
 # Legacy WinForms hotfix releases use legacy-v* tags and release-legacy.yml.
 #
@@ -37,8 +37,8 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          if ($env:RELEASE_TAG -notmatch '^recast-v(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(-beta\.[1-9]\d*)?$') {
-            throw "Release tag must be recast-vMAJOR.MINOR.PATCH[.REVISION], optionally followed by -beta.N (N >= 1)."
+          if ($env:RELEASE_TAG -notmatch '^recast-v(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(-beta(?:\.[1-9]\d*)?)?$') {
+            throw "Release tag must be recast-vMAJOR.MINOR.PATCH[.REVISION], optionally followed by -beta or -beta.N (N >= 1)."
           }
           $prerelease = [bool]$Matches[5]
           $parts = @($Matches[1], $Matches[2], $Matches[3], $(if ($Matches[4]) { $Matches[4] } else { '0' }))

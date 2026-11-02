@@ -12,6 +12,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+## [0.10.0-beta] - 2026-11-02
+
+This beta focuses on **more reliable Automap and recovery of unsaved work**. Automap now follows magic-word
+journeys, remembers multiple directions between rooms, and records each move as its own undo step. Recovery copies
+and clearer error reports help protect your maps and diagnose problems. This is still a beta: keep backups and
+[report problems](https://github.com/leeoades/trizbort/issues).
+
 ### Added
 
 - **Automap joins teleports.** When a command that isn't a direction takes you somewhere (a magic word such as
@@ -28,7 +35,7 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
-- Automap mapped the first room of a game, including when the first command is `look`.
+- Automap now maps the first room of a game correctly, including when the first command is `look`.
 - Automap keeps room names with a comma or dash (`Garden, East`, `Hall - Upstairs`) as separate rooms.
 - Each automap move is one undo step, and Undo while automap is running no longer crashes (GitHub #24).
 - Automap no longer crashes with "Sequence contains no matching element" when it re-routes an exit.
@@ -48,6 +55,7 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - Show Grid is saved with the map, so turning it on or off now marks the map as changed and can be undone.
 - Code export includes every direction of a join labelled with several ("north / down"), and doesn't turn
   teleport joins into compass exits.
+- Inform 6 export writes each door only once, even when its join lists several directions.
 - An automap move that arrives while you are dragging waits for the drag to finish, so cancelling the drag no
   longer loses it.
 - Saving to a file name without a folder no longer reports a failure after saving, and Undo and Redo are no
@@ -55,6 +63,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - After recovering unsaved changes, Recast watches the original file for changes made elsewhere; turning
   recovery copies on now copies a map that already has unsaved changes.
 - All compiler warnings are fixed, including a broken binding in Map Settings.
+
+### Changed
+
+- The grid is drawn as lines again, and **View > Show Grid** and **Map Settings > Grid > Visible** now control
+  the same setting.
+- The New Map toolbar button uses a page icon rather than a plus sign.
 
 ## [0.9.0-beta.1] - 2026-10-31
 
