@@ -552,11 +552,7 @@ public class AutomapCanvas : IAutomapCanvas
   public Room ResolveRoom(Room room)
   {
     if (room == null) return null;
-    var candidate = CurrentProject.Elements.OfType<Room>().FirstOrDefault(element => element.Id == room.Id);
-    if (candidate == null || ReferenceEquals(candidate, room)) return candidate;
-    // Undo and redo rebuild rooms as new objects with the same id and name. A different room with the same id is a
-    // new room that took the id of one that was deleted (ids are reused), not the room automap remembers.
-    return candidate.Name == room.Name ? candidate : null;
+    return CurrentProject.Elements.OfType<Room>().FirstOrDefault(element => element.StableId == room.StableId);
   }
 
   private sealed class NoBatch : IDisposable

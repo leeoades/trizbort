@@ -198,6 +198,8 @@ public class Room : Element, ISizeable
 
   public int OldId { get; set; }
 
+  public Guid StableId { get; private set; } = Guid.NewGuid();
+
   public bool IsReference => ReferenceRoom != null;
 
   public bool IsStartRoom {
@@ -811,6 +813,9 @@ public class Room : Element, ISizeable
 
   public void Load(XmlElementReader element, Action<string, string> reportWarning)
   {
+    if (Guid.TryParse(element.Attribute("stableId").Text, out var stableId) && stableId != Guid.Empty)
+      StableId = stableId;
+
     Name = element.Attribute("name").Text;
     SubTitle = element.Attribute("subtitle").Text;
     ClearDescriptions();
@@ -959,6 +964,7 @@ public class Room : Element, ISizeable
 
   public void Save(XmlScribe scribe)
   {
+    scribe.Attribute("stableId", StableId.ToString("D"));
     scribe.Attribute("name", Name);
     scribe.Attribute("subtitle", SubTitle);
     scribe.Attribute("x", Position.X);

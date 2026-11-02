@@ -6,6 +6,7 @@ using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
+using Trizbort.Editor;
 
 namespace Trizbort.Core.Tests;
 
@@ -279,13 +280,31 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
     // PR #26 review: ids are reused, so a deleted room's id could lead automap to an unrelated room
     var canvas = new AutomapCanvas();
     var hall = AddRoomAt("Hall", 0, 0);
-    var remembered = canvas.CreateRoom(hall, MappableDirection.East, "Garden", "Garden");
+    var remembered = canvas.CreateRoom(hall, MappableDirection.East, "Cupboard", "Cupboard");
     Project.Current.Elements.Remove(remembered);
     var cupboard = AddRoomAt("Cupboard", 900, 0);
     cupboard.Id.ShouldBe(remembered.Id);
+    cupboard.Name.ShouldBe(remembered.Name);
 
     canvas.ResolveRoom(remembered).ShouldBeNull();
     canvas.ResolveRoom(hall).ShouldBeSameAs(hall);
+  }
+
+  [Test]
+  public void ResolveRoom_RestoredAfterUndoWithDifferentName_IsStillFound()
+  {
+    using var session = new EditorSession();
+    var canvas = new AutomapCanvas(null, null, session);
+    var hall = AddRoomAt("Hall", 0, 0);
+
+    session.Execute("Rename room", () => hall.Name = "Great Hall");
+    session.PerformUndo();
+
+    var restored = Project.Current.Elements.OfType<Room>().ShouldHaveSingleItem();
+    restored.ShouldNotBeSameAs(hall);
+    restored.Id.ShouldBe(hall.Id);
+    restored.Name.ShouldBe("Hall");
+    canvas.ResolveRoom(hall).ShouldBeSameAs(restored);
   }
 
   [Test]

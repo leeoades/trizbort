@@ -16,7 +16,7 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
 <trizbort version="...">
   <info>...</info>
   <map>
-    <room id="1" name="West of House" x="-3200" y="-640" w="96" h="64" description="...">
+    <room id="1" stableId="..." name="West of House" x="-3200" y="-640" w="96" h="64" description="...">
       <objects>Small window</objects>
     </room>
     <line id="3">
@@ -29,6 +29,9 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
 ```
 
 - Room geometry is stored as plain XML attributes (`x`, `y`, `w`, `h`).
+- Rooms persist a `stableId` GUID independent of their reusable numeric `id`; undo snapshots preserve it so
+  automap can resolve a room after snapshot restoration, even if it was renamed. Older maps without this
+  attribute receive a new identity when loaded.
 - A connection is a `<line>` with two (or more) `<dock>` children identifying the room ID and
   compass port it attaches to — this is the on-disk form of the in-memory `Vertex.Port.Owner`
   relationship described in [`02-domain-model.md`](02-domain-model.md).
