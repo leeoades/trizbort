@@ -150,6 +150,7 @@ public class CopyController
     newConnection.EndText = connection.EndText;
     newConnection.Flow = connection.Flow;
     newConnection.MidText = connection.MidText;
+    newConnection.AutomapCommand = connection.AutomapCommand;
     newConnection.Name = connection.Name;
     newConnection.StartText = connection.StartText;
     newConnection.Style = connection.Style;
@@ -251,6 +252,7 @@ public class CopyController
       EndText = conn.EndText,
       Flow = conn.Flow,
       MidText = conn.MidText,
+      AutomapCommand = conn.AutomapCommand,
       Name = conn.Name,
       StartText = conn.StartText,
       Style = conn.Style,
@@ -337,6 +339,7 @@ public class CopyController
     public string Description { get; set; }
     public Door Door { get; set; }
     public string EndText { get; set; }
+    public string AutomapCommand { get; set; }
     public ConnectionFlow Flow { get; set; }
     public string MidText { get; set; }
     public string Name { get; set; }

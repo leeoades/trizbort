@@ -422,6 +422,11 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   - `PeekingStreamReader` derived from StreamReader and called base async reads from overrides (fragile; Copilot reported recursion): it now wraps a StreamReader.
   - A move's exit-stub removal was its own undo step before the move's: it now goes with the response, or as its own step when the move is blocked.
   - Show Grid changed a saved map setting without an undo step or marking the map changed: it is now an undoable edit.
+- Second review round (4 comments, all real), **fixed** 2026-11-02:
+  - Undo/redo reports the rebuilt map as clean before setting its saved state, so recovery clean-up deleted a recovered copy (and our own) on undo while the map was still unsaved: clean-up now runs after the change has settled (posted to the UI thread) and re-checks.
+  - A recovered copy waiting for save/discard survived closing with Discard and was offered again: normal shutdown (service dispose) deletes it.
+  - Undo rebuilds the map as a new `Project`, so keying confirmed join ends by project lost them: they are keyed by `Project.DocumentId`, which undo/redo copy across and new/opened maps don't share.
+  - Teleport joins were recognised by look (dotted + middle label), which the user can give any connection: they are now marked by `Connection.AutomapCommand`, saved as the optional `automapCommand` attribute and kept by copy/paste.
 - Severity: high     Flags: —
 - Ticket: —
 

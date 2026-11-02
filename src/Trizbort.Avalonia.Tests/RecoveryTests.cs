@@ -92,7 +92,7 @@ public class RecoveryTests
 
         _session!.MarkSaved();
         Project.Current.IsDirty.ShouldBeFalse();
-        _store!.HasCopy.ShouldBeFalse();
+        WaitFor(() => !_store!.HasCopy).ShouldBeTrue();
     }
 
     [AvaloniaTest]
@@ -104,7 +104,7 @@ public class RecoveryTests
         _session!.PerformUndo();
 
         Project.Current.IsDirty.ShouldBeFalse();
-        _store!.HasCopy.ShouldBeFalse();
+        WaitFor(() => !_store!.HasCopy).ShouldBeTrue();
     }
 
     [AvaloniaTest]
@@ -125,7 +125,7 @@ public class RecoveryTests
 
         _session!.NewProject();
 
-        _store!.HasCopy.ShouldBeFalse();
+        WaitFor(() => !_store!.HasCopy).ShouldBeTrue();
     }
 
     [AvaloniaTest]
@@ -280,6 +280,39 @@ public class RecoveryTests
 
         Project.Current.IsDirty = false; // saved
         _session!.CheckDirty();
+
+        WaitFor(() => !File.Exists(copy)).ShouldBeTrue();
+    }
+
+    [AvaloniaTest]
+    public async Task Startup_Recover_WithRecoveryOff_EditThenUndo_KeepsTheCopy()
+    {
+        // PR #26 review: undo rebuilds the map and reports it clean for a moment, which deleted the only copy
+        _enabled = false;
+        var (_, copy) = MakeOrphan("Lost Map", "/maps/lost.trizbort");
+        var dialogs = Dialogs(RecoveryChoice.Recover);
+        (await RecoveryStartup.RunAsync(_session!, _store!, _service, (IDialogService)(object)dialogs, null))
+            .ShouldBeTrue();
+
+        AddRoom("Another room");
+        _session!.PerformUndo();
+        Dispatcher.UIThread.RunJobs();
+
+        Project.Current.IsDirty.ShouldBeTrue();
+        File.Exists(copy).ShouldBeTrue();
+    }
+
+    [AvaloniaTest]
+    public async Task Startup_Recover_WithRecoveryOff_ClosingNormally_DeletesTheCopy()
+    {
+        // PR #26 review: closing after choosing Discard left the copy to be offered again
+        _enabled = false;
+        var (_, copy) = MakeOrphan("Lost Map", "/maps/lost.trizbort");
+        var dialogs = Dialogs(RecoveryChoice.Recover);
+        (await RecoveryStartup.RunAsync(_session!, _store!, _service, (IDialogService)(object)dialogs, null))
+            .ShouldBeTrue();
+
+        _service!.Dispose();
 
         File.Exists(copy).ShouldBeFalse();
     }

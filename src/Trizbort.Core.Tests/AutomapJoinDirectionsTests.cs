@@ -151,6 +151,74 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
   }
 
   [Test]
+  public void AssumedWayBack_IsStillReplacedAfterUndoingAnotherEdit()
+  {
+    // PR #26 review: undo rebuilds the map as a new Project, which used to forget which ends were travelled
+    using var session = new Trizbort.Editor.EditorSession();
+    var canvas = new AutomapCanvas(null, null, session);
+    var junction = AddRoomAt("South Junction", 0, 0);
+    var east = canvas.CreateRoom(junction, MappableDirection.East, "Southeast Junction", "Southeast Junction");
+    session.Execute("Automap", () => canvas.Connect(junction, MappableDirection.East, east, true));
+    session.Execute("Add room", () => AddRoomAt("Elsewhere", 0, 600));
+    session.PerformUndo();
+
+    canvas.Connect(canvas.ResolveRoom(east), MappableDirection.South, canvas.ResolveRoom(junction), true);
+
+    var join = TheJoin();
+    EndSide(join).ShouldBe(CompassPoint.South);
+    join.StartText.ShouldBeNullOrEmpty();
+    join.EndText.ShouldBeNullOrEmpty();
+  }
+
+  [Test]
+  public void DottedLabelledConnection_IsStillAnOrdinaryExit()
+  {
+    // PR #26 review: a user's dotted connection labelled "requires key" was mistaken for a teleport join
+    var canvas = new AutomapCanvas();
+    var hall = AddRoomAt("Hall", 0, 0);
+    var vault = canvas.CreateRoom(hall, MappableDirection.East, "Vault", "Vault");
+    canvas.Connect(hall, MappableDirection.East, vault, true);
+    TheJoin().Style = ConnectionStyle.Dashed;
+    TheJoin().MidText = "requires key";
+
+    canvas.Connect(hall, MappableDirection.East, vault, true);
+
+    TheJoin().MidText.ShouldBe("requires key");
+  }
+
+  [Test]
+  public void TeleportJoin_IsMarkedAndTheMarkIsSaved()
+  {
+    var canvas = new AutomapCanvas();
+    var building = AddRoomAt("Inside Building", 0, 0);
+    var debris = AddRoomAt("Debris Room", 400, 0);
+    canvas.ConnectByCommand(building, debris, "xyzzy");
+    TheJoin().AutomapCommand.ShouldBe("xyzzy");
+
+    var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "teleport-" + System.Guid.NewGuid().ToString("N") + ".trizbort");
+    try
+    {
+      new MapSaver(Project.Current).SaveMap(path).ShouldBeTrue();
+      using var reloaded = new Project();
+      var previous = Project.Current;
+      Project.Current = reloaded;
+      try
+      {
+        new MapLoader(reloaded).LoadMap(path).ShouldBeTrue();
+        reloaded.Elements.OfType<Connection>().ShouldHaveSingleItem().AutomapCommand.ShouldBe("xyzzy");
+      }
+      finally
+      {
+        Project.Current = previous;
+      }
+    }
+    finally
+    {
+      System.IO.File.Delete(path);
+    }
+  }
+
+  [Test]
   public void UpOnItsOwn_StillLabelledUpAndDown()
   {
     var canvas = new AutomapCanvas();

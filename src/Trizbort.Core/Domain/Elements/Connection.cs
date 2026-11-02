@@ -143,6 +143,23 @@ public class Connection : Element
 
   public override bool HasDialog => true;
 
+  /// <summary>
+  ///   The command that took the player along this connection when automap made it as a teleport join ("xyzzy");
+  ///   empty for every other connection. Kept apart from <see cref="MidText" /> and <see cref="Style" />, which the
+  ///   user can edit. Saved as the optional <c>automapCommand</c> attribute, which older Trizbort versions ignore.
+  /// </summary>
+  public string AutomapCommand {
+    get { return _automapCommand; }
+    set {
+      value = value ?? string.Empty;
+      if (_automapCommand == value) return;
+      _automapCommand = value;
+      RaiseChanged();
+    }
+  }
+
+  private string _automapCommand = string.Empty;
+
   public string MidText {
     get { return _midText; }
     set {
@@ -484,6 +501,7 @@ public class Connection : Element
     Description = element.Attribute("description").Text;
     StartText = element.Attribute("startText").Text != "" ? element.Attribute("startText").Text : element.Attribute("start").Text;
     MidText = element.Attribute("midText").Text != "" ? element.Attribute("midText").Text : element.Attribute("mid").Text;
+    AutomapCommand = element.Attribute("automapCommand").Text;
     EndText = element.Attribute("endText").Text != "" ? element.Attribute("endText").Text : element.Attribute("end").Text;
     if (element.Attribute("color").Text != "")
       ConnectionColor = ColorTranslator.FromHtml(element.Attribute("color").Text);
@@ -581,6 +599,8 @@ public class Connection : Element
       scribe.Attribute("startText", StartText);
     if (!string.IsNullOrEmpty(MidText))
       scribe.Attribute("midText", MidText);
+    if (!string.IsNullOrEmpty(AutomapCommand))
+      scribe.Attribute("automapCommand", AutomapCommand);
     if (!string.IsNullOrEmpty(EndText))
       scribe.Attribute("endText", EndText);
 

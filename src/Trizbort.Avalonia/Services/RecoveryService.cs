@@ -65,6 +65,24 @@ public sealed class RecoveryService : IDisposable
         {
             var project = Project.Current;
             if (project != null && project.IsDirty && IsEnabled()) Schedule();
+            // Undo and redo rebuild the map and report it, still marked clean, before setting whether it is saved.
+            // Decide once that has finished, so a map that is still unsaved never loses its copies.
+            else Dispatcher.UIThread.Post(Settle);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Recovery change handling failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>Acts on the map's final state after a change: write a copy later if it is unsaved, else clean up.</summary>
+    private void Settle()
+    {
+        try
+        {
+            if (_disposed) return;
+            var project = Project.Current;
+            if (project != null && project.IsDirty && IsEnabled()) Schedule();
             else Cleanup();
         }
         catch (Exception ex)
@@ -168,6 +186,9 @@ public sealed class RecoveryService : IDisposable
         }
 
         _session.Changed -= OnSessionChanged;
+        // Closing normally means the player has saved the map or chosen to discard it, so a recovered copy that was
+        // waiting for that goes too.
+        DeleteAdopted();
         Store.Dispose();
     }
 }

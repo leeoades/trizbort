@@ -36,6 +36,9 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
   `curveThreeQuarter` with invariant-culture `"x,y"` values. They are deliberately attributes,
   not child elements, because `EndLoad` matches child elements to `VertexList` by position and
   older Trizbort versions ignore unknown attributes (they simply draw the line straight).
+- A `<line>` that automap made for a move by command rather than direction (a teleport such as
+  `xyzzy`) carries `automapCommand="xyzzy"` (`Connection.AutomapCommand`). Automap uses it to tell
+  these joins from ordinary exits, whatever their style or labels; older versions ignore it.
 - `<settings>` holds per-map drawing/document settings (fonts, colors, grid, validation rules)
   — separate again from the two settings systems below.
 - Labels use `<label id="..." text="..." x="..." y="..." w="..." h="..." shape="..."

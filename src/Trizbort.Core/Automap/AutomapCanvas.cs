@@ -153,27 +153,28 @@ public class AutomapCanvas : IAutomapCanvas
   }
 
   /// <summary>
-  ///   Ends of joins the player has set off from: (map, connection id, start end?). Keyed by id so the knowledge
-  ///   survives undo, which replaces the connection objects, and by map so another map's ids don't match. An id is
-  ///   forgotten when a new join is made with it (ids are handed out again after undo).
+  ///   Ends of joins the player has set off from: (document, connection id, start end?). Keyed by the document's
+  ///   <see cref="Project.DocumentId" /> and the connection's id so the knowledge survives undo and redo, which
+  ///   rebuild the map, while another map's ids don't match. An id is forgotten when a new join is made with it (ids
+  ///   are handed out again after undo).
   /// </summary>
-  private readonly HashSet<(Project Map, int Id, bool AtStart)> _travelledEnds = new();
+  private readonly HashSet<(Guid Document, int Id, bool AtStart)> _travelledEnds = new();
 
   private void MarkTravelled(Connection connection, bool atStart)
   {
-    // only the open map matters; don't keep closed maps alive
-    var map = CurrentProject;
-    _travelledEnds.RemoveWhere(end => !ReferenceEquals(end.Map, map));
-    _travelledEnds.Add((map, connection.Id, atStart));
+    // only the open document matters
+    var document = CurrentProject.DocumentId;
+    _travelledEnds.RemoveWhere(end => end.Document != document);
+    _travelledEnds.Add((document, connection.Id, atStart));
   }
 
   private bool WasTravelled(Connection connection, bool atStart) =>
-    _travelledEnds.Contains((CurrentProject, connection.Id, atStart));
+    _travelledEnds.Contains((CurrentProject.DocumentId, connection.Id, atStart));
 
   private void ForgetTravelled(Connection connection)
   {
-    _travelledEnds.Remove((CurrentProject, connection.Id, true));
-    _travelledEnds.Remove((CurrentProject, connection.Id, false));
+    _travelledEnds.Remove((CurrentProject.DocumentId, connection.Id, true));
+    _travelledEnds.Remove((CurrentProject.DocumentId, connection.Id, false));
   }
 
   /// <summary>
@@ -255,9 +256,11 @@ public class AutomapCanvas : IAutomapCanvas
     return true;
   }
 
-  /// <summary>A dotted join labelled in the middle: one made by <see cref="ConnectByCommand" /> ("xyzzy").</summary>
-  internal static bool IsCommandJoin(Connection connection) =>
-    connection.Style == ConnectionStyle.Dashed && !string.IsNullOrEmpty(connection.MidText);
+  /// <summary>
+  ///   A join made by <see cref="ConnectByCommand" /> ("xyzzy"). Marked by <see cref="Connection.AutomapCommand" />,
+  ///   not by its look: the user can give any connection a dotted line and a middle label.
+  /// </summary>
+  internal static bool IsCommandJoin(Connection connection) => !string.IsNullOrEmpty(connection.AutomapCommand);
 
   private static CompassPoint EndPoint(Connection connection, bool atStart)
   {
@@ -408,7 +411,7 @@ public class AutomapCanvas : IAutomapCanvas
 
     foreach (var connection in CurrentProject.Elements.OfType<Connection>())
     {
-      if (!string.Equals(connection.MidText, command, StringComparison.OrdinalIgnoreCase)) continue;
+      if (!string.Equals(connection.AutomapCommand, command, StringComparison.OrdinalIgnoreCase)) continue;
       var from = connection.GetSourceRoom();
       var to = connection.GetTargetRoom();
       if (from == source && to == target) return;
@@ -424,6 +427,7 @@ public class AutomapCanvas : IAutomapCanvas
     added.Style = ConnectionStyle.Dashed;
     added.Flow = ConnectionFlow.OneWay;
     added.MidText = command;
+    added.AutomapCommand = command;
   }
 
   /// <summary>The side of <paramref name="from" /> (one of the eight main points) that faces <paramref name="to" />.</summary>

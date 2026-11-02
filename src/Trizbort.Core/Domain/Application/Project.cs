@@ -30,6 +30,12 @@ public class Project : IDisposable
 
   public Element ActiveSelectedElement { get; set; }
 
+  /// <summary>
+  ///   Identifies the open document. A new or opened map gets a new one; undo and redo, which rebuild the map as a
+  ///   new <see cref="Project" />, keep it.
+  /// </summary>
+  public Guid DocumentId { get; private set; } = Guid.NewGuid();
+
   public string Author { get; set; }
 
   public List<Element> GetSelectedElements()
@@ -148,6 +154,7 @@ public class Project : IDisposable
   /// </summary>
   internal void CopyTransientStateFrom(Project other)
   {
+    DocumentId = other.DocumentId;
     FileName = other.FileName;
     MustHaveDescription = other.MustHaveDescription;
     MustHaveNoDanglingConnectors = other.MustHaveNoDanglingConnectors;
