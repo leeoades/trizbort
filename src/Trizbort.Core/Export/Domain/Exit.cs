@@ -28,6 +28,7 @@ public class Exit
     Source = source;
     Target = target;
     VisualCompassPoint = visualCompassPoint;
+    Connection = connection;
     Door = connection.Door;
     ConnectionName = connection.Name;
     ConnectionDescription = connection.Description;
@@ -55,6 +56,7 @@ public class Exit
     Source = source;
     Target = target;
     VisualCompassPoint = visualCompassPoint;
+    Connection = connection;
     Door = connection.Door;
     ConnectionName = connection.Name;
     ConnectionDescription = connection.Description;
@@ -69,6 +71,7 @@ public class Exit
 
   //   True if this exit requires some in-game action from the player to be used; false otherwise.
   public bool Conditional { get; }
+  public Connection Connection { get; }
   public string ConnectionDescription { get; }
   public string ConnectionName { get; }
 

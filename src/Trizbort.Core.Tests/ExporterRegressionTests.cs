@@ -207,6 +207,29 @@ public class ExporterRegressionTests : IsolatedProjectTests
   }
 
   [Test]
+  public void Inform6Export_DeclaresOneDoorForEveryListedDirection()
+  {
+    var cliff = ProjectRegressionTests.AddRoom("Cliff");
+    var beach = ProjectRegressionTests.AddRoom("Beach");
+    var door = Join(cliff, CompassPoint.North, beach, CompassPoint.South);
+    door.Flow = ConnectionFlow.TwoWay;
+    door.StartText = "north / down";
+    door.EndText = "south / up";
+    door.Name = "Gate";
+    door.Description = "A gate";
+    door.Door = new Door();
+
+    using var exporter = new Inform6Exporter();
+    var output = exporter.Export();
+
+    output.Split('\n').Count(line => line.StartsWith("Object Gate ", StringComparison.Ordinal)).ShouldBe(1);
+    output.ShouldContain("n_to Gate,");
+    output.ShouldContain("d_to Gate,");
+    output.ShouldContain("s_to Gate,");
+    output.ShouldContain("u_to Gate,");
+  }
+
+  [Test]
   public void Preparation_ASingleUpLabelStillMeansUp()
   {
     var hall = ProjectRegressionTests.AddRoom("Hall");
