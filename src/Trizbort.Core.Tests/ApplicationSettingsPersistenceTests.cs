@@ -13,7 +13,6 @@ public class ApplicationSettingsPersistenceTests
   {
     var settings = new ApplicationSettings();
     settings.ApplyStyleToNewRooms.ShouldBeFalse();
-    settings.DoubleClickToAddRoom.ShouldBeFalse();
   }
 
   [Test]
@@ -21,16 +20,25 @@ public class ApplicationSettingsPersistenceTests
   {
     var settings = JsonConvert.DeserializeObject<ApplicationSettings>("{}");
     settings.ApplyStyleToNewRooms.ShouldBeFalse();
-    settings.DoubleClickToAddRoom.ShouldBeFalse();
   }
 
   [Test]
   public void MapPreferences_RoundTripThroughJson()
   {
-    var settings = new ApplicationSettings { ApplyStyleToNewRooms = true, DoubleClickToAddRoom = true };
+    var settings = new ApplicationSettings { ApplyStyleToNewRooms = true };
     var json = JsonConvert.SerializeObject(settings, Formatting.Indented);
     var loaded = JsonConvert.DeserializeObject<ApplicationSettings>(json);
     loaded.ApplyStyleToNewRooms.ShouldBeTrue();
-    loaded.DoubleClickToAddRoom.ShouldBeTrue();
+  }
+
+  [TestCase(false)]
+  [TestCase(true)]
+  public void RemovedDoubleClickPreference_IsIgnoredAndNotSaved(bool enabled)
+  {
+    var json = "{\"DoubleClickToAddRoom\":" + (enabled ? "true" : "false") + ",\"ApplyStyleToNewRooms\":true}";
+    var settings = JsonConvert.DeserializeObject<ApplicationSettings>(json);
+
+    settings.ApplyStyleToNewRooms.ShouldBeTrue();
+    JsonConvert.SerializeObject(settings).ShouldNotContain("DoubleClickToAddRoom");
   }
 }

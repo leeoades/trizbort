@@ -36,9 +36,6 @@ public partial class AppSettingsViewModel : ViewModelBase
     private bool _applyStyleToNewRooms;
 
     [ObservableProperty]
-    private bool _doubleClickToAddRoom;
-
-    [ObservableProperty]
     private int _portAdjustDetail;
 
     [ObservableProperty]
@@ -134,7 +131,6 @@ public partial class AppSettingsViewModel : ViewModelBase
         GenHorizontalMargin = settings.GenHorizontalMargin;
         GenVerticalMargin = settings.GenVerticalMargin;
         ApplyStyleToNewRooms = settings.ApplyStyleToNewRooms;
-        DoubleClickToAddRoom = settings.DoubleClickToAddRoom;
         PortAdjustDetail = settings.PortAdjustDetail;
         SaveAt100 = settings.SaveAt100;
         SaveToPdf = settings.SaveToPDF;
@@ -170,7 +166,6 @@ public partial class AppSettingsViewModel : ViewModelBase
         settings.GenHorizontalMargin = GenHorizontalMargin;
         settings.GenVerticalMargin = GenVerticalMargin;
         settings.ApplyStyleToNewRooms = ApplyStyleToNewRooms;
-        settings.DoubleClickToAddRoom = DoubleClickToAddRoom;
         settings.PortAdjustDetail = PortAdjustDetail;
         settings.SaveAt100 = SaveAt100;
         settings.SaveToPDF = SaveToPdf;

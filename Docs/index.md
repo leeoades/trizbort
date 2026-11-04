@@ -128,7 +128,7 @@ Trizbort 2 is a modernised fork of Trizbort 1.7. Your existing maps open as befo
 
 - **Map labels** - free-standing text annotations with a choice of shapes, outlines, backgrounds and colours, which can be connected to rooms. See [Map Labels](#help_labels).
 - **Curved connections** - drag a selected connection's midpoint handle to bend it into a smooth curve. See [Curved Connections](#help_conn_curves).
-- **Double click to add room** - an optional preference which creates a room when you double-click empty canvas. See [Map Preferences](#map_preferences).
+- **Double click to add room** - double-clicking empty canvas always creates a room.
 - **Apply style to new rooms** - an optional preference which makes new rooms copy the shape, borders, colours, region and lighting of the last selected room. See [Styling New Rooms](#help_rooms_stylenew).
 - **Smarter Room Properties focus** - the dialog opens where you are most likely to type next. See [Editing Rooms](#help_rooms_edit).
 - **.NET 10** - Trizbort now runs on .NET 10 (LTS) and is distributed as a self-contained download.
@@ -221,7 +221,7 @@ Older Trizbort versions ignore labels and lines connected to them. Opening the m
 
 You can create a room by moving the mouse over where you'd like the room to appear on the canvas and pressing `R`. You can also choose `Edit->Add Room` to add a room in the center of the canvas. You can also create a room between two connected rooms by highlighting the line and pressing `R`. The room will be centered on where your mouse is hovering, but if it isn't quite right, you can move it with the arrows or resize it with `control-alt-arrows`.
 
-If you turn on **Double click to add room** in [Map Preferences](#map_preferences), you can also create a room by double-clicking an empty part of the canvas. Double-clicking a room, label or connection still opens its properties.
+You can also create a room by double-clicking an empty part of the canvas. This is always enabled. Double-clicking a room, label or connection still opens its properties.
 
 **WARNING:** your graphics card may cause the screen to rotate if you use control-alt-arrows. There are options to reset this, and you can do so manually, but it is a shock if it happens. You can Google how to disable hotkeys for your graphics card.
 
@@ -827,10 +827,11 @@ By default, the application will save to PDF and PNG on Smart Save. You can spec
 
 #### Map Preferences (Trizbort 2)
 
-The **Preferences** group on the **Map** tab of the App Settings dialog contains two options. Both are off by default.
+The **Preferences** group on the **Map** tab of the App Settings dialog contains the following option, which is off by default.
 
 - **Apply style to new rooms** - new rooms copy the style of the last selected room. See [Styling New Rooms](#help_rooms_stylenew).
-- **Double click to add room** - double-clicking an empty part of the canvas creates a room there. Double-clicking a room, label or connection still opens its properties.
+
+Double-clicking an empty part of the canvas always creates a room there; it is not an App Settings option. Double-clicking a room, label or connection still opens its properties.
 
 <a name="help_automap"></a>
 

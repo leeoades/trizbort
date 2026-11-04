@@ -160,7 +160,7 @@ public sealed class CanvasInteraction : IDisposable
       }
 
       // Legacy IsEmptySpace: no handle, port, waypoint or element under the pointer.
-      if (ApplicationSettingsController.AppSettings.DoubleClickToAddRoom && IsEmptySpace(world))
+      if (IsEmptySpace(world))
       {
         _gestureButton = PointerButton.None;
         _session.AddRoom(world);

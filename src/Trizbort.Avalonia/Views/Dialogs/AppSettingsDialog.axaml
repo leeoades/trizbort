@@ -133,9 +133,6 @@
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <CheckBox Content="Apply _style to new rooms" IsChecked="{Binding ApplyStyleToNewRooms}" ToolTip.Tip="If this is checked, new rooms adopt the style of the last selected room" />
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <CheckBox Content="Double _click to add room" IsChecked="{Binding DoubleClickToAddRoom}" ToolTip.Tip="If this is checked, double clicking on an empty space on the map creates a new room" />
-                            </StackPanel>
                         </StackPanel>
                     </HeaderedContentControl>
                 </StackPanel>
