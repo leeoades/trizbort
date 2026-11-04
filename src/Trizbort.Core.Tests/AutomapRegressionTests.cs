@@ -34,10 +34,14 @@ public class AutomapRegressionTests : IsolatedProjectTests
   private sealed class DelegatePrompts : IEditorPrompts
   {
     private readonly Func<Room, string, AutomapSameDirectionResult> _sameDirection;
+    private readonly Func<string, IReadOnlyList<Room>, RoomDisambiguation> _disambiguate;
 
-    public DelegatePrompts(Func<Room, string, AutomapSameDirectionResult> sameDirection)
+    public DelegatePrompts(
+      Func<Room, string, AutomapSameDirectionResult> sameDirection,
+      Func<string, IReadOnlyList<Room>, RoomDisambiguation> disambiguate = null)
     {
       _sameDirection = sameDirection;
+      _disambiguate = disambiguate;
     }
 
     public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
@@ -54,6 +58,8 @@ public class AutomapRegressionTests : IsolatedProjectTests
       IReadOnlyList<Room> candidates,
       CancellationToken token = default)
     {
+      if (_disambiguate != null)
+        return Task.FromResult(_disambiguate(roomDescription, candidates));
       throw new AssertionException("Unexpected disambiguation");
     }
   }
@@ -101,6 +107,18 @@ public class AutomapRegressionTests : IsolatedProjectTests
   [TestCase("Hall - Upstairs", "Hall - Upstairs")]
   [TestCase("Deck 2, Aft", "Deck 2, Aft")]
   [TestCase("Garden, East, by the roses", "Garden, East")]
+  [TestCase("Maze of Twisty Little Passages, all different", "Maze of Twisty Little Passages, all different")]
+  [TestCase("Maze of Twisty Little Passages, all alike", "Maze of Twisty Little Passages, all alike")]
+  [TestCase("Garden, north", "Garden, north")]
+  [TestCase("Garden, north, under the tree", "Garden, north")]
+  [TestCase("Bedroom, under the table", "Bedroom")]
+  [TestCase("Garden, near the pond", "Garden")]
+  [TestCase("Dead End, near Vending Machine", "Dead End, near Vending Machine")]
+  [TestCase("Y2", "Y2")]
+  [TestCase("\"Y2\"", "\"Y2\"")]
+  [TestCase("At \"Y2\"", "At \"Y2\"")]
+  [TestCase("At \"Y2\" (on the rock)", "At \"Y2\"")]
+  [TestCase("At A1", "At A1")]
   public void RoomTitle_StripsDecorationsButKeepsRoomIdentity(string line, string expected)
   {
     CreateParser().ExtractRoomName(line, "", out var name).ShouldBeTrue();
@@ -132,6 +150,13 @@ public class AutomapRegressionTests : IsolatedProjectTests
   [TestCase("bedroom")]
   [TestCase("GAME OVER")]
   [TestCase("A very ordinary sentence about a room.")]
+  [TestCase("You are in a maze of twisty little passages, all different.")]
+  [TestCase("Garden, north.")]
+  [TestCase("Opening the Buck Palace-endorsed, regulation mailbox reveals a copy of The")]
+  [TestCase("At \"Y2")]
+  [TestCase("At Y2\"")]
+  [TestCase("At \"Y2\".")]
+  [TestCase("\"GAME OVER\"")]
   [TestCase("")]
   [TestCase(null)]
   public void RoomTitle_RejectsWhitespaceProseAndBanners(string line)
@@ -149,6 +174,102 @@ public class AutomapRegressionTests : IsolatedProjectTests
     paragraph.ShouldBe(first + " the light is dim.");
     parser.ExtractParagraph(new List<string> { "[Previous turn undone.]", "" }, 0, out paragraph).ShouldBeFalse();
     paragraph.ShouldBeNull();
+  }
+
+  [Test]
+  public async Task QuotedGridReference_CreatesAndRevisitsTheRoomWithItsConnections()
+  {
+    var parser = CreateParser();
+    await parser.StartCl(new AutomapCanvas(), SettingsFor(
+      ">look\n\nLow N/S Passage\n\n>n\n\nAt \"Y2\"\n" +
+      "You are in a large room, with a passage to the south, a passage to the west, and\n" +
+      "a wall of broken rock to the east. There is a large \"Y2\" on a rock in the room's\n" +
+      "center.\n\n>w\n\nAt Window on Pit\n\n>e\n\nAt \"Y2\"\n"));
+
+    var rooms = Project.Current.Elements.OfType<Room>().ToArray();
+    rooms.Select(room => room.Name).ShouldBe(
+      new[] { "Low N/S Passage", "At \"Y2\"", "At Window on Pit" }, ignoreOrder: true);
+    var y2 = rooms.Single(room => room.Name == "At \"Y2\"");
+    y2.PrimaryDescription.ShouldContain("There is a large \"Y2\"");
+    var connections = Project.Current.Elements.OfType<Connection>().ToArray();
+    connections.Length.ShouldBe(2);
+    connections.Single(connection => connection.GetSourceRoom().Name == "Low N/S Passage")
+               .GetTargetRoom().ShouldBeSameAs(y2);
+    connections.Single(connection => connection.GetSourceRoom() == y2)
+               .GetTargetRoom().Name.ShouldBe("At Window on Pit");
+  }
+
+  [Test]
+  public async Task CommaQualifiers_RemainDistinctRoomNames_OnRevisit()
+  {
+    const string firstName = "Maze of Twisty Little Passages, all different";
+    const string secondName = "Maze of Twisty Little Passages, all alike";
+    await CreateParser().StartCl(new AutomapCanvas(), SettingsFor(
+      ">look\n\n" + firstName + "\nA maze.\n\n>e\n\n" + secondName +
+      "\nAnother maze.\n\n>w\n\n" + firstName + "\n"));
+
+    var rooms = Project.Current.Elements.OfType<Room>().ToArray();
+    rooms.Select(room => room.Name).ShouldBe(new[] { firstName, secondName }, ignoreOrder: true);
+    var connection = Project.Current.Elements.OfType<Connection>().ShouldHaveSingleItem();
+    connection.GetSourceRoom().Name.ShouldBe(firstName);
+    connection.GetTargetRoom().Name.ShouldBe(secondName);
+  }
+
+  [Test]
+  public async Task Maze_DifferentDescriptionsStillPrompt_AndExactRevisitsReuseTheRoom()
+  {
+    const string firstDescription = "You are in a maze of twisty little passages, all different.";
+    const string secondDescription = "You are in a twisty little maze of passages, all different.";
+    var prompts = 0;
+    var parser = new Parser(
+      (message, title) => throw new AssertionException(title + ": " + message),
+      new DelegatePrompts(
+        (_, __) => throw new AssertionException("Unexpected same-direction conflict"),
+        (description, candidates) => {
+          prompts++;
+          description.ShouldBe(secondDescription);
+          candidates.ShouldHaveSingleItem().PrimaryDescription.ShouldBe(firstDescription);
+          return new RoomDisambiguation { NewRoom = true };
+        }));
+    var settings = SettingsFor(
+      ">look\n\nMaze\n" + firstDescription + "\n\n>u\n\nMaze\n" + secondDescription +
+      "\n\n>d\n\nMaze\n" + firstDescription + "\n");
+    settings.AssumeRoomsWithSameNameAreSameRoom = false;
+    await parser.StartCl(new AutomapCanvas(), settings);
+
+    prompts.ShouldBe(1);
+    var rooms = Project.Current.Elements.OfType<Room>().ToArray();
+    rooms.Length.ShouldBe(2);
+    rooms.ShouldAllBe(room => room.Name == "Maze");
+    rooms.Select(room => room.PrimaryDescription)
+         .ShouldBe(new[] { firstDescription, secondDescription }, ignoreOrder: true);
+    Project.Current.Elements.OfType<Connection>().ShouldHaveSingleItem().IsDangling.ShouldBeFalse();
+  }
+
+  [Test]
+  public async Task ChangedDescription_ConfirmedAsExistingRoom_IsRecognisedOnLaterVisits()
+  {
+    const string firstDescription = "A large room with a closed door.";
+    const string changedDescription = "A large room with an open door.";
+    var prompts = 0;
+    var parser = new Parser(
+      (message, title) => throw new AssertionException(title + ": " + message),
+      new DelegatePrompts(
+        (_, __) => throw new AssertionException("Unexpected same-direction conflict"),
+        (description, candidates) => {
+          prompts++;
+          description.ShouldBe(changedDescription);
+          return new RoomDisambiguation { Chosen = candidates.ShouldHaveSingleItem() };
+        }));
+    var settings = SettingsFor(
+      ">look\n\nHall\n" + firstDescription + "\n\n>open door\n\nHall\n" + changedDescription +
+      "\n\n>look\n\nHall\n" + changedDescription.ToUpperInvariant() +
+      "\n\n>look\n\nHall\n" + firstDescription + "\n");
+    settings.AssumeRoomsWithSameNameAreSameRoom = false;
+    await parser.StartCl(new AutomapCanvas(), settings);
+
+    prompts.ShouldBe(1);
+    Project.Current.Elements.OfType<Room>().ShouldHaveSingleItem().PrimaryDescription.ShouldBe(firstDescription);
   }
 
   [TestCase("n", MappableDirection.North)]

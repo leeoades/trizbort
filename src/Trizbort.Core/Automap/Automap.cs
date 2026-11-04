@@ -160,21 +160,28 @@ public sealed class Automap : IAutomapController
       return false;
     }
 
-    if (!char.IsLetterOrDigit(line[line.Length - 1]))
+    if (line.Count(character => character == '"') % 2 != 0)
+    {
+      SetFailureReason("the line contains unmatched quotation marks");
+      return false;
+    }
+
+    var unquotedLine = line.Trim('"');
+    if (unquotedLine.Length == 0 || !char.IsLetterOrDigit(unquotedLine[unquotedLine.Length - 1]))
     {
       // the last character of the room description must be a number or a letter
       SetFailureReason("after stripping suffixes from the line, it didn't end with a letter or a number");
       return false;
     }
 
-    if (!char.IsLetterOrDigit(line[0]))
+    if (!char.IsLetterOrDigit(unquotedLine[0]))
     {
       // the first character of the room description must be a number or a letter
       SetFailureReason("the line must start with a letter or a number");
       return false;
     }
 
-    if (!StartsWithCapitalOrNonLetter(line))
+    if (!StartsWithCapitalOrNonLetter(unquotedLine))
     {
       // if the first character of the room description is a letter, it must be capitalised
       SetFailureReason("the line starts with a letter, but it isn't capitalised");
@@ -192,8 +199,11 @@ public sealed class Automap : IAutomapController
 
     var maxWordLength = 0;
     var wordCountWithAllCaps = 0;
-    foreach (var word in words)
+    var hasGridReference = false;
+    var inCommaQualifier = false;
+    foreach (var rawWord in words)
     {
+      var word = rawWord.Trim('"');
       // a dash between words, as in "Hall - Upstairs", kept because the text after it is capitalised
       if (word == "-") continue;
 
@@ -209,7 +219,7 @@ public sealed class Automap : IAutomapController
         return false;
       }
 
-      if (!StartsWithCapitalOrNonLetter(word) && word.Length >= 4)
+      if (!inCommaQualifier && !StartsWithCapitalOrNonLetter(word) && word.Length >= 4)
       {
         // all longish words must start with a capital or non letter.
         SetFailureReason(
@@ -221,9 +231,11 @@ public sealed class Automap : IAutomapController
 
       maxWordLength = Math.Max(maxWordLength, word.Length);
       if (IsAllCaps(word)) ++wordCountWithAllCaps;
+      hasGridReference |= IsGridReference(word);
+      inCommaQualifier |= word.Contains(',');
     }
 
-    if (words.Length > 1 && maxWordLength < 3)
+    if (words.Length > 1 && maxWordLength < 3 && !hasGridReference)
     {
       // we must have at least one word over n letters long
       SetFailureReason("there must be at least {0} word(s) over {1} letter(s) long", 1, 3);
@@ -263,13 +275,32 @@ public sealed class Automap : IAutomapController
   }
 
   /// <summary>
-  ///   Where a decorative suffix starts, or -1. A comma or " - " only starts one when the text after it begins in lower
-  ///   case ("Bedroom, on the bed"); "Garden, East" or "Hall - Upstairs" are names (GitHub #25, I-041).
+  ///   A comma introduces decoration only for a lower-case location phrase such as "on the bed".
+  ///   Other comma qualifiers belong to the name; a dash still introduces decoration when followed by lower case.
   /// </summary>
   private static int FindDecorativeSuffix(string line, string marker)
   {
-    var lowerCaseOnly = marker == "," || marker == " - ";
+    var lowerCaseOnly = marker == " - ";
     var index = line.IndexOf(marker, StringComparison.Ordinal);
+    if (marker == ",")
+    {
+      while (index >= 0)
+      {
+        var words = line.Substring(index + 1).Split(_wordSeparators, StringSplitOptions.RemoveEmptyEntries);
+        // Keep the existing sentence guard for long lower-case continuations of wrapped prose.
+        if (line.Length - index > 30 && words.Length > 0 && char.IsLower(words[0][0]))
+          return index;
+        if (words.Length >= 3 &&
+            words[0] is "on" or "in" or "under" or "inside" or "outside" or "by" or "near" or "at" or
+              "behind" or "beneath" or "above" or "below" &&
+            words[1] is "the" or "a" or "an")
+          return index;
+        index = line.IndexOf(marker, index + marker.Length, StringComparison.Ordinal);
+      }
+
+      return -1;
+    }
+
     while (index >= 0 && lowerCaseOnly)
     {
       var after = line.Substring(index + marker.Length).TrimStart();
@@ -350,8 +381,13 @@ public sealed class Automap : IAutomapController
   private bool IsAllCaps(string word)
   {
     // a grid reference such as "Y2" (Colossal Cave) is a name, not shouting
-    if (word.Count(char.IsLetter) == 1 && word.Any(char.IsDigit)) return false;
+    if (IsGridReference(word)) return false;
     return word.ToUpper() == word;
+  }
+
+  private static bool IsGridReference(string word)
+  {
+    return word.Count(char.IsLetter) == 1 && word.Any(char.IsDigit);
   }
 
   internal bool ExtractParagraph(List<string> lines, int lineIndex, out string paragraph)
@@ -439,7 +475,7 @@ public sealed class Automap : IAutomapController
       // a brief revisit (name only): it may be this room; a single candidate is taken as it
       return null;
 
-    if (room.MatchDescription(description))
+    if (room.Descriptions.Any(known => string.Equals(known, description, StringComparison.OrdinalIgnoreCase)))
       // the descriptions match; they're the same room
       return true;
 
