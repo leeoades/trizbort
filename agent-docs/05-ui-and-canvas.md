@@ -251,6 +251,10 @@ Pointer press picks the mode from the hit test; move updates it; release commits
 `ICommandService`/Core controllers (no undo/redo). Right-drag pans; a right-release with no pan
 movement (`_panMoved` false) opens the context menu (Properties...). Double-click on a
 Room/Connection/MapLabel calls `ShowElementPropertiesAsync`. Space+drag also pans.
+Double-clicking empty canvas always calls `EditorSession.AddRoom` through `CanvasInteraction`,
+as one undo step; handles, ports and waypoints are not empty space. There is no app preference
+for this gesture (old `DoubleClickToAddRoom` JSON values are ignored).
+The App Settings Map tab only exposes the apply-style-to-new-rooms preference.
 Gesture tests: `MapCanvasControlGestureTests`, `MapCanvasControlSyncTests`.
 
 Scroll, pinch and touch navigation (ticket 131, issue #21). `WheelInput` carries `DeltaX` and `DeltaY`;

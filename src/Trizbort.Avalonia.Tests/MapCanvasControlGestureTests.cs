@@ -196,13 +196,11 @@ public class MapCanvasControlGestureTests
     }
 
     [AvaloniaTest]
-    public void DoubleClick_OnEmptySpace_AddsRoomWhenSettingEnabled()
+    public void DoubleClick_OnEmptySpace_AddsRoom()
     {
-        var original = ApplicationSettingsController.AppSettings.DoubleClickToAddRoom;
         var (window, _, _) = CreateTestHarness();
         try
         {
-            ApplicationSettingsController.AppSettings.DoubleClickToAddRoom = true;
             var p = new Point(300, 300);
             window.MouseDown(p, MouseButton.Left);
             window.MouseUp(p, MouseButton.Left);
@@ -211,17 +209,15 @@ public class MapCanvasControlGestureTests
 
             Project.Current.Elements.OfType<Room>().Count().ShouldBe(1);
 
-            ApplicationSettingsController.AppSettings.DoubleClickToAddRoom = false;
             var q = new Point(600, 500);
             window.MouseDown(q, MouseButton.Left);
             window.MouseUp(q, MouseButton.Left);
             window.MouseDown(q, MouseButton.Left);
             window.MouseUp(q, MouseButton.Left);
-            Project.Current.Elements.OfType<Room>().Count().ShouldBe(1);
+            Project.Current.Elements.OfType<Room>().Count().ShouldBe(2);
         }
         finally
         {
-            ApplicationSettingsController.AppSettings.DoubleClickToAddRoom = original;
             window.Close();
         }
     }

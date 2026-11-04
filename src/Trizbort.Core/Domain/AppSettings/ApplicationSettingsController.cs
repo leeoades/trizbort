@@ -104,7 +104,6 @@ public static class ApplicationSettingsController
     AppSettings.ShowObjectsInTooltips = true;
     AppSettings.ShowDescriptionsInTooltips = true;
     AppSettings.ApplyStyleToNewRooms = false;
-    AppSettings.DoubleClickToAddRoom = false;
   }
 
   public static void SaveSettings()

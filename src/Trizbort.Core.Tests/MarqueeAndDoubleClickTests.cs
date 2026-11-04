@@ -1,7 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
 using Shouldly;
-using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
@@ -14,21 +13,6 @@ namespace Trizbort.Core.Tests;
 [TestFixture]
 public class MarqueeAndDoubleClickTests : CanvasGestureTestBase
 {
-  private bool _previousDoubleClick;
-
-  [SetUp]
-  public void SetUp()
-  {
-    _previousDoubleClick = ApplicationSettingsController.AppSettings.DoubleClickToAddRoom;
-    ApplicationSettingsController.AppSettings.DoubleClickToAddRoom = true;
-  }
-
-  [TearDown]
-  public void TearDown()
-  {
-    ApplicationSettingsController.AppSettings.DoubleClickToAddRoom = _previousDoubleClick;
-  }
-
   private void Marquee(ModifierKeys modifiers)
   {
     var from = new Vector(-50, -50);
@@ -116,13 +100,18 @@ public class MarqueeAndDoubleClickTests : CanvasGestureTestBase
   }
 
   [Test]
-  public void DoubleClick_Setting_Off_DoesNotAddRoom()
+  public void DoubleClick_AddsRoomAsOneUndoStep()
   {
-    ApplicationSettingsController.AppSettings.DoubleClickToAddRoom = false;
-
     Move(new Vector(600, 600));
     Press(new Vector(600, 600), ModifierKeys.None, 2);
+    Release(new Vector(600, 600));
 
+    Session.Project.Elements.OfType<Room>().Count().ShouldBe(1);
+    Session.Undo.CanUndo.ShouldBeTrue();
+    Session.PerformUndo();
     Session.Project.Elements.OfType<Room>().ShouldBeEmpty();
+    Session.Undo.CanUndo.ShouldBeFalse();
+    Session.PerformRedo();
+    Session.Project.Elements.OfType<Room>().Count().ShouldBe(1);
   }
 }
