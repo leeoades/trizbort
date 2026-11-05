@@ -36,8 +36,12 @@ public class Inform7Exporter : CodeExporter
     return base.Create(fileName);
   }
 
+  /// <summary>Doors already declared in this export.</summary>
+  private readonly HashSet<Door> _declaredDoors = new();
+
   protected override void ExportContent(TextWriter writer)
   {
+    _declaredDoors.Clear();
     var anyConditionalExits = false;
 
     if (MapStatistics.NumberOfRoomsWithoutRegion() > 0)
@@ -317,7 +321,9 @@ public class Inform7Exporter : CodeExporter
 
         if (exit.Door == null)
           WriteNormalExit(writer, location, direction, exit);
-        else
+        // A door is declared once however many directions lead through it ("north / down"): Inform places a door
+        // in one direction from each room, so the extra directions can't be given to the same door.
+        else if (_declaredDoors.Add(exit.Door))
           WriteDoor(writer, location, direction, exit);
       }
     }

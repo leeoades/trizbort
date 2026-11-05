@@ -439,4 +439,12 @@ Format is defined in `../avalonia-parity-review.md` §9. Add `Flags: fix-now` to
   - The file watcher takes the full path of a relative file name, so saving as `map.trizbort` no longer fails after writing.
   - A transaction that changes nothing still raises `UndoStack.Changed`, so Undo/Redo are re-enabled.
 
-<!-- Next ID: I-055 -->
+- Fourth review round: the Inform 6 export declared a door once per direction for a connection labelled "north / down" (two objects with one name, which doesn't compile); Inform 7 had the same problem. **Fixed** 2026-11-05: each door is declared once and every direction still leads to it.
+
+## I-055 Automap's remembered room can be lost or confused after rename-then-undo (known issue)
+- Reported: 2026-11-02 by Copilot code review on PR #26 (comment 4441983372)   OS: all   Category: automap
+- `AutomapCanvas.ResolveRoom` finds a remembered room again by id, and accepts a different object only when the name matches (undo/redo rebuild rooms as new objects; ids are reused). Two gaps: rename automap's current room and then undo before the next response, and the restored room (same id, old name) is rejected, so the next move loses its source connection; and a new room that reuses a deleted room's id *and* has the same name is accepted as the old room. Both need a room identity that survives snapshot restore and rename but is new for every new room (for example a per-room GUID carried through snapshots).
+- Severity: low (needs a rename or delete while automap is waiting, then undo)     Flags: known issue, not fixed
+- Ticket: —
+
+<!-- Next ID: I-056 -->
