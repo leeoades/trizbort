@@ -786,6 +786,9 @@ public sealed class Automap : IAutomapController
 
           // add this description if the room doesn't have it already
           if (room != null) room.AddDescription(roomDescription);
+
+          // let the rooms around the player make space for each other, in this move's undo step
+          if (_settings.AutoTidy && _lastKnownRoom != null) _canvas.TidyAround(_lastKnownRoom);
         }
 
         // single stepping waits outside the batch, so the user can undo while we wait

@@ -41,7 +41,4 @@ Southwest Junction [south] <-> [west] South Junction
 Top Landing [southsouthwest "down"] <-> [northnorthwest "up"] Middle of Beach Stairs
 
 overlaps:
-Entrance to Hedge Maze is on the join Northwest Junction - Cannon Emplacement
-Front Porch is on the join Garden, East - Garden, South
-Garden, North is on the join Northwest Junction - Cannon Emplacement
-Northeast Junction is on the join Garden, East - Garden, South
+South Junction is on the join Southeast Junction - Patio

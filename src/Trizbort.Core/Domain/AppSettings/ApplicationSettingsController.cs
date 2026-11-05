@@ -186,6 +186,7 @@ public static class ApplicationSettingsController
           settingsAutomap.AssumeRoomsWithSameNameAreSameRoom = automap["assumeRoomsWithSameNameAreSameRoom"]
             .ToBool(AppSettings.Automap.AssumeRoomsWithSameNameAreSameRoom);
           settingsAutomap.GuessExits = automap["guessExits"].ToBool(AppSettings.Automap.GuessExits);
+          settingsAutomap.AutoTidy = automap["autoTidy"].ToBool(AppSettings.Automap.AutoTidy);
           settingsAutomap.AddObjectCommand = automap["addObjectCommand"].ToText(AppSettings.Automap.AddObjectCommand);
           settingsAutomap.AddRegionCommand = automap["addRegionCommand"].ToText(AppSettings.Automap.AddRegionCommand);
           AppSettings.Automap = settingsAutomap;

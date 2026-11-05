@@ -46,6 +46,9 @@
                         <CheckBox Content="_Guess possible exits from a room by reading its initial description."
                                   IsChecked="{Binding GuessExits}" />
 
+                        <CheckBox Content="Tidy the map as you go, so _rooms make space for each other."
+                                  IsChecked="{Binding AutoTidy}" />
+
                         <CheckBox Content="_Start processing from the end of the transcript file."
                                   IsChecked="{Binding ContinueTranscript}" />
 

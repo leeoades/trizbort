@@ -13,7 +13,8 @@ public struct AutomapSettings
         AddObjectCommand = "tb see",
         AddRegionCommand = "tb region",
         ContinueTranscript = false,
-        AssumeTwoWayConnections = true
+        AssumeTwoWayConnections = true,
+        AutoTidy = true
       };
       return settings;
     }
@@ -28,4 +29,7 @@ public struct AutomapSettings
   public string AddRegionCommand;
   public bool ContinueTranscript;
   public bool AssumeTwoWayConnections;
+
+  /// <summary>Rooms near the player rearrange themselves after each move so they don't get in each other's way.</summary>
+  public bool AutoTidy;
 }

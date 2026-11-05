@@ -75,6 +75,18 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         }
     }
 
+    public void TidyAround(Room room)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            _innerCanvas.TidyAround(room);
+        }
+        else
+        {
+            Dispatcher.UIThread.Invoke(() => _innerCanvas.TidyAround(room));
+        }
+    }
+
     public void SelectRoom(Room room)
     {
         if (Dispatcher.UIThread.CheckAccess())

@@ -442,11 +442,24 @@ public class AutomapCanvas : IAutomapCanvas
     };
   }
 
+  public void TidyAround(Room room)
+  {
+    room = ResolveRoom(room);
+    if (room == null) return;
+    var moved = LayoutTidy.TidyAround(CurrentProject.Elements.ToList(), room);
+    if (moved > 0) _session?.EnsureVisible(room);
+  }
+
   public Room CreateRoom(Room existing, string name)
   {
     var room = new Room(CurrentProject) { Name = name };
 
     if (existing != null) room.Position = existing.Position;
+    else if (_session != null)
+      // the first room goes in the middle of the view, so the map has space to grow every way
+      room.Position = new Vector(
+        _session.Viewport.VisibleWorldBounds.Center.X - room.Width / 2,
+        _session.Viewport.VisibleWorldBounds.Center.Y - room.Height / 2);
     room.Position = Settings.Snap(room.Position);
 
     var tryOtherSideNext = false;

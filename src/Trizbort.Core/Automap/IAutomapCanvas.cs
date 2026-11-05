@@ -30,6 +30,12 @@ public interface IAutomapCanvas
 
   void RemoveExitStub(Room room, MappableDirection direction);
 
+  /// <summary>
+  ///   Let the rooms near <paramref name="room" /> rearrange themselves so they don't get in each other's way
+  ///   (<see cref="LayoutTidy" />). Called inside the move's batch, so it is part of the same undo step.
+  /// </summary>
+  void TidyAround(Room room);
+
   void SelectRoom(Room room);
   void RemoveRoom(Room otherRoom);
 

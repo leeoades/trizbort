@@ -96,6 +96,11 @@ public class AutomapErrorTests : IsolatedProjectTests
       _inner.RemoveExitStub(room, direction);
     }
 
+    public void TidyAround(Room room)
+    {
+      _inner.TidyAround(room);
+    }
+
     public void SelectRoom(Room room)
     {
       _inner.SelectRoom(room);
