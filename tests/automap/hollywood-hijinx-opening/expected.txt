@@ -19,3 +19,5 @@ Garden, West [northeast] <-> [southwest] Garden, North
 Northeast Junction [west] <-> [east] Entrance to Hedge Maze
 South Junction [east] <-> [west] Southeast Junction
 Southeast Junction [north] <-> [south] Northeast Junction
+
+natural joins: 8 of 8

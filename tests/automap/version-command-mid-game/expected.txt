@@ -8,3 +8,5 @@ Lane
 connections:
 Cottage [east] <-> [west] Lane
 Lane [east] <-> [west] Field
+
+natural joins: 2 of 2

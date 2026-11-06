@@ -8,3 +8,5 @@ Garden, West
 connections:
 Garden, East [north] <-> [south] Garden, North
 Garden, East [west] <-> [east] Garden, West
+
+natural joins: 2 of 2

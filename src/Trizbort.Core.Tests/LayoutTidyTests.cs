@@ -213,4 +213,30 @@ public class LayoutTidyTests : IsolatedProjectTests
     Cell(cannon).ShouldBe((ec, er - 1));
     Cell(cliff).ShouldBe((ec, er - 2));
   }
+
+  private static string RepositoryFile(params string[] parts)
+  {
+    var directory = new System.IO.DirectoryInfo(TestContext.CurrentContext.TestDirectory);
+    while (directory != null && !System.IO.File.Exists(System.IO.Path.Combine(directory.FullName, "Trizbort.sln")))
+      directory = directory.Parent;
+    directory.ShouldNotBeNull();
+    return System.IO.Path.Combine(new[] { directory.FullName }.Concat(parts).ToArray());
+  }
+
+  [Test]
+  public void LeesIdealHollywoodHijinxMap_HasEveryJoinNaturallyPlaced_AndTidyingKeepsItThatWay()
+  {
+    // HH-NOV-6-ideal.trizbort: Lee's hand layout of the first part of Hollywood Hijinx. Every join points the
+    // way its directions say; several are long. Tidying around any room must not make it worse.
+    var path = RepositoryFile("tests", "automap", "hollywood-hijinx-nov-6", "ideal.trizbort");
+    new MapLoader(Project.Current).LoadMap(path).ShouldBeTrue();
+    var elements = Project.Current.Elements.ToList();
+    LayoutTidy.NaturalJoins(elements).ShouldBe((20, 20));
+
+    foreach (var room in Project.Current.Elements.OfType<Room>().ToList())
+      LayoutTidy.TidyAround(Project.Current.Elements.ToList(), room);
+
+    LayoutTidy.NaturalJoins(Project.Current.Elements.ToList()).Natural.ShouldBe(20);
+    Overlaps().ShouldBe(0);
+  }
 }

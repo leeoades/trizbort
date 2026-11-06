@@ -56,6 +56,11 @@ public static class AutomapMapSummary
     lines.Sort(StringComparer.Ordinal);
     foreach (var line in lines) builder.Append(line).Append('\n');
 
+    // how readable the layout is: joins pointing the way their directions say (see LayoutTidy)
+    var (natural, total) = Trizbort.Automap.LayoutTidy.NaturalJoins(project.Elements.ToList());
+    builder.Append('\n');
+    builder.Append($"natural joins: {natural} of {total}\n");
+
     var overlaps = Overlaps(project, rooms, names);
     if (overlaps.Count > 0)
     {

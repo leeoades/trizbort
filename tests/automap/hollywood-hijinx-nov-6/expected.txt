@@ -39,5 +39,7 @@ Southeast Junction [southeast] stub
 Southwest Junction [north] <-> [south] Northwest Junction
 Top Landing [southsouthwest "down"] <-> [northnorthwest "up"] Middle of Beach Stairs
 
+natural joins: 18 of 18
+
 overlaps:
 Garden, North is on the join South Junction - Southwest Junction

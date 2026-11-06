@@ -6,3 +6,5 @@ Cliff Top (start)
 
 connections:
 Cliff Top [north "north / down"] <-> [south "south / up"] Beach
+
+natural joins: 1 of 1

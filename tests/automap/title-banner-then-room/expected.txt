@@ -6,3 +6,5 @@ Lane
 
 connections:
 Cottage [east] <-> [west] Lane
+
+natural joins: 1 of 1

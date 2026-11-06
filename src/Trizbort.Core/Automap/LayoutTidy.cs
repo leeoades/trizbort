@@ -29,8 +29,11 @@ public static class LayoutTidy
   private const double SoftPull = 0.25;
   private const double StayPut = 0.2;
 
-  /// <summary>A join that points the right way but is longer than one step costs this much per extra step (squared).</summary>
-  private const double Stretch = 0.15;
+  /// <summary>A join counts as naturally placed when it points within this many degrees of its direction.</summary>
+  private const double NaturalAngle = 22.6;
+
+  /// <summary>Cost per step a join is longer than one; small, since a long join that points the right way reads fine.</summary>
+  private const double LengthCost = 0.08;
 
   private const int MaxPush = 6;
 
@@ -48,6 +51,17 @@ public static class LayoutTidy
     return map.Tidy(map.Neighbourhood(centre, radius), timeLimitMs, map.JoinCount(centre) <= 1 ? centre : null);
   }
 
+  /// <summary>
+  ///   How many joins are naturally placed: the far room lies in the direction the join's ends give (within 22.5
+  ///   degrees), as read on the map. Joins without a direction (teleports, exit stubs) aren't counted.
+  /// </summary>
+  public static (int Natural, int Total) NaturalJoins(IList<Element> elements)
+  {
+    var map = new LayoutMap(elements);
+    var joins = map.DirectedJoins.ToList();
+    return (joins.Count(map.IsNatural), joins.Count);
+  }
+
   /// <summary>Tidies the given rooms (all of them may move); the others stay put. Returns how many rooms moved.</summary>
   public static int Tidy(IList<Element> elements, IEnumerable<Room> rooms, int timeLimitMs = 400)
   {
@@ -56,7 +70,7 @@ public static class LayoutTidy
     return map.Tidy(rooms.Where(map.Contains).ToList(), timeLimitMs, null);
   }
 
-  private sealed class Join
+  internal sealed class Join
   {
     public int A;
     public int B;
@@ -491,23 +505,39 @@ public static class LayoutTidy
     }
 
     /// <summary>
-    ///   How far a join is from what its ends say: being off to the side costs fully, being longer in the right
-    ///   direction costs little (a long straight join still reads clearly), being shorter or backwards costs fully.
+    ///   What a join costs: nothing when it is naturally placed (the far room lies within 22.5 degrees of the
+    ///   direction its ends give, as you would read it on the map), more the further off it points, plus a little for
+    ///   each step longer than one, so that rooms stay close when nothing else matters.
     /// </summary>
     private double JoinCost(Join join)
     {
       var ax = (_x[join.B] - _x[join.A]) / _stepX;
       var ay = (_y[join.B] - _y[join.A]) / _stepY;
-      var length = Math.Sqrt(join.WantX * join.WantX + join.WantY * join.WantY);
-      if (length < 1e-9) return 0;
-      var ux = join.WantX / length;
-      var uy = join.WantY / length;
-      var along = ax * ux + ay * uy;
-      var sideX = ax - along * ux;
-      var sideY = ay - along * uy;
-      var extra = along - length;
-      var lengthCost = extra > 0 ? Stretch * extra * extra : extra * extra;
-      return join.Pull * (sideX * sideX + sideY * sideY + lengthCost);
+      var want = Math.Sqrt(join.WantX * join.WantX + join.WantY * join.WantY);
+      if (want < 1e-9) return 0;
+      var distance = Math.Sqrt(ax * ax + ay * ay);
+      if (distance < 1e-6) return join.Pull * 2;
+      var off = AngleBetween(ax, ay, join.WantX, join.WantY);
+      var cost = off <= NaturalAngle ? 0 : 1 + (off - NaturalAngle) / 45;
+      cost += LengthCost * Math.Max(0, distance - want);
+      return join.Pull * cost;
+    }
+
+    /// <summary>Whether a join is naturally placed (see <see cref="JoinCost" />).</summary>
+    public bool IsNatural(Join join)
+    {
+      var ax = (_x[join.B] - _x[join.A]) / _stepX;
+      var ay = (_y[join.B] - _y[join.A]) / _stepY;
+      if (Math.Sqrt(ax * ax + ay * ay) < 1e-6) return false;
+      return AngleBetween(ax, ay, join.WantX, join.WantY) <= NaturalAngle;
+    }
+
+    public IEnumerable<Join> DirectedJoins => _joins.Where(join => join.Pull > 0);
+
+    private static double AngleBetween(double ax, double ay, double bx, double by)
+    {
+      var difference = Math.Abs(Math.Atan2(ay, ax) - Math.Atan2(by, bx)) * 180 / Math.PI;
+      return difference > 180 ? 360 - difference : difference;
     }
 
     private bool SegmentHitsRoom(int a, int b, int room)
