@@ -40,8 +40,9 @@ public static class LayoutTidy
     if (elements == null || centre == null) return 0;
     var map = new LayoutMap(elements);
     if (!map.Contains(centre)) return 0;
-    // the room just arrived at was only just placed, so it has nowhere it "should" stay
-    return map.Tidy(map.Neighbourhood(centre, radius), timeLimitMs, centre);
+    // A room reached for the first time (one join so far) was only just placed, so it has nowhere it "should"
+    // stay; a room the player came back to keeps its place like the others.
+    return map.Tidy(map.Neighbourhood(centre, radius), timeLimitMs, map.JoinCount(centre) <= 1 ? centre : null);
   }
 
   /// <summary>Tidies the given rooms (all of them may move); the others stay put. Returns how many rooms moved.</summary>
@@ -113,7 +114,7 @@ public static class LayoutTidy
       foreach (var connection in elements.OfType<Connection>())
       {
         var a = connection.GetSourceRoom(out var point);
-        var b = connection.GetTargetRoom();
+        var b = connection.GetTargetRoom(out var targetPoint);
         if (a == null || b == null || a == b) continue;
         if (!_index.TryGetValue(a, out var ia) || !_index.TryGetValue(b, out var ib)) continue;
         var join = new Join { A = ia, B = ib };
@@ -123,10 +124,40 @@ public static class LayoutTidy
         }
         else
         {
-          var direction = CompassPointHelper.GetAutomapDirectionVector(point);
-          join.WantX = Math.Sign(direction.X);
-          join.WantY = Math.Sign(direction.Y);
-          join.Pull = IsMainPoint(point) ? CompassPull : SoftPull;
+          // Both ends say where the other room is. "East from South Junction" and "south from Southeast Junction"
+          // together put Southeast Junction to the north-east; when the ends agree (east and west) it is just east.
+          // A compass end beats up, down, in and out, which don't say much about where a room is drawn.
+          var fromA = CompassPointHelper.GetAutomapDirectionVector(point);
+          var fromB = CompassPointHelper.GetAutomapDirectionVector(targetPoint);
+          var aIsCompass = IsMainPoint(point);
+          var bIsCompass = IsMainPoint(targetPoint);
+          double x, y;
+          if (aIsCompass == bIsCompass)
+          {
+            x = fromA.X - fromB.X;
+            y = fromA.Y - fromB.Y;
+          }
+          else if (aIsCompass)
+          {
+            x = fromA.X;
+            y = fromA.Y;
+          }
+          else
+          {
+            x = -fromB.X;
+            y = -fromB.Y;
+          }
+
+          if (Math.Sign(x) == 0 && Math.Sign(y) == 0)
+          {
+            // the ends contradict each other (east there, east back): go by the first
+            x = fromA.X;
+            y = fromA.Y;
+          }
+
+          join.WantX = Math.Sign(x);
+          join.WantY = Math.Sign(y);
+          join.Pull = aIsCompass || bIsCompass ? CompassPull : SoftPull;
         }
 
         _joins.Add(join);
@@ -136,6 +167,8 @@ public static class LayoutTidy
     }
 
     public bool Contains(Room room) => room != null && _index.ContainsKey(room);
+
+    public int JoinCount(Room room) => _joinsOf[_index[room]].Count;
 
     public List<Room> Neighbourhood(Room centre, int radius)
     {
@@ -153,6 +186,12 @@ public static class LayoutTidy
 
         frontier = next;
       }
+
+      // and any room close by, which may be in the way of the centre room
+      var c = _index[centre];
+      for (var i = 0; i < _rooms.Count; i++)
+        if (Math.Abs(_x[i] - _x[c]) < _stepX * 1.5 && Math.Abs(_y[i] - _y[c]) < _stepY * 1.5)
+          seen.Add(i);
 
       return seen.Select(i => _rooms[i]).ToList();
     }
@@ -187,6 +226,40 @@ public static class LayoutTidy
               else
               {
                 foreach (var i in moved)
+                {
+                  _x[i] -= dx * _stepX;
+                  _y[i] -= dy * _stepY;
+                }
+              }
+            }
+
+        // Make space: move a room and every movable room beyond it, in that direction, one step further out,
+        // so a group keeps its shape (like moving the map apart, but only near the change).
+        foreach (var room in movable)
+          for (var dx = -1; dx <= 1; dx++)
+            for (var dy = -1; dy <= 1; dy++)
+            {
+              if ((dx == 0 && dy == 0) || room == _free) continue;
+              if (clock.ElapsedMilliseconds > timeLimitMs) return Apply();
+              var side = movable.Where(other => other != _free &&
+                                                (_x[other] - _x[room]) * dx / _stepX +
+                                                (_y[other] - _y[room]) * dy / _stepY > -0.5).ToList();
+              if (side.Count < 2) continue;
+              foreach (var i in side)
+              {
+                _x[i] += dx * _stepX;
+                _y[i] += dy * _stepY;
+              }
+
+              var after = Score(movable);
+              if (after < score - 0.001)
+              {
+                score = after;
+                improved = true;
+              }
+              else
+              {
+                foreach (var i in side)
                 {
                   _x[i] -= dx * _stepX;
                   _y[i] -= dy * _stepY;

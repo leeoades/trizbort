@@ -442,6 +442,8 @@ public class AutomapCanvas : IAutomapCanvas
     };
   }
 
+  public bool MakeSpaceForNewRooms { get; set; }
+
   public void TidyAround(Room room)
   {
     room = ResolveRoom(room);
@@ -498,7 +500,13 @@ public class AutomapCanvas : IAutomapCanvas
     if (line != roomName) room.SubTitle = line.Replace(roomName, "");
 
     var point = CompassPointHelper.GetCompassDirection(directionFromExisting);
-    if (!TryPlaceInClearSpace(room, existing, point))
+    if (MakeSpaceForNewRooms)
+    {
+      // next to the room it was reached from, even if that spot is taken: the tidy that follows moves the other
+      // rooms aside, which reads better than putting the new room further away at the end of a long join
+      PositionRelativeTo(room, existing, point, out _);
+    }
+    else if (!TryPlaceInClearSpace(room, existing, point))
     {
       // nowhere clear nearby: make room by moving the map apart, as Trizbort did
       PositionRelativeTo(room, existing, point, out var delta);

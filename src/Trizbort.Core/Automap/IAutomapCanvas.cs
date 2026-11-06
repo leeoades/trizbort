@@ -17,6 +17,12 @@ public interface IAutomapCanvas
 
   Room CreateRoom(Room existing, MappableDirection directionFromExisting, string roomName, string line);
 
+  /// <summary>
+  ///   True while the map tidies itself after each move (<see cref="TidyAround" />): a new room whose spot is taken
+  ///   goes there anyway and the tidy moves the other rooms aside, rather than the new room being put further away.
+  /// </summary>
+  bool MakeSpaceForNewRooms { get; set; }
+
   void Connect(Room source, MappableDirection directionFromSource, Room target, bool assumeTwoWayConnections);
 
   /// <summary>

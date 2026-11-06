@@ -127,4 +127,46 @@ public class LayoutTidyTests : IsolatedProjectTests
 
     island.Position.ShouldBe(before);
   }
+
+  [Test]
+  public void BothEndsOfAJoinDecideWhereTheRoomGoes_AndTheOthersMakeSpace()
+  {
+    // Hollywood Hijinx: east from South Junction reaches Southeast Junction, and south from there leads back,
+    // so Southeast Junction belongs to the north-east; Northeast Junction (north of it) moves up to make space
+    // and the Patio (west of it) ends up beside it. This is the map Lee corrected by hand.
+    var start = AddRoomAt("South Junction", 0, 0);
+    var southeast = AddRoomAt("Southeast Junction", 1, 0);
+    var patio = AddRoomAt("Patio", 0, -1);
+    var northeast = AddRoomAt("Northeast Junction", 1, -1);
+    Join(start, CompassPoint.East, southeast, CompassPoint.South);
+    Join(southeast, CompassPoint.West, patio, CompassPoint.East);
+    Join(southeast, CompassPoint.North, northeast, CompassPoint.South);
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), start).ShouldBeGreaterThan(0);
+
+    Overlaps().ShouldBe(0);
+    var (sc, sr) = Cell(start);
+    Cell(southeast).ShouldBe((sc + 1, sr - 1));
+    Cell(patio).ShouldBe((sc, sr - 1));
+    Cell(northeast).ShouldBe((sc + 1, sr - 2));
+  }
+
+  [Test]
+  public void ANewRoomWhoseSpotIsTaken_StaysNextToItsRoom_AndTheOthersMoveAside()
+  {
+    // east of the Hall is the Lobby; a new room reached north from the Lobby lands where the Study already is
+    var hall = AddRoomAt("Hall", 0, 0);
+    var lobby = AddRoomAt("Lobby", 1, 0);
+    Join(hall, CompassPoint.East, lobby, CompassPoint.West);
+    var study = AddRoomAt("Study", 1, -1);
+    Join(hall, CompassPoint.NorthEast, study, CompassPoint.SouthWest);
+    var cloakroom = AddRoomAt("Cloakroom", 1, -1); // same spot as the Study
+    Join(lobby, CompassPoint.North, cloakroom, CompassPoint.South);
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), cloakroom);
+
+    Overlaps().ShouldBe(0);
+    var (lc, lr) = Cell(lobby);
+    Cell(cloakroom).ShouldBe((lc, lr - 1));
+  }
 }
