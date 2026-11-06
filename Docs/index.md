@@ -988,7 +988,7 @@ Trizbort recognises room names in the transcript by applying a series of rules w
 
 Trizbort Recast recognises short grid-reference names such as `Y2` and quoted headings such as `At "Y2"`. It keeps comma qualifiers in names such as `Garden, north` and `Maze of Twisty Little Passages, all different`, while still stripping positional decorations such as `, on the bed`.
 
-In Colossal Cave, the "all different" maze rooms actually share the heading `Maze`; their descriptions differ. To map them separately, use a verbose transcript, leave **Assume no two rooms have the same name** unchecked, and choose **A New Room** when a new maze description appears in the disambiguation dialog. An exact description match on a later visit reuses that room; a shared opening phrase does not automatically merge rooms.
+In Colossal Cave, the "all different" maze rooms actually share the heading `Maze`; their descriptions differ. To map them separately, use a verbose transcript, leave **Assume no two rooms have the same name** unchecked, and choose **A New Room** when a new maze description appears in the disambiguation dialog. On a later visit, a description with the same first sentence (ignoring case) reuses that room. Text after the first sentence can change, such as a door being open, without automap asking again.
 
 Since Trizbort identifies rooms purely by name (and, if possible, description), geography which is intentionally confusing to the player (such as mazes where each room is called "Maze" with the description "A room in a maze") will not be mapped well by Trizbort. Likewise for games which have multiple locations called "Alley", "Cupboard", etc.
 

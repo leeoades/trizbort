@@ -272,6 +272,37 @@ public class AutomapRegressionTests : IsolatedProjectTests
     Project.Current.Elements.OfType<Room>().ShouldHaveSingleItem().PrimaryDescription.ShouldBe(firstDescription);
   }
 
+  [Test]
+  public async Task ChangedTextAfterTheFirstSentence_IsTheSameRoomWithoutAsking()
+  {
+    // the majority case: the room's opening sentence stays, the state described after it changes
+    const string closed = "A large hall with a vaulted ceiling. The oak door is closed.";
+    const string open = "A large hall with a vaulted ceiling. The oak door is open, and a draught blows in.";
+    var parser = new Parser(
+      (message, title) => throw new AssertionException(title + ": " + message),
+      new DelegatePrompts(
+        (_, __) => throw new AssertionException("Unexpected same-direction conflict"),
+        (_, __) => throw new AssertionException("Should not ask which room this is")));
+    var settings = SettingsFor(
+      ">look\n\nHall\n" + closed + "\n\n>open door\n\n>look\n\nHall\n" + open + "\n");
+    settings.AssumeRoomsWithSameNameAreSameRoom = false;
+
+    await parser.StartCl(new AutomapCanvas(), settings);
+
+    Project.Current.Elements.OfType<Room>().ShouldHaveSingleItem().Name.ShouldBe("Hall");
+  }
+
+  [TestCase("A large hall. The door is closed.", "A large hall.")]
+  [TestCase("A large hall! The door is closed.", "A large hall!")]
+  [TestCase("\"Welcome,\" says the sign. It creaks.", "\"Welcome,\" says the sign.")]
+  [TestCase("A hall\nwith a high\n  ceiling. Dusty.", "A hall with a high ceiling.")]
+  [TestCase("No full stop at all", "No full stop at all")]
+  [TestCase("", "")]
+  public void FirstSentence_StopsAtTheFirstSentenceEnd(string description, string expected)
+  {
+    Parser.FirstSentence(description).ShouldBe(expected);
+  }
+
   [TestCase("n", MappableDirection.North)]
   [TestCase("go to the north", MappableDirection.North)]
   [TestCase("walk east", MappableDirection.East)]

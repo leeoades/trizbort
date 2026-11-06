@@ -128,9 +128,11 @@ Two distinct ambiguous situations, each with its own dialog:
    room") → `UI\DisambiguateRoomsDialog.cs` shows transcript context and candidate rooms. User
    picks an existing room, chooses "new room", or asks to stop being prompted (after which the
    first candidate is used automatically for the rest of the run). Automatic description
-   matching requires equality with a stored description, ignoring case; a shared opening
-   prefix is not sufficient. Confirming a changed description as the same room stores that
-   variant for subsequent visits.
+   matching compares the **first sentence** with each stored description's first sentence,
+   ignoring case and spacing (`Parser.FirstSentence`): games add changing text after it ("The
+   door is open."), which shouldn't ask. A shared opening phrase within the first sentence is not
+   enough. Confirming a changed description as the same room stores that variant for subsequent
+   visits.
 2. **A room already exists in the direction just moved** → `UI\AutomapRoomSameDirectionDialog.cs`
    asks whether to keep the existing room, replace it with the newly detected one, or keep both.
 
@@ -139,8 +141,8 @@ always treated as the same room.
 
 Colossal Cave's "all different" maze prints the heading `Maze` for every room; its descriptions,
 not its headings, differ. Use verbose transcripts with `AssumeRoomsWithSameNameAreSameRoom`
-disabled and choose "new room" for each distinct description. Names remain `Maze`; exact
-description revisits reuse the corresponding room. A brief revisit with several same-named
+disabled and choose "new room" for each distinct description. Names remain `Maze`; a revisit
+with the same first sentence reuses the corresponding room. A brief revisit with several same-named
 candidates still needs disambiguation.
 
 ## Settings (`Automap\AutomapSettings.cs`)

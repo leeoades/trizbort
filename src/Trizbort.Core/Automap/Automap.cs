@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Trizbort.Automap.Utility;
@@ -475,12 +476,29 @@ public sealed class Automap : IAutomapController
       // a brief revisit (name only): it may be this room; a single candidate is taken as it
       return null;
 
-    if (room.Descriptions.Any(known => string.Equals(known, description, StringComparison.OrdinalIgnoreCase)))
-      // the descriptions match; they're the same room
+    if (room.Descriptions.Any(known => SameFirstSentence(known, description)))
+      // the descriptions start the same way; they're the same room. Only the first sentence counts: games add
+      // changing text after it ("The door is open.", an object you dropped), which doesn't make it another room.
       return true;
 
     // the descriptions don't match; they may or may not be the same room
     return null;
+  }
+
+  /// <summary>Whether two room descriptions have the same first sentence, ignoring case and spacing.</summary>
+  internal static bool SameFirstSentence(string one, string two) =>
+    string.Equals(FirstSentence(one), FirstSentence(two), StringComparison.OrdinalIgnoreCase);
+
+  /// <summary>
+  ///   The first sentence of a description, with runs of spaces and line breaks made single spaces: up to the first
+  ///   ".", "!" or "?" (and any closing quote or bracket) that ends the text or is followed by a space.
+  /// </summary>
+  internal static string FirstSentence(string description)
+  {
+    if (string.IsNullOrWhiteSpace(description)) return string.Empty;
+    var text = Regex.Replace(description.Trim(), @"\s+", " ");
+    var end = Regex.Match(text, @"[.!?][""'\u201D\u2019)\]]*(?=\s|$)");
+    return end.Success ? text.Substring(0, end.Index + end.Length) : text;
   }
 
   private static Room OtherEnd(Connection connection, Room room)
