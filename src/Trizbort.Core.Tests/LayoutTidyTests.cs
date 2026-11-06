@@ -169,4 +169,48 @@ public class LayoutTidyTests : IsolatedProjectTests
     var (lc, lr) = Cell(lobby);
     Cell(cloakroom).ShouldBe((lc, lr - 1));
   }
+
+  [Test]
+  public void GoingSouthIntoTheGarden_MovesEverythingAboveUpToMakeSpace()
+  {
+    // Lee's Hollywood Hijinx map (HH-Nov-6-garden): south from the Entrance to Hedge Maze is Garden, North, but the
+    // Patio is in that spot. The Entrance and everything above it should move up, so the garden sits south of it.
+    var start = AddRoomAt("South Junction", 0, 1);
+    var porch = AddRoomAt("Front Porch", 0, 0);
+    var patio = AddRoomAt("Patio", 0, -1);
+    var southeast = AddRoomAt("Southeast Junction", 1, -1);
+    var southwest = AddRoomAt("Southwest Junction", -1, -1);
+    var entrance = AddRoomAt("Entrance to Hedge Maze", 0, -2);
+    var northeast = AddRoomAt("Northeast Junction", 1, -2);
+    var northwest = AddRoomAt("Northwest Junction", -2, -3);
+    var cannon = AddRoomAt("Cannon Emplacement", 0, -3);
+    var cliff = AddRoomAt("Cliff", 0, -4);
+    var landing = AddRoomAt("Top Landing", 2, -2);
+    var stairs = AddRoomAt("Middle of Beach Stairs", 2, -1);
+    Join(start, CompassPoint.East, southeast, CompassPoint.South);
+    Join(southeast, CompassPoint.West, patio, CompassPoint.East);
+    Join(start, CompassPoint.North, porch, CompassPoint.South);
+    Join(start, CompassPoint.West, southwest, CompassPoint.South);
+    Join(southwest, CompassPoint.East, patio, CompassPoint.West);
+    Join(southwest, CompassPoint.North, northwest, CompassPoint.South);
+    Join(northwest, CompassPoint.East, entrance, CompassPoint.West);
+    Join(entrance, CompassPoint.East, northeast, CompassPoint.West);
+    Join(northeast, CompassPoint.South, southeast, CompassPoint.North);
+    Join(northwest, CompassPoint.North, cannon, CompassPoint.West);
+    Join(cannon, CompassPoint.East, northeast, CompassPoint.North);
+    Join(cannon, CompassPoint.North, cliff, CompassPoint.South);
+    Join(northeast, CompassPoint.East, landing, CompassPoint.West);
+    Join(landing, CompassPoint.SouthSouthWest, stairs, CompassPoint.NorthNorthWest);
+    var garden = AddRoomAt("Garden, North", 0, -1); // automap puts it south of the Entrance, on the Patio
+    Join(entrance, CompassPoint.South, garden, CompassPoint.North);
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), garden).ShouldBeGreaterThan(0);
+
+    Overlaps().ShouldBe(0);
+    var (ec, er) = Cell(entrance);
+    Cell(garden).ShouldBe((ec, er + 1));
+    // the rooms above moved up together, keeping their shape
+    Cell(cannon).ShouldBe((ec, er - 1));
+    Cell(cliff).ShouldBe((ec, er - 2));
+  }
 }

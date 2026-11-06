@@ -29,13 +29,16 @@ public static class LayoutTidy
   private const double SoftPull = 0.25;
   private const double StayPut = 0.2;
 
+  /// <summary>A join that points the right way but is longer than one step costs this much per extra step (squared).</summary>
+  private const double Stretch = 0.15;
+
   private const int MaxPush = 6;
 
   /// <summary>
   ///   Tidies the rooms within <paramref name="radius" /> joins of <paramref name="centre" />; rooms further away
   ///   stay put but still count (nothing may be moved on top of them). Returns how many rooms moved.
   /// </summary>
-  public static int TidyAround(IList<Element> elements, Room centre, int radius = 2, int timeLimitMs = 40)
+  public static int TidyAround(IList<Element> elements, Room centre, int radius = 2, int timeLimitMs = 80)
   {
     if (elements == null || centre == null) return 0;
     var map = new LayoutMap(elements);
@@ -197,11 +200,13 @@ public static class LayoutTidy
     }
 
     private int _free = -1;
+    private HashSet<int> _movable = new();
 
     public int Tidy(List<Room> movableRooms, int timeLimitMs, Room free)
     {
       if (movableRooms.Count == 0) return 0;
       _free = free != null && _index.TryGetValue(free, out var freeIndex) ? freeIndex : -1;
+      _movable = movableRooms.Select(room => _index[room]).ToHashSet();
       var movable = movableRooms.Select(room => _index[room]).ToHashSet();
       var clock = Stopwatch.StartNew();
       var score = Score(movable);
@@ -209,6 +214,19 @@ public static class LayoutTidy
       for (var pass = 0; pass < 12; pass++)
       {
         var improved = false;
+
+        // The room just arrived at first, trying every move and taking the best, not the first that helps: sliding
+        // it aside is found before making space for it, but making space is usually better.
+        if (_free >= 0 && clock.ElapsedMilliseconds <= timeLimitMs)
+        {
+          var best = BestMoveForFree(movable, score);
+          if (best != null)
+          {
+            Shift(best.Value.Rooms, best.Value.Dx, best.Value.Dy);
+            score = Score(movable);
+            improved = true;
+          }
+        }
         foreach (var room in movable)
           for (var dx = -1; dx <= 1; dx++)
             for (var dy = -1; dy <= 1; dy++)
@@ -267,10 +285,109 @@ public static class LayoutTidy
               }
             }
 
+        // Make space across the map: move a room one step and shift every room at or beyond the spot it moves to,
+        // anywhere on the map, one step further the same way. Going south into a garden where the Patio is moves
+        // the hedge and everything above it up, instead of pushing the garden off to one side.
+        foreach (var room in movable)
+          for (var dx = -1; dx <= 1; dx++)
+            for (var dy = -1; dy <= 1; dy++)
+            {
+              if (dx == 0 && dy == 0) continue;
+              if (clock.ElapsedMilliseconds > timeLimitMs) return Apply();
+              var beyond = Beyond(room, dx, dy);
+              if (beyond.Count == 0) continue;
+              var counted = new HashSet<int>(movable);
+              counted.UnionWith(beyond);
+              var before = Score(counted);
+              foreach (var i in beyond.Append(room))
+              {
+                _x[i] += dx * _stepX;
+                _y[i] += dy * _stepY;
+              }
+
+              if (Score(counted) < before - 0.001)
+              {
+                score = Score(movable);
+                improved = true;
+              }
+              else
+              {
+                foreach (var i in beyond.Append(room))
+                {
+                  _x[i] -= dx * _stepX;
+                  _y[i] -= dy * _stepY;
+                }
+              }
+            }
+
         if (!improved) break;
       }
 
       return Apply();
+    }
+
+    private void Shift(IEnumerable<int> rooms, int dx, int dy)
+    {
+      foreach (var i in rooms)
+      {
+        _x[i] += dx * _stepX;
+        _y[i] += dy * _stepY;
+      }
+    }
+
+    /// <summary>The rooms at or beyond the spot one step from <paramref name="room" />, anywhere on the map.</summary>
+    private List<int> Beyond(int room, int dx, int dy)
+    {
+      var targetX = _x[room] + dx * _stepX;
+      var targetY = _y[room] + dy * _stepY;
+      return Enumerable.Range(0, _rooms.Count)
+        .Where(other => other != room && other != _free &&
+                        (_x[other] - targetX) * dx / _stepX + (_y[other] - targetY) * dy / _stepY > -0.5)
+        .ToList();
+    }
+
+    /// <summary>
+    ///   The best single step for the room just arrived at: on its own (pushing nearby rooms), or with every room
+    ///   beyond the spot moving out of its way. Null when nothing improves the map.
+    /// </summary>
+    private (List<int> Rooms, int Dx, int Dy)? BestMoveForFree(HashSet<int> movable, double score)
+    {
+      (List<int> Rooms, int Dx, int Dy)? best = null;
+      var bestGain = 0.001;
+      for (var dx = -1; dx <= 1; dx++)
+        for (var dy = -1; dy <= 1; dy++)
+        {
+          if (dx == 0 && dy == 0) continue;
+
+          var pushed = TryMove(_free, dx, dy, movable);
+          if (pushed != null)
+          {
+            var gain = score - Score(movable);
+            Shift(pushed, -dx, -dy);
+            if (gain > bestGain)
+            {
+              bestGain = gain;
+              best = (pushed, dx, dy);
+            }
+          }
+
+          var beyond = Beyond(_free, dx, dy);
+          if (beyond.Count == 0) continue;
+          var counted = new HashSet<int>(movable);
+          counted.UnionWith(beyond);
+          var before = Score(counted);
+          var all = beyond.Append(_free).ToList();
+          Shift(all, dx, dy);
+          var spaceGain = before - Score(counted);
+          Shift(all, -dx, -dy);
+          if (spaceGain > bestGain)
+          {
+            bestGain = spaceGain;
+            best = (all, dx, dy);
+          }
+        }
+
+      return best;
     }
 
     /// <summary>
@@ -333,9 +450,7 @@ public static class LayoutTidy
         var join = _joins[j];
         if (join.Pull > 0)
         {
-          var offX = (_x[join.B] - _x[join.A]) / _stepX - join.WantX;
-          var offY = (_y[join.B] - _y[join.A]) / _stepY - join.WantY;
-          score += join.Pull * (offX * offX + offY * offY);
+          score += JoinCost(join);
         }
 
         // no room sits on a join that isn't its own
@@ -361,9 +476,11 @@ public static class LayoutTidy
           if (Cross(_joins[j], _joins[k])) score += CrossingCost;
         }
 
-      // and rooms prefer to stay where they were
-      foreach (var room in movable)
+      // and rooms prefer to stay where they were (rooms moved along with a whole side of the map don't count:
+      // they keep their places relative to each other)
+      foreach (var room in _movable)
       {
+        if (!movable.Contains(room)) continue;
         if (room == _free) continue;
         var mx = (_x[room] - _startX[room]) / _stepX;
         var my = (_y[room] - _startY[room]) / _stepY;
@@ -371,6 +488,26 @@ public static class LayoutTidy
       }
 
       return score;
+    }
+
+    /// <summary>
+    ///   How far a join is from what its ends say: being off to the side costs fully, being longer in the right
+    ///   direction costs little (a long straight join still reads clearly), being shorter or backwards costs fully.
+    /// </summary>
+    private double JoinCost(Join join)
+    {
+      var ax = (_x[join.B] - _x[join.A]) / _stepX;
+      var ay = (_y[join.B] - _y[join.A]) / _stepY;
+      var length = Math.Sqrt(join.WantX * join.WantX + join.WantY * join.WantY);
+      if (length < 1e-9) return 0;
+      var ux = join.WantX / length;
+      var uy = join.WantY / length;
+      var along = ax * ux + ay * uy;
+      var sideX = ax - along * ux;
+      var sideY = ay - along * uy;
+      var extra = along - length;
+      var lengthCost = extra > 0 ? Stretch * extra * extra : extra * extra;
+      return join.Pull * (sideX * sideX + sideY * sideY + lengthCost);
     }
 
     private bool SegmentHitsRoom(int a, int b, int room)
