@@ -70,14 +70,22 @@ UI\AutomapDialog.cs
 
 - the previous line was blank or a prompt,
 - the line itself is non-blank, non-indented,
-- it starts and ends with a letter/digit,
+- it starts and ends with a letter/digit, optionally inside balanced double quotes,
 - a leading letter must be capitalized,
 - each space-separated word starts with a letter, digit, or `#`,
-- longer words must generally be capitalized,
-- an all-uppercase line is rejected (treated as a banner/game-over text, not a room name).
+- longer words before a comma qualifier must generally be capitalized,
+- an all-uppercase line is rejected (treated as a banner/game-over text, not a room name),
+  except for grid references such as `Y2`. These also exempt short multiword headings such as
+  `At "Y2"` from the minimum-word-length rule. Quotes are ignored for word validation but
+  preserved in the detected name.
 
-Decorative suffixes (starting at `,`, `(`, `[`, `{`, or `" - "`) are stripped from the detected
-name, e.g. `Bedroom, on the bed` → room name `Bedroom`.
+Decorative suffixes (starting at `(`, `[`, `{`, or `" - "`) are stripped from the detected
+name; a dash suffix must begin in lower case. A comma only introduces a positional decoration
+when followed by a lower-case location preposition and article, e.g. `Bedroom, on the bed` →
+room name `Bedroom`. Other comma qualifiers are retained, including `Garden, north`,
+`Dead End, near Vending Machine` and `Maze of Twisty Little Passages, all different`.
+The existing sentence guard still rejects lower-case comma continuations longer than 30
+characters, to avoid detecting wrapped prose as a heading.
 
 `ExtractParagraph` then greedily collects the following non-blank lines (stopping at a blank
 line, a prompt, another detected room name, or a short line under 65 chars) and joins them with
@@ -119,12 +127,23 @@ Two distinct ambiguous situations, each with its own dialog:
 1. **Same room name, different description** (`Match` returns `null` = "possibly the same
    room") → `UI\DisambiguateRoomsDialog.cs` shows transcript context and candidate rooms. User
    picks an existing room, chooses "new room", or asks to stop being prompted (after which the
-   first candidate is used automatically for the rest of the run).
+   first candidate is used automatically for the rest of the run). Automatic description
+   matching compares the **first sentence** with each stored description's first sentence,
+   ignoring case and spacing (`Parser.FirstSentence`): games add changing text after it ("The
+   door is open."), which shouldn't ask. A shared opening phrase within the first sentence is not
+   enough. Confirming a changed description as the same room stores that variant for subsequent
+   visits.
 2. **A room already exists in the direction just moved** → `UI\AutomapRoomSameDirectionDialog.cs`
    asks whether to keep the existing room, replace it with the newly detected one, or keep both.
 
 If `AssumeRoomsWithSameNameAreSameRoom` is enabled, case 1 never prompts — same-named rooms are
 always treated as the same room.
+
+Colossal Cave's "all different" maze prints the heading `Maze` for every room; its descriptions,
+not its headings, differ. Use verbose transcripts with `AssumeRoomsWithSameNameAreSameRoom`
+disabled and choose "new room" for each distinct description. Names remain `Maze`; a revisit
+with the same first sentence reuses the corresponding room. A brief revisit with several same-named
+candidates still needs disambiguation.
 
 ## Settings (`Automap\AutomapSettings.cs`)
 
