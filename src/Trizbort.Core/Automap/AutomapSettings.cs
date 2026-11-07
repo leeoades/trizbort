@@ -14,7 +14,8 @@ public struct AutomapSettings
         AddRegionCommand = "tb region",
         ContinueTranscript = false,
         AssumeTwoWayConnections = true,
-        AutoTidy = true
+        AutoTidy = true,
+        MoveByMove = false
       };
       return settings;
     }
@@ -32,4 +33,10 @@ public struct AutomapSettings
 
   /// <summary>Rooms near the player rearrange themselves after each move so they don't get in each other's way.</summary>
   public bool AutoTidy;
+
+  /// <summary>
+  ///   Play the transcript a move at a time: automap waits before each command until it is told to play the next move
+  ///   (<see cref="Automap.PlayNextMove" />) or to play to the end (<see cref="Automap.PlayToEnd" />).
+  /// </summary>
+  public bool MoveByMove;
 }

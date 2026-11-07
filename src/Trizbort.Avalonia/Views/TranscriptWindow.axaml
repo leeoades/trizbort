@@ -1,0 +1,73 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        x:Class="Trizbort.Avalonia.Views.TranscriptWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Transcript"
+        Width="760" Height="580"
+        MinWidth="360" MinHeight="240"
+        Background="#081208"
+        WindowStartupLocation="CenterOwner">
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom"
+                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="10,6">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding AutomapStatusText}"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6"
+                            IsVisible="{Binding IsAutomapActive}">
+                    <Button Content="Next Move"
+                            IsVisible="{Binding IsAutomapMoveByMove}"
+                            Command="{Binding PlayNextMoveCommand}"
+                            Padding="12,4" FontSize="12" />
+                    <Button Content="Play to End"
+                            IsVisible="{Binding IsAutomapMoveByMove}"
+                            Command="{Binding PlayToEndCommand}"
+                            Padding="12,4" FontSize="12" />
+                    <Button Content="Pause"
+                            IsVisible="{Binding !IsAutomapMoveByMove}"
+                            Command="{Binding PauseAutomapCommand}"
+                            Padding="12,4" FontSize="12" />
+                </StackPanel>
+            </Grid>
+        </Border>
+        <!-- read-only but selectable, so text can be copied into a room's description or a label -->
+        <TextBox x:Name="TranscriptBox"
+                 Text="{Binding AutomapTranscriptText, Mode=OneWay}"
+                 IsReadOnly="True"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 BorderThickness="0"
+                 Padding="16,12"
+                 Background="#081208"
+                 Foreground="#5CFF8A"
+                 SelectionBrush="#3A7A4A"
+                 SelectionForegroundBrush="#E8FFE8"
+                 CaretBrush="#5CFF8A"
+                 FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, Liberation Mono, Menlo, monospace"
+                 FontSize="14"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <TextBox.Styles>
+                <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                    <Setter Property="Background" Value="#081208" />
+                    <Setter Property="BorderThickness" Value="0" />
+                </Style>
+                <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                    <Setter Property="Background" Value="#081208" />
+                </Style>
+                <Style Selector="TextBox:pointerover">
+                    <Setter Property="Foreground" Value="#5CFF8A" />
+                </Style>
+                <Style Selector="TextBox:focus">
+                    <Setter Property="Foreground" Value="#5CFF8A" />
+                </Style>
+            </TextBox.Styles>
+        </TextBox>
+    </DockPanel>
+</Window>

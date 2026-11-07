@@ -52,6 +52,10 @@
                         <CheckBox Content="_Start processing from the end of the transcript file."
                                   IsChecked="{Binding ContinueTranscript}" />
 
+                        <CheckBox Content="_Play the transcript a move at a time, starting paused."
+                                  ToolTip.Tip="Use Next move and Play to end on the automap bar to step through a transcript you already have."
+                                  IsChecked="{Binding MoveByMove}" />
+
                         <CheckBox Content="Always assume two-way connections."
                                   IsChecked="{Binding AssumeTwoWayConnections}" />
 

@@ -13,12 +13,30 @@
                 <TextBlock Text="{Binding Status, ElementName=root}" FontSize="12" VerticalAlignment="Center" />
             </StackPanel>
 
-            <Button Grid.Column="2"
-                    Content="Stop Automapping"
-                    Command="{Binding StopCommand, ElementName=root}"
-                    Padding="12,4"
-                    FontSize="12"
-                    VerticalAlignment="Center" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Button Content="Next Move"
+                        IsVisible="{Binding IsMoveByMove, ElementName=root}"
+                        Command="{Binding NextMoveCommand, ElementName=root}"
+                        ToolTip.Tip="Play the transcript's next move, then pause"
+                        Padding="12,4"
+                        FontSize="12" />
+                <Button Content="Play to End"
+                        IsVisible="{Binding IsMoveByMove, ElementName=root}"
+                        Command="{Binding PlayToEndCommand, ElementName=root}"
+                        ToolTip.Tip="Play the rest of the transcript without pausing, then follow the game as it goes on"
+                        Padding="12,4"
+                        FontSize="12" />
+                <Button Content="Pause"
+                        IsVisible="{Binding !IsMoveByMove, ElementName=root}"
+                        Command="{Binding PauseCommand, ElementName=root}"
+                        ToolTip.Tip="Pause before the next move, to step through the transcript a move at a time"
+                        Padding="12,4"
+                        FontSize="12" />
+                <Button Content="Stop Automapping"
+                        Command="{Binding StopCommand, ElementName=root}"
+                        Padding="12,4"
+                        FontSize="12" />
+            </StackPanel>
         </Grid>
     </Border>
 </UserControl>

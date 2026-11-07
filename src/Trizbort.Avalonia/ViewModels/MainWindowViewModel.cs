@@ -50,6 +50,27 @@ public partial class MainWindowViewModel : ViewModelBase
     private Task? _automapTask;
     private object? _currentRunToken;
 
+    /// <summary>True while automap plays the transcript a move at a time; false while it plays freely.</summary>
+    [ObservableProperty]
+    private bool _isAutomapMoveByMove;
+
+    /// <summary>The end of the transcript read so far, as much as fits on the little game monitor.</summary>
+    [ObservableProperty]
+    private string _automapScreenText = string.Empty;
+
+    /// <summary>The whole transcript read so far; kept up to date only while the transcript window is open.</summary>
+    [ObservableProperty]
+    private string _automapTranscriptText = string.Empty;
+
+    private bool _isTranscriptWindowOpen;
+    private bool _screenRefreshPending;
+    private int _screenLineCount;
+    private readonly List<string> _screenLines = new();
+
+    /// <summary>Columns and rows of the little game monitor, for working out how much of the transcript fits.</summary>
+    internal const int MonitorColumns = 50;
+    internal const int MonitorRows = 16;
+
     internal Task? CurrentAutomapTask => _automapTask;
 
     [ObservableProperty]
@@ -453,8 +474,89 @@ public partial class MainWindowViewModel : ViewModelBase
         _currentRunToken = null;
 
         AutomapEngine.Instance.Stop();
+        AutomapEngine.Instance.ScreenChanged -= OnAutomapScreenChanged;
         IsAutomapActive = false;
         AutomapStatusText = "Automap is not running.";
+    }
+
+    /// <summary>Play the transcript's next move, then pause.</summary>
+    [RelayCommand]
+    public void PlayNextMove()
+    {
+        AutomapEngine.Instance.PlayNextMove();
+        IsAutomapMoveByMove = true;
+    }
+
+    /// <summary>Play the rest of the transcript without pausing.</summary>
+    [RelayCommand]
+    public void PlayToEnd()
+    {
+        AutomapEngine.Instance.PlayToEnd();
+        IsAutomapMoveByMove = false;
+    }
+
+    /// <summary>Pause before the transcript's next move.</summary>
+    [RelayCommand]
+    public void PauseAutomap()
+    {
+        AutomapEngine.Instance.Pause();
+        IsAutomapMoveByMove = true;
+    }
+
+    /// <summary>The transcript window is open (or closed): keep its text up to date only while it is open.</summary>
+    internal void SetTranscriptWindowOpen(bool open)
+    {
+        _isTranscriptWindowOpen = open;
+        AutomapTranscriptText = open ? string.Join(Environment.NewLine, _screenLines) : string.Empty;
+    }
+
+    private void ResetAutomapScreen()
+    {
+        _screenLines.Clear();
+        _screenLineCount = 0;
+        AutomapScreenText = string.Empty;
+        AutomapTranscriptText = string.Empty;
+    }
+
+    // the engine reads a line at a time; the screen catches up at most once per dispatcher pass
+    private void OnAutomapScreenChanged()
+    {
+        lock (_screenLines)
+        {
+            if (_screenRefreshPending) return;
+            _screenRefreshPending = true;
+        }
+
+        Dispatcher.UIThread.Post(RefreshAutomapScreen, DispatcherPriority.Background);
+    }
+
+    private void RefreshAutomapScreen()
+    {
+        lock (_screenLines) _screenRefreshPending = false;
+        var engine = AutomapEngine.Instance;
+        var lines = engine.ScreenLines(_screenLineCount);
+        if (lines.Count == 0) return;
+        _screenLines.AddRange(lines);
+        _screenLineCount += lines.Count;
+        AutomapScreenText = MonitorText(_screenLines, MonitorColumns, MonitorRows);
+        if (_isTranscriptWindowOpen) AutomapTranscriptText = string.Join(Environment.NewLine, _screenLines);
+    }
+
+    /// <summary>The last lines that fit on a screen of this many columns and rows, long lines wrapping.</summary>
+    internal static string MonitorText(IReadOnlyList<string> lines, int columns, int rows)
+    {
+        var used = 0;
+        var first = lines.Count;
+        while (first > 0)
+        {
+            var length = lines[first - 1].Length;
+            var height = Math.Max(1, (length + columns - 1) / columns);
+            if (used + height > rows) break;
+            used += height;
+            first--;
+        }
+
+        return string.Join("\n", lines.Skip(first));
     }
 
     public Task StartAutomapAsync(AutomapSettings settings)
@@ -465,7 +567,10 @@ public partial class MainWindowViewModel : ViewModelBase
         _currentRunToken = runToken;
 
         IsAutomapActive = true;
+        IsAutomapMoveByMove = settings.MoveByMove;
         AutomapStatusText = "Automapping has started.";
+        ResetAutomapScreen();
+        AutomapEngine.Instance.ScreenChanged += OnAutomapScreenChanged;
 
         _automapTask = RunAutomapLoopAsync(settings, runToken);
         return Task.CompletedTask;
@@ -485,6 +590,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             if (ReferenceEquals(_currentRunToken, runToken))
             {
+                AutomapEngine.Instance.ScreenChanged -= OnAutomapScreenChanged;
                 AutomapStatusText = AutomapEngine.Instance.Status;
                 IsAutomapActive = false;
                 UpdateState();
@@ -507,7 +613,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OnAutomapStatusChanged(string status)
     {
-        RunOnUiThread(() => AutomapStatusText = status);
+        RunOnUiThread(() =>
+        {
+            AutomapStatusText = status;
+            IsAutomapMoveByMove = AutomapEngine.Instance.MoveByMove;
+        });
     }
 
     // The engine has already reported the error through IEditorPrompts; here the UI returns to "not running".

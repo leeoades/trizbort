@@ -87,10 +87,21 @@
                        IsHitTestVisible="False" />
 
             <!-- AutomapBar overlay -->
+            <!-- the game as automap has read it so far, on a little monitor; click it for the whole transcript -->
+            <controls:TranscriptMonitor VerticalAlignment="Bottom"
+                                        HorizontalAlignment="Right"
+                                        Margin="0,0,12,52"
+                                        IsVisible="{Binding IsAutomapActive}"
+                                        Text="{Binding AutomapScreenText}" />
+
             <controls:AutomapBar VerticalAlignment="Bottom"
                                  HorizontalAlignment="Stretch"
                                  IsVisible="{Binding IsAutomapActive}"
                                  Status="{Binding AutomapStatusText}"
+                                 IsMoveByMove="{Binding IsAutomapMoveByMove}"
+                                 NextMoveCommand="{Binding PlayNextMoveCommand}"
+                                 PlayToEndCommand="{Binding PlayToEndCommand}"
+                                 PauseCommand="{Binding PauseAutomapCommand}"
                                  StopCommand="{Binding StopAutomapCommand}" />
         </Grid>
     </DockPanel>

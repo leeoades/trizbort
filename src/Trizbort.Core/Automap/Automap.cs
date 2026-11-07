@@ -42,6 +42,42 @@ public sealed class Automap : IAutomapController
     _stepNow = false;
   }
 
+  /// <summary>
+  ///   When playing move by move, wait before the player's next command until <see cref="PlayNextMove" /> or
+  ///   <see cref="PlayToEnd" />. The map and the transcript read so far are up to date while it waits.
+  /// </summary>
+  private async Task WaitForNextMove(string command, CancellationToken token)
+  {
+    token.ThrowIfCancellationRequested();
+    if (!_moveByMove) return;
+    if (TakeMove()) return;
+
+    NextCommand = command;
+    Status = string.IsNullOrWhiteSpace(command)
+      ? "Paused before the next move."
+      : "Paused before the next move: " + command;
+    while (_moveByMove && !TakeMove()) await Task.Delay(50, token);
+    token.ThrowIfCancellationRequested();
+    NextCommand = null;
+    Status = "Automapping is processing the transcript.";
+  }
+
+  private bool TakeMove()
+  {
+    while (true)
+    {
+      var moves = Volatile.Read(ref _movesToPlay);
+      if (moves <= 0) return false;
+      if (Interlocked.CompareExchange(ref _movesToPlay, moves - 1, moves) == moves) return true;
+    }
+  }
+
+  private void AddScreenLine(string line)
+  {
+    lock (_screen) _screen.Add(line ?? string.Empty);
+    ScreenChanged?.Invoke();
+  }
+
   private async Task<string> WaitForNewLine(
     TextReader reader,
     CancellationToken cancellationToken)
@@ -1074,6 +1110,9 @@ public sealed class Automap : IAutomapController
 
   private AutomapSettings _settings;
   private volatile bool _stepNow;
+  private volatile bool _moveByMove;
+  private int _movesToPlay;
+  private readonly List<string> _screen = new();
   private string _failureReason = string.Empty;
 
   private CancellationTokenSource _tokenSource;
@@ -1182,6 +1221,11 @@ public sealed class Automap : IAutomapController
     _lastJourneyCommand = null;
     _gameName = string.Empty;
     _stepNow = false;
+    _moveByMove = settings.MoveByMove;
+    Volatile.Write(ref _movesToPlay, 0);
+    NextCommand = null;
+    lock (_screen) _screen.Clear();
+    ScreenChanged?.Invoke();
     _dontAskAboutAmbiguities = false;
     UseDottedConnection = false;
   }
@@ -1202,6 +1246,46 @@ public sealed class Automap : IAutomapController
     _settings.SingleStep = false;
     Step();
   }
+
+  /// <summary>True while the run waits before each move (see <see cref="AutomapSettings.MoveByMove" />).</summary>
+  public bool MoveByMove => _moveByMove;
+
+  /// <summary>The command automap is paused before, while playing move by move; otherwise null.</summary>
+  public string NextCommand { get; private set; }
+
+  /// <summary>Play the next move of the transcript, then pause again.</summary>
+  public void PlayNextMove()
+  {
+    _moveByMove = true;
+    Interlocked.Increment(ref _movesToPlay);
+  }
+
+  /// <summary>Play the rest of the transcript without pausing (and keep following it as the game goes on).</summary>
+  public void PlayToEnd()
+  {
+    _moveByMove = false;
+    Volatile.Write(ref _movesToPlay, 0);
+  }
+
+  /// <summary>Pause before the next move.</summary>
+  public void Pause()
+  {
+    Volatile.Write(ref _movesToPlay, 0);
+    _moveByMove = true;
+  }
+
+  /// <summary>
+  ///   The transcript lines automap has read in this run, from <paramref name="from" /> on: what the game window
+  ///   showed up to this point.
+  /// </summary>
+  public IReadOnlyList<string> ScreenLines(int from = 0)
+  {
+    lock (_screen)
+      return from >= _screen.Count ? Array.Empty<string>() : _screen.GetRange(Math.Max(0, from), _screen.Count - Math.Max(0, from));
+  }
+
+  /// <summary>Raised when automap reads another line of the transcript, or a run starts. May be raised off the UI thread.</summary>
+  public event Action ScreenChanged;
 
   public string Status
   {
@@ -1468,6 +1552,8 @@ public sealed class Automap : IAutomapController
           atFileEnd = await reader.IsAtEndAsync(tokenSource.Token); // store this now so that it's still valid when we use it below
         }
 
+        AddScreenLine(line);
+
         //Trace("[" + line + "]");
         string command;
         if (IsPrompt(line, out command))
@@ -1486,9 +1572,16 @@ public sealed class Automap : IAutomapController
           // interpreter writes that before the game's reply, so the next line is the reply, not the command.
           if (atFileEnd && string.IsNullOrWhiteSpace(command))
             // we've already read the prompt, now just read the command when the player enters it
-            command = (await WaitForNewLine(reader, tokenSource.Token)).Trim();
+          {
+            var typed = await WaitForNewLine(reader, tokenSource.Token);
+            AddScreenLine(typed);
+            command = typed.Trim();
+          }
 
           //                  var nextParagraph = getTextToNextPrompt(reader);
+
+          // playing move by move: wait here, with the game's reply to the last move mapped
+          await WaitForNextMove(command, tokenSource.Token);
 
           // process the next command
           tokenSource.Token.ThrowIfCancellationRequested();
