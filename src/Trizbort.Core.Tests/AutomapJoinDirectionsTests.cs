@@ -296,6 +296,26 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
   }
 
   [Test]
+  public void AnEndListingSeveralDirections_PrefersASideWhoseLineCrossesNoOtherJoin()
+  {
+    // the Garden is as much north as east of the Hall, so "n / e" could leave either side; a join from the Attic
+    // down to the Basement runs just past the Hall's north side, so the east side, which doesn't cross it, wins
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 300, -300);
+    var join = new Connection(Project.Current, new Vertex(hall.PortAt(CompassPoint.North)),
+      new Vertex(garden.PortAt(CompassPoint.South)));
+    join.StartText = "n / e";
+    Project.Current.Elements.Add(join);
+    var attic = AddRoomAt("Attic", 22, -300);
+    var basement = AddRoomAt("Basement", 22, 200);
+    Project.Current.Elements.Add(new Connection(Project.Current, new Vertex(attic.PortAt(CompassPoint.South)),
+      new Vertex(basement.PortAt(CompassPoint.North))));
+
+    GuessedEnds.Face(Project.Current.Elements, new[] { hall }).ShouldBe(1);
+    StartSide(join).ShouldBe(CompassPoint.East);
+  }
+
+  [Test]
   public void AnArrowDrawnByHand_IsLeftWhereItIs()
   {
     var hall = AddRoomAt("Hall", 0, 0);
