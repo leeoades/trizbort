@@ -102,6 +102,9 @@ public static class LayoutTidy
 
     public double WantY;
     public double Pull;
+
+    /// <summary>Where the join meets each room, from the room's centre: the line is drawn between these points.</summary>
+    public double AX, AY, BX, BY;
   }
 
   private sealed class LayoutMap
@@ -167,6 +170,17 @@ public static class LayoutTidy
         if (a == null || b == null || a == b) continue;
         if (!_index.TryGetValue(a, out var ia) || !_index.TryGetValue(b, out var ib)) continue;
         var join = new Join { A = ia, B = ib };
+        if (connection.VertexList.Count >= 2)
+        {
+          var start = connection.VertexList[0].Position;
+          var end = connection.VertexList[connection.VertexList.Count - 1].Position;
+          var startCentre = a.InnerBounds.Center;
+          var endCentre = b.InnerBounds.Center;
+          join.AX = start.X - startCentre.X;
+          join.AY = start.Y - startCentre.Y;
+          join.BX = end.X - endCentre.X;
+          join.BY = end.Y - endCentre.Y;
+        }
         if (!string.IsNullOrEmpty(connection.AutomapCommand))
         {
           join.Pull = 0; // a teleport: it can go anywhere
@@ -315,7 +329,7 @@ public static class LayoutTidy
         var touches = set.Contains(join.A) || set.Contains(join.B);
         for (var room = 0; room < _rooms.Count; room++)
           if (room != join.A && room != join.B && (touches || set.Contains(room)) &&
-              SegmentHitsRoom(join.A, join.B, room))
+              SegmentHitsRoom(join, room))
             return true;
       }
 
@@ -626,7 +640,7 @@ public static class LayoutTidy
 
         // no room sits on a join that isn't its own
         for (var room = 0; room < _rooms.Count; room++)
-          if (room != join.A && room != join.B && SegmentHitsRoom(join.A, join.B, room))
+          if (room != join.A && room != join.B && SegmentHitsRoom(join, room))
             score += RoomOnJoinCost;
       }
 
@@ -648,7 +662,7 @@ public static class LayoutTidy
         {
           var join = _joins[j];
           if (join.A == room || join.B == room || movable.Contains(join.A) || movable.Contains(join.B)) continue;
-          if (SegmentHitsRoom(join.A, join.B, room)) score += RoomOnJoinCost;
+          if (SegmentHitsRoom(join, room)) score += RoomOnJoinCost;
         }
 
       // joins don't cross
@@ -709,14 +723,17 @@ public static class LayoutTidy
       return difference > 180 ? 360 - difference : difference;
     }
 
-    private bool SegmentHitsRoom(int a, int b, int room)
+    private bool SegmentHitsRoom(Join join, int room)
     {
-      // the room's box, slightly shrunk, against the line between the two room centres
-      var left = _x[room] - _halfW[room] * 0.9;
-      var right = _x[room] + _halfW[room] * 0.9;
-      var top = _y[room] - _halfH[room] * 0.9;
-      var bottom = _y[room] + _halfH[room] * 0.9;
-      return SegmentHitsBox(_x[a], _y[a], _x[b], _y[b], left, top, right, bottom);
+      // the line as drawn, between the points where the join meets its rooms, against the room's box with a little
+      // margin: a line just skimming a room reads as touching it
+      var margin = _gap / 4;
+      var left = _x[room] - _halfW[room] - margin;
+      var right = _x[room] + _halfW[room] + margin;
+      var top = _y[room] - _halfH[room] - margin;
+      var bottom = _y[room] + _halfH[room] + margin;
+      return SegmentHitsBox(_x[join.A] + join.AX, _y[join.A] + join.AY, _x[join.B] + join.BX, _y[join.B] + join.BY,
+        left, top, right, bottom);
     }
 
     private static bool SegmentHitsBox(

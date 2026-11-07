@@ -39,7 +39,4 @@ Southeast Junction [southeast] stub
 Southwest Junction [north] <-> [south] Northwest Junction
 Top Landing [southsouthwest "d"] <-> [northnorthwest "u"] Middle of Beach Stairs
 
-natural joins: 18 of 18
-
-overlaps:
-Front Porch is on the join Entrance to Hedge Maze - Northeast Junction
+natural joins: 17 of 18

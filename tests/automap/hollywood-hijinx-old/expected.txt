@@ -40,4 +40,4 @@ Southwest Junction [north] <-> [south] Northwest Junction
 Southwest Junction [south] <-> [west] South Junction
 Top Landing [southsouthwest "d"] <-> [northnorthwest "u"] Middle of Beach Stairs
 
-natural joins: 18 of 20
+natural joins: 16 of 20

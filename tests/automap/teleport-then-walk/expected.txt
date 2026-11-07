@@ -10,6 +10,3 @@ Inside Building [west] <-> [east] Debris Room "xyzzy" (dotted)
 Inside Building [west] <-> [east] End of Road
 
 natural joins: 1 of 1
-
-overlaps:
-Debris Room is on the join Inside Building - End of Road

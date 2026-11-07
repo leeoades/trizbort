@@ -150,6 +150,31 @@ public class LayoutTidyTests : IsolatedProjectTests
   }
 
   [Test]
+  public void ANewRoomUnderAJoin_MovesDown_TakingTheRoomsBelowWithIt()
+  {
+    // Colossal Cave: north from the Tall E/W Canyon reaches the Swiss Cheese Room, in the gap just under the
+    // one-way join from the Hall of the Mountain King's south-west corner to the Secret E/W Canyon. The join
+    // skims the room's top; the room should move down instead, and the canyons below it make space.
+    var hall = AddRoomAt("Hall of the Mountain King", 0, -1);
+    var side = AddRoomAt("In South Side Chamber", 0, 0);
+    var secret = AddRoomAt("Secret E/W Canyon", -2, 0);
+    var tall = AddRoomAt("In Tall E/W Canyon", -1, 1);
+    var narrow = AddRoomAt("N/S Canyon", -1, 2);
+    var swiss = AddRoomAt("In Swiss Cheese Room", -1, 0);
+    Join(hall, CompassPoint.South, side, CompassPoint.North);
+    Join(hall, CompassPoint.SouthWest, secret, CompassPoint.East).Flow = ConnectionFlow.OneWay;
+    Join(narrow, CompassPoint.North, tall, CompassPoint.South).Flow = ConnectionFlow.OneWay;
+    Join(tall, CompassPoint.North, swiss, CompassPoint.South).Flow = ConnectionFlow.OneWay;
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), swiss).ShouldBeGreaterThan(0);
+
+    Overlaps().ShouldBe(0);
+    var (_, secretRow) = Cell(secret);
+    Cell(swiss).Row.ShouldBeGreaterThan(secretRow);
+    Cell(tall).ShouldBe((Cell(swiss).Column, Cell(swiss).Row + 1));
+  }
+
+  [Test]
   public void TheSpaceInFrontOfAnUnexploredExit_StaysClear()
   {
     // Colossal Cave: the Debris Room has an unexplored way west; going up reaches the Sloping E/W Canyon, whose way
