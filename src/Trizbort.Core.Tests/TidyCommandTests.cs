@@ -78,6 +78,33 @@ public class TidyCommandTests
   }
 
   [Test]
+  public void TidyMapWithSolver_PutsEveryJoinTheWayItPoints_AsOneUndoStep()
+  {
+    var (hall, garden, shed) = AMessyMap();
+    var before = (hall.Position, garden.Position, shed.Position);
+
+    _catalogue.Find("map.tidySolver").ExecuteAsync(_session).Wait();
+
+    LayoutTidy.NaturalJoins(Project.Current.Elements.ToList()).ShouldBe((2, 2));
+    _session.PerformUndo();
+    Vector At(string name) => Project.Current.Elements.OfType<Room>().Single(room => room.Name == name).Position;
+    (At("Hall"), At("Garden"), At("Shed")).ShouldBe(before);
+  }
+
+  [Test]
+  public void TidySelectedRoomsWithSolver_MovesOnlyTheSelection()
+  {
+    var (hall, garden, shed) = AMessyMap();
+    var hallBefore = hall.Position;
+
+    _session.Selection.Set(new Element[] { garden, shed });
+    _catalogue.Find("map.tidySelectionSolver").ExecuteAsync(_session).Wait();
+
+    hall.Position.ShouldBe(hallBefore);
+    LayoutTidy.NaturalJoins(Project.Current.Elements.ToList()).ShouldBe((2, 2));
+  }
+
+  [Test]
   public void TidySelectedRooms_MovesOnlyTheSelection()
   {
     var (hall, garden, shed) = AMessyMap();

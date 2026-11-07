@@ -25,7 +25,7 @@ namespace Trizbort.Automap;
 ///   two rooms, only the one that fits best counts. The far end of a one-way join nobody has come back along says
 ///   nothing about where its room should be.
 /// </remarks>
-public static class LayoutTidy
+public static partial class LayoutTidy
 {
   // weights of the score; lower is better
   private const double OverlapCost = 400;
@@ -133,6 +133,18 @@ public static class LayoutTidy
     private readonly double _stepX;
     private readonly double _stepY;
     private readonly double _gap;
+
+    // read by the solver (LayoutTidy.Solver.cs)
+    public IReadOnlyList<Room> Rooms => _rooms;
+    public IReadOnlyList<Join> Joins => _joins;
+    public double StepX => _stepX;
+    public double StepY => _stepY;
+    public double Gap => _gap;
+    public double CentreX(int room) => _x[room];
+    public double CentreY(int room) => _y[room];
+    public double HalfWidth(int room) => _halfW[room];
+    public double HalfHeight(int room) => _halfH[room];
+    public int IndexOf(Room room) => _index.TryGetValue(room, out var i) ? i : -1;
 
     public LayoutMap(IList<Element> elements)
     {

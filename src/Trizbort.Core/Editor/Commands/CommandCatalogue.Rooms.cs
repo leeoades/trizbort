@@ -116,6 +116,24 @@ public sealed partial class CommandCatalogue
       CanExecuteFunc = s => s.SelectedRooms.Count > 1,
       ExecuteAsyncFunc = s => Run(() => Tidy(s, s.SelectedRooms.ToList()))
     });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "map.tidySolver",
+      Title = "Tidy Map with Sol_ver",
+      MenuPath = "Edit/Rooms",
+      Group = "5-tidy",
+      CanExecuteFunc = s => s.Project.Elements.OfType<Room>().Skip(1).Any(),
+      ExecuteAsyncFunc = s => Run(() => Tidy(s, null, true))
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "map.tidySelectionSolver",
+      Title = "Tidy Selected Rooms with Solve_r",
+      MenuPath = "Edit/Rooms",
+      Group = "5-tidy",
+      CanExecuteFunc = s => s.SelectedRooms.Count > 1,
+      ExecuteAsyncFunc = s => Run(() => Tidy(s, s.SelectedRooms.ToList(), true))
+    });
   }
 
   /// <summary>How long Tidy Map and Tidy Selected Rooms may think: longer than the tidy after each automap move.</summary>
@@ -125,16 +143,25 @@ public sealed partial class CommandCatalogue
   ///   Rearranges <paramref name="rooms" /> (every room when null) so joins point the way their directions say,
   ///   rooms keep off each other and off joins, and joins cross as little as possible; other rooms stay put.
   /// </summary>
-  private static void Tidy(EditorSession session, IReadOnlyList<Room> rooms)
+  /// <param name="solver">
+  ///   Lay the rooms out in one go with the constraint solver (LayoutTidy.SolverTidy) rather than improving the
+  ///   layout a step at a time.
+  /// </param>
+  private static void Tidy(EditorSession session, IReadOnlyList<Room> rooms, bool solver = false)
   {
     var elements = session.Project.Elements.ToList();
     var targets = rooms ?? elements.OfType<Room>().ToList();
     session.Execute(rooms == null ? "Tidy map" : "Tidy selected rooms", () =>
     {
-      if (LayoutTidy.Tidy(elements, targets, TidyTimeLimitMs, rearrange: true) > 0)
-        GuessedEnds.Face(session.Project.Elements, targets.ToList());
+      var moved = solver
+        ? LayoutTidy.SolverTidy(elements, targets, SolverTimeLimitMs)
+        : LayoutTidy.Tidy(elements, targets, TidyTimeLimitMs, rearrange: true);
+      if (moved > 0) GuessedEnds.Face(session.Project.Elements, targets.ToList());
     });
   }
+
+  /// <summary>How long the solver may search; it stops early when it knows its layout is the best.</summary>
+  private const int SolverTimeLimitMs = 5000;
 
   private static void RegisterShape(
     CommandCatalogue catalogue, string id, string title, InputKey key, RoomShape shape, int contextOrder)
