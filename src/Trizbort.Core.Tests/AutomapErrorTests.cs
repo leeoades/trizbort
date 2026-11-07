@@ -102,6 +102,12 @@ public class AutomapErrorTests : IsolatedProjectTests
       set => _inner.MakeSpaceForNewRooms = value;
     }
 
+    public bool AbbreviateDirections
+    {
+      get => _inner.AbbreviateDirections;
+      set => _inner.AbbreviateDirections = value;
+    }
+
     public void TidyAround(Room room)
     {
       _inner.TidyAround(room);

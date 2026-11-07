@@ -23,6 +23,9 @@ public interface IAutomapCanvas
   /// </summary>
   bool MakeSpaceForNewRooms { get; set; }
 
+  /// <summary>Label joins with short directions ("n / u / in") rather than whole words.</summary>
+  bool AbbreviateDirections { get; set; }
+
   void Connect(Room source, MappableDirection directionFromSource, Room target, bool assumeTwoWayConnections);
 
   /// <summary>

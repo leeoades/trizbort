@@ -41,6 +41,10 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _autoTidy = true;
 
+    /// <summary>Label joins "n / u / in" rather than "north / up / in".</summary>
+    [ObservableProperty]
+    private bool _abbreviateDirections = true;
+
     /// <summary>Start paused, and play the transcript a move at a time from the automap bar.</summary>
     [ObservableProperty]
     private bool _moveByMove;
@@ -74,6 +78,7 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         AssumeTwoWayConnections = settings.AssumeTwoWayConnections;
         GuessExits = settings.GuessExits;
         AutoTidy = settings.AutoTidy;
+        AbbreviateDirections = settings.AbbreviateDirections;
         MoveByMove = settings.MoveByMove;
         AddObjectCommand = string.IsNullOrEmpty(settings.AddObjectCommand) ? "tb see" : settings.AddObjectCommand;
         AddRegionCommand = string.IsNullOrEmpty(settings.AddRegionCommand) ? "tb region" : settings.AddRegionCommand;
@@ -105,6 +110,7 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         settings.AssumeRoomsWithSameNameAreSameRoom = !VerboseTranscript || AssumeRoomsWithSameNameAreSameRoom;
         settings.GuessExits = GuessExits;
         settings.AutoTidy = AutoTidy;
+        settings.AbbreviateDirections = AbbreviateDirections;
         settings.MoveByMove = MoveByMove;
         settings.AddObjectCommand = string.IsNullOrEmpty(AddObjectCommand) ? AutomapSettings.Default.AddObjectCommand : AddObjectCommand;
         settings.AddRegionCommand = string.IsNullOrEmpty(AddRegionCommand) ? AutomapSettings.Default.AddRegionCommand : AddRegionCommand;

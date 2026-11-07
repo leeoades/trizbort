@@ -20,7 +20,7 @@ Top Landing
 
 connections:
 Cannon Emplacement [east] <-> [north] Northeast Junction
-Cannon Emplacement [north "north / down"] <-> [south "south / up"] Cliff
+Cannon Emplacement [north "n / d"] <-> [south "s / u"] Cliff
 Entrance to Hedge Maze [east] <-> [west] Northeast Junction
 Entrance to Hedge Maze [south] <-> [north] Garden, North
 Garden, East [southwest] <-> [northeast] Garden, South
@@ -37,7 +37,7 @@ South Junction [north] <-> [south] Front Porch
 South Junction [west] <-> [south] Southwest Junction
 Southeast Junction [southeast] stub
 Southwest Junction [north] <-> [south] Northwest Junction
-Top Landing [southsouthwest "down"] <-> [northnorthwest "up"] Middle of Beach Stairs
+Top Landing [southsouthwest "d"] <-> [northnorthwest "u"] Middle of Beach Stairs
 
 natural joins: 18 of 18
 

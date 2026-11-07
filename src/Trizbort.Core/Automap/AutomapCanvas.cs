@@ -174,10 +174,10 @@ public class AutomapCanvas : IAutomapCanvas
     }
 
     var thereWords = EndWords(connection, !hereIsStart);
-    var added = AddWord(hereWords, DirectionWord(direction));
+    var added = AddWord(hereWords, LabelWord(direction));
     // assuming two-way joins, the way back is the opposite direction
     if (added && !hereIsGuess && assumeTwoWayConnections && connection.Flow == ConnectionFlow.TwoWay)
-      AddWord(thereWords, DirectionWord(CompassPointHelper.GetOpposite(direction)));
+      AddWord(thereWords, LabelWord(CompassPointHelper.GetOpposite(direction)));
 
     var hereCompass = FirstCompass(hereWords);
     if (hereCompass != null && !IsMainPoint(EndPoint(connection, hereIsStart)))
@@ -319,14 +319,14 @@ public class AutomapCanvas : IAutomapCanvas
   ///   The directions written at one end of a join, plus the compass direction of the side it leaves the room from
   ///   when no compass direction is written. Words that aren't directions (a label the user typed) are kept.
   /// </summary>
-  private static List<string> EndWords(Connection connection, bool atStart)
+  private List<string> EndWords(Connection connection, bool atStart)
   {
     var text = atStart ? connection.StartText : connection.EndText;
     var words = string.IsNullOrWhiteSpace(text)
       ? new List<string>()
       : text.Split('/').Select(word => word.Trim()).Where(word => word.Length > 0).ToList();
     var point = EndPoint(connection, atStart);
-    if (IsMainPoint(point) && !words.Any(IsCompassWord)) words.Insert(0, DirectionWord(DirectionOfMainPoint(point)));
+    if (IsMainPoint(point) && !words.Any(IsCompassWord)) words.Insert(0, LabelWord(DirectionOfMainPoint(point)));
     return words;
   }
 
@@ -513,6 +513,31 @@ public class AutomapCanvas : IAutomapCanvas
   }
 
   public bool MakeSpaceForNewRooms { get; set; }
+
+  /// <summary>
+  ///   Write directions on join labels in short ("n / u / in") rather than in full ("north / up / in"). Automap's
+  ///   settings turn it on by default; labels already written in full are still understood, and not doubled up.
+  /// </summary>
+  public bool AbbreviateDirections { get; set; }
+
+  /// <summary>The word for <paramref name="direction" /> on a join's label: short or in full, as asked for.</summary>
+  private string LabelWord(MappableDirection direction) =>
+    AbbreviateDirections ? ShortWord(direction) : DirectionWord(direction);
+
+  private static string ShortWord(MappableDirection direction) => direction switch
+  {
+    MappableDirection.North => "n",
+    MappableDirection.NorthEast => "ne",
+    MappableDirection.East => "e",
+    MappableDirection.SouthEast => "se",
+    MappableDirection.South => "s",
+    MappableDirection.SouthWest => "sw",
+    MappableDirection.West => "w",
+    MappableDirection.NorthWest => "nw",
+    MappableDirection.Up => "u",
+    MappableDirection.Down => "d",
+    _ => DirectionWord(direction)
+  };
 
   private string _tidiedMap;
 

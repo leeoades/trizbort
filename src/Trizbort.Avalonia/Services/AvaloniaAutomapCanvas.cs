@@ -81,6 +81,12 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         set => _innerCanvas.MakeSpaceForNewRooms = value;
     }
 
+    public bool AbbreviateDirections
+    {
+        get => _innerCanvas.AbbreviateDirections;
+        set => _innerCanvas.AbbreviateDirections = value;
+    }
+
     public void TidyAround(Room room)
     {
         if (Dispatcher.UIThread.CheckAccess())

@@ -188,6 +188,37 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
   }
 
   [Test]
+  public void AbbreviatedDirections_LabelJoinsInShort()
+  {
+    var canvas = new AutomapCanvas { AbbreviateDirections = true };
+    var cliff = AddRoomAt("Cliff Top", 0, 0);
+    var beach = canvas.CreateRoom(cliff, MappableDirection.Down, "Beach", "Beach");
+    canvas.Connect(cliff, MappableDirection.Down, beach, true);
+    canvas.Connect(cliff, MappableDirection.North, beach, true);
+    canvas.Connect(cliff, MappableDirection.In, beach, true);
+
+    var join = TheJoin();
+    join.StartText.ShouldBe("n / d / in");
+    join.EndText.ShouldBe("s / u / out");
+  }
+
+  [Test]
+  public void AbbreviatedDirections_DontDoubleUpWordsAlreadyWrittenInFull()
+  {
+    var canvas = new AutomapCanvas();
+    var cliff = AddRoomAt("Cliff Top", 0, 0);
+    var beach = canvas.CreateRoom(cliff, MappableDirection.Down, "Beach", "Beach");
+    canvas.Connect(cliff, MappableDirection.Down, beach, true);
+    canvas.Connect(cliff, MappableDirection.North, beach, true);
+
+    canvas.AbbreviateDirections = true;
+    canvas.Connect(cliff, MappableDirection.North, beach, true);
+    canvas.Connect(cliff, MappableDirection.Down, beach, true);
+
+    TheJoin().StartText.ShouldBe("north / down");
+  }
+
+  [Test]
   public void TwoCommandsToTheSameRoom_ShareOneJoin()
   {
     // Colossal Cave: "light lamp" and "turn on lamp" both lead from the darkness to the Debris Room

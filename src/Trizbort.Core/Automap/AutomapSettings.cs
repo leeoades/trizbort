@@ -15,6 +15,7 @@ public struct AutomapSettings
         ContinueTranscript = false,
         AssumeTwoWayConnections = true,
         AutoTidy = true,
+        AbbreviateDirections = true,
         MoveByMove = false
       };
       return settings;
@@ -33,6 +34,9 @@ public struct AutomapSettings
 
   /// <summary>Rooms near the player rearrange themselves after each move so they don't get in each other's way.</summary>
   public bool AutoTidy;
+
+  /// <summary>Label joins with short directions ("n / u / in") rather than whole words ("north / up / in").</summary>
+  public bool AbbreviateDirections;
 
   /// <summary>
   ///   Play the transcript a move at a time: automap waits before each command until it is told to play the next move
