@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Linq;
+using Trizbort.Automap;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Editor.Input;
@@ -92,6 +94,46 @@ public sealed partial class CommandCatalogue
       CommandScope.Canvas, 59, s => s.SwapRoomFormats());
     RegisterSwap(catalogue, "room.swap.regions", "Swap _Regions", new KeyGesture(InputKey.W, ModifierKeys.Alt),
       CommandScope.Canvas, 60, s => s.SwapRoomRegions());
+
+    // Tidy: the auto-tidy, run over the whole map or the selected rooms, as one undo step.
+    catalogue.Register(new EditorCommand
+    {
+      Id = "map.tidy",
+      Title = "_Tidy Map",
+      MenuPath = "Edit/Rooms",
+      Group = "5-tidy",
+      CanExecuteFunc = s => s.Project.Elements.OfType<Room>().Skip(1).Any(),
+      ExecuteAsyncFunc = s => Run(() => Tidy(s, null))
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "map.tidySelection",
+      ContextOrder = 61, ContextGroup = "5-room",
+      Title = "Tidy Selected Roo_ms",
+      MenuPath = "Edit/Rooms",
+      Group = "5-tidy",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.SelectedRooms.Count > 1,
+      ExecuteAsyncFunc = s => Run(() => Tidy(s, s.SelectedRooms.ToList()))
+    });
+  }
+
+  /// <summary>How long Tidy Map and Tidy Selected Rooms may think: longer than the tidy after each automap move.</summary>
+  private const int TidyTimeLimitMs = 3000;
+
+  /// <summary>
+  ///   Rearranges <paramref name="rooms" /> (every room when null) so joins point the way their directions say,
+  ///   rooms keep off each other and off joins, and joins cross as little as possible; other rooms stay put.
+  /// </summary>
+  private static void Tidy(EditorSession session, IReadOnlyList<Room> rooms)
+  {
+    var elements = session.Project.Elements.ToList();
+    var targets = rooms ?? elements.OfType<Room>().ToList();
+    session.Execute(rooms == null ? "Tidy map" : "Tidy selected rooms", () =>
+    {
+      if (LayoutTidy.Tidy(elements, targets, TidyTimeLimitMs, rearrange: true) > 0)
+        GuessedEnds.Face(session.Project.Elements, targets.ToList());
+    });
   }
 
   private static void RegisterShape(

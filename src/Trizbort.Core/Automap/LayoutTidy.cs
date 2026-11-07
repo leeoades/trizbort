@@ -87,11 +87,15 @@ public static class LayoutTidy
   }
 
   /// <summary>Tidies the given rooms (all of them may move); the others stay put. Returns how many rooms moved.</summary>
-  public static int Tidy(IList<Element> elements, IEnumerable<Room> rooms, int timeLimitMs = 400)
+  /// <param name="rearrange">
+  ///   True when the user asked for these rooms to be tidied (Tidy Map, Tidy Selected Rooms): they may move as far as
+  ///   it takes. Otherwise rooms are reluctant to move far from where they are, so the map stays familiar.
+  /// </param>
+  public static int Tidy(IList<Element> elements, IEnumerable<Room> rooms, int timeLimitMs = 400, bool rearrange = false)
   {
     if (elements == null || rooms == null) return 0;
     var map = new LayoutMap(elements);
-    return map.Tidy(rooms.Where(map.Contains).ToList(), timeLimitMs, null);
+    return map.Tidy(rooms.Where(map.Contains).ToList(), timeLimitMs, null, null, rearrange ? StayPut / 20 : StayPut);
   }
 
   internal sealed class Join
@@ -379,8 +383,14 @@ public static class LayoutTidy
     // rooms further away that a join of the rooms being tidied runs across
     private HashSet<int> _inTheWay = new();
 
-    public int Tidy(List<Room> movableRooms, int timeLimitMs, Room free, List<Room> roomsInTheWay = null)
+    private double _stayPut = StayPut;
+    private bool _rearrange;
+
+    public int Tidy(
+      List<Room> movableRooms, int timeLimitMs, Room free, List<Room> roomsInTheWay = null, double stayPut = StayPut)
     {
+      _stayPut = stayPut;
+      _rearrange = stayPut < StayPut;
       _inTheWay = roomsInTheWay == null ? new HashSet<int>() : roomsInTheWay.Select(room => _index[room]).ToHashSet();
       if (movableRooms.Count == 0) return 0;
       _free = free != null && _index.TryGetValue(free, out var freeIndex) ? freeIndex : -1;
@@ -481,6 +491,8 @@ public static class LayoutTidy
               if (dx == 0 && dy == 0) continue;
               if (clock.ElapsedMilliseconds > timeLimitMs) return Apply();
               var beyond = Beyond(room, dx, dy);
+              // tidying what the user chose: rooms they didn't choose stay where they are
+              if (_rearrange) beyond = beyond.Where(movable.Contains).ToList();
               if (beyond.Count == 0) continue;
               var counted = new HashSet<int>(movable);
               counted.UnionWith(beyond);
@@ -752,7 +764,7 @@ public static class LayoutTidy
         if (room == _free) continue;
         var mx = (_x[room] - _startX[room]) / _stepX;
         var my = (_y[room] - _startY[room]) / _stepY;
-        score += StayPut * (mx * mx + my * my);
+        score += _stayPut * (mx * mx + my * my);
       }
 
       return score;
