@@ -670,26 +670,29 @@ public static class ConnectionDrawingAdapter
             cache.CachedEndText = null;
         }
 
-        if (!string.IsNullOrEmpty(connection.StartText))
+        // an end with no label of its own may show its direction ("ne"), as the map settings say
+        var startText = ConnectionEndLabels.Text(connection, true);
+        if (!string.IsNullOrEmpty(startText))
         {
-            if (cache.LastStartText != connection.StartText || cache.CachedStartText == null)
+            if (cache.LastStartText != startText || cache.CachedStartText == null)
             {
-                cache.LastStartText = connection.StartText;
+                cache.LastStartText = startText;
                 cache.CachedStartText = null;
             }
             var startVertex = connection.VertexList.Count > 0 ? connection.VertexList[0] : null;
-            DrawSingleAnnotation(context, connection.StartText, segments[0], font, typeface, brush, true, startVertex, ref cache.CachedStartText);
+            DrawSingleAnnotation(context, startText, segments[0], font, typeface, brush, true, startVertex, ref cache.CachedStartText);
         }
 
-        if (!string.IsNullOrEmpty(connection.EndText))
+        var endText = ConnectionEndLabels.Text(connection, false);
+        if (!string.IsNullOrEmpty(endText))
         {
-            if (cache.LastEndText != connection.EndText || cache.CachedEndText == null)
+            if (cache.LastEndText != endText || cache.CachedEndText == null)
             {
-                cache.LastEndText = connection.EndText;
+                cache.LastEndText = endText;
                 cache.CachedEndText = null;
             }
             var endVertex = connection.VertexList.Count > 1 ? connection.VertexList[^1] : null;
-            DrawSingleAnnotation(context, connection.EndText, segments[^1], font, typeface, brush, false, endVertex, ref cache.CachedEndText);
+            DrawSingleAnnotation(context, endText, segments[^1], font, typeface, brush, false, endVertex, ref cache.CachedEndText);
         }
 
         if (!string.IsNullOrEmpty(connection.MidText))

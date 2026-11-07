@@ -269,6 +269,14 @@ public partial class MapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _handDrawn;
 
+    /// <summary>Label the ends of joins leaving from a diagonal side ("ne", "sw").</summary>
+    [ObservableProperty]
+    private bool _labelDiagonalExits = true;
+
+    /// <summary>Label the ends of joins leaving from the north, east, south or west side ("n", "e").</summary>
+    [ObservableProperty]
+    private bool _labelCompassExits;
+
     [ObservableProperty]
     private bool _wrapTextAtDashes;
 
@@ -367,6 +375,8 @@ public partial class MapSettingsViewModel : ViewModelBase
         PreferredDistanceBetweenRooms = Settings.PreferredDistanceBetweenRooms;
 
         HandDrawn = Settings.HandDrawn;
+        LabelDiagonalExits = Settings.LabelDiagonalExits;
+        LabelCompassExits = Settings.LabelCompassExits;
         WrapTextAtDashes = Settings.WrapTextAtDashes;
         DocumentSpecificMargins = Settings.DocumentSpecificMargins;
         DocHorizontalMargin = Settings.DocHorizontalMargin;
@@ -421,6 +431,8 @@ public partial class MapSettingsViewModel : ViewModelBase
         Settings.PreferredDistanceBetweenRooms = PreferredDistanceBetweenRooms;
 
         Settings.HandDrawn = HandDrawn;
+        Settings.LabelDiagonalExits = LabelDiagonalExits;
+        Settings.LabelCompassExits = LabelCompassExits;
         Settings.WrapTextAtDashes = WrapTextAtDashes;
         Settings.DocumentSpecificMargins = DocumentSpecificMargins;
         Settings.DocHorizontalMargin = DocHorizontalMargin;

@@ -47,7 +47,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="12" Margin="8" Grid.IsSharedSizeScope="True">
                         <HeaderedContentControl Classes="group" Header="Lines">
-                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
                                 <ColumnDefinition Width="12" />
@@ -64,6 +64,14 @@
                             <NumericUpDown Grid.Row="4" Grid.Column="2" x:Name="TextOffsetBox" Value="{Binding TextOffsetFromConnection}" Minimum="0" Maximum="64" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
                             <Label Grid.Row="5" Grid.Column="0" Classes="field-label" Content="_Preferred Distance Between Rooms:" Target="{Binding #PreferredDistanceBox}" />
                             <NumericUpDown Grid.Row="5" Grid.Column="2" x:Name="PreferredDistanceBox" Value="{Binding PreferredDistanceBetweenRooms}" Minimum="16" Maximum="512" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
+                            <CheckBox Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3"
+                                      Content="Always label _diagonal exits (ne, nw, se, sw)"
+                                      ToolTip.Tip="Write the direction at each end of a join that leaves a room from a corner, unless the end has a label already"
+                                      IsChecked="{Binding LabelDiagonalExits}" />
+                            <CheckBox Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3"
+                                      Content="Always label straight exit_s (n, e, s, w)"
+                                      ToolTip.Tip="Write the direction at each end of a join that leaves a room from its north, east, south or west side, unless the end has a label already"
+                                      IsChecked="{Binding LabelCompassExits}" />
                         </Grid>
                         </HeaderedContentControl>
                         <HeaderedContentControl Classes="group" Header="Grid">
