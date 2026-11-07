@@ -61,6 +61,18 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "automap.nextMove",
+      Title = "Play Next Automap Mo_ve",
+      MenuPath = "Project",
+      Group = "2-automap-run",
+      Scope = CommandScope.Canvas,
+      // F10, as stepping over a line in a debugger; F5 plays to the end
+      Gestures = new[] { new KeyGesture(InputKey.F10, none) },
+      CanExecuteFunc = s => s.Automap.IsRunning,
+      ExecuteAsyncFunc = s => Run(() => s.Automap.PlayNextMove())
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "automap.step",
       Title = "Automap Single _Step (debug)",
       MenuPath = "Project",

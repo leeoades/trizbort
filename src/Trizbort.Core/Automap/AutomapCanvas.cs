@@ -66,7 +66,7 @@ public class AutomapCanvas : IAutomapCanvas
       TryMoveRoomsForTidyConnection(source, sourceCompassPoint, target, targetCompassPoint);
       // a one-way join's far end is only a guess until the way back is found, so it meets the far room on the side
       // facing the room it came from rather than looping round to the opposite side
-      if (!assumeTwoWayConnections) targetCompassPoint = FacingPoint(target, source);
+      if (!assumeTwoWayConnections) targetCompassPoint = FreeFacingPoint(target, source, null);
       connection = AddConnection(source, sourceCompassPoint, target, targetCompassPoint);
 
       if (_automap != null && _automap.UseDottedConnection)
@@ -515,8 +515,10 @@ public class AutomapCanvas : IAutomapCanvas
       return;
     }
 
-    var sourcePoint = FacingPoint(source, target);
-    var added = AddConnection(source, sourcePoint, target, CompassPointHelper.GetOpposite(sourcePoint));
+    // the nearest free points facing each other, so the dashed line doesn't share a point with another join or an
+    // unexplored exit
+    var sourcePoint = FreeFacingPoint(source, target, null);
+    var added = AddConnection(source, sourcePoint, target, FreeFacingPoint(target, source, null));
     added.Style = ConnectionStyle.Dashed;
     added.Flow = ConnectionFlow.OneWay;
     added.MidText = command;
@@ -524,6 +526,40 @@ public class AutomapCanvas : IAutomapCanvas
   }
 
   /// <summary>The side of <paramref name="from" /> (one of the eight main points) that faces <paramref name="to" />.</summary>
+  /// <summary>
+  ///   The side of <paramref name="from" /> facing <paramref name="to" />, using all sixteen points round the room,
+  ///   and the nearest one that no other join (or exit stub) uses already, so arrows arriving from the same side
+  ///   don't run into one point and look joined up. <paramref name="self" /> is the join being docked, if it exists.
+  /// </summary>
+  private CompassPoint FreeFacingPoint(Room from, Room to, Connection self)
+  {
+    var a = from.InnerBounds.Center;
+    var b = to.InnerBounds.Center;
+    var dx = b.X - a.X;
+    var dy = b.Y - a.Y;
+    if (dx == 0 && dy == 0) return FacingPoint(from, to);
+
+    // compass angle (0 = north, clockwise) in sixteenths: North is 0, NorthNorthEast 1 ... as CompassPoint counts
+    var bearing = Math.Atan2(dx, -dy) * 180.0 / Math.PI;
+    var best = ((int)Math.Round(bearing / 22.5) % 16 + 16) % 16;
+
+    var used = new HashSet<CompassPoint>();
+    foreach (var connection in CurrentProject.Elements.OfType<Connection>())
+    {
+      if (connection == self) continue;
+      if (connection.GetSourceRoom(out var startPoint) == from) used.Add(startPoint);
+      if (connection.GetTargetRoom(out var endPoint) == from) used.Add(endPoint);
+    }
+
+    foreach (var offset in new[] { 0, 1, -1, 2, -2, 3, -3 })
+    {
+      var point = (CompassPoint)(((best + offset) % 16 + 16) % 16);
+      if (!used.Contains(point)) return point;
+    }
+
+    return (CompassPoint)best;
+  }
+
   private static CompassPoint FacingPoint(Room from, Room to)
   {
     var a = from.InnerBounds.Center;
@@ -630,7 +666,7 @@ public class AutomapCanvas : IAutomapCanvas
       var source = connection.GetSourceRoom();
       var target = connection.GetTargetRoom();
       if (source == null || target == null || source == target) continue;
-      var facing = FacingPoint(target, source);
+      var facing = FreeFacingPoint(target, source, connection);
       if (EndPoint(connection, false) != facing) DockEnd(connection, false, target, facing);
     }
   }

@@ -219,6 +219,32 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
   }
 
   [Test]
+  public void OneWayArrivalsFromTheSameSide_DontShareAPoint()
+  {
+    // Colossal Cave: west from the Valley and west from the Streambed both drop into the Forest, with no way back
+    // (the Forest's own way east is still unexplored)
+    var canvas = new AutomapCanvas();
+    var forest = AddRoomAt("In Forest", 0, 0);
+    var valley = AddRoomAt("In A Valley", 400, -40);
+    var streambed = AddRoomAt("At Slit In Streambed", 400, 40);
+    canvas.AddExitStub(forest, MappableDirection.East);
+    canvas.Connect(valley, MappableDirection.West, forest, false);
+    canvas.Connect(streambed, MappableDirection.West, forest, false);
+
+    var arrivals = Project.Current.Elements.OfType<Connection>()
+      .Where(join => join.GetSourceRoom() != forest)
+      .Select(join =>
+      {
+        join.GetTargetRoom(out var point);
+        return point;
+      })
+      .ToList();
+    arrivals.Count.ShouldBe(2);
+    arrivals.Distinct().Count().ShouldBe(2);
+    arrivals.ShouldNotContain(CompassPoint.East);
+  }
+
+  [Test]
   public void AWayBackIntoTheSameRoom_IsALoop()
   {
     // "north" in the forest returns to the forest; so does "west"

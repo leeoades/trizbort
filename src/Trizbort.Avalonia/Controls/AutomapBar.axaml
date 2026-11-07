@@ -17,19 +17,19 @@
                 <Button Content="Next Move"
                         IsVisible="{Binding IsMoveByMove, ElementName=root}"
                         Command="{Binding NextMoveCommand, ElementName=root}"
-                        ToolTip.Tip="Play the transcript's next move, then pause"
+                        ToolTip.Tip="Play the transcript's next move, then pause (F10)"
                         Padding="12,4"
                         FontSize="12" />
                 <Button Content="Play to End"
                         IsVisible="{Binding IsMoveByMove, ElementName=root}"
                         Command="{Binding PlayToEndCommand, ElementName=root}"
-                        ToolTip.Tip="Play the rest of the transcript without pausing, then follow the game as it goes on"
+                        ToolTip.Tip="Play the rest of the transcript without pausing, then follow the game as it goes on (F5)"
                         Padding="12,4"
                         FontSize="12" />
                 <Button Content="Pause"
                         IsVisible="{Binding !IsMoveByMove, ElementName=root}"
                         Command="{Binding PauseCommand, ElementName=root}"
-                        ToolTip.Tip="Pause before the next move, to step through the transcript a move at a time"
+                        ToolTip.Tip="Pause before the next move, to step through the transcript a move at a time (F10 plays the next move)"
                         Padding="12,4"
                         FontSize="12" />
                 <Button Content="Hide Monitor"

@@ -37,6 +37,15 @@ public class AutomapKeyCommandTests
       Runs++;
     }
 
+    public bool MoveByMove { get; private set; }
+    public int Moves { get; private set; }
+
+    public void PlayNextMove()
+    {
+      MoveByMove = true;
+      Moves++;
+    }
+
     public void RaiseStatus(string status)
     {
       StatusChanged?.Invoke(status);
@@ -94,6 +103,22 @@ public class AutomapKeyCommandTests
     run.ExecuteAsync(_session).Wait();
 
     _automap.Runs.ShouldBe(1);
+  }
+
+  [Test]
+  public void F10_PlaysTheNextMove_WhileAutomapRuns()
+  {
+    var next = _catalogue.FindByGesture(new KeyGesture(InputKey.F10, ModifierKeys.None), CommandScope.Canvas);
+    next.ShouldNotBeNull();
+    next.Id.ShouldBe("automap.nextMove");
+    next.CanExecute(_session).ShouldBeFalse();
+
+    _automap.IsRunning = true;
+    next.CanExecute(_session).ShouldBeTrue();
+    next.ExecuteAsync(_session).Wait();
+
+    _automap.Moves.ShouldBe(1);
+    _automap.MoveByMove.ShouldBeTrue();
   }
 
   [Test]

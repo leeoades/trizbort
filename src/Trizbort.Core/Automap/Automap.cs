@@ -1254,6 +1254,7 @@ public sealed class Automap : IAutomapController
   {
     _settings.SingleStep = false;
     Step();
+    PlayToEnd();
   }
 
   /// <summary>True while the run waits before each move (see <see cref="AutomapSettings.MoveByMove" />).</summary>

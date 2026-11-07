@@ -43,4 +43,3 @@ natural joins: 18 of 18
 
 overlaps:
 Front Porch is on the join Entrance to Hedge Maze - Northeast Junction
-Garden, North is on the join South Junction - Southwest Junction

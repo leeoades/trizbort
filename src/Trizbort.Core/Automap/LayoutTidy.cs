@@ -30,6 +30,12 @@ public static class LayoutTidy
   // weights of the score; lower is better
   private const double OverlapCost = 400;
   private const double RoomOnJoinCost = 60;
+
+  /// <summary>
+  ///   A room standing right in front of another room's unexplored exit: the exit's stub and the room's joins would
+  ///   run into each other, and the exit couldn't be explored without a muddle.
+  /// </summary>
+  private const double StubBlockedCost = 20;
   private const double CrossingCost = 6;
   private const double CompassPull = 1.0;
   private const double SoftPull = 0.25;
@@ -103,6 +109,9 @@ public static class LayoutTidy
     private readonly List<Room> _rooms;
     private readonly Dictionary<Room, int> _index = new(ReferenceEqualityComparer.Instance);
     private readonly List<Join> _joins = new();
+
+    // unexplored exits: the room and the step its stub points along
+    private readonly List<(int Room, int Dx, int Dy)> _stubs = new();
     private readonly List<int>[] _joinsOf;
 
     // centres and half sizes; positions change as the search runs
@@ -149,6 +158,12 @@ public static class LayoutTidy
       {
         var a = connection.GetSourceRoom(out var point);
         var b = connection.GetTargetRoom(out var targetPoint);
+        if (a != null && a == b && point == targetPoint && IsMainPoint(point) && _index.TryGetValue(a, out var stubRoom))
+        {
+          var step = CompassPointHelper.GetAutomapDirectionVector(point);
+          _stubs.Add((stubRoom, Math.Sign(step.X), Math.Sign(step.Y)));
+        }
+
         if (a == null || b == null || a == b) continue;
         if (!_index.TryGetValue(a, out var ia) || !_index.TryGetValue(b, out var ib)) continue;
         var join = new Join { A = ia, B = ib };
@@ -616,6 +631,16 @@ public static class LayoutTidy
       }
 
       score += pairCost.Values.Sum();
+
+      // the space in front of an unexplored exit stays clear, for whatever is found there
+      foreach (var (stubRoom, sx, sy) in _stubs)
+        for (var room = 0; room < _rooms.Count; room++)
+        {
+          if (room == stubRoom || (!movable.Contains(room) && !movable.Contains(stubRoom))) continue;
+          var dx = (_x[room] - _x[stubRoom]) / _stepX - sx;
+          var dy = (_y[room] - _y[stubRoom]) / _stepY - sy;
+          if (Math.Abs(dx) < 0.6 && Math.Abs(dy) < 0.6) score += StubBlockedCost;
+        }
 
       // a movable room doesn't sit on other joins
       foreach (var room in movable)

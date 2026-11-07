@@ -150,6 +150,25 @@ public class LayoutTidyTests : IsolatedProjectTests
   }
 
   [Test]
+  public void TheSpaceInFrontOfAnUnexploredExit_StaysClear()
+  {
+    // Colossal Cave: the Debris Room has an unexplored way west; going up reaches the Sloping E/W Canyon, whose way
+    // back is east. The canyon belongs to the west, but not right in front of the west exit, where the two would
+    // run into each other.
+    var debris = AddRoomAt("Debris Room", 0, 0);
+    Join(debris, CompassPoint.West, debris, CompassPoint.West);
+    var canyon = AddRoomAt("Sloping E/W Canyon", -1, 0);
+    Join(debris, CompassPoint.NorthNorthWest, canyon, CompassPoint.East);
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), canyon).ShouldBeGreaterThan(0);
+
+    Overlaps().ShouldBe(0);
+    var (dc, dr) = Cell(debris);
+    Cell(canyon).ShouldNotBe((dc - 1, dr));
+    Cell(canyon).Column.ShouldBeLessThan(dc);
+  }
+
+  [Test]
   public void TwoWaysToTheSameRoom_OnlyTheOneThatFitsCounts()
   {
     // east and north from the Hall both reach the Garden; the Garden sits east, so the north way just bends round

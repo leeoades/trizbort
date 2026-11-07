@@ -19,6 +19,12 @@ public interface IAutomapController
 
   void RunToCompletion();
 
+  /// <summary>True while the run plays the transcript a move at a time, waiting before each command.</summary>
+  bool MoveByMove { get; }
+
+  /// <summary>Play the transcript's next move, then pause before the one after.</summary>
+  void PlayNextMove();
+
   /// <summary>Raised with the new status text each time it is set. May be raised off the UI thread.</summary>
   event Action<string> StatusChanged;
 
