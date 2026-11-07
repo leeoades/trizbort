@@ -285,8 +285,11 @@ public sealed class CanvasInteraction : IDisposable
         var moveDelta = Settings.Snap(world) - _dragOffset;
         if (moveDelta != Vector.Zero)
         {
-          MapEditing.Move(_session.Project.Elements, _session.Selection.Items.ToList(), moveDelta);
+          var moving = _session.Selection.Items.ToList();
+          MapEditing.Move(_session.Project.Elements, moving, moveDelta);
           _dragOffset += moveDelta;
+          // arrows whose far end is only a guess turn to face the room they come from as it moves
+          GuessedEnds.Face(_session.Project.Elements, moving.OfType<Room>().ToList());
         }
 
         break;

@@ -8,9 +8,9 @@ Y2
 
 connections:
 Debris Room [west] stub
+Inside Building [northwest] <-> [east] Debris Room "xyzzy" (dotted)
+Inside Building [southwest] -> [east] Y2 "plugh" (dotted)
 Inside Building [west] stub
-Inside Building [westnorthwest] <-> [east] Debris Room "xyzzy" (dotted)
-Inside Building [westsouthwest] -> [east] Y2 "plugh" (dotted)
 Low Passage [north] stub
 Y2 [east] stub
 Y2 [south] <-> [north] Low Passage

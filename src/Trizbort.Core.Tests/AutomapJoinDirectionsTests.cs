@@ -245,6 +245,52 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
   }
 
   [Test]
+  public void AGuessedArrow_MovesOffASideThatTurnsOutToBeAnotherExit()
+  {
+    // Colossal Cave: north from the End of Road reaches the Forest, with no way back known, so the arrow meets the
+    // Forest on its south side. Then south from the Forest just loops back into it: the arrow's way in isn't south.
+    var canvas = new AutomapCanvas();
+    var road = AddRoomAt("At End Of Road", 0, 0);
+    var forest = AddRoomAt("In Forest", 0, -200);
+    canvas.Connect(road, MappableDirection.North, forest, false);
+    EndSide(TheJoin()).ShouldBe(CompassPoint.South);
+
+    canvas.ConnectLoop(forest, MappableDirection.South);
+
+    var arrow = Project.Current.Elements.OfType<Connection>().Single(join => join.GetSourceRoom() == road);
+    EndSide(arrow).ShouldNotBeOneOf(CompassPoint.SouthSouthWest, CompassPoint.South, CompassPoint.SouthSouthEast);
+  }
+
+  [Test]
+  public void AGuessedArrow_FollowsItsRoomAsItIsDragged()
+  {
+    var canvas = new AutomapCanvas();
+    var road = AddRoomAt("At End Of Road", 0, 0);
+    var forest = AddRoomAt("In Forest", 0, -200);
+    canvas.Connect(road, MappableDirection.North, forest, false);
+
+    // the user drags the Forest off to the left of the road
+    forest.Position = new Vector(-400, 0);
+    GuessedEnds.Face(Project.Current.Elements, new[] { forest }).ShouldBe(1);
+
+    EndSide(TheJoin()).ShouldBe(CompassPoint.East);
+  }
+
+  [Test]
+  public void AnArrowDrawnByHand_IsLeftWhereItIs()
+  {
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 0, -200);
+    var join = new Connection(Project.Current, new Vertex(hall.PortAt(CompassPoint.North)),
+      new Vertex(garden.PortAt(CompassPoint.West)));
+    join.Flow = ConnectionFlow.OneWay;
+    Project.Current.Elements.Add(join);
+
+    GuessedEnds.Face(Project.Current.Elements).ShouldBe(0);
+    EndSide(join).ShouldBe(CompassPoint.West);
+  }
+
+  [Test]
   public void AWayBackIntoTheSameRoom_IsALoop()
   {
     // "north" in the forest returns to the forest; so does "west"

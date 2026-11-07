@@ -98,6 +98,9 @@ public class AutomapCanvas : IAutomapCanvas
       assumeTwoWayConnections);
 
     TakeOverCommandJoins(connection, source, target);
+
+    // a newly known exit may take the point a guessed arrow was using
+    FaceGuessedEnds();
   }
 
   /// <summary>
@@ -475,6 +478,9 @@ public class AutomapCanvas : IAutomapCanvas
     }
 
     MarkTravelled(loop, true, direction);
+
+    // a guessed arrow on the side the loop now uses moves off it (north into the forest, south loops back)
+    FaceGuessedEnds();
   }
 
   public void ConnectByCommand(Room source, Room target, string command)
@@ -531,34 +537,8 @@ public class AutomapCanvas : IAutomapCanvas
   ///   and the nearest one that no other join (or exit stub) uses already, so arrows arriving from the same side
   ///   don't run into one point and look joined up. <paramref name="self" /> is the join being docked, if it exists.
   /// </summary>
-  private CompassPoint FreeFacingPoint(Room from, Room to, Connection self)
-  {
-    var a = from.InnerBounds.Center;
-    var b = to.InnerBounds.Center;
-    var dx = b.X - a.X;
-    var dy = b.Y - a.Y;
-    if (dx == 0 && dy == 0) return FacingPoint(from, to);
-
-    // compass angle (0 = north, clockwise) in sixteenths: North is 0, NorthNorthEast 1 ... as CompassPoint counts
-    var bearing = Math.Atan2(dx, -dy) * 180.0 / Math.PI;
-    var best = ((int)Math.Round(bearing / 22.5) % 16 + 16) % 16;
-
-    var used = new HashSet<CompassPoint>();
-    foreach (var connection in CurrentProject.Elements.OfType<Connection>())
-    {
-      if (connection == self) continue;
-      if (connection.GetSourceRoom(out var startPoint) == from) used.Add(startPoint);
-      if (connection.GetTargetRoom(out var endPoint) == from) used.Add(endPoint);
-    }
-
-    foreach (var offset in new[] { 0, 1, -1, 2, -2, 3, -3 })
-    {
-      var point = (CompassPoint)(((best + offset) % 16 + 16) % 16);
-      if (!used.Contains(point)) return point;
-    }
-
-    return (CompassPoint)best;
-  }
+  private CompassPoint FreeFacingPoint(Room from, Room to, Connection self) =>
+    GuessedEnds.FreeFacingPoint(CurrentProject.Elements, from, to, self);
 
   private static CompassPoint FacingPoint(Room from, Room to)
   {
@@ -656,20 +636,7 @@ public class AutomapCanvas : IAutomapCanvas
   ///   After rooms move, the far end of a one-way join nobody has come back along turns to face the room it came
   ///   from, until the way back is known.
   /// </summary>
-  private void FaceGuessedEnds()
-  {
-    foreach (var connection in CurrentProject.Elements.OfType<Connection>().ToList())
-    {
-      if (connection.Flow != ConnectionFlow.OneWay || IsCommandJoin(connection)) continue;
-      if (WasTravelled(connection, false) || EndWords(connection, false).Count(IsCompassWord) > 1) continue;
-      if (!string.IsNullOrWhiteSpace(connection.EndText)) continue;
-      var source = connection.GetSourceRoom();
-      var target = connection.GetTargetRoom();
-      if (source == null || target == null || source == target) continue;
-      var facing = FreeFacingPoint(target, source, connection);
-      if (EndPoint(connection, false) != facing) DockEnd(connection, false, target, facing);
-    }
-  }
+  private void FaceGuessedEnds() => GuessedEnds.Face(CurrentProject.Elements.ToList());
 
   public Room CreateRoom(Room existing, string name)
   {
