@@ -277,6 +277,25 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
   }
 
   [Test]
+  public void AnEndListingSeveralDirections_TakesTheListedSideThatFacesTheOtherRoom()
+  {
+    // "n / e" from the Hall both reach the Garden, drawn from the Hall's north side; the user drags the Hall down
+    // and to the left of the Garden, so its east side now faces the Garden
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 0, -200);
+    var join = new Connection(Project.Current, new Vertex(hall.PortAt(CompassPoint.North)),
+      new Vertex(garden.PortAt(CompassPoint.South)));
+    join.StartText = "n / e";
+    Project.Current.Elements.Add(join);
+
+    GuessedEnds.Face(Project.Current.Elements, new[] { hall }).ShouldBe(0);
+
+    hall.Position = new Vector(-400, -150);
+    GuessedEnds.Face(Project.Current.Elements, new[] { hall }).ShouldBe(1);
+    StartSide(join).ShouldBe(CompassPoint.East);
+  }
+
+  [Test]
   public void AnArrowDrawnByHand_IsLeftWhereItIs()
   {
     var hall = AddRoomAt("Hall", 0, 0);

@@ -10,6 +10,8 @@ namespace Trizbort.Domain.Elements;
 ///   The far end of a one-way join automap made, which nobody has come back along: where it meets its room is only a
 ///   guess, so it meets it on the side facing the room it came from, at a point no known exit uses, and follows as
 ///   rooms move (automap's tidy, or the user dragging). Joins drawn by hand, and ends with a label, are left alone.
+///   An end whose label lists several compass directions ("n / e") may meet its room on any of those sides, and
+///   takes whichever best faces the room at the other end.
 /// </summary>
 public static class GuessedEnds
 {
@@ -32,6 +34,14 @@ public static class GuessedEnds
     var moved = 0;
     foreach (var connection in list.OfType<Connection>().ToList())
     {
+      var source0 = connection.GetSourceRoom();
+      var target0 = connection.GetTargetRoom();
+      if (rooms == null || rooms.Contains(source0) || rooms.Contains(target0))
+      {
+        if (FaceListedSide(connection, true)) moved++;
+        if (FaceListedSide(connection, false)) moved++;
+      }
+
       if (!IsGuessedFarEnd(connection)) continue;
       var source = connection.GetSourceRoom();
       var target = connection.GetTargetRoom(out var current);
@@ -78,6 +88,46 @@ public static class GuessedEnds
       }
 
     return (CompassPoint)best;
+  }
+
+  /// <summary>
+  ///   An end labelled with several compass directions ("n / e") and meeting its room on one of their sides moves to
+  ///   the listed side that best faces the room at the other end. Returns true if it moved.
+  /// </summary>
+  private static bool FaceListedSide(Connection connection, bool atStart)
+  {
+    if (connection.VertexList.Count != 2) return false;
+    var directions = DirectionWords.ListedDirections(atStart ? connection.StartText : connection.EndText)
+      .Where(DirectionWords.IsCompass).ToList();
+    if (directions.Count < 2) return false;
+
+    CompassPoint current;
+    var here = atStart ? connection.GetSourceRoom(out current) : connection.GetTargetRoom(out current);
+    var there = atStart ? connection.GetTargetRoom() : connection.GetSourceRoom();
+    if (here == null || there == null || here == there) return false;
+    var sides = directions.Select(CompassPointHelper.GetCompassDirection).Distinct().ToList();
+    // docked somewhere else on purpose: leave it
+    if (!sides.Contains(current)) return false;
+
+    var a = here.InnerBounds.Center;
+    var b = there.InnerBounds.Center;
+    var towards = new Vector(b.X - a.X, b.Y - a.Y);
+    if (towards.Length < 0.01f) return false;
+    towards = Vector.Normalize(towards);
+
+    double Facing(CompassPoint side)
+    {
+      var v = CompassPointHelper.GetAutomapDirectionVector(side);
+      var unit = Vector.Normalize(new Vector(v.X, v.Y));
+      return unit.X * towards.X + unit.Y * towards.Y;
+    }
+
+    var best = sides.OrderByDescending(Facing).First();
+    // a little stickiness, so an end doesn't flicker between two sides that face the other room about as well
+    if (best == current || Facing(best) < Facing(current) + 0.05) return false;
+    var vertex = atStart ? connection.VertexList[0] : connection.VertexList[connection.VertexList.Count - 1];
+    vertex.Port = here.PortAt(best);
+    return true;
   }
 
   private static void Block(HashSet<int> used, int point, bool withNeighbours)
