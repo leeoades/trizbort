@@ -114,6 +114,8 @@ public sealed class Automap : IAutomapController
 
     // the map stays as it is; automap carries on from the room it was in then, if it's still there
     _lastKnownRoom = point.Room == null ? null : _canvas.ResolveRoom(point.Room);
+    // and the map shows that room as the one you're in again
+    if (_lastKnownRoom != null) _canvas.SelectRoom(_lastKnownRoom);
     _lastMoveDirection = null;
     _lastJourneyCommand = null;
     _pendingStubRemoval = null;
