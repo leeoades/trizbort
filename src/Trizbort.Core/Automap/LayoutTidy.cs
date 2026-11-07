@@ -70,7 +70,9 @@ public static class LayoutTidy
     if (onlyIfCluttered && !map.Cluttered(map.Neighbourhood(centre, radius))) return 0;
     // A room reached for the first time (one join so far) was only just placed, so it has nowhere it "should"
     // stay; a room the player came back to keeps its place like the others.
-    return map.Tidy(map.Neighbourhood(centre, radius), timeLimitMs, map.JoinCount(centre) <= 1 ? centre : null);
+    var near = map.Neighbourhood(centre, radius, false);
+    var all = map.Neighbourhood(centre, radius);
+    return map.Tidy(all, timeLimitMs, map.JoinCount(centre) <= 1 ? centre : null, all.Except(near).ToList());
   }
 
   /// <summary>
@@ -338,7 +340,7 @@ public static class LayoutTidy
 
     public int JoinCount(Room room) => _joinsOf[_index[room]].Count;
 
-    public List<Room> Neighbourhood(Room centre, int radius)
+    public List<Room> Neighbourhood(Room centre, int radius, bool withRoomsInTheWay = true)
     {
       var seen = new HashSet<int> { _index[centre] };
       var frontier = new List<int> { _index[centre] };
@@ -361,14 +363,25 @@ public static class LayoutTidy
         if (Math.Abs(_x[i] - _x[c]) < _stepX * 1.5 && Math.Abs(_y[i] - _y[c]) < _stepY * 1.5)
           seen.Add(i);
 
+      // and any room one of their joins runs across, however far away, so it can step out of the way
+      if (withRoomsInTheWay)
+      foreach (var j in seen.SelectMany(room => _joinsOf[room]).Distinct().ToList())
+        for (var i = 0; i < _rooms.Count; i++)
+          if (i != _joins[j].A && i != _joins[j].B && SegmentHitsRoom(_joins[j], i))
+            seen.Add(i);
+
       return seen.Select(i => _rooms[i]).ToList();
     }
 
     private int _free = -1;
     private HashSet<int> _movable = new();
 
-    public int Tidy(List<Room> movableRooms, int timeLimitMs, Room free)
+    // rooms further away that a join of the rooms being tidied runs across
+    private HashSet<int> _inTheWay = new();
+
+    public int Tidy(List<Room> movableRooms, int timeLimitMs, Room free, List<Room> roomsInTheWay = null)
     {
+      _inTheWay = roomsInTheWay == null ? new HashSet<int>() : roomsInTheWay.Select(room => _index[room]).ToHashSet();
       if (movableRooms.Count == 0) return 0;
       _free = free != null && _index.TryGetValue(free, out var freeIndex) ? freeIndex : -1;
       _movable = movableRooms.Select(room => _index[room]).ToHashSet();
@@ -376,6 +389,7 @@ public static class LayoutTidy
       BuildGroups();
       var clock = Stopwatch.StartNew();
       var score = Score(movable);
+      score = ClearTheWay(movable, score);
 
       for (var pass = 0; pass < 12; pass++)
       {
@@ -607,6 +621,63 @@ public static class LayoutTidy
       across = NaturalPairsAcross(moved);
       Shift(moved, dx, dy);
       return moved;
+    }
+
+    /// <summary>
+    ///   A join must never run across a room: the room it runs across steps aside, up or down from a join going
+    ///   across, left or right from one going up or down, by one step or two, whichever leaves the map best (fewest
+    ///   joins crossing). For rooms further away, which the usual moves don't reach; done first.
+    /// </summary>
+    private double ClearTheWay(HashSet<int> movable, double score)
+    {
+      for (var j = 0; j < _joins.Count; j++)
+      {
+        var join = _joins[j];
+        if (!movable.Contains(join.A) && !movable.Contains(join.B)) continue;
+        for (var room = 0; room < _rooms.Count; room++)
+        {
+          if (room == join.A || room == join.B || !_inTheWay.Contains(room) || !movable.Contains(room)) continue;
+          if (!SegmentHitsRoom(join, room)) continue;
+
+          var across = Math.Abs(_x[join.B] - _x[join.A]) / _stepX >= Math.Abs(_y[join.B] - _y[join.A]) / _stepY;
+          (int Dx, int Dy, List<int> Rooms)? best = null;
+          var bestScore = score;
+          foreach (var direction in new[] { -1, 1 })
+            for (var steps = 1; steps <= 2; steps++)
+            {
+              var dx = across ? 0 : direction;
+              var dy = across ? direction : 0;
+              var moved = new List<int>();
+              var ok = true;
+              var bend = 0.0;
+              for (var s = 0; s < steps && ok; s++)
+              {
+                var step = TryMove(new[] { room }, dx, dy, movable, out var bent);
+                if (step == null) ok = false;
+                else
+                {
+                  moved.AddRange(step);
+                  bend += BendCost(bent);
+                }
+              }
+
+              var after = ok ? Score(movable) + bend : double.MaxValue;
+              // undo, step by step
+              Shift(moved, -dx, -dy);
+              if (ok && after < bestScore - 0.001)
+              {
+                bestScore = after;
+                best = (dx, dy, moved);
+              }
+            }
+
+          if (best == null) continue;
+          Shift(best.Value.Rooms, best.Value.Dx, best.Value.Dy);
+          score = Score(movable);
+        }
+      }
+
+      return score;
     }
 
     private bool Overlaps(int a, int b) =>

@@ -175,6 +175,26 @@ public class LayoutTidyTests : IsolatedProjectTests
   }
 
   [Test]
+  public void ARoomAJoinRunsAcross_StepsUpOrDown_SoTheJoinPassesItBy()
+  {
+    // east from the Hall, a long way, to the Gallery; the Statue Room sits in the way, two rooms short of it
+    // (the Gallery has a way on east too, so it keeps its place)
+    var hall = AddRoomAt("Hall", 0, 0);
+    var statue = AddRoomAt("Statue Room", 2, 0);
+    var gallery = AddRoomAt("Gallery", 4, 0);
+    var garden = AddRoomAt("Garden", 5, 0);
+    Join(hall, CompassPoint.East, gallery, CompassPoint.West);
+    Join(gallery, CompassPoint.East, garden, CompassPoint.West);
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), gallery).ShouldBeGreaterThan(0);
+
+    Cell(hall).ShouldBe((0f, 0f));
+    Cell(gallery).ShouldBe((4f, 0f));
+    Cell(statue).Column.ShouldBe(2f);
+    Cell(statue).Row.ShouldNotBe(0f);
+  }
+
+  [Test]
   public void TheSpaceInFrontOfAnUnexploredExit_StaysClear()
   {
     // Colossal Cave: the Debris Room has an unexplored way west; going up reaches the Sloping E/W Canyon, whose way
