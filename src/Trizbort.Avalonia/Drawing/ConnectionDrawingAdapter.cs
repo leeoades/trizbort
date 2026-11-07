@@ -211,6 +211,9 @@ public static class ConnectionDrawingAdapter
         var seed = connection.Id;
         var cache = _connectionCaches.GetOrCreateValue(connection);
         var curved = connection.HasCurveWaypoints;
+
+        // a way out that leads straight back in: a small curl on the room's side, arrow at its head
+        if (!curved && TryDrawLoop(connection, context, pen, brush, isSelected, isHover, cache)) return;
         var chevrons = new List<(CoreVector position, CoreVector direction)>();
         var sketched = new List<IReadOnlyList<CoreVector>>();
 
@@ -439,6 +442,77 @@ public static class ConnectionDrawingAdapter
             }
         }
         DrawConnection(connection, context, isSelected, isHover, spatial, 0);
+    }
+
+    /// <summary>
+    ///   Draws a join from a room back to itself (two different sides of one room, no bends) as a small curl out of
+    ///   the side it leaves from, with a single arrowhead where it comes back in. Returns false for anything else.
+    /// </summary>
+    private static bool TryDrawLoop(
+        Connection connection,
+        AvaloniaDrawingContext context,
+        IPen pen,
+        IBrush brush,
+        bool isSelected,
+        bool isHover,
+        ConnectionCache cache)
+    {
+        if (connection.VertexList.Count != 2) return false;
+        var start = connection.VertexList[0];
+        var end = connection.VertexList[1];
+        if (start.Port == null || end.Port == null || start.Port == end.Port) return false;
+        if (start.Port.Owner is not Room room || end.Port.Owner != room) return false;
+
+        // outwards from the middle of the room through the side the loop leaves from
+        var centre = room.InnerBounds.Center;
+        var foot = start.Position;
+        var outward = foot - centre;
+        if (outward.Length < 0.01f) return false;
+        outward = CoreVector.Normalize(outward);
+        var across = new CoreVector(-outward.Y, outward.X);
+
+        // a teardrop: leave on one side of the foot, swing out and round, come back in on the other side
+        var size = Math.Max(14f, (float)Settings.ConnectionArrowSize * 2.2f);
+        var width = size * 0.35f;
+        var p0 = foot - across * width;
+        var p3 = foot + across * width;
+        var p1 = p0 + outward * size - across * (width * 1.6f);
+        var p2 = p3 + outward * size + across * (width * 1.6f);
+
+        var geometry = new StreamGeometry();
+        using (var figure = geometry.Open())
+        {
+            figure.BeginFigure(p0.ToAvaloniaPoint(), false);
+            figure.CubicBezierTo(p1.ToAvaloniaPoint(), p2.ToAvaloniaPoint(), p3.ToAvaloniaPoint());
+            figure.EndFigure(false);
+        }
+
+        context.DrawGeometry(null, pen, geometry);
+        if (isSelected) context.DrawGeometry(null, HighlightPen(CoreColors.SelectedLine, 1.5, connection.Style), geometry);
+        else if (isHover) context.DrawGeometry(null, HighlightPen(CoreColors.HoverLine, 1.0, connection.Style), geometry);
+
+        // one arrowhead near the end, pointing back into the room
+        var t = 0.86f;
+        var head = Bezier(p0, p1, p2, p3, t);
+        var heading = Bezier(p0, p1, p2, p3, Math.Min(1f, t + 0.05f)) - Bezier(p0, p1, p2, p3, t - 0.05f);
+        if (heading.Length > 0.01f)
+        {
+            var angle = Math.Atan2(heading.Y, heading.X) * 180.0 / Math.PI;
+            DrawingAdapters.DrawChevron(context, head.ToAvaloniaPoint(), angle, Settings.ConnectionArrowSize, brush,
+                connection.Id, Settings.HandDrawn);
+        }
+
+        // labels go beyond the top of the curl
+        var apex = Bezier(p0, p1, p2, p3, 0.5f);
+        var labelLine = new List<CoreLineSegment> { new(apex, apex + outward * 8f) };
+        DrawAnnotations(connection, context, labelLine, cache);
+        return true;
+    }
+
+    private static CoreVector Bezier(CoreVector p0, CoreVector p1, CoreVector p2, CoreVector p3, float t)
+    {
+        var u = 1 - t;
+        return p0 * (u * u * u) + p1 * (3 * u * u * t) + p2 * (3 * u * t * t) + p3 * (t * t * t);
     }
 
     public static List<CoreLineSegment> SplitSegment(CoreLineSegment lineSegment, SpatialLineIndex spatialIndex, int depth = 0)
