@@ -64,6 +64,9 @@ public class AutomapCanvas : IAutomapCanvas
     {
       var targetCompassPoint = CompassPointHelper.GetAutomapOpposite(sourceCompassPoint);
       TryMoveRoomsForTidyConnection(source, sourceCompassPoint, target, targetCompassPoint);
+      // a one-way join's far end is only a guess until the way back is found, so it meets the far room on the side
+      // facing the room it came from rather than looping round to the opposite side
+      if (!assumeTwoWayConnections) targetCompassPoint = FacingPoint(target, source);
       connection = AddConnection(source, sourceCompassPoint, target, targetCompassPoint);
 
       if (_automap != null && _automap.UseDottedConnection)
@@ -444,12 +447,65 @@ public class AutomapCanvas : IAutomapCanvas
 
   public bool MakeSpaceForNewRooms { get; set; }
 
+  private string _tidiedMap;
+
+  /// <summary>
+  ///   Tidies the rooms around <paramref name="room" /> when the map has changed since the last tidy (a new room, a
+  ///   new join, or a join that learned a direction). Walking around rooms automap already knows leaves the map, and
+  ///   anything the user moved by hand, alone, unless a room nearby sits on another room or on a join.
+  /// </summary>
   public void TidyAround(Room room)
   {
     room = ResolveRoom(room);
     if (room == null) return;
-    var moved = LayoutTidy.TidyAround(CurrentProject.Elements.ToList(), room);
-    if (moved > 0) _session?.EnsureVisible(room);
+    var unchanged = MapShape() == _tidiedMap;
+    var moved = LayoutTidy.TidyAround(CurrentProject.Elements.ToList(), room, onlyIfCluttered: unchanged);
+    if (moved > 0)
+    {
+      FaceGuessedEnds();
+      _session?.EnsureVisible(room);
+    }
+
+    _tidiedMap = MapShape();
+  }
+
+  /// <summary>What the map is made of, ignoring where the rooms are: its rooms, its joins and their directions.</summary>
+  private string MapShape()
+  {
+    var text = new System.Text.StringBuilder();
+    foreach (var element in CurrentProject.Elements)
+      switch (element)
+      {
+        case Room r:
+          text.Append('R').Append(r.Id).Append(';');
+          break;
+        case Connection c:
+          text.Append('C').Append(c.Id).Append(':').Append(c.GetSourceRoom()?.Id).Append(EndPoint(c, true))
+            .Append('>').Append(c.GetTargetRoom()?.Id).Append(EndPoint(c, false)).Append(c.Flow)
+            .Append(c.StartText).Append('|').Append(c.EndText).Append(';');
+          break;
+      }
+
+    return text.ToString();
+  }
+
+  /// <summary>
+  ///   After rooms move, the far end of a one-way join nobody has come back along turns to face the room it came
+  ///   from, until the way back is known.
+  /// </summary>
+  private void FaceGuessedEnds()
+  {
+    foreach (var connection in CurrentProject.Elements.OfType<Connection>().ToList())
+    {
+      if (connection.Flow != ConnectionFlow.OneWay || IsCommandJoin(connection)) continue;
+      if (WasTravelled(connection, false) || EndWords(connection, false).Count(IsCompassWord) > 1) continue;
+      if (!string.IsNullOrWhiteSpace(connection.EndText)) continue;
+      var source = connection.GetSourceRoom();
+      var target = connection.GetTargetRoom();
+      if (source == null || target == null || source == target) continue;
+      var facing = FacingPoint(target, source);
+      if (EndPoint(connection, false) != facing) DockEnd(connection, false, target, facing);
+    }
   }
 
   public Room CreateRoom(Room existing, string name)

@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Automap;
@@ -126,6 +126,55 @@ public class LayoutTidyTests : IsolatedProjectTests
     LayoutTidy.TidyAround(Project.Current.Elements.ToList(), garden);
 
     island.Position.ShouldBe(before);
+  }
+
+  [Test]
+  public void ASquareOfRooms_KeepsItsShape_WhenANewRoomLandsOnIt()
+  {
+    // four rooms in a square, then a room south-east of the first lands where the fourth already is
+    var a = AddRoomAt("A", 0, 0);
+    var b = AddRoomAt("B", 1, 0);
+    var c = AddRoomAt("C", 0, 1);
+    var d = AddRoomAt("D", 1, 1);
+    Join(a, CompassPoint.East, b, CompassPoint.West);
+    Join(a, CompassPoint.South, c, CompassPoint.North);
+    Join(b, CompassPoint.South, d, CompassPoint.North);
+    Join(c, CompassPoint.East, d, CompassPoint.West);
+    var e = AddRoomAt("E", 1, 1);
+    Join(a, CompassPoint.SouthEast, e, CompassPoint.NorthWest);
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), e).ShouldBeGreaterThan(0);
+
+    Overlaps().ShouldBe(0);
+    LayoutTidy.NaturalJoins(Project.Current.Elements.ToList()).ShouldBe((5, 5));
+  }
+
+  [Test]
+  public void TwoWaysToTheSameRoom_OnlyTheOneThatFitsCounts()
+  {
+    // east and north from the Hall both reach the Garden; the Garden sits east, so the north way just bends round
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 1, 0);
+    Join(hall, CompassPoint.East, garden, CompassPoint.West);
+    Join(hall, CompassPoint.North, garden, CompassPoint.South);
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), garden).ShouldBe(0);
+  }
+
+  [Test]
+  public void TheFarEndOfAOneWayJoin_DoesntSayWhereItsRoomGoes()
+  {
+    // east from the Hall drops into the Cellar, and there's no way back: the arrow meets the Cellar on the side
+    // facing the Hall, which says nothing about where the Cellar should be, so it goes east
+    var hall = AddRoomAt("Hall", 0, 0);
+    var cellar = AddRoomAt("Cellar", 0, -1);
+    var join = Join(hall, CompassPoint.East, cellar, CompassPoint.South);
+    join.Flow = ConnectionFlow.OneWay;
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), cellar).ShouldBeGreaterThan(0);
+
+    Cell(hall).ShouldBe((0f, 0f));
+    Cell(cellar).ShouldBe((1f, 0f));
   }
 
   [Test]

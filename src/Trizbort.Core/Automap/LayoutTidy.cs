@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Trizbort.Domain.Elements;
+using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 
@@ -18,6 +19,11 @@ namespace Trizbort.Automap;
 ///   A join's direction comes from the side of the room it leaves. How it is drawn (style, labels) doesn't matter.
 ///   Teleport joins (<see cref="Connection.AutomapCommand" />) don't pull, and up, down, in and out pull gently, since
 ///   another floor can sit anywhere nearby.
+///   A join that already reads correctly should keep reading correctly: rooms joined like that (a group) can move as
+///   a whole, making space may stretch a group along its joins, and bending one of its joins the wrong way costs
+///   extra, so it happens only to get a room off another room or off a join. Of several joins between the same
+///   two rooms, only the one that fits best counts. The far end of a one-way join nobody has come back along says
+///   nothing about where its room should be.
 /// </remarks>
 public static class LayoutTidy
 {
@@ -35,17 +41,27 @@ public static class LayoutTidy
   /// <summary>Cost per step a join is longer than one; small, since a long join that points the right way reads fine.</summary>
   private const double LengthCost = 0.08;
 
-  private const int MaxPush = 6;
+  /// <summary>How many rooms one step may push along with it.</summary>
+  private const int MaxPush = 24;
+
+  /// <summary>Extra cost of bending a join that reads correctly the wrong way, on top of the join's own cost.</summary>
+  private const double BendPenalty = 1;
 
   /// <summary>
   ///   Tidies the rooms within <paramref name="radius" /> joins of <paramref name="centre" />; rooms further away
   ///   stay put but still count (nothing may be moved on top of them). Returns how many rooms moved.
   /// </summary>
-  public static int TidyAround(IList<Element> elements, Room centre, int radius = 2, int timeLimitMs = 80)
+  /// <param name="onlyIfCluttered">
+  ///   Tidy only if a room near <paramref name="centre" /> sits on another room or on a join; otherwise leave the
+  ///   map alone (for a move that didn't change the map).
+  /// </param>
+  public static int TidyAround(
+    IList<Element> elements, Room centre, int radius = 2, int timeLimitMs = 80, bool onlyIfCluttered = false)
   {
     if (elements == null || centre == null) return 0;
     var map = new LayoutMap(elements);
     if (!map.Contains(centre)) return 0;
+    if (onlyIfCluttered && !map.Cluttered(map.Neighbourhood(centre, radius))) return 0;
     // A room reached for the first time (one join so far) was only just placed, so it has nowhere it "should"
     // stay; a room the player came back to keeps its place like the others.
     return map.Tidy(map.Neighbourhood(centre, radius), timeLimitMs, map.JoinCount(centre) <= 1 ? centre : null);
@@ -128,6 +144,7 @@ public static class LayoutTidy
       _stepX = _gap + width;
       _stepY = _gap + height;
 
+      var pairOf = new Dictionary<(int, int), int>();
       foreach (var connection in elements.OfType<Connection>())
       {
         var a = connection.GetSourceRoom(out var point);
@@ -147,9 +164,18 @@ public static class LayoutTidy
           var fromA = CompassPointHelper.GetAutomapDirectionVector(point);
           var fromB = CompassPointHelper.GetAutomapDirectionVector(targetPoint);
           var aIsCompass = IsMainPoint(point);
-          var bIsCompass = IsMainPoint(targetPoint);
+          // the far end of a one-way join nobody has come back along only faces the room it came from: it says
+          // nothing about where that room should be
+          var bIsGuess = connection.Flow == ConnectionFlow.OneWay && string.IsNullOrWhiteSpace(connection.EndTravelled) &&
+                         string.IsNullOrWhiteSpace(connection.EndText);
+          var bIsCompass = IsMainPoint(targetPoint) && !bIsGuess;
           double x, y;
-          if (aIsCompass == bIsCompass)
+          if (bIsGuess && !aIsCompass)
+          {
+            x = fromA.X;
+            y = fromA.Y;
+          }
+          else if (aIsCompass == bIsCompass)
           {
             x = fromA.X - fromB.X;
             y = fromA.Y - fromB.Y;
@@ -180,10 +206,106 @@ public static class LayoutTidy
         _joins.Add(join);
         _joinsOf[ia].Add(_joins.Count - 1);
         _joinsOf[ib].Add(_joins.Count - 1);
+        var key = ia < ib ? (ia, ib) : (ib, ia);
+        if (!pairOf.TryGetValue(key, out var pair))
+        {
+          pair = _pairs.Count;
+          pairOf[key] = pair;
+          _pairs.Add(new List<int>());
+        }
+
+        _pairs[pair].Add(_joins.Count - 1);
+        _pairIndex.Add(pair);
+      }
+
+      _group = Enumerable.Range(0, n).ToArray();
+    }
+
+    // joins between the same two rooms ("east" and "north" both lead to the Hall): only the one that fits best counts
+    private readonly List<List<int>> _pairs = new();
+    private readonly List<int> _pairIndex = new();
+
+    // groups of rooms whose joins between them read correctly; a group moves as one piece
+    private readonly int[] _group;
+    private Dictionary<int, List<int>> _members = new();
+
+    private bool PairNatural(int pair) => _pairs[pair].Any(j => _joins[j].Pull > 0 && IsNatural(_joins[j]));
+
+    /// <summary>
+    ///   Rooms joined by naturally placed joins form a group, which keeps its shape: the tidy moves the group as a
+    ///   whole, or opens it up only along its joins' directions. The room just arrived at belongs to none yet.
+    /// </summary>
+    private void BuildGroups()
+    {
+      var parent = Enumerable.Range(0, _rooms.Count).ToArray();
+
+      int Find(int i)
+      {
+        while (parent[i] != i) i = parent[i] = parent[parent[i]];
+        return i;
+      }
+
+      for (var pair = 0; pair < _pairs.Count; pair++)
+      {
+        var join = _joins[_pairs[pair][0]];
+        if (join.A == _free || join.B == _free || !PairNatural(pair)) continue;
+        parent[Find(join.A)] = Find(join.B);
+      }
+
+      _members = new Dictionary<int, List<int>>();
+      for (var i = 0; i < _rooms.Count; i++)
+      {
+        _group[i] = Find(i);
+        if (!_members.TryGetValue(_group[i], out var list)) _members[_group[i]] = list = new List<int>();
+        list.Add(i);
       }
     }
 
+    /// <summary>The naturally placed pairs of rooms that moving <paramref name="moving" /> pulls apart (the new room aside).</summary>
+    private List<int> NaturalPairsAcross(IEnumerable<int> moving)
+    {
+      var set = moving.ToHashSet();
+      var across = new List<int>();
+      for (var pair = 0; pair < _pairs.Count; pair++)
+      {
+        var join = _joins[_pairs[pair][0]];
+        if (join.A == _free || join.B == _free) continue;
+        if (set.Contains(join.A) == set.Contains(join.B)) continue;
+        if (PairNatural(pair)) across.Add(pair);
+      }
+
+      return across;
+    }
+
+    /// <summary>
+    ///   What it costs to bend joins that read correctly the wrong way: about double a join left pointing the wrong
+    ///   way, so a group keeps its shape unless that gets a room off another room or off a join.
+    /// </summary>
+    private double BendCost(List<int> pairs) => BendPenalty * pairs.Count(pair => !PairNatural(pair));
+
     public bool Contains(Room room) => room != null && _index.ContainsKey(room);
+
+    /// <summary>Whether any of these rooms sits on another room or on a join, or has a join running over a room.</summary>
+    public bool Cluttered(IEnumerable<Room> rooms)
+    {
+      var set = rooms.Select(room => _index[room]).ToHashSet();
+      foreach (var a in set)
+        for (var b = 0; b < _rooms.Count; b++)
+          if (b != a && Overlaps(a, b))
+            return true;
+
+      for (var j = 0; j < _joins.Count; j++)
+      {
+        var join = _joins[j];
+        var touches = set.Contains(join.A) || set.Contains(join.B);
+        for (var room = 0; room < _rooms.Count; room++)
+          if (room != join.A && room != join.B && (touches || set.Contains(room)) &&
+              SegmentHitsRoom(join.A, join.B, room))
+            return true;
+      }
+
+      return false;
+    }
 
     public int JoinCount(Room room) => _joinsOf[_index[room]].Count;
 
@@ -222,6 +344,7 @@ public static class LayoutTidy
       _free = free != null && _index.TryGetValue(free, out var freeIndex) ? freeIndex : -1;
       _movable = movableRooms.Select(room => _index[room]).ToHashSet();
       var movable = movableRooms.Select(room => _index[room]).ToHashSet();
+      BuildGroups();
       var clock = Stopwatch.StartNew();
       var score = Score(movable);
 
@@ -241,16 +364,21 @@ public static class LayoutTidy
             improved = true;
           }
         }
-        foreach (var room in movable)
+        // move a room, or a whole group, one step; a group with a room that has to stay put stays put
+        var units = movable.Select(room => new List<int> { room }).Concat(movable.Select(room => _group[room])
+            .Distinct().Select(group => _members[group]).Where(unit => unit.Count > 1 && unit.All(movable.Contains)))
+          .ToList();
+        foreach (var unit in units)
           for (var dx = -1; dx <= 1; dx++)
             for (var dy = -1; dy <= 1; dy++)
             {
               if (dx == 0 && dy == 0) continue;
               if (clock.ElapsedMilliseconds > timeLimitMs) return Apply();
-              var moved = TryMove(room, dx, dy, movable);
+              var moved = TryMove(unit, dx, dy, movable, out var across);
               if (moved == null) continue;
               var after = Score(movable);
-              if (after < score - 0.001)
+              // bending a join that reads correctly costs extra, so groups keep their shape
+              if (after + BendCost(across) < score - 0.001)
               {
                 score = after;
                 improved = true;
@@ -277,6 +405,7 @@ public static class LayoutTidy
                                                 (_x[other] - _x[room]) * dx / _stepX +
                                                 (_y[other] - _y[room]) * dy / _stepY > -0.5).ToList();
               if (side.Count < 2) continue;
+              var sideAcross = NaturalPairsAcross(side);
               foreach (var i in side)
               {
                 _x[i] += dx * _stepX;
@@ -284,7 +413,7 @@ public static class LayoutTidy
               }
 
               var after = Score(movable);
-              if (after < score - 0.001)
+              if (after + BendCost(sideAcross) < score - 0.001)
               {
                 score = after;
                 improved = true;
@@ -313,13 +442,15 @@ public static class LayoutTidy
               var counted = new HashSet<int>(movable);
               counted.UnionWith(beyond);
               var before = Score(counted);
+              var across = NaturalPairsAcross(beyond.Append(room));
               foreach (var i in beyond.Append(room))
               {
                 _x[i] += dx * _stepX;
                 _y[i] += dy * _stepY;
               }
 
-              if (Score(counted) < before - 0.001)
+              // making space may stretch a group along its joins; bending one of them the wrong way costs extra
+              if (Score(counted) + BendCost(across) < before - 0.001)
               {
                 score = Score(movable);
                 improved = true;
@@ -373,10 +504,10 @@ public static class LayoutTidy
         {
           if (dx == 0 && dy == 0) continue;
 
-          var pushed = TryMove(_free, dx, dy, movable);
+          var pushed = TryMove(new[] { _free }, dx, dy, movable, out var pushedAcross);
           if (pushed != null)
           {
-            var gain = score - Score(movable);
+            var gain = score - Score(movable) - BendCost(pushedAcross);
             Shift(pushed, -dx, -dy);
             if (gain > bestGain)
             {
@@ -391,8 +522,9 @@ public static class LayoutTidy
           counted.UnionWith(beyond);
           var before = Score(counted);
           var all = beyond.Append(_free).ToList();
+          var across = NaturalPairsAcross(all);
           Shift(all, dx, dy);
-          var spaceGain = before - Score(counted);
+          var spaceGain = before - Score(counted) - BendCost(across);
           Shift(all, -dx, -dy);
           if (spaceGain > bestGain)
           {
@@ -405,15 +537,17 @@ public static class LayoutTidy
     }
 
     /// <summary>
-    ///   Moves a room one step, pushing along any movable room it would land on (and so on, up to a few rooms).
-    ///   Returns the rooms moved, or null if a room that can't move is in the way.
+    ///   Moves some rooms one step, pushing along any movable room they would land on (and so on, up to a few rooms).
+    ///   Returns the rooms moved, or null if a room that can't move is in the way; <paramref name="across" /> gets
+    ///   the naturally placed joins the move pulls apart, as they were before it.
     /// </summary>
-    private List<int> TryMove(int room, int dx, int dy, HashSet<int> movable)
+    private List<int> TryMove(IEnumerable<int> rooms, int dx, int dy, HashSet<int> movable, out List<int> across)
     {
+      across = null;
       var moved = new List<int>();
-      var queue = new Queue<int>();
-      queue.Enqueue(room);
-      var inMove = new HashSet<int> { room };
+      var queue = new Queue<int>(rooms);
+      var inMove = new HashSet<int>(queue);
+      var limit = inMove.Count + MaxPush;
       while (queue.Count > 0)
       {
         var current = queue.Dequeue();
@@ -423,7 +557,7 @@ public static class LayoutTidy
         for (var other = 0; other < _rooms.Count; other++)
         {
           if (inMove.Contains(other) || !Overlaps(current, other)) continue;
-          if (!movable.Contains(other) || inMove.Count >= MaxPush)
+          if (!movable.Contains(other) || inMove.Count >= limit)
           {
             foreach (var i in moved)
             {
@@ -439,6 +573,10 @@ public static class LayoutTidy
         }
       }
 
+      // which joins read correctly is judged where the rooms were
+      Shift(moved, -dx, -dy);
+      across = NaturalPairsAcross(moved);
+      Shift(moved, dx, dy);
       return moved;
     }
 
@@ -459,12 +597,16 @@ public static class LayoutTidy
 
       // the joins touching a movable room
       var joins = movable.SelectMany(room => _joinsOf[room]).Distinct().ToList();
+      var pairCost = new Dictionary<int, double>();
       foreach (var j in joins)
       {
         var join = _joins[j];
         if (join.Pull > 0)
         {
-          score += JoinCost(join);
+          // of several joins between the same two rooms, the one that fits best counts
+          var cost = JoinCost(join);
+          var pair = _pairIndex[j];
+          pairCost[pair] = pairCost.TryGetValue(pair, out var other) ? Math.Min(other, cost) : cost;
         }
 
         // no room sits on a join that isn't its own
@@ -472,6 +614,8 @@ public static class LayoutTidy
           if (room != join.A && room != join.B && SegmentHitsRoom(join.A, join.B, room))
             score += RoomOnJoinCost;
       }
+
+      score += pairCost.Values.Sum();
 
       // a movable room doesn't sit on other joins
       foreach (var room in movable)

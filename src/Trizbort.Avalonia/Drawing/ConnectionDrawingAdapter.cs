@@ -719,6 +719,20 @@ public static class ConnectionDrawingAdapter
         }
     }
 
+    /// <summary>Whether the room at this end lists its objects above or below itself, on the side this end is at.</summary>
+    private static bool ObjectsOnSideOf(Vertex? vertex, CoreVector anchor)
+    {
+        if (vertex?.Port?.Owner is not Room room) return false;
+        if (string.IsNullOrWhiteSpace(ObjectList.FormatForDisplay(room.Objects))) return false;
+        var bounds = room.InnerBounds;
+        return room.ObjectsPosition switch
+        {
+            CompassPoint.South => anchor.Y >= bounds.Center.Y,
+            CompassPoint.North => anchor.Y <= bounds.Center.Y,
+            _ => false
+        };
+    }
+
     private static void DrawSingleAnnotation(
         AvaloniaDrawingContext context,
         string text,
@@ -783,6 +797,14 @@ public static class ConnectionDrawingAdapter
                 CompassPoint.West or CompassPoint.NorthWest or CompassPoint.SouthWest => TextAlignment.Right,
                 _ => TextAlignment.Left
             };
+        }
+
+        // A label on a join leaving straight up or down from a room whose objects are listed on that side goes to
+        // the left of the line, since the objects are written to the right of it.
+        if ((compass == CompassPoint.North || compass == CompassPoint.South) && ObjectsOnSideOf(vertex, anchor))
+        {
+            pos = new CoreVector(anchor.X - Settings.TextOffsetFromConnection, pos.Y);
+            alignment = TextAlignment.Right;
         }
 
         if (cachedFormattedText == null)
