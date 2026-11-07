@@ -59,8 +59,10 @@ public static class GuessedEnds
 
   /// <summary>
   ///   The side of <paramref name="from" /> facing <paramref name="to" /> (any of its sixteen points), or the nearest
-  ///   one free: a known exit keeps its point and the points either side of it, so a guess doesn't look like that
-  ///   exit; another guess only keeps its own point. <paramref name="self" /> is the join being docked, if any.
+  ///   one free on that side: a point another join uses is taken, and the points either side of a known exit are
+  ///   avoided where possible, so a guess doesn't look like that exit. When every point near the facing side is
+  ///   taken, the facing point is shared rather than the end going round the room. <paramref name="self" /> is the
+  ///   join being docked, if any.
   /// </summary>
   /// <param name="otherEnd">Where the join's other end is, if known: then, of the free points near the facing side,
   ///   the one whose line crosses fewest other joins wins, and <paramref name="current" /> keeps its place in a tie.</param>
@@ -76,39 +78,41 @@ public static class GuessedEnds
     var bearing = dx == 0 && dy == 0 ? 90 : Math.Atan2(dx, -dy) * 180.0 / Math.PI;
     var best = ((int)Math.Round(bearing / 22.5) % 16 + 16) % 16;
 
-    var used = new HashSet<int>();
+    // points other joins meet the room at are taken; the points either side of a known exit are best avoided, so
+    // a guess doesn't look like that exit, but they beat going round to another side of the room
+    var taken = new HashSet<int>();
+    var nearExit = new HashSet<int>();
     foreach (var connection in elements.OfType<Connection>())
     {
       if (connection == self) continue;
       var guessedFar = IsGuessedFarEnd(connection);
-      if (connection.GetSourceRoom(out var startPoint) == from) Block(used, (int)startPoint, true);
-      if (connection.GetTargetRoom(out var endPoint) == from) Block(used, (int)endPoint, !guessedFar);
+      if (connection.GetSourceRoom(out var startPoint) == from) Mark(taken, nearExit, (int)startPoint, true);
+      if (connection.GetTargetRoom(out var endPoint) == from) Mark(taken, nearExit, (int)endPoint, !guessedFar);
     }
 
     var lines = otherEnd.HasValue ? Lines(elements, self) : null;
     CompassPoint? choice = null;
     var choiceScore = double.MaxValue;
-    for (var step = 0; step <= 8; step++)
+    // stay on the side facing the other room: within two points of it, or four if those are all taken
+    foreach (var reach in new[] { 2, 4 })
     {
-      // once a free point is found, only look a little further round for one that crosses fewer joins
-      if (choice.HasValue && (lines == null || step > 3)) break;
-      foreach (var offset in step == 0 ? new[] { 0 } : new[] { step, -step })
-      {
-        var point = ((best + offset) % 16 + 16) % 16;
-        if (used.Contains(point)) continue;
-        var score = step * 0.1;
-        if (lines != null)
+      for (var step = 0; step <= reach; step++)
+        foreach (var offset in step == 0 ? new[] { 0 } : new[] { step, -step })
         {
-          score += Crossings(from.PortAt((CompassPoint)point).Position, otherEnd.Value, lines);
-          if (current.HasValue && (int)current.Value == point) score -= 0.05;
+          var point = ((best + offset) % 16 + 16) % 16;
+          if (taken.Contains(point)) continue;
+          var score = step * 0.1 + (nearExit.Contains(point) ? 0.5 : 0);
+          if (lines != null) score += Crossings(from.PortAt((CompassPoint)point).Position, otherEnd.Value, lines);
+          // an end already here stays unless somewhere is clearly better
+          if (current.HasValue && (int)current.Value == point) score -= 0.15;
+          if (score < choiceScore)
+          {
+            choiceScore = score;
+            choice = (CompassPoint)point;
+          }
         }
 
-        if (score < choiceScore)
-        {
-          choiceScore = score;
-          choice = (CompassPoint)point;
-        }
-      }
+      if (choice.HasValue) break;
     }
 
     return choice ?? (CompassPoint)best;
@@ -199,11 +203,11 @@ public static class GuessedEnds
     return ((d1 > 0.5 && d2 < -0.5) || (d1 < -0.5 && d2 > 0.5)) && ((d3 > 0.5 && d4 < -0.5) || (d3 < -0.5 && d4 > 0.5));
   }
 
-  private static void Block(HashSet<int> used, int point, bool withNeighbours)
+  private static void Mark(HashSet<int> taken, HashSet<int> nearExit, int point, bool knownExit)
   {
-    used.Add(point);
-    if (!withNeighbours) return;
-    used.Add((point + 1) % 16);
-    used.Add((point + 15) % 16);
+    taken.Add(point);
+    if (!knownExit) return;
+    nearExit.Add((point + 1) % 16);
+    nearExit.Add((point + 15) % 16);
   }
 }

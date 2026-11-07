@@ -317,6 +317,27 @@ public class LayoutTidyTests : IsolatedProjectTests
   }
 
   [Test]
+  public void LeesLongForest_MovingItASquare_KeepsTheStreambedArrowOnTheSideFacingTheStreambed()
+  {
+    // Long forest snap.trizbort: Colossal Cave's In Forest stretched tall, with arrows arriving on its east side
+    // from the Streambed and the Outside Grate. Moving the forest one square jumped the Streambed's arrow round to
+    // north-north-east, because every point near the east side was taken or beside a known exit.
+    var path = RepositoryFile("tests", "automap", "colossal-cave", "long-forest.trizbort");
+    new MapLoader(Project.Current).LoadMap(path).ShouldBeTrue();
+    var forest = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "In Forest");
+    var streambed = Project.Current.Elements.OfType<Connection>()
+      .Single(join => join.GetSourceRoom()?.Name == "At Slit In Streambed" && join.GetTargetRoom() == forest);
+
+    foreach (var dx in new[] { -32f, 32f, 32f })
+    {
+      forest.Position = new Vector(forest.Position.X + dx, forest.Position.Y);
+      GuessedEnds.Face(Project.Current.Elements, new[] { forest });
+      streambed.GetTargetRoom(out var point);
+      ((int)point).ShouldBeInRange((int)CompassPoint.EastNorthEast, (int)CompassPoint.SouthSouthEast);
+    }
+  }
+
+  [Test]
   public void LeesIdealHollywoodHijinxMap_HasEveryJoinNaturallyPlaced_AndTidyingKeepsItThatWay()
   {
     // HH-NOV-6-ideal.trizbort: Lee's hand layout of the first part of Hollywood Hijinx. Every join points the
