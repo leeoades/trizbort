@@ -59,9 +59,10 @@ public static class GuessedEnds
 
   /// <summary>
   ///   The side of <paramref name="from" /> facing <paramref name="to" /> (any of its sixteen points), or the nearest
-  ///   one free on that side: a point another join uses is taken, and the points either side of a known exit are
-  ///   avoided where possible, so a guess doesn't look like that exit. When every point near the facing side is
-  ///   taken, the facing point is shared rather than the end going round the room. <paramref name="self" /> is the
+  ///   one free on that side: a point a known exit uses is taken, and the points either side of it are avoided where
+  ///   possible, so a guess doesn't look like that exit. A point another guessed arrow arrives at may be shared when
+  ///   no clean point is near. When every point near the facing side is taken, the facing point is shared rather than
+  ///   the end going round the room. <paramref name="self" /> is the
   ///   join being docked, if any.
   /// </summary>
   /// <param name="otherEnd">Where the join's other end is, if known: then, of the free points near the facing side,
@@ -82,12 +83,15 @@ public static class GuessedEnds
     // a guess doesn't look like that exit, but they beat going round to another side of the room
     var taken = new HashSet<int>();
     var nearExit = new HashSet<int>();
+    var arrivals = new HashSet<int>();
     foreach (var connection in elements.OfType<Connection>())
     {
       if (connection == self) continue;
-      var guessedFar = IsGuessedFarEnd(connection);
-      if (connection.GetSourceRoom(out var startPoint) == from) Mark(taken, nearExit, (int)startPoint, true);
-      if (connection.GetTargetRoom(out var endPoint) == from) Mark(taken, nearExit, (int)endPoint, !guessedFar);
+      if (connection.GetSourceRoom(out var startPoint) == from) Mark(taken, nearExit, (int)startPoint);
+      if (connection.GetTargetRoom(out var endPoint) != from) continue;
+      // another arrow that only guesses where it arrives: sharing its point is better than going far round
+      if (IsGuessedFarEnd(connection)) arrivals.Add((int)endPoint);
+      else Mark(taken, nearExit, (int)endPoint);
     }
 
     var lines = otherEnd.HasValue ? Lines(elements, self) : null;
@@ -101,7 +105,7 @@ public static class GuessedEnds
         {
           var point = ((best + offset) % 16 + 16) % 16;
           if (taken.Contains(point)) continue;
-          var score = step * 0.1 + (nearExit.Contains(point) ? 0.5 : 0);
+          var score = step * 0.1 + (nearExit.Contains(point) ? 0.5 : 0) + (arrivals.Contains(point) ? 0.35 : 0);
           if (lines != null) score += Crossings(from.PortAt((CompassPoint)point).Position, otherEnd.Value, lines);
           // an end already here stays unless somewhere is clearly better
           if (current.HasValue && (int)current.Value == point) score -= 0.15;
@@ -203,10 +207,9 @@ public static class GuessedEnds
     return ((d1 > 0.5 && d2 < -0.5) || (d1 < -0.5 && d2 > 0.5)) && ((d3 > 0.5 && d4 < -0.5) || (d3 < -0.5 && d4 > 0.5));
   }
 
-  private static void Mark(HashSet<int> taken, HashSet<int> nearExit, int point, bool knownExit)
+  private static void Mark(HashSet<int> taken, HashSet<int> nearExit, int point)
   {
     taken.Add(point);
-    if (!knownExit) return;
     nearExit.Add((point + 1) % 16);
     nearExit.Add((point + 15) % 16);
   }
