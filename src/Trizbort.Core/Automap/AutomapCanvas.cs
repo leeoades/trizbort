@@ -96,6 +96,54 @@ public class AutomapCanvas : IAutomapCanvas
 
     RecordDirection(connection, source, sourceIsStart, directionFromSource, sourceEndIsGuess, target,
       assumeTwoWayConnections);
+
+    TakeOverCommandJoins(connection, source, target);
+  }
+
+  /// <summary>
+  ///   A direction leading from <paramref name="source" /> to <paramref name="target" /> comes first: commands that
+  ///   lead the same way ("light lamp") join its middle label, instead of having dashed joins of their own.
+  /// </summary>
+  private void TakeOverCommandJoins(Connection connection, Room source, Room target)
+  {
+    if (IsCommandJoin(connection))
+    {
+      // the command join turned out to be a direction too: its commands stay as its label
+      connection.AutomapCommand = string.Empty;
+      connection.Style = ConnectionStyle.Solid;
+    }
+
+    foreach (var other in CurrentProject.Elements.OfType<Connection>().ToList())
+    {
+      if (other == connection || !IsCommandJoin(other)) continue;
+      if (other.GetSourceRoom() != source || other.GetTargetRoom() != target) continue;
+      foreach (var command in CommandsOf(other)) connection.MidText = WithMethod(connection.MidText, command);
+      CurrentProject.Elements.Remove(other);
+    }
+  }
+
+  /// <summary>The commands a join records: a command join's commands, or the ones listed in a join's middle label.</summary>
+  private static List<string> CommandsOf(Connection connection) =>
+    SplitMethods(IsCommandJoin(connection) ? connection.AutomapCommand : connection.MidText);
+
+  private static List<string> SplitMethods(string text) =>
+    (text ?? string.Empty).Split(" / ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+  /// <summary>A " / " list of the ways along a join, with <paramref name="method" /> added if it isn't there yet.</summary>
+  private static string WithMethod(string text, string method)
+  {
+    var methods = SplitMethods(text);
+    if (methods.Any(m => string.Equals(m, method, StringComparison.OrdinalIgnoreCase))) return text;
+    methods.Add(method);
+    return string.Join(" / ", methods);
+  }
+
+  /// <summary>Whether <paramref name="connection" /> is a way from <paramref name="from" /> to <paramref name="to" />.</summary>
+  private static bool Leads(Connection connection, Room from, Room to)
+  {
+    var start = connection.GetSourceRoom();
+    var end = connection.GetTargetRoom();
+    return (start == from && end == to) || (connection.Flow == ConnectionFlow.TwoWay && start == to && end == from);
   }
 
   /// <summary>
@@ -400,17 +448,36 @@ public class AutomapCanvas : IAutomapCanvas
     if (!CurrentProject.Elements.Contains(source) || !CurrentProject.Elements.Contains(target)) return;
     command = command.Trim();
 
-    foreach (var connection in CurrentProject.Elements.OfType<Connection>())
+    var between = CurrentProject.Elements.OfType<Connection>().Where(connection =>
     {
-      if (!string.Equals(connection.AutomapCommand, command, StringComparison.OrdinalIgnoreCase)) continue;
       var from = connection.GetSourceRoom();
       var to = connection.GetTargetRoom();
-      if (from == source && to == target) return;
-      if (from == target && to == source)
-      {
-        connection.Flow = ConnectionFlow.TwoWay;
-        return;
-      }
+      return (from == source && to == target) || (from == target && to == source);
+    }).ToList();
+
+    // a command already known along a join between these rooms
+    foreach (var connection in between)
+    {
+      if (!CommandsOf(connection).Any(c => string.Equals(c, command, StringComparison.OrdinalIgnoreCase))) continue;
+      if (IsCommandJoin(connection) && !Leads(connection, source, target)) connection.Flow = ConnectionFlow.TwoWay;
+      return;
+    }
+
+    // a direction that leads there comes first; the command joins its label
+    var way = between.FirstOrDefault(connection => !IsCommandJoin(connection) && Leads(connection, source, target));
+    if (way != null)
+    {
+      way.MidText = WithMethod(way.MidText, command);
+      return;
+    }
+
+    // another command that leads there ("turn on lamp" as well as "light lamp"): one join lists both
+    var other = between.FirstOrDefault(connection => IsCommandJoin(connection) && Leads(connection, source, target));
+    if (other != null)
+    {
+      other.AutomapCommand = WithMethod(other.AutomapCommand, command);
+      other.MidText = WithMethod(other.MidText, command);
+      return;
     }
 
     var sourcePoint = FacingPoint(source, target);

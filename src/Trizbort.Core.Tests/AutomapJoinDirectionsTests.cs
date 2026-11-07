@@ -188,6 +188,60 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
   }
 
   [Test]
+  public void TwoCommandsToTheSameRoom_ShareOneJoin()
+  {
+    // Colossal Cave: "light lamp" and "turn on lamp" both lead from the darkness to the Debris Room
+    var canvas = new AutomapCanvas();
+    var dark = AddRoomAt("Darkness", 0, 0);
+    var debris = AddRoomAt("Debris Room", 400, 0);
+    canvas.ConnectByCommand(dark, debris, "light lamp");
+    canvas.ConnectByCommand(dark, debris, "turn on lamp");
+    canvas.ConnectByCommand(dark, debris, "Light lamp");
+
+    var join = TheJoin();
+    join.MidText.ShouldBe("light lamp / turn on lamp");
+    join.AutomapCommand.ShouldBe("light lamp / turn on lamp");
+    join.Flow.ShouldBe(ConnectionFlow.OneWay);
+  }
+
+  [Test]
+  public void ACommandAlongADirection_JoinsTheDirectionsLabel()
+  {
+    var canvas = new AutomapCanvas();
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 400, 0);
+    canvas.Connect(hall, MappableDirection.East, garden, true);
+    canvas.ConnectByCommand(hall, garden, "climb through window");
+
+    var join = TheJoin();
+    join.MidText.ShouldBe("climb through window");
+    join.AutomapCommand.ShouldBeEmpty();
+    join.Style.ShouldBe(ConnectionStyle.Solid);
+  }
+
+  [Test]
+  public void ADirectionFoundAfterACommand_TakesOverTheCommandsJoin()
+  {
+    var canvas = new AutomapCanvas();
+    var dark = AddRoomAt("Darkness", 0, 0);
+    var debris = AddRoomAt("Debris Room", 400, 0);
+    var lobby = AddRoomAt("Lobby", 0, 400);
+    canvas.ConnectByCommand(dark, debris, "light lamp");
+    canvas.ConnectByCommand(lobby, debris, "xyzzy");
+
+    canvas.Connect(dark, MappableDirection.East, debris, true);
+
+    var joins = Project.Current.Elements.OfType<Connection>().ToList();
+    joins.Count.ShouldBe(2);
+    var east = joins.Single(join => join.GetSourceRoom() == dark);
+    east.MidText.ShouldBe("light lamp");
+    east.AutomapCommand.ShouldBeEmpty();
+    east.StartText.ShouldBeEmpty();
+    StartSide(east).ShouldBe(CompassPoint.East);
+    joins.Single(join => join.GetSourceRoom() == lobby).AutomapCommand.ShouldBe("xyzzy");
+  }
+
+  [Test]
   public void TeleportJoin_IsMarkedAndTheMarkIsSaved()
   {
     var canvas = new AutomapCanvas();
