@@ -32,6 +32,18 @@
                         ToolTip.Tip="Pause before the next move, to step through the transcript a move at a time"
                         Padding="12,4"
                         FontSize="12" />
+                <Button Content="Hide Monitor"
+                        IsVisible="{Binding IsMonitorShown, ElementName=root}"
+                        Command="{Binding ToggleMonitorCommand, ElementName=root}"
+                        ToolTip.Tip="Hide the little game monitor (View > Automap Game Monitor brings it back)"
+                        Padding="12,4"
+                        FontSize="12" />
+                <Button Content="Show Monitor"
+                        IsVisible="{Binding !IsMonitorShown, ElementName=root}"
+                        Command="{Binding ToggleMonitorCommand, ElementName=root}"
+                        ToolTip.Tip="Show the game so far on a little monitor"
+                        Padding="12,4"
+                        FontSize="12" />
                 <Button Content="Stop Automapping"
                         Command="{Binding StopCommand, ElementName=root}"
                         Padding="12,4"

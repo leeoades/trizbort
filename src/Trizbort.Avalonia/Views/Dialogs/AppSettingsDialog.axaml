@@ -5,7 +5,7 @@
         x:DataType="vm:AppSettingsViewModel"
         Title="Application Settings"
         Width="520" Height="820"
-        MinWidth="460" MinHeight="700"
+        MinWidth="460" MinHeight="240"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         KeyboardNavigation.TabNavigation="Cycle">

@@ -96,6 +96,7 @@ public static class ApplicationSettingsController
     AppSettings.Automap = AutomapSettings.Default;
     AppSettings.InfiniteScrollBounds = false;
     AppSettings.ShowMiniMap = true;
+    AppSettings.ShowGameMonitor = true;
     AppSettings.SaveAt100 = true;
     AppSettings.SaveToImage = true;
     AppSettings.SaveToPDF = true;
@@ -130,6 +131,7 @@ public static class ApplicationSettingsController
           if (!string.IsNullOrEmpty(versionText)) AppSettings.DontCareAboutVersion = new Version(versionText);
           AppSettings.InfiniteScrollBounds = root["infiniteScrollBounds"].ToBool(AppSettings.InfiniteScrollBounds);
           AppSettings.ShowMiniMap = root["showMiniMap"].ToBool(AppSettings.ShowMiniMap);
+          AppSettings.ShowGameMonitor = root["showGameMonitor"].ToBool(AppSettings.ShowGameMonitor);
 
           AppSettings.LoadLastProjectOnStart =
             root["loadLastProjectOnStart"].ToBool(AppSettings.LoadLastProjectOnStart);

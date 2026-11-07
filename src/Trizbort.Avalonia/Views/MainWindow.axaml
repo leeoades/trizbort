@@ -91,7 +91,7 @@
             <controls:TranscriptMonitor VerticalAlignment="Bottom"
                                         HorizontalAlignment="Right"
                                         Margin="0,0,12,52"
-                                        IsVisible="{Binding IsAutomapActive}"
+                                        IsVisible="{Binding IsGameMonitorVisible}"
                                         Text="{Binding AutomapScreenText}" />
 
             <controls:AutomapBar VerticalAlignment="Bottom"
@@ -102,6 +102,8 @@
                                  NextMoveCommand="{Binding PlayNextMoveCommand}"
                                  PlayToEndCommand="{Binding PlayToEndCommand}"
                                  PauseCommand="{Binding PauseAutomapCommand}"
+                                 IsMonitorShown="{Binding IsGameMonitorShown}"
+                                 ToggleMonitorCommand="{Binding ToggleGameMonitorCommand}"
                                  StopCommand="{Binding StopAutomapCommand}" />
         </Grid>
     </DockPanel>

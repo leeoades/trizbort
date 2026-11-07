@@ -6,7 +6,7 @@
         x:Name="DialogWindow"
         Title="Automapping"
         Width="520" Height="640"
-        MinWidth="442" MinHeight="600"
+        MinWidth="442" MinHeight="240"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 

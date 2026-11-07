@@ -42,7 +42,16 @@ public partial class MainWindowViewModel : ViewModelBase
     private double _zoomFactor = 1.0;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsGameMonitorVisible))]
     private bool _isAutomapActive;
+
+    /// <summary>Whether the game monitor is wanted (View > Automap Game Monitor, or the automap bar).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsGameMonitorVisible))]
+    private bool _isGameMonitorShown = true;
+
+    /// <summary>The game monitor shows while automapping, unless it has been hidden.</summary>
+    public bool IsGameMonitorVisible => IsAutomapActive && IsGameMonitorShown;
 
     [ObservableProperty]
     private string _automapStatusText = "Automap is not running.";
@@ -111,6 +120,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _commandService.Session.Changed += OnSessionChanged;
         }
 
+        IsGameMonitorShown = _commandService.Session?.ShowGameMonitor ?? true;
         UpdateState();
     }
 
@@ -122,6 +132,21 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnSessionChanged(EditorChange change)
     {
         if ((change & EditorChange.Model) != 0) UpdateElementCount();
+        if (_commandService.Session != null) IsGameMonitorShown = _commandService.Session.ShowGameMonitor;
+    }
+
+    /// <summary>Show or hide the little game monitor; remembered between runs of the app.</summary>
+    [RelayCommand]
+    public void ToggleGameMonitor()
+    {
+        if (_commandService.Session == null)
+        {
+            IsGameMonitorShown = !IsGameMonitorShown;
+            return;
+        }
+
+        _commandService.Session.ShowGameMonitor = !_commandService.Session.ShowGameMonitor;
+        IsGameMonitorShown = _commandService.Session.ShowGameMonitor;
     }
 
     private void OnDirtyChanged(object? sender, EventArgs e)

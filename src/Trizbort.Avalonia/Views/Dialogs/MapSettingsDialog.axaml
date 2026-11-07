@@ -6,7 +6,7 @@
         x:DataType="vm:MapSettingsViewModel"
         Title="Map Settings"
         Width="640" Height="700"
-        MinWidth="544" MinHeight="595"
+        MinWidth="544" MinHeight="240"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 

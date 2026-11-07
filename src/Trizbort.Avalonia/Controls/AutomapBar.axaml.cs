@@ -24,6 +24,25 @@ public partial class AutomapBar : UserControl
     public static readonly StyledProperty<ICommand?> PauseCommandProperty =
         AvaloniaProperty.Register<AutomapBar, ICommand?>(nameof(PauseCommand));
 
+    public static readonly StyledProperty<bool> IsMonitorShownProperty =
+        AvaloniaProperty.Register<AutomapBar, bool>(nameof(IsMonitorShown), true);
+
+    public static readonly StyledProperty<ICommand?> ToggleMonitorCommandProperty =
+        AvaloniaProperty.Register<AutomapBar, ICommand?>(nameof(ToggleMonitorCommand));
+
+    /// <summary>True while the game monitor is shown: the bar offers to hide it, otherwise to show it.</summary>
+    public bool IsMonitorShown
+    {
+        get => GetValue(IsMonitorShownProperty);
+        set => SetValue(IsMonitorShownProperty, value);
+    }
+
+    public ICommand? ToggleMonitorCommand
+    {
+        get => GetValue(ToggleMonitorCommandProperty);
+        set => SetValue(ToggleMonitorCommandProperty, value);
+    }
+
     /// <summary>True while automap plays a move at a time: shows Next Move and Play to End instead of Pause.</summary>
     public bool IsMoveByMove
     {
