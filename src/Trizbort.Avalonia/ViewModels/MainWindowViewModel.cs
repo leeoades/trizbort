@@ -520,6 +520,14 @@ public partial class MainWindowViewModel : ViewModelBase
         IsAutomapMoveByMove = false;
     }
 
+    /// <summary>Go back a move in the transcript, leaving the map as it is; Next Move plays it again.</summary>
+    [RelayCommand]
+    public void GoBackAutomap()
+    {
+        AutomapEngine.Instance.GoBack();
+        IsAutomapMoveByMove = true;
+    }
+
     /// <summary>Pause before the transcript's next move.</summary>
     [RelayCommand]
     public void PauseAutomap()
@@ -559,6 +567,15 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         lock (_screenLines) _screenRefreshPending = false;
         var engine = AutomapEngine.Instance;
+        if (engine.ScreenLineCount < _screenLineCount)
+        {
+            // automap went back a move: start the screen again from what it has now
+            _screenLines.Clear();
+            _screenLineCount = 0;
+            AutomapScreenText = string.Empty;
+            if (_isTranscriptWindowOpen) AutomapTranscriptText = string.Empty;
+        }
+
         var lines = engine.ScreenLines(_screenLineCount);
         if (lines.Count == 0) return;
         _screenLines.AddRange(lines);

@@ -21,6 +21,16 @@ public partial class AutomapBar : UserControl
     public static readonly StyledProperty<ICommand?> PlayToEndCommandProperty =
         AvaloniaProperty.Register<AutomapBar, ICommand?>(nameof(PlayToEndCommand));
 
+    public static readonly StyledProperty<ICommand?> BackCommandProperty =
+        AvaloniaProperty.Register<AutomapBar, ICommand?>(nameof(BackCommand));
+
+    /// <summary>Goes back a move in the transcript.</summary>
+    public ICommand? BackCommand
+    {
+        get => GetValue(BackCommandProperty);
+        set => SetValue(BackCommandProperty, value);
+    }
+
     public static readonly StyledProperty<ICommand?> PauseCommandProperty =
         AvaloniaProperty.Register<AutomapBar, ICommand?>(nameof(PauseCommand));
 

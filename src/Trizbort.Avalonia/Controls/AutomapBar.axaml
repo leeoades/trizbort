@@ -14,6 +14,11 @@
             </StackPanel>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Button Content="Back"
+                        Command="{Binding BackCommand, ElementName=root}"
+                        ToolTip.Tip="Go back a move in the transcript, leaving the map as it is; Next Move plays it again (F9)"
+                        Padding="12,4"
+                        FontSize="12" />
                 <Button Content="Next Move"
                         IsVisible="{Binding IsMoveByMove, ElementName=root}"
                         Command="{Binding NextMoveCommand, ElementName=root}"

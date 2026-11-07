@@ -46,6 +46,10 @@ public class AutomapKeyCommandTests
       Moves++;
     }
 
+    public int Backs { get; private set; }
+
+    public void GoBack() => Backs++;
+
     public void RaiseStatus(string status)
     {
       StatusChanged?.Invoke(status);
@@ -119,6 +123,19 @@ public class AutomapKeyCommandTests
 
     _automap.Moves.ShouldBe(1);
     _automap.MoveByMove.ShouldBeTrue();
+  }
+
+  [Test]
+  public void F9_GoesBackAMove_WhileAutomapRuns()
+  {
+    var back = _catalogue.FindByGesture(new KeyGesture(InputKey.F9, ModifierKeys.None), CommandScope.Canvas);
+    back.ShouldNotBeNull();
+    back.Id.ShouldBe("automap.back");
+    back.CanExecute(_session).ShouldBeFalse();
+
+    _automap.IsRunning = true;
+    back.ExecuteAsync(_session).Wait();
+    _automap.Backs.ShouldBe(1);
   }
 
   [Test]

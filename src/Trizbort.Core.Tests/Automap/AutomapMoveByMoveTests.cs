@@ -80,6 +80,68 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task GoingBack_ReadsTheTranscriptAgain_AndPutsBackARoomDeletedByMistake()
+  {
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Hall", "A grand hall. A door leads north.", "",
+      ">north", "Kitchen", "A small kitchen. The hall is south.", "",
+      ">south", "Hall", "",
+      ">"
+    });
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    settings.MoveByMove = true;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.NextCommand == "look");
+      engine.PlayNextMove();
+      await WaitFor(() => engine.NextCommand == "north");
+      engine.PlayNextMove();
+      await WaitFor(() => engine.NextCommand == "south");
+      Rooms().ShouldBe(new[] { "Hall", "Kitchen" });
+
+      // the Kitchen is deleted by mistake
+      var kitchen = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "Kitchen");
+      foreach (var join in Project.Current.Elements.OfType<Connection>().ToList()) Project.Current.Elements.Remove(join);
+      Project.Current.Elements.Remove(kitchen);
+
+      engine.GoBack();
+      await WaitFor(() => engine.NextCommand == "north");
+      engine.ScreenLines().Last().ShouldBe(">north");
+      Rooms().ShouldBe(new[] { "Hall" });
+
+      engine.PlayNextMove();
+      await WaitFor(() => engine.NextCommand == "south");
+      Rooms().ShouldBe(new[] { "Hall", "Kitchen" });
+      // (exits not yet explored are stubs from a room to itself)
+      var joined = Project.Current.Elements.OfType<Connection>()
+        .Where(join => join.GetSourceRoom() != join.GetTargetRoom()).ShouldHaveSingleItem();
+      new[] { joined.GetSourceRoom()?.Name, joined.GetTargetRoom()?.Name }.ShouldBe(new[] { "Hall", "Kitchen" }, true);
+
+      // and back two moves at once
+      engine.GoBack();
+      engine.GoBack();
+      await WaitFor(() => engine.NextCommand == "look");
+      engine.ScreenLines().ShouldBe(new[] { ">look" });
+      Rooms().ShouldBe(new[] { "Hall", "Kitchen" });
+
+      engine.Stop();
+      await run;
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
   public async Task Pause_StopsBeforeTheNextMove()
   {
     var path = Path.GetTempFileName();

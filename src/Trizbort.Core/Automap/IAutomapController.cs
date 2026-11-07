@@ -25,6 +25,9 @@ public interface IAutomapController
   /// <summary>Play the transcript's next move, then pause before the one after.</summary>
   void PlayNextMove();
 
+  /// <summary>Go back a move in the transcript and wait there, leaving the map as it is.</summary>
+  void GoBack();
+
   /// <summary>Raised with the new status text each time it is set. May be raised off the UI thread.</summary>
   event Action<string> StatusChanged;
 

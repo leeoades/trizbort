@@ -99,6 +99,7 @@
                                  IsVisible="{Binding IsAutomapActive}"
                                  Status="{Binding AutomapStatusText}"
                                  IsMoveByMove="{Binding IsAutomapMoveByMove}"
+                                 BackCommand="{Binding GoBackAutomapCommand}"
                                  NextMoveCommand="{Binding PlayNextMoveCommand}"
                                  PlayToEndCommand="{Binding PlayToEndCommand}"
                                  PauseCommand="{Binding PauseAutomapCommand}"

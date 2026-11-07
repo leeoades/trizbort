@@ -23,6 +23,9 @@
                            TextTrimming="CharacterEllipsis" />
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6"
                             IsVisible="{Binding IsAutomapActive}">
+                    <Button Content="Back"
+                            Command="{Binding GoBackAutomapCommand}"
+                            Padding="12,4" FontSize="12" />
                     <Button Content="Next Move"
                             IsVisible="{Binding IsAutomapMoveByMove}"
                             Command="{Binding PlayNextMoveCommand}"

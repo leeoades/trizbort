@@ -61,6 +61,18 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "automap.back",
+      Title = "Go _Back an Automap Move",
+      MenuPath = "Project",
+      Group = "2-automap-run",
+      Scope = CommandScope.Canvas,
+      // F9, beside F10 for the next move: read the transcript again from the move before, map left as it is
+      Gestures = new[] { new KeyGesture(InputKey.F9, none) },
+      CanExecuteFunc = s => s.Automap.IsRunning,
+      ExecuteAsyncFunc = s => Run(() => s.Automap.GoBack())
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "automap.nextMove",
       Title = "Play Next Automap Mo_ve",
       MenuPath = "Project",
