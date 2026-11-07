@@ -102,6 +102,11 @@ public class AutomapErrorTests : IsolatedProjectTests
       set => _inner.MakeSpaceForNewRooms = value;
     }
 
+    public void ConnectLoop(Room room, MappableDirection direction)
+    {
+      _inner.ConnectLoop(room, direction);
+    }
+
     public bool AbbreviateDirections
     {
       get => _inner.AbbreviateDirections;

@@ -814,6 +814,14 @@ public sealed class Automap : IAutomapController
             NowInRoom(room);
             waits++;
           }
+          else if (_lastKnownRoom != null && _lastMoveDirection != null)
+          {
+            // the way out led straight back in ("north" in the forest returns to the forest); a move that fails
+            // doesn't show the room again, so it never gets here
+            _canvas.ConnectLoop(_lastKnownRoom, _lastMoveDirection.Value);
+            Trace("{0}: {1} leads from {2} back to itself.", FormatTranscriptLineForDisplay(line),
+              _lastMoveDirection.Value.ToString().ToLower(), _lastKnownRoom.Name);
+          }
           else
           {
             // player didn't change rooms

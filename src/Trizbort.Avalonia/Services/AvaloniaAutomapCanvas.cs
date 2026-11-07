@@ -81,6 +81,11 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         set => _innerCanvas.MakeSpaceForNewRooms = value;
     }
 
+    public void ConnectLoop(Room room, MappableDirection direction)
+    {
+        _innerCanvas.ConnectLoop(room, direction);
+    }
+
     public bool AbbreviateDirections
     {
         get => _innerCanvas.AbbreviateDirections;

@@ -442,6 +442,41 @@ public class AutomapCanvas : IAutomapCanvas
     return false;
   }
 
+  /// <summary>
+  ///   A way out of <paramref name="room" /> that leads straight back in ("north" in the forest returns to the forest):
+  ///   a one-way loop leaving the room on the side of the direction and coming back in on the next side round, labelled
+  ///   with the direction. Further directions that loop back are added to the same loop's label.
+  /// </summary>
+  public void ConnectLoop(Room room, MappableDirection direction)
+  {
+    room = ResolveRoom(room);
+    if (room == null || direction == MappableDirection.None) return;
+
+    var loop = CurrentProject.Elements.OfType<Connection>().FirstOrDefault(connection =>
+      connection.GetSourceRoom(out var from) == room && connection.GetTargetRoom(out var to) == room &&
+      from != to && !IsCommandJoin(connection));
+    var word = LabelWord(direction);
+    if (loop == null)
+    {
+      var side = CompassPointHelper.GetCompassDirection(direction);
+      // the next side round, two of the sixteen points on: a stub uses the same side at both ends
+      var back = (CompassPoint)(((int)side + 2) % 16);
+      loop = AddConnection(room, side, room, back);
+      loop.Flow = ConnectionFlow.OneWay;
+      loop.Style = ConnectionStyle.Solid;
+      loop.StartText = word;
+    }
+    else
+    {
+      var words = DirectionWords.SplitLabel(loop.StartText);
+      if (ListsDirection(words, direction)) return;
+      words.Add(word);
+      loop.StartText = string.Join(" / ", words);
+    }
+
+    MarkTravelled(loop, true, direction);
+  }
+
   public void ConnectByCommand(Room source, Room target, string command)
   {
     if (source == null || target == null || source == target || string.IsNullOrWhiteSpace(command)) return;

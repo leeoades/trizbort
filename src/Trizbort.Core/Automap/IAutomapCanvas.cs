@@ -26,6 +26,12 @@ public interface IAutomapCanvas
   /// <summary>Label joins with short directions ("n / u / in") rather than whole words.</summary>
   bool AbbreviateDirections { get; set; }
 
+  /// <summary>
+  ///   Record that <paramref name="direction" /> leads from <paramref name="room" /> straight back to it ("north" in
+  ///   the forest returns to the forest), as a loop from the room to itself.
+  /// </summary>
+  void ConnectLoop(Room room, MappableDirection direction);
+
   void Connect(Room source, MappableDirection directionFromSource, Room target, bool assumeTwoWayConnections);
 
   /// <summary>

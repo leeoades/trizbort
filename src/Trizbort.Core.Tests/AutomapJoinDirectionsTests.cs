@@ -219,6 +219,25 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
   }
 
   [Test]
+  public void AWayBackIntoTheSameRoom_IsALoop()
+  {
+    // "north" in the forest returns to the forest; so does "west"
+    var canvas = new AutomapCanvas { AbbreviateDirections = true };
+    var forest = AddRoomAt("Forest", 0, 0);
+    canvas.ConnectLoop(forest, MappableDirection.North);
+    canvas.ConnectLoop(forest, MappableDirection.North);
+    canvas.ConnectLoop(forest, MappableDirection.West);
+
+    var loop = TheJoin();
+    loop.GetSourceRoom().ShouldBe(forest);
+    loop.GetTargetRoom().ShouldBe(forest);
+    StartSide(loop).ShouldBe(CompassPoint.North);
+    EndSide(loop).ShouldBe(CompassPoint.NorthEast);
+    loop.Flow.ShouldBe(ConnectionFlow.OneWay);
+    loop.StartText.ShouldBe("n / w");
+  }
+
+  [Test]
   public void TwoCommandsToTheSameRoom_ShareOneJoin()
   {
     // Colossal Cave: "light lamp" and "turn on lamp" both lead from the darkness to the Debris Room
