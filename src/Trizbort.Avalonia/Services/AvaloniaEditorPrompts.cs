@@ -123,6 +123,67 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         return viewModel.Result;
     }
 
+    /// <summary>Tidy Map...: asks which rooms and which way. Without an owner window, takes the suggestion.</summary>
+    public Task<TidyChoice?> ChooseTidyAsync(TidyChoice suggested, int selectedRooms, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            if (owner == null)
+            {
+                return (TidyChoice?)suggested;
+            }
+
+            var dialog = new TidyMapDialog();
+            dialog.Configure(suggested, selectedRooms);
+            return await dialog.ShowDialog<TidyChoice?>(owner);
+        });
+    }
+
+    /// <summary>
+    ///     Runs the work on a background thread. If it takes more than a moment, shows a progress dialog whose Cancel
+    ///     cancels it; the app stays responsive (repaints, the dialog moves) while it runs.
+    /// </summary>
+    public Task<T> RunWithProgressAsync<T>(
+        string title, string message, int expectedMs, Func<CancellationToken, T> work, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            using var cancel = CancellationTokenSource.CreateLinkedTokenSource(token);
+            var task = Task.Run(() => work(cancel.Token), CancellationToken.None);
+            var owner = _getOwner();
+            // quick work finishes without a dialog flashing up
+            if (owner == null || await Task.WhenAny(task, Task.Delay(ProgressDelayMs)) == task)
+            {
+                return await task;
+            }
+
+            var dialog = new ProgressDialog();
+            dialog.Configure(title, message, expectedMs);
+            dialog.Cancelled += (_, _) => cancel.Cancel();
+            var shown = dialog.ShowDialog(owner);
+            T result;
+            try
+            {
+                result = await task;
+            }
+            finally
+            {
+                if (!cancel.IsCancellationRequested)
+                {
+                    dialog.Finish();
+                }
+
+                await shown;
+            }
+
+            return cancel.IsCancellationRequested ? default! : result;
+        });
+    }
+
+    /// <summary>How long work may take before the progress dialog appears.</summary>
+    public const int ProgressDelayMs = 250;
+
     public Task<string?> QuickFindAsync(IReadOnlyList<string> suggestions, CancellationToken token = default)
     {
         return OnUiThreadAsync(async () =>

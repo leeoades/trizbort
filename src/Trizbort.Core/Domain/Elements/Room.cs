@@ -172,7 +172,7 @@ public class Room : Element, ISizeable
 
   /// <summary>
   ///   The user put this room where it is (dragged or nudged it), so the automapper's tidy as you play leaves it
-  ///   there. Tidy Map and Tidy Selected Rooms clear it. Saved with the map; older versions ignore it.
+  ///   there. Tidy Map clears it from the rooms it tidies. Saved with the map; older versions ignore it.
   /// </summary>
   public bool PlacedByHand {
     get { return _placedByHand; }

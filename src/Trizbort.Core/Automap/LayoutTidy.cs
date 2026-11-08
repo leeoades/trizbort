@@ -2,12 +2,29 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 
 namespace Trizbort.Automap;
+
+/// <summary>How Tidy Map works the layout out.</summary>
+public enum TidyMethod
+{
+  /// <summary>Step by step: improves the layout a move at a time, keeping it familiar. Takes a few seconds at most.</summary>
+  Quick,
+
+  /// <summary>
+  ///   Solver: lays every room out again in one go with a constraint solver, then polishes. Finds layouts the step
+  ///   by step tidy can't reach, but may move rooms a long way. Takes several seconds.
+  /// </summary>
+  Thorough
+}
+
+/// <summary>What Tidy Map was asked to do: tidy only the selected rooms, or the whole map, and how.</summary>
+public readonly record struct TidyChoice(bool SelectedOnly, TidyMethod Method);
 
 /// <summary>
 ///   Moves rooms so the map reads clearly: each join pulls its far room one step away in its direction, rooms keep
@@ -109,7 +126,7 @@ public static partial class LayoutTidy
 
   /// <summary>Tidies the given rooms (all of them may move); the others stay put. Returns how many rooms moved.</summary>
   /// <param name="rearrange">
-  ///   True when the user asked for these rooms to be tidied (Tidy Map, Tidy Selected Rooms): they may move as far as
+  ///   True when the user asked for these rooms to be tidied (Tidy Map): they may move as far as
   ///   it takes. Otherwise rooms are reluctant to move far from where they are, so the map stays familiar.
   /// </param>
   public static int Tidy(IList<Element> elements, IEnumerable<Room> rooms, int timeLimitMs = 400, bool rearrange = false)
@@ -117,6 +134,78 @@ public static partial class LayoutTidy
     if (elements == null || rooms == null) return 0;
     var map = new LayoutMap(elements);
     return map.Tidy(rooms.Where(map.Contains).ToList(), timeLimitMs, null, null, rearrange ? StayPut / 20 : StayPut);
+  }
+
+  /// <summary>
+  ///   Gets ready to tidy <paramref name="rooms" /> the way the user asked (Tidy Map). Takes a copy of the layout
+  ///   now, on the caller's thread; <see cref="TidyPlan.Run" /> then works on the copy and may run on any thread,
+  ///   without touching the map. Apply what it returns with <see cref="TidyPlan.Apply" />.
+  /// </summary>
+  public static TidyPlan PlanTidy(IList<Element> elements, IEnumerable<Room> rooms, TidyMethod method)
+  {
+    var map = new LayoutMap(elements ?? new List<Element>());
+    var movable = (rooms ?? Enumerable.Empty<Room>()).Where(map.Contains).ToList();
+    return method == TidyMethod.Thorough
+      ? new TidyPlan(map, movable, method, SolverPlanMs, token =>
+      {
+        Solve(map, movable, SolverPlanMs, token);
+        return true;
+      })
+      : new TidyPlan(map, movable, method, QuickPlanMs, token =>
+      {
+        map.Tidy(movable, QuickPlanMs, null, null, StayPut / 20, token);
+        return true;
+      });
+  }
+
+  /// <summary>How long Tidy Map's quick tidy may take.</summary>
+  public const int QuickPlanMs = 3000;
+
+  /// <summary>How long Tidy Map's solver may search (its polish takes a little longer).</summary>
+  public const int SolverPlanMs = 5000;
+
+  /// <summary>A tidy worked out on a copy of the layout, ready to apply (see <see cref="PlanTidy" />).</summary>
+  public sealed class TidyPlan
+  {
+    private readonly LayoutMap _map;
+    private readonly Func<CancellationToken, bool> _run;
+
+    internal TidyPlan(
+      LayoutMap map, IReadOnlyList<Room> rooms, TidyMethod method, int timeLimitMs, Func<CancellationToken, bool> run)
+    {
+      _map = map;
+      _run = run;
+      Rooms = rooms;
+      Method = method;
+      ExpectedMs = method == TidyMethod.Thorough ? timeLimitMs + Math.Max(500, timeLimitMs / 5) : timeLimitMs;
+    }
+
+    /// <summary>The rooms being tidied.</summary>
+    public IReadOnlyList<Room> Rooms { get; }
+
+    public TidyMethod Method { get; }
+
+    /// <summary>About how long <see cref="Run" /> takes at most, for a progress bar.</summary>
+    public int ExpectedMs { get; }
+
+    /// <summary>
+    ///   Works out the tidy: where each room that moves should go. Safe on a background thread. Returns null when
+    ///   cancelled, or when the solver found nothing better.
+    /// </summary>
+    public IReadOnlyDictionary<Room, Vector> Run(CancellationToken token = default)
+    {
+      _map.Commit = false;
+      if (!_run(token) || token.IsCancellationRequested) return null;
+      return _map.Moves();
+    }
+
+    /// <summary>Puts the rooms where <see cref="Run" /> said (on the map's thread). Returns how many moved.</summary>
+    public static int Apply(IReadOnlyDictionary<Room, Vector> moves)
+    {
+      if (moves == null) return 0;
+      foreach (var (room, at) in moves) room.Position = at;
+      return moves.Count;
+    }
   }
 
   internal sealed class Join
@@ -134,7 +223,7 @@ public static partial class LayoutTidy
     public double AX, AY, BX, BY;
   }
 
-  private sealed class LayoutMap
+  internal sealed class LayoutMap
   {
     private readonly List<Room> _rooms;
     private readonly Dictionary<Room, int> _index = new(ReferenceEqualityComparer.Instance);
@@ -147,8 +236,13 @@ public static partial class LayoutTidy
     // centres and half sizes; positions change as the search runs
     private readonly double[] _x;
     private readonly double[] _y;
-    private readonly double[] _startX;
-    private readonly double[] _startY;
+    // where the rooms were when the map was read: what moving is measured from when the result is applied
+    private readonly double[] _originX;
+    private readonly double[] _originY;
+
+    // what staying put is measured from; the solver moves it to where it put the rooms before it polishes
+    private double[] _startX;
+    private double[] _startY;
     private readonly double[] _halfW;
     private readonly double[] _halfH;
     private readonly double _stepX;
@@ -176,14 +270,16 @@ public static partial class LayoutTidy
       _y = new double[n];
       _startX = new double[n];
       _startY = new double[n];
+      _originX = new double[n];
+      _originY = new double[n];
       _halfW = new double[n];
       _halfH = new double[n];
       _joinsOf = new List<int>[n];
       for (var i = 0; i < n; i++)
       {
         var bounds = _rooms[i].InnerBounds;
-        _x[i] = _startX[i] = bounds.Center.X;
-        _y[i] = _startY[i] = bounds.Center.Y;
+        _x[i] = _startX[i] = _originX[i] = bounds.Center.X;
+        _y[i] = _startY[i] = _originY[i] = bounds.Center.Y;
         _halfW[i] = bounds.Width / 2;
         _halfH[i] = bounds.Height / 2;
         _joinsOf[i] = new List<int>();
@@ -420,8 +516,10 @@ public static partial class LayoutTidy
     private bool _rearrange;
 
     public int Tidy(
-      List<Room> movableRooms, int timeLimitMs, Room free, List<Room> roomsInTheWay = null, double stayPut = StayPut)
+      List<Room> movableRooms, int timeLimitMs, Room free, List<Room> roomsInTheWay = null, double stayPut = StayPut,
+      CancellationToken cancel = default)
     {
+      _cancel = cancel;
       _stayPut = stayPut;
       _rearrange = stayPut < StayPut;
       _inTheWay = roomsInTheWay == null ? new HashSet<int>() : roomsInTheWay.Select(room => _index[room]).ToHashSet();
@@ -440,7 +538,7 @@ public static partial class LayoutTidy
 
         // The room just arrived at first, trying every move and taking the best, not the first that helps: sliding
         // it aside is found before making space for it, but making space is usually better.
-        if (_free >= 0 && clock.ElapsedMilliseconds <= timeLimitMs)
+        if (_free >= 0 && !OutOfTime(clock, timeLimitMs))
         {
           var best = BestMoveForFree(movable, score);
           if (best != null)
@@ -459,7 +557,7 @@ public static partial class LayoutTidy
             for (var dy = -1; dy <= 1; dy++)
             {
               if (dx == 0 && dy == 0) continue;
-              if (clock.ElapsedMilliseconds > timeLimitMs) return Apply();
+              if (OutOfTime(clock, timeLimitMs)) return Apply();
               var moved = TryMove(unit, dx, dy, movable, out var across);
               if (moved == null) continue;
               var after = Score(movable);
@@ -486,7 +584,7 @@ public static partial class LayoutTidy
           var members = unit.ToHashSet();
           foreach (var j in unit.SelectMany(room => _joinsOf[room]).Distinct().ToList())
           {
-            if (clock.ElapsedMilliseconds > timeLimitMs) return Apply();
+            if (OutOfTime(clock, timeLimitMs)) return Apply();
             var join = _joins[j];
             if (join.Pull <= 0 || members.Contains(join.A) == members.Contains(join.B)) continue;
             var (sx, sy) = ExactShift(join);
@@ -529,7 +627,7 @@ public static partial class LayoutTidy
             for (var dy = -1; dy <= 1; dy++)
             {
               if ((dx == 0 && dy == 0) || room == _free) continue;
-              if (clock.ElapsedMilliseconds > timeLimitMs) return Apply();
+              if (OutOfTime(clock, timeLimitMs)) return Apply();
               var side = movable.Where(other => other != _free &&
                                                 (_x[other] - _x[room]) * dx / _stepX +
                                                 (_y[other] - _y[room]) * dy / _stepY > -0.5).ToList();
@@ -565,7 +663,7 @@ public static partial class LayoutTidy
             for (var dy = -1; dy <= 1; dy++)
             {
               if (dx == 0 && dy == 0) continue;
-              if (clock.ElapsedMilliseconds > timeLimitMs) return Apply();
+              if (OutOfTime(clock, timeLimitMs)) return Apply();
               var beyond = Beyond(room, dx, dy);
               // tidying what the user chose: rooms they didn't choose stay where they are
               if (_rearrange) beyond = beyond.Where(movable.Contains).ToList();
@@ -971,20 +1069,62 @@ public static partial class LayoutTidy
       return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
     }
 
-    /// <summary>Puts the rooms where the search left them; returns how many moved.</summary>
+    /// <summary>
+    ///   False while planning (<see cref="TidyPlan" />): the search works on this copy only and the rooms aren't
+    ///   moved; <see cref="Moves" /> says where they would go.
+    /// </summary>
+    public bool Commit { get; set; } = true;
+
+    private CancellationToken _cancel;
+
+    private bool OutOfTime(Stopwatch clock, int timeLimitMs) =>
+      clock.ElapsedMilliseconds > timeLimitMs || _cancel.IsCancellationRequested;
+
+    /// <summary>Puts the rooms where the search left them (unless planning); returns how many moved.</summary>
     private int Apply()
     {
-      var moved = 0;
+      var moves = Moves();
+      if (Commit) TidyPlan.Apply(moves);
+      return moves.Count;
+    }
+
+    /// <summary>Where each room that moved would go (its snapped top left).</summary>
+    public Dictionary<Room, Vector> Moves()
+    {
+      var moves = new Dictionary<Room, Vector>(ReferenceEqualityComparer.Instance);
       for (var i = 0; i < _rooms.Count; i++)
       {
-        if (Math.Abs(_x[i] - _startX[i]) < 0.5 && Math.Abs(_y[i] - _startY[i]) < 0.5) continue;
-        var room = _rooms[i];
-        room.Position = Settings.Snap(new Vector((float)(_x[i] - _halfW[i]), (float)(_y[i] - _halfH[i])));
-        moved++;
+        var at = Settings.Snap(new Vector((float)(_x[i] - _halfW[i]), (float)(_y[i] - _halfH[i])));
+        var was = Settings.Snap(new Vector((float)(_originX[i] - _halfW[i]), (float)(_originY[i] - _halfH[i])));
+        if (at != was) moves[_rooms[i]] = at;
       }
 
-      return moved;
+      return moves;
     }
+
+    /// <summary>Puts a room's top left at (<paramref name="left" />, <paramref name="top" />) in this copy.</summary>
+    public void PlaceTopLeft(int room, double left, double top)
+    {
+      _x[room] = left + _halfW[room];
+      _y[room] = top + _halfH[room];
+    }
+
+    public (double[] X, double[] Y) Snapshot() => ((double[])_x.Clone(), (double[])_y.Clone());
+
+    public void Restore((double[] X, double[] Y) snapshot)
+    {
+      Array.Copy(snapshot.X, _x, _x.Length);
+      Array.Copy(snapshot.Y, _y, _y.Length);
+    }
+
+    /// <summary>Staying put is measured from where the rooms are now.</summary>
+    public void Rebase()
+    {
+      _startX = (double[])_x.Clone();
+      _startY = (double[])_y.Clone();
+    }
+
+    public int NaturalCount() => DirectedJoins.Count(IsNatural);
 
     private static bool IsMainPoint(CompassPoint point) => point is CompassPoint.North or CompassPoint.NorthEast
       or CompassPoint.East or CompassPoint.SouthEast or CompassPoint.South or CompassPoint.SouthWest

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Trizbort.Automap;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
@@ -95,75 +96,52 @@ public sealed partial class CommandCatalogue
     RegisterSwap(catalogue, "room.swap.regions", "Swap _Regions", new KeyGesture(InputKey.W, ModifierKeys.Alt),
       CommandScope.Canvas, 60, s => s.SwapRoomRegions());
 
-    // Tidy: the auto-tidy, run over the whole map or the selected rooms, as one undo step.
+    // Tidy Map...: asks which rooms and which way, works it out in the background, then applies it as one undo step.
     catalogue.Register(new EditorCommand
     {
       Id = "map.tidy",
-      Title = "_Tidy Map",
-      MenuPath = "Edit/Rooms",
-      Group = "5-tidy",
-      CanExecuteFunc = s => s.Project.Elements.OfType<Room>().Skip(1).Any(),
-      ExecuteAsyncFunc = s => Run(() => Tidy(s, null))
-    });
-    catalogue.Register(new EditorCommand
-    {
-      Id = "map.tidySelection",
       ContextOrder = 61, ContextGroup = "5-room",
-      Title = "Tidy Selected Roo_ms",
+      Title = "_Tidy Map...",
       MenuPath = "Edit/Rooms",
       Group = "5-tidy",
       ContextTargets = ContextTargets.Room,
-      CanExecuteFunc = s => s.SelectedRooms.Count > 1,
-      ExecuteAsyncFunc = s => Run(() => Tidy(s, s.SelectedRooms.ToList()))
-    });
-    catalogue.Register(new EditorCommand
-    {
-      Id = "map.tidySolver",
-      Title = "Tidy Map with Sol_ver",
-      MenuPath = "Edit/Rooms",
-      Group = "5-tidy",
       CanExecuteFunc = s => s.Project.Elements.OfType<Room>().Skip(1).Any(),
-      ExecuteAsyncFunc = s => Run(() => Tidy(s, null, true))
-    });
-    catalogue.Register(new EditorCommand
-    {
-      Id = "map.tidySelectionSolver",
-      Title = "Tidy Selected Rooms with Solve_r",
-      MenuPath = "Edit/Rooms",
-      Group = "5-tidy",
-      CanExecuteFunc = s => s.SelectedRooms.Count > 1,
-      ExecuteAsyncFunc = s => Run(() => Tidy(s, s.SelectedRooms.ToList(), true))
+      ExecuteAsyncFunc = s => TidyAsync(s)
     });
   }
 
-  /// <summary>How long Tidy Map and Tidy Selected Rooms may think: longer than the tidy after each automap move.</summary>
-  private const int TidyTimeLimitMs = 3000;
+  /// <summary>The way Tidy Map tidied last time, offered first next time.</summary>
+  private static TidyMethod _lastTidyMethod = TidyMethod.Quick;
 
   /// <summary>
-  ///   Rearranges <paramref name="rooms" /> (every room when null) so joins point the way their directions say,
-  ///   rooms keep off each other and off joins, and joins cross as little as possible; other rooms stay put.
+  ///   Tidy Map...: asks which rooms (the whole map, or the selected rooms when more than one is selected) and which
+  ///   way to tidy them, works the layout out off the UI thread with a progress bar, then moves the rooms as one undo
+  ///   step. Tidied rooms lose their placed-by-hand mark. Cancelling at either step changes nothing.
   /// </summary>
-  /// <param name="solver">
-  ///   Lay the rooms out in one go with the constraint solver (LayoutTidy.SolverTidy) rather than improving the
-  ///   layout a step at a time.
-  /// </param>
-  private static void Tidy(EditorSession session, IReadOnlyList<Room> rooms, bool solver = false)
+  private static async Task TidyAsync(EditorSession session)
   {
+    var selected = session.SelectedRooms.Count;
+    var choice = await session.Prompts.ChooseTidyAsync(new TidyChoice(selected > 1, _lastTidyMethod), selected);
+    if (choice == null) return;
+    _lastTidyMethod = choice.Value.Method;
+
     var elements = session.Project.Elements.ToList();
-    var targets = rooms ?? elements.OfType<Room>().ToList();
-    session.Execute(rooms == null ? "Tidy map" : "Tidy selected rooms", () =>
+    var rooms = choice.Value.SelectedOnly && selected > 1
+      ? session.SelectedRooms.ToList()
+      : elements.OfType<Room>().ToList();
+    var plan = LayoutTidy.PlanTidy(elements, rooms, choice.Value.Method);
+    var title = choice.Value.SelectedOnly && selected > 1 ? "Tidy selected rooms" : "Tidy map";
+    var moves = await session.Prompts.RunWithProgressAsync(title, "Tidying the map...", plan.ExpectedMs, plan.Run);
+    if (moves == null || moves.Count == 0) return;
+
+    session.Execute(title, () =>
     {
       // asked to tidy them, so they're no longer where the user put them by hand
-      foreach (var room in targets) room.PlacedByHand = false;
-      var moved = solver
-        ? LayoutTidy.SolverTidy(elements, targets, SolverTimeLimitMs)
-        : LayoutTidy.Tidy(elements, targets, TidyTimeLimitMs, rearrange: true);
-      if (moved > 0) GuessedEnds.Face(session.Project.Elements, targets.ToList());
+      foreach (var room in plan.Rooms) room.PlacedByHand = false;
+      LayoutTidy.TidyPlan.Apply(moves);
+      GuessedEnds.Face(session.Project.Elements, plan.Rooms.ToList());
     });
   }
-
-  /// <summary>How long the solver may search; it stops early when it knows its layout is the best.</summary>
-  private const int SolverTimeLimitMs = 5000;
 
   private static void RegisterShape(
     CommandCatalogue catalogue, string id, string title, InputKey key, RoomShape shape, int contextOrder)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Google.OrTools.Sat;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
@@ -38,10 +39,34 @@ public static partial class LayoutTidy
   {
     if (elements == null || rooms == null) return 0;
     var map = new LayoutMap(elements);
+    var result = Solve(map, rooms.Where(map.Contains).ToList(), timeLimitMs, CancellationToken.None);
+    return result < 0 ? -1 : TidyPlan.Apply(map.Moves());
+  }
+
+  /// <summary>
+  ///   The solver tidy on <paramref name="map" />'s copy of the layout; the rooms themselves aren't moved. Returns 1
+  ///   when it changed the layout, 0 when it kept it (nothing better, or cancelled) and -1 when it found no layout.
+  /// </summary>
+  private static int Solve(LayoutMap map, List<Room> rooms, int timeLimitMs, CancellationToken token)
+  {
     var movable = rooms.Select(map.IndexOf).Where(i => i >= 0).ToHashSet();
     var n = map.Rooms.Count;
     if (movable.Count == 0 || n < 2) return 0;
+    var commit = map.Commit;
+    map.Commit = false;
+    try
+    {
+      return Solve(map, rooms, movable, n, timeLimitMs, token);
+    }
+    finally
+    {
+      map.Commit = commit;
+    }
+  }
 
+  private static int Solve(
+    LayoutMap map, List<Room> rooms, HashSet<int> movable, int n, int timeLimitMs, CancellationToken token)
+  {
     var stepX = map.StepX;
     var stepY = map.StepY;
     var left = new double[n];
@@ -73,8 +98,8 @@ public static partial class LayoutTidy
     var minY = cellY.Min() - reach;
     var maxY = cellY.Max() + reach;
 
-    var naturalBefore = NaturalJoins(elements).Natural;
-    var before = map.Rooms.Select(room => room.Position).ToList();
+    var naturalBefore = map.NaturalCount();
+    var before = map.Snapshot();
 
     var model = new CpModel();
     var x = new IntVar[n];
@@ -166,36 +191,30 @@ public static partial class LayoutTidy
     {
       StringParameters = $"max_time_in_seconds:{timeLimitMs / 1000.0:0.0###}, num_workers:8"
     };
-    var status = solver.Solve(model);
+    CpSolverStatus status;
+    using (token.Register(() => solver.StopSearch()))
+      status = solver.Solve(model);
+    if (token.IsCancellationRequested) return 0;
     if (status != CpSolverStatus.Optimal && status != CpSolverStatus.Feasible) return -1;
 
-    var moved = 0;
     foreach (var i in movable)
-    {
-      var nx = solver.Value(x[i]);
-      var ny = solver.Value(y[i]);
-      if (nx == cellX[i] && ny == cellY[i]) continue;
-      var room = map.Rooms[i];
-      room.Position = Settings.Snap(new Vector((float)(originX + nx * stepX), (float)(originY + ny * stepY)));
-      moved++;
-    }
+      map.PlaceTopLeft(i, originX + solver.Value(x[i]) * stepX, originY + solver.Value(y[i]) * stepY);
 
-    var solved = NaturalJoins(elements).Natural;
-    var solvedAt = map.Rooms.Select(room => room.Position).ToList();
-    // polish: rooms off joins, fewer crossings; kept only if it doesn't cost a join pointing its way
-    Tidy(elements, movable.Select(i => map.Rooms[i]).ToList(), Math.Max(500, timeLimitMs / 5), rearrange: true);
-    var polished = NaturalJoins(elements).Natural;
-    if (polished < solved)
-      for (var i = 0; i < n; i++)
-        map.Rooms[i].Position = solvedAt[i];
+    var solved = map.NaturalCount();
+    var solvedAt = map.Snapshot();
+    // polish: rooms off joins, fewer crossings, lined up; kept only if it doesn't cost a join pointing its way
+    map.Rebase();
+    map.Tidy(rooms, Math.Max(500, timeLimitMs / 5), null, null, StayPut / 20, token);
+    if (token.IsCancellationRequested) return 0;
+    if (map.NaturalCount() < solved) map.Restore(solvedAt);
 
     // never worse than it was
-    if (NaturalJoins(elements).Natural < naturalBefore)
+    if (map.NaturalCount() < naturalBefore)
     {
-      for (var i = 0; i < n; i++) map.Rooms[i].Position = before[i];
+      map.Restore(before);
       return 0;
     }
 
-    return moved;
+    return 1;
   }
 }
