@@ -6,7 +6,7 @@
         x:Name="DialogWindow"
         Title="Automapping"
         Width="520" Height="640"
-        MinWidth="442" MinHeight="600"
+        MinWidth="442" MinHeight="240"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
@@ -46,8 +46,18 @@
                         <CheckBox Content="_Guess possible exits from a room by reading its initial description."
                                   IsChecked="{Binding GuessExits}" />
 
+                        <CheckBox Content="Tidy the map as you go, so _rooms make space for each other."
+                                  IsChecked="{Binding AutoTidy}" />
+
+                        <CheckBox Content="_Label directions in short: n / u / in rather than north / up / in."
+                                  IsChecked="{Binding AbbreviateDirections}" />
+
                         <CheckBox Content="_Start processing from the end of the transcript file."
                                   IsChecked="{Binding ContinueTranscript}" />
+
+                        <CheckBox Content="_Play the transcript a move at a time, starting paused."
+                                  ToolTip.Tip="Use Next move and Play to end on the automap bar to step through a transcript you already have."
+                                  IsChecked="{Binding MoveByMove}" />
 
                         <CheckBox Content="Always assume two-way connections."
                                   IsChecked="{Binding AssumeTwoWayConnections}" />

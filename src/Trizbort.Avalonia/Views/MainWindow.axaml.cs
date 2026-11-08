@@ -26,6 +26,7 @@ public partial class MainWindow : Window
         Opened += OnWindowOpened;
         AddHandler(InputElement.KeyDownEvent, OnModalKeyGuard, RoutingStrategies.Tunnel);
         AddHandler(InputElement.KeyDownEvent, OnCancelGestureKey, RoutingStrategies.Tunnel);
+        AddHandler(InputElement.KeyDownEvent, OnAutomapKey, RoutingStrategies.Tunnel);
         PositionChanged += (_, _) => CaptureNormalBounds();
         PropertyChanged += (_, e) =>
         {
@@ -40,10 +41,35 @@ public partial class MainWindow : Window
     /// </summary>
     private void OnModalKeyGuard(object? sender, KeyEventArgs e)
     {
-        var owned = OwnedWindows;
-        if (owned.Count == 0 || e.Handled) return;
+        if (e.Handled) return;
+        // the transcript window is a floating helper, not a dialog: the map keeps its keys while it is open
+        Window? dialog = null;
+        foreach (var owned in OwnedWindows)
+            if (owned is not TranscriptWindow)
+                dialog = owned;
+        if (dialog == null) return;
         e.Handled = true;
-        owned[owned.Count - 1].Activate();
+        dialog.Activate();
+    }
+
+    /// <summary>
+    ///   F10 (next automap move) and F5 (play to the end) work wherever the focus is in the main window, not only
+    ///   on the map: after pressing Next Move the focus is on that button.
+    /// </summary>
+    private void OnAutomapKey(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || DataContext is not MainWindowViewModel vm) return;
+        var session = vm.CommandService?.Session;
+        var catalogue = App.Services?.GetService<CommandCatalogue>();
+        if (session == null || catalogue == null) return;
+
+        var input = AvaloniaKeyMapper.ToKeyInput(e.Key, e.KeyModifiers, AvaloniaKeyMapper.IsMacOS);
+        var command = catalogue.FindByGesture(input, CommandScope.Canvas);
+        if (command == null || !command.Id.StartsWith("automap.", StringComparison.Ordinal)) return;
+        if (!command.CanExecute(session)) return;
+
+        e.Handled = true;
+        _ = command.ExecuteAsync(session);
     }
 
     /// <summary>

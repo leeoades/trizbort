@@ -32,6 +32,14 @@ public class AutomapStartStopUxTests
         {
         }
 
+        public bool MoveByMove { get; private set; }
+
+        public void PlayNextMove() => MoveByMove = true;
+
+        public void GoBack()
+        {
+        }
+
         public void RaiseStatus(string status) => StatusChanged?.Invoke(status);
 
         public void RaiseFailed(Exception exception) => AutomapFailed?.Invoke(exception);

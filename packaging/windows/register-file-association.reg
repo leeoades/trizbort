@@ -1,6 +1,6 @@
 Windows Registry Editor Version 5.00
 
-; Per-user (HKCU) association of .trizbort with Trizbort Recast. Edit the exe path below first.
+; Per-user (HKCU) association of .trizbort with Trizbort: Recast. Edit the exe path below first.
 [HKEY_CURRENT_USER\Software\Classes\.trizbort]
 @="Trizbort.Map"
 

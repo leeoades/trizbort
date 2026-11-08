@@ -75,6 +75,35 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         }
     }
 
+    public bool MakeSpaceForNewRooms
+    {
+        get => _innerCanvas.MakeSpaceForNewRooms;
+        set => _innerCanvas.MakeSpaceForNewRooms = value;
+    }
+
+    public void ConnectLoop(Room room, MappableDirection direction)
+    {
+        _innerCanvas.ConnectLoop(room, direction);
+    }
+
+    public bool AbbreviateDirections
+    {
+        get => _innerCanvas.AbbreviateDirections;
+        set => _innerCanvas.AbbreviateDirections = value;
+    }
+
+    public void TidyAround(Room room)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            _innerCanvas.TidyAround(room);
+        }
+        else
+        {
+            Dispatcher.UIThread.Invoke(() => _innerCanvas.TidyAround(room));
+        }
+    }
+
     public void SelectRoom(Room room)
     {
         if (Dispatcher.UIThread.CheckAccess())

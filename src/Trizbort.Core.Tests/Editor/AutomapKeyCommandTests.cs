@@ -3,6 +3,8 @@ using NUnit.Framework;
 using Shouldly;
 using Trizbort.Automap;
 using Trizbort.Domain.Application;
+using Trizbort.Domain.Elements;
+using Trizbort.Domain.Misc;
 using Trizbort.Editor;
 using Trizbort.Editor.Commands;
 using Trizbort.Editor.Input;
@@ -36,6 +38,21 @@ public class AutomapKeyCommandTests
     {
       Runs++;
     }
+
+    public bool MoveByMove { get; private set; }
+    public int Moves { get; private set; }
+
+    public void PlayNextMove()
+    {
+      MoveByMove = true;
+      Moves++;
+    }
+
+    public int Backs { get; private set; }
+
+    public void GoBack() => Backs++;
+
+    public Room CurrentRoom { get; set; }
 
     public void RaiseStatus(string status)
     {
@@ -94,6 +111,53 @@ public class AutomapKeyCommandTests
     run.ExecuteAsync(_session).Wait();
 
     _automap.Runs.ShouldBe(1);
+  }
+
+  [Test]
+  public void F10_PlaysTheNextMove_WhileAutomapRuns()
+  {
+    var next = _catalogue.FindByGesture(new KeyGesture(InputKey.F10, ModifierKeys.None), CommandScope.Canvas);
+    next.ShouldNotBeNull();
+    next.Id.ShouldBe("automap.nextMove");
+    next.CanExecute(_session).ShouldBeFalse();
+
+    _automap.IsRunning = true;
+    next.CanExecute(_session).ShouldBeTrue();
+    next.ExecuteAsync(_session).Wait();
+
+    _automap.Moves.ShouldBe(1);
+    _automap.MoveByMove.ShouldBeTrue();
+  }
+
+  [Test]
+  public void F9_GoesBackAMove_WhileAutomapRuns()
+  {
+    var back = _catalogue.FindByGesture(new KeyGesture(InputKey.F9, ModifierKeys.None), CommandScope.Canvas);
+    back.ShouldNotBeNull();
+    back.Id.ShouldBe("automap.back");
+    back.CanExecute(_session).ShouldBeFalse();
+
+    _automap.IsRunning = true;
+    back.ExecuteAsync(_session).Wait();
+    _automap.Backs.ShouldBe(1);
+  }
+
+  [Test]
+  public void GoToCurrentRoom_SelectsTheRoomAutomapIsIn_AndCentresOnIt()
+  {
+    var command = _catalogue.Find("automap.currentRoom");
+    var far = new Room(_project) { Name = "Far Away", Position = new Vector(5000, 4000) };
+    _project.Elements.Add(far);
+    command.CanExecute(_session).ShouldBeFalse(); // not running
+
+    _automap.IsRunning = true;
+    command.CanExecute(_session).ShouldBeFalse(); // doesn't know where the player is
+    _automap.CurrentRoom = far;
+    command.CanExecute(_session).ShouldBeTrue();
+    command.ExecuteAsync(_session).Wait();
+
+    _session.Selection.Items.ShouldBe(new Element[] { far });
+    _session.Viewport.VisibleWorldBounds.Contains(far.InnerBounds.Center).ShouldBeTrue();
   }
 
   [Test]

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -95,6 +96,27 @@ public interface IEditorPrompts
   Task MessageAsync(string message, string title, CancellationToken token = default)
   {
     return Task.CompletedTask;
+  }
+
+  /// <summary>
+  ///   Tidy Map: asks which rooms to tidy (the whole map, or the <paramref name="selectedRooms" /> selected ones when
+  ///   there's more than one) and which way. Returns the choice, or null when cancelled. Default implementation takes
+  ///   <paramref name="suggested" /> without asking.
+  /// </summary>
+  Task<TidyChoice?> ChooseTidyAsync(TidyChoice suggested, int selectedRooms, CancellationToken token = default)
+  {
+    return Task.FromResult<TidyChoice?>(suggested);
+  }
+
+  /// <summary>
+  ///   Runs <paramref name="work" /> off the UI thread, showing <paramref name="message" /> and a progress bar
+  ///   (<paramref name="expectedMs" /> is about how long it takes at most) with a Cancel button that cancels its
+  ///   token. Returns what the work returned, or default when cancelled. Default implementation just runs it.
+  /// </summary>
+  Task<T> RunWithProgressAsync<T>(
+    string title, string message, int expectedMs, Func<CancellationToken, T> work, CancellationToken token = default)
+  {
+    return Task.FromResult(work(token));
   }
 
   /// <summary>

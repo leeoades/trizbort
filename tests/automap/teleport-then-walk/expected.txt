@@ -8,3 +8,6 @@ Inside Building (start)
 connections:
 Inside Building [west] <-> [east] Debris Room "xyzzy" (dotted)
 Inside Building [west] <-> [east] End of Road
+
+natural joins: 1 of 1
+exact joins: 1 of 1

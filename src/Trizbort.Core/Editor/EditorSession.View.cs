@@ -55,6 +55,23 @@ public sealed partial class EditorSession
     }
   }
 
+  /// <summary>
+  ///   Whether the little game monitor is shown while automapping (the persisted <c>ShowGameMonitor</c> application
+  ///   setting).
+  /// </summary>
+  public bool ShowGameMonitor
+  {
+    get => ApplicationSettingsController.AppSettings.ShowGameMonitor;
+    set
+    {
+      var settings = ApplicationSettingsController.AppSettings;
+      if (settings.ShowGameMonitor == value) return;
+
+      settings.ShowGameMonitor = value;
+      RaiseChanged(EditorChange.Viewport);
+    }
+  }
+
   /// <summary>True when at least one selected element can be resized.</summary>
   public bool CanResizeSelection => Selection.Items.OfType<ISizeable>().Any();
 

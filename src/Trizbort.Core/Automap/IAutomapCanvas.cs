@@ -17,6 +17,21 @@ public interface IAutomapCanvas
 
   Room CreateRoom(Room existing, MappableDirection directionFromExisting, string roomName, string line);
 
+  /// <summary>
+  ///   True while the map tidies itself after each move (<see cref="TidyAround" />): a new room whose spot is taken
+  ///   goes there anyway and the tidy moves the other rooms aside, rather than the new room being put further away.
+  /// </summary>
+  bool MakeSpaceForNewRooms { get; set; }
+
+  /// <summary>Label joins with short directions ("n / u / in") rather than whole words.</summary>
+  bool AbbreviateDirections { get; set; }
+
+  /// <summary>
+  ///   Record that <paramref name="direction" /> leads from <paramref name="room" /> straight back to it ("north" in
+  ///   the forest returns to the forest), as a loop from the room to itself.
+  /// </summary>
+  void ConnectLoop(Room room, MappableDirection direction);
+
   void Connect(Room source, MappableDirection directionFromSource, Room target, bool assumeTwoWayConnections);
 
   /// <summary>
@@ -29,6 +44,12 @@ public interface IAutomapCanvas
   void AddExitStub(Room room, MappableDirection direction);
 
   void RemoveExitStub(Room room, MappableDirection direction);
+
+  /// <summary>
+  ///   Let the rooms near <paramref name="room" /> rearrange themselves so they don't get in each other's way
+  ///   (<see cref="LayoutTidy" />). Called inside the move's batch, so it is part of the same undo step.
+  /// </summary>
+  void TidyAround(Room room);
 
   void SelectRoom(Room room);
   void RemoveRoom(Room otherRoom);

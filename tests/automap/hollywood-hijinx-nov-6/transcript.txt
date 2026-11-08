@@ -1,0 +1,533 @@
+Here begins a transcript of interaction with
+
+HOLLYWOOD HIJINX
+Infocom interactive fiction -- a zany treasure hunt
+Copyright (C) 1986 Infocom, Inc. All rights reserved.
+HOLLYWOOD HIJINX is a trademark of Infocom, Inc.
+Release 37 / Serial Number 861215
+
+>look
+South Junction
+You're standing in front of the house where you spent many of your summers as a
+youngster. The old place is not as big as it seemed to you then, but it is still
+quite large. Stone pathways wind east and west around the house, and a larger
+main walkway leads north.
+
+A life-size statue of Buck Palace, one of the stars of Uncle Buddy's talent
+stables, stands here. He's holding a bazooka pointing north.
+
+>e
+You follow the stone walkway as it turns north around the corner of the house,
+arriving at...
+
+Southeast Junction
+This is the southeastern corner of a large backyard whose main feature is an
+elaborate garden. The stone walkway splits in three directions here: north,
+along the perimeter of the garden; south, around the side of the house; and
+west, where the walkway ends at a couple of steps leading up.
+
+>w
+Patio
+This is a large fieldstone patio spanning the entire width of the back of the
+house. In the daytime you can look out onto Aunt Hildegarde's beautiful garden,
+said to be the envy of the Malibu colony. This is where Uncle Buddy and Aunt
+Hildegarde would often entertain.
+
+Standing here you remember the time at one of their parties when you swiped one
+of Uncle Buddy's big Hollywood cigars and smoked it, then got sick on a rose
+bush in the garden. You snicker a little bit thinking about that poor rose bush
+now and the goofy things you did as a child. To the north a stone pathway leads
+to the garden. Steps lead down off to the east and west, and there is a closed
+door to the south.
+
+You can see an orange punch card here.
+
+>e
+Southeast Junction
+
+>s
+You follow the stone walkway as it turns west around the corner of the house,
+arriving at...
+
+South Junction
+
+A life-size statue of Buck Palace, one of the stars of Uncle Buddy's talent
+stables, stands here. He's holding a bazooka pointing south. Hmmm. It looks as
+if the statue of Buck Palace, the fighting letter carrier, has changed position.
+
+>n
+As you walk toward the house, a large black cat scurries across the path,
+heading toward Johnny Carson's house.
+
+Front Porch
+You're standing on the front porch of the house. Next to the front door is a
+regulation mailbox endorsed by Buck Palace. Beneath the mailbox is a doorbell
+once rung by Sonny Tufts. To the south is a walkway.
+
+>s
+South Junction
+
+A life-size statue of Buck Palace, one of the stars of Uncle Buddy's talent
+stables, stands here. He's holding a bazooka pointing south.
+
+>w
+You follow the stone walkway as it turns north around the corner of the house,
+arriving at...
+
+Southwest Junction
+This is the southwestern corner of a large backyard whose main feature is an
+elaborate garden. The stone walkway splits in three directions here: north,
+along the perimeter of the garden; south, around the side of the house; and
+east, where the walkway ends at the foot of a couple of steps.
+
+>e
+Patio
+
+You can see an orange punch card here.
+
+>w
+Southwest Junction
+
+>s
+You follow the stone walkway as it turns east around the corner of the house,
+arriving at...
+
+South Junction
+
+A life-size statue of Buck Palace, one of the stars of Uncle Buddy's talent
+stables, stands here. He's holding a bazooka pointing south.
+
+Shadows pour over you as grey clouds sweep past the night's full moon.
+
+>sw
+You can't go that way.
+
+>w
+You follow the stone walkway as it turns north around the corner of the house,
+arriving at...
+
+Southwest Junction
+
+>n
+Northwest Junction
+In this corner of the backyard you can make out the enormous hedge, which is
+part of the estate's hedge maze. The stone walkway splits in three directions
+here: north, along the dark and towering hedge; south, past the fragrant and
+inviting garden; and east, where the walkway cuts a straight and narrow path
+between the hedge and the garden.
+
+>s
+Southwest Junction
+
+>n
+Northwest Junction
+
+>e
+Entrance to Hedge Maze
+This is the entrance to the hedge maze. Aunt Hildegarde told you never to go
+into the maze without the map, and of course you would go in anyway and she
+would have to come in and find you.
+
+Guests were forever getting lost in the maze at parties. Sometimes you wished
+Cousin Herman would go in and never come out. But you always had the feeling he
+was thinking the same about you, only more seriously. Tall hedges, thick and
+green, stretch along paths leading to the east and west and a grass path north
+enters the maze. A stone walkway leads south.
+
+>e
+Northeast Junction
+In this corner of the backyard you can make out the enormous hedge, which is
+part of the estate's hedge maze. The stone walkway splits in three directions
+here: north, along the dark and towering hedge; south, past the fragrant and
+inviting garden; and west, where the walkway cuts a straight and narrow path
+between the hedge and the garden. A slightly worn path in the grass heads east.
+
+>s
+Southeast Junction
+
+>n
+Northeast Junction
+
+>w
+Entrance to Hedge Maze
+
+>w
+Northwest Junction
+
+>n
+You follow the walkway as it turns east around the hedge leading to...
+
+Cannon Emplacement
+This is a cannon emplacement complete with a Civil War-style cannon and a neatly
+stacked pyramid of cannon balls. During the day this area affords a spectacular
+view of the coastline. Stone walkways lead east and west, and a steep path leads
+down.
+
+>s
+You can't go that way.
+
+>w
+You follow the walkway as it turns south around the hedge leading to...
+
+Northwest Junction
+
+>n
+You follow the walkway as it turns east around the hedge leading to...
+
+Cannon Emplacement
+
+>e
+You follow the walkway as it turns south around the hedge leading to...
+
+Northeast Junction
+
+>n
+You follow the walkway as it turns west around the hedge leading to...
+
+Cannon Emplacement
+
+>s
+You can't go that way.
+
+>d
+You attempt to walk down, but end up sliding most of the way to a cliff below.
+
+Cliff
+This cliff affords the same spectacular view as from the cannon emplacement
+above. Far below you and stretching east, are the white sands of a beach,
+illuminated by the moon's glow. You can hear the faint sound of waves lapping at
+the shore. Nearby in the ground is a closed hatch.
+
+There is an unusual ladder lying on the ground here.
+
+>u
+You slip and slide in the loose rock, but manage to make your way up to the
+cannon emplacement.
+
+Cannon Emplacement
+
+>n
+You attempt to walk down, but end up sliding most of the way to a cliff below.
+
+Cliff
+
+There is an unusual ladder lying on the ground here.
+
+>s
+You slip and slide in the loose rock, but manage to make your way up to the
+cannon emplacement.
+
+Cannon Emplacement
+
+>n
+You attempt to walk down, but end up sliding most of the way to a cliff below.
+
+Cliff
+
+There is an unusual ladder lying on the ground here.
+
+>e
+You can't go that way.
+
+>s
+You slip and slide in the loose rock, but manage to make your way up to the
+cannon emplacement.
+
+Cannon Emplacement
+
+>u
+You can't go that way.
+
+>e
+You follow the walkway as it turns south around the hedge leading to...
+
+Northeast Junction
+
+>e
+As you walk along the path you hear footsteps running south along the stone
+walkway.
+
+Top Landing
+This is a rickety landing at the top of a long flight of old, wooden stairs
+leading down to the beach far below. You and Cousin Herman would race down these
+stairs in the summertime to see who would get to the water first. Usually Cousin
+Herman would trip you and win. A path in the grass leads west.
+
+>w
+You walk a short distance along the grass path, arriving at...
+
+Northeast Junction
+
+>e
+You walk a short distance along the grass path, arriving at...
+
+Top Landing
+
+>s
+You can't go that way.
+
+>d
+You walk down the old, creaking stairs. You stop as you come to a wide gap of
+missing steps.
+
+Middle of Beach Stairs
+You're about halfway down the steep staircase, which creaks under your weight.
+There are several steps missing here. It's quite a gap: probably more than you
+could jump across. On the other side of the gap, the stairs continue down.
+Climbing up the stairs returns to the landing.
+
+>d
+You step into the gap and plunge down onto the sharp rocks below.
+
+Fade to black:
+
+         ****  You have died  ****
+
+Your score is 0 points out of 150, in 43 moves.
+
+Do you want to restart the story, restore a saved position, or quit?
+
+(Please type RESTART, RESTORE or QUIT.) >u
+
+Do you want to restart the story, restore a saved position, or quit?
+
+(Please type RESTART, RESTORE or QUIT.) >u
+
+Do you want to restart the story, restore a saved position, or quit?
+
+(Please type RESTART, RESTORE or QUIT.) >u
+
+Do you want to restart the story, restore a saved position, or quit?
+
+(Please type RESTART, RESTORE or QUIT.) >restart
+As night falls the black limousine turns off the highway. It has all happened so
+fast, you think to yourself. Your Aunt passing away without any warning, the
+funeral this afternoon, and now this unusual stipulation in her will. The limo
+pulls up to the front of the house. "This is the end of the line," says the
+attorney, and you step out of the back of the limo. "Remember, your Aunt
+Hildegarde's will stated you will inherit her entire fortune -- if you can find
+the ten 'treasures' in one night."
+
+He hands you a photo of Uncle Buddy and a letter, saying, "Her will instructed
+that I give you this photo, with the poem, to point you in the right direction.
+Also this letter, and here, you'll need this." He gives you a flashlight. "Meet
+me at 9 a.m. in the living room with all the 'treasures' and you'll inherit her
+entire estate," he says as the limo pulls away and disappears into the night's
+darkness.
+
+HOLLYWOOD HIJINX
+Infocom interactive fiction -- a zany treasure hunt
+Copyright (C) 1986 Infocom, Inc. All rights reserved.
+HOLLYWOOD HIJINX is a trademark of Infocom, Inc.
+Release 37 / Serial Number 861215
+
+South Junction
+You're standing in front of the house where you spent many of your summers as a
+youngster. The old place is not as big as it seemed to you then, but it is still
+quite large. Stone pathways wind east and west around the house, and a larger
+main walkway leads north.
+
+A life-size statue of Buck Palace, one of the stars of Uncle Buddy's talent
+stables, stands here. He's holding a bazooka pointing north.
+
+>n
+As you walk toward the house, a large black cat scurries across the path,
+heading toward Johnny Carson's house.
+
+Front Porch
+You're standing on the front porch of the house. Next to the front door is a
+regulation mailbox endorsed by Buck Palace. Beneath the mailbox is a doorbell
+once rung by Sonny Tufts. To the south is a walkway.
+
+>n
+The oak door is closed.
+
+>e
+You can't go that way.
+
+>w
+You can't go that way.
+
+>s
+South Junction
+
+A life-size statue of Buck Palace, one of the stars of Uncle Buddy's talent
+stables, stands here. He's holding a bazooka pointing south. Hmmm. It looks as
+if the statue of Buck Palace, the fighting letter carrier, has changed position.
+
+>w
+You follow the stone walkway as it turns north around the corner of the house,
+arriving at...
+
+Southwest Junction
+This is the southwestern corner of a large backyard whose main feature is an
+elaborate garden. The stone walkway splits in three directions here: north,
+along the perimeter of the garden; south, around the side of the house; and
+east, where the walkway ends at the foot of a couple of steps.
+
+>sw
+You can't go that way.
+
+>w
+You can't go that way.
+
+>n
+Northwest Junction
+In this corner of the backyard you can make out the enormous hedge, which is
+part of the estate's hedge maze. The stone walkway splits in three directions
+here: north, along the dark and towering hedge; south, past the fragrant and
+inviting garden; and east, where the walkway cuts a straight and narrow path
+between the hedge and the garden.
+
+>n
+You follow the walkway as it turns east around the hedge leading to...
+
+Cannon Emplacement
+This is a cannon emplacement complete with a Civil War-style cannon and a neatly
+stacked pyramid of cannon balls. During the day this area affords a spectacular
+view of the coastline. Stone walkways lead east and west, and a steep path leads
+down.
+
+>n
+You attempt to walk down, but end up sliding most of the way to a cliff below.
+
+Cliff
+This cliff affords the same spectacular view as from the cannon emplacement
+above. Far below you and stretching east, are the white sands of a beach,
+illuminated by the moon's glow. You can hear the faint sound of waves lapping at
+the shore. Nearby in the ground is a closed hatch.
+
+There is an unusual ladder lying on the ground here.
+
+Shadows pour over you as grey clouds sweep past the night's full moon.
+
+>n
+You can't go that way.
+
+>d
+You can't go through the closed hatch.
+
+>l
+Cliff
+This cliff affords the same spectacular view as from the cannon emplacement
+above. Far below you and stretching east, are the white sands of a beach,
+illuminated by the moon's glow. You can hear the faint sound of waves lapping at
+the shore. Nearby in the ground is a closed hatch.
+
+There is an unusual ladder lying on the ground here.
+
+>s
+You slip and slide in the loose rock, but manage to make your way up to the
+cannon emplacement.
+
+Cannon Emplacement
+
+>e
+You follow the walkway as it turns south around the hedge leading to...
+
+Northeast Junction
+In this corner of the backyard you can make out the enormous hedge, which is
+part of the estate's hedge maze. The stone walkway splits in three directions
+here: north, along the dark and towering hedge; south, past the fragrant and
+inviting garden; and west, where the walkway cuts a straight and narrow path
+between the hedge and the garden. A slightly worn path in the grass heads east.
+
+>w
+Entrance to Hedge Maze
+This is the entrance to the hedge maze. Aunt Hildegarde told you never to go
+into the maze without the map, and of course you would go in anyway and she
+would have to come in and find you.
+
+Guests were forever getting lost in the maze at parties. Sometimes you wished
+Cousin Herman would go in and never come out. But you always had the feeling he
+was thinking the same about you, only more seriously. Tall hedges, thick and
+green, stretch along paths leading to the east and west and a grass path north
+enters the maze. A stone walkway leads south.
+
+>s
+Garden, North
+You are in the orchid section of the garden. Tender orchid petals of every color
+surround a small pond here. The stone walkway leads north, southeast and
+southwest.
+
+>n
+Entrance to Hedge Maze
+
+>s
+Garden, North
+
+>se
+Garden, East
+You are in the overpoweringly fragrant rose bush section of the garden. As you
+admire the roses you notice one somewhat sickly rose bush. Something about the
+sight of this particular rose bush makes you feel a bit queasy. The stone
+walkway leads northwest and southwest.
+
+>sw
+Garden, South
+You're standing on a stone walkway in Aunt Hildegarde's much envied garden where
+she would spend hours tending to her flowers, bushes and trees. The garden was
+off limits to you as a child because of an incident one summer when you and
+Cousin Herman were playing in the garden. You suggested pretending to be wild
+African animals and climbed a tree and began to screech as if a baboon while
+Cousin Herman ran off toward the roses shouting something about being a
+rhinoceros.
+
+After howling until your throat felt like you had puffed on one of Uncle Buddy's
+Hollywood cigars, you went to find Cousin Herman. When you arrived you couldn't
+believe your eyes -- Cousin Herman had pulled all the thorns off of all of Aunt
+Hildegarde's rose bushes in a quest to find the biggest thorn possible so he
+could be a rhino. Of course when Aunt Hildegarde saw her naked rose bushes,
+Cousin Herman blamed it all on you. The walkway leads south, northeast and
+northwest.
+
+>nw
+Garden, West
+You're standing on a stone walkway in the tulip section of the garden. The
+walkway leads northeast and southeast.
+
+A small shovel is lying amongst the flower beds.
+
+>ne
+Garden, North
+
+>sw
+Garden, West
+
+A small shovel is lying amongst the flower beds.
+
+>se
+Garden, South
+
+>ne
+Garden, East
+
+>nw
+Garden, North
+
+>se
+Garden, East
+
+>sw
+Garden, South
+
+>s
+Patio
+This is a large fieldstone patio spanning the entire width of the back of the
+house. In the daytime you can look out onto Aunt Hildegarde's beautiful garden,
+said to be the envy of the Malibu colony. This is where Uncle Buddy and Aunt
+Hildegarde would often entertain.
+
+Standing here you remember the time at one of their parties when you swiped one
+of Uncle Buddy's big Hollywood cigars and smoked it, then got sick on a rose
+bush in the garden. You snicker a little bit thinking about that poor rose bush
+now and the goofy things you did as a child. To the north a stone pathway leads
+to the garden. Steps lead down off to the east and west, and there is a closed
+door to the south.
+
+You can see an orange punch card here.
+
+>n
+Garden, South
+
+>

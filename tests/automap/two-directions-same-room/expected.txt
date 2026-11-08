@@ -5,4 +5,7 @@ Beach
 Cliff Top (start)
 
 connections:
-Cliff Top [north "north / down"] <-> [south "south / up"] Beach
+Cliff Top [north "n / d"] <-> [south "s / u"] Beach
+
+natural joins: 1 of 1
+exact joins: 1 of 1

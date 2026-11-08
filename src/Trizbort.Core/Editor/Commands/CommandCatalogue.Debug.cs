@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Trizbort.Domain.Elements;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Editor.Input;
 using Trizbort.Domain.Enums;
@@ -61,6 +63,40 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "automap.back",
+      Title = "_Previous Automap Move",
+      MenuPath = "Project",
+      Group = "2-automap-run",
+      Scope = CommandScope.Canvas,
+      // F9, beside F10 for the next move: read the transcript again from the move before, map left as it is
+      Gestures = new[] { new KeyGesture(InputKey.F9, none) },
+      CanExecuteFunc = s => s.Automap.IsRunning,
+      ExecuteAsyncFunc = s => Run(() => s.Automap.GoBack())
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "automap.nextMove",
+      Title = "Play Next Automap Mo_ve",
+      MenuPath = "Project",
+      Group = "2-automap-run",
+      Scope = CommandScope.Canvas,
+      // F10, as stepping over a line in a debugger; F5 plays to the end
+      Gestures = new[] { new KeyGesture(InputKey.F10, none) },
+      CanExecuteFunc = s => s.Automap.IsRunning,
+      ExecuteAsyncFunc = s => Run(() => s.Automap.PlayNextMove())
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "automap.currentRoom",
+      Title = "Go to _Current Automap Room",
+      MenuPath = "Project",
+      Group = "2-automap-run",
+      Scope = CommandScope.Canvas,
+      CanExecuteFunc = s => s.Automap.IsRunning && s.Automap.CurrentRoom != null,
+      ExecuteAsyncFunc = s => Run(() => GoToAutomapRoom(s))
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "automap.step",
       Title = "Automap Single _Step (debug)",
       MenuPath = "Project",
@@ -72,6 +108,15 @@ public sealed partial class CommandCatalogue
       CanExecuteFunc = s => s.DebugEnabled && s.Automap.IsRunning && s.Automap.SingleStep,
       ExecuteAsyncFunc = s => Run(() => s.Automap.Step())
     });
+  }
+
+  /// <summary>Selects the room automap thinks the player is in and centres the map on it.</summary>
+  public static void GoToAutomapRoom(EditorSession session)
+  {
+    var room = session.Automap.CurrentRoom;
+    if (room == null || !session.Project.Elements.Contains(room)) return;
+    session.Selection.Set(new List<Element> { room });
+    session.CenterOnElement(room);
   }
 
   private static EditorCommand DebugToggle(

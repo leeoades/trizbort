@@ -945,6 +945,13 @@ Whilst automapping, Trizbort displays a bar beneath the canvas, telling you what
 
 You can freely interact with the canvas, and do anything else you like in Trizbort, whilst automapping.
 
+In Trizbort: Recast the bar also has these buttons:
+
+- **Current Room** selects the room automap thinks you're in and centres the map on it.
+- **Next Move** (F10) and **Play to End** (F5), when playing the transcript a move at a time (an option when you start automapping). **Pause** stops before the next move.
+- **Previous Move** (F9) goes back a move in the transcript and waits there. The map is left as it is, so you can step through part of the game again; the room you were in then is selected.
+- **Hide Monitor** and **Show Monitor** hide and show the small game monitor in the corner of the map, which shows the game so far. Click the monitor for a larger window you can copy text from; it floats beside the map, and the map's keys and Undo still work.
+
 ![Trizbort's appearance whilst automapping is in progress.](automapping_inprogress.png)
 
 *Trizbort's appearance whilst automapping is in progress.*
@@ -986,7 +993,7 @@ The automapping process is based on applying a series of heuristics to the text 
 
 Trizbort recognises room names in the transcript by applying a series of rules when reading each line of the transcript. Primarily it expects words in room names to be proper names with an initial capital letter (but not all caps), though very short words are exempt from this rule. It also understands that room names in the transcript may be followed by suffixes such as " (on the bed)" or ", under the table" and will attempt to strip those out when determining the room name. There are numerous other rules it applies as it makes a best guess as to what is a room name and what is just text; but it may get things wrong.
 
-Trizbort Recast recognises short grid-reference names such as `Y2` and quoted headings such as `At "Y2"`. It keeps comma qualifiers in names such as `Garden, north` and `Maze of Twisty Little Passages, all different`, while still stripping positional decorations such as `, on the bed`.
+Trizbort: Recast recognises short grid-reference names such as `Y2` and quoted headings such as `At "Y2"`. It keeps comma qualifiers in names such as `Garden, north` and `Maze of Twisty Little Passages, all different`, while still stripping positional decorations such as `, on the bed`.
 
 In Colossal Cave, the "all different" maze rooms actually share the heading `Maze`; their descriptions differ. To map them separately, use a verbose transcript, leave **Assume no two rooms have the same name** unchecked, and choose **A New Room** when a new maze description appears in the disambiguation dialog. On a later visit, a description with the same first sentence (ignoring case) reuses that room. Text after the first sentence can change, such as a door being open, without automap asking again.
 
@@ -1057,6 +1064,8 @@ Some maps can look too complicated because of extraneous connections (for exampl
 After moving into a new room on a complicated map, **check back and see where Trizbort has put it**. If you don't like the positioning, move it straight away, ideally to a more open area of the map; this will help Trizbort place new rooms and connections in sensible places. Some games are more devious in this regard than others; especially in early games, mapping the game was considered to be part of the challenge, and an automapper stands little chance next to a human brain. But a little manual intervention as you go along will go a long (sic) way.
 
 **Trizbort doesn't mind where rooms are positioned on the map** during automapping: it will connect them up regardless. So you can freely move rooms around if you keep their connections intact.
+
+**Trizbort: Recast tidies the map as you go.** After each move, rooms nearby shift so that joins point the way their directions say, never run across a room, and cross each other as little as possible. A room you drag or nudge yourself is left where you put it (this is saved with the map). To tidy a whole map, or just the rooms you've selected, choose `Edit->Rooms->Tidy Map...`: **step by step** keeps the map familiar, and the **solver** lays everything out again. Tidy Map can be undone in one step.
 
 <a name="help_automap_tips_rearranging"></a>
 

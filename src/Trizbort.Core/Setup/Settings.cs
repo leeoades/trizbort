@@ -33,6 +33,8 @@ public static class Settings
   private static Font _lineFont;
   private static float _lineWidth;
   private static bool _handDrawn;
+  private static bool _labelDiagonalExits = true;
+  private static bool _labelCompassExits;
   private static bool _snapToGrid;
   private static bool _isGridVisible;
   private static bool _showOrigin;
@@ -176,6 +178,36 @@ public static class Settings
       if (_handDrawn != value)
       {
         _handDrawn = value;
+        RaiseChanged();
+      }
+    }
+  }
+
+  /// <summary>
+  ///   Write the direction ("ne", "sw") at each end of a join that leaves a room from a diagonal side and has no label
+  ///   of its own. On by default.
+  /// </summary>
+  public static bool LabelDiagonalExits {
+    get { return _labelDiagonalExits; }
+    set {
+      if (_labelDiagonalExits != value)
+      {
+        _labelDiagonalExits = value;
+        RaiseChanged();
+      }
+    }
+  }
+
+  /// <summary>
+  ///   Write the direction ("n", "e") at each end of a join that leaves a room from its north, east, south or west
+  ///   side and has no label of its own.
+  /// </summary>
+  public static bool LabelCompassExits {
+    get { return _labelCompassExits; }
+    set {
+      if (_labelCompassExits != value)
+      {
+        _labelCompassExits = value;
         RaiseChanged();
       }
     }
@@ -417,6 +449,8 @@ public static class Settings
     ConnectionArrowSize = element["lines"]["arrowSize"].ToFloat(_connectionArrowSize);
     TextOffsetFromConnection = element["lines"]["textOffset"].ToFloat(_textOffsetFromConnection);
     HandDrawn = element["lines"]["handDrawn"].ToBool(false);
+    LabelDiagonalExits = element["lines"]["labelDiagonalExits"].ToBool(true);
+    LabelCompassExits = element["lines"]["labelCompassExits"].ToBool(false);
 
     DarknessStripeSize = element["rooms"]["darknessStripeSize"].ToFloat(_darknessStripeSize);
     ObjectListOffsetFromRoom = element["rooms"]["objectListOffset"].ToFloat(_objectListOffsetFromRoom);
@@ -490,6 +524,8 @@ public static class Settings
 
     LineWidth = 2.0f;
     HandDrawn = false;
+    LabelDiagonalExits = true;
+    LabelCompassExits = false;
 
     SnapToGrid = true;
     IsGridVisible = true;
@@ -556,6 +592,8 @@ public static class Settings
     scribe.Element("arrowSize", _connectionArrowSize);
     scribe.Element("textOffset", _textOffsetFromConnection);
     scribe.Element("handDrawn", _handDrawn);
+    scribe.Element("labelDiagonalExits", _labelDiagonalExits);
+    scribe.Element("labelCompassExits", _labelCompassExits);
     scribe.EndElement();
 
     scribe.StartElement("rooms");

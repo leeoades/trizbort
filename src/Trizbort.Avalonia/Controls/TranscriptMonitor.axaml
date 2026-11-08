@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Trizbort.Avalonia.Controls.TranscriptMonitor"
+             x:Name="root"
+             Cursor="Hand"
+             ToolTip.Tip="The game so far. Click to see the whole transcript and copy text from it.">
+    <!-- a little 4:3 monochrome monitor: a bezel, a dark screen, green text and faint scan lines -->
+    <Border Width="240" Height="197"
+            CornerRadius="10"
+            Padding="10,10,10,20"
+            Background="#2A2A2A"
+            BorderBrush="#555555"
+            BorderThickness="1"
+            BoxShadow="0 3 10 0 #70000000">
+        <Grid>
+            <Border CornerRadius="6" Background="#081208" ClipToBounds="True">
+                <Grid>
+                    <Viewbox Stretch="Uniform">
+                        <Border Width="560" Height="420" Padding="14,10" ClipToBounds="True">
+                            <TextBlock Text="{Binding Text, ElementName=root}"
+                                       FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, Liberation Mono, Menlo, monospace"
+                                       FontSize="18"
+                                       Foreground="#5CFF8A"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Bottom">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect OffsetX="0" OffsetY="0" BlurRadius="6" Color="#A040FF70" />
+                                </TextBlock.Effect>
+                            </TextBlock>
+                        </Border>
+                    </Viewbox>
+                    <Rectangle IsHitTestVisible="False">
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,3" SpreadMethod="Repeat">
+                                <GradientStop Offset="0" Color="#00000000" />
+                                <GradientStop Offset="0.5" Color="#00000000" />
+                                <GradientStop Offset="0.5" Color="#38000000" />
+                                <GradientStop Offset="1" Color="#38000000" />
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <Rectangle IsHitTestVisible="False">
+                        <Rectangle.Fill>
+                            <RadialGradientBrush>
+                                <GradientStop Offset="0.6" Color="#00000000" />
+                                <GradientStop Offset="1" Color="#60000000" />
+                            </RadialGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                </Grid>
+            </Border>
+            <Ellipse Width="5" Height="5" Fill="#4CAF50"
+                     HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,4,-13" />
+        </Grid>
+    </Border>
+</UserControl>

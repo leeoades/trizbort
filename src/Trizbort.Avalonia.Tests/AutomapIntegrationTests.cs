@@ -113,6 +113,7 @@ public class AutomapIntegrationTests
         original.AddRegionCommand = "make zone";
         original.ContinueTranscript = true;
         original.AssumeTwoWayConnections = false;
+        original.AutoTidy = false;
 
         vm.Initialize(original);
 
@@ -126,6 +127,7 @@ public class AutomapIntegrationTests
         vm.AddRegionCommand.ShouldBe("make zone");
         vm.ContinueTranscript.ShouldBeTrue();
         vm.AssumeTwoWayConnections.ShouldBeFalse();
+        vm.AutoTidy.ShouldBeFalse();
 
         var exported = vm.GetSettings();
         exported.FileName.ShouldBe("/tmp/transcript.txt");
@@ -137,6 +139,7 @@ public class AutomapIntegrationTests
         exported.AddRegionCommand.ShouldBe("make zone");
         exported.ContinueTranscript.ShouldBeTrue();
         exported.AssumeTwoWayConnections.ShouldBeFalse();
+        exported.AutoTidy.ShouldBeFalse();
     }
 
     [Test]

@@ -96,6 +96,28 @@ public class AutomapErrorTests : IsolatedProjectTests
       _inner.RemoveExitStub(room, direction);
     }
 
+    public bool MakeSpaceForNewRooms
+    {
+      get => _inner.MakeSpaceForNewRooms;
+      set => _inner.MakeSpaceForNewRooms = value;
+    }
+
+    public void ConnectLoop(Room room, MappableDirection direction)
+    {
+      _inner.ConnectLoop(room, direction);
+    }
+
+    public bool AbbreviateDirections
+    {
+      get => _inner.AbbreviateDirections;
+      set => _inner.AbbreviateDirections = value;
+    }
+
+    public void TidyAround(Room room)
+    {
+      _inner.TidyAround(room);
+    }
+
     public void SelectRoom(Room room)
     {
       _inner.SelectRoom(room);

@@ -66,6 +66,9 @@ public class ApplicationSettings
   public bool SaveToImage { get; set; }
   public bool SaveToPDF { get; set; }
   public bool ShowMiniMap { get; set; }
+
+  /// <summary>Whether the little game monitor shows the transcript beside the automap bar while automapping.</summary>
+  public bool ShowGameMonitor { get; set; } = true;
   public bool ShowObjectsInTooltips { get; set; } = true;
   public bool ShowDescriptionsInTooltips { get; set; } = true;
   public bool LimitRoomDescriptionCharactersInTooltip { get; set; } = false;

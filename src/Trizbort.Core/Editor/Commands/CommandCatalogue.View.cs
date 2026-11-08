@@ -97,6 +97,15 @@ public sealed partial class CommandCatalogue
       IsCheckedFunc = s => s.ShowMiniMap,
       ExecuteAsyncFunc = s => Run(() => s.ShowMiniMap = !s.ShowMiniMap)
     });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "view.toggleGameMonitor",
+      Title = "Automap Game Mo_nitor",
+      MenuPath = "View",
+      Group = "2-display",
+      IsCheckedFunc = s => s.ShowGameMonitor,
+      ExecuteAsyncFunc = s => Run(() => s.ShowGameMonitor = !s.ShowGameMonitor)
+    });
 
     RegisterArrow(catalogue, "left", InputKey.Left, new Vector(-1, 0));
     RegisterArrow(catalogue, "right", InputKey.Right, new Vector(1, 0));

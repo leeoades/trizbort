@@ -7,7 +7,7 @@
         x:DataType="vm:ConnectionPropertiesViewModel"
         Title="Connection Properties"
         Width="520" Height="700"
-        MinWidth="442" MinHeight="595"
+        MinWidth="442" MinHeight="240"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 

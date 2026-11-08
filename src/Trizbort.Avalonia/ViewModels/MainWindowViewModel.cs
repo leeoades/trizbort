@@ -42,13 +42,43 @@ public partial class MainWindowViewModel : ViewModelBase
     private double _zoomFactor = 1.0;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsGameMonitorVisible))]
     private bool _isAutomapActive;
+
+    /// <summary>Whether the game monitor is wanted (View > Automap Game Monitor, or the automap bar).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsGameMonitorVisible))]
+    private bool _isGameMonitorShown = true;
+
+    /// <summary>The game monitor shows while automapping, unless it has been hidden.</summary>
+    public bool IsGameMonitorVisible => IsAutomapActive && IsGameMonitorShown;
 
     [ObservableProperty]
     private string _automapStatusText = "Automap is not running.";
 
     private Task? _automapTask;
     private object? _currentRunToken;
+
+    /// <summary>True while automap plays the transcript a move at a time; false while it plays freely.</summary>
+    [ObservableProperty]
+    private bool _isAutomapMoveByMove;
+
+    /// <summary>The end of the transcript read so far, as much as fits on the little game monitor.</summary>
+    [ObservableProperty]
+    private string _automapScreenText = string.Empty;
+
+    /// <summary>The whole transcript read so far; kept up to date only while the transcript window is open.</summary>
+    [ObservableProperty]
+    private string _automapTranscriptText = string.Empty;
+
+    private bool _isTranscriptWindowOpen;
+    private bool _screenRefreshPending;
+    private int _screenLineCount;
+    private readonly List<string> _screenLines = new();
+
+    /// <summary>Columns and rows of the little game monitor, for working out how much of the transcript fits.</summary>
+    internal const int MonitorColumns = 50;
+    internal const int MonitorRows = 16;
 
     internal Task? CurrentAutomapTask => _automapTask;
 
@@ -90,6 +120,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _commandService.Session.Changed += OnSessionChanged;
         }
 
+        IsGameMonitorShown = _commandService.Session?.ShowGameMonitor ?? true;
         UpdateState();
     }
 
@@ -101,6 +132,21 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnSessionChanged(EditorChange change)
     {
         if ((change & EditorChange.Model) != 0) UpdateElementCount();
+        if (_commandService.Session != null) IsGameMonitorShown = _commandService.Session.ShowGameMonitor;
+    }
+
+    /// <summary>Show or hide the little game monitor; remembered between runs of the app.</summary>
+    [RelayCommand]
+    public void ToggleGameMonitor()
+    {
+        if (_commandService.Session == null)
+        {
+            IsGameMonitorShown = !IsGameMonitorShown;
+            return;
+        }
+
+        _commandService.Session.ShowGameMonitor = !_commandService.Session.ShowGameMonitor;
+        IsGameMonitorShown = _commandService.Session.ShowGameMonitor;
     }
 
     private void OnDirtyChanged(object? sender, EventArgs e)
@@ -453,8 +499,120 @@ public partial class MainWindowViewModel : ViewModelBase
         _currentRunToken = null;
 
         AutomapEngine.Instance.Stop();
+        AutomapEngine.Instance.ScreenChanged -= OnAutomapScreenChanged;
         IsAutomapActive = false;
         AutomapStatusText = "Automap is not running.";
+    }
+
+    /// <summary>Play the transcript's next move, then pause.</summary>
+    [RelayCommand]
+    public void PlayNextMove()
+    {
+        AutomapEngine.Instance.PlayNextMove();
+        IsAutomapMoveByMove = true;
+    }
+
+    /// <summary>Play the rest of the transcript without pausing.</summary>
+    [RelayCommand]
+    public void PlayToEnd()
+    {
+        AutomapEngine.Instance.PlayToEnd();
+        IsAutomapMoveByMove = false;
+    }
+
+    /// <summary>Go back a move in the transcript, leaving the map as it is; Next Move plays it again.</summary>
+    [RelayCommand]
+    public void GoBackAutomap()
+    {
+        AutomapEngine.Instance.GoBack();
+        IsAutomapMoveByMove = true;
+    }
+
+    /// <summary>Select the room automap thinks the player is in and centre the map on it.</summary>
+    [RelayCommand]
+    public void GoToAutomapRoom()
+    {
+        var session = _commandService.Session;
+        if (session == null)
+        {
+            return;
+        }
+
+        Trizbort.Editor.Commands.CommandCatalogue.GoToAutomapRoom(session);
+        _commandService.InvalidateCanvas();
+    }
+
+    /// <summary>Pause before the transcript's next move.</summary>
+    [RelayCommand]
+    public void PauseAutomap()
+    {
+        AutomapEngine.Instance.Pause();
+        IsAutomapMoveByMove = true;
+    }
+
+    /// <summary>The transcript window is open (or closed): keep its text up to date only while it is open.</summary>
+    internal void SetTranscriptWindowOpen(bool open)
+    {
+        _isTranscriptWindowOpen = open;
+        AutomapTranscriptText = open ? string.Join(Environment.NewLine, _screenLines) : string.Empty;
+    }
+
+    private void ResetAutomapScreen()
+    {
+        _screenLines.Clear();
+        _screenLineCount = 0;
+        AutomapScreenText = string.Empty;
+        AutomapTranscriptText = string.Empty;
+    }
+
+    // the engine reads a line at a time; the screen catches up at most once per dispatcher pass
+    private void OnAutomapScreenChanged()
+    {
+        lock (_screenLines)
+        {
+            if (_screenRefreshPending) return;
+            _screenRefreshPending = true;
+        }
+
+        Dispatcher.UIThread.Post(RefreshAutomapScreen, DispatcherPriority.Background);
+    }
+
+    private void RefreshAutomapScreen()
+    {
+        lock (_screenLines) _screenRefreshPending = false;
+        var engine = AutomapEngine.Instance;
+        if (engine.ScreenLineCount < _screenLineCount)
+        {
+            // automap went back a move: start the screen again from what it has now
+            _screenLines.Clear();
+            _screenLineCount = 0;
+            AutomapScreenText = string.Empty;
+            if (_isTranscriptWindowOpen) AutomapTranscriptText = string.Empty;
+        }
+
+        var lines = engine.ScreenLines(_screenLineCount);
+        if (lines.Count == 0) return;
+        _screenLines.AddRange(lines);
+        _screenLineCount += lines.Count;
+        AutomapScreenText = MonitorText(_screenLines, MonitorColumns, MonitorRows);
+        if (_isTranscriptWindowOpen) AutomapTranscriptText = string.Join(Environment.NewLine, _screenLines);
+    }
+
+    /// <summary>The last lines that fit on a screen of this many columns and rows, long lines wrapping.</summary>
+    internal static string MonitorText(IReadOnlyList<string> lines, int columns, int rows)
+    {
+        var used = 0;
+        var first = lines.Count;
+        while (first > 0)
+        {
+            var length = lines[first - 1].Length;
+            var height = Math.Max(1, (length + columns - 1) / columns);
+            if (used + height > rows) break;
+            used += height;
+            first--;
+        }
+
+        return string.Join("\n", lines.Skip(first));
     }
 
     public Task StartAutomapAsync(AutomapSettings settings)
@@ -465,7 +623,10 @@ public partial class MainWindowViewModel : ViewModelBase
         _currentRunToken = runToken;
 
         IsAutomapActive = true;
+        IsAutomapMoveByMove = settings.MoveByMove;
         AutomapStatusText = "Automapping has started.";
+        ResetAutomapScreen();
+        AutomapEngine.Instance.ScreenChanged += OnAutomapScreenChanged;
 
         _automapTask = RunAutomapLoopAsync(settings, runToken);
         return Task.CompletedTask;
@@ -485,6 +646,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             if (ReferenceEquals(_currentRunToken, runToken))
             {
+                AutomapEngine.Instance.ScreenChanged -= OnAutomapScreenChanged;
                 AutomapStatusText = AutomapEngine.Instance.Status;
                 IsAutomapActive = false;
                 UpdateState();
@@ -507,7 +669,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OnAutomapStatusChanged(string status)
     {
-        RunOnUiThread(() => AutomapStatusText = status);
+        RunOnUiThread(() =>
+        {
+            AutomapStatusText = status;
+            IsAutomapMoveByMove = AutomapEngine.Instance.MoveByMove;
+        });
     }
 
     // The engine has already reported the error through IEditorPrompts; here the UI returns to "not running".

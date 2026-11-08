@@ -1,6 +1,6 @@
-# Trizbort Recast change log
+# Trizbort: Recast change log
 
-Trizbort Recast is a cross-platform rebuild of [Trizbort](https://github.com/JasonLautzenheiser/trizbort), the
+Trizbort: Recast is a cross-platform rebuild of [Trizbort](https://github.com/JasonLautzenheiser/trizbort), the
 interactive fiction map editor first written by [Genstein](https://github.com/genstein) and continued by
 [Jason Lautzenheiser](https://github.com/JasonLautzenheiser) and contributors. It opens and saves the same `.trizbort` maps.
 
@@ -11,6 +11,68 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 `recast-vX.Y.Z`; headings here leave out the prefix.
 
 ## [Unreleased]
+
+## [0.11.0-beta] - 2026-11-08
+
+This beta is about **Automap keeping your map tidy as you play**, and **playing a transcript a move at a time**.
+Rooms now move aside to keep joins pointing the way their directions say, never across a room, and crossing as
+little as possible. **Tidy Map...** tidies a whole map or the rooms you select, and rooms you place by hand stay
+where you put them. The app is now called **Trizbort: Recast**. This is still a beta: keep backups and
+[report problems](https://github.com/leeoades/trizbort/issues).
+
+### Added
+
+- **Rooms tidy themselves as you explore.** After each automap move, the rooms nearby shift so that joins point the
+  way their directions say (north up the map, east to the right), lined up in rows and columns where they can be.
+  Automap makes space for a new room by moving whole parts of the map, keeps groups of neatly joined rooms in shape,
+  moves a room up or down when a join would run across it, and avoids joins crossing. It only tidies when the map
+  changed.
+- **Rooms placed by hand stay put.** A room you drag or nudge is left where you put it by the tidy as you play. This
+  is saved with the map (older versions ignore it), and Tidy Map clears it from the rooms it tidies.
+- **Tidy Map...** (Edit > Rooms, and the room right-click menu) tidies the whole map, or the selected rooms. Choose
+  **step by step**, which keeps the map familiar and takes a few seconds, or the **solver** (Google OR-Tools), which
+  lays everything out again and can untangle what step by step can't. It works in the background with a progress bar
+  and Cancel, and is one undo step.
+- **Play a transcript move by move.** Choose it when you start Automap, then use **Next Move** (F10), **Play to End**
+  (F5), **Pause** and **Previous Move** (F9) on the automap bar. Previous Move goes back in the transcript without
+  undoing the map, so you can step through a part again; the room you were in then is selected.
+- **Game monitor.** A small monochrome screen in the corner of the map shows the game so far. Click it for a larger window you
+  can copy from, which floats beside the map without blocking it (the map's keys and Ctrl+Z still work). Hide it from
+  the automap bar.
+- **Current Room** on the automap bar selects the room automap thinks you're in and centres the map on it.
+- **Loops.** An exit that leads straight back into the same room is drawn as a small curl with an arrow, and counts
+  as explored.
+- **Map Settings > always label diagonal exits** (on by default) and **always label straight exits**.
+- Automap labels several directions in short, "n / u / in" (a setting, on by default), and commands that lead to the
+  same room share one label ("light lamp / turn on lamp"), with a compass direction first.
+
+### Changed
+
+- **Renamed Trizbort: Recast.** Download and file names stay as they were (`TrizbortRecast-...`,
+  `trizbort-recast`, `Trizbort Recast.app`), as file names can't contain a colon.
+- **One-way arrows** from a move automap hasn't seen the way back from arrive on the side of the room facing where
+  they came from, keep off the room's known exits, and follow the room as you drag it. Going west into a new room
+  arrives at its east side, taken to be the way back until you find otherwise.
+- A join labelled with several directions ("n / e") moves to the side that faces the other room as you drag, and join
+  ends move to wherever their line crosses fewest other joins.
+- Up and down joins move round their rooms to keep from crossing other joins. Up rooms are placed above and down
+  rooms below, but move aside when something's in the way.
+- Double-clicking an empty part of the map always adds a room; the setting for it has gone (#28).
+- Automap treats rooms with the same name as the same room when the first sentence of their descriptions matches, so
+  text a game adds afterwards ("The door is open.") no longer makes it ask (#29).
+- Dialogs scroll when a tiling window manager makes them smaller than they need, with OK and Cancel kept in view.
+- The automap bar's Back button is now Previous Move, and the status bar no longer shows the pointer's coordinates.
+
+### Fixed
+
+- Joins and unexplored-exit stubs no longer touch or run into each other.
+- Trying an exit that goes nowhere removes its stub as soon as the game replies, not when you next type a command.
+- Carrying on from the end of a game that's still running now reads the command you type next, so automap finds the
+  room you're in.
+- Automap keeps headings such as `At "Y2"` and lowercase qualifiers such as `Garden, north` (#29).
+- Inform 7 export declares a door once, however many directions lead through it (#30).
+- F5, F9 and F10 work wherever the focus is, and Undo works while the transcript window is open.
+- The automap bar's buttons no longer miss clicks when the status text changes.
 
 ## [0.10.0-beta] - 2026-11-02
 
@@ -72,7 +134,7 @@ and clearer error reports help protect your maps and diagnose problems. This is 
 
 ## [0.9.0-beta.1] - 2026-10-31
 
-This is the **first beta of Trizbort Recast**, for testing. It has everything the Windows app has, and more, but it has
+This is the **first beta of Trizbort: Recast**, for testing. It has everything the Windows app has, and more, but it has
 not been used much yet. Keep backups of your maps. The Windows-only Trizbort 2.x is still available from the
 [releases page](https://github.com/leeoades/trizbort/releases) (tags `legacy-v*` and the older `v2.*`).
 

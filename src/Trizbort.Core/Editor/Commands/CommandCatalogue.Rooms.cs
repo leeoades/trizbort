@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Trizbort.Automap;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Editor.Input;
@@ -92,6 +95,52 @@ public sealed partial class CommandCatalogue
       CommandScope.Canvas, 59, s => s.SwapRoomFormats());
     RegisterSwap(catalogue, "room.swap.regions", "Swap _Regions", new KeyGesture(InputKey.W, ModifierKeys.Alt),
       CommandScope.Canvas, 60, s => s.SwapRoomRegions());
+
+    // Tidy Map...: asks which rooms and which way, works it out in the background, then applies it as one undo step.
+    catalogue.Register(new EditorCommand
+    {
+      Id = "map.tidy",
+      ContextOrder = 61, ContextGroup = "5-room",
+      Title = "_Tidy Map...",
+      MenuPath = "Edit/Rooms",
+      Group = "5-tidy",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.Project.Elements.OfType<Room>().Skip(1).Any(),
+      ExecuteAsyncFunc = s => TidyAsync(s)
+    });
+  }
+
+  /// <summary>The way Tidy Map tidied last time, offered first next time.</summary>
+  private static TidyMethod _lastTidyMethod = TidyMethod.Quick;
+
+  /// <summary>
+  ///   Tidy Map...: asks which rooms (the whole map, or the selected rooms when more than one is selected) and which
+  ///   way to tidy them, works the layout out off the UI thread with a progress bar, then moves the rooms as one undo
+  ///   step. Tidied rooms lose their placed-by-hand mark. Cancelling at either step changes nothing.
+  /// </summary>
+  private static async Task TidyAsync(EditorSession session)
+  {
+    var selected = session.SelectedRooms.Count;
+    var choice = await session.Prompts.ChooseTidyAsync(new TidyChoice(selected > 1, _lastTidyMethod), selected);
+    if (choice == null) return;
+    _lastTidyMethod = choice.Value.Method;
+
+    var elements = session.Project.Elements.ToList();
+    var rooms = choice.Value.SelectedOnly && selected > 1
+      ? session.SelectedRooms.ToList()
+      : elements.OfType<Room>().ToList();
+    var plan = LayoutTidy.PlanTidy(elements, rooms, choice.Value.Method);
+    var title = choice.Value.SelectedOnly && selected > 1 ? "Tidy selected rooms" : "Tidy map";
+    var moves = await session.Prompts.RunWithProgressAsync(title, "Tidying the map...", plan.ExpectedMs, plan.Run);
+    if (moves == null || moves.Count == 0) return;
+
+    session.Execute(title, () =>
+    {
+      // asked to tidy them, so they're no longer where the user put them by hand
+      foreach (var room in plan.Rooms) room.PlacedByHand = false;
+      LayoutTidy.TidyPlan.Apply(moves);
+      GuessedEnds.Face(session.Project.Elements, plan.Rooms.ToList());
+    });
   }
 
   private static void RegisterShape(

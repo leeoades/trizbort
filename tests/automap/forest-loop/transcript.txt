@@ -1,0 +1,31 @@
+Woodland
+An Interactive Fiction by A. Tester
+Release 1 / Serial number 261107
+
+>look
+
+Forest
+You are lost in a forest of tall trees. Paths lead north and east.
+
+>north
+
+Forest
+You are lost in a forest of tall trees. Paths lead north and east.
+
+>south
+You can't go that way.
+
+>east
+
+Clearing
+A sunny clearing. The forest lies to the west.
+
+>west
+
+Forest
+You are lost in a forest of tall trees. Paths lead north and east.
+
+>north
+
+Forest
+You are lost in a forest of tall trees. Paths lead north and east.

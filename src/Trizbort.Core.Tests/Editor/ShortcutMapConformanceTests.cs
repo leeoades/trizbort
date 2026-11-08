@@ -137,6 +137,8 @@ public class ShortcutMapConformanceTests
 
       // Automap keys. F11 is host dependent: Primary+Shift+F11 on macOS.
       Canvas("automap.run", "F5"),
+      Canvas("automap.nextMove", "F10"),
+      Canvas("automap.back", "F9"),
       new Row("automap.step", CommandScope.Canvas, new[] { "F11" }, new[] { "Primary+Shift+F11" }, HostDependent: true),
 
       // Debug toggles (Lee, Q6): reference keys; none on macOS (Developer menu only); gridPolyline never has a key.

@@ -188,6 +188,221 @@ public class AutomapJoinDirectionsTests : IsolatedProjectTests
   }
 
   [Test]
+  public void AbbreviatedDirections_LabelJoinsInShort()
+  {
+    var canvas = new AutomapCanvas { AbbreviateDirections = true };
+    var cliff = AddRoomAt("Cliff Top", 0, 0);
+    var beach = canvas.CreateRoom(cliff, MappableDirection.Down, "Beach", "Beach");
+    canvas.Connect(cliff, MappableDirection.Down, beach, true);
+    canvas.Connect(cliff, MappableDirection.North, beach, true);
+    canvas.Connect(cliff, MappableDirection.In, beach, true);
+
+    var join = TheJoin();
+    join.StartText.ShouldBe("n / d / in");
+    join.EndText.ShouldBe("s / u / out");
+  }
+
+  [Test]
+  public void AbbreviatedDirections_DontDoubleUpWordsAlreadyWrittenInFull()
+  {
+    var canvas = new AutomapCanvas();
+    var cliff = AddRoomAt("Cliff Top", 0, 0);
+    var beach = canvas.CreateRoom(cliff, MappableDirection.Down, "Beach", "Beach");
+    canvas.Connect(cliff, MappableDirection.Down, beach, true);
+    canvas.Connect(cliff, MappableDirection.North, beach, true);
+
+    canvas.AbbreviateDirections = true;
+    canvas.Connect(cliff, MappableDirection.North, beach, true);
+    canvas.Connect(cliff, MappableDirection.Down, beach, true);
+
+    TheJoin().StartText.ShouldBe("north / down");
+  }
+
+  [Test]
+  public void OneWayArrivalsFromTheSameSide_DontShareAPoint()
+  {
+    // Colossal Cave: west from the Valley and west from the Streambed both drop into the Forest, with no way back
+    // (the Forest's own way east is still unexplored)
+    var canvas = new AutomapCanvas();
+    var forest = AddRoomAt("In Forest", 0, 0);
+    var valley = AddRoomAt("In A Valley", 400, -40);
+    var streambed = AddRoomAt("At Slit In Streambed", 400, 40);
+    canvas.AddExitStub(forest, MappableDirection.East);
+    canvas.Connect(valley, MappableDirection.West, forest, false);
+    canvas.Connect(streambed, MappableDirection.West, forest, false);
+
+    var arrivals = Project.Current.Elements.OfType<Connection>()
+      .Where(join => join.GetSourceRoom() != forest)
+      .Select(join =>
+      {
+        join.GetTargetRoom(out var point);
+        return point;
+      })
+      .ToList();
+    arrivals.Count.ShouldBe(2);
+    arrivals.Distinct().Count().ShouldBe(2);
+    arrivals.ShouldNotContain(CompassPoint.East);
+  }
+
+  [Test]
+  public void AGuessedArrow_MovesOffASideThatTurnsOutToBeAnotherExit()
+  {
+    // Colossal Cave: north from the End of Road reaches the Forest, with no way back known, so the arrow meets the
+    // Forest on its south side. Then south from the Forest just loops back into it: the arrow's way in isn't south.
+    var canvas = new AutomapCanvas();
+    var road = AddRoomAt("At End Of Road", 0, 0);
+    var forest = AddRoomAt("In Forest", 0, -200);
+    canvas.Connect(road, MappableDirection.North, forest, false);
+    EndSide(TheJoin()).ShouldBe(CompassPoint.South);
+
+    canvas.ConnectLoop(forest, MappableDirection.South);
+
+    var arrow = Project.Current.Elements.OfType<Connection>().Single(join => join.GetSourceRoom() == road);
+    EndSide(arrow).ShouldNotBeOneOf(CompassPoint.SouthSouthWest, CompassPoint.South, CompassPoint.SouthSouthEast);
+  }
+
+  [Test]
+  public void AGuessedArrow_FollowsItsRoomAsItIsDragged()
+  {
+    var canvas = new AutomapCanvas();
+    var road = AddRoomAt("At End Of Road", 0, 0);
+    var forest = AddRoomAt("In Forest", 0, -200);
+    canvas.Connect(road, MappableDirection.North, forest, false);
+
+    // the user drags the Forest off to the left of the road
+    forest.Position = new Vector(-400, 0);
+    GuessedEnds.Face(Project.Current.Elements, new[] { forest }).ShouldBe(1);
+
+    EndSide(TheJoin()).ShouldBe(CompassPoint.East);
+  }
+
+  [Test]
+  public void AnEndListingSeveralDirections_TakesTheListedSideThatFacesTheOtherRoom()
+  {
+    // "n / e" from the Hall both reach the Garden, drawn from the Hall's north side; the user drags the Hall down
+    // and to the left of the Garden, so its east side now faces the Garden
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 0, -200);
+    var join = new Connection(Project.Current, new Vertex(hall.PortAt(CompassPoint.North)),
+      new Vertex(garden.PortAt(CompassPoint.South)));
+    join.StartText = "n / e";
+    Project.Current.Elements.Add(join);
+
+    GuessedEnds.Face(Project.Current.Elements, new[] { hall }).ShouldBe(0);
+
+    hall.Position = new Vector(-400, -150);
+    GuessedEnds.Face(Project.Current.Elements, new[] { hall }).ShouldBe(1);
+    StartSide(join).ShouldBe(CompassPoint.East);
+  }
+
+  [Test]
+  public void AnEndListingSeveralDirections_PrefersASideWhoseLineCrossesNoOtherJoin()
+  {
+    // the Garden is as much north as east of the Hall, so "n / e" could leave either side; a join from the Attic
+    // down to the Basement runs just past the Hall's north side, so the east side, which doesn't cross it, wins
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 300, -300);
+    var join = new Connection(Project.Current, new Vertex(hall.PortAt(CompassPoint.North)),
+      new Vertex(garden.PortAt(CompassPoint.South)));
+    join.StartText = "n / e";
+    Project.Current.Elements.Add(join);
+    var attic = AddRoomAt("Attic", 22, -300);
+    var basement = AddRoomAt("Basement", 22, 200);
+    Project.Current.Elements.Add(new Connection(Project.Current, new Vertex(attic.PortAt(CompassPoint.South)),
+      new Vertex(basement.PortAt(CompassPoint.North))));
+
+    GuessedEnds.Face(Project.Current.Elements, new[] { hall }).ShouldBe(1);
+    StartSide(join).ShouldBe(CompassPoint.East);
+  }
+
+  [Test]
+  public void AnArrowDrawnByHand_IsLeftWhereItIs()
+  {
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 0, -200);
+    var join = new Connection(Project.Current, new Vertex(hall.PortAt(CompassPoint.North)),
+      new Vertex(garden.PortAt(CompassPoint.West)));
+    join.Flow = ConnectionFlow.OneWay;
+    Project.Current.Elements.Add(join);
+
+    GuessedEnds.Face(Project.Current.Elements).ShouldBe(0);
+    EndSide(join).ShouldBe(CompassPoint.West);
+  }
+
+  [Test]
+  public void AWayBackIntoTheSameRoom_IsALoop()
+  {
+    // "north" in the forest returns to the forest; so does "west"
+    var canvas = new AutomapCanvas { AbbreviateDirections = true };
+    var forest = AddRoomAt("Forest", 0, 0);
+    canvas.ConnectLoop(forest, MappableDirection.North);
+    canvas.ConnectLoop(forest, MappableDirection.North);
+    canvas.ConnectLoop(forest, MappableDirection.West);
+
+    var loop = TheJoin();
+    loop.GetSourceRoom().ShouldBe(forest);
+    loop.GetTargetRoom().ShouldBe(forest);
+    StartSide(loop).ShouldBe(CompassPoint.North);
+    EndSide(loop).ShouldBe(CompassPoint.NorthEast);
+    loop.Flow.ShouldBe(ConnectionFlow.OneWay);
+    loop.StartText.ShouldBe("n / w");
+  }
+
+  [Test]
+  public void TwoCommandsToTheSameRoom_ShareOneJoin()
+  {
+    // Colossal Cave: "light lamp" and "turn on lamp" both lead from the darkness to the Debris Room
+    var canvas = new AutomapCanvas();
+    var dark = AddRoomAt("Darkness", 0, 0);
+    var debris = AddRoomAt("Debris Room", 400, 0);
+    canvas.ConnectByCommand(dark, debris, "light lamp");
+    canvas.ConnectByCommand(dark, debris, "turn on lamp");
+    canvas.ConnectByCommand(dark, debris, "Light lamp");
+
+    var join = TheJoin();
+    join.MidText.ShouldBe("light lamp / turn on lamp");
+    join.AutomapCommand.ShouldBe("light lamp / turn on lamp");
+    join.Flow.ShouldBe(ConnectionFlow.OneWay);
+  }
+
+  [Test]
+  public void ACommandAlongADirection_JoinsTheDirectionsLabel()
+  {
+    var canvas = new AutomapCanvas();
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 400, 0);
+    canvas.Connect(hall, MappableDirection.East, garden, true);
+    canvas.ConnectByCommand(hall, garden, "climb through window");
+
+    var join = TheJoin();
+    join.MidText.ShouldBe("climb through window");
+    join.AutomapCommand.ShouldBeEmpty();
+    join.Style.ShouldBe(ConnectionStyle.Solid);
+  }
+
+  [Test]
+  public void ADirectionFoundAfterACommand_TakesOverTheCommandsJoin()
+  {
+    var canvas = new AutomapCanvas();
+    var dark = AddRoomAt("Darkness", 0, 0);
+    var debris = AddRoomAt("Debris Room", 400, 0);
+    var lobby = AddRoomAt("Lobby", 0, 400);
+    canvas.ConnectByCommand(dark, debris, "light lamp");
+    canvas.ConnectByCommand(lobby, debris, "xyzzy");
+
+    canvas.Connect(dark, MappableDirection.East, debris, true);
+
+    var joins = Project.Current.Elements.OfType<Connection>().ToList();
+    joins.Count.ShouldBe(2);
+    var east = joins.Single(join => join.GetSourceRoom() == dark);
+    east.MidText.ShouldBe("light lamp");
+    east.AutomapCommand.ShouldBeEmpty();
+    east.StartText.ShouldBeEmpty();
+    StartSide(east).ShouldBe(CompassPoint.East);
+    joins.Single(join => join.GetSourceRoom() == lobby).AutomapCommand.ShouldBe("xyzzy");
+  }
+
+  [Test]
   public void TeleportJoin_IsMarkedAndTheMarkIsSaved()
   {
     var canvas = new AutomapCanvas();

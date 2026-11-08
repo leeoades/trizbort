@@ -139,7 +139,7 @@ alone, and duplicate entries apply in order.
 | **`Properties.Settings`** (`Properties\Settings.settings` / `.Designer.cs`) | `.NET` user-scoped `user.config` (standard `ApplicationSettingsBase` mechanism), registered in `app.config` under `<userSettings>` | Per-Windows-user | Currently **only one setting**: `SettingsLastTabIndex` (long) — just remembers the last-selected tab in `SettingsDialog`. Read/written via `Properties.Settings.Default.SettingsLastTabIndex` in `UI\SettingsDialog.cs`. |
 | **`ApplicationSettings`** (`Domain\AppSettings\ApplicationSettings.cs` + `ApplicationSettingsController.cs`) | JSON file `.\appsettings.json` (relative to working directory!), via Newtonsoft.Json | App-wide, not per-document | Automap defaults, canvas size, debug flags, default fonts/images, export filenames, last-project filename, load-last-project flag, recent-projects list, save-to-image/PDF options, tooltip options, margins/wrapping, Map preferences (apply-style-to-new-rooms, double-click-to-add-room). |
 
-In Trizbort Recast, `DoubleClickToAddRoom` is no longer a stored preference: double-clicking
+In Trizbort: Recast, `DoubleClickToAddRoom` is no longer a stored preference: double-clicking
 empty canvas always creates a room. Old JSON values are ignored and omitted on the next save.
 The Map preferences dialog only exposes `ApplyStyleToNewRooms`.
 

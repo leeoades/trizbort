@@ -10,3 +10,6 @@ connections:
 South Junction [east] <-> [south] Southeast Junction
 Southeast Junction [north] <-> [south] Northeast Junction
 Southeast Junction [west] <-> [east] Patio
+
+natural joins: 3 of 3
+exact joins: 3 of 3

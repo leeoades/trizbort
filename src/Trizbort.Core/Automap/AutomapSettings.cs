@@ -13,7 +13,10 @@ public struct AutomapSettings
         AddObjectCommand = "tb see",
         AddRegionCommand = "tb region",
         ContinueTranscript = false,
-        AssumeTwoWayConnections = true
+        AssumeTwoWayConnections = true,
+        AutoTidy = true,
+        AbbreviateDirections = true,
+        MoveByMove = false
       };
       return settings;
     }
@@ -28,4 +31,16 @@ public struct AutomapSettings
   public string AddRegionCommand;
   public bool ContinueTranscript;
   public bool AssumeTwoWayConnections;
+
+  /// <summary>Rooms near the player rearrange themselves after each move so they don't get in each other's way.</summary>
+  public bool AutoTidy;
+
+  /// <summary>Label joins with short directions ("n / u / in") rather than whole words ("north / up / in").</summary>
+  public bool AbbreviateDirections;
+
+  /// <summary>
+  ///   Play the transcript a move at a time: automap waits before each command until it is told to play the next move
+  ///   (<see cref="Automap.PlayNextMove" />) or to play to the end (<see cref="Automap.PlayToEnd" />).
+  /// </summary>
+  public bool MoveByMove;
 }

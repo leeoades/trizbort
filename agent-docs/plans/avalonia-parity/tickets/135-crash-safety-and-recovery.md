@@ -11,7 +11,7 @@ Requested by Lee (2026-11-01) after GitHub #24 crashed the app: "We basically do
 - **Clean up.** Delete this instance's copy when the map is saved (no longer dirty), when the user discards changes
   (New/Open/close after "Don't save"), and on a normal exit.
 - **On start**, before reopening the last map or a command-line file: for each orphaned copy ask
-  "Trizbort Recast didn't close properly. Recover your unsaved changes to <title> (from <time>)?" with
+  "Trizbort: Recast didn't close properly. Recover your unsaved changes to <title> (from <time>)?" with
   Recover / Discard / Decide later. Recover opens the copy as an unsaved map with the original file name (so Save writes
   there; Save As offered if there was none). Discard deletes it. Decide later keeps it for next start.
 - **If something goes wrong:** handle `Dispatcher.UIThread.UnhandledException`, `AppDomain.CurrentDomain.UnhandledException`

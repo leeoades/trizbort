@@ -1,0 +1,44 @@
+current: Garden, South
+
+rooms:
+Cannon Emplacement
+Cliff
+Entrance to Hedge Maze
+Front Porch
+Garden, East
+Garden, North
+Garden, South
+Garden, West
+Middle of Beach Stairs
+Northeast Junction
+Northwest Junction
+Patio
+South Junction (start)
+Southeast Junction
+Southwest Junction
+Top Landing
+
+connections:
+Cannon Emplacement [east] <-> [north] Northeast Junction
+Cannon Emplacement [north "n / d"] <-> [south "s / u"] Cliff
+Entrance to Hedge Maze [east] <-> [west] Northeast Junction
+Entrance to Hedge Maze [south] <-> [north] Garden, North
+Garden, East [southwest] <-> [northeast] Garden, South
+Garden, North [southeast] <-> [northwest] Garden, East
+Garden, South [northwest] <-> [southeast] Garden, West
+Garden, South [south] <-> [north] Patio
+Garden, West [northeast] <-> [southwest] Garden, North
+Northeast Junction [east] <-> [west] Top Landing
+Northeast Junction [south] <-> [north] Southeast Junction
+Northwest Junction [east] <-> [west] Entrance to Hedge Maze
+Northwest Junction [north] <-> [west] Cannon Emplacement
+South Junction [east] <-> [south] Southeast Junction
+South Junction [north] <-> [south] Front Porch
+South Junction [west] <-> [south] Southwest Junction
+Southeast Junction [southeast] stub
+Southwest Junction [north] <-> [south] Northwest Junction
+Top Landing [southsouthwest "d"] <-> [northnorthwest "u"] Middle of Beach Stairs
+
+natural joins: 17 of 18
+exact joins: 13 of 18
+not natural: Garden, South -> Garden, West

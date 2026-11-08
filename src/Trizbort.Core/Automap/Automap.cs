@@ -42,6 +42,106 @@ public sealed class Automap : IAutomapController
     _stepNow = false;
   }
 
+  /// <summary>
+  ///   When playing move by move, wait before the player's next command until <see cref="PlayNextMove" /> or
+  ///   <see cref="PlayToEnd" />. The map and the transcript read so far are up to date while it waits.
+  /// </summary>
+  private async Task<bool> WaitForNextMove(string command, CancellationToken token)
+  {
+    token.ThrowIfCancellationRequested();
+    if (Volatile.Read(ref _movesBack) > 0) return true;
+    if (!_moveByMove) return false;
+    if (TakeMove()) return false;
+
+    NextCommand = command;
+    Status = string.IsNullOrWhiteSpace(command)
+      ? "Paused before the next move."
+      : "Paused before the next move: " + command;
+    while (_moveByMove && !TakeMove())
+    {
+      if (Volatile.Read(ref _movesBack) > 0) return true;
+      await Task.Delay(50, token);
+    }
+
+    token.ThrowIfCancellationRequested();
+    NextCommand = null;
+    Status = "Automapping is processing the transcript.";
+    return false;
+  }
+
+  /// <summary>Where automap was when it stopped before a command: enough to go back there and play on.</summary>
+  private sealed record MovePoint(int LinesRead, int ScreenLines, Room Room, string Command, bool SeenCommand);
+
+  private readonly List<MovePoint> _movePoints = new();
+  private int _movesBack;
+  private int _linesRead;
+
+  /// <summary>Notes the place before a command, unless it is the place automap has just gone back to.</summary>
+  private void NoteMovePoint(string command)
+  {
+    if (_movePoints.Count > 0 && _movePoints[^1].LinesRead == _linesRead) return;
+    int screen;
+    lock (_screen) screen = _screen.Count;
+    _movePoints.Add(new MovePoint(_linesRead, screen, _lastKnownRoom, command, _seenCommand));
+  }
+
+  /// <summary>
+  ///   Goes back the asked-for number of moves: the transcript is read again from that point, the map is left as it
+  ///   is, and automap waits there. Returns the command it waits before.
+  /// </summary>
+  private async Task<(string Command, PeekingStreamReader Reader, Stream Stream)> GoBackAsync(
+    PeekingStreamReader reader, Stream stream, CancellationToken token)
+  {
+    var back = Interlocked.Exchange(ref _movesBack, 0);
+    // the last point is the one automap is waiting at now
+    var target = Math.Max(0, _movePoints.Count - 1 - back);
+    var point = _movePoints[target];
+    _movePoints.RemoveRange(target + 1, _movePoints.Count - target - 1);
+
+    reader.Dispose();
+    stream.Dispose();
+    stream = File.Open(_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+    reader = new PeekingStreamReader(stream);
+    for (var i = 0; i < point.LinesRead; i++)
+      if (await reader.ReadLineAsync(token) == null)
+        break;
+    _linesRead = point.LinesRead;
+
+    lock (_screen)
+      if (_screen.Count > point.ScreenLines)
+        _screen.RemoveRange(point.ScreenLines, _screen.Count - point.ScreenLines);
+    ScreenChanged?.Invoke();
+
+    // the map stays as it is; automap carries on from the room it was in then, if it's still there
+    _lastKnownRoom = point.Room == null ? null : _canvas.ResolveRoom(point.Room);
+    // and the map shows that room as the one you're in again
+    if (_lastKnownRoom != null) _canvas.SelectRoom(_lastKnownRoom);
+    _lastMoveDirection = null;
+    _lastJourneyCommand = null;
+    _pendingStubRemoval = null;
+    _seenCommand = point.SeenCommand;
+    _moveByMove = true;
+    Volatile.Write(ref _movesToPlay, 0);
+    Trace("Automap: went back to before \"{0}\".", point.Command);
+    return (point.Command, reader, stream);
+  }
+
+  private bool TakeMove()
+  {
+    while (true)
+    {
+      var moves = Volatile.Read(ref _movesToPlay);
+      if (moves <= 0) return false;
+      if (Interlocked.CompareExchange(ref _movesToPlay, moves - 1, moves) == moves) return true;
+    }
+  }
+
+  private void AddScreenLine(string line)
+  {
+    lock (_screen) _screen.Add(line ?? string.Empty);
+    ScreenChanged?.Invoke();
+  }
+
   private async Task<string> WaitForNewLine(
     TextReader reader,
     CancellationToken cancellationToken)
@@ -53,7 +153,10 @@ public sealed class Automap : IAutomapController
       var line = await reader.ReadLineAsync(cancellationToken);
 
       if (line is not null)
+      {
+        _linesRead++;
         return line;
+      }
 
       Status = "Automapping is waiting for more text.";
 
@@ -778,6 +881,14 @@ public sealed class Automap : IAutomapController
             NowInRoom(room);
             waits++;
           }
+          else if (_lastKnownRoom != null && _lastMoveDirection != null)
+          {
+            // the way out led straight back in ("north" in the forest returns to the forest); a move that fails
+            // doesn't show the room again, so it never gets here
+            _canvas.ConnectLoop(_lastKnownRoom, _lastMoveDirection.Value);
+            Trace("{0}: {1} leads from {2} back to itself.", FormatTranscriptLineForDisplay(line),
+              _lastMoveDirection.Value.ToString().ToLower(), _lastKnownRoom.Name);
+          }
           else
           {
             // player didn't change rooms
@@ -786,6 +897,9 @@ public sealed class Automap : IAutomapController
 
           // add this description if the room doesn't have it already
           if (room != null) room.AddDescription(roomDescription);
+
+          // let the rooms around the player make space for each other, in this move's undo step
+          if (_settings.AutoTidy && _lastKnownRoom != null) _canvas.TidyAround(_lastKnownRoom);
         }
 
         // single stepping waits outside the batch, so the user can undo while we wait
@@ -1071,6 +1185,9 @@ public sealed class Automap : IAutomapController
 
   private AutomapSettings _settings;
   private volatile bool _stepNow;
+  private volatile bool _moveByMove;
+  private int _movesToPlay;
+  private readonly List<string> _screen = new();
   private string _failureReason = string.Empty;
 
   private CancellationTokenSource _tokenSource;
@@ -1169,6 +1286,8 @@ public sealed class Automap : IAutomapController
   {
     _canvas = canvas;
     _settings = settings;
+    _canvas.MakeSpaceForNewRooms = settings.AutoTidy;
+    _canvas.AbbreviateDirections = settings.AbbreviateDirections;
     _seenCommand = false;
     _startRoom = null;
     _lastCommand = null;
@@ -1178,6 +1297,14 @@ public sealed class Automap : IAutomapController
     _lastJourneyCommand = null;
     _gameName = string.Empty;
     _stepNow = false;
+    _moveByMove = settings.MoveByMove;
+    Volatile.Write(ref _movesToPlay, 0);
+    Volatile.Write(ref _movesBack, 0);
+    _movePoints.Clear();
+    _linesRead = 0;
+    NextCommand = null;
+    lock (_screen) _screen.Clear();
+    ScreenChanged?.Invoke();
     _dontAskAboutAmbiguities = false;
     UseDottedConnection = false;
   }
@@ -1197,7 +1324,75 @@ public sealed class Automap : IAutomapController
   {
     _settings.SingleStep = false;
     Step();
+    PlayToEnd();
   }
+
+  /// <summary>The room automap thinks the player is in, as it is on the map now; null when it doesn't know.</summary>
+  public Room CurrentRoom => _lastKnownRoom == null ? null : _canvas?.ResolveRoom(_lastKnownRoom);
+
+  /// <summary>True while the run waits before each move (see <see cref="AutomapSettings.MoveByMove" />).</summary>
+  public bool MoveByMove => _moveByMove;
+
+  /// <summary>The command automap is paused before, while playing move by move; otherwise null.</summary>
+  public string NextCommand { get; private set; }
+
+  /// <summary>Play the next move of the transcript, then pause again.</summary>
+  public void PlayNextMove()
+  {
+    _moveByMove = true;
+    Interlocked.Increment(ref _movesToPlay);
+  }
+
+  /// <summary>Play the rest of the transcript without pausing (and keep following it as the game goes on).</summary>
+  public void PlayToEnd()
+  {
+    _moveByMove = false;
+    Volatile.Write(ref _movesToPlay, 0);
+    // and no more single stepping (the debug option), as F5 does
+    _settings.SingleStep = false;
+    _stepNow = true;
+  }
+
+  /// <summary>
+  ///   Go back a move in the transcript (again to go further), and wait there; the map is left as it is, and playing
+  ///   on walks through what's already mapped, putting back anything that's missing.
+  /// </summary>
+  public void GoBack()
+  {
+    Interlocked.Increment(ref _movesBack);
+  }
+
+  /// <summary>Whether there is a move to go back to.</summary>
+  public bool CanGoBack => _movePoints.Count > 1 || (_movePoints.Count == 1 && NextCommand == null);
+
+  /// <summary>How many transcript lines automap has read in this run, as <see cref="ScreenLines" /> holds them.</summary>
+  public int ScreenLineCount
+  {
+    get
+    {
+      lock (_screen) return _screen.Count;
+    }
+  }
+
+  /// <summary>Pause before the next move.</summary>
+  public void Pause()
+  {
+    Volatile.Write(ref _movesToPlay, 0);
+    _moveByMove = true;
+  }
+
+  /// <summary>
+  ///   The transcript lines automap has read in this run, from <paramref name="from" /> on: what the game window
+  ///   showed up to this point.
+  /// </summary>
+  public IReadOnlyList<string> ScreenLines(int from = 0)
+  {
+    lock (_screen)
+      return from >= _screen.Count ? Array.Empty<string>() : _screen.GetRange(Math.Max(0, from), _screen.Count - Math.Max(0, from));
+  }
+
+  /// <summary>Raised when automap reads another line of the transcript, or a run starts. May be raised off the UI thread.</summary>
+  public event Action ScreenChanged;
 
   public string Status
   {
@@ -1350,6 +1545,10 @@ public sealed class Automap : IAutomapController
           // we've now dealt with all lines to this point
           linesBetweenPrompts.Clear();
 
+          // the reply is all in: a direction tried that led nowhere loses its stub now, not when the player types
+          // the next command (playing live, or move by move, the map would show the stub until then)
+          await FlushPendingStubRemoval(tokenSource.Token);
+
           // process the next command
           await ProcessPromptCommand(command, tokenSource.Token);
 
@@ -1428,17 +1627,23 @@ public sealed class Automap : IAutomapController
       "Must assume rooms with same name are same room unless transcript is verbose.");
     Status = "Automapping has started.";
 
+    // the transcript, reopened when automap goes back a move
+    Stream stream = null;
+    PeekingStreamReader reader = null;
     try
     {
-      using var stream = File.Open(_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-      using var reader = new PeekingStreamReader(stream);
+      stream = File.Open(_settings.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+      reader = new PeekingStreamReader(stream);
       var lastline = "";
 
       if (_settings.ContinueTranscript)
       {
         string next;
         while ((next = await reader.ReadLineAsync(tokenSource.Token)) != null)
+        {
           lastline = next;
+          _linesRead++;
+        }
       }
 
       // keep track of lines we read between here and the next prompt
@@ -1454,8 +1659,11 @@ public sealed class Automap : IAutomapController
         tokenSource.Token.ThrowIfCancellationRequested();
         if (_settings.ContinueTranscript)
         {
+          // carrying on from the end of a game still running: the last line is usually its prompt, waiting for the
+          // player's next command, which is read as the command when it's typed
           line = lastline;
           _settings.ContinueTranscript = false;
+          atFileEnd = await reader.IsAtEndAsync(tokenSource.Token);
         }
         else
         {
@@ -1463,6 +1671,8 @@ public sealed class Automap : IAutomapController
           line = await WaitForNewLine(reader, tokenSource.Token);
           atFileEnd = await reader.IsAtEndAsync(tokenSource.Token); // store this now so that it's still valid when we use it below
         }
+
+        AddScreenLine(line);
 
         //Trace("[" + line + "]");
         string command;
@@ -1477,14 +1687,32 @@ public sealed class Automap : IAutomapController
           // we've now dealt with all lines to this point
           linesBetweenPrompts.Clear();
 
+          // the reply is all in: a direction tried that led nowhere loses its stub now, not when the player types
+          // the next command (playing live, or move by move, the map would show the stub until then)
+          await FlushPendingStubRemoval(tokenSource.Token);
+
           // handle the case where we're at the end of the file, waiting for user input: the prompt has been
           // written but the command hasn't. When the prompt line already holds the command (">north"), keep it: an
           // interpreter writes that before the game's reply, so the next line is the reply, not the command.
           if (atFileEnd && string.IsNullOrWhiteSpace(command))
             // we've already read the prompt, now just read the command when the player enters it
-            command = (await WaitForNewLine(reader, tokenSource.Token)).Trim();
+          {
+            var typed = await WaitForNewLine(reader, tokenSource.Token);
+            AddScreenLine(typed);
+            command = typed.Trim();
+          }
 
           //                  var nextParagraph = getTextToNextPrompt(reader);
+
+          // playing move by move: wait here, with the game's reply to the last move mapped; going back reads the
+          // transcript again from an earlier move and waits there
+          NoteMovePoint(command);
+          while (await WaitForNextMove(command, tokenSource.Token))
+          {
+            (command, reader, stream) = await GoBackAsync(reader, stream, tokenSource.Token);
+            linesBetweenPrompts.Clear();
+            atFileEnd = false;
+          }
 
           // process the next command
           tokenSource.Token.ThrowIfCancellationRequested();
@@ -1530,6 +1758,8 @@ public sealed class Automap : IAutomapController
     }
     finally
     {
+      reader?.Dispose();
+      stream?.Dispose();
       if (ReferenceEquals(_tokenSource, tokenSource)) _tokenSource = null;
     }
   }

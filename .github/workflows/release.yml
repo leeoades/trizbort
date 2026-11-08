@@ -1,7 +1,7 @@
-name: Release (Trizbort Recast)
+name: "Release (Trizbort: Recast)"
 
-# Releases of Trizbort Recast, the cross-platform Avalonia app.
-# Tag format: recast-vMAJOR.MINOR.PATCH[.REVISION][-beta[.N]], e.g. recast-v0.10.0-beta.
+# Releases of Trizbort: Recast, the cross-platform Avalonia app.
+# Tag format: recast-vMAJOR.MINOR.PATCH[.REVISION][-beta[.N]], e.g. recast-v0.11.0-beta.
 # Changelog headings in the root changelog.md omit the prefix: ## [0.9.0-beta.1]
 # Legacy WinForms hotfix releases use legacy-v* tags and release-legacy.yml.
 #
@@ -146,7 +146,7 @@ jobs:
           $macAssets = @("TrizbortRecast-$env:PACKAGE_VERSION-osx-arm64.zip", "TrizbortRecast-$env:PACKAGE_VERSION-osx-x64.zip")
           foreach ($asset in $macAssets) { if (-not (Test-Path $asset)) { throw "Missing macOS asset $asset." } }
           $releaseArgs = @('release', 'create', $env:RELEASE_TAG) + ($env:RELEASE_ASSETS -split ' ') + $macAssets + @(
-            '--repo', $env:RELEASE_REPO, '--verify-tag', '--title', "Trizbort Recast $env:RELEASE_INFO", '--generate-notes')
+            '--repo', $env:RELEASE_REPO, '--verify-tag', '--title', "Trizbort: Recast $env:RELEASE_INFO", '--generate-notes')
           if ($env:RELEASE_PRERELEASE -eq 'true') {
             $heading = "## [$env:RELEASE_INFO]"
             $changelog = Get-Content 'changelog.md' -Raw
