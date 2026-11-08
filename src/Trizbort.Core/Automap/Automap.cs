@@ -1345,6 +1345,9 @@ public sealed class Automap : IAutomapController
   {
     _moveByMove = false;
     Volatile.Write(ref _movesToPlay, 0);
+    // and no more single stepping (the debug option), as F5 does
+    _settings.SingleStep = false;
+    _stepNow = true;
   }
 
   /// <summary>
@@ -1653,8 +1656,11 @@ public sealed class Automap : IAutomapController
         tokenSource.Token.ThrowIfCancellationRequested();
         if (_settings.ContinueTranscript)
         {
+          // carrying on from the end of a game still running: the last line is usually its prompt, waiting for the
+          // player's next command, which is read as the command when it's typed
           line = lastline;
           _settings.ContinueTranscript = false;
+          atFileEnd = await reader.IsAtEndAsync(tokenSource.Token);
         }
         else
         {

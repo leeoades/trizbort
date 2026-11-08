@@ -120,6 +120,42 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task CarryingOnFromTheEnd_OfAGameStillRunning_ReadsTheNextCommandTyped()
+  {
+    // the map already has the room; the game waits at its prompt
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, ">look\nHall\nA grand hall. A door leads north.\n\n>");
+    var hall = new Room(Project.Current) { Name = "Hall" };
+    Project.Current.Elements.Add(hall);
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    settings.ContinueTranscript = true;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      // the prompt is on the game monitor: automap waits for the command
+      await WaitFor(() => engine.ScreenLines().Count == 1);
+      await Task.Delay(100);
+
+      // the player types look, then goes north
+      File.AppendAllText(path, "look\nHall\nA grand hall. A door leads north.\n\n>north\nKitchen\nA small kitchen.\n\n>");
+      await WaitFor(() => engine.ScreenLines().Count == 10);
+      await Task.Delay(100);
+      Rooms().ShouldBe(new[] { "Hall", "Kitchen" });
+      var join = Project.Current.Elements.OfType<Connection>().Single(connection => connection.GetSourceRoom() != connection.GetTargetRoom());
+      join.GetSourceRoom().Name.ShouldBe("Hall");
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
   public async Task GoingBack_ReadsTheTranscriptAgain_AndPutsBackARoomDeletedByMistake()
   {
     var path = Path.GetTempFileName();
