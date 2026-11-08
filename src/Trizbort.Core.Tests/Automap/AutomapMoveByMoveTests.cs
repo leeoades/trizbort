@@ -79,6 +79,46 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  private static List<string> Stubs() =>
+    Project.Current.Elements.OfType<Connection>()
+      .Select(connection => (source: connection.GetSourceRoom(out var from), target: connection.GetTargetRoom(out var to), from, to))
+      .Where(x => x.source != null && x.source == x.target && x.from == x.to)
+      .Select(x => x.source.Name + " " + x.from).OrderBy(name => name).ToList();
+
+  [Test]
+  public async Task AWayThatLeadsNowhere_LosesItsStub_AsSoonAsTheReplyIsIn()
+  {
+    // playing live: the game has answered "east" and waits at the prompt for the next command
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Hall", "A grand hall. Doors lead north and east.", "",
+      ">east", "You can't go that way.", "",
+      ">"
+    });
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    try
+    {
+      var run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+
+      await WaitFor(() => engine.ScreenLines().Count == 8);
+      await Task.Delay(200);
+      TestContext.Out.WriteLine(string.Join(", ", Stubs()));
+      Stubs().ShouldNotContain(stub => stub.EndsWith("East"));
+      Stubs().ShouldContain("Hall North");
+
+      engine.Stop();
+      await run;
+    }
+    finally
+    {
+      engine.Stop();
+      File.Delete(path);
+    }
+  }
+
   [Test]
   public async Task GoingBack_ReadsTheTranscriptAgain_AndPutsBackARoomDeletedByMistake()
   {

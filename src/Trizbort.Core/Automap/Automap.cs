@@ -1539,6 +1539,10 @@ public sealed class Automap : IAutomapController
           // we've now dealt with all lines to this point
           linesBetweenPrompts.Clear();
 
+          // the reply is all in: a direction tried that led nowhere loses its stub now, not when the player types
+          // the next command (playing live, or move by move, the map would show the stub until then)
+          await FlushPendingStubRemoval(tokenSource.Token);
+
           // process the next command
           await ProcessPromptCommand(command, tokenSource.Token);
 
@@ -1673,6 +1677,10 @@ public sealed class Automap : IAutomapController
 
           // we've now dealt with all lines to this point
           linesBetweenPrompts.Clear();
+
+          // the reply is all in: a direction tried that led nowhere loses its stub now, not when the player types
+          // the next command (playing live, or move by move, the map would show the stub until then)
+          await FlushPendingStubRemoval(tokenSource.Token);
 
           // handle the case where we're at the end of the file, waiting for user input: the prompt has been
           // written but the command hasn't. When the prompt line already holds the command (">north"), keep it: an
