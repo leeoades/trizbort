@@ -4,7 +4,7 @@ This folder holds the **original Windows Forms Trizbort** exactly as released at
 restored with its full git history (`git log --follow legacy/src/Trizbort/UI/MainForm.cs` reaches
 2013). It is kept for two reasons:
 
-1. **Urgent hotfixes and legacy releases** while Trizbort Recast, the cross-platform app (root `Trizbort.sln`), is
+1. **Urgent hotfixes and legacy releases** while Trizbort: Recast, the cross-platform app (root `Trizbort.sln`), is
    being completed.
 2. **Reference behaviour** for the Avalonia port — see `agent-docs/plans/avalonia-parity-review.md`,
    where this folder is called `$REF`.
@@ -41,5 +41,5 @@ CI: `.github/workflows/legacy-tests.yml` runs on any change under `legacy/` or `
 Push a tag `legacy-vMAJOR.MINOR.PATCH` (optionally `-beta.N`), e.g. `legacy-v2.3.2`.
 `.github/workflows/release-legacy.yml` stamps the version, runs the tests, publishes a self-contained
 `win-x64` build and creates the GitHub release "Trizbort (legacy) legacy-v2.3.2".
-Releases of Trizbort Recast (the new app) use `recast-v*` tags and `.github/workflows/release.yml`.
+Releases of Trizbort: Recast (the new app) use `recast-v*` tags and `.github/workflows/release.yml`.
 The older `v2.*` tags are releases of this app from before the prefixes were introduced.

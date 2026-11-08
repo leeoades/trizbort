@@ -247,7 +247,7 @@ The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefi
 2. Stamp the version from the tag without committing it (Recast passes `-p:Version` /
    `-p:InformationalVersion` to `dotnet publish`; legacy rewrites `AssemblyInfo.cs`).
 3. Run the tests, then publish self-contained single-file builds (no .NET install required).
-4. Create a GitHub Release ("Trizbort Recast 0.10.0-beta" / "Trizbort (legacy) legacy-v2.3.2").
+4. Create a GitHub Release ("Trizbort: Recast 0.11.0-beta" / "Trizbort (legacy) legacy-v2.3.2").
    Betas are marked prerelease, never replace the latest stable release, and use their changelog
    section (heading without the prefix, e.g. `## [0.10.0-beta]`) as the notes; the build fails if
    it is missing. A beta can be tagged from an unmerged branch for testing.

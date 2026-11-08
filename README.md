@@ -1,13 +1,13 @@
-# Trizbort Recast
+# Trizbort: Recast
 
-Trizbort Recast is a map editor for interactive fiction. Draw rooms and connections as you play, let Automap build the
+Trizbort: Recast is a map editor for interactive fiction. Draw rooms and connections as you play, let Automap build the
 map from a game transcript, and export it as an image, a PDF, or a starting point for your own game in Inform 7,
 Inform 6, TADS, Hugo, ZIL, Quest, Alan or Adventuron.
 
 Recast is a cross-platform rebuild of **Trizbort**. It runs on Windows, Linux and macOS, and opens and saves the same
 `.trizbort` maps.
 
-> **Status: beta (0.10).** Recast does everything the Windows app does, and more, but it is new. Keep backups of your
+> **Status: beta (0.11).** Recast does everything the Windows app does, and more, but it is new. Keep backups of your
 > maps and please [report anything that goes wrong](https://github.com/leeoades/trizbort/issues).
 
 ## Where it comes from
@@ -28,7 +28,7 @@ self-contained, so no separate .NET install is needed. They are unsigned, so Win
 - **Linux x64:** extract `TrizbortRecast-<version>-linux-x64.tar.gz` and run `trizbort-recast`. To open `.trizbort`
   files from your file manager, see [packaging/README.md](packaging/README.md).
 - **macOS:** download `…-osx-arm64.zip` for Apple Silicon (M1 and later) or `…-osx-x64.zip` for Intel Macs, unzip it
-  and drag **Trizbort Recast** to Applications. The app isn't signed with an Apple Developer ID, so the first time macOS
+  and drag `Trizbort Recast.app` to Applications. The app isn't signed with an Apple Developer ID, so the first time macOS
   refuses to open it: go to **System Settings > Privacy & Security** and choose **Open Anyway**. The macOS build is
   new and hasn't been tested on a Mac yet; reports are very welcome.
 
@@ -51,7 +51,7 @@ pull request.
 This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Repository layout
-- `Trizbort.sln`: Trizbort Recast (Core + Avalonia + tests), **.NET 10 LTS**.
+- `Trizbort.sln`: Trizbort: Recast (Core + Avalonia + tests), **.NET 10 LTS**.
 - `src/Trizbort.Core/`: the map model, editing, Automap, exporters, geometry and file handling, with no UI (`net10.0`).
 - `src/Trizbort.Core.Tests/`: headless unit tests (`net10.0`).
 - `src/Trizbort.Avalonia/`: the Avalonia app (`net10.0`).
@@ -68,7 +68,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 ## Building and testing
 Prerequisites: **.NET 10 SDK** (10.0.x or later).
 
-### Trizbort Recast (Windows, Linux, macOS)
+### Trizbort: Recast (Windows, Linux, macOS)
 ```bash
 dotnet build Trizbort.sln -c Debug
 dotnet test Trizbort.sln -c Debug
@@ -83,12 +83,12 @@ dotnet run --project legacy/src/Trizbort
 
 ## Releasing
 Pushing a tag starts a release build on GitHub Actions. Both apps need a changelog entry for a beta tag,
-under a heading without the prefix. Recast accepts `-beta` or `-beta.N`, such as `## [0.10.0-beta]`;
+under a heading without the prefix. Recast accepts `-beta` or `-beta.N`, such as `## [0.11.0-beta]`;
 the legacy app accepts `-beta.N`.
 
 | Tag | Builds | Changelog |
 |---|---|---|
-| `recast-v0.10.0-beta` | Trizbort Recast for Windows x64, Linux x64 and macOS (Apple Silicon and Intel) | [changelog.md](changelog.md) |
+| `recast-v0.11.0-beta` | Trizbort: Recast for Windows x64, Linux x64 and macOS (Apple Silicon and Intel) | [changelog.md](changelog.md) |
 | `legacy-v2.3.2` | Trizbort 2.x for Windows x64 | [legacy/changelog.md](legacy/changelog.md) |
 
 ## License

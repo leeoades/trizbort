@@ -1,7 +1,7 @@
 ﻿# Trizbort change log (Windows app, 1.x and 2.x)
 All notable changes to the Windows Forms Trizbort are documented in this file. Version numbers conform to semver-style versioning (https://semver.org/).
 
-Trizbort Recast, the cross-platform rebuild, has its own [change log](../changelog.md).
+Trizbort: Recast, the cross-platform rebuild, has its own [change log](../changelog.md).
 
 Releases from 2.3.2 on are tagged `legacy-vX.Y.Z`; headings here leave out the prefix.
 

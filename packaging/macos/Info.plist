@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Trizbort Recast</string>
+    <string>Trizbort: Recast</string>
     <key>CFBundleDisplayName</key>
-    <string>Trizbort Recast</string>
+    <string>Trizbort: Recast</string>
     <key>CFBundleIdentifier</key>
     <string>io.github.leeoades.trizbort-recast</string>
     <key>CFBundleExecutable</key>
@@ -25,7 +25,7 @@
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSHumanReadableCopyright</key>
-    <string>Trizbort Recast by Lee Oades, based on Trizbort by Genstein and Jason Lautzenheiser. MIT licence.</string>
+    <string>Trizbort: Recast by Lee Oades, based on Trizbort by Genstein and Jason Lautzenheiser. MIT licence.</string>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>

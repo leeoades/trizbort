@@ -153,9 +153,9 @@ convention exists.
 
 ---
 
-## D5 — Product name: Trizbort Recast 0.9
+## D5 — Product name: Trizbort: Recast
 
-**Accepted** (Lee, 2026-10-31). The Avalonia app is **Trizbort Recast**, version **0.9** until it is ready for release.
+**Accepted** (Lee, 2026-10-31). The Avalonia app is **Trizbort: Recast**, version **0.9** until it is ready for release.
 It names its roots: the About box credits Genstein (original) and Jason Lautzenheiser (enhancements) with links, and says
 it is a cross-platform rebuild of Trizbort that opens and saves the same `.trizbort` maps. The name comes from
 `AppInfo.ProductName` (window title, prompts, PDF Creator/Producer) and `<Product>`/`<Version>` in
@@ -163,7 +163,13 @@ it is a cross-platform rebuild of Trizbort that opens and saves the same `.trizb
 MIME type, and the per-user settings folder (`Trizbort`) so existing settings carry over. "Trizbort" on its own, or
 "the reference", means the WinForms app (v2.3.1-beta.2) in `legacy/`.
 
-Release tags (Lee, 2026-10-31): both apps use prefixed tags, `recast-v*` for Trizbort Recast and `legacy-v*` for the
+Release tags (Lee, 2026-10-31): both apps use prefixed tags, `recast-v*` for Trizbort: Recast and `legacy-v*` for the
 WinForms app. Recast's change log is the root `changelog.md` (changes since Trizbort 1.7.4.1); the WinForms history
 moved to `legacy/changelog.md`. Release downloads are `TrizbortRecast-<version>-<rid>` with `TrizbortRecast.exe` /
 `trizbort-recast`.
+
+Renamed (Lee, 2026-11-08): the name is written **Trizbort: Recast** (it was "Trizbort Recast"), from 0.11.0-beta. Only
+the name people read changes: `AppInfo.ProductName`, `<Product>`, the About box, the Linux desktop entry and the macOS
+bundle name. File and folder names stay as they were (`TrizbortRecast-<version>-<rid>`, `TrizbortRecast.exe`,
+`trizbort-recast`, `Trizbort Recast.app`, the release tags), because a colon isn't allowed in file names on Windows
+or in the macOS Finder.

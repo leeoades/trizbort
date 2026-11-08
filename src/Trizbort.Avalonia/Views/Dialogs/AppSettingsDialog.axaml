@@ -24,7 +24,7 @@
                                 <CheckBox Content="_Open last project on start" IsChecked="{Binding LoadLastProjectOnStart}" ToolTip.Tip="If this is checked, Trizbort will load the last project on startup" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <CheckBox Content="Keep a recovery cop_y of unsaved changes" IsChecked="{Binding KeepRecoveryCopy}" ToolTip.Tip="Saves a copy of your unsaved work in the settings folder, so it can be recovered if Trizbort Recast closes unexpectedly" />
+                                <CheckBox Content="Keep a recovery cop_y of unsaved changes" IsChecked="{Binding KeepRecoveryCopy}" ToolTip.Tip="Saves a copy of your unsaved work in the settings folder, so it can be recovered if Trizbort: Recast closes unexpectedly" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <CheckBox Content="Invert Mouse Wheel _Zoom" IsChecked="{Binding InvertMouseWheel}" />
