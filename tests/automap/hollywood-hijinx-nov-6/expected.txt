@@ -39,5 +39,6 @@ Southeast Junction [southeast] stub
 Southwest Junction [north] <-> [south] Northwest Junction
 Top Landing [southsouthwest "d"] <-> [northnorthwest "u"] Middle of Beach Stairs
 
-natural joins: 18 of 18
-exact joins: 10 of 18
+natural joins: 17 of 18
+exact joins: 13 of 18
+not natural: Garden, South -> Garden, West

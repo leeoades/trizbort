@@ -33,6 +33,16 @@ public class AutomapCanvas : IAutomapCanvas
     if (!CurrentProject.Elements.Contains(room)) return;
 
     var sourceCompassPoint = CompassPointHelper.GetCompassDirection(direction);
+    // a join already leaves or arrives there: no stub on top of it. Arriving by going west, the room's east exit
+    // is taken to be the way back until the player finds otherwise.
+    foreach (var other in CurrentProject.Elements.OfType<Connection>())
+    {
+      // (a teleport or command join arriving there says nothing about the exit)
+      if (!string.IsNullOrEmpty(other.AutomapCommand)) continue;
+      if (other.GetSourceRoom(out var start) == room && start == sourceCompassPoint) return;
+      if (other.GetTargetRoom(out var end) == room && end == sourceCompassPoint) return;
+    }
+
     var connection = AddConnection(room, sourceCompassPoint, room, sourceCompassPoint);
     switch (direction)
     {

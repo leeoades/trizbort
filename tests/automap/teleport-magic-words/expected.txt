@@ -11,7 +11,6 @@ Debris Room [west] stub
 Inside Building [northwest] <-> [east] Debris Room "xyzzy" (dotted)
 Inside Building [southwest] -> [east] Y2 "plugh" (dotted)
 Inside Building [west] stub
-Low Passage [north] stub
 Y2 [east] stub
 Y2 [south] <-> [north] Low Passage
 

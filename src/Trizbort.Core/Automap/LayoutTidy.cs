@@ -113,6 +113,14 @@ public static partial class LayoutTidy
     return (joins.Count(map.IsNatural), joins.Count);
   }
 
+  /// <summary>The joins that aren't naturally placed (see <see cref="NaturalJoins" />), from room to room.</summary>
+  public static List<(Room From, Room To)> UnnaturalJoins(IList<Element> elements)
+  {
+    var map = new LayoutMap(elements);
+    return map.DirectedJoins.Where(join => !map.IsNatural(join)).Select(join => (map.Rooms[join.A], map.Rooms[join.B]))
+      .ToList();
+  }
+
   /// <summary>
   ///   How many joins are exactly placed: naturally placed (see <see cref="NaturalJoins" />) and exactly level,
   ///   upright or diagonal (as many steps across as down), which is what makes a map look neat.
@@ -325,8 +333,8 @@ public static partial class LayoutTidy
           // Both ends say where the other room is. "East from South Junction" and "south from Southeast Junction"
           // together put Southeast Junction to the north-east; when the ends agree (east and west) it is just east.
           // A compass end beats up, down, in and out, which don't say much about where a room is drawn.
-          var fromA = CompassPointHelper.GetAutomapDirectionVector(point);
-          var fromB = CompassPointHelper.GetAutomapDirectionVector(targetPoint);
+          var fromA = FloorDirection(connection.StartText, point) ?? CompassPointHelper.GetAutomapDirectionVector(point);
+          var fromB = FloorDirection(connection.EndText, targetPoint) ?? CompassPointHelper.GetAutomapDirectionVector(targetPoint);
           var aIsCompass = IsMainPoint(point);
           // the far end of a one-way join nobody has come back along only faces the room it came from: it says
           // nothing about where that room should be
@@ -1125,6 +1133,20 @@ public static partial class LayoutTidy
     }
 
     public int NaturalCount() => DirectedJoins.Count(IsNatural);
+
+    /// <summary>
+    ///   An end labelled up or down, off the compass points, wherever it meets its room (it moves round to keep clear
+    ///   of other joins): up is better drawn above, down below. Null for any other end.
+    /// </summary>
+    private static Vector? FloorDirection(string label, CompassPoint point)
+    {
+      if (IsMainPoint(point)) return null;
+      var directions = GuessedEnds.FloorWords(label);
+      if (directions.Count == 0) return null;
+      if (directions.All(direction => direction == MappableDirection.Up)) return new Vector(0, -1);
+      if (directions.All(direction => direction == MappableDirection.Down)) return new Vector(0, 1);
+      return null;
+    }
 
     private static bool IsMainPoint(CompassPoint point) => point is CompassPoint.North or CompassPoint.NorthEast
       or CompassPoint.East or CompassPoint.SouthEast or CompassPoint.South or CompassPoint.SouthWest

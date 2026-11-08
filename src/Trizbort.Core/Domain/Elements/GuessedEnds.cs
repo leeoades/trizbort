@@ -41,6 +41,8 @@ public static class GuessedEnds
       {
         if (FaceListedSide(list, connection, true)) moved++;
         if (FaceListedSide(list, connection, false)) moved++;
+        if (FaceFloorEnd(list, connection, true)) moved++;
+        if (FaceFloorEnd(list, connection, false)) moved++;
       }
 
       if (!IsGuessedFarEnd(connection)) continue;
@@ -166,6 +168,85 @@ public static class GuessedEnds
     vertex.Port = here.PortAt(best);
     return true;
   }
+
+  /// <summary>
+  ///   An end of an automap join labelled only up or down ("d", "u / d") meets its room at one of the eight points
+  ///   between the compass points (down starts at the bottom, left of centre). It moves to whichever of those, not used
+  ///   by another join, has its line cross fewest other joins, then best faces the room at the other end; it stays
+  ///   put unless somewhere is clearly better. An end docked on a compass point (by the user) is left alone. Returns
+  ///   true if it moved.
+  /// </summary>
+  private static bool FaceFloorEnd(IList<Element> elements, Connection connection, bool atStart)
+  {
+    if (connection.VertexList.Count != 2) return false;
+    // made by automap (drawn by hand, it stays where it was drawn)
+    if (string.IsNullOrWhiteSpace(connection.StartTravelled) && string.IsNullOrWhiteSpace(connection.EndTravelled))
+      return false;
+    var label = atStart ? connection.StartText : connection.EndText;
+    var directions = FloorWords(label);
+    if (directions.Count == 0 ||
+        directions.Any(direction => direction is not (MappableDirection.Up or MappableDirection.Down)))
+      return false;
+
+    CompassPoint current;
+    var here = atStart ? connection.GetSourceRoom(out current) : connection.GetTargetRoom(out current);
+    var there = atStart ? connection.GetTargetRoom() : connection.GetSourceRoom();
+    if (here == null || there == null || here == there) return false;
+    if (IsCompassPoint(current)) return false;
+
+    var taken = new HashSet<CompassPoint>();
+    foreach (var other in elements.OfType<Connection>())
+    {
+      if (other == connection) continue;
+      if (other.GetSourceRoom(out var start) == here) taken.Add(start);
+      if (other.GetTargetRoom(out var end) == here) taken.Add(end);
+    }
+
+    var centre = here.InnerBounds.Center;
+    var towards = there.InnerBounds.Center - centre;
+    if (towards.Length < 0.01f) return false;
+    towards = Vector.Normalize(towards);
+    var preferred = CompassPointHelper.GetCompassDirection(directions[0]);
+    var otherEnd = (atStart ? connection.VertexList[connection.VertexList.Count - 1] : connection.VertexList[0]).Position;
+    var lines = Lines(elements, connection);
+
+    double Score(CompassPoint point)
+    {
+      var port = here.PortAt(point).Position;
+      var outward = port - centre;
+      var unit = outward.Length < 0.01f ? outward : Vector.Normalize(outward);
+      var facing = unit.X * towards.X + unit.Y * towards.Y;
+      return Crossings(port, otherEnd, lines) + (1 - facing) * 0.4 + (point == preferred ? -0.1 : 0);
+    }
+
+    var candidates = Enumerable.Range(0, 16).Select(i => (CompassPoint)i)
+      .Where(point => !IsCompassPoint(point) && (!taken.Contains(point) || point == current)).ToList();
+    if (candidates.Count == 0) return false;
+    var best = candidates.OrderBy(Score).First();
+    if (best == current || Score(best) > Score(current) - 0.05) return false;
+    var vertex = atStart ? connection.VertexList[0] : connection.VertexList[connection.VertexList.Count - 1];
+    vertex.Port = here.PortAt(best);
+    return true;
+  }
+
+  /// <summary>
+  ///   The directions a label names, if every word of it is a direction ("u / d"); otherwise none, as a label with
+  ///   other words was written by someone.
+  /// </summary>
+  public static List<MappableDirection> FloorWords(string label)
+  {
+    var directions = new List<MappableDirection>();
+    foreach (var word in DirectionWords.SplitLabel(label))
+    {
+      if (!DirectionWords.TryParse(word, out var direction)) return new List<MappableDirection>();
+      directions.Add(direction);
+    }
+
+    return directions;
+  }
+
+  /// <summary>North, north-east, east...: the eight points a compass exit uses (the others lie between them).</summary>
+  private static bool IsCompassPoint(CompassPoint point) => ((int)point & 1) == 0;
 
   /// <summary>The straight pieces of every join but <paramref name="self" />, as drawn between their points.</summary>
   private static List<(Vector A, Vector B)> Lines(IEnumerable<Element> elements, Connection self)
