@@ -288,6 +288,8 @@ public sealed class CanvasInteraction : IDisposable
           var moving = _session.Selection.Items.ToList();
           MapEditing.Move(_session.Project.Elements, moving, moveDelta);
           _dragOffset += moveDelta;
+          // the user put these rooms here, so the tidy as you play leaves them alone
+          foreach (var room in moving.OfType<Room>()) room.PlacedByHand = true;
           // arrows whose far end is only a guess turn to face the room they come from as it moves
           GuessedEnds.Face(_session.Project.Elements, moving.OfType<Room>().ToList());
         }

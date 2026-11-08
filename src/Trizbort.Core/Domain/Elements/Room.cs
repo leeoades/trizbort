@@ -28,6 +28,7 @@ public class Room : Element, ISizeable
   private bool _ellipse;
   private HandDrawnStyle _handDrawnStyle;
   private bool _isDark;
+  private bool _placedByHand;
   private bool _isEndRoom;
   private bool _isStartRoom;
   private CompassPoint _objectsPosition = DefaultObjectsPosition;
@@ -164,6 +165,21 @@ public class Room : Element, ISizeable
       if (_isDark != value)
       {
         _isDark = value;
+        RaiseChanged();
+      }
+    }
+  }
+
+  /// <summary>
+  ///   The user put this room where it is (dragged or nudged it), so the automapper's tidy as you play leaves it
+  ///   there. Tidy Map and Tidy Selected Rooms clear it. Saved with the map; older versions ignore it.
+  /// </summary>
+  public bool PlacedByHand {
+    get { return _placedByHand; }
+    set {
+      if (_placedByHand != value)
+      {
+        _placedByHand = value;
         RaiseChanged();
       }
     }
@@ -825,6 +841,7 @@ public class Room : Element, ISizeable
     Region = element.Attribute("region").Text;
     ReferenceRoomId = element.Attribute("referenceRoom").ToInt();
     IsDark = element.Attribute("isDark").ToBool();
+    PlacedByHand = element.Attribute("placedByHand").ToBool();
     IsStartRoom = element.Attribute("isStartRoom").ToBool();
     IsEndRoom = element.Attribute("isEndRoom").ToBool();
     ZOrder = element.Attribute("ZOrder").ToInt();
@@ -990,6 +1007,9 @@ public class Room : Element, ISizeable
 
     if (IsDark)
       scribe.Attribute("isDark", IsDark);
+
+    if (PlacedByHand)
+      scribe.Attribute("placedByHand", PlacedByHand);
 
     if (IsStartRoom)
       scribe.Attribute("isStartRoom", IsStartRoom);

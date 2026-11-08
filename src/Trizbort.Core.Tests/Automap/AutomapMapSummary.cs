@@ -60,6 +60,8 @@ public static class AutomapMapSummary
     var (natural, total) = Trizbort.Automap.LayoutTidy.NaturalJoins(project.Elements.ToList());
     builder.Append('\n');
     builder.Append($"natural joins: {natural} of {total}\n");
+    // and how neat: of those, joins exactly level, upright or diagonal
+    builder.Append($"exact joins: {Trizbort.Automap.LayoutTidy.ExactJoins(project.Elements.ToList()).Exact} of {total}\n");
 
     var overlaps = Overlaps(project, rooms, names);
     if (overlaps.Count > 0)

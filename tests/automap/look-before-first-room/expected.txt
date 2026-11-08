@@ -8,3 +8,4 @@ connections:
 Cottage [east] <-> [west] Lane
 
 natural joins: 1 of 1
+exact joins: 1 of 1

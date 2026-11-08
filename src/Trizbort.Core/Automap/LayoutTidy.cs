@@ -54,6 +54,12 @@ public static partial class LayoutTidy
   private const double BendPenalty = 1;
 
   /// <summary>
+  ///   Cost of a join that isn't exactly level, upright or at 45 degrees (in steps). Small, so it only decides
+  ///   between layouts that read equally well: rooms line up in rows and columns at regular spacing.
+  /// </summary>
+  private const double InexactCost = 0.3;
+
+  /// <summary>
   ///   Tidies the rooms within <paramref name="radius" /> joins of <paramref name="centre" />; rooms further away
   ///   stay put but still count (nothing may be moved on top of them). Returns how many rooms moved.
   /// </summary>
@@ -72,7 +78,11 @@ public static partial class LayoutTidy
     // stay; a room the player came back to keeps its place like the others.
     var near = map.Neighbourhood(centre, radius, false);
     var all = map.Neighbourhood(centre, radius);
-    return map.Tidy(all, timeLimitMs, map.JoinCount(centre) <= 1 ? centre : null, all.Except(near).ToList());
+    var free = map.JoinCount(centre) <= 1 ? centre : null;
+    // rooms the user placed by hand stay where they were put
+    var movable = all.Where(room => !room.PlacedByHand || room == free).ToList();
+    if (movable.Count == 0) return 0;
+    return map.Tidy(movable, timeLimitMs, free, movable.Except(near).ToList());
   }
 
   /// <summary>
@@ -84,6 +94,17 @@ public static partial class LayoutTidy
     var map = new LayoutMap(elements);
     var joins = map.DirectedJoins.ToList();
     return (joins.Count(map.IsNatural), joins.Count);
+  }
+
+  /// <summary>
+  ///   How many joins are exactly placed: naturally placed (see <see cref="NaturalJoins" />) and exactly level,
+  ///   upright or diagonal (as many steps across as down), which is what makes a map look neat.
+  /// </summary>
+  public static (int Exact, int Total) ExactJoins(IList<Element> elements)
+  {
+    var map = new LayoutMap(elements);
+    var joins = map.DirectedJoins.ToList();
+    return (joins.Count(join => map.IsNatural(join) && map.IsExactlyPlaced(join)), joins.Count);
   }
 
   /// <summary>Tidies the given rooms (all of them may move); the others stay put. Returns how many rooms moved.</summary>
@@ -458,6 +479,49 @@ public static partial class LayoutTidy
               }
             }
 
+        // Line up: move a room, or a whole group, the little way that makes one of its joins exactly level, upright
+        // or diagonal, so rooms sit in neat rows and columns.
+        foreach (var unit in units)
+        {
+          var members = unit.ToHashSet();
+          foreach (var j in unit.SelectMany(room => _joinsOf[room]).Distinct().ToList())
+          {
+            if (clock.ElapsedMilliseconds > timeLimitMs) return Apply();
+            var join = _joins[j];
+            if (join.Pull <= 0 || members.Contains(join.A) == members.Contains(join.B)) continue;
+            var (sx, sy) = ExactShift(join);
+            if (Math.Abs(sx) < 0.5 && Math.Abs(sy) < 0.5) continue;
+            // the shift is for B; moving A instead goes the other way
+            if (members.Contains(join.A))
+            {
+              sx = -sx;
+              sy = -sy;
+            }
+
+            var across = NaturalPairsAcross(unit);
+            foreach (var i in unit)
+            {
+              _x[i] += sx;
+              _y[i] += sy;
+            }
+
+            var after = Score(movable);
+            if (after + BendCost(across) < score - 0.001)
+            {
+              score = after;
+              improved = true;
+            }
+            else
+            {
+              foreach (var i in unit)
+              {
+                _x[i] -= sx;
+                _y[i] -= sy;
+              }
+            }
+          }
+        }
+
         // Make space: move a room and every movable room beyond it, in that direction, one step further out,
         // so a group keeps its shape (like moving the map apart, but only near the change).
         foreach (var room in movable)
@@ -798,7 +862,37 @@ public static partial class LayoutTidy
       var off = AngleBetween(ax, ay, join.WantX, join.WantY);
       var cost = off <= NaturalAngle ? 0 : 1 + (off - NaturalAngle) / 45;
       cost += LengthCost * Math.Max(0, distance - want);
+      if (off <= NaturalAngle && !IsExact(join)) cost += InexactCost;
       return join.Pull * cost;
+    }
+
+    /// <summary>How close two rooms must be to count as lined up: half a grid square, since rooms snap to the grid.</summary>
+    private static double AlignTolerance => Settings.SnapToGrid ? Math.Max(1, Settings.GridSize / 2.0) : 1;
+
+    /// <summary>
+    ///   Whether a naturally placed join is exactly level or upright, or exactly diagonal in steps (as many steps
+    ///   across as down).
+    /// </summary>
+    public bool IsExactlyPlaced(Join join) => IsExact(join);
+
+    private bool IsExact(Join join)
+    {
+      var (sx, sy) = ExactShift(join);
+      return Math.Abs(sx) <= AlignTolerance && Math.Abs(sy) <= AlignTolerance;
+    }
+
+    /// <summary>
+    ///   How far B would have to move to make the join exact, keeping about the same number of steps between the
+    ///   rooms: level or upright for a straight join, as many steps across as down for a diagonal one.
+    /// </summary>
+    private (double X, double Y) ExactShift(Join join)
+    {
+      var dx = _x[join.B] - _x[join.A];
+      var dy = _y[join.B] - _y[join.A];
+      if (join.WantX == 0) return (-dx, 0);
+      if (join.WantY == 0) return (0, -dy);
+      var steps = Math.Max(1, Math.Round((Math.Abs(dx) / _stepX + Math.Abs(dy) / _stepY) / 2));
+      return (Math.Sign(join.WantX) * steps * _stepX - dx, Math.Sign(join.WantY) * steps * _stepY - dy);
     }
 
     /// <summary>Whether a join is naturally placed (see <see cref="JoinCost" />).</summary>

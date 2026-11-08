@@ -279,7 +279,11 @@ public sealed partial class EditorSession : IDisposable
     if (delta == Vector.Zero || Selection.Count == 0) return;
 
     var items = Selection.Items.ToList();
-    Execute("Move", () => MapEditing.Move(Project.Elements, items, delta), items);
+    Execute("Move", () =>
+    {
+      MapEditing.Move(Project.Elements, items, delta);
+      foreach (var room in items.OfType<Room>()) room.PlacedByHand = true;
+    }, items);
     RaiseChanged(EditorChange.Model);
   }
 

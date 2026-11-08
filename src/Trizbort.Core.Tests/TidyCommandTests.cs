@@ -105,6 +105,45 @@ public class TidyCommandTests
   }
 
   [Test]
+  public void DraggingARoom_MarksItPlacedByHand_AndTheMarkIsSavedWithTheMap()
+  {
+    var (hall, garden, _) = AMessyMap();
+    _session.Selection.Set(new Element[] { garden });
+    _session.NudgeSelected(new Vector(32, 0));
+    garden.PlacedByHand.ShouldBeTrue();
+    hall.PlacedByHand.ShouldBeFalse();
+
+    var fileName = System.IO.Path.GetTempFileName();
+    try
+    {
+      new LegacyMapFileEngine(Project.Current).Save(fileName).ShouldBeTrue();
+      System.IO.File.ReadAllText(fileName).ShouldContain("placedByHand");
+      Project.Current = new Project();
+      new LegacyMapFileEngine(Project.Current).Load(fileName).ShouldBeTrue();
+      var rooms = Project.Current.Elements.OfType<Room>().ToList();
+      rooms.Single(room => room.Name == "Garden").PlacedByHand.ShouldBeTrue();
+      rooms.Single(room => room.Name == "Hall").PlacedByHand.ShouldBeFalse();
+    }
+    finally
+    {
+      System.IO.File.Delete(fileName);
+    }
+  }
+
+  [Test]
+  public void TidyMap_ClearsThePlacedByHandMark()
+  {
+    var (hall, garden, shed) = AMessyMap();
+    garden.PlacedByHand = true;
+    shed.PlacedByHand = true;
+
+    _catalogue.Find("map.tidy").ExecuteAsync(_session).Wait();
+
+    Project.Current.Elements.OfType<Room>().Any(room => room.PlacedByHand).ShouldBeFalse();
+    LayoutTidy.NaturalJoins(Project.Current.Elements.ToList()).ShouldBe((2, 2));
+  }
+
+  [Test]
   public void TidySelectedRooms_MovesOnlyTheSelection()
   {
     var (hall, garden, shed) = AMessyMap();

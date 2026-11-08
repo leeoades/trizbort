@@ -16,3 +16,4 @@ Y2 [east] stub
 Y2 [south] <-> [north] Low Passage
 
 natural joins: 1 of 1
+exact joins: 1 of 1

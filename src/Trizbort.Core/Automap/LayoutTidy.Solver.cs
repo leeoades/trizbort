@@ -24,6 +24,9 @@ namespace Trizbort.Automap;
 public static partial class LayoutTidy
 {
   private const int SatisfiedWeight = 100;
+
+  /// <summary>Bonus for a join exactly level, upright or diagonal, so rooms line up in rows and columns.</summary>
+  private const int ExactWeight = 20;
   private const int LengthWeight = 3;
   private const int MoveWeight = 1;
 
@@ -148,6 +151,14 @@ public static partial class LayoutTidy
         model.Add(1000 * wy * dy >= 414 * wx * dx).OnlyEnforceIf(satisfied);
         model.Add(1000 * wy * dy <= 2414 * wx * dx).OnlyEnforceIf(satisfied);
       }
+
+      // exactly that way: level, upright, or as many squares across as down
+      var exact = model.NewBoolVar($"e{j}");
+      objective.Add(ExactWeight * exact);
+      model.AddImplication(exact, satisfied);
+      if (wy == 0) model.Add(dy == 0).OnlyEnforceIf(exact);
+      else if (wx == 0) model.Add(dx == 0).OnlyEnforceIf(exact);
+      else model.Add(wx * dx == wy * dy).OnlyEnforceIf(exact);
     }
 
     model.Maximize(LinearExpr.Sum(objective));
@@ -156,8 +167,6 @@ public static partial class LayoutTidy
       StringParameters = $"max_time_in_seconds:{timeLimitMs / 1000.0:0.0###}, num_workers:8"
     };
     var status = solver.Solve(model);
-    var trace = Environment.GetEnvironmentVariable("TB_SOLVER") != null;
-    if (trace) Console.WriteLine($"SOLVER status={status} objective={solver.ObjectiveValue} bound={solver.BestObjectiveBound} time={solver.WallTime():0.0}");
     if (status != CpSolverStatus.Optimal && status != CpSolverStatus.Feasible) return -1;
 
     var moved = 0;
@@ -173,11 +182,9 @@ public static partial class LayoutTidy
 
     var solved = NaturalJoins(elements).Natural;
     var solvedAt = map.Rooms.Select(room => room.Position).ToList();
-    if (trace) Console.WriteLine($"SOLVER natural before={naturalBefore} after solve={solved}");
     // polish: rooms off joins, fewer crossings; kept only if it doesn't cost a join pointing its way
     Tidy(elements, movable.Select(i => map.Rooms[i]).ToList(), Math.Max(500, timeLimitMs / 5), rearrange: true);
     var polished = NaturalJoins(elements).Natural;
-    if (trace) Console.WriteLine($"SOLVER after polish={polished}");
     if (polished < solved)
       for (var i = 0; i < n; i++)
         map.Rooms[i].Position = solvedAt[i];

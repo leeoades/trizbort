@@ -358,6 +358,75 @@ public class LayoutTidyTests : IsolatedProjectTests
   }
 
   [Test]
+  public void ARoomPlacedByHand_StaysWhereTheUserPutIt()
+  {
+    // as ARoomAJoinRunsAcross_StepsUpOrDown, but the user put the Statue Room there
+    var hall = AddRoomAt("Hall", 0, 0);
+    var statue = AddRoomAt("Statue Room", 2, 0);
+    statue.PlacedByHand = true;
+    var gallery = AddRoomAt("Gallery", 4, 0);
+    var garden = AddRoomAt("Garden", 5, 0);
+    Join(hall, CompassPoint.East, gallery, CompassPoint.West);
+    Join(gallery, CompassPoint.East, garden, CompassPoint.West);
+    var before = statue.Position;
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), gallery);
+
+    statue.Position.ShouldBe(before);
+  }
+
+  [Test]
+  public void ANewRoomSlightlyOutOfLine_LinesUpWithTheRoomItCameFrom()
+  {
+    // east from the Hall to the Garden, drawn a little low; north-east from the Garden to the Shed, a little left
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 1, 0.25f);
+    Join(hall, CompassPoint.East, garden, CompassPoint.West);
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), garden).ShouldBe(1);
+
+    garden.Position.Y.ShouldBe(hall.Position.Y);
+    LayoutTidy.ExactJoins(Project.Current.Elements.ToList()).ShouldBe((1, 1));
+  }
+
+  [Test]
+  public void TidyMap_LinesRoomsUp_InRowsColumnsAndDiagonals()
+  {
+    // all naturally placed already, but out of line
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 1, 0.25f);
+    var shed = AddRoomAt("Shed", 1.75f, -1);
+    var cellar = AddRoomAt("Cellar", 0.25f, 1);
+    Join(hall, CompassPoint.East, garden, CompassPoint.West);
+    Join(garden, CompassPoint.NorthEast, shed, CompassPoint.SouthWest);
+    Join(hall, CompassPoint.South, cellar, CompassPoint.North);
+    var elements = Project.Current.Elements.ToList();
+    LayoutTidy.NaturalJoins(elements).ShouldBe((3, 3));
+    LayoutTidy.ExactJoins(elements).Exact.ShouldBe(0);
+
+    LayoutTidy.Tidy(elements, elements.OfType<Room>(), 2000, rearrange: true);
+
+    LayoutTidy.ExactJoins(Project.Current.Elements.ToList()).ShouldBe((3, 3));
+    Overlaps().ShouldBe(0);
+  }
+
+  [Test]
+  public void LeesIdealHollywoodHijinxMap_StaysNeat_WhenTidied()
+  {
+    // Lee laid it out evenly spaced and lined up: tidying the whole map must not make it less neat
+    var path = RepositoryFile("tests", "automap", "hollywood-hijinx-nov-6", "ideal.trizbort");
+    new MapLoader(Project.Current).LoadMap(path).ShouldBeTrue();
+    var exact = LayoutTidy.ExactJoins(Project.Current.Elements.ToList());
+    TestContext.Out.WriteLine($"exact before: {exact}");
+
+    var elements = Project.Current.Elements.ToList();
+    LayoutTidy.Tidy(elements, elements.OfType<Room>(), 3000, rearrange: true);
+
+    LayoutTidy.NaturalJoins(Project.Current.Elements.ToList()).Natural.ShouldBe(20);
+    LayoutTidy.ExactJoins(Project.Current.Elements.ToList()).Exact.ShouldBeGreaterThanOrEqualTo(exact.Exact);
+  }
+
+  [Test]
   public void LeesIdealHollywoodHijinxMap_HasEveryJoinNaturallyPlaced_AndTidyingKeepsItThatWay()
   {
     // HH-NOV-6-ideal.trizbort: Lee's hand layout of the first part of Hollywood Hijinx. Every join points the

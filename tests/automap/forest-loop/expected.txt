@@ -9,3 +9,4 @@ Forest [east] <-> [west] Clearing
 Forest [north "n"] -> [northeast] Forest
 
 natural joins: 1 of 1
+exact joins: 1 of 1

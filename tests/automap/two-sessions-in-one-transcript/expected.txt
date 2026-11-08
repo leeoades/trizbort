@@ -10,3 +10,4 @@ Cottage [east] <-> [west] Lane
 Cottage [north] <-> [south] Garden
 
 natural joins: 2 of 2
+exact joins: 2 of 2

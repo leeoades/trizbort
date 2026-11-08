@@ -153,6 +153,8 @@ public sealed partial class CommandCatalogue
     var targets = rooms ?? elements.OfType<Room>().ToList();
     session.Execute(rooms == null ? "Tidy map" : "Tidy selected rooms", () =>
     {
+      // asked to tidy them, so they're no longer where the user put them by hand
+      foreach (var room in targets) room.PlacedByHand = false;
       var moved = solver
         ? LayoutTidy.SolverTidy(elements, targets, SolverTimeLimitMs)
         : LayoutTidy.Tidy(elements, targets, TidyTimeLimitMs, rearrange: true);
