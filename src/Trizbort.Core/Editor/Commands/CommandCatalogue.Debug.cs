@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Trizbort.Domain.Elements;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Editor.Input;
 using Trizbort.Domain.Enums;
@@ -62,7 +64,7 @@ public sealed partial class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "automap.back",
-      Title = "Go _Back an Automap Move",
+      Title = "_Previous Automap Move",
       MenuPath = "Project",
       Group = "2-automap-run",
       Scope = CommandScope.Canvas,
@@ -85,6 +87,16 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "automap.currentRoom",
+      Title = "Go to _Current Automap Room",
+      MenuPath = "Project",
+      Group = "2-automap-run",
+      Scope = CommandScope.Canvas,
+      CanExecuteFunc = s => s.Automap.IsRunning && s.Automap.CurrentRoom != null,
+      ExecuteAsyncFunc = s => Run(() => GoToAutomapRoom(s))
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "automap.step",
       Title = "Automap Single _Step (debug)",
       MenuPath = "Project",
@@ -96,6 +108,15 @@ public sealed partial class CommandCatalogue
       CanExecuteFunc = s => s.DebugEnabled && s.Automap.IsRunning && s.Automap.SingleStep,
       ExecuteAsyncFunc = s => Run(() => s.Automap.Step())
     });
+  }
+
+  /// <summary>Selects the room automap thinks the player is in and centres the map on it.</summary>
+  public static void GoToAutomapRoom(EditorSession session)
+  {
+    var room = session.Automap.CurrentRoom;
+    if (room == null || !session.Project.Elements.Contains(room)) return;
+    session.Selection.Set(new List<Element> { room });
+    session.CenterOnElement(room);
   }
 
   private static EditorCommand DebugToggle(

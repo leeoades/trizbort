@@ -6,15 +6,24 @@
             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
             BorderThickness="0,1,0,0"
             Padding="12,6">
+        <!-- The status takes what room is left and is cut short to fit, so the buttons never move: the status
+             changes as automap works, and a button that moves between press and release doesn't click. -->
         <Grid ColumnDefinitions="Auto,*,Auto">
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                 <Ellipse Width="10" Height="10" Fill="#4CAF50" VerticalAlignment="Center" />
                 <TextBlock Text="Automap:" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" />
-                <TextBlock Text="{Binding Status, ElementName=root}" FontSize="12" VerticalAlignment="Center" />
             </StackPanel>
+            <TextBlock Grid.Column="1" Margin="8,0" Text="{Binding Status, ElementName=root}" FontSize="12"
+                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="{Binding Status, ElementName=root}" />
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <Button Content="Back"
+                <Button Content="Current Room"
+                        Command="{Binding CurrentRoomCommand, ElementName=root}"
+                        ToolTip.Tip="Select the room automap thinks you're in, and centre the map on it"
+                        Padding="12,4"
+                        FontSize="12" />
+                <Button Content="Previous Move"
                         Command="{Binding BackCommand, ElementName=root}"
                         ToolTip.Tip="Go back a move in the transcript, leaving the map as it is; Next Move plays it again (F9)"
                         Padding="12,4"

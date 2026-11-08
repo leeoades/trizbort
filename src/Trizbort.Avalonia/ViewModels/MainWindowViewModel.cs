@@ -528,6 +528,20 @@ public partial class MainWindowViewModel : ViewModelBase
         IsAutomapMoveByMove = true;
     }
 
+    /// <summary>Select the room automap thinks the player is in and centre the map on it.</summary>
+    [RelayCommand]
+    public void GoToAutomapRoom()
+    {
+        var session = _commandService.Session;
+        if (session == null)
+        {
+            return;
+        }
+
+        Trizbort.Editor.Commands.CommandCatalogue.GoToAutomapRoom(session);
+        _commandService.InvalidateCanvas();
+    }
+
     /// <summary>Pause before the transcript's next move.</summary>
     [RelayCommand]
     public void PauseAutomap()

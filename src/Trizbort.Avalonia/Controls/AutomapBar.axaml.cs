@@ -24,6 +24,16 @@ public partial class AutomapBar : UserControl
     public static readonly StyledProperty<ICommand?> BackCommandProperty =
         AvaloniaProperty.Register<AutomapBar, ICommand?>(nameof(BackCommand));
 
+    public static readonly StyledProperty<ICommand?> CurrentRoomCommandProperty =
+        AvaloniaProperty.Register<AutomapBar, ICommand?>(nameof(CurrentRoomCommand));
+
+    /// <summary>Selects the room automap thinks the player is in and centres the map on it.</summary>
+    public ICommand? CurrentRoomCommand
+    {
+        get => GetValue(CurrentRoomCommandProperty);
+        set => SetValue(CurrentRoomCommandProperty, value);
+    }
+
     /// <summary>Goes back a move in the transcript.</summary>
     public ICommand? BackCommand
     {

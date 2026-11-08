@@ -1327,6 +1327,9 @@ public sealed class Automap : IAutomapController
     PlayToEnd();
   }
 
+  /// <summary>The room automap thinks the player is in, as it is on the map now; null when it doesn't know.</summary>
+  public Room CurrentRoom => _lastKnownRoom == null ? null : _canvas?.ResolveRoom(_lastKnownRoom);
+
   /// <summary>True while the run waits before each move (see <see cref="AutomapSettings.MoveByMove" />).</summary>
   public bool MoveByMove => _moveByMove;
 

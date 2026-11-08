@@ -23,8 +23,13 @@
                            TextTrimming="CharacterEllipsis" />
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6"
                             IsVisible="{Binding IsAutomapActive}">
-                    <Button Content="Back"
+                    <Button Content="Current Room"
+                            Command="{Binding GoToAutomapRoomCommand}"
+                            ToolTip.Tip="Select the room automap thinks you're in, and centre the map on it"
+                            Padding="12,4" FontSize="12" />
+                    <Button Content="Previous Move"
                             Command="{Binding GoBackAutomapCommand}"
+                            ToolTip.Tip="Go back a move in the transcript, leaving the map as it is; Next Move plays it again (F9)"
                             Padding="12,4" FontSize="12" />
                     <Button Content="Next Move"
                             IsVisible="{Binding IsAutomapMoveByMove}"

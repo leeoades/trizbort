@@ -3,6 +3,8 @@ using NUnit.Framework;
 using Shouldly;
 using Trizbort.Automap;
 using Trizbort.Domain.Application;
+using Trizbort.Domain.Elements;
+using Trizbort.Domain.Misc;
 using Trizbort.Editor;
 using Trizbort.Editor.Commands;
 using Trizbort.Editor.Input;
@@ -49,6 +51,8 @@ public class AutomapKeyCommandTests
     public int Backs { get; private set; }
 
     public void GoBack() => Backs++;
+
+    public Room CurrentRoom { get; set; }
 
     public void RaiseStatus(string status)
     {
@@ -136,6 +140,24 @@ public class AutomapKeyCommandTests
     _automap.IsRunning = true;
     back.ExecuteAsync(_session).Wait();
     _automap.Backs.ShouldBe(1);
+  }
+
+  [Test]
+  public void GoToCurrentRoom_SelectsTheRoomAutomapIsIn_AndCentresOnIt()
+  {
+    var command = _catalogue.Find("automap.currentRoom");
+    var far = new Room(_project) { Name = "Far Away", Position = new Vector(5000, 4000) };
+    _project.Elements.Add(far);
+    command.CanExecute(_session).ShouldBeFalse(); // not running
+
+    _automap.IsRunning = true;
+    command.CanExecute(_session).ShouldBeFalse(); // doesn't know where the player is
+    _automap.CurrentRoom = far;
+    command.CanExecute(_session).ShouldBeTrue();
+    command.ExecuteAsync(_session).Wait();
+
+    _session.Selection.Items.ShouldBe(new Element[] { far });
+    _session.Viewport.VisibleWorldBounds.Contains(far.InnerBounds.Center).ShouldBeTrue();
   }
 
   [Test]

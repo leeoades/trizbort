@@ -1,4 +1,5 @@
 using System;
+using Trizbort.Domain.Elements;
 
 namespace Trizbort.Automap;
 
@@ -27,6 +28,9 @@ public interface IAutomapController
 
   /// <summary>Go back a move in the transcript and wait there, leaving the map as it is.</summary>
   void GoBack();
+
+  /// <summary>The room automap thinks the player is in, if it knows; null otherwise.</summary>
+  Room CurrentRoom => null;
 
   /// <summary>Raised with the new status text each time it is set. May be raised off the UI thread.</summary>
   event Action<string> StatusChanged;
