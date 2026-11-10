@@ -120,9 +120,9 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
   }
 
   [Test]
-  public async Task ThroughAPortal_AutomapGoesToTheRoomItStandsFor_AndJoinsNothingAcrossTheMap()
+  public async Task AfterANewArea_AutomapGoesAlongTheSplitJoin_AndAddsNothing()
   {
-    // the house mapped apart from the garden: the foyer moved to an area of its own, with portals
+    // the house mapped apart from the garden: the foyer moved to an area of its own, its join to the porch split
     var porch = new Room(Project.Current) { Name = "Front Porch", Position = new Vector(0, 0) };
     var foyer = new Room(Project.Current) { Name = "Foyer", Position = new Vector(0, -200) };
     Project.Current.Elements.Add(porch);
@@ -130,7 +130,7 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
     var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
     var canvas = new AutomapCanvas(Project.Current, engine);
     canvas.Connect(porch, MappableDirection.North, foyer, true);
-    NewArea.Start(Project.Current, foyer).Count.ShouldBe(2);
+    NewArea.Start(Project.Current, foyer).Count.ShouldBe(1);
     var connections = Project.Current.Elements.OfType<Connection>().Count();
 
     var lines = new[]
@@ -142,9 +142,34 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
     };
     await RunToEnd(engine, lines);
 
-    AllRooms().Count.ShouldBe(4);
-    Joined(porch, foyer).ShouldBeFalse();
+    AllRooms().Count.ShouldBe(2);
     Project.Current.Elements.OfType<Connection>().Count().ShouldBe(connections);
+    Project.Current.Elements.OfType<Connection>().Single().Split.ShouldBeTrue();
+  }
+
+  [Test]
+  public async Task ThroughAReferenceRoomMadeByHand_AutomapGoesToTheRoomItStandsFor()
+  {
+    // "To Front Porch" drawn south of the foyer, the real porch far away
+    var porch = Add("Front Porch", 0, 0, "A creaky porch.");
+    var foyer = Add("Foyer", 2000, -200, "An elegant foyer.");
+    var portal = Add("x", 2000, 0);
+    portal.AddReferenceRoom(porch.Id);
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    new AutomapCanvas(Project.Current, engine).Connect(foyer, MappableDirection.South, portal, true);
+    var lines = new[]
+    {
+      ">look", "Foyer", "An elegant foyer.", "",
+      ">south", "Front Porch", "A creaky porch.", "",
+      ">east", "Garden", "A walled garden.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines);
+
+    var garden = AllRooms().Single(room => room.Name == "Garden");
+    Joined(porch, garden).ShouldBeTrue();
+    Joined(porch, foyer).ShouldBeFalse();
   }
 
   private static Room Add(string name, float x, float y, string description = null)

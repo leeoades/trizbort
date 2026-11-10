@@ -26,7 +26,7 @@ public sealed partial class CommandCatalogue
       Scope = CommandScope.Canvas,
       Gestures = new[] { new KeyGesture(InputKey.K, ModifierKeys.None) },
       ContextTargets = ContextTargets.Room,
-      CanExecuteFunc = s => s.Selection.Rooms.Any(),
+      CanExecuteFunc = s => s.Selection.Rooms.Any(room => !room.IsReference),
       IsCheckedFunc = s => s.PrimaryRoom != null && s.PrimaryRoom.IsDark,
       ExecuteAsyncFunc = s => Run(() => s.ToggleDarkness())
     });
@@ -38,7 +38,7 @@ public sealed partial class CommandCatalogue
       MenuPath = "Edit/Rooms",
       Group = "6-automap",
       ContextTargets = ContextTargets.Room,
-      CanExecuteFunc = s => s.Selection.Rooms.Any(),
+      CanExecuteFunc = s => s.Selection.Rooms.Any(room => !room.IsReference),
       IsCheckedFunc = s => s.PrimaryRoom != null && s.PrimaryRoom.AutomapPause,
       ExecuteAsyncFunc = s => Run(() =>
       {
@@ -70,6 +70,50 @@ public sealed partial class CommandCatalogue
         {
           foreach (var room in rooms) room.Moves = on;
         });
+      })
+    });
+    // copies of rooms: portals and a moving room's stops
+    catalogue.Register(new EditorCommand
+    {
+      Id = "room.copy.goTo",
+      ContextOrder = 66, ContextGroup = "5-room",
+      Title = "_Go to the Room It Stands For",
+      MenuPath = "Edit/Rooms",
+      Group = "6-automap",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.SelectedRooms.Count == 1 && s.SelectedRooms[0].IsReference,
+      ExecuteAsyncFunc = s => Run(() => s.JumpToReferencedRoom(s.SelectedRooms[0]))
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "room.copy.moveJoins",
+      ContextOrder = 67, ContextGroup = "5-room",
+      Title = "Move _Joins to the Room It Stands For",
+      MenuPath = "Edit/Rooms",
+      Group = "6-automap",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.SelectedRooms.Count == 1 && s.SelectedRooms[0].IsReference,
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        var copy = s.SelectedRooms[0];
+        var room = copy.ReferenceRoom;
+        s.Execute("Move joins to " + room.Name, () => RoomCopies.MoveJoinsToRoom(s.Project.Elements, copy));
+        s.Selection.Set(new List<Element> { room });
+      })
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "room.copy.ownRoom",
+      ContextOrder = 68, ContextGroup = "5-room",
+      Title = "Make It a Room of Its _Own",
+      MenuPath = "Edit/Rooms",
+      Group = "6-automap",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.SelectedRooms.Count == 1 && s.SelectedRooms[0].IsReference,
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        var copy = s.SelectedRooms[0];
+        s.Execute("Make " + copy.ReferenceRoom.Name + " a room of its own", () => RoomCopies.MakeRoomOfItsOwn(copy));
       })
     });
     catalogue.Register(new EditorCommand
@@ -138,7 +182,7 @@ public sealed partial class CommandCatalogue
       Group = "2-markers",
       Gestures = new[] { new KeyGesture(InputKey.F5, primary) },
       ContextTargets = ContextTargets.Room,
-      CanExecuteFunc = s => s.SelectedRooms.Count == 1,
+      CanExecuteFunc = s => s.SelectedRooms.Count == 1 && !s.SelectedRooms[0].IsReference,
       IsCheckedFunc = s => s.PrimaryRoom != null && s.PrimaryRoom.IsStartRoom,
       ExecuteAsyncFunc = s => Run(() => s.SetStartRoom())
     });
@@ -152,7 +196,7 @@ public sealed partial class CommandCatalogue
       Scope = CommandScope.Canvas,
       Gestures = new[] { new KeyGesture(InputKey.F5, ModifierKeys.Shift) },
       ContextTargets = ContextTargets.Room,
-      CanExecuteFunc = s => s.Selection.Rooms.Any(),
+      CanExecuteFunc = s => s.Selection.Rooms.Any(room => !room.IsReference),
       IsCheckedFunc = s => s.PrimaryRoom != null && s.PrimaryRoom.IsEndRoom,
       ExecuteAsyncFunc = s => Run(() => s.ToggleEndRoom())
     });

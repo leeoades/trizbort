@@ -22,7 +22,7 @@ public class NewAreaTests : IsolatedProjectTests
   }
 
   [Test]
-  public void StartingANewAreaAtTheFoyer_MovesItClearOfTheMap_WithPortalsBothWays()
+  public void StartingANewAreaAtTheFoyer_MovesItClearOfTheMap_AndSplitsItsJoins()
   {
     var garden = Add("Garden", -400, 0);
     var porch = Add("Front Porch", 0, 0);
@@ -30,42 +30,51 @@ public class NewAreaTests : IsolatedProjectTests
     var canvas = new AutomapCanvas(Project.Current);
     canvas.Connect(garden, MappableDirection.East, porch, true);
     canvas.Connect(porch, MappableDirection.North, foyer, true);
-    var old = foyer.Position;
 
-    var portals = NewArea.Start(Project.Current, foyer);
+    var split = NewArea.Start(Project.Current, foyer);
 
-    portals.Count.ShouldBe(2);
-    var toFoyer = portals[0];
-    var toPorch = portals[1];
-    toFoyer.ReferenceRoom.ShouldBe(foyer);
-    toFoyer.IsPortal.ShouldBeTrue();
-    toFoyer.Position.ShouldBe(old);
-    toPorch.ReferenceRoom.ShouldBe(porch);
-    // clear of everything else, the porch's portal where the porch was relative to the foyer
+    split.Count.ShouldBe(1);
+    var join = split[0];
+    join.Split.ShouldBeTrue();
+    join.IsDrawnSplit.ShouldBeTrue();
+    join.GetSourceRoom().ShouldBe(porch);
+    join.GetTargetRoom().ShouldBe(foyer);
     foyer.Position.X.ShouldBeGreaterThan(porch.Position.X + porch.Width * 2);
-    (toPorch.Position - foyer.Position).ShouldBe(porch.Position - old);
-
-    var joins = Project.Current.Elements.OfType<Connection>().Select(c =>
-    {
-      var source = c.GetSourceRoom(out var start);
-      var target = c.GetTargetRoom(out var end);
-      return $"{Name(source)} {start} -> {Name(target)} {end}";
-    }).ToList();
-    joins.ShouldContain("Front Porch North -> To Foyer South");
-    joins.ShouldContain("To Front Porch North -> Foyer South");
-    joins.ShouldContain("Garden East -> Front Porch West");
-    joins.Count.ShouldBe(3);
+    Project.Current.Elements.OfType<Room>().Count().ShouldBe(3);
+    // the garden's join is left alone
+    Project.Current.Elements.OfType<Connection>().Single(c => c != join).Split.ShouldBeFalse();
   }
 
-  private static string Name(Room room) => room.IsPortal ? "To " + room.ReferenceRoom.Name : room.Name;
+  [Test]
+  public void ASplitJoin_IsDrawnAsAStubOutOfEachRoom()
+  {
+    var porch = Add("Front Porch", 0, 0);
+    var foyer = Add("Foyer", 2000, -200);
+    new AutomapCanvas(Project.Current).Connect(porch, MappableDirection.North, foyer, true);
+    var join = Project.Current.Elements.OfType<Connection>().Single();
+    join.Split = true;
+
+    var segments = join.GetSegments();
+
+    segments.Count.ShouldBe(2);
+    segments[0].Start.ShouldBe(join.VertexList[0].Position);
+    segments[0].Length.ShouldBe(Connection.SplitStubLength, 0.01f);
+    segments[0].End.Y.ShouldBeLessThan(segments[0].Start.Y); // out of the porch's north side
+    segments[1].End.ShouldBe(join.VertexList[^1].Position);
+    segments[1].Length.ShouldBe(Connection.SplitStubLength, 0.01f);
+    join.FarRoom(true).ShouldBe(foyer);
+    join.FarRoom(false).ShouldBe(porch);
+    // nowhere near the middle of the old line
+    join.Distance(new Vector(1000, -100), false).ShouldBeGreaterThan(100);
+  }
 
   [Test]
-  public void APortal_OrARoomWithNoJoins_CantStartAnArea()
+  public void ACopy_OrARoomWithNoJoins_CantStartAnArea()
   {
     var porch = Add("Front Porch", 0, 0);
     NewArea.CanStart(porch).ShouldBeFalse();
-    var portal = Add("x", 300, 0);
-    portal.AddReferenceRoom(porch.Id);
-    NewArea.CanStart(portal).ShouldBeFalse();
+    var copy = Add("x", 300, 0);
+    copy.AddReferenceRoom(porch.Id);
+    NewArea.CanStart(copy).ShouldBeFalse();
   }
 }

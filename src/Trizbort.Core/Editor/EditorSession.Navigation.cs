@@ -486,4 +486,20 @@ public sealed partial class EditorSession
     SelectAndCentre(original);
     return true;
   }
+
+  /// <summary>
+  ///   Ctrl+click on a split join's stub: selects the room at the other end from the stub nearest
+  ///   <paramref name="world" />, and centres it. Returns false when the join isn't drawn split.
+  /// </summary>
+  public bool JumpAlongSplitJoin(Connection connection, Vector world)
+  {
+    if (connection is not { IsDrawnSplit: true }) return false;
+    var segments = connection.GetSegments();
+    var nearStart = world.DistanceFromLineSegment(segments[0]) <= world.DistanceFromLineSegment(segments[^1]);
+    var far = connection.FarRoom(nearStart);
+    if (far == null) return false;
+
+    SelectAndCentre(far);
+    return true;
+  }
 }

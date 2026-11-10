@@ -746,7 +746,8 @@ public sealed class CanvasInteraction : IDisposable
   private CursorKind DetermineCursor()
   {
     if (_mode == CanvasDragMode.Pan || _spaceHeld) return CursorKind.Pan;
-    if (_mode == CanvasDragMode.None && _referenceJumpHeld && _hoverElement is Room { IsReference: true })
+    if (_mode == CanvasDragMode.None && _referenceJumpHeld &&
+        _hoverElement is Room { IsReference: true } or Connection { IsDrawnSplit: true })
       return CursorKind.Hand;
     if (_mode == CanvasDragMode.MoveWaypoint || (_mode == CanvasDragMode.None && _hoverWaypoint.HasValue))
       return CursorKind.SizeAll;
@@ -857,6 +858,10 @@ public sealed class CanvasInteraction : IDisposable
 
   private bool TryJumpToReferencedRoom(Vector world)
   {
+    // a split join's stub goes to the room at its other end, selected or not
+    if (_hit.HitElement(world) is Connection { IsDrawnSplit: true } split)
+      return _session.JumpAlongSplitJoin(split, world);
+
     var selection = _session.Selection;
     if (selection.Count != 1 || selection.Primary is not Room { IsReference: true } room) return false;
     if (_hit.HitElement(world) != room) return false;

@@ -27,7 +27,7 @@
             <ComboBox Grid.Row="3" Grid.Column="2" x:Name="ReferenceCombo" ItemsSource="{Binding AvailableReferenceRooms}"
                       SelectedItem="{Binding SelectedReferenceRoom}" HorizontalAlignment="Stretch" />
 
-            <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="16">
+            <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="16" IsVisible="{Binding IsNotReferenceRoom}">
                 <CheckBox Content="_Start Room" IsChecked="{Binding IsStartRoom}" />
                 <CheckBox Content="_End Room" IsChecked="{Binding IsEndRoom}" />
                 <CheckBox Content="_Dark" IsChecked="{Binding IsDark}" />
@@ -38,7 +38,9 @@
             </StackPanel>
         </Grid>
 
-        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
+        <TextBlock Grid.Row="1" Text="{Binding ReferenceNote}" TextWrapping="Wrap" VerticalAlignment="Top"
+                   IsVisible="{Binding IsReferenceRoom}" />
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}" IsVisible="{Binding IsNotReferenceRoom}">
             <!-- Description & Objects -->
             <TabItem Header="Description &amp; Objects">
                 <Grid RowDefinitions="*,*,Auto" Margin="8" RowSpacing="12">

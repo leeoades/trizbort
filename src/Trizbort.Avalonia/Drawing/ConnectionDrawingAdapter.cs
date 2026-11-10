@@ -137,7 +137,7 @@ public static class ConnectionDrawingAdapter
             if (segments != null && segments.Count > 0)
             {
                 var segsHash = ComputeSegmentsHash(segments);
-                if (!conn.HasCurveWaypoints)
+                if (!conn.HasCurveWaypoints || conn.IsDrawnSplit)
                 {
                     foreach (var seg in segments)
                     {
@@ -210,7 +210,8 @@ public static class ConnectionDrawingAdapter
         var handDrawn = Settings.HandDrawn;
         var seed = connection.Id;
         var cache = _connectionCaches.GetOrCreateValue(connection);
-        var curved = connection.HasCurveWaypoints;
+        // (a split join is two straight stubs, whatever its curve)
+        var curved = connection.HasCurveWaypoints && !connection.IsDrawnSplit;
 
         // a way out that leads straight back in: a small curl on the room's side, arrow at its head
         if (!curved && TryDrawLoop(connection, context, pen, brush, isSelected, isHover, cache)) return;
@@ -769,6 +770,14 @@ public static class ConnectionDrawingAdapter
             DrawSingleAnnotation(context, endText, segments[^1], font, typeface, brush, false, endVertex, ref cache.CachedEndText);
         }
 
+        // a split join says at the tip of each stub where it goes, the command with it
+        if (connection.IsDrawnSplit)
+        {
+            DrawSplitLabel(connection, context, true, font, typeface, brush);
+            DrawSplitLabel(connection, context, false, font, typeface, brush);
+            return;
+        }
+
         if (!string.IsNullOrEmpty(connection.MidText))
         {
             if (cache.LastMidText != connection.MidText || cache.CachedMidText == null)
@@ -794,6 +803,54 @@ public static class ConnectionDrawingAdapter
                 }
             }
         }
+    }
+
+    /// <summary>
+    ///   The label at the tip of a split join's stub: "to Building" (or "from Debris Room" at the far end of a one-way
+    ///   join), with the join's command, "xyzzy", before it.
+    /// </summary>
+    internal static string SplitLabel(Connection connection, bool atStart)
+    {
+        var far = connection.FarRoom(atStart);
+        var name = far == null ? string.Empty : far.IsPortal ? far.ReferenceRoom?.Name ?? far.Name : far.Name;
+        var where = (connection.Flow == ConnectionFlow.OneWay && !atStart ? "from " : "to ") + name;
+        return string.IsNullOrWhiteSpace(connection.MidText) ? where : connection.MidText.Trim() + ": " + where;
+    }
+
+    private static void DrawSplitLabel(
+        Connection connection,
+        AvaloniaDrawingContext context,
+        bool atStart,
+        ThemeFont font,
+        Typeface typeface,
+        IBrush brush)
+    {
+        connection.GetSplitStub(atStart, out var foot, out var tip);
+        var outward = tip - foot;
+        if (outward.Length < 0.01f) return;
+        outward = CoreVector.Normalize(outward);
+        var text = new FormattedText(SplitLabel(connection, atStart), CultureInfo.CurrentCulture,
+            FlowDirection.LeftToRight, typeface, font.Size, brush);
+        var anchor = tip + outward * 3f;
+        double x;
+        double y;
+        if (outward.X > 0.4f)
+        {
+            x = anchor.X;
+            y = anchor.Y - text.Height / 2;
+        }
+        else if (outward.X < -0.4f)
+        {
+            x = anchor.X - text.Width;
+            y = anchor.Y - text.Height / 2;
+        }
+        else
+        {
+            x = anchor.X - text.Width / 2;
+            y = outward.Y < 0 ? anchor.Y - text.Height : anchor.Y;
+        }
+
+        context.DrawText(text, new AvaloniaPoint(x, y));
     }
 
     /// <summary>Whether the room at this end lists its objects above or below itself, on the side this end is at.</summary>

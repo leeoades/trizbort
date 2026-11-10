@@ -108,6 +108,26 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private RoomReferenceItem? _selectedReferenceRoom;
 
+    /// <summary>
+    ///   The room is a copy of another (a reference): everything but its name and place is the other room's, so the
+    ///   dialog shows only those, and a note.
+    /// </summary>
+    public bool IsReferenceRoom => SelectedReferenceRoom is { Id: not -1 };
+
+    public bool IsNotReferenceRoom => !IsReferenceRoom;
+
+    public string ReferenceNote => IsReferenceRoom
+        ? $"This room stands for '{SelectedReferenceRoom!.Name}'. Its description, objects, darkness and look are that room's: change them there. " +
+          "Right-click this room to go to that room, move its joins onto that room, or make it a room of its own."
+        : string.Empty;
+
+    partial void OnSelectedReferenceRoomChanged(RoomReferenceItem? value)
+    {
+        OnPropertyChanged(nameof(IsReferenceRoom));
+        OnPropertyChanged(nameof(IsNotReferenceRoom));
+        OnPropertyChanged(nameof(ReferenceNote));
+    }
+
     [ObservableProperty]
     private int _selectedTabIndex;
 

@@ -46,10 +46,17 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   up and down arrows; Ctrl-click a stop to go to the room. Set it yourself with **Moves** in Room Properties or
   **Room Moves** on the room menu. Saved as an optional `moves` attribute; older versions ignore it.
 - **Start a New Area Here** (the room menu, or Edit > Rooms) moves a room, such as the foyer on going into a house,
-  to clear space beside the map, so the area beyond it can be mapped on its own. Portals to the rooms it was joined
-  to ("To Front Porch") sit round it where those rooms were, joined the same way, and a portal back to it ("To
-  Foyer") is left where it was, keeping the old joins. Automap goes through portals to the rooms they stand for,
-  joining nothing across the map. Copies of rooms are never matched by name. One undo step.
+  to clear space beside the map, so the area beyond it can be mapped on its own, and splits its joins to the rooms
+  it leaves behind. One undo step.
+- **Split Join** (the join menu, or Edit) draws a long join as a short stub out of each room, labelled with the
+  room at the other end ("to Building", "xyzzy: to Building", "from Debris Room" at the far end of a one-way join),
+  instead of a line across the map. It's still one join, so automap goes along it as usual. Ctrl-click a stub to go
+  to the other end. Saved as an optional `split` attribute; older versions draw the whole line.
+- **Copies of rooms** (reference rooms, and a moving room's stops) are drawn in the look of the room they stand
+  for, and their properties show only their name and that room. New on their menu: **Go to the Room It Stands
+  For**, **Move Joins to the Room It Stands For**, and **Make It a Room of Its Own**. Darkness, start and end room
+  and the automap settings are greyed out for them. Automap goes through a copy to the room it stands for, and
+  never matches a copy by name.
 - **One way, two rooms.** A way out (a direction, or a command such as "enter closet") that leads to more than one
   room, as after Keep Both, takes you to the one the game's heading names, then the one whose description starts
   the same way. With no heading, automap waits for the next one instead of guessing.
