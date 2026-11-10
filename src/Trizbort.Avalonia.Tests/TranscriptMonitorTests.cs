@@ -1,8 +1,9 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
 using Avalonia.Media;
+using Avalonia.Threading;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Avalonia.Controls;
@@ -60,6 +61,40 @@ public class TranscriptMonitorTests
             }
 
             green.ShouldBeGreaterThan(20);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    private static string Lines(int count) =>
+        string.Join("\n", Enumerable.Range(1, count).Select(i => i == count ? ">look" : "Line " + i));
+
+    [AvaloniaTest]
+    public void TheLastLine_StaysAtTheBottom_AsTheTextGrowsAndShrinks()
+    {
+        // after going back a move the text is shorter: the screen still shows its end, not its top
+        var monitor = new TranscriptMonitor();
+        var window = new Window { Width = 300, Height = 300, Content = monitor };
+        try
+        {
+            window.Show();
+            var screen = monitor.FindControl<BottomAnchor>("Screen")!;
+            var text = monitor.FindControl<TextBlock>("ScreenText")!;
+            void Settle()
+            {
+                Dispatcher.UIThread.RunJobs();
+                window.UpdateLayout();
+            }
+
+            foreach (var count in new[] { 60, 40, 3 })
+            {
+                monitor.Text = Lines(count);
+                Settle();
+                text.Bounds.Bottom.ShouldBe(screen.Bounds.Height, 1, $"{count} lines");
+                if (count > 3) text.Bounds.Top.ShouldBeLessThan(0, $"{count} lines overflow at the top");
+            }
         }
         finally
         {

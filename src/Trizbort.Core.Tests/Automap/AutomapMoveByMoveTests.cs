@@ -495,6 +495,55 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task GoingBack_AfterPlayingToTheEnd_PausesBeforeTheLastMove_WithTheScreenEndingThere()
+  {
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Hall", "A grand hall. A door leads north.", "",
+      ">north", "Kitchen", "A small kitchen. The hall is south.", "",
+      ">south", "Hall", "",
+      ">"
+    });
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      // played to the end: waiting at the last prompt for the game to go on
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count == 12);
+      await Task.Delay(100);
+      engine.MoveByMove.ShouldBeFalse();
+
+      engine.GoBack();
+      await WaitFor(() => engine.NextCommand == "south");
+      engine.MoveByMove.ShouldBeTrue();
+      engine.ScreenLines().Last().ShouldBe(">south");
+      engine.ScreenLines().Count.ShouldBe(9);
+      engine.CurrentRoom?.Name.ShouldBe("Kitchen");
+
+      engine.GoBack();
+      await WaitFor(() => engine.NextCommand == "north");
+      engine.ScreenLines().Last().ShouldBe(">north");
+
+      engine.PlayToEnd();
+      await WaitFor(() => engine.ScreenLines().Count == 12 && engine.NextCommand == null);
+      Rooms().ShouldBe(new[] { "Hall", "Kitchen" });
+
+      engine.Stop();
+      await run;
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
   public async Task Pause_StopsBeforeTheNextMove()
   {
     var path = Path.GetTempFileName();

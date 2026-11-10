@@ -90,11 +90,12 @@ public sealed class Automap : IAutomapController
   ///   is, and automap waits there. Returns the command it waits before.
   /// </summary>
   private async Task<(string Command, PeekingStreamReader Reader, Stream Stream)> GoBackAsync(
-    PeekingStreamReader reader, Stream stream, CancellationToken token)
+    PeekingStreamReader reader, Stream stream, CancellationToken token, bool fromTheEnd = false)
   {
     var back = Interlocked.Exchange(ref _movesBack, 0);
-    // the last point is the one automap is waiting at now
-    var target = Math.Max(0, _movePoints.Count - 1 - back);
+    // the last point is the one automap is waiting at now, unless it is waiting at the end of the transcript for the
+    // game to go on, past the last move it played
+    var target = Math.Max(0, _movePoints.Count - (fromTheEnd ? 0 : 1) - back);
     var point = _movePoints[target];
     _movePoints.RemoveRange(target + 1, _movePoints.Count - target - 1);
 
@@ -156,6 +157,13 @@ public sealed class Automap : IAutomapController
       {
         _linesRead++;
         return line;
+      }
+
+      // asked to go back a move while waiting for the game to go on: null tells the caller to go back
+      if (Volatile.Read(ref _movesBack) > 0)
+      {
+        if (_movePoints.Count > 0) return null;
+        Volatile.Write(ref _movesBack, 0);
       }
 
       Status = "Automapping is waiting for more text.";
@@ -2097,6 +2105,8 @@ public sealed class Automap : IAutomapController
       while (true)
       {
         tokenSource.Token.ThrowIfCancellationRequested();
+        string command = null;
+        var wentBack = false;
         if (_settings.ContinueTranscript)
         {
           // carrying on from the end of a game still running: the last line is usually its prompt, waiting for the
@@ -2109,37 +2119,59 @@ public sealed class Automap : IAutomapController
         {
           // ...read a line of text
           line = await WaitForNewLine(reader, tokenSource.Token);
-          atFileEnd = await reader.IsAtEndAsync(tokenSource.Token); // store this now so that it's still valid when we use it below
+          if (line == null)
+          {
+            // went back a move while waiting at the end of the transcript (after playing to the end)
+            (command, reader, stream) = await GoBackAsync(reader, stream, tokenSource.Token, true);
+            linesBetweenPrompts.Clear();
+            wentBack = true;
+          }
+          else
+          {
+            atFileEnd = await reader.IsAtEndAsync(tokenSource.Token); // store this now so that it's still valid when we use it below
+          }
         }
 
-        AddScreenLine(line);
+        if (!wentBack) AddScreenLine(line);
 
         //Trace("[" + line + "]");
-        string command;
-        if (IsPrompt(line, out command))
+        if (wentBack || IsPrompt(line, out command))
         {
           // this is a prompt line
 
-          // let's process everything leading up to it since the last prompt, but not necessarily this new prompt itself
-          await ProcessTranscriptText(linesBetweenPrompts, tokenSource.Token);
-          tokenSource.Token.ThrowIfCancellationRequested();
+          if (!wentBack)
+          {
+            // let's process everything leading up to it since the last prompt, but not necessarily this new prompt itself
+            await ProcessTranscriptText(linesBetweenPrompts, tokenSource.Token);
+            tokenSource.Token.ThrowIfCancellationRequested();
 
-          // we've now dealt with all lines to this point
-          linesBetweenPrompts.Clear();
+            // we've now dealt with all lines to this point
+            linesBetweenPrompts.Clear();
 
-          // the reply is all in: a direction tried that led nowhere loses its stub now, not when the player types
-          // the next command (playing live, or move by move, the map would show the stub until then)
-          await FlushPendingStubRemoval(tokenSource.Token);
+            // the reply is all in: a direction tried that led nowhere loses its stub now, not when the player types
+            // the next command (playing live, or move by move, the map would show the stub until then)
+            await FlushPendingStubRemoval(tokenSource.Token);
+          }
 
           // handle the case where we're at the end of the file, waiting for user input: the prompt has been
           // written but the command hasn't. When the prompt line already holds the command (">north"), keep it: an
           // interpreter writes that before the game's reply, so the next line is the reply, not the command.
-          if (atFileEnd && string.IsNullOrWhiteSpace(command))
+          if (!wentBack && atFileEnd && string.IsNullOrWhiteSpace(command))
             // we've already read the prompt, now just read the command when the player enters it
           {
             var typed = await WaitForNewLine(reader, tokenSource.Token);
-            AddScreenLine(typed);
-            command = typed.Trim();
+            if (typed == null)
+            {
+              // went back a move while waiting for the player's next command
+              (command, reader, stream) = await GoBackAsync(reader, stream, tokenSource.Token, true);
+              linesBetweenPrompts.Clear();
+              atFileEnd = false;
+            }
+            else
+            {
+              AddScreenLine(typed);
+              command = typed.Trim();
+            }
           }
 
           //                  var nextParagraph = getTextToNextPrompt(reader);

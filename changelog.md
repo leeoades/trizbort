@@ -63,6 +63,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - Going up into a room that mentions a way down (or any way back the way you came) no longer adds a stub beside
   the join: automap assumes that way leads back, and labels the join's end with it. The join stays one-way until
   you go that way. A way out already drawn on a join gets no stub either, wherever the join leaves the room.
+- Previous Move works after Play to the End: automap goes back to before the last move it played and pauses there.
+- Going back a move keeps the end of the transcript at the bottom of the game screen, with the lines played since
+  gone, instead of showing the top of the screen.
 - Tracking only no longer changes the map at all: "see" (add object) and region commands in the transcript, and
   ways that lead nowhere removing their stubs, are left alone too.
 

@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:Trizbort.Avalonia.Controls"
              x:Class="Trizbort.Avalonia.Controls.TranscriptMonitor"
              x:Name="root"
              Cursor="Hand"
@@ -17,7 +18,9 @@
                 <Grid>
                     <Viewbox Stretch="Uniform">
                         <Border Width="560" Height="420" Padding="14,10" ClipToBounds="True">
-                            <TextBlock Text="{Binding Text, ElementName=root}"
+                            <!-- the end of the text always shows, at the bottom, however much there is -->
+                            <controls:BottomAnchor x:Name="Screen">
+                            <TextBlock x:Name="ScreenText" Text="{Binding Text, ElementName=root}"
                                        FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, Liberation Mono, Menlo, monospace"
                                        FontSize="18"
                                        Foreground="#5CFF8A"
@@ -27,6 +30,7 @@
                                     <DropShadowEffect OffsetX="0" OffsetY="0" BlurRadius="6" Color="#A040FF70" />
                                 </TextBlock.Effect>
                             </TextBlock>
+                            </controls:BottomAnchor>
                         </Border>
                     </Viewbox>
                     <Rectangle IsHitTestVisible="False">
