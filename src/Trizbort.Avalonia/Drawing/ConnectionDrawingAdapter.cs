@@ -778,6 +778,9 @@ public static class ConnectionDrawingAdapter
             return;
         }
 
+        connection.SplitLabelBounds[0] = null;
+        connection.SplitLabelBounds[1] = null;
+
         if (!string.IsNullOrEmpty(connection.MidText))
         {
             if (cache.LastMidText != connection.MidText || cache.CachedMidText == null)
@@ -851,6 +854,8 @@ public static class ConnectionDrawingAdapter
         }
 
         context.DrawText(text, new AvaloniaPoint(x, y));
+        // clickable: it goes to the room it names
+        connection.SplitLabelBounds[atStart ? 0 : 1] = new CoreRect((float)x, (float)y, (float)text.Width, (float)text.Height);
     }
 
     /// <summary>Whether the room at this end lists its objects above or below itself, on the side this end is at.</summary>

@@ -50,8 +50,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   it leaves behind. One undo step.
 - **Split Join** (the join menu, or Edit) draws a long join as a short stub out of each room, labelled with the
   room at the other end ("to Building", "xyzzy: to Building", "from Debris Room" at the far end of a one-way join),
-  instead of a line across the map. It's still one join, so automap goes along it as usual. Ctrl-click a stub to go
-  to the other end. Saved as an optional `split` attribute; older versions draw the whole line.
+  instead of a line across the map. It's still one join, so automap goes along it as usual. Click a label ("to
+  Debris Room") to move the map to that room, or Ctrl-click a stub. Saved as an optional `split` attribute; older versions draw the whole line.
 - **Copies of rooms** (reference rooms, and a moving room's stops) are drawn in the look of the room they stand
   for, and their properties show only their name and that room. New on their menu: **Go to the Room It Stands
   For**, **Move Joins to the Room It Stands For**, and **Make It a Room of Its Own**. Darkness, start and end room

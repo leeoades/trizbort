@@ -140,6 +140,14 @@ public sealed class CanvasInteraction : IDisposable
     var shift = IsShift(input.Modifiers);
     var ctrl = IsCtrl(input.Modifiers);
 
+    // a split join's label ("to Debris Room") goes to the room it names
+    if (!shift && !ctrl && input.ClickCount == 1 && _session.JumpFromSplitLabel(world))
+    {
+      _gestureButton = PointerButton.None;
+      Refresh();
+      return true;
+    }
+
     if (IsReferenceJumpModifier(input.Modifiers) && TryJumpToReferencedRoom(world))
     {
       _gestureButton = PointerButton.None;
@@ -746,6 +754,7 @@ public sealed class CanvasInteraction : IDisposable
   private CursorKind DetermineCursor()
   {
     if (_mode == CanvasDragMode.Pan || _spaceHeld) return CursorKind.Pan;
+    if (_mode == CanvasDragMode.None && _session.SplitLabelAt(_lastWorld, out _) != null) return CursorKind.Hand;
     if (_mode == CanvasDragMode.None && _referenceJumpHeld &&
         _hoverElement is Room { IsReference: true } or Connection { IsDrawnSplit: true })
       return CursorKind.Hand;

@@ -263,6 +263,21 @@ public class Connection : Element
     tip = foot + Vector.Normalize(outward) * SplitStubLength;
   }
 
+  /// <summary>
+  ///   Where each of a split join's labels was last drawn (start, end), so a click on one can go to the room it names.
+  ///   Set by the drawing; not saved.
+  /// </summary>
+  public Rect?[] SplitLabelBounds { get; } = new Rect?[2];
+
+  /// <summary>Which of the split join's labels <paramref name="point" /> is on: true for the start's, false for the end's.</summary>
+  public bool? SplitLabelAt(Vector point)
+  {
+    if (!IsDrawnSplit) return null;
+    if (SplitLabelBounds[0] is { } start && start.Contains(point)) return true;
+    if (SplitLabelBounds[1] is { } end && end.Contains(point)) return false;
+    return null;
+  }
+
   /// <summary>The room at the other end from the start (or end) of the join.</summary>
   public Room FarRoom(bool fromStart) => fromStart ? GetTargetRoom() : GetSourceRoom();
 

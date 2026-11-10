@@ -492,6 +492,34 @@ public sealed partial class EditorSession
   ///   <paramref name="world" />, and centres it. Returns false when the join isn't drawn split.
   /// </summary>
   public bool JumpAlongSplitJoin(Connection connection, Vector world)
+    => JumpAlongSplitJoinCore(connection, world);
+
+  /// <summary>The split join whose label ("to Debris Room") is at <paramref name="world" />, and which end's it is.</summary>
+  public Connection SplitLabelAt(Vector world, out bool atStart)
+  {
+    atStart = false;
+    foreach (var connection in Project.Elements.OfType<Connection>())
+      if (connection.SplitLabelAt(world) is { } start)
+      {
+        atStart = start;
+        return connection;
+      }
+
+    return null;
+  }
+
+  /// <summary>A click on a split join's label: goes to the room it names. Returns false when there's no label there.</summary>
+  public bool JumpFromSplitLabel(Vector world)
+  {
+    var connection = SplitLabelAt(world, out var atStart);
+    var far = connection?.FarRoom(atStart);
+    if (far == null) return false;
+
+    SelectAndCentre(far);
+    return true;
+  }
+
+  private bool JumpAlongSplitJoinCore(Connection connection, Vector world)
   {
     if (connection is not { IsDrawnSplit: true }) return false;
     var segments = connection.GetSegments();
