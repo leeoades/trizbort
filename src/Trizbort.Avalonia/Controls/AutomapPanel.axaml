@@ -40,6 +40,19 @@
                         Command="{Binding StopAutomapCommand}" ToolTip.Tip="Stop automapping" />
             </Grid>
 
+            <!-- playing to the end, at the bottom, away from the step buttons: a slip shouldn't map the whole game -->
+            <Border DockPanel.Dock="Bottom" BorderThickness="0,1,0,0" Padding="12,8,12,10"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    IsVisible="{Binding IsAutomapMoveByMove}">
+                <StackPanel Spacing="4">
+                    <Button x:Name="PlayButton" Content="Play to the End ⏭"
+                            Command="{Binding PlayToEndCommand}"
+                            ToolTip.Tip="Play every move left without pausing, then follow the game as it goes on (F5)" />
+                    <TextBlock Classes="small" HorizontalAlignment="Center"
+                               Text="Plays every move left; asks first if there are many." />
+                </StackPanel>
+            </Border>
+
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="12,0,12,12" Spacing="18">
 
@@ -72,9 +85,6 @@
                                     Command="{Binding PlayNextMoveCommand}"
                                     ToolTip.Tip="Play the next move, then pause (F10)" />
                         </Grid>
-                        <Button x:Name="PlayButton" Content="Play" IsVisible="{Binding IsAutomapMoveByMove}"
-                                Command="{Binding PlayToEndCommand}"
-                                ToolTip.Tip="Play on without pausing, and follow the game as it goes on (F5)" />
                         <Button x:Name="PauseButton" Content="Pause" IsVisible="{Binding !IsAutomapMoveByMove}"
                                 Command="{Binding PauseAutomapCommand}"
                                 ToolTip.Tip="Pause before the next move, to step through the transcript a move at a time" />

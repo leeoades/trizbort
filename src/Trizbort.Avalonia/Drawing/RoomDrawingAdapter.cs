@@ -222,6 +222,12 @@ public static class RoomDrawingAdapter
             }
         }
 
+        // 8b. Automap doesn't map from here: a small amber "no entry" sign in the top left corner
+        if (drawBody && room.AutomapPause)
+        {
+            DrawAutomapPauseSign(context, bounds);
+        }
+
         // 9. Draw Hover Adorner
         if (isHover && !isSelected)
         {
@@ -240,6 +246,25 @@ public static class RoomDrawingAdapter
             context.DrawLine(crossPen, new AvaloniaPoint(bounds.Left, bounds.Top), new AvaloniaPoint(bounds.Right, bounds.Bottom));
             context.DrawLine(crossPen, new AvaloniaPoint(bounds.Right, bounds.Top), new AvaloniaPoint(bounds.Left, bounds.Bottom));
         }
+    }
+
+    private static readonly IBrush _automapPauseFill = new SolidColorBrush(AvaloniaColor.FromArgb(230, 0xFF, 0xF4, 0xDC));
+    private static readonly IPen _automapPausePen = new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0xE0, 0xA0, 0x30)), 1.6);
+
+    /// <summary>
+    ///   The sign on a room marked "don't automap from here" (a maze, a lift): a small circle with a bar through it,
+    ///   in the room's top left corner, in the automap panel's amber for "not mapping".
+    /// </summary>
+    internal static void DrawAutomapPauseSign(AvaloniaDrawingContext context, CoreRect bounds)
+    {
+        var radius = Math.Min(6.0, Math.Min(bounds.Width, bounds.Height) / 6);
+        if (radius < 2) return;
+        var centre = new AvaloniaPoint(bounds.Left + radius + 4, bounds.Top + radius + 4);
+        context.DrawEllipse(_automapPauseFill, _automapPausePen, centre, radius, radius);
+        var offset = radius * 0.7071;
+        context.DrawLine(_automapPausePen,
+            new AvaloniaPoint(centre.X - offset, centre.Y + offset),
+            new AvaloniaPoint(centre.X + offset, centre.Y - offset));
     }
 
     public static CoreVector[]? GetSecondFillPolygon(CoreRect bounds, string? location)

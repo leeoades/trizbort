@@ -617,12 +617,21 @@ public partial class MainWindowViewModel : ViewModelBase
         IsAutomapMoveByMove = true;
     }
 
-    /// <summary>Play the rest of the transcript without pausing.</summary>
+    /// <summary>Play the rest of the transcript without pausing; asks first when there are many moves left.</summary>
     [RelayCommand]
-    public void PlayToEnd()
+    public async Task PlayToEndAsync()
     {
-        AutomapEngine.Instance.PlayToEnd();
-        IsAutomapMoveByMove = false;
+        var session = _commandService.Session;
+        if (session != null)
+        {
+            await Trizbort.Editor.Commands.CommandCatalogue.PlayToEndAsync(session);
+        }
+        else
+        {
+            AutomapEngine.Instance.PlayToEnd();
+        }
+
+        IsAutomapMoveByMove = AutomapEngine.Instance.MoveByMove;
     }
 
     /// <summary>Go back a move in the transcript, leaving the map as it is; Next Move plays it again.</summary>

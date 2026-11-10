@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Editor.Input;
@@ -53,13 +54,13 @@ public sealed partial class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "automap.run",
-      Title = "_Play",
+      Title = "_Play to the End",
       MenuPath = "Project/Automap",
       Group = "2-automap/2-transcript",
       Scope = CommandScope.Canvas,
       Gestures = new[] { new KeyGesture(InputKey.F5, none) },
       CanExecuteFunc = s => s.Automap.IsRunning,
-      ExecuteAsyncFunc = s => Run(() => s.Automap.RunToCompletion())
+      ExecuteAsyncFunc = PlayToEndAsync
     });
     catalogue.Register(new EditorCommand
     {
@@ -143,6 +144,31 @@ public sealed partial class CommandCatalogue
       CanExecuteFunc = s => s.DebugEnabled && s.Automap.IsRunning && s.Automap.SingleStep,
       ExecuteAsyncFunc = s => Run(() => s.Automap.Step())
     });
+  }
+
+  /// <summary>Playing to the end with at least this many moves left asks first: it can't be stopped part way back.</summary>
+  public const int ConfirmPlayToEndMoves = 20;
+
+  /// <summary>
+  ///   Plays the rest of the transcript without pausing. When automap is paused with many moves left, asks first: a
+  ///   slip of the finger shouldn't map the whole game in one go.
+  /// </summary>
+  public static async Task PlayToEndAsync(EditorSession session)
+  {
+    var automap = session.Automap;
+    if (!automap.IsRunning) return;
+    if (automap.MoveByMove)
+    {
+      var moves = automap.MovesAhead();
+      if (moves >= ConfirmPlayToEndMoves &&
+          !await session.Prompts.ConfirmAsync(
+            $"There are {moves} moves left in the transcript. Play them all without pausing?\n\n" +
+            "Automap maps each move as it goes, then keeps following the game. Pause stops it at any point.",
+            "Play to the End"))
+        return;
+    }
+
+    automap.RunToCompletion();
   }
 
   /// <summary>Selects the room automap thinks the player is in and centres the map on it.</summary>

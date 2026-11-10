@@ -63,6 +63,12 @@ public class AutomapPanelTests
             // stepping, not "go to start / end": the buttons say what they do
             panel.FindControl<Button>("PreviousMoveButton")!.Content.ShouldBe("◀ Previous Move");
             panel.FindControl<Button>("NextMoveButton")!.Content.ShouldBe("Next Move ▶");
+            // playing to the end is at the bottom, away from them, and visible while paused
+            var play = panel.FindControl<Button>("PlayButton")!;
+            play.IsEffectivelyVisible.ShouldBeTrue();
+            play.Content.ShouldBe("Play to the End ⏭");
+            global::Avalonia.VisualExtensions.TranslatePoint(play, new global::Avalonia.Point(0, 0), panel)!.Value.Y
+                .ShouldBeGreaterThan(panel.Bounds.Height - 120);
             var shots = System.Environment.GetEnvironmentVariable("TRIZBORT_SCREENSHOTS");
             if (!string.IsNullOrEmpty(shots))
             {

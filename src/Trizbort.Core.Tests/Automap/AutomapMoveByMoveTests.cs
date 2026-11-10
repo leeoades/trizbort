@@ -56,6 +56,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
       engine.MoveByMove.ShouldBeTrue();
       Rooms().ShouldBeEmpty();
       engine.ScreenLines().ShouldBe(new[] { ">look" });
+      engine.MovesAhead().ShouldBe(3); // look, north, south: the empty prompt at the end isn't a move
 
       engine.PlayNextMove();
       await WaitFor(() => engine.NextCommand == "north");
@@ -66,6 +67,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
       engine.PlayNextMove();
       await WaitFor(() => engine.NextCommand == "south");
       Rooms().ShouldBe(new[] { "Hall", "Kitchen" });
+      engine.MovesAhead().ShouldBe(1);
 
       engine.PlayToEnd();
       await WaitFor(() => engine.ScreenLines().Count == 12 && engine.NextCommand == null);

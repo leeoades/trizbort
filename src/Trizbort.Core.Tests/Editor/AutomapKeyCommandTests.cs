@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Automap;
@@ -39,7 +42,10 @@ public class AutomapKeyCommandTests
       Runs++;
     }
 
-    public bool MoveByMove { get; private set; }
+    public bool MoveByMove { get; set; }
+    public int MovesLeft { get; set; }
+
+    public int MovesAhead() => MovesLeft;
     public int Moves { get; private set; }
 
     public void PlayNextMove()
@@ -64,6 +70,24 @@ public class AutomapKeyCommandTests
     public void RaiseFailed(Exception exception)
     {
       AutomapFailed?.Invoke(exception);
+    }
+  }
+
+  private sealed class ConfirmingPrompts : IEditorPrompts
+  {
+    public bool Answer { get; set; }
+    public string Asked { get; private set; }
+
+    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, CancellationToken token = default) =>
+      Task.FromResult(AutomapSameDirectionResult.Cancel);
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, CancellationToken token = default) =>
+      Task.FromResult<RoomDisambiguation>(default);
+
+    public Task<bool> ConfirmAsync(string message, string title, CancellationToken token = default)
+    {
+      Asked = message;
+      return Task.FromResult(Answer);
     }
   }
 
@@ -113,6 +137,44 @@ public class AutomapKeyCommandTests
     run.ExecuteAsync(_session).Wait();
 
     _automap.Runs.ShouldBe(1);
+  }
+
+  [Test]
+  public void PlayToTheEnd_WithManyMovesLeft_AsksFirst()
+  {
+    var prompts = new ConfirmingPrompts();
+    _session.Prompts = prompts;
+    _automap.IsRunning = true;
+    _automap.MoveByMove = true;
+    _automap.MovesLeft = 250;
+    var run = _catalogue.Find("automap.run");
+
+    run.ExecuteAsync(_session).Wait();
+    prompts.Asked.ShouldContain("250 moves");
+    _automap.Runs.ShouldBe(0); // said no
+
+    prompts.Answer = true;
+    run.ExecuteAsync(_session).Wait();
+    _automap.Runs.ShouldBe(1);
+  }
+
+  [Test]
+  public void PlayToTheEnd_WithFewMovesLeft_OrAlreadyPlaying_JustPlays()
+  {
+    var prompts = new ConfirmingPrompts();
+    _session.Prompts = prompts;
+    _automap.IsRunning = true;
+    _automap.MoveByMove = true;
+    _automap.MovesLeft = CommandCatalogue.ConfirmPlayToEndMoves - 1;
+    var run = _catalogue.Find("automap.run");
+
+    run.ExecuteAsync(_session).Wait();
+    _automap.MoveByMove = false;
+    _automap.MovesLeft = 1000;
+    run.ExecuteAsync(_session).Wait();
+
+    prompts.Asked.ShouldBeNull();
+    _automap.Runs.ShouldBe(2);
   }
 
   [Test]

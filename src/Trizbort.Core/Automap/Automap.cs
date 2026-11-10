@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -1781,6 +1781,37 @@ public sealed class Automap : IAutomapController
     {
       lock (_screen) return _screen.Count;
     }
+  }
+
+  /// <summary>
+  ///   How many moves are left to play in the transcript as it is now: the command automap is paused before, if
+  ///   any, and each command typed after it. Reads the transcript again, so call it once, not on a timer.
+  /// </summary>
+  public int MovesAhead()
+  {
+    var fileName = _settings.FileName;
+    if (!Running || string.IsNullOrEmpty(fileName)) return 0;
+    var skip = _linesRead;
+    var moves = string.IsNullOrWhiteSpace(NextCommand) ? 0 : 1;
+    try
+    {
+      using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+      using var reader = new StreamReader(stream);
+      var index = 0;
+      while (reader.ReadLine() is { } line)
+      {
+        if (index++ < skip) continue;
+        if (IsPrompt(line, out var command) && !string.IsNullOrWhiteSpace(command)) moves++;
+      }
+    }
+    catch (IOException)
+    {
+    }
+    catch (UnauthorizedAccessException)
+    {
+    }
+
+    return moves;
   }
 
   /// <summary>Pause before the next move.</summary>

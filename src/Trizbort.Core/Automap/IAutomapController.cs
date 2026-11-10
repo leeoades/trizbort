@@ -34,6 +34,9 @@ public interface IAutomapController
   {
   }
 
+  /// <summary>How many moves are left to play in the transcript, counting the one automap is paused before.</summary>
+  int MovesAhead() => 0;
+
   /// <summary>The room automap thinks the player is in, if it knows; null otherwise.</summary>
   Room CurrentRoom => null;
 
