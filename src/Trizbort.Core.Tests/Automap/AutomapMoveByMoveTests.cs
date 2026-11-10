@@ -279,6 +279,37 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldBe(new[] { "Cupboard -> Cupboard (-1) Pull First Peg", "Cupboard (-1) -> Cellar" });
   }
 
+  [Test]
+  public async Task AQuestionInBrackets_AndTheAnswer_FollowTheJoinLabelledWithBoth()
+  {
+    // Hollywood Hijinx: "pull peg", "[Which peg do you mean, ...?]", "second" follows the join end labelled
+    // "Pull second peg" back up
+    var cupboard = AddRoom("Cupboard");
+    var below = AddRoom("Cupboard (-1)", column: 1);
+    var lift = new Connection(Project.Current, new Vertex(cupboard.PortAt(CompassPoint.East)), new Vertex(below.PortAt(CompassPoint.West)))
+    {
+      StartText = "Pull first peg",
+      EndText = "Pull second peg"
+    };
+    Project.Current.Elements.Add(lift);
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var lines = new[]
+    {
+      ">look", "Cupboard", "A cramped cupboard with pegs on the wall.", "",
+      ">pull first peg", "The cupboard moves down, then stops.", "",
+      ">pull peg", "[Which peg do you mean, the first coat peg, the second coat peg, the third coat",
+      "peg, or the sawed-off peg?]", "",
+      ">second", "The cupboard moves up, then stops.", "",
+      ">north", "Hall", "A grand hall.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    Joins().ShouldContain("Cupboard -> Hall");
+    Joins().ShouldNotContain(join => join.StartsWith("Cupboard (-1) -> Hall"));
+  }
+
   private sealed class SplitPrompts : IEditorPrompts
   {
     public string AskedAbout;

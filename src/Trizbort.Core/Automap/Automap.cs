@@ -952,7 +952,11 @@ public sealed class Automap : IAutomapController
     // the game answered the last command with a question ("Which peg do you mean, the first or the second?"): the
     // next command may answer it ("first"), and the two make one ("pull first peg")
     var lastText = lines.LastOrDefault(text => !string.IsNullOrWhiteSpace(text));
-    if (lastText != null) _askedAbout = lastText.TrimEnd().EndsWith("?") && !string.IsNullOrWhiteSpace(_lastCommand) ? _lastCommand : null;
+    // (Infocom puts its questions in brackets: "[Which peg do you mean, ...?]")
+    if (lastText != null)
+      _askedAbout = lastText.TrimEnd(' ', '\t', ']', ')', '"', '\'').EndsWith("?") && !string.IsNullOrWhiteSpace(_lastCommand)
+        ? _lastCommand
+        : null;
 
     var firstReply = lines.FindIndex(text => !string.IsNullOrWhiteSpace(text));
     for (var index = 0; index < lines.Count; ++index)
