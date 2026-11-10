@@ -100,6 +100,86 @@ public class AutomapConnectByCommandTests : IsolatedProjectTests
   }
 
   [Test]
+  public void ADirectionBack_JoinsTheCommandJoin_WithTheCommandAtItsStart()
+  {
+    // the foyer's closet: "enter closet" goes in, "north" comes back out
+    var foyer = AddRoomAt("Foyer", 0, 0);
+    var closet = AddRoomAt("Closet", 0, 400);
+    var canvas = new AutomapCanvas();
+
+    canvas.ConnectByCommand(foyer, closet, "enter closet");
+    var join = Connections().ShouldHaveSingleItem();
+    join.StartText.ShouldBeNullOrEmpty();
+    join.EndText.ShouldBeNullOrEmpty();
+
+    canvas.Connect(closet, MappableDirection.North, foyer, true);
+
+    Connections().ShouldHaveSingleItem().ShouldBeSameAs(join);
+    join.Flow.ShouldBe(ConnectionFlow.TwoWay);
+    join.Style.ShouldBe(ConnectionStyle.Solid);
+    join.AutomapCommand.ShouldBeNullOrEmpty();
+    join.MidText.ShouldBeNullOrEmpty();
+    join.GetSourceRoom().ShouldBeSameAs(foyer);
+    join.StartText.ShouldBe("enter closet"); // not "south", and not the side it happens to leave from
+    join.GetTargetRoom(out var closetSide).ShouldBeSameAs(closet);
+    closetSide.ShouldBe(CompassPoint.North);
+    join.EndText.ShouldBeNullOrEmpty(); // the north side says it
+  }
+
+  [Test]
+  public void ACommandJoinOnACornerOfTheRoom_IsNotLabelledWithTheCorner()
+  {
+    var foyer = AddRoomAt("Foyer", 0, 0);
+    var closet = AddRoomAt("Closet", -400, -400);
+    var canvas = new AutomapCanvas();
+
+    canvas.ConnectByCommand(foyer, closet, "enter closet");
+    canvas.Connect(closet, MappableDirection.Out, foyer, true);
+
+    var join = Connections().ShouldHaveSingleItem();
+    join.StartText.ShouldBe("enter closet");
+    join.EndText.ShouldBe("out");
+  }
+
+  [Test]
+  public void AWayOutBackTheWayYouCame_IsAssumedToBeTheJoin_NotAStub()
+  {
+    // up from the cellar, one-way as far as automap knows; the kitchen mentions a way down
+    var cellar = AddRoomAt("Cellar", 0, 400);
+    var kitchen = AddRoomAt("Kitchen", 0, 0);
+    var canvas = new AutomapCanvas();
+
+    canvas.Connect(cellar, MappableDirection.Up, kitchen, false);
+    canvas.AddExitStub(kitchen, MappableDirection.Down);
+    canvas.AddExitStub(kitchen, MappableDirection.Down);
+
+    var join = Connections().ShouldHaveSingleItem();
+    join.Flow.ShouldBe(ConnectionFlow.OneWay);
+    join.GetTargetRoom().ShouldBeSameAs(kitchen);
+    join.EndText.ShouldStartWith("d", Case.Insensitive); // "down", or "d" when directions are abbreviated
+  }
+
+  [Test]
+  public void ACompassWayOutBack_DocksTheJoinOnThatSide()
+  {
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 400, 0);
+    var canvas = new AutomapCanvas();
+
+    canvas.Connect(hall, MappableDirection.East, garden, false);
+    canvas.AddExitStub(garden, MappableDirection.West);
+    canvas.AddExitStub(garden, MappableDirection.North);
+
+    var joins = Connections();
+    joins.Length.ShouldBe(2); // the join, and a stub north
+    var join = joins.Single(c => c.GetSourceRoom() == hall);
+    join.Flow.ShouldBe(ConnectionFlow.OneWay);
+    join.GetTargetRoom(out var side).ShouldBeSameAs(garden);
+    side.ShouldBe(CompassPoint.West);
+    join.EndText.ShouldBeNullOrEmpty();
+  }
+
+  [Test]
   public void SameRoomOrBlankCommand_AddsNothing()
   {
     var building = AddRoomAt("Inside Building", 0, 0);

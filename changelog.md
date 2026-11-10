@@ -57,6 +57,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 - Dying no longer joins rooms: "yes" to "Do you want to be reincarnated?" isn't taken for a magic word, and a room
   shown after "You have died" or "*** The End ***" isn't joined to the room before.
+- A command into a room and a direction back out are one join: "enter closet" from the foyer and "north" back
+  from the closet make a single two-way join, labelled "enter closet" at the foyer and north at the closet, not two
+  one-way joins. A command's join is no longer labelled with the corner it happens to leave from ("NW").
+- Going up into a room that mentions a way down (or any way back the way you came) no longer adds a stub beside
+  the join: automap assumes that way leads back, and labels the join's end with it. The join stays one-way until
+  you go that way. A way out already drawn on a join gets no stub either, wherever the join leaves the room.
 - Tracking only no longer changes the map at all: "see" (add object) and region commands in the transcript, and
   ways that lead nowhere removing their stubs, are left alone too.
 
