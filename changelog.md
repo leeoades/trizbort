@@ -68,6 +68,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- Several rooms with one name (Hollywood Hijinx has three "In the Chimney"): the map says which first. A join the
+  way you went leads to its room, and going back the way a one-way join came (down, after coming up) leads back to
+  the room it came from, until you find otherwise. Otherwise the room whose description starts the same way is
+  the one; if none does, automap asks which, or whether it's a new room, offering them all. A name only one room
+  has is that room, whatever the game shows on a later visit.
 - A game that answers a move into the dark with a sentence ("It is pitch black.") rather than a heading is
   understood as dark: lighting the lamp maps the room as reached by the move, not by "turn on flashlight".
 - A join's end moves to the side of a compass direction learnt later, when the side it was on only faced the

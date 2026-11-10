@@ -555,6 +555,7 @@ public sealed class Automap : IAutomapController
     if (maybes.Count == 1 && (string.IsNullOrEmpty(roomDescription) || maybes[0].PrimaryDescription == null))
       return maybes[0];
 
+    _askedWhichRoom = true;
     var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, maybes, token);
     token.ThrowIfCancellationRequested();
     if (choice.AutoChooseRest)
@@ -565,6 +566,9 @@ public sealed class Automap : IAutomapController
 
     return choice.NewRoom ? null : choice.Chosen;
   }
+
+  /// <summary>The user was asked which room a heading meant, by <see cref="FindRoomAsync" />.</summary>
+  private bool _askedWhichRoom;
 
   private bool? Match(Room room, string name, string description)
   {
@@ -1007,13 +1011,20 @@ public sealed class Automap : IAutomapController
 
         // work out which room the transcript is referring to here, asking them if necessary.
         // All prompts happen before the batch below opens: the user can't undo while a batch is open.
+        // The map comes first: a join the way the player went (or back the way they came) says which room it is, so
+        // several rooms sharing a name needn't be asked about.
         RefreshLastKnownRoom();
-        var room = await FindRoomAsync(roomName, roomDescription, line, token);
-        token.ThrowIfCancellationRequested();
-        RefreshLastKnownRoom();
-        if (room != null) room = _canvas.ResolveRoom(room);
-        room = VariantRoom(roomName, room);
-        room = await SameNameElsewhereAsync(room, roomName, roomDescription, line, token);
+        var room = VariantRoom(roomName, null);
+        if (room == null)
+        {
+          _askedWhichRoom = false;
+          room = await FindRoomAsync(roomName, roomDescription, line, token);
+          token.ThrowIfCancellationRequested();
+          RefreshLastKnownRoom();
+          if (room != null) room = _canvas.ResolveRoom(room);
+          // (once only: if the user has just said which room it is, that's that)
+          if (!_askedWhichRoom) room = await WhichOfTheSameNameAsync(room, roomName, roomDescription, line, token);
+        }
 
         AutomapSameDirectionResult? decision = null;
         Room otherRoom = null;
@@ -1273,45 +1284,87 @@ public sealed class Automap : IAutomapController
   ///   "Cupboard": it's the room the heading means when the player is in it already (looking round), or when the way
   ///   they just went is known to lead to it. Otherwise <paramref name="found" />, the room with the heading's name.
   /// </summary>
+  /// <summary>
+  ///   The room the heading means, as the map shows it, or null when the map doesn't say: staying put in a copy of
+  ///   the room ("Cupboard (-1)" for "Cupboard"); the way the player went, as the map shows it (by its label, wherever
+  ///   it leaves the room), to a room by this name or a copy of it; or, going back the way a one-way join came (down,
+  ///   after coming up), the room it came from. Several rooms can share a name: two "In the Chimney" one above the
+  ///   other.
+  /// </summary>
   private Room VariantRoom(string roomName, Room found)
   {
     var here = _lastKnownRoom;
-    if (here == null) return found;
+    if (here == null) return null;
     if (_lastMoveDirection == null && _lastJourneyCommand == null)
-      return IsVariantOf(here.Name, roomName) ? here : found;
-    if (_lastMoveDirection == null) return found;
+      return IsVariantOf(here.Name, roomName) ? here : null;
+    if (_lastMoveDirection == null) return null;
+    var direction = _lastMoveDirection.Value;
 
-    // the way the player went, as the map shows it (by its label, wherever it leaves the room), to another room by
-    // this name or a copy of it: two rooms called "In the Chimney", one above the other
-    var along = _canvas.RoomsAlong(here, _lastMoveDirection.Value)
-      .FirstOrDefault(other => other != null && other != here &&
-                               (IsVariantOf(other.Name, roomName) ||
-                                string.Equals(other.Name?.Trim(), roomName?.Trim(), StringComparison.OrdinalIgnoreCase)));
-    return along ?? found;
+    var along = _canvas.RoomsAlong(here, direction)
+      .FirstOrDefault(other => other != null && other != here && NamedAs(other.Name, roomName));
+    if (along != null) return along;
+
+    // the natural way back along a one-way join that brought the player here, from a room by this name, until the
+    // player finds it leads somewhere else
+    var cameBy = CompassPointHelper.GetOpposite(direction);
+    var back = here.GetConnections()
+      .Where(connection => connection.Flow == ConnectionFlow.OneWay && connection.GetTargetRoom() == here)
+      .Select(connection => (Join: connection, From: connection.GetSourceRoom()))
+      .Where(pair => pair.From != null && pair.From != here && NamedAs(pair.From.Name, roomName))
+      .FirstOrDefault(pair =>
+      {
+        var ways = JoinWays.Of(pair.Join);
+        return !JoinWays.SeenFrom(ways, false) &&
+               ways.Any(way => way.AtStart && way.IsDirection && way.Seen && way.Direction == cameBy);
+      }).From;
+    return back == null ? null : _canvas.ResolveRoom(back);
   }
 
+  /// <summary>The room's name is the heading, or a copy of it ("Cupboard (-1)" for "Cupboard").</summary>
+  private static bool NamedAs(string name, string heading) =>
+    IsVariantOf(name, heading) ||
+    string.Equals(name?.Trim(), heading?.Trim(), StringComparison.OrdinalIgnoreCase);
+
   /// <summary>
-  ///   Moving by a direction to a room with the same name as the room you left, showing a description that starts
-  ///   unlike any of its own: it may be another room by that name (a second "In the Chimney" further up). Asks, since
-  ///   descriptions can change as a game goes on; returns null for a new room, or the room you left. Not asked for a
-  ///   way already mapped as leading back into the room, or when automap isn't mapping.
+  ///   A room found by its name alone, when the map doesn't say which, and the game shows a description: of the rooms
+  ///   with that name, the one whose description starts the same way. If none does, it may be another room by that
+  ///   name (a second "In the Chimney" further along), so automap asks, since descriptions can change as a game goes
+  ///   on. Returns null for a new room. Not asked for a way already mapped as leading back into the room, or when
+  ///   automap isn't mapping.
   /// </summary>
-  private async Task<Room> SameNameElsewhereAsync(
+  private async Task<Room> WhichOfTheSameNameAsync(
     Room room, string roomName, string roomDescription, string line, CancellationToken token)
   {
     var here = _lastKnownRoom;
-    if (room == null || room != here || _lastMoveDirection == null || _dontAskAboutAmbiguities || _suspended ||
-        room.AutomapPause || string.IsNullOrWhiteSpace(roomDescription) || room.Descriptions.Count == 0 ||
+    if (room == null || _suspended || (_lastMoveDirection == null && _lastJourneyCommand == null) ||
+        (here != null && here.AutomapPause) || string.IsNullOrWhiteSpace(roomDescription) ||
         !string.Equals(room.Name?.Trim(), roomName?.Trim(), StringComparison.OrdinalIgnoreCase) ||
-        room.Descriptions.Any(known => SameFirstSentence(known, roomDescription)) ||
-        LoopsBack(room, _lastMoveDirection.Value))
+        room.Descriptions.Any(known => SameFirstSentence(known, roomDescription)))
       return room;
 
-    var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, new[] { room }, token);
+    var sameName = _canvas.FindRooms(roomName, roomDescription, (name, _, other) =>
+        string.Equals(other.Name?.Trim(), name?.Trim(), StringComparison.OrdinalIgnoreCase) ? null : false)
+      .Maybes?.ToList() ?? new List<Room>();
+    var described = sameName.FirstOrDefault(other =>
+      other.Descriptions.Any(known => SameFirstSentence(known, roomDescription)));
+    if (described != null) return described;
+
+    // a room whose name no other room has is that room, whatever it says now (a revisit can show only what's lying
+    // about); the question is only which of several, or whether the room you left is somewhere new
+    if (room.Descriptions.Count == 0 || _dontAskAboutAmbiguities || (sameName.Count < 2 && room != here)) return room;
+    if (room == here && _lastMoveDirection != null && LoopsBack(room, _lastMoveDirection.Value)) return room;
+    if (sameName.Count == 0) sameName.Add(room);
+
+    var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, sameName, token);
     token.ThrowIfCancellationRequested();
     RefreshLastKnownRoom();
-    if (choice.AutoChooseRest) _dontAskAboutAmbiguities = true;
-    return choice.NewRoom ? null : _canvas.ResolveRoom(room);
+    if (choice.AutoChooseRest)
+    {
+      _dontAskAboutAmbiguities = true;
+      return _canvas.ResolveRoom(room);
+    }
+
+    return choice.NewRoom ? null : _canvas.ResolveRoom(choice.Chosen ?? room);
   }
 
   /// <summary>Whether the map has <paramref name="direction" /> leading from <paramref name="room" /> straight back in.</summary>
