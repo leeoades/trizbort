@@ -9,6 +9,7 @@ using Shouldly;
 using Trizbort.Automap;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
+using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Trizbort.Editor;
 
@@ -242,6 +243,38 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Rooms().ShouldBe(new[] { "Hall", "Kitchen", "Maze" });
     // into the maze is mapped; nothing in it or out of it is; mapping goes on from the hall
     Joins().ShouldBe(new[] { "Hall -> Kitchen", "Hall -> Maze" }, ignoreOrder: true);
+  }
+
+  [TestCase("pull first peg")]
+  [TestCase("pull peg", "first")]
+  public async Task AJoinTheUserDrew_LabelledWithTheCommand_TakesThePlayerAlongIt(params string[] commands)
+  {
+    // Hollywood Hijinx: the user drew the lift's way down themselves
+    var cupboard = AddRoom("Cupboard", automapPause: true);
+    var below = AddRoom("Cupboard (-1)", column: 1);
+    var lift = new Connection(Project.Current, new Vertex(cupboard.PortAt(CompassPoint.South)), new Vertex(below.PortAt(CompassPoint.North)))
+    {
+      Flow = ConnectionFlow.OneWay,
+      MidText = "Pull First Peg"
+    };
+    Project.Current.Elements.Add(lift);
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var lines = new List<string> { ">look", "Cupboard", "A cramped cupboard with pegs on the wall.", "" };
+    if (commands.Length == 2)
+      lines.AddRange(new[] { ">" + commands[0], "Which peg do you mean, the first peg or the second peg?", "" });
+    lines.AddRange(new[]
+    {
+      ">" + commands[^1], "The cupboard lurches and sinks.", "",
+      ">look", "Cupboard", "A cramped cupboard with pegs on the wall.", "",
+      ">out", "Cellar", "A damp cellar.", "",
+      ">"
+    });
+
+    await RunToEnd(engine, lines.ToArray(), lines.Count);
+
+    Rooms().ShouldBe(new[] { "Cellar", "Cupboard", "Cupboard (-1)" });
+    // the lift's way out leads to the cellar; nothing joins the cellar to the cupboard upstairs
+    Joins().ShouldBe(new[] { "Cupboard -> Cupboard (-1) Pull First Peg", "Cupboard (-1) -> Cellar" });
   }
 
   [Test]

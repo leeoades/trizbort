@@ -24,6 +24,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Merge Rooms** (Edit > Rooms, or the room menu, with two or more rooms selected) makes them one room: the one
   selected last is kept, and gets the others' joins, descriptions and objects. Joins between them, and joins and
   stubs left doubled, go. One undo step.
+- **Joins you draw are followed.** Type a command that a join from your room is labelled with ("pull first peg"),
+  and automap moves you along it once the game replies, unless the reply shows you somewhere else. A question and
+  your answer count together ("pull peg", "Which peg?", "first"), words in any order. A heading naming a copy of
+  a room ("Cupboard" in "Cupboard (-1)") means that copy when you're in it, or when your way there is known.
 - **Suspend Mapping** on the automap bar (and Project menu): automap follows you through rooms it knows but changes
   nothing until you resume, then maps on from the next room it sees, joined to nothing.
 

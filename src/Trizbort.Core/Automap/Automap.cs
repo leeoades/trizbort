@@ -849,6 +849,11 @@ public sealed class Automap : IAutomapController
       StartedAgain();
 
     string previousLine = null;
+    // the game answered the last command with a question ("Which peg do you mean, the first or the second?"): the
+    // next command may answer it ("first"), and the two make one ("pull first peg")
+    var lastText = lines.LastOrDefault(text => !string.IsNullOrWhiteSpace(text));
+    if (lastText != null) _askedAbout = lastText.TrimEnd().EndsWith("?") && !string.IsNullOrWhiteSpace(_lastCommand) ? _lastCommand : null;
+
     for (var index = 0; index < lines.Count; ++index)
     {
       token.ThrowIfCancellationRequested();
@@ -866,6 +871,21 @@ public sealed class Automap : IAutomapController
       {
         string roomDescription;
         ExtractParagraph(lines, index + 1, out roomDescription);
+
+        // the command was the label of a join the user drew ("pull first peg"): a heading naming the room at its
+        // other end (or the room it was made from, "Cupboard" for "Cupboard (-1)") is that room, not a journey;
+        // any other heading is mapped as usual
+        if (_followTo != null)
+        {
+          var followed = _canvas.ResolveRoom(_followTo);
+          _followTo = null;
+          if (followed != null && followed.Name.StartsWith(roomName.Trim(), StringComparison.OrdinalIgnoreCase))
+          {
+            await FollowAsync(followed, token);
+            previousLine = line;
+            continue;
+          }
+        }
 
         // not mapping for now: suspended by the user, or in a room marked "don't automap from here" (a maze, a
         // cupboard that turns out to be a lift). Automap only follows where the player is until it can map again.
@@ -922,6 +942,7 @@ public sealed class Automap : IAutomapController
         token.ThrowIfCancellationRequested();
         RefreshLastKnownRoom();
         if (room != null) room = _canvas.ResolveRoom(room);
+        room = VariantRoom(roomName, room);
 
         AutomapSameDirectionResult? decision = null;
         Room otherRoom = null;
@@ -1120,6 +1141,14 @@ public sealed class Automap : IAutomapController
 
       previousLine = line;
     }
+
+    // no room heading in the reply: the labelled join took the player along it ("The cupboard lurches downwards.")
+    if (_followTo != null)
+    {
+      var followed = _canvas.ResolveRoom(_followTo);
+      _followTo = null;
+      if (followed != null) await FollowAsync(followed, token);
+    }
   }
 
   private string FormatTranscriptLineForDisplay(string line)
@@ -1147,6 +1176,102 @@ public sealed class Automap : IAutomapController
 
     // a command that isn't a direction may still take the player somewhere ("xyzzy", "enter boat")
     _lastJourneyCommand = _lastMoveDirection == null && IsPossibleJourney(command) ? command.Trim() : null;
+
+    // a join on the map labelled with this command takes the player along it, once the game has replied
+    var asked = _askedAbout;
+    _askedAbout = null;
+    _followTo = _lastJourneyCommand != null ? LabelledJoinEnd(command, asked) : null;
+  }
+
+  /// <summary>
+  ///   A copy of a room the user (or Split) made for the same place seen differently, "Cupboard (-1)" for a heading of
+  ///   "Cupboard": it's the room the heading means when the player is in it already (looking round), or when the way
+  ///   they just went is known to lead to it. Otherwise <paramref name="found" />, the room with the heading's name.
+  /// </summary>
+  private Room VariantRoom(string roomName, Room found)
+  {
+    var here = _lastKnownRoom;
+    if (here == null) return found;
+    if (_lastMoveDirection == null && _lastJourneyCommand == null)
+      return IsVariantOf(here.Name, roomName) ? here : found;
+    if (_lastMoveDirection == null) return found;
+
+    var along = here.GetConnections(CompassPointHelper.GetCompassDirection(_lastMoveDirection.Value))
+      .Where(connection => connection.Flow != ConnectionFlow.OneWay || connection.GetSourceRoom() == here)
+      .Select(connection => OtherEnd(connection, here))
+      .FirstOrDefault(other => other != null && other != here && IsVariantOf(other.Name, roomName));
+    return along ?? found;
+  }
+
+  /// <summary>"Cupboard (-1)" or "Cupboard 2" for "Cupboard": the name, then something more after a space or bracket.</summary>
+  private static bool IsVariantOf(string name, string heading)
+  {
+    if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(heading)) return false;
+    name = name.Trim();
+    heading = heading.Trim();
+    return name.Length > heading.Length && name.StartsWith(heading, StringComparison.OrdinalIgnoreCase) &&
+           !char.IsLetterOrDigit(name[heading.Length]);
+  }
+
+  /// <summary>The command the game answered with a question, if the last reply was one.</summary>
+  private string _askedAbout;
+
+  /// <summary>
+  ///   The room at the other end of a join labelled with the last command: the player is there once the game has
+  ///   replied, unless the reply shows them somewhere else.
+  /// </summary>
+  private Room _followTo;
+
+  private async Task FollowAsync(Room room, CancellationToken token)
+  {
+    using (await BeginBatchAsync("Automap: " + room.Name, token))
+    {
+      NowInRoom(room);
+    }
+
+    _lastMoveDirection = null;
+    _lastJourneyCommand = null;
+    _pendingStubRemoval = null;
+    Trace("Automap: followed the join labelled \"{0}\" to {1}.", _lastCommand, room.Name);
+  }
+
+  /// <summary>
+  ///   A join from where the player is, labelled with the command they typed (or with it and the command it answers,
+  ///   "pull peg" then "first" for "pull first peg"): the user drew it for a way automap can't see, such as a lift.
+  ///   Returns the room at its other end. Words count in any order, and "the", "a" and "an" don't count.
+  /// </summary>
+  private Room LabelledJoinEnd(string command, string asked)
+  {
+    RefreshLastKnownRoom();
+    var here = _lastKnownRoom;
+    if (here == null) return null;
+    var tries = new List<string> { command };
+    if (asked != null) tries.Add(asked + " " + command);
+
+    foreach (var connection in here.GetConnections())
+    {
+      var to = OtherEnd(connection, here);
+      if (to == null || to == here) continue;
+      if (connection.Flow == ConnectionFlow.OneWay && connection.GetSourceRoom() != here) continue;
+      var labels = new[] { connection.MidText, connection.GetSourceRoom() == here ? connection.StartText : connection.EndText };
+      var match = labels.Where(label => !string.IsNullOrWhiteSpace(label))
+        .SelectMany(label => label.Split('/'))
+        .FirstOrDefault(label => tries.Any(attempt => SameWords(label, attempt)));
+      if (match != null) return to;
+    }
+
+    return null;
+  }
+
+  private static readonly string[] _articles = { "the", "a", "an" };
+
+  /// <summary>The same words, in any order, leaving out "the", "a" and "an".</summary>
+  private static bool SameWords(string a, string b)
+  {
+    static List<string> Words(string text) => text.Split(_wordSeparators, StringSplitOptions.RemoveEmptyEntries)
+      .Select(word => word.ToLowerInvariant()).Where(word => !_articles.Contains(word)).OrderBy(word => word).ToList();
+    var first = Words(a);
+    return first.Count > 0 && first.SequenceEqual(Words(b));
   }
 
   private static readonly string[] _notJourneys =
@@ -1513,6 +1638,8 @@ public sealed class Automap : IAutomapController
     _pausedFrom = null;
     _dark = null;
     _seenInTheDark = false;
+    _askedAbout = null;
+    _followTo = null;
     Volatile.Write(ref _movesToPlay, 0);
     Volatile.Write(ref _movesBack, 0);
     _movePoints.Clear();
