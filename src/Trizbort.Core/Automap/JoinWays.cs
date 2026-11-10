@@ -231,8 +231,9 @@ public static class JoinWays
       var travelled = TravelledWords(connection, atStart);
       var byCommand = travelled.Contains(ByCommand);
       var point = EndPoint(connection, atStart);
+      // the side gives the direction only when the label names none: "down" drawn on the south side is down
       if (IsMainPoint(point) && !commandJoin && !byCommand && !loop &&
-          !words.Any(w => DirectionWords.TryParse(w, out var d) && DirectionWords.IsCompass(d)))
+          !words.Any(w => DirectionWords.TryParse(w, out _)))
       {
         var side = DirectionOfMainPoint(point);
         ways.Add(JoinWay.Go(atStart, side, travelled.Contains(DirectionWords.Word(side))));

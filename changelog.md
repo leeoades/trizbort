@@ -53,6 +53,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- A join's side gives its direction only when its label names none: drawn on the south side and labelled "down",
+  it's down, not south too. On the right of a room with no label, it's still east. **Join Properties** shows that
+  direction ("east") in the end's label box, so you can see it and change it; left as it is, the map still leaves
+  it off.
 - **Joins remember their ways.** Each join keeps a list of the ways along it: every direction or command, from
   which end, and whether you were seen going that way or automap only assumed it. Its labels are drawn from that
   list ("north / up" at one end, "climb ladder" in the middle), so automap no longer has to guess from the label

@@ -138,10 +138,34 @@ public class JoinWaysTests : IsolatedProjectTests
 
     var ways = JoinWays.Of(join);
 
-    JoinWays.Lists(ways, true, MappableDirection.North).ShouldBeTrue();
     JoinWays.Lists(ways, true, MappableDirection.Up).ShouldBeTrue();
-    JoinWays.Lists(ways, false, MappableDirection.South).ShouldBeTrue();
+    JoinWays.Lists(ways, true, MappableDirection.North).ShouldBeFalse(); // the label says up: the side doesn't add north
+    JoinWays.Lists(ways, false, MappableDirection.South).ShouldBeTrue(); // no label: the side says south
     JoinWays.Commands(ways).ShouldBe(new[] { "climb ladder" });
+  }
+
+  [Test]
+  public void AJoinLabelledDown_OnTheSouthSide_IsDown_NotSouth()
+  {
+    // drawn by hand from the bottom of the roof to the top of the chimney, labelled down and up
+    var roof = AddRoomAt("East End of Roof", 0, 0);
+    var chimney = AddRoomAt("In the Chimney", 0, 300);
+    var join = Join(roof, CompassPoint.South, chimney, CompassPoint.North);
+    join.StartText = "down";
+    join.EndText = "up";
+
+    var ways = JoinWays.Of(join);
+
+    JoinWays.Lists(ways, true, MappableDirection.Down).ShouldBeTrue();
+    JoinWays.Lists(ways, true, MappableDirection.South).ShouldBeFalse();
+    JoinWays.Lists(ways, false, MappableDirection.Up).ShouldBeTrue();
+    JoinWays.Lists(ways, false, MappableDirection.North).ShouldBeFalse();
+    ConnectionEndLabels.SideDirection(join, true).ShouldBeNull();
+
+    // with no label, the side says it: south
+    join.StartText = string.Empty;
+    ConnectionEndLabels.SideDirection(join, true).ShouldBe(MappableDirection.South);
+    JoinWays.Lists(JoinWays.Of(join), true, MappableDirection.South).ShouldBeTrue();
   }
 
   [Test]
