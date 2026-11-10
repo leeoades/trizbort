@@ -12,6 +12,15 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+## [0.12.0-beta] - 2026-11-10
+
+This beta is about **automap understanding the places games play tricks with**: rooms that share a name, rooms
+that move (lifts, vehicles), ways that lead to different rooms at different times, darkness, and joins you draw
+yourself. Joins now remember each way along them, so their labels say exactly what you did. A long join can be
+**split** into two labelled stubs, and **Start a New Area Here** gives a part of the game (inside the house) room
+of its own. While automapping, a **panel** beside the map shows where you are, the transcript and the mapping. This
+is still a beta: keep backups and [report problems](https://github.com/leeoades/trizbort/issues).
+
 ### Added
 
 - **Automap panel.** While automapping, its controls are in a panel docked beside the map, in three parts:
@@ -51,7 +60,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Split Join** (the join menu, or Edit) draws a long join as a short stub out of each room, labelled with the
   room at the other end ("to Building", "xyzzy: to Building", "from Debris Room" at the far end of a one-way join),
   instead of a line across the map. It's still one join, so automap goes along it as usual. Click a label ("to
-  Debris Room") to move the map to that room, or Ctrl-click a stub. Saved as an optional `split` attribute; older versions draw the whole line.
+  Debris Room") to move the map to that room, or Ctrl-click a stub. Saved as an optional `split` attribute; older
+  versions draw the whole line.
 - **Copies of rooms** (reference rooms, and a moving room's stops) are drawn in the look of the room they stand
   for, and their properties show only their name and that room. New on their menu: **Go to the Room It Stands
   For**, **Move Joins to the Room It Stands For**, and **Make It a Room of Its Own**. Darkness, start and end room
@@ -60,17 +70,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **One way, two rooms.** A way out (a direction, or a command such as "enter closet") that leads to more than one
   room, as after Keep Both, takes you to the one the game's heading names, then the one whose description starts
   the same way. With no heading, automap waits for the next one instead of guessing.
-- **A command and a direction from one end** ("in" and "enter closet" into the closet, "north" seen back) are written
-  together on that end's label, not the command in the middle, since the command works from that end. A command
-  stays in the middle while the way back is only assumed.
-- **The way back doesn't take a way already known.** Coming out of the closet north, the foyer isn't assumed to lead
-  south to the closet when south from the foyer is the front porch, and the join's end doesn't move to that side.
-- **Room Properties fits a small screen.** Everything but OK and Cancel scrolls, and the dialog opens no taller
-  than the screen, so the buttons stay in reach (Linux, laptops).
 - **Where you are stays shown.** While automap runs, the room it thinks you're in has a blue dashed ring of its
   own, so clicking about the map (which changes the selection) no longer loses it.
-- **Questions in brackets.** Infocom's "[Which peg do you mean, ...?]" counts as a question, so "pull peg" then
-  "second" follows a join labelled "pull second peg".
 - **Same name, different place?** Going a direction to a room with the same name as the one you left, when the
   game shows a description that starts unlike any of that room's, automap asks whether it's a new room (a second
   "In the Chimney" further up) or the same one. A way already mapped as looping back never asks, and once you say
@@ -85,6 +86,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- A command used from one end alongside a direction ("in" and "enter closet" into the closet, with "north" seen
+  back) is written on that end's label ("in / enter closet") instead of in the middle, since it works from that end.
+  A command stays in the middle while the way back is only assumed.
 - **Disambiguate Rooms** lists the rooms with that name and then **<Add a new room>** (showing the description the
   transcript gives), with **OK** and **Cancel**. Cancel maps nothing for it. **Auto-Choose the Rest**, which always
   took the first room, is now **Don't ask again while automapping: guess**: the room whose description starts the
@@ -108,6 +112,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- Coming back north out of the closet no longer assumes the foyer leads south to it when south from the foyer is
+  already the front porch, and the join's end doesn't move onto the side another join uses.
+- A game's question in brackets (Infocom's "[Which peg do you mean, ...?]") counts as a question, so "pull peg"
+  then "second" follows a join labelled "pull second peg".
+- Going back a move while automap waited for a live game's next line no longer crashes when you carry on.
+- **Room Properties** fits a small screen (Linux, laptops): everything but OK and Cancel scrolls, and the dialog opens
+  no taller than the screen, so the buttons stay in reach.
 - Going a way you've been seen to go somewhere else, into a room already on the map (out of the closet led to the
   foyer; after pulling the peg it leads to the cellar), now asks, as it does for a new room: keep the old way,
   the new one, both, or split the room you left ("Closet (2)", reached by "pull peg"). Keeping the new way takes
