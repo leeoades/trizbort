@@ -23,6 +23,18 @@
                         ToolTip.Tip="Select the room automap thinks you're in, and centre the map on it"
                         Padding="12,4"
                         FontSize="12" />
+                <Button Content="Suspend Mapping"
+                        IsVisible="{Binding !IsSuspended, ElementName=root}"
+                        Command="{Binding SuspendCommand, ElementName=root}"
+                        ToolTip.Tip="Stop mapping for now: automap follows you through rooms it knows and changes nothing, until you resume"
+                        Padding="12,4"
+                        FontSize="12" />
+                <Button Content="Resume Mapping"
+                        IsVisible="{Binding IsSuspended, ElementName=root}"
+                        Command="{Binding SuspendCommand, ElementName=root}"
+                        ToolTip.Tip="Map again, from the next room automap sees (it isn't joined to where you suspended)"
+                        Padding="12,4"
+                        FontSize="12" />
                 <Button Content="Previous Move"
                         Command="{Binding BackCommand, ElementName=root}"
                         ToolTip.Tip="Go back a move in the transcript, leaving the map as it is; Next Move plays it again (F9)"

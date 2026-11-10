@@ -656,6 +656,112 @@ public sealed class Automap : IAutomapController
     }
   }
 
+  /// <summary>
+  ///   A room heading while automap isn't mapping. Suspended, it only follows the player through rooms it knows. In
+  ///   a room marked "don't automap from here", it waits until the player is somewhere else (another room with the
+  ///   same name, as in a maze, counts as still there). Leaving that room, it jumps to a room it knows, or adds a new
+  ///   one joined from the room by a dotted "?" line: there is a way through, not yet mapped. Resumed somewhere it
+  ///   didn't know (the player may have moved on, or gone back in the transcript), it waits for the next room it
+  ///   sees and maps from there, joining it to nothing.
+  /// </summary>
+  private async Task FollowWhilePausedAsync(
+    string roomName, string roomDescription, string line, bool pausedHere, CancellationToken token)
+  {
+    try
+    {
+      if (pausedHere && string.Equals(roomName, _lastKnownRoom.Name, StringComparison.OrdinalIgnoreCase))
+      {
+        Status = $"Not mapping in {_lastKnownRoom.Name}: waiting for you to leave.";
+        Trace("{0}: still in {1}, which automap doesn't map from.", FormatTranscriptLineForDisplay(line), roomName);
+        return;
+      }
+
+      var room = await FindRoomAsync(roomName, roomDescription, line, token);
+      token.ThrowIfCancellationRequested();
+      RefreshLastKnownRoom();
+      if (room != null) room = _canvas.ResolveRoom(room);
+
+      if (_suspended)
+      {
+        // follow the player, mapping nothing; somewhere new leaves automap not knowing where they are
+        if (room != null)
+        {
+          NowInRoom(room);
+          _pausedFrom = room;
+        }
+        else
+        {
+          _lastKnownRoom = null;
+        }
+
+        Status = room != null ? $"Automap is suspended (in {room.Name})." : "Automap is suspended (somewhere new).";
+        Trace("{0}: suspended, {1}.", FormatTranscriptLineForDisplay(line), room != null ? "in " + room.Name : "somewhere new");
+        return;
+      }
+
+      var from = pausedHere ? _lastKnownRoom : _canvas.ResolveRoom(_pausedFrom);
+      using (await BeginBatchAsync("Automap: " + roomName, token))
+      {
+        if (room != null) room = _canvas.ResolveRoom(room);
+        from = _canvas.ResolveRoom(from);
+        if (room == null)
+        {
+          // placed near where mapping stopped; joined to it only when leaving a room automap doesn't map from
+          room = _canvas.CreateRoom(from, roomName);
+          DeduceExitsFromDescription(room, roomDescription);
+          if (pausedHere && from != null) _canvas.ConnectByCommand(from, room, UnmappedWay);
+          Trace("{0}: {1}, reached from {2} by a way automap didn't map.", FormatTranscriptLineForDisplay(line),
+            roomName, from?.Name ?? "nowhere known");
+        }
+        else
+        {
+          Trace("{0}: back in {1}.", FormatTranscriptLineForDisplay(line), roomName);
+        }
+
+        room.AddDescription(roomDescription);
+        NowInRoom(room);
+        if (_settings.AutoTidy) _canvas.TidyAround(room);
+      }
+
+      _pausedFrom = null;
+      Status = "Automapping is processing the transcript.";
+    }
+    finally
+    {
+      _lastMoveDirection = null;
+      _lastJourneyCommand = null;
+    }
+  }
+
+  /// <summary>The label of a join automap adds for a way through it didn't map (see <see cref="FollowWhilePausedAsync" />).</summary>
+  public const string UnmappedWay = "?";
+
+  /// <summary>True while the user has suspended mapping: automap follows the player but doesn't change the map.</summary>
+  public bool Suspended => _suspended;
+
+  /// <summary>
+  ///   Stop mapping for now: automap keeps following the player through rooms it knows, and maps again after
+  ///   <see cref="Resume" />, from a room it knows or with a "?" join to somewhere new.
+  /// </summary>
+  public void Suspend()
+  {
+    if (_suspended) return;
+    _pausedFrom = _lastKnownRoom;
+    _suspended = true;
+    Status = "Automap is suspended.";
+  }
+
+  /// <summary>Map again (see <see cref="Suspend" />).</summary>
+  public void Resume()
+  {
+    if (!_suspended) return;
+    _suspended = false;
+    Status = "Automap will map again from the next room.";
+  }
+
+  private volatile bool _suspended;
+  private Room _pausedFrom;
+
   private void NowInRoom(Room room)
   {
     // the first room of the run, whether automap made it or found it already on the map
@@ -714,11 +820,32 @@ public sealed class Automap : IAutomapController
     {
       token.ThrowIfCancellationRequested();
       var line = lines[index];
+      if (IsDeathOrEnd(line))
+      {
+        // the player died, or the game ended: wherever they are next isn't reached from here
+        _lastMoveDirection = null;
+        _lastJourneyCommand = null;
+        Trace("{0}: the player died, or the game ended.", FormatTranscriptLineForDisplay(line));
+      }
+
       string roomName;
       if (ExtractRoomName(line, previousLine, out roomName))
       {
         string roomDescription;
         ExtractParagraph(lines, index + 1, out roomDescription);
+
+        // not mapping for now: suspended by the user, or in a room marked "don't automap from here" (a maze, a
+        // cupboard that turns out to be a lift). Automap only follows where the player is until it can map again.
+        RefreshLastKnownRoom();
+        var pausedHere = !_suspended && _lastKnownRoom != null && _lastKnownRoom.AutomapPause;
+        var resuming = !_suspended && !pausedHere && _pausedFrom != null;
+        if (resuming && _lastKnownRoom != null) _pausedFrom = null; // resumed somewhere known: map from there
+        else if (_suspended || pausedHere || resuming)
+        {
+          await FollowWhilePausedAsync(roomName, roomDescription, line, pausedHere, token);
+          previousLine = line;
+          continue;
+        }
 
         // work out which room the transcript is referring to here, asking them if necessary.
         // All prompts happen before the batch below opens: the user can't undo while a batch is open.
@@ -957,8 +1084,24 @@ public sealed class Automap : IAutomapController
   private static readonly string[] _notJourneys =
   {
     "undo", "restore", "load", "restart", "quit", "q", "save", "look", "l", "again", "g", "oops", "script", "unscript",
-    "transcript"
+    "transcript",
+    // answers to the game's questions ("Do you want to be reincarnated?", "Are you sure you want to quit?")
+    "yes", "y", "no"
   };
+
+  /// <summary>
+  ///   The game says the player died, or the game is over ("You have died", "You are dead", "*** You have won ***").
+  ///   What follows (a reincarnation, a restart) is no journey from the room they were in.
+  /// </summary>
+  internal static bool IsDeathOrEnd(string line)
+  {
+    if (string.IsNullOrWhiteSpace(line)) return false;
+    return _deathOrEnd.IsMatch(line);
+  }
+
+  private static readonly System.Text.RegularExpressions.Regex _deathOrEnd = new(
+    @"\byou(?: have|'ve| are|'re)? (?:died|dead|been killed)\b|\byou die\b|^\s*\*{2,}.*\*{2,}\s*$",
+    System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
   /// <summary>
   ///   A command that could take the player to another room without a compass direction. Not the automap commands,
@@ -1298,6 +1441,8 @@ public sealed class Automap : IAutomapController
     _gameName = string.Empty;
     _stepNow = false;
     _moveByMove = settings.MoveByMove;
+    _suspended = false;
+    _pausedFrom = null;
     Volatile.Write(ref _movesToPlay, 0);
     Volatile.Write(ref _movesBack, 0);
     _movePoints.Clear();

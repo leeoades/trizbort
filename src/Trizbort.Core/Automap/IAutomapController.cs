@@ -32,6 +32,19 @@ public interface IAutomapController
   /// <summary>The room automap thinks the player is in, if it knows; null otherwise.</summary>
   Room CurrentRoom => null;
 
+  /// <summary>True while mapping is suspended (automap follows the player but doesn't change the map).</summary>
+  bool Suspended => false;
+
+  /// <summary>Stop mapping for now, following the player through rooms already on the map.</summary>
+  void Suspend()
+  {
+  }
+
+  /// <summary>Map again after <see cref="Suspend" />.</summary>
+  void Resume()
+  {
+  }
+
   /// <summary>Raised with the new status text each time it is set. May be raised off the UI thread.</summary>
   event Action<string> StatusChanged;
 

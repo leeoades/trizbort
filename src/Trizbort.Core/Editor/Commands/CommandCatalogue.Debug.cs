@@ -87,6 +87,20 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "automap.suspend",
+      Title = "Suspend _Mapping",
+      MenuPath = "Project",
+      Group = "2-automap-run",
+      CanExecuteFunc = s => s.Automap.IsRunning,
+      IsCheckedFunc = s => s.Automap.Suspended,
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        if (s.Automap.Suspended) s.Automap.Resume();
+        else s.Automap.Suspend();
+      })
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "automap.currentRoom",
       Title = "Go to _Current Automap Room",
       MenuPath = "Project",

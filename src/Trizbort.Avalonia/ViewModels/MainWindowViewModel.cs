@@ -63,6 +63,10 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isAutomapMoveByMove;
 
+    /// <summary>True while mapping is suspended: automap follows the player but doesn't change the map.</summary>
+    [ObservableProperty]
+    private bool _isAutomapSuspended;
+
     /// <summary>The end of the transcript read so far, as much as fits on the little game monitor.</summary>
     [ObservableProperty]
     private string _automapScreenText = string.Empty;
@@ -542,6 +546,22 @@ public partial class MainWindowViewModel : ViewModelBase
         _commandService.InvalidateCanvas();
     }
 
+    /// <summary>Suspend mapping (automap follows the player but doesn't change the map), or map again.</summary>
+    [RelayCommand]
+    public void ToggleSuspendAutomap()
+    {
+        if (AutomapEngine.Instance.Suspended)
+        {
+            AutomapEngine.Instance.Resume();
+        }
+        else
+        {
+            AutomapEngine.Instance.Suspend();
+        }
+
+        IsAutomapSuspended = AutomapEngine.Instance.Suspended;
+    }
+
     /// <summary>Pause before the transcript's next move.</summary>
     [RelayCommand]
     public void PauseAutomap()
@@ -673,6 +693,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             AutomapStatusText = status;
             IsAutomapMoveByMove = AutomapEngine.Instance.MoveByMove;
+            IsAutomapSuspended = AutomapEngine.Instance.Suspended;
         });
     }
 

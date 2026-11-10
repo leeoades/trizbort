@@ -24,6 +24,26 @@ public partial class AutomapBar : UserControl
     public static readonly StyledProperty<ICommand?> BackCommandProperty =
         AvaloniaProperty.Register<AutomapBar, ICommand?>(nameof(BackCommand));
 
+    public static readonly StyledProperty<bool> IsSuspendedProperty =
+        AvaloniaProperty.Register<AutomapBar, bool>(nameof(IsSuspended));
+
+    public static readonly StyledProperty<ICommand?> SuspendCommandProperty =
+        AvaloniaProperty.Register<AutomapBar, ICommand?>(nameof(SuspendCommand));
+
+    /// <summary>True while mapping is suspended: the bar offers to resume, otherwise to suspend.</summary>
+    public bool IsSuspended
+    {
+        get => GetValue(IsSuspendedProperty);
+        set => SetValue(IsSuspendedProperty, value);
+    }
+
+    /// <summary>Suspends mapping, or resumes it.</summary>
+    public ICommand? SuspendCommand
+    {
+        get => GetValue(SuspendCommandProperty);
+        set => SetValue(SuspendCommandProperty, value);
+    }
+
     public static readonly StyledProperty<ICommand?> CurrentRoomCommandProperty =
         AvaloniaProperty.Register<AutomapBar, ICommand?>(nameof(CurrentRoomCommand));
 
