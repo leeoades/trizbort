@@ -116,8 +116,8 @@ public static class RoomDrawingAdapter
         var corners = room.Corners;
         var (tl, tr, br, bl) = corners != null ? (corners.TopLeft, corners.TopRight, corners.BottomRight, corners.BottomLeft) : (0f, 0f, 0f, 0f);
 
-        // 1. Draw Start / End / Reference Outer Halo (behind room)
-        if (room.IsStartRoom || room.IsEndRoom || room.IsReference)
+        // 1. Draw End / Reference Outer Halo (behind room); the start room has a sign instead (8b)
+        if (room.IsEndRoom || room.IsReference)
         {
             var haloBounds = bounds;
             haloBounds.Inflate(5);
@@ -130,7 +130,7 @@ public static class RoomDrawingAdapter
 
             var haloBrush = room.IsReference
                 ? CoreColor.LightBlue.ToBrush()
-                : (room.IsStartRoom ? Settings.Color[CoreColors.StartRoom] : Settings.Color[CoreColors.EndRoom]).ToBrush();
+                : Settings.Color[CoreColors.EndRoom].ToBrush();
 
             context.DrawGeometry(haloBrush, null, cache.CachedHaloGeometry);
         }
@@ -222,10 +222,11 @@ public static class RoomDrawingAdapter
             }
         }
 
-        // 8b. Automap doesn't map from here: a small amber "no entry" sign in the top left corner
-        if (drawBody && room.AutomapPause)
+        // 8b. Little signs in the top left corner: the start room (green "play"), and automap doesn't map from here
+        //     (amber "no entry"). Hovering over one explains it (RoomBadge).
+        foreach (var badge in RoomBadges.Of(room))
         {
-            DrawAutomapPauseSign(context, bounds);
+            DrawBadge(context, badge);
         }
 
         // 9. Draw Hover Adorner
@@ -250,21 +251,46 @@ public static class RoomDrawingAdapter
 
     private static readonly IBrush _automapPauseFill = new SolidColorBrush(AvaloniaColor.FromArgb(230, 0xFF, 0xF4, 0xDC));
     private static readonly IPen _automapPausePen = new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0xE0, 0xA0, 0x30)), 1.6);
+    private static readonly IBrush _startFill = new SolidColorBrush(AvaloniaColor.FromArgb(230, 0xE6, 0xF7, 0xE6));
+    private static readonly IPen _startPen = new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x3C, 0xA0, 0x4C)), 1.6);
+    private static readonly IBrush _startMark = new SolidColorBrush(AvaloniaColor.FromRgb(0x3C, 0xA0, 0x4C));
 
     /// <summary>
-    ///   The sign on a room marked "don't automap from here" (a maze, a lift): a small circle with a bar through it,
-    ///   in the room's top left corner, in the automap panel's amber for "not mapping".
+    ///   A sign in a room's corner: the start room's green circle with a "play" triangle, or the amber "no entry"
+    ///   circle with a bar through it on a room automap doesn't map from (a maze, a lift).
     /// </summary>
-    internal static void DrawAutomapPauseSign(AvaloniaDrawingContext context, CoreRect bounds)
+    internal static void DrawBadge(AvaloniaDrawingContext context, RoomBadge badge)
     {
-        var radius = Math.Min(6.0, Math.Min(bounds.Width, bounds.Height) / 6);
-        if (radius < 2) return;
-        var centre = new AvaloniaPoint(bounds.Left + radius + 4, bounds.Top + radius + 4);
-        context.DrawEllipse(_automapPauseFill, _automapPausePen, centre, radius, radius);
-        var offset = radius * 0.7071;
-        context.DrawLine(_automapPausePen,
-            new AvaloniaPoint(centre.X - offset, centre.Y + offset),
-            new AvaloniaPoint(centre.X + offset, centre.Y - offset));
+        var radius = (double)badge.Radius;
+        var centre = new AvaloniaPoint(badge.Centre.X, badge.Centre.Y);
+        switch (badge.Kind)
+        {
+            case RoomBadgeKind.StartRoom:
+            {
+                context.DrawEllipse(_startFill, _startPen, centre, radius, radius);
+                var size = radius * 0.55;
+                var triangle = new StreamGeometry();
+                using (var g = triangle.Open())
+                {
+                    g.BeginFigure(new AvaloniaPoint(centre.X - size * 0.7, centre.Y - size), true);
+                    g.LineTo(new AvaloniaPoint(centre.X + size, centre.Y));
+                    g.LineTo(new AvaloniaPoint(centre.X - size * 0.7, centre.Y + size));
+                    g.EndFigure(true);
+                }
+
+                context.DrawGeometry(_startMark, null, triangle);
+                break;
+            }
+            default:
+            {
+                context.DrawEllipse(_automapPauseFill, _automapPausePen, centre, radius, radius);
+                var offset = radius * 0.7071;
+                context.DrawLine(_automapPausePen,
+                    new AvaloniaPoint(centre.X - offset, centre.Y + offset),
+                    new AvaloniaPoint(centre.X + offset, centre.Y - offset));
+                break;
+            }
+        }
     }
 
     public static CoreVector[]? GetSecondFillPolygon(CoreRect bounds, string? location)

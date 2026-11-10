@@ -23,14 +23,14 @@ public class AutomapPauseSignTests
         var window = new Window { Content = canvas, Width = 400, Height = 300 };
         window.Show();
         var maze = new Room(Project.Current) { Name = "Hedge Maze", Position = new CoreVector(0, 0), Size = new CoreVector(96, 64), AutomapPause = true };
-        var garden = new Room(Project.Current) { Name = "Garden", Position = new CoreVector(160, 0), Size = new CoreVector(96, 64) };
+        var garden = new Room(Project.Current) { Name = "Garden", Position = new CoreVector(160, 0), Size = new CoreVector(96, 64), IsStartRoom = true };
         Project.Current.Elements.Add(maze);
         Project.Current.Elements.Add(garden);
 
         using var frame = window.CaptureRenderedFrame();
         frame.ShouldNotBeNull();
         var shots = System.Environment.GetEnvironmentVariable("TRIZBORT_SCREENSHOTS");
-        if (!string.IsNullOrEmpty(shots)) frame!.Save(System.IO.Path.Combine(shots, "automap-pause-sign.png"));
+        if (!string.IsNullOrEmpty(shots)) frame!.Save(System.IO.Path.Combine(shots, "room-badges.png"));
         window.Close();
     }
 }

@@ -23,8 +23,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Don't automap from here.** Mark a room (Room Properties, or the room's right-click menu) where automap has no
   chance, such as a maze or a cupboard that turns out to be a lift. While you're in it, automap maps nothing; when you
   come out it carries on from there, jumping to a room it knows or adding the new one joined by a dotted "?" join
-  for the way through. The room shows a small amber "no entry" sign in its top-left corner. Saved with the map;
-  older versions ignore it.
+  for the way through. The room shows a small amber "no entry" sign in its top-left corner; hover over it for what
+  it means. Saved with the map; older versions ignore it.
 - **Darkness.** A heading that says it's too dark to see ("Darkness", "It is pitch black") isn't mapped as a room.
   Automap remembers how you got there, and when you light the lamp maps the room you see as reached that way, with
   no "light lamp" join, and marks it Dark.
@@ -49,6 +49,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- The start room is shown by a small green "play" sign in its top-left corner, instead of a green glow round the
+  room. Hover over it for what it means.
 - The automap items in the Project menu are now together in a **Project > Automap** submenu, named as in the
   automap panel: Start Automap..., Stop Automap, Play to the End, Pause, Next Move, Previous Move, Tracking Only, Centre on
   Current Room and I'm Here.
