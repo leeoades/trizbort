@@ -280,6 +280,37 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task TheWayBackFromTheCloset_DoesntTakeTheFoyersSouthSide_WhenTheFrontPorchIsThere()
+  {
+    // Hollywood Hijinx: south from the foyer is the front porch; "in" to the closet, "north" back out
+    var porch = new Room(Project.Current) { Name = "Front Porch", Position = new Vector(0, 300), Size = new Vector(96, 64) };
+    var foyer = new Room(Project.Current) { Name = "Foyer", Position = new Vector(0, 0), Size = new Vector(96, 64) };
+    Project.Current.Elements.Add(porch);
+    Project.Current.Elements.Add(foyer);
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    new AutomapCanvas(Project.Current, engine).Connect(porch, MappableDirection.North, foyer, true);
+    var lines = new[]
+    {
+      ">look", "Foyer", "An elegant foyer.", "",
+      ">in", "Closet", "A small closet.", "",
+      ">out", "Foyer", "",
+      ">enter closet", "Closet", "",
+      ">north", "Foyer", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    var closet = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "Closet");
+    var join = Project.Current.Elements.OfType<Connection>().Single(connection =>
+      connection.GetSourceRoom() == foyer && connection.GetTargetRoom() == closet);
+    join.GetSourceRoom(out var side);
+    side.ShouldNotBe(CompassPoint.South);
+    join.StartText.ShouldBe("in / enter closet");
+    join.MidText.ShouldBeEmpty();
+  }
+
+  [Test]
   public async Task AQuestionInBrackets_AndTheAnswer_FollowTheJoinLabelledWithBoth()
   {
     // Hollywood Hijinx: "pull peg", "[Which peg do you mean, ...?]", "second" follows the join end labelled

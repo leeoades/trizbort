@@ -141,12 +141,12 @@ public static class JoinWays
   // ---- drawing the labels ----
 
   /// <summary>
-  ///   A command goes on its end's label when it's the only kind of way from that end and a direction leads back from
-  ///   the other end ("enter closet", and "north" back); otherwise in the middle.
+  ///   A command goes on its end's label when the player was seen going back from the other end by a direction ("in /
+  ///   enter closet" at the foyer, "north" seen back): it works from that end. Otherwise (a command join, or a way back
+  ///   only assumed) it goes in the middle.
   /// </summary>
   private static bool OnEndLabel(List<JoinWay> ways, bool atStart) =>
-    !ways.Any(way => way.AtStart == atStart && way.IsDirection) &&
-    ways.Any(way => way.AtStart != atStart && way.IsDirection);
+    ways.Any(way => way.AtStart != atStart && way.IsDirection && way.Seen);
 
   private static string EndLabel(Connection connection, List<JoinWay> ways, bool atStart,
     Func<MappableDirection, string> word)

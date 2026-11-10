@@ -253,9 +253,12 @@ public class AutomapCanvas : IAutomapCanvas
     }
 
     var added = JoinWays.AddDirection(ways, hereIsStart, direction, seen: true);
-    // assuming two-way joins, the way back is the opposite direction
-    if (added && !hereIsGuess && assumeTwoWayConnections && connection.Flow == ConnectionFlow.TwoWay)
-      JoinWays.AddDirection(ways, !hereIsStart, CompassPointHelper.GetOpposite(direction), seen: false);
+    // assuming two-way joins, the way back is the opposite direction, unless that way from the far room is known
+    // to lead somewhere else (north out of the closet: the foyer's south is the front porch)
+    var back = CompassPointHelper.GetOpposite(direction);
+    if (added && !hereIsGuess && assumeTwoWayConnections && connection.Flow == ConnectionFlow.TwoWay &&
+        !RoomsAlong(far, back).Any(other => other != null && other != here))
+      JoinWays.AddDirection(ways, !hereIsStart, back, seen: false);
 
     var hereCompass = JoinWays.FirstCompass(ways, hereIsStart);
     // the end moves to the compass side, unless the side it's on is one of its ways already. A side that only faced
@@ -273,11 +276,13 @@ public class AutomapCanvas : IAutomapCanvas
         DockEnd(connection, hereIsStart, here, point);
         if (!IsMainPoint(EndPoint(connection, !hereIsStart)))
         {
+          // the far end goes to the side of its own direction; with none ("in", "enter closet"), opposite this
+          // end, unless another join already leaves that side (the foyer's south, to the front porch)
           var thereCompass = JoinWays.FirstCompass(ways, !hereIsStart);
-          DockEnd(connection, !hereIsStart, far,
-            thereCompass != null
-              ? CompassPointHelper.GetCompassDirection(thereCompass.Value)
-              : CompassPointHelper.GetOpposite(point));
+          if (thereCompass != null)
+            DockEnd(connection, !hereIsStart, far, CompassPointHelper.GetCompassDirection(thereCompass.Value));
+          else if (!SideInUse(far, CompassPointHelper.GetOpposite(point), connection))
+            DockEnd(connection, !hereIsStart, far, CompassPointHelper.GetOpposite(point));
         }
       }
     }
@@ -350,6 +355,15 @@ public class AutomapCanvas : IAutomapCanvas
     else connection.GetTargetRoom(out point);
     return point;
   }
+
+  /// <summary>Whether a join other than <paramref name="except" /> leaves <paramref name="room" /> at <paramref name="point" />.</summary>
+  private bool SideInUse(Room room, CompassPoint point, Connection except) =>
+    CurrentProject.Elements.OfType<Connection>().Any(connection =>
+    {
+      if (connection == except) return false;
+      if (connection.GetSourceRoom(out var start) == room && start == point) return true;
+      return connection.GetTargetRoom(out var end) == room && end == point;
+    });
 
   private static void DockEnd(Connection connection, bool atStart, Room room, CompassPoint point)
   {

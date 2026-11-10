@@ -8,11 +8,14 @@
         x:DataType="vm:RoomPropertiesViewModel"
         Title="Room Properties"
         Width="560" Height="840"
-        MinWidth="476" MinHeight="760"
+        MinWidth="476" MinHeight="320"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="16" Grid.IsSharedSizeScope="True">
+    <Grid RowDefinitions="*,Auto" Margin="16" Grid.IsSharedSizeScope="True">
+        <!-- everything but OK and Cancel scrolls, so the buttons stay in reach in a small window (a small screen) -->
+        <ScrollViewer Grid.Row="0" x:Name="ContentScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid RowDefinitions="Auto,*" MinHeight="640">
         <!-- Persistent header: visible on every tab, as in the reference dialog -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8" Margin="0,0,0,12">
             <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Name:" Target="{Binding #NameBox}" />
@@ -195,9 +198,11 @@
                 </StackPanel>
             </TabItem>
         </TabControl>
+        </Grid>
+        </ScrollViewer>
 
         <!-- OK / Cancel Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
             <Button Classes="dialog-button" Content="OK" IsDefault="True" Click="OnOkClick" />
             <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Click="OnCancelClick" />
         </StackPanel>

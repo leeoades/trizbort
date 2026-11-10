@@ -60,6 +60,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **One way, two rooms.** A way out (a direction, or a command such as "enter closet") that leads to more than one
   room, as after Keep Both, takes you to the one the game's heading names, then the one whose description starts
   the same way. With no heading, automap waits for the next one instead of guessing.
+- **A command and a direction from one end** ("in" and "enter closet" into the closet, "north" seen back) are written
+  together on that end's label, not the command in the middle, since the command works from that end. A command
+  stays in the middle while the way back is only assumed.
+- **The way back doesn't take a way already known.** Coming out of the closet north, the foyer isn't assumed to lead
+  south to the closet when south from the foyer is the front porch, and the join's end doesn't move to that side.
+- **Room Properties fits a small screen.** Everything but OK and Cancel scrolls, and the dialog opens no taller
+  than the screen, so the buttons stay in reach (Linux, laptops).
 - **Where you are stays shown.** While automap runs, the room it thinks you're in has a blue dashed ring of its
   own, so clicking about the map (which changes the selection) no longer loses it.
 - **Questions in brackets.** Infocom's "[Which peg do you mean, ...?]" counts as a question, so "pull peg" then

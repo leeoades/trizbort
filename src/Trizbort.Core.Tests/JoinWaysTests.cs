@@ -83,6 +83,25 @@ public class JoinWaysTests : IsolatedProjectTests
   }
 
   [Test]
+  public void ACommandBesideADirection_WithADirectionBack_IsWrittenOnItsEnd()
+  {
+    // the foyer: "in" and "enter closet" lead into the closet, "north" back; enter closet only works from the foyer
+    var foyer = AddRoomAt("Foyer", 0, 0);
+    var closet = AddRoomAt("Closet", 200, 200);
+    var join = Join(foyer, CompassPoint.SouthEast, closet, CompassPoint.North);
+
+    JoinWays.Write(join, new[]
+    {
+      JoinWay.Go(true, MappableDirection.In, true, "in"),
+      JoinWay.Typed(true, "enter closet"),
+      JoinWay.Go(false, MappableDirection.North, true, "n")
+    }, Word);
+
+    join.StartText.ShouldBe("in / enter closet");
+    join.MidText.ShouldBeEmpty();
+  }
+
+  [Test]
   public void ACommandAlone_IsWrittenInTheMiddle_AndMarksACommandJoin()
   {
     var building = AddRoomAt("Building", 0, 0);
