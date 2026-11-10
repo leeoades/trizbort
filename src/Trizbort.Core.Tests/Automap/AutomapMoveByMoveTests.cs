@@ -9,6 +9,7 @@ using Shouldly;
 using Trizbort.Automap;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
+using Trizbort.Domain.Misc;
 using Trizbort.Editor;
 
 namespace Trizbort.Core.Tests.Automap;
@@ -146,6 +147,169 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
       Rooms().ShouldBe(new[] { "Hall", "Kitchen" });
       var join = Project.Current.Elements.OfType<Connection>().Single(connection => connection.GetSourceRoom() != connection.GetTargetRoom());
       join.GetSourceRoom().Name.ShouldBe("Hall");
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  private static List<string> Joins() =>
+    Project.Current.Elements.OfType<Connection>()
+      .Where(connection => connection.GetSourceRoom() != null && connection.GetSourceRoom() != connection.GetTargetRoom())
+      .Select(connection => connection.GetSourceRoom().Name + " -> " + connection.GetTargetRoom()?.Name +
+                            (string.IsNullOrEmpty(connection.MidText) ? "" : " " + connection.MidText))
+      .OrderBy(join => join).ToList();
+
+  private static Room AddRoom(string name, bool automapPause = false, int column = 0)
+  {
+    var room = new Room(Project.Current) { Name = name, AutomapPause = automapPause, Position = new Vector(column * 200, 0) };
+    Project.Current.Elements.Add(room);
+    return room;
+  }
+
+  /// <summary>Runs automap over <paramref name="lines" /> to the end (the game waits at its prompt).</summary>
+  private static async Task RunToEnd(Trizbort.Automap.Automap engine, string[] lines, int screenLines)
+  {
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, string.Join("\n", lines));
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count >= screenLines);
+      await Task.Delay(200);
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
+  public async Task LeavingARoomMarkedDontAutomap_MapsWhereYouComeOut_WithADottedQuestionMarkJoin()
+  {
+    // Hollywood Hijinx: the cupboard off the foyer is a lift; pulling a peg takes it down to the cellar
+    var foyer = AddRoom("Foyer");
+    AddRoom("Cupboard", automapPause: true, column: 1);
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var lines = new[]
+    {
+      ">look", "Foyer", "A grand foyer. A cupboard is set into the east wall.", "",
+      ">enter cupboard", "Cupboard", "A cramped cupboard with pegs on the wall.", "",
+      ">pull first peg", "The cupboard lurches and sinks.", "",
+      ">look", "Cupboard", "A cramped cupboard with pegs on the wall.", "",
+      ">out", "Cellar", "A damp cellar. A passage leads west.", "",
+      ">west", "Wine Store", "Racks of dusty bottles.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    Rooms().ShouldBe(new[] { "Cellar", "Cupboard", "Foyer", "Wine Store" });
+    Joins().ShouldContain("Foyer -> Cupboard enter cupboard");
+    Joins().ShouldContain("Cupboard -> Cellar " + Trizbort.Automap.Automap.UnmappedWay);
+    Joins().ShouldContain("Cellar -> Wine Store");
+    // the cupboard's way out isn't taken to lead back to the foyer, or anywhere else
+    Joins().Count.ShouldBe(3);
+    foyer.Name.ShouldBe("Foyer");
+  }
+
+  [Test]
+  public async Task InAMazeMarkedDontAutomap_MovesStayInTheMaze_AndLeavingToAKnownRoomJumpsThere()
+  {
+    AddRoom("Hall");
+    AddRoom("Maze", automapPause: true, column: 1);
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var lines = new[]
+    {
+      ">look", "Hall", "A grand hall.", "",
+      ">east", "Maze", "You are in a maze of twisty little passages, all alike.", "",
+      ">north", "Maze", "You are in a maze of twisty little passages, all different.", "",
+      ">up", "Hall", "A grand hall.", "",
+      ">south", "Kitchen", "A small kitchen.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    Rooms().ShouldBe(new[] { "Hall", "Kitchen", "Maze" });
+    // into the maze is mapped; nothing in it or out of it is; mapping goes on from the hall
+    Joins().ShouldBe(new[] { "Hall -> Kitchen", "Hall -> Maze" }, ignoreOrder: true);
+  }
+
+  [Test]
+  public async Task Dying_AndBeingReincarnated_JoinsNothing()
+  {
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var lines = new[]
+    {
+      ">look", "Hall", "A grand hall.", "",
+      ">north", "Ledge", "A narrow ledge over a pit.", "",
+      ">jump", "You fall into the pit and break every bone. You are dead.", "",
+      "Do you want me to try to reincarnate you?", "",
+      ">yes", "All right. You find yourself back where you started.", "",
+      "Garden", "A walled garden.", "",
+      ">east", "You stumble and fall. You have died.", "", "*** You have died ***", "",
+      "Lawn", "A wide lawn.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    Rooms().ShouldBe(new[] { "Garden", "Hall", "Lawn", "Ledge" });
+    // "yes" isn't a magic word from the ledge, and dying on the way east doesn't lead to the lawn
+    Joins().ShouldBe(new[] { "Hall -> Ledge" });
+  }
+
+  [TestCase("You are dead.", true)]
+  [TestCase("You have died.", true)]
+  [TestCase("    *** You have died ***", true)]
+  [TestCase("*** You have won ***", true)]
+  [TestCase("You've been killed by the troll.", true)]
+  [TestCase("The dead tree creaks.", false)]
+  [TestCase("You are standing by a dead end.", false)]
+  public void DeathAndTheEnd_AreRecognised(string line, bool recognised)
+  {
+    Trizbort.Automap.Automap.IsDeathOrEnd(line).ShouldBe(recognised);
+  }
+
+  [Test]
+  public async Task SuspendedThenResumed_MapsFromTheNextRoom_JoiningItToNothing()
+  {
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, ">look\nHall\nA grand hall.\n\n>");
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count == 5);
+      await Task.Delay(100);
+
+      // suspended: the player wanders somewhere new; nothing is mapped
+      engine.Suspend();
+      File.AppendAllText(path, "north\nKitchen\nA small kitchen.\n\n>");
+      await WaitFor(() => engine.ScreenLines().Count == 10);
+      await Task.Delay(100);
+      Rooms().ShouldBe(new[] { "Hall" });
+      engine.CurrentRoom.ShouldBeNull();
+
+      // resumed: automap waits to see where the player is, and maps on from there
+      engine.Resume();
+      File.AppendAllText(path, "east\nGarden\nA walled garden.\n\n>south\nShed\nA potting shed.\n\n>");
+      await WaitFor(() => engine.ScreenLines().Count == 19);
+      await Task.Delay(100);
+      Rooms().ShouldBe(new[] { "Garden", "Hall", "Shed" });
+      Joins().ShouldBe(new[] { "Garden -> Shed" });
     }
     finally
     {

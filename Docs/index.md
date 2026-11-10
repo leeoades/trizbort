@@ -948,6 +948,7 @@ You can freely interact with the canvas, and do anything else you like in Trizbo
 In Trizbort: Recast the bar also has these buttons:
 
 - **Current Room** selects the room automap thinks you're in and centres the map on it.
+- **Suspend Mapping** stops mapping for now: automap follows you through rooms it knows but changes nothing. **Resume Mapping** maps again from the next room it sees, without joining it to where you suspended.
 - **Next Move** (F10) and **Play to End** (F5), when playing the transcript a move at a time (an option when you start automapping). **Pause** stops before the next move.
 - **Previous Move** (F9) goes back a move in the transcript and waits there. The map is left as it is, so you can step through part of the game again; the room you were in then is selected.
 - **Hide Monitor** and **Show Monitor** hide and show the small game monitor in the corner of the map, which shows the game so far. Click the monitor for a larger window you can copy text from; it floats beside the map, and the map's keys and Undo still work.
@@ -1065,7 +1066,9 @@ After moving into a new room on a complicated map, **check back and see where Tr
 
 **Trizbort doesn't mind where rooms are positioned on the map** during automapping: it will connect them up regardless. So you can freely move rooms around if you keep their connections intact.
 
-**Trizbort: Recast tidies the map as you go.** After each move, rooms nearby shift so that joins point the way their directions say, never run across a room, and cross each other as little as possible. A room you drag or nudge yourself is left where you put it (this is saved with the map). To tidy a whole map, or just the rooms you've selected, choose `Edit->Rooms->Tidy Map...`: **step by step** keeps the map familiar, and the **solver** lays everything out again. Tidy Map can be undone in one step.
+**Trizbort: Recast tidies the map as you go.** After each move, rooms nearby shift so that joins point the way their directions say, never run across a room, and cross each other as little as possible. A room you drag or nudge yourself is left where you put it (this is saved with the map).
+
+**Rooms automap can't map.** For a maze, or a room that moves (a cupboard that turns out to be a lift), tick **Don't automap from here** in the room's properties (or choose it from the room's right-click menu). While you're in that room automap maps nothing; when you come out somewhere else it carries on from there, adding a dotted "?" join for the way through if the room is new. Relabel the join, or draw the real route, when you've worked it out. To tidy a whole map, or just the rooms you've selected, choose `Edit->Rooms->Tidy Map...`: **step by step** keeps the map familiar, and the **solver** lays everything out again. Tidy Map can be undone in one step.
 
 <a name="help_automap_tips_rearranging"></a>
 

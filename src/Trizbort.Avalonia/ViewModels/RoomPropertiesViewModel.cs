@@ -43,6 +43,10 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isDark;
 
+    /// <summary>Automap doesn't map from this room (see <see cref="Room.AutomapPause" />).</summary>
+    [ObservableProperty]
+    private bool _automapPause;
+
     [ObservableProperty]
     private bool _isStartRoom;
 
@@ -262,6 +266,7 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         CustomPositionDown = room.ObjectsCustomPositionDown;
         CustomPositionRight = room.ObjectsCustomPositionRight;
         IsDark = room.IsDark;
+        AutomapPause = room.AutomapPause;
         IsStartRoom = room.IsStartRoom;
         IsEndRoom = room.IsEndRoom;
         Shape = room.Shape;
@@ -321,6 +326,7 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         room.ObjectsCustomPositionDown = CustomPositionDown;
         room.ObjectsCustomPositionRight = CustomPositionRight;
         room.IsDark = IsDark;
+        room.AutomapPause = AutomapPause;
         room.IsStartRoom = IsStartRoom;
         room.IsEndRoom = IsEndRoom;
         room.Shape = Shape;

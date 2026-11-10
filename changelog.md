@@ -12,6 +12,20 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Added
+
+- **Don't automap from here.** Mark a room (Room Properties, or the room's right-click menu) where automap has no
+  chance, such as a maze or a cupboard that turns out to be a lift. While you're in it, automap maps nothing; when you
+  come out it carries on from there, jumping to a room it knows or adding the new one joined by a dotted "?" join
+  for the way through. Saved with the map; older versions ignore it.
+- **Suspend Mapping** on the automap bar (and Project menu): automap follows you through rooms it knows but changes
+  nothing until you resume, then maps on from the next room it sees, joined to nothing.
+
+### Fixed
+
+- Dying no longer joins rooms: "yes" to "Do you want to be reincarnated?" isn't taken for a magic word, and a room
+  shown after "You have died" or "*** The End ***" isn't joined to the room before.
+
 ## [0.11.0-beta] - 2026-11-08
 
 This beta is about **Automap keeping your map tidy as you play**, and **playing a transcript a move at a time**.

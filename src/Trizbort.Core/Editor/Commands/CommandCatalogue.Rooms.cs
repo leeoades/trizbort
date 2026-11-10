@@ -32,6 +32,26 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "room.toggleAutomapPause",
+      ContextOrder = 62, ContextGroup = "5-room",
+      Title = "Don't _Automap From Here",
+      MenuPath = "Edit/Rooms",
+      Group = "6-automap",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.Selection.Rooms.Any(),
+      IsCheckedFunc = s => s.PrimaryRoom != null && s.PrimaryRoom.AutomapPause,
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        var rooms = s.Selection.Rooms.ToList();
+        var on = !(s.PrimaryRoom ?? rooms[0]).AutomapPause;
+        s.Execute(on ? "Don't automap from here" : "Automap from here", () =>
+        {
+          foreach (var room in rooms) room.AutomapPause = on;
+        });
+      })
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "room.forceDark",
       Title = "_Force Darkness",
       MenuPath = "Edit/Rooms",

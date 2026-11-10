@@ -99,6 +99,8 @@
                                  Status="{Binding AutomapStatusText}"
                                  IsMoveByMove="{Binding IsAutomapMoveByMove}"
                                  CurrentRoomCommand="{Binding GoToAutomapRoomCommand}"
+                                 IsSuspended="{Binding IsAutomapSuspended}"
+                                 SuspendCommand="{Binding ToggleSuspendAutomapCommand}"
                                  BackCommand="{Binding GoBackAutomapCommand}"
                                  NextMoveCommand="{Binding PlayNextMoveCommand}"
                                  PlayToEndCommand="{Binding PlayToEndCommand}"
