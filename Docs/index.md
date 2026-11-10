@@ -947,7 +947,8 @@ You can freely interact with the canvas, and do anything else you like in Trizbo
 
 In Trizbort: Recast the bar also has these buttons:
 
-- **Current Room** selects the room automap thinks you're in and centres the map on it.
+- **Current Room** selects the room automap thinks you're in and centres the map on it. The map glides there, and glides as automap follows you from room to room, so you can see which way you went.
+- If automap has lost track of where you are, right-click the room you're in and choose **Automap: I'm Here**.
 - **Suspend Mapping** stops mapping for now: automap follows you through rooms it knows but changes nothing. **Resume Mapping** maps again from the next room it sees, without joining it to where you suspended.
 - **Next Move** (F10) and **Play to End** (F5), when playing the transcript a move at a time (an option when you start automapping). **Pause** stops before the next move.
 - **Previous Move** (F9) goes back a move in the transcript and waits there. The map is left as it is, so you can step through part of the game again; the room you were in then is selected.

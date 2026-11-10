@@ -740,6 +740,25 @@ public sealed class Automap : IAutomapController
   public bool Suspended => _suspended;
 
   /// <summary>
+  ///   "I'm here": the user says the player is in <paramref name="room" /> (automap lost track, or got it wrong).
+  ///   Automap maps on from there; the move it was in the middle of, if any, isn't joined to anything.
+  /// </summary>
+  public void SetCurrentRoom(Room room)
+  {
+    if (room == null) return;
+    _lastKnownRoom = room;
+    _lastMoveDirection = null;
+    _lastJourneyCommand = null;
+    _pendingStubRemoval = null;
+    _pausedFrom = null;
+    _dark = null;
+    _followTo = null;
+    _doneInRoom = null;
+    _canvas?.SelectRoom(room);
+    Status = $"Automap: you're in {room.Name}.";
+  }
+
+  /// <summary>
   ///   Stop mapping for now: automap keeps following the player through rooms it knows, and maps again after
   ///   <see cref="Resume" />, from a room it knows or with a "?" join to somewhere new.
   /// </summary>

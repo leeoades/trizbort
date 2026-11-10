@@ -44,13 +44,16 @@ public sealed partial class EditorSession
     var bounds = element is Room room ? room.InnerBounds : element.UnionBoundsWith(Rect.Empty, false);
     if (bounds == Rect.Empty) return;
 
+    // judged from where the view is going, when it's on its way somewhere
     var visible = Viewport.VisibleWorldBounds;
+    var shift = Viewport.TargetOrigin - Viewport.Origin;
     var margin = 20f / Viewport.ZoomFactor;
-    var dx = PanToFit(bounds.Left, bounds.Right, visible.Left, visible.Right, margin);
-    var dy = PanToFit(bounds.Top, bounds.Bottom, visible.Top, visible.Bottom, margin);
+    var dx = PanToFit(bounds.Left, bounds.Right, visible.Left + shift.X, visible.Right + shift.X, margin);
+    var dy = PanToFit(bounds.Top, bounds.Bottom, visible.Top + shift.Y, visible.Bottom + shift.Y, margin);
     if (dx == 0 && dy == 0) return;
 
-    Viewport.Pan(new Vector(dx, dy));
+    // glides, so the user can see which way the map moved
+    Viewport.GlideTo(Viewport.TargetOrigin + new Vector(dx, dy));
   }
 
   private static float PanToFit(float low, float high, float visibleLow, float visibleHigh, float margin)

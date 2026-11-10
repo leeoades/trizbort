@@ -35,6 +35,11 @@ public interface IAutomapController
   /// <summary>True while mapping is suspended (automap follows the player but doesn't change the map).</summary>
   bool Suspended => false;
 
+  /// <summary>Tells automap the player is in <paramref name="room" />: it maps on from there.</summary>
+  void SetCurrentRoom(Room room)
+  {
+  }
+
   /// <summary>Stop mapping for now, following the player through rooms already on the map.</summary>
   void Suspend()
   {

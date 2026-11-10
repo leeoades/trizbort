@@ -54,6 +54,8 @@ public class AutomapKeyCommandTests
 
     public Room CurrentRoom { get; set; }
 
+    public void SetCurrentRoom(Room room) => CurrentRoom = room;
+
     public void RaiseStatus(string status)
     {
       StatusChanged?.Invoke(status);
@@ -158,6 +160,22 @@ public class AutomapKeyCommandTests
 
     _session.Selection.Items.ShouldBe(new Element[] { far });
     _session.Viewport.VisibleWorldBounds.Contains(far.InnerBounds.Center).ShouldBeTrue();
+  }
+
+  [Test]
+  public void ImHere_TellsAutomapThePlayerIsInTheRoom()
+  {
+    var command = _catalogue.Find("automap.imHere");
+    var cellar = new Room(_project) { Name = "Cellar" };
+    _project.Elements.Add(cellar);
+    _session.Selection.Set(new Element[] { cellar });
+    command.CanExecute(_session).ShouldBeFalse(); // not running
+
+    _automap.IsRunning = true;
+    command.CanExecute(_session).ShouldBeTrue();
+    command.ExecuteAsync(_session).Wait();
+
+    _automap.CurrentRoom.ShouldBe(cellar);
   }
 
   [Test]

@@ -101,6 +101,17 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "automap.imHere",
+      ContextOrder = 64, ContextGroup = "5-room",
+      Title = "Automap: I'm _Here",
+      MenuPath = "Project",
+      Group = "2-automap-run",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.Automap.IsRunning && s.PrimaryRoom != null && s.Selection.Count == 1,
+      ExecuteAsyncFunc = s => Run(() => s.Automap.SetCurrentRoom(s.PrimaryRoom))
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "automap.currentRoom",
       Title = "Go to _Current Automap Room",
       MenuPath = "Project",

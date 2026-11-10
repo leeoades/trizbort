@@ -32,6 +32,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   offers **Split 'Cupboard' into separate rooms**: for a room that is really two places alike, such as a lift.
   Automap adds "Cupboard (2)", joined from the cupboard by the last thing you did there ("pull peg, first"), and
   joins the new room to it.
+- **Automap: I'm Here** (the room's right-click menu, while automapping) tells automap which room you're in, when
+  it has lost track or got it wrong. It maps on from there.
+- **The map glides** when automap moves on to another room, and for Current Room, easing in and out so you can see
+  which way it went. Panning or zooming yourself stops it.
 - **Suspend Mapping** on the automap bar (and Project menu): automap follows you through rooms it knows but changes
   nothing until you resume, then maps on from the next room it sees, joined to nothing.
 
