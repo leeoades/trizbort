@@ -135,4 +135,84 @@ public class AutomapArrivalTests : IsolatedProjectTests
 
     GuessedEnds.Face(Project.Current.Elements.ToList()).ShouldBe(0);
   }
+  [Test]
+  public void MergeRooms_MovesTheJoinsOntoTheRoomKept_AndRemovesTheOthers()
+  {
+    // Colossal Cave: "Darkness" east of the debris room, which turned out to be the awkward canyon
+    var debris = AddRoomAt("Debris Room", 0, 0);
+    var dark = AddRoomAt("Darkness", 1, 0);
+    var canyon = AddRoomAt("Awkward Canyon", 2, 0);
+    dark.AddDescription("It is now pitch dark.");
+    Join(debris, CompassPoint.East, dark, CompassPoint.West);
+    Join(dark, CompassPoint.East, canyon, CompassPoint.West); // between the merged rooms: goes
+    Join(canyon, CompassPoint.West, debris, CompassPoint.East); // doubles the first once merged: goes
+    var stub = Join(dark, CompassPoint.North, dark, CompassPoint.North); // an unexplored exit: kept, on the canyon
+
+    RoomMerge.Merge(Project.Current.Elements, canyon, new[] { dark, canyon }).ShouldBe(1);
+
+    Project.Current.Elements.OfType<Room>().Select(room => room.Name).OrderBy(name => name)
+      .ShouldBe(new[] { "Awkward Canyon", "Debris Room" });
+    var joins = Project.Current.Elements.OfType<Connection>().ToList();
+    joins.Count.ShouldBe(2);
+    joins.Count(join => join.GetSourceRoom() == debris && join.GetTargetRoom() == canyon).ShouldBe(1);
+    stub.GetSourceRoom(out var point).ShouldBe(canyon);
+    point.ShouldBe(CompassPoint.North);
+    canyon.Descriptions.ShouldContain("It is now pitch dark.");
+  }
+
+  [TestCase("Darkness", true)]
+  [TestCase("Dark", true)]
+  [TestCase("It is pitch black", true)]
+  [TestCase("In the Darkness", true)]
+  [TestCase("Dark Forest", false)]
+  [TestCase("Darkroom", false)]
+  public void DarkHeadings_AreRecognised(string heading, bool dark)
+  {
+    Trizbort.Automap.Automap.IsDarkness(heading).ShouldBe(dark);
+  }
+
+  [Test]
+  public async Task SomewhereDark_IsMappedWhenItCanBeSeen_AsReachedTheWayYouCameIn()
+  {
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, string.Join("\n", new[]
+    {
+      ">look", "Debris Room", "A room full of debris.", "",
+      ">east", "Darkness", "It is now pitch dark. If you proceed you will likely fall into a pit.", "",
+      ">light lamp", "Your lamp is now on.", "", "Awkward Canyon", "You are in an awkward sloping canyon.", "",
+      ">west", "Debris Room", "A room full of debris.", "",
+      ">east", "Awkward Canyon", "You are in an awkward sloping canyon.", "",
+      ">"
+    }));
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      var clock = Stopwatch.StartNew();
+      while (engine.ScreenLines().Count < 23 && clock.ElapsedMilliseconds < 5000) await Task.Delay(10);
+      engine.ScreenLines().Count.ShouldBe(23, "screen: " + string.Join(" | ", engine.ScreenLines()) + " status: " + engine.Status);
+      await Task.Delay(200);
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+
+    var rooms = Project.Current.Elements.OfType<Room>().ToList();
+    rooms.Select(room => room.Name).OrderBy(name => name).ShouldBe(new[] { "Awkward Canyon", "Debris Room" });
+    rooms.Single(room => room.Name == "Awkward Canyon").IsDark.ShouldBeTrue();
+    rooms.Single(room => room.Name == "Debris Room").IsDark.ShouldBeFalse();
+    var joins = Project.Current.Elements.OfType<Connection>()
+      .Where(connection => connection.GetSourceRoom() != connection.GetTargetRoom()).ToList();
+    var join = joins.ShouldHaveSingleItem();
+    join.GetSourceRoom(out var from).Name.ShouldBe("Debris Room");
+    from.ShouldBe(CompassPoint.East);
+    join.GetTargetRoom().Name.ShouldBe("Awkward Canyon");
+    string.IsNullOrEmpty(join.MidText).ShouldBeTrue();
+  }
 }

@@ -762,8 +762,41 @@ public sealed class Automap : IAutomapController
   private volatile bool _suspended;
   private Room _pausedFrom;
 
+  /// <summary>How the player got somewhere dark, so the room can be mapped that way when it can be seen.</summary>
+  private sealed record DarkArrival(
+    Room From, MappableDirection? Direction, string Journey, (Room Room, MappableDirection Direction)? Stub);
+
+  private DarkArrival _dark;
+
+  /// <summary>The room about to be entered was first found in the dark: it's marked dark.</summary>
+  private bool _seenInTheDark;
+
+  /// <summary>
+  ///   Words in a room heading that mean the player can't see where they are ("Darkness", "It is pitch black"), so
+  ///   the heading isn't a room.
+  /// </summary>
+  private static readonly string[] _darkWords = { "darkness", "pitch dark", "pitch black", "too dark" };
+
+  /// <summary>A heading that says it's too dark to see ("Darkness", "It is pitch dark"), not a room's name.</summary>
+  public static bool IsDarkness(string roomName)
+  {
+    if (string.IsNullOrWhiteSpace(roomName)) return false;
+    var name = roomName.Trim();
+    if (string.Equals(name, "dark", StringComparison.OrdinalIgnoreCase)) return true;
+    return _darkWords.Any(word => System.Text.RegularExpressions.Regex.IsMatch(name,
+      @"\b" + System.Text.RegularExpressions.Regex.Escape(word) + @"\b",
+      System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+  }
+
   private void NowInRoom(Room room)
   {
+    if (_seenInTheDark)
+    {
+      // found in the dark: it needs a light
+      room.IsDark = true;
+      _seenInTheDark = false;
+    }
+
     // the first room of the run, whether automap made it or found it already on the map
     _startRoom ??= room;
     _lastKnownRoom = room;
@@ -845,6 +878,41 @@ public sealed class Automap : IAutomapController
           await FollowWhilePausedAsync(roomName, roomDescription, line, pausedHere, token);
           previousLine = line;
           continue;
+        }
+
+        // somewhere dark: not a room yet. Automap remembers how the player got there, and maps the room when it can
+        // be seen (once the lamp is lit), as reached that way.
+        if (IsDarkness(roomName))
+        {
+          if (_dark == null) _dark = new DarkArrival(_lastKnownRoom, _lastMoveDirection, _lastJourneyCommand, _pendingStubRemoval);
+          else if (_lastMoveDirection != null) _dark = new DarkArrival(null, null, null, null); // moved on in the dark
+          _pendingStubRemoval = null; // the way leads somewhere: its stub stays until the room is seen
+          _lastMoveDirection = null;
+          _lastJourneyCommand = null;
+          Status = "Somewhere dark: the room will be mapped when it can be seen.";
+          Trace("{0}: somewhere dark, not mapped until it can be seen.", FormatTranscriptLineForDisplay(line));
+          previousLine = line;
+          continue;
+        }
+
+        if (_dark != null)
+        {
+          if (_lastMoveDirection == null)
+          {
+            // lit up where the player stands ("light lamp"): the room is where the move into the dark led
+            _lastKnownRoom = _dark.From == null ? null : _canvas.ResolveRoom(_dark.From);
+            _lastMoveDirection = _dark.Direction;
+            _lastJourneyCommand = _dark.Journey;
+            _pendingStubRemoval = _dark.Stub;
+            _seenInTheDark = true;
+          }
+          else
+          {
+            // moved on in the dark: where from isn't known
+            _lastKnownRoom = null;
+          }
+
+          _dark = null;
         }
 
         // work out which room the transcript is referring to here, asking them if necessary.
@@ -1093,7 +1161,7 @@ public sealed class Automap : IAutomapController
   ///   The game says the player died, or the game is over ("You have died", "You are dead", "*** You have won ***").
   ///   What follows (a reincarnation, a restart) is no journey from the room they were in.
   /// </summary>
-  internal static bool IsDeathOrEnd(string line)
+  public static bool IsDeathOrEnd(string line)
   {
     if (string.IsNullOrWhiteSpace(line)) return false;
     return _deathOrEnd.IsMatch(line);
@@ -1443,6 +1511,8 @@ public sealed class Automap : IAutomapController
     _moveByMove = settings.MoveByMove;
     _suspended = false;
     _pausedFrom = null;
+    _dark = null;
+    _seenInTheDark = false;
     Volatile.Write(ref _movesToPlay, 0);
     Volatile.Write(ref _movesBack, 0);
     _movePoints.Clear();

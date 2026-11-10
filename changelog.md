@@ -18,6 +18,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   chance, such as a maze or a cupboard that turns out to be a lift. While you're in it, automap maps nothing; when you
   come out it carries on from there, jumping to a room it knows or adding the new one joined by a dotted "?" join
   for the way through. Saved with the map; older versions ignore it.
+- **Darkness.** A heading that says it's too dark to see ("Darkness", "It is pitch black") isn't mapped as a room.
+  Automap remembers how you got there, and when you light the lamp maps the room you see as reached that way, with
+  no "light lamp" join, and marks it Dark.
+- **Merge Rooms** (Edit > Rooms, or the room menu, with two or more rooms selected) makes them one room: the one
+  selected last is kept, and gets the others' joins, descriptions and objects. Joins between them, and joins and
+  stubs left doubled, go. One undo step.
 - **Suspend Mapping** on the automap bar (and Project menu): automap follows you through rooms it knows but changes
   nothing until you resume, then maps on from the next room it sees, joined to nothing.
 

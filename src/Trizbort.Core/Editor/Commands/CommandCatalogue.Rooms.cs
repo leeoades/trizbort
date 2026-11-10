@@ -52,6 +52,24 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "room.merge",
+      ContextOrder = 63, ContextGroup = "5-room",
+      Title = "_Merge Rooms",
+      MenuPath = "Edit/Rooms",
+      Group = "6-automap",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.Selection.Rooms.Skip(1).Any(),
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        // the room selected last is kept
+        var rooms = s.Selection.Rooms.ToList();
+        var keep = s.PrimaryRoom ?? rooms[^1];
+        s.Execute("Merge rooms into " + keep.Name, () => RoomMerge.Merge(s.Project.Elements, keep, rooms));
+        s.Selection.Set(new List<Element> { keep });
+      })
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "room.forceDark",
       Title = "_Force Darkness",
       MenuPath = "Edit/Rooms",

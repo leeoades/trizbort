@@ -1068,7 +1068,11 @@ After moving into a new room on a complicated map, **check back and see where Tr
 
 **Trizbort: Recast tidies the map as you go.** After each move, rooms nearby shift so that joins point the way their directions say, never run across a room, and cross each other as little as possible. A room you drag or nudge yourself is left where you put it (this is saved with the map).
 
-**Rooms automap can't map.** For a maze, or a room that moves (a cupboard that turns out to be a lift), tick **Don't automap from here** in the room's properties (or choose it from the room's right-click menu). While you're in that room automap maps nothing; when you come out somewhere else it carries on from there, adding a dotted "?" join for the way through if the room is new. Relabel the join, or draw the real route, when you've worked it out. To tidy a whole map, or just the rooms you've selected, choose `Edit->Rooms->Tidy Map...`: **step by step** keeps the map familiar, and the **solver** lays everything out again. Tidy Map can be undone in one step.
+**Rooms automap can't map.** For a maze, or a room that moves (a cupboard that turns out to be a lift), tick **Don't automap from here** in the room's properties (or choose it from the room's right-click menu). While you're in that room automap maps nothing; when you come out somewhere else it carries on from there, adding a dotted "?" join for the way through if the room is new. Relabel the join, or draw the real route, when you've worked it out.
+
+**Dark rooms.** A heading that says it's too dark to see ("Darkness", "It is pitch black") isn't mapped as a room. When you light the lamp, the room you then see is mapped as reached the way you came in, and marked Dark.
+
+**Merging rooms.** If a place has ended up on the map twice, select both rooms, the one to keep last, and choose `Edit->Rooms->Merge Rooms`. The other room's joins, descriptions and objects move onto the one you keep. To tidy a whole map, or just the rooms you've selected, choose `Edit->Rooms->Tidy Map...`: **step by step** keeps the map familiar, and the **solver** lays everything out again. Tidy Map can be undone in one step.
 
 <a name="help_automap_tips_rearranging"></a>
 
