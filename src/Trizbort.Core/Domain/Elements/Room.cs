@@ -30,6 +30,7 @@ public class Room : Element, ISizeable
   private bool _isDark;
   private bool _placedByHand;
   private bool _automapPause;
+  private bool _moves;
   private bool _isEndRoom;
   private bool _isStartRoom;
   private CompassPoint _objectsPosition = DefaultObjectsPosition;
@@ -201,6 +202,31 @@ public class Room : Element, ISizeable
       }
     }
   }
+
+  /// <summary>
+  ///   The room moves, taking the player with it: a lift, a car, a train. Each place it stops is drawn as a copy of
+  ///   it (a reference room with the same name), joined to what's there; automap keeps track of which stop the
+  ///   player is at. Saved with the map; older versions ignore it.
+  /// </summary>
+  public bool Moves {
+    get { return _moves; }
+    set {
+      if (_moves != value)
+      {
+        _moves = value;
+        RaiseChanged();
+      }
+    }
+  }
+
+  /// <summary>A copy of a moving room, standing for it at one of its stops (see <see cref="Moves" />).</summary>
+  public bool IsStop => ReferenceRoom is { Moves: true };
+
+  /// <summary>
+  ///   A reference room standing in for a room elsewhere on the map ("To Front Porch"), not a stop of a moving room:
+  ///   going through it takes the player to the real room.
+  /// </summary>
+  public bool IsPortal => IsReference && !IsStop;
 
   public bool IsEndRoom {
     get { return _isEndRoom; }
@@ -860,6 +886,7 @@ public class Room : Element, ISizeable
     IsDark = element.Attribute("isDark").ToBool();
     PlacedByHand = element.Attribute("placedByHand").ToBool();
     AutomapPause = element.Attribute("automapPause").ToBool();
+    Moves = element.Attribute("moves").ToBool();
     IsStartRoom = element.Attribute("isStartRoom").ToBool();
     IsEndRoom = element.Attribute("isEndRoom").ToBool();
     ZOrder = element.Attribute("ZOrder").ToInt();
@@ -1031,6 +1058,9 @@ public class Room : Element, ISizeable
 
     if (AutomapPause)
       scribe.Attribute("automapPause", AutomapPause);
+
+    if (Moves)
+      scribe.Attribute("moves", Moves);
 
     if (IsStartRoom)
       scribe.Attribute("isStartRoom", IsStartRoom);

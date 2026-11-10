@@ -39,6 +39,17 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   offers **Split 'Cupboard' into separate rooms**: for a room that is really two places alike, such as a lift.
   Automap adds "Cupboard (2)", joined from the cupboard by the last thing you did there ("pull peg, first"), and
   joins the new room to it.
+- **Rooms that move** (a lift, a car, a train). The same question offers **'Closet' moves (a lift, a vehicle)**:
+  the room is marked as moving, and a copy of it with its name stands for it at the new stop, joined from it by what
+  you did there ("pull peg"). Automap then works out which stop you're at from the way you go out, asking nothing
+  more as you ride up and down, and adds a stop for a new place. A moving room and its stops show a blue sign with
+  up and down arrows; Ctrl-click a stop to go to the room. Set it yourself with **Moves** in Room Properties or
+  **Room Moves** on the room menu. Saved as an optional `moves` attribute; older versions ignore it.
+- **Start a New Area Here** (the room menu, or Edit > Rooms) moves a room, such as the foyer on going into a house,
+  to clear space beside the map, so the area beyond it can be mapped on its own. Portals to the rooms it was joined
+  to ("To Front Porch") sit round it where those rooms were, joined the same way, and a portal back to it ("To
+  Foyer") is left where it was, keeping the old joins. Automap goes through portals to the rooms they stand for,
+  joining nothing across the map. Copies of rooms are never matched by name. One undo step.
 - **Same name, different place?** Going a direction to a room with the same name as the one you left, when the
   game shows a description that starts unlike any of that room's, automap asks whether it's a new room (a second
   "In the Chimney" further up) or the same one. A way already mapped as looping back never asks, and once you say

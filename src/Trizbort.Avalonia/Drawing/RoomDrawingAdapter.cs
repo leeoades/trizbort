@@ -116,8 +116,9 @@ public static class RoomDrawingAdapter
         var corners = room.Corners;
         var (tl, tr, br, bl) = corners != null ? (corners.TopLeft, corners.TopRight, corners.BottomRight, corners.BottomLeft) : (0f, 0f, 0f, 0f);
 
-        // 1. Draw End / Reference Outer Halo (behind room); the start room has a sign instead (8b)
-        if (room.IsEndRoom || room.IsReference)
+        // 1. Draw End / Reference Outer Halo (behind room); the start room, and a moving room's stops, have a sign
+        // instead (8b)
+        if (room.IsEndRoom || room.IsPortal)
         {
             var haloBounds = bounds;
             haloBounds.Inflate(5);
@@ -128,7 +129,7 @@ public static class RoomDrawingAdapter
                 cache.CachedHaloGeometry = CreateShapeGeometry(haloBounds, room.Shape, corners, handDrawn, seed);
             }
 
-            var haloBrush = room.IsReference
+            var haloBrush = room.IsPortal
                 ? CoreColor.LightBlue.ToBrush()
                 : Settings.Color[CoreColors.EndRoom].ToBrush();
 
@@ -254,6 +255,9 @@ public static class RoomDrawingAdapter
     private static readonly IBrush _startFill = new SolidColorBrush(AvaloniaColor.FromArgb(230, 0xE6, 0xF7, 0xE6));
     private static readonly IPen _startPen = new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x3C, 0xA0, 0x4C)), 1.6);
     private static readonly IBrush _startMark = new SolidColorBrush(AvaloniaColor.FromRgb(0x3C, 0xA0, 0x4C));
+    private static readonly IBrush _movesFill = new SolidColorBrush(AvaloniaColor.FromArgb(230, 0xE3, 0xEE, 0xFB));
+    private static readonly IPen _movesPen = new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x3A, 0x72, 0xC4)), 1.6);
+    private static readonly IBrush _movesMark = new SolidColorBrush(AvaloniaColor.FromRgb(0x3A, 0x72, 0xC4));
 
     /// <summary>
     ///   A sign in a room's corner: the start room's green circle with a "play" triangle, or the amber "no entry"
@@ -279,6 +283,28 @@ public static class RoomDrawingAdapter
                 }
 
                 context.DrawGeometry(_startMark, null, triangle);
+                break;
+            }
+            case RoomBadgeKind.Moves:
+            {
+                // a lift's buttons: a little triangle up, and one down
+                context.DrawEllipse(_movesFill, _movesPen, centre, radius, radius);
+                var size = radius * 0.45;
+                var gap = radius * 0.12;
+                var arrows = new StreamGeometry();
+                using (var g = arrows.Open())
+                {
+                    g.BeginFigure(new AvaloniaPoint(centre.X, centre.Y - gap - size), true);
+                    g.LineTo(new AvaloniaPoint(centre.X + size, centre.Y - gap));
+                    g.LineTo(new AvaloniaPoint(centre.X - size, centre.Y - gap));
+                    g.EndFigure(true);
+                    g.BeginFigure(new AvaloniaPoint(centre.X, centre.Y + gap + size), true);
+                    g.LineTo(new AvaloniaPoint(centre.X - size, centre.Y + gap));
+                    g.LineTo(new AvaloniaPoint(centre.X + size, centre.Y + gap));
+                    g.EndFigure(true);
+                }
+
+                context.DrawGeometry(_movesMark, null, arrows);
                 break;
             }
             default:
@@ -491,8 +517,9 @@ public static class RoomDrawingAdapter
 
         if (textBounds.Width <= 0 || textBounds.Height <= 0) return;
 
-        var nameText = room.IsReference ? "To" : (room.Name ?? string.Empty);
-        var subtitleText = room.IsReference ? (room.ReferenceRoom?.Name ?? string.Empty) : (room.SubTitle ?? string.Empty);
+        // a portal reads "To Front Porch"; a moving room's stop is the room itself, so it keeps its own name
+        var nameText = room.IsPortal ? "To" : (room.Name ?? string.Empty);
+        var subtitleText = room.IsPortal ? (room.ReferenceRoom?.Name ?? string.Empty) : (room.SubTitle ?? string.Empty);
 
         var nameFont = Settings.RoomFontMetadata;
         // Legacy Room.cs:912-916: name (and, for reference rooms, subtitle) colour is the room colour or the region text colour.
@@ -500,7 +527,7 @@ public static class RoomDrawingAdapter
 
         var hasSubtitle = !string.IsNullOrWhiteSpace(subtitleText);
         var subFont = Settings.SubtitleFontMetadata;
-        var subColor = room.IsReference
+        var subColor = room.IsPortal
             ? nameColor
             : (room.RoomSubtitleColor != CoreColor.Transparent ? room.RoomSubtitleColor : Settings.Color[CoreColors.Subtitle]);
 

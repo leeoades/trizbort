@@ -52,6 +52,45 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "room.toggleMoves",
+      ContextOrder = 64, ContextGroup = "5-room",
+      Title = "Room M_oves",
+      MenuPath = "Edit/Rooms",
+      Group = "6-automap",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.Selection.Rooms.Any(room => !room.IsReference),
+      IsCheckedFunc = s => s.PrimaryRoom != null && (s.PrimaryRoom.Moves || s.PrimaryRoom.IsStop),
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        var rooms = s.Selection.Rooms.Select(room => room.IsStop ? room.ReferenceRoom : room)
+          .Where(room => room != null && !room.IsReference).Distinct().ToList();
+        if (rooms.Count == 0) return;
+        var on = !rooms[0].Moves;
+        s.Execute(on ? "Room moves" : "Room doesn't move", () =>
+        {
+          foreach (var room in rooms) room.Moves = on;
+        });
+      })
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "room.newArea",
+      ContextOrder = 65, ContextGroup = "5-room",
+      Title = "Start a New _Area Here",
+      MenuPath = "Edit/Rooms",
+      Group = "6-automap",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.SelectedRooms.Count == 1 && NewArea.CanStart(s.PrimaryRoom ?? s.SelectedRooms[0]),
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        var room = s.PrimaryRoom ?? s.SelectedRooms[0];
+        s.Execute("Start a new area at " + room.Name, () => NewArea.Start(s.Project, room));
+        s.Selection.Set(new List<Element> { room });
+        s.EnsureVisible(room);
+      })
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "room.merge",
       ContextOrder = 63, ContextGroup = "5-room",
       Title = "_Merge Rooms",

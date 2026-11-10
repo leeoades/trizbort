@@ -47,6 +47,10 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private bool _automapPause;
 
+    /// <summary>The room moves, taking the player with it (see <see cref="Room.Moves" />).</summary>
+    [ObservableProperty]
+    private bool _moves;
+
     [ObservableProperty]
     private bool _isStartRoom;
 
@@ -267,6 +271,7 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         CustomPositionRight = room.ObjectsCustomPositionRight;
         IsDark = room.IsDark;
         AutomapPause = room.AutomapPause;
+        Moves = room.Moves;
         IsStartRoom = room.IsStartRoom;
         IsEndRoom = room.IsEndRoom;
         Shape = room.Shape;
@@ -327,6 +332,7 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         room.ObjectsCustomPositionRight = CustomPositionRight;
         room.IsDark = IsDark;
         room.AutomapPause = AutomapPause;
+        room.Moves = Moves;
         room.IsStartRoom = IsStartRoom;
         room.IsEndRoom = IsEndRoom;
         room.Shape = Shape;

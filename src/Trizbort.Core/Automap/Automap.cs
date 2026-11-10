@@ -546,7 +546,8 @@ public sealed class Automap : IAutomapController
     string line,
     CancellationToken token)
   {
-    var result = _canvas.FindRooms(roomName, roomDescription, (n, d, r) => Match(r, n, d));
+    // copies of rooms (portals, a moving room's stops) are found by the map, not by name
+    var result = _canvas.FindRooms(roomName, roomDescription, (n, d, r) => r.IsReference ? false : Match(r, n, d));
     if (result.Certain != null) return result.Certain;
 
     var maybes = result.Maybes;
@@ -1043,6 +1044,7 @@ public sealed class Automap : IAutomapController
         // The map comes first: a join the way the player went (or back the way they came) says which room it is, so
         // several rooms sharing a name needn't be asked about.
         RefreshLastKnownRoom();
+        await ChangeStopAsync(roomName, token);
         var room = VariantRoom(roomName, null);
         _skipHeading = false;
         if (room == null)
@@ -1051,7 +1053,7 @@ public sealed class Automap : IAutomapController
           room = await FindRoomAsync(roomName, roomDescription, line, token);
           token.ThrowIfCancellationRequested();
           RefreshLastKnownRoom();
-          if (room != null) room = _canvas.ResolveRoom(room);
+          if (room != null) room = AtStop(_canvas.ResolveRoom(room));
           // (once only: if the user has just said which room it is, that's that)
           if (!_askedWhichRoom) room = await WhichOfTheSameNameAsync(room, roomName, roomDescription, line, token);
         }
@@ -1100,7 +1102,7 @@ public sealed class Automap : IAutomapController
           // A one-way connection that only arrives here says nothing about where this exit leads (two-way
           // connections off: going east to here is not a promise that west leads back), so it doesn't count.
           // The join's ways say where it leads, wherever it leaves the room: "n / up" on the north side leads up.
-          otherRoom = _canvas.RoomsAlong(_lastKnownRoom, _lastMoveDirection.Value)
+          otherRoom = _canvas.RoomsAlong(_lastKnownRoom, _lastMoveDirection.Value).Select(Real)
                       .FirstOrDefault(room => room != null && room != _lastKnownRoom);
           if (otherRoom != null)
           {
@@ -1150,6 +1152,16 @@ public sealed class Automap : IAutomapController
                     room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
                     _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
                     break;
+                  case AutomapSameDirectionResult.Moves:
+                  {
+                    // the room the player left moves (a lift): it's at another stop now, a copy of it there
+                    var stop = NewStop(_lastKnownRoom);
+                    room = _canvas.CreateRoom(stop, _lastMoveDirection.Value, roomName, line);
+                    _canvas.Connect(stop, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    Trace("{0}: {1} moves; {2} is {3} from this stop.", FormatTranscriptLineForDisplay(line),
+                      stop.Name, roomName, _lastMoveDirection.Value.ToString().ToLower());
+                    break;
+                  }
                   case AutomapSameDirectionResult.Split:
                   {
                     // the room the player left is a second place like it ("Cupboard (2)", down the lift), reached
@@ -1247,7 +1259,7 @@ public sealed class Automap : IAutomapController
             else if (_lastKnownRoom != null && _lastJourneyCommand != null)
             {
               // back to a known room by something other than a direction ("xyzzy" again)
-              _canvas.ConnectByCommand(_lastKnownRoom, room, _lastJourneyCommand);
+              _canvas.ConnectByCommand(_lastKnownRoom, Near(_lastKnownRoom, room), _lastJourneyCommand);
               Trace("{0}: {1} reached from {2} by \"{3}\".", FormatTranscriptLineForDisplay(line), roomName,
                 _lastKnownRoom.Name, _lastJourneyCommand);
             }
@@ -1361,11 +1373,13 @@ public sealed class Automap : IAutomapController
     var here = _lastKnownRoom;
     if (here == null) return null;
     if (_lastMoveDirection == null && _lastJourneyCommand == null)
-      return IsVariantOf(here.Name, roomName) ? here : null;
-    if (_lastMoveDirection == null) return null;
+      return NamedAs(here.Name, roomName) ? here : null;
+    // a moving room takes the player with it ("pull peg" in the lift): still in it, at whichever stop
+    if (_lastMoveDirection == null) return Moving(here) && NamedAs(here.Name, roomName) ? here : null;
     var direction = _lastMoveDirection.Value;
 
-    var along = _canvas.RoomsAlong(here, direction)
+    // through a portal ("To Front Porch") to the room it stands for
+    var along = _canvas.RoomsAlong(here, direction).Select(Real)
       .FirstOrDefault(other => other != null && other != here && NamedAs(other.Name, roomName));
     if (along != null) return along;
 
@@ -1374,7 +1388,7 @@ public sealed class Automap : IAutomapController
     var cameBy = CompassPointHelper.GetOpposite(direction);
     var back = here.GetConnections()
       .Where(connection => connection.Flow == ConnectionFlow.OneWay && connection.GetTargetRoom() == here)
-      .Select(connection => (Join: connection, From: connection.GetSourceRoom()))
+      .Select(connection => (Join: connection, From: Real(connection.GetSourceRoom())))
       .Where(pair => pair.From != null && pair.From != here && NamedAs(pair.From.Name, roomName))
       .FirstOrDefault(pair =>
       {
@@ -1408,7 +1422,7 @@ public sealed class Automap : IAutomapController
       return room;
 
     var sameName = _canvas.FindRooms(roomName, roomDescription, (name, _, other) =>
-        string.Equals(other.Name?.Trim(), name?.Trim(), StringComparison.OrdinalIgnoreCase) ? null : false)
+        !other.IsReference && string.Equals(other.Name?.Trim(), name?.Trim(), StringComparison.OrdinalIgnoreCase) ? null : false)
       .Maybes?.ToList() ?? new List<Room>();
     var described = sameName.FirstOrDefault(other =>
       other.Descriptions.Any(known => SameFirstSentence(known, roomDescription)));
@@ -1441,8 +1455,8 @@ public sealed class Automap : IAutomapController
       if (source == null || target == null || source == target) continue;
       var hereIsStart = source == here;
       if (!hereIsStart && connection.Flow == ConnectionFlow.OneWay) continue;
-      var other = hereIsStart ? target : source;
-      if (other == room) continue;
+      var other = Real(hereIsStart ? target : source);
+      if (other == room || other == here) continue;
       if (JoinWays.Of(connection).Any(way => way.AtStart == hereIsStart && way.IsDirection && way.Seen &&
                                             way.Direction == direction))
         return _canvas.ResolveRoom(other);
@@ -1462,7 +1476,7 @@ public sealed class Automap : IAutomapController
     var direction = _lastMoveDirection.Value;
     if (before == null || decision == null || decision == AutomapSameDirectionResult.KeepBoth)
     {
-      _canvas.Connect(here, direction, room, _settings.AssumeTwoWayConnections);
+      _canvas.Connect(here, direction, Near(here, room), _settings.AssumeTwoWayConnections);
       return;
     }
 
@@ -1474,9 +1488,18 @@ public sealed class Automap : IAutomapController
           direction.ToString().ToLower(), before.Name);
         break;
       case AutomapSameDirectionResult.KeepRoom2:
-        _canvas.ForgetWay(here, direction, before);
-        _canvas.Connect(here, direction, room, _settings.AssumeTwoWayConnections);
+        _canvas.ForgetWay(here, direction, Near(here, before));
+        _canvas.Connect(here, direction, Near(here, room), _settings.AssumeTwoWayConnections);
         break;
+      case AutomapSameDirectionResult.Moves:
+      {
+        var stop = NewStop(here);
+        _canvas.Connect(stop, direction, Near(stop, room), _settings.AssumeTwoWayConnections);
+        _lastKnownRoom = stop;
+        Trace("{0}: {1} moves; {2} is {3} from this stop.", FormatTranscriptLineForDisplay(line), stop.Name,
+          room.Name, direction.ToString().ToLower());
+        break;
+      }
       case AutomapSameDirectionResult.Split:
       {
         var second = _canvas.CreateRoom(here, SplitName(here.Name));
@@ -1489,9 +1512,101 @@ public sealed class Automap : IAutomapController
         break;
       }
       default:
-        _canvas.Connect(here, direction, room, _settings.AssumeTwoWayConnections);
+        _canvas.Connect(here, direction, Near(here, room), _settings.AssumeTwoWayConnections);
         break;
     }
+  }
+
+  /// <summary>
+  ///   The room <paramref name="room" /> stands for: a portal ("To Front Porch", a reference room) is the room it
+  ///   refers to; any other room, a moving room's stop included, is itself.
+  /// </summary>
+  private Room Real(Room room) =>
+    room is { IsPortal: true } ? _canvas.ResolveRoom(room.ReferenceRoom) ?? room : room;
+
+  /// <summary>
+  ///   What to join <paramref name="here" /> to for <paramref name="room" />: a portal to it already joined to
+  ///   <paramref name="here" /> ("To Front Porch" beside the foyer), so the map keeps to its areas; else the room.
+  /// </summary>
+  private static Room Near(Room here, Room room)
+  {
+    if (here == null || room == null || room.IsReference) return room;
+    Room portal = null;
+    foreach (var connection in here.GetConnections())
+    {
+      var other = OtherEnd(connection, here);
+      if (other == room) return room;
+      if (other is { IsPortal: true } && other.ReferenceRoomId == room.Id) portal ??= other;
+    }
+
+    return portal ?? room;
+  }
+
+  /// <summary>
+  ///   A moving room found by its name, from where the player is: the stop of it joined to that room ("enter closet"
+  ///   from the cellar goes into the closet down there), else the room.
+  /// </summary>
+  private Room AtStop(Room room)
+  {
+    var here = _lastKnownRoom;
+    if (room is not { Moves: true } || here == null || here == room || MovingRootOrNull(here) == room) return room;
+    return here.GetConnections().Select(connection => OtherEnd(connection, here))
+      .FirstOrDefault(other => other is { IsStop: true } && other.ReferenceRoomId == room.Id) ?? room;
+  }
+
+  private static Room MovingRootOrNull(Room room) => room.IsStop ? room.ReferenceRoom : room.Moves ? room : null;
+
+  /// <summary>A room that moves, or one of its stops (<see cref="Room.Moves" />).</summary>
+  private static bool Moving(Room room) => room != null && (room.Moves || room.IsStop);
+
+  /// <summary>The moving room <paramref name="room" /> is, or is a stop of.</summary>
+  private static Room MovingRoot(Room room) => room.IsStop ? room.ReferenceRoom : room;
+
+  /// <summary>
+  ///   A new stop for the moving room the player is in (it's somewhere else now): a copy of it, with its name,
+  ///   beside <paramref name="here" /> and joined from it by what moved it ("pull peg"). The room is marked as moving.
+  /// </summary>
+  private Room NewStop(Room here)
+  {
+    var root = MovingRoot(here);
+    root.Moves = true;
+    var stop = _canvas.CreateRoom(here, root.Name);
+    stop.ReferenceRoomId = root.Id;
+    stop.CopyStyleFrom(root);
+    foreach (var description in root.Descriptions) stop.AddDescription(description);
+    _canvas.ConnectByCommand(here, stop, _doneInRoom ?? UnmappedWay);
+    return stop;
+  }
+
+  /// <summary>
+  ///   In a moving room (a lift), the way out says which stop it's at: when the way the player went is known to lead
+  ///   somewhere other than this heading, they're at another stop, the one where it does lead here, or a new one.
+  ///   Automap carries on from that stop, so a lift's doors needn't be asked about.
+  /// </summary>
+  private async Task ChangeStopAsync(string roomName, CancellationToken token)
+  {
+    var here = _lastKnownRoom;
+    if (_suspended || here == null || _lastMoveDirection == null || !Moving(here) || MovingRoot(here) == null) return;
+    var direction = _lastMoveDirection.Value;
+    List<Room> Along(Room stop) => _canvas.RoomsAlong(stop, direction).Select(Real)
+      .Where(other => other != null && other != stop).ToList();
+
+    var along = Along(here);
+    if (along.Count == 0 || along.Any(other => NamedAs(other.Name, roomName))) return;
+
+    var root = MovingRoot(here);
+    var stops = Trizbort.Domain.Application.Project.Current.Elements.OfType<Room>()
+      .Where(other => other == root || other.ReferenceRoomId == root.Id && other.IsStop).ToList();
+    var stop = stops.FirstOrDefault(other => other != here && Along(other).Any(room => NamedAs(room.Name, roomName)));
+    using (await BeginBatchAsync("Automap: " + root.Name + " moves", token))
+    {
+      if (stop == null) stop = NewStop(here);
+      else if (!here.GetConnections().Any(connection => OtherEnd(connection, here) == stop))
+        _canvas.ConnectByCommand(here, stop, _doneInRoom ?? UnmappedWay);
+    }
+
+    Trace("{0} is at another stop.", root.Name);
+    _lastKnownRoom = stop;
   }
 
   /// <summary>Whether the map has <paramref name="direction" /> leading from <paramref name="room" /> straight back in.</summary>
@@ -1570,7 +1685,7 @@ public sealed class Automap : IAutomapController
       var match = labels.Where(label => !string.IsNullOrWhiteSpace(label))
         .SelectMany(label => label.Split('/'))
         .FirstOrDefault(label => tries.Any(attempt => SameWords(label, attempt)));
-      if (match != null) return to;
+      if (match != null) return Real(to);
     }
 
     return null;
