@@ -1,0 +1,110 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+             xmlns:controls="using:Trizbort.Avalonia.Controls"
+             x:Class="Trizbort.Avalonia.Controls.AutomapPanel"
+             x:DataType="vm:MainWindowViewModel">
+    <UserControl.Styles>
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="Margin" Value="0,0,0,2" />
+        </Style>
+        <Style Selector="TextBlock.note">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.small">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <!-- Automap's controls, docked beside the map while it runs: where you are, the transcript (moving through
+         it) and mapping (whether automap changes the map). -->
+    <Border Width="280"
+            Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            BorderThickness="1,0,0,0">
+        <DockPanel>
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="12,10,12,8">
+                <TextBlock Text="Automap" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="Stop" Padding="12,3" HorizontalAlignment="Right"
+                        Command="{Binding StopAutomapCommand}" ToolTip.Tip="Stop automapping" />
+            </Grid>
+
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="12,0,12,12" Spacing="18">
+
+                    <!-- where you are -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="section" Text="WHERE YOU ARE" />
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Ellipse Width="10" Height="10" Margin="0,5,8,0" VerticalAlignment="Top"
+                                     Fill="{Binding AutomapStateBrush}"
+                                     ToolTip.Tip="Green: mapping. Amber: not changing the map. Grey: in the dark." />
+                            <TextBlock Grid.Column="1" x:Name="RoomName" Text="{Binding AutomapRoomName}"
+                                       FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        </Grid>
+                        <Button x:Name="CentreButton" Content="Centre on Current Room"
+                                Command="{Binding GoToAutomapRoomCommand}"
+                                ToolTip.Tip="Select the room automap thinks you're in, and glide the map to it" />
+                        <TextBlock Classes="small"
+                                   Text="Wrong room? Right-click the room you're in and choose Automap: I'm Here." />
+                    </StackPanel>
+
+                    <!-- the transcript: moving through it -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="section" Text="TRANSCRIPT" />
+                        <TextBlock Classes="note" x:Name="TranscriptNote" Text="{Binding AutomapTranscriptNote}" />
+                        <Grid ColumnDefinitions="*,6,*">
+                            <Button x:Name="PreviousMoveButton" Content="◀ Previous Move"
+                                    Command="{Binding GoBackAutomapCommand}"
+                                    ToolTip.Tip="Go back a move in the transcript, leaving the map as it is (F9)" />
+                            <Button Grid.Column="2" x:Name="NextMoveButton" Content="Next Move ▶"
+                                    Command="{Binding PlayNextMoveCommand}"
+                                    ToolTip.Tip="Play the next move, then pause (F10)" />
+                        </Grid>
+                        <Button x:Name="PlayButton" Content="Play" IsVisible="{Binding IsAutomapMoveByMove}"
+                                Command="{Binding PlayToEndCommand}"
+                                ToolTip.Tip="Play on without pausing, and follow the game as it goes on (F5)" />
+                        <Button x:Name="PauseButton" Content="Pause" IsVisible="{Binding !IsAutomapMoveByMove}"
+                                Command="{Binding PauseAutomapCommand}"
+                                ToolTip.Tip="Pause before the next move, to step through the transcript a move at a time" />
+                        <controls:TranscriptMonitor HorizontalAlignment="Center" Margin="0,4,0,0"
+                                                    IsVisible="{Binding IsGameMonitorShown}"
+                                                    Text="{Binding AutomapScreenText}" />
+                        <CheckBox Content="Show the game screen" FontSize="12"
+                                  IsChecked="{Binding IsGameMonitorShown, Mode=OneWay}"
+                                  Command="{Binding ToggleGameMonitorCommand}" />
+                    </StackPanel>
+
+                    <!-- mapping: whether automap changes the map -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="section" Text="MAPPING" />
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <RadioButton x:Name="MappingRadio" GroupName="AutomapMode" Content="Mapping"
+                                         IsChecked="{Binding IsAutomapMapping}"
+                                         ToolTip.Tip="Add rooms and joins as you go" />
+                            <RadioButton x:Name="TrackingRadio" GroupName="AutomapMode" Content="Tracking only"
+                                         IsChecked="{Binding IsAutomapSuspended}"
+                                         ToolTip.Tip="Follow where you are without changing the map" />
+                        </StackPanel>
+                        <TextBlock Classes="note" x:Name="MappingNote" Text="{Binding AutomapMappingNote}" />
+                        <TextBlock Classes="small"
+                                   Text="Tracking only lets you step back and forward through the transcript to check automap follows the rooms you expect. Fix the map if not, then switch back to Mapping." />
+                    </StackPanel>
+
+                    <TextBlock Classes="small" Text="{Binding AutomapStatusText}" />
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</UserControl>

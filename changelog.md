@@ -14,6 +14,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Automap panel.** While automapping, its controls are in a panel docked beside the map, in three parts:
+  **Where you are** (the room automap thinks you're in, with a green, amber or grey dot for mapping, not changing
+  the map, or in the dark, and Centre on Current Room); **Transcript** (Previous Move, Next Move, Play and Pause,
+  and the game screen); and **Mapping** (Mapping or Tracking only, and why automap isn't mapping when it isn't).
+
 - **Don't automap from here.** Mark a room (Room Properties, or the room's right-click menu) where automap has no
   chance, such as a maze or a cupboard that turns out to be a lift. While you're in it, automap maps nothing; when you
   come out it carries on from there, jumping to a room it knows or adding the new one joined by a dotted "?" join
@@ -36,8 +41,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   it has lost track or got it wrong. It maps on from there.
 - **The map glides** when automap moves on to another room, and for Current Room, easing in and out so you can see
   which way it went. Panning or zooming yourself stops it.
-- **Suspend Mapping** on the automap bar (and Project menu): automap follows you through rooms it knows but changes
-  nothing until you resume, then maps on from the next room it sees, joined to nothing.
+- **Tracking only** (the automap panel; Suspend Mapping in the Project menu): automap follows you through rooms it
+  knows but changes nothing, so you can step back and forward through the transcript to check it, and fix the map.
+  Switch back to Mapping and it maps on from the next room it sees, joined to nothing.
 
 ### Fixed
 

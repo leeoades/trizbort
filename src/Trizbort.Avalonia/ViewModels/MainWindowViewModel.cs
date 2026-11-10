@@ -65,7 +65,107 @@ public partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>True while mapping is suspended: automap follows the player but doesn't change the map.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAutomapMapping))]
     private bool _isAutomapSuspended;
+
+    /// <summary>The automap panel's Mapping / Tracking only choice: true while automap changes the map.</summary>
+    public bool IsAutomapMapping
+    {
+        get => !IsAutomapSuspended;
+        set => IsAutomapSuspended = !value;
+    }
+
+    partial void OnIsAutomapSuspendedChanged(bool value)
+    {
+        // chosen in the panel: tell the engine (when the engine changed, it already agrees)
+        if (value == AutomapEngine.Instance.Suspended)
+        {
+            return;
+        }
+
+        if (value)
+        {
+            AutomapEngine.Instance.Suspend();
+        }
+        else
+        {
+            AutomapEngine.Instance.Resume();
+        }
+
+        RefreshAutomapPanel();
+    }
+
+    /// <summary>The room automap thinks the player is in, for the automap panel.</summary>
+    [ObservableProperty]
+    private string _automapRoomName = string.Empty;
+
+    /// <summary>Where automap is in the transcript: following the game, or paused before a move.</summary>
+    [ObservableProperty]
+    private string _automapTranscriptNote = string.Empty;
+
+    /// <summary>What automap is doing with what it reads: mapping, tracking only, not mapping here, in the dark.</summary>
+    [ObservableProperty]
+    private string _automapMappingNote = string.Empty;
+
+    /// <summary>Green while mapping, amber while not changing the map, grey in the dark.</summary>
+    [ObservableProperty]
+    private global::Avalonia.Media.IBrush _automapStateBrush = global::Avalonia.Media.Brushes.Gray;
+
+    private static readonly global::Avalonia.Media.IBrush _mappingBrush =
+        new global::Avalonia.Media.SolidColorBrush(global::Avalonia.Media.Color.FromRgb(0x4C, 0xAF, 0x50));
+
+    private static readonly global::Avalonia.Media.IBrush _notMappingBrush =
+        new global::Avalonia.Media.SolidColorBrush(global::Avalonia.Media.Color.FromRgb(0xE0, 0xA0, 0x30));
+
+    private DispatcherTimer? _automapPanelTimer;
+
+    /// <summary>Brings the automap panel up to date with the engine: where you are, the transcript and mapping.</summary>
+    internal void RefreshAutomapPanel()
+    {
+        var engine = AutomapEngine.Instance;
+        var room = engine.CurrentRoom;
+        AutomapRoomName = room?.Name ?? "Somewhere automap doesn't know";
+        IsAutomapMoveByMove = engine.MoveByMove;
+        IsAutomapSuspended = engine.Suspended;
+        AutomapTranscriptNote = !engine.MoveByMove
+            ? "Playing: following the game as it goes on."
+            : string.IsNullOrWhiteSpace(engine.NextCommand)
+                ? "Paused before the next move."
+                : $"Paused before \"{engine.NextCommand}\".";
+        if (engine.Suspended)
+        {
+            AutomapMappingNote = "Tracking only: following where you are, without changing the map.";
+            AutomapStateBrush = _notMappingBrush;
+        }
+        else if (engine.InDark)
+        {
+            AutomapMappingNote = "In the dark: the room will be mapped when it can be seen.";
+            AutomapStateBrush = global::Avalonia.Media.Brushes.Gray;
+        }
+        else if (room?.AutomapPause == true)
+        {
+            AutomapMappingNote = $"Not mapping in {room.Name}: mapping carries on where you come out.";
+            AutomapStateBrush = _notMappingBrush;
+        }
+        else
+        {
+            AutomapMappingNote = "Mapping: adding rooms and joins as you go.";
+            AutomapStateBrush = _mappingBrush;
+        }
+    }
+
+    private void StartAutomapPanelUpdates()
+    {
+        RefreshAutomapPanel();
+        _automapPanelTimer ??= new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background,
+            (_, _) => RefreshAutomapPanel());
+        _automapPanelTimer.Start();
+    }
+
+    private void StopAutomapPanelUpdates()
+    {
+        _automapPanelTimer?.Stop();
+    }
 
     /// <summary>The end of the transcript read so far, as much as fits on the little game monitor.</summary>
     [ObservableProperty]
@@ -506,6 +606,7 @@ public partial class MainWindowViewModel : ViewModelBase
         AutomapEngine.Instance.ScreenChanged -= OnAutomapScreenChanged;
         IsAutomapActive = false;
         AutomapStatusText = "Automap is not running.";
+        StopAutomapPanelUpdates();
     }
 
     /// <summary>Play the transcript's next move, then pause.</summary>
@@ -647,6 +748,7 @@ public partial class MainWindowViewModel : ViewModelBase
         AutomapStatusText = "Automapping has started.";
         ResetAutomapScreen();
         AutomapEngine.Instance.ScreenChanged += OnAutomapScreenChanged;
+        StartAutomapPanelUpdates();
 
         _automapTask = RunAutomapLoopAsync(settings, runToken);
         return Task.CompletedTask;
@@ -669,6 +771,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 AutomapEngine.Instance.ScreenChanged -= OnAutomapScreenChanged;
                 AutomapStatusText = AutomapEngine.Instance.Status;
                 IsAutomapActive = false;
+                StopAutomapPanelUpdates();
                 UpdateState();
                 _commandService.InvalidateCanvas();
             }
@@ -692,8 +795,15 @@ public partial class MainWindowViewModel : ViewModelBase
         RunOnUiThread(() =>
         {
             AutomapStatusText = status;
-            IsAutomapMoveByMove = AutomapEngine.Instance.MoveByMove;
-            IsAutomapSuspended = AutomapEngine.Instance.Suspended;
+            if (IsAutomapActive)
+            {
+                RefreshAutomapPanel();
+            }
+            else
+            {
+                IsAutomapMoveByMove = AutomapEngine.Instance.MoveByMove;
+                IsAutomapSuspended = AutomapEngine.Instance.Suspended;
+            }
         });
     }
 

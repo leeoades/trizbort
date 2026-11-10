@@ -739,6 +739,9 @@ public sealed class Automap : IAutomapController
   /// <summary>True while the user has suspended mapping: automap follows the player but doesn't change the map.</summary>
   public bool Suspended => _suspended;
 
+  /// <summary>True while the player is somewhere dark, so automap waits to see the room before mapping it.</summary>
+  public bool InDark => _dark != null;
+
   /// <summary>
   ///   "I'm here": the user says the player is in <paramref name="room" /> (automap lost track, or got it wrong).
   ///   Automap maps on from there; the move it was in the middle of, if any, isn't joined to anything.

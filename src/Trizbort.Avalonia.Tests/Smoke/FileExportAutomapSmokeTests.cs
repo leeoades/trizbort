@@ -668,10 +668,10 @@ public class FileExportAutomapSmokeTests
         // Status now follows the engine's events, which may already have moved on to the next reference message.
         vm.AutomapStatusText.ShouldBeOneOf("Automapping has started.", "Automapping is processing the transcript.");
 
-        // Status bar indicator and AutomapBar are both visibility-bound to IsAutomapActive.
+        // Status bar indicator and the automap panel are both visibility-bound to IsAutomapActive.
         var xaml = LoadMainWindowXaml();
         xaml.Descendants(Ui + "TextBlock").Any(t => (string?)t.Attribute("Text") == "Automap Running").ShouldBeTrue();
-        var bar = xaml.Descendants().First(e => e.Name.LocalName == "AutomapBar");
+        var bar = xaml.Descendants().First(e => e.Name.LocalName == "AutomapPanel");
         ((string?)bar.Attribute("IsVisible")).ShouldBe("{Binding IsAutomapActive}");
 
         await StopAndAwaitAsync(vm);

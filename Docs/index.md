@@ -945,14 +945,11 @@ Whilst automapping, Trizbort displays a bar beneath the canvas, telling you what
 
 You can freely interact with the canvas, and do anything else you like in Trizbort, whilst automapping.
 
-In Trizbort: Recast the bar also has these buttons:
+In Trizbort: Recast the automap controls are in a panel docked beside the map while automap runs:
 
-- **Current Room** selects the room automap thinks you're in and centres the map on it. The map glides there, and glides as automap follows you from room to room, so you can see which way you went.
-- If automap has lost track of where you are, right-click the room you're in and choose **Automap: I'm Here**.
-- **Suspend Mapping** stops mapping for now: automap follows you through rooms it knows but changes nothing. **Resume Mapping** maps again from the next room it sees, without joining it to where you suspended.
-- **Next Move** (F10) and **Play to End** (F5), when playing the transcript a move at a time (an option when you start automapping). **Pause** stops before the next move.
-- **Previous Move** (F9) goes back a move in the transcript and waits there. The map is left as it is, so you can step through part of the game again; the room you were in then is selected.
-- **Hide Monitor** and **Show Monitor** hide and show the small game monitor in the corner of the map, which shows the game so far. Click the monitor for a larger window you can copy text from; it floats beside the map, and the map's keys and Undo still work.
+- **Where you are** shows the room automap thinks you're in. The dot beside it is green while automap is mapping, amber while it isn't changing the map, and grey when you're in the dark. **Centre on Current Room** selects that room and glides the map to it. If automap has lost track of where you are, right-click the room you're in and choose **Automap: I'm Here**.
+- **Transcript** moves through the game. **Next Move** (F10) plays one move and pauses; **Previous Move** (F9) goes back a move, leaving the map as it is, so you can step through part of the game again; **Play** (F5) plays on and follows the game, and **Pause** stops before the next move. The game screen below shows the game so far; click it for a larger window you can copy text from.
+- **Mapping** chooses between **Mapping** (adding rooms and joins as you go) and **Tracking only** (following where you are without changing the map). Tracking only lets you step back and forward to check automap follows the rooms you expect; fix the map if not, then switch back to Mapping, and it maps on from the next room it sees. The panel also says when automap isn't mapping because you're in a room marked Don't Automap From Here, or in the dark.
 
 ![Trizbort's appearance whilst automapping is in progress.](automapping_inprogress.png)
 
