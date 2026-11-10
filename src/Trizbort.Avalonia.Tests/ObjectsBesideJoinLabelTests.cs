@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
 using NUnit.Framework;
@@ -18,8 +18,27 @@ namespace Trizbort.Avalonia.Tests;
 ///   the middle of its bottom don't overprint: the label goes to the left of the line.
 /// </summary>
 [TestFixture]
+[NonParallelizable]
 public class ObjectsBesideJoinLabelTests
 {
+    private Project? _previousProject;
+
+    // a map of its own: a canvas left watching the shared map breaks later tests ("Call from invalid thread")
+    [SetUp]
+    public void SetUp()
+    {
+        _previousProject = Project.Current;
+        Project.Current = new Project();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        var created = Project.Current;
+        Project.Current = _previousProject!;
+        created.Dispose();
+    }
+
     [AvaloniaTest]
     public void TheLabelOfAJoinStraightDown_GoesLeftOfTheLine_AwayFromTheObjects()
     {

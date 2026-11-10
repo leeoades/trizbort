@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
 using NUnit.Framework;
@@ -13,8 +13,27 @@ namespace Trizbort.Avalonia.Tests;
 
 /// <summary>A room marked "don't automap from here" shows a small amber sign, so it can be seen on the map.</summary>
 [TestFixture]
+[NonParallelizable]
 public class AutomapPauseSignTests
 {
+    private Project? _previousProject;
+
+    // a map of its own: a canvas left watching the shared map breaks later tests ("Call from invalid thread")
+    [SetUp]
+    public void SetUp()
+    {
+        _previousProject = Project.Current;
+        Project.Current = new Project();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        var created = Project.Current;
+        Project.Current = _previousProject!;
+        created.Dispose();
+    }
+
     [AvaloniaTest]
     public void ARoomAutomapDoesntMapFrom_ShowsASign()
     {
