@@ -572,6 +572,59 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     lower.Descriptions.ShouldNotContain(d => d.StartsWith("Higher up"));
   }
 
+  private sealed class NewRoomPrompts : IEditorPrompts
+  {
+    public int Asked;
+
+    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, System.Threading.CancellationToken token = default) =>
+      Task.FromResult(AutomapSameDirectionResult.KeepRoom1);
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, System.Threading.CancellationToken token = default)
+    {
+      Asked++;
+      return Task.FromResult(RoomDisambiguation.CreateNew());
+    }
+  }
+
+  [Test]
+  public async Task TheSameNameWithADifferentDescription_AsksWhetherItIsANewRoom_Once()
+  {
+    var prompts = new NewRoomPrompts();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "In the Chimney", "A sooty chimney. Light shows far above.", "",
+      ">up", "In the Chimney", "Higher up the chimney, the walls are rough.", "",
+      ">down", "In the Chimney", "A sooty chimney. Light shows far above.", "",
+      ">up", "In the Chimney", "Higher up the chimney, the walls are rough.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    prompts.Asked.ShouldBe(1);
+    Rooms().ShouldBe(new[] { "In the Chimney", "In the Chimney" });
+    Joins().ShouldHaveSingleItem().ShouldStartWith("In the Chimney -> In the Chimney");
+  }
+
+  [Test]
+  public async Task AWayBackIntoTheSameRoom_WithTheSameDescription_AsksNothing()
+  {
+    var prompts = new NewRoomPrompts();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "Forest", "Trees all around. Paths lead every way.", "",
+      ">north", "Forest", "Trees all around. Paths lead every way.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    prompts.Asked.ShouldBe(0);
+    Rooms().ShouldBe(new[] { "Forest" });
+  }
+
   [Test]
   public async Task Pause_StopsBeforeTheNextMove()
   {

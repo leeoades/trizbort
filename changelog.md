@@ -39,6 +39,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   offers **Split 'Cupboard' into separate rooms**: for a room that is really two places alike, such as a lift.
   Automap adds "Cupboard (2)", joined from the cupboard by the last thing you did there ("pull peg, first"), and
   joins the new room to it.
+- **Same name, different place?** Going a direction to a room with the same name as the one you left, when the
+  game shows a description that starts unlike any of that room's, automap asks whether it's a new room (a second
+  "In the Chimney" further up) or the same one. A way already mapped as looping back never asks, and once you say
+  it's the same room, its new description is kept, so it won't ask again.
 - **Automap: I'm Here** (the room's right-click menu, or Project > Automap > I'm Here, while automapping) tells automap which room you're in, when
   it has lost track or got it wrong. It maps on from there.
 - **The map glides** when automap moves on to another room, and for Current Room, easing in and out so you can see

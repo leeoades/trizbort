@@ -981,6 +981,7 @@ public sealed class Automap : IAutomapController
         RefreshLastKnownRoom();
         if (room != null) room = _canvas.ResolveRoom(room);
         room = VariantRoom(roomName, room);
+        room = await SameNameElsewhereAsync(room, roomName, roomDescription, line, token);
 
         AutomapSameDirectionResult? decision = null;
         Room otherRoom = null;
@@ -1260,6 +1261,37 @@ public sealed class Automap : IAutomapController
                                 string.Equals(other.Name?.Trim(), roomName?.Trim(), StringComparison.OrdinalIgnoreCase)));
     return along ?? found;
   }
+
+  /// <summary>
+  ///   Moving by a direction to a room with the same name as the room you left, showing a description that starts
+  ///   unlike any of its own: it may be another room by that name (a second "In the Chimney" further up). Asks, since
+  ///   descriptions can change as a game goes on; returns null for a new room, or the room you left. Not asked for a
+  ///   way already mapped as leading back into the room, or when automap isn't mapping.
+  /// </summary>
+  private async Task<Room> SameNameElsewhereAsync(
+    Room room, string roomName, string roomDescription, string line, CancellationToken token)
+  {
+    var here = _lastKnownRoom;
+    if (room == null || room != here || _lastMoveDirection == null || _dontAskAboutAmbiguities || _suspended ||
+        room.AutomapPause || string.IsNullOrWhiteSpace(roomDescription) || room.Descriptions.Count == 0 ||
+        !string.Equals(room.Name?.Trim(), roomName?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+        room.Descriptions.Any(known => SameFirstSentence(known, roomDescription)) ||
+        LoopsBack(room, _lastMoveDirection.Value))
+      return room;
+
+    var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, new[] { room }, token);
+    token.ThrowIfCancellationRequested();
+    RefreshLastKnownRoom();
+    if (choice.AutoChooseRest) _dontAskAboutAmbiguities = true;
+    return choice.NewRoom ? null : _canvas.ResolveRoom(room);
+  }
+
+  /// <summary>Whether the map has <paramref name="direction" /> leading from <paramref name="room" /> straight back in.</summary>
+  private static bool LoopsBack(Room room, MappableDirection direction) =>
+    room.GetConnections().Any(connection =>
+      connection.GetSourceRoom(out var from) == room && connection.GetTargetRoom(out var to) == room && from != to &&
+      DirectionWords.SplitLabel(connection.StartText)
+        .Any(word => DirectionWords.TryParse(word, out var listed) && listed == direction));
 
   /// <summary>"Cupboard (-1)" or "Cupboard 2" for "Cupboard": the name, then something more after a space or bracket.</summary>
   private static bool IsVariantOf(string name, string heading)
