@@ -877,8 +877,10 @@ public static class ConnectionDrawingAdapter
         }
 
         // A label on a join leaving straight up or down from a room whose objects are listed on that side goes to
-        // the left of the line, since the objects are written to the right of it.
-        if ((compass == CompassPoint.North || compass == CompassPoint.South) && ObjectsOnSideOf(vertex, anchor))
+        // the left of the line, since the objects are written to the right of it. (The compass point is never north
+        // or south here: DirectionFromAngle gives a diagonal for a vertical line, so go by the angle.)
+        var upright = Math.Abs(Math.Abs(angle) - 90) <= 10;
+        if (isStart != null && upright && ObjectsOnSideOf(vertex, anchor))
         {
             pos = new CoreVector(anchor.X - Settings.TextOffsetFromConnection, pos.Y);
             alignment = TextAlignment.Right;

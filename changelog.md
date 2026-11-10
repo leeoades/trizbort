@@ -68,6 +68,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - Previous Move works after Play to the End: automap goes back to before the last move it played and pauses there.
 - Going back a move keeps the end of the transcript at the bottom of the game screen, with the lines played since
   gone, instead of showing the top of the screen.
+- Two rooms with the same name, one beyond the other ("In the Chimney", and up to another "In the Chimney"): when
+  the map has a join that way to a room by that name, automap follows it, rather than taking you to be back in the
+  room you left and adding a loop. A join counts by its label ("n / up") wherever it leaves the room.
+- The label of a join leaving straight up or down from a room no longer overprints the room's objects listed on
+  that side: it goes on the other side of the line, as was intended.
 - Tracking only no longer changes the map at all: "see" (add object) and region commands in the transcript, and
   ways that lead nowhere removing their stubs, are left alone too.
 

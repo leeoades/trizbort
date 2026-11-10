@@ -1252,10 +1252,12 @@ public sealed class Automap : IAutomapController
       return IsVariantOf(here.Name, roomName) ? here : found;
     if (_lastMoveDirection == null) return found;
 
-    var along = here.GetConnections(CompassPointHelper.GetCompassDirection(_lastMoveDirection.Value))
-      .Where(connection => connection.Flow != ConnectionFlow.OneWay || connection.GetSourceRoom() == here)
-      .Select(connection => OtherEnd(connection, here))
-      .FirstOrDefault(other => other != null && other != here && IsVariantOf(other.Name, roomName));
+    // the way the player went, as the map shows it (by its label, wherever it leaves the room), to another room by
+    // this name or a copy of it: two rooms called "In the Chimney", one above the other
+    var along = _canvas.RoomsAlong(here, _lastMoveDirection.Value)
+      .FirstOrDefault(other => other != null && other != here &&
+                               (IsVariantOf(other.Name, roomName) ||
+                                string.Equals(other.Name?.Trim(), roomName?.Trim(), StringComparison.OrdinalIgnoreCase)));
     return along ?? found;
   }
 

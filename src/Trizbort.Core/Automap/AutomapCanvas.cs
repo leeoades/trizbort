@@ -804,6 +804,31 @@ public class AutomapCanvas : IAutomapCanvas
     return room;
   }
 
+  /// <summary>
+  ///   The rooms the map shows <paramref name="direction" /> leading to from <paramref name="room" />: joins whose end
+  ///   there is labelled with it ("n / up") or leaves from its side, one-way joins only from where they start.
+  /// </summary>
+  public IReadOnlyList<Room> RoomsAlong(Room room, MappableDirection direction)
+  {
+    var rooms = new List<Room>();
+    if (room == null || direction == MappableDirection.None) return rooms;
+    var point = CompassPointHelper.GetCompassDirection(direction);
+    foreach (var connection in CurrentProject.Elements.OfType<Connection>())
+    {
+      if (IsCommandJoin(connection)) continue;
+      var source = connection.GetSourceRoom(out var sourcePoint);
+      var target = connection.GetTargetRoom(out var targetPoint);
+      if (source == null || target == null || source == target) continue;
+      if (source == room && (sourcePoint == point || ListsDirection(EndWords(connection, true), direction)))
+        rooms.Add(target);
+      else if (target == room && connection.Flow == ConnectionFlow.TwoWay &&
+               (targetPoint == point || ListsDirection(EndWords(connection, false), direction)))
+        rooms.Add(source);
+    }
+
+    return rooms;
+  }
+
   public RoomSearchResult FindRooms(string roomName, string roomDescription, RoomMatcher matcher)
   {
     var list = new List<Room>();

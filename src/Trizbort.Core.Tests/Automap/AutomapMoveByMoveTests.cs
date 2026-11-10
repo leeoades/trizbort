@@ -544,6 +544,35 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task TwoRoomsWithTheSameName_TheJoinOnTheMap_SaysWhichOneYouGoTo()
+  {
+    // the chimney goes on up into a second room also called "In the Chimney"; the user has drawn it, with a join
+    // labelled "n / up" on the north side (not the side automap gives up)
+    var lower = new Room(Project.Current) { Name = "In the Chimney", Position = new Vector(0, 300), Size = new Vector(96, 64) };
+    var upper = new Room(Project.Current) { Name = "In the Chimney", Position = new Vector(0, 0), Size = new Vector(96, 64) };
+    Project.Current.Elements.Add(lower);
+    Project.Current.Elements.Add(upper);
+    new AutomapCanvas(Project.Current).Connect(lower, MappableDirection.North, upper, true);
+    var drawn = Project.Current.Elements.OfType<Connection>().ShouldHaveSingleItem();
+    drawn.StartText = "n / up";
+
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var lines = new[]
+    {
+      ">look", "In the Chimney", "A sooty chimney. Light shows far above.", "",
+      ">up", "In the Chimney", "Higher up the chimney, the walls are rough.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    // no loop back into the lower room: the join leads up to the other one
+    Project.Current.Elements.OfType<Connection>().ShouldHaveSingleItem().ShouldBeSameAs(drawn);
+    upper.Descriptions.ShouldContain(d => d.StartsWith("Higher up"));
+    lower.Descriptions.ShouldNotContain(d => d.StartsWith("Higher up"));
+  }
+
+  [Test]
   public async Task Pause_StopsBeforeTheNextMove()
   {
     var path = Path.GetTempFileName();

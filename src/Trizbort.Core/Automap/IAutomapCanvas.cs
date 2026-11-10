@@ -68,6 +68,12 @@ public interface IAutomapCanvas
   ///   room's id doesn't count.
   /// </summary>
   Room ResolveRoom(Room room);
+
+  /// <summary>
+  ///   The rooms the map shows <paramref name="direction" /> leading to from <paramref name="room" />, by the joins'
+  ///   labels or the sides they leave from.
+  /// </summary>
+  IReadOnlyList<Room> RoomsAlong(Room room, MappableDirection direction) => Array.Empty<Room>();
 }
 
 public delegate bool? RoomMatcher(string roomName, string roomDescription, Room room);
