@@ -53,6 +53,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **Joins remember their ways.** Each join keeps a list of the ways along it: every direction or command, from
+  which end, and whether you were seen going that way or automap only assumed it. Its labels are drawn from that
+  list ("north / up" at one end, "climb ladder" in the middle), so automap no longer has to guess from the label
+  text or from the side a join leaves a room. Change a join's labels, or move an end whose side gave its
+  direction, and automap goes by what you changed. Saved with the map; older versions keep the labels as before.
+- Going a way the map already shows leading somewhere else now asks, wherever the join leaves the room: up from a
+  room with a join drawn "n / up" on its north side.
 - The start room is shown by a small green "play" sign in its top-left corner, instead of a green glow round the
   room. Hover over it for what it means.
 - The automap items in the Project menu are now together in a **Project > Automap** submenu, named as in the

@@ -992,12 +992,8 @@ public sealed class Automap : IAutomapController
           // connection's target, which is this very room when the connection arrived here from elsewhere.)
           // A one-way connection that only arrives here says nothing about where this exit leads (two-way
           // connections off: going east to here is not a promise that west leads back), so it doesn't count.
-          otherRoom = _lastKnownRoom
-                      .GetConnections(CompassPointHelper.GetCompassDirection(_lastMoveDirection.Value))
-                      .Where(connection => !AutomapCanvas.IsCommandJoin(connection))
-                      .Where(connection => connection.Flow != ConnectionFlow.OneWay ||
-                                           connection.GetSourceRoom() == _lastKnownRoom)
-                      .Select(connection => OtherEnd(connection, _lastKnownRoom))
+          // The join's ways say where it leads, wherever it leaves the room: "n / up" on the north side leads up.
+          otherRoom = _canvas.RoomsAlong(_lastKnownRoom, _lastMoveDirection.Value)
                       .FirstOrDefault(room => room != null && room != _lastKnownRoom);
           if (otherRoom != null)
           {
@@ -1290,8 +1286,7 @@ public sealed class Automap : IAutomapController
   private static bool LoopsBack(Room room, MappableDirection direction) =>
     room.GetConnections().Any(connection =>
       connection.GetSourceRoom(out var from) == room && connection.GetTargetRoom(out var to) == room && from != to &&
-      DirectionWords.SplitLabel(connection.StartText)
-        .Any(word => DirectionWords.TryParse(word, out var listed) && listed == direction));
+      JoinWays.Lists(JoinWays.Of(connection), true, direction));
 
   /// <summary>"Cupboard (-1)" or "Cupboard 2" for "Cupboard": the name, then something more after a space or bracket.</summary>
   private static bool IsVariantOf(string name, string heading)

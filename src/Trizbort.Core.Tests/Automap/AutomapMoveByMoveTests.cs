@@ -625,6 +625,47 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Rooms().ShouldBe(new[] { "Forest" });
   }
 
+  private sealed class SameDirectionPrompts : IEditorPrompts
+  {
+    public string AskedAbout;
+
+    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, System.Threading.CancellationToken token = default)
+    {
+      AskedAbout = existing?.Name;
+      return Task.FromResult(AutomapSameDirectionResult.KeepBoth);
+    }
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, System.Threading.CancellationToken token = default) =>
+      Task.FromResult(RoomDisambiguation.Choose(candidates[0]));
+  }
+
+  [Test]
+  public async Task AWayUpDrawnOnTheNorthSide_CountsAsTheWayUp_WhenUpLeadsSomewhereNew()
+  {
+    // the user drew the chimney going up from the fireplace on its north side, labelled "n / up"
+    var fireplace = new Room(Project.Current) { Name = "Fireplace", Position = new Vector(0, 300), Size = new Vector(96, 64) };
+    var chimney = new Room(Project.Current) { Name = "In the Chimney", Position = new Vector(0, 0), Size = new Vector(96, 64) };
+    Project.Current.Elements.Add(fireplace);
+    Project.Current.Elements.Add(chimney);
+    var drawn = new Connection(Project.Current, new Vertex(fireplace.PortAt(CompassPoint.North)), new Vertex(chimney.PortAt(CompassPoint.South)))
+      { StartText = "n / up" };
+    Project.Current.Elements.Add(drawn);
+
+    var prompts = new SameDirectionPrompts();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "Fireplace", "A big fireplace.", "",
+      ">up", "Roof", "On the roof.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    // up already leads to the chimney: automap asks rather than quietly adding a second way up
+    prompts.AskedAbout.ShouldBe("In the Chimney");
+  }
+
   [Test]
   public async Task Pause_StopsBeforeTheNextMove()
   {
