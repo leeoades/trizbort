@@ -173,7 +173,8 @@ public static class CatalogueMenuBuilder
             previousGroup = group;
 
             // CreateMenuItem sets the enabled state itself (items in a closed menu are not attached yet).
-            menu.Items.Add(CreateMenuItem(command, session, commandFor, refreshers, showGesture: false));
+            menu.Items.Add(CreateMenuItem(command, session, commandFor, refreshers, showGesture: false,
+                header: command.ContextTitle));
         }
 
         // A context menu is rebuilt each time it is shown, so it only listens to the session while it is open.
@@ -333,11 +334,12 @@ public static class CatalogueMenuBuilder
         EditorSession session,
         Func<EditorCommand, ICommand?>? commandFor,
         List<Action> refreshers,
-        bool showGesture = true)
+        bool showGesture = true,
+        string? header = null)
     {
         var macOS = AvaloniaKeyMapper.IsMacOS;
         var adapter = new CatalogueCommandAdapter(command, session, commandFor?.Invoke(command));
-        var item = new MenuItem { Header = command.TitleFor(session) };
+        var item = new MenuItem { Header = header ?? command.TitleFor(session) };
         var dynamic = command.DynamicChildren != null;
         if (!dynamic) item.Command = adapter;
 

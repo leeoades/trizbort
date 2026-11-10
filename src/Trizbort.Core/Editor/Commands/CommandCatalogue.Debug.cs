@@ -53,9 +53,9 @@ public sealed partial class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "automap.run",
-      Title = "_Run Automap to Completion",
-      MenuPath = "Project",
-      Group = "2-automap-run",
+      Title = "_Play",
+      MenuPath = "Project/Automap",
+      Group = "2-automap/2-transcript",
       Scope = CommandScope.Canvas,
       Gestures = new[] { new KeyGesture(InputKey.F5, none) },
       CanExecuteFunc = s => s.Automap.IsRunning,
@@ -63,22 +63,19 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
-      Id = "automap.back",
-      Title = "_Previous Automap Move",
-      MenuPath = "Project",
-      Group = "2-automap-run",
-      Scope = CommandScope.Canvas,
-      // F9, beside F10 for the next move: read the transcript again from the move before, map left as it is
-      Gestures = new[] { new KeyGesture(InputKey.F9, none) },
-      CanExecuteFunc = s => s.Automap.IsRunning,
-      ExecuteAsyncFunc = s => Run(() => s.Automap.GoBack())
+      Id = "automap.pause",
+      Title = "P_ause",
+      MenuPath = "Project/Automap",
+      Group = "2-automap/2-transcript",
+      CanExecuteFunc = s => s.Automap.IsRunning && !s.Automap.MoveByMove,
+      ExecuteAsyncFunc = s => Run(() => s.Automap.Pause())
     });
     catalogue.Register(new EditorCommand
     {
       Id = "automap.nextMove",
-      Title = "Play Next Automap Mo_ve",
-      MenuPath = "Project",
-      Group = "2-automap-run",
+      Title = "_Next Move",
+      MenuPath = "Project/Automap",
+      Group = "2-automap/2-transcript",
       Scope = CommandScope.Canvas,
       // F10, as stepping over a line in a debugger; F5 plays to the end
       Gestures = new[] { new KeyGesture(InputKey.F10, none) },
@@ -87,10 +84,22 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "automap.back",
+      Title = "P_revious Move",
+      MenuPath = "Project/Automap",
+      Group = "2-automap/2-transcript",
+      Scope = CommandScope.Canvas,
+      // F9, beside F10 for the next move: read the transcript again from the move before, map left as it is
+      Gestures = new[] { new KeyGesture(InputKey.F9, none) },
+      CanExecuteFunc = s => s.Automap.IsRunning,
+      ExecuteAsyncFunc = s => Run(() => s.Automap.GoBack())
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "automap.suspend",
-      Title = "Suspend _Mapping",
-      MenuPath = "Project",
-      Group = "2-automap-run",
+      Title = "_Tracking Only",
+      MenuPath = "Project/Automap",
+      Group = "2-automap/3-mapping",
       CanExecuteFunc = s => s.Automap.IsRunning,
       IsCheckedFunc = s => s.Automap.Suspended,
       ExecuteAsyncFunc = s => Run(() =>
@@ -103,9 +112,10 @@ public sealed partial class CommandCatalogue
     {
       Id = "automap.imHere",
       ContextOrder = 64, ContextGroup = "5-room",
-      Title = "Automap: I'm _Here",
-      MenuPath = "Project",
-      Group = "2-automap-run",
+      Title = "_I'm Here",
+      ContextTitle = "Automap: I'm _Here",
+      MenuPath = "Project/Automap",
+      Group = "2-automap/4-where",
       ContextTargets = ContextTargets.Room,
       CanExecuteFunc = s => s.Automap.IsRunning && s.PrimaryRoom != null && s.Selection.Count == 1,
       ExecuteAsyncFunc = s => Run(() => s.Automap.SetCurrentRoom(s.PrimaryRoom))
@@ -113,9 +123,9 @@ public sealed partial class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "automap.currentRoom",
-      Title = "Go to _Current Automap Room",
-      MenuPath = "Project",
-      Group = "2-automap-run",
+      Title = "_Centre on Current Room",
+      MenuPath = "Project/Automap",
+      Group = "2-automap/4-where",
       Scope = CommandScope.Canvas,
       CanExecuteFunc = s => s.Automap.IsRunning && s.Automap.CurrentRoom != null,
       ExecuteAsyncFunc = s => Run(() => GoToAutomapRoom(s))
@@ -123,9 +133,9 @@ public sealed partial class CommandCatalogue
     catalogue.Register(new EditorCommand
     {
       Id = "automap.step",
-      Title = "Automap Single _Step (debug)",
-      MenuPath = "Project",
-      Group = "2-automap-run",
+      Title = "Single _Step (debug)",
+      MenuPath = "Project/Automap",
+      Group = "2-automap/9-debug",
       Hidden = hidden,
       Scope = CommandScope.Canvas,
       // F11 is Show Desktop on macOS: use Primary+Shift+F11 there.

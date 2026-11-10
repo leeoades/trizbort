@@ -37,13 +37,19 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   offers **Split 'Cupboard' into separate rooms**: for a room that is really two places alike, such as a lift.
   Automap adds "Cupboard (2)", joined from the cupboard by the last thing you did there ("pull peg, first"), and
   joins the new room to it.
-- **Automap: I'm Here** (the room's right-click menu, while automapping) tells automap which room you're in, when
+- **Automap: I'm Here** (the room's right-click menu, or Project > Automap > I'm Here, while automapping) tells automap which room you're in, when
   it has lost track or got it wrong. It maps on from there.
 - **The map glides** when automap moves on to another room, and for Current Room, easing in and out so you can see
   which way it went. Panning or zooming yourself stops it.
-- **Tracking only** (the automap panel; Suspend Mapping in the Project menu): automap follows you through rooms it
+- **Tracking only** (the automap panel, or Project > Automap > Tracking Only): automap follows you through rooms it
   knows but changes nothing, so you can step back and forward through the transcript to check it, and fix the map.
   Switch back to Mapping and it maps on from the next room it sees, joined to nothing.
+
+### Changed
+
+- The automap items in the Project menu are now together in a **Project > Automap** submenu, named as in the
+  automap panel: Start Automap..., Stop Automap, Play, Pause, Next Move, Previous Move, Tracking Only, Centre on
+  Current Room and I'm Here.
 
 ### Fixed
 

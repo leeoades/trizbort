@@ -43,7 +43,8 @@ public class AutomapPanelTests
         var settings = AutomapSettings.Default;
         settings.FileName = path;
         settings.MoveByMove = true;
-        var window = new Views.MainWindow { DataContext = vm, Width = 1200, Height = 800 };
+        // the panel on its own (a whole main window would stay subscribed to the map after the test)
+        var window = new Window { DataContext = vm, Width = 400, Height = 900, Content = new AutomapPanel() };
         try
         {
             window.Show();

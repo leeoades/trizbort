@@ -29,6 +29,11 @@ public interface IAutomapController
   /// <summary>Go back a move in the transcript and wait there, leaving the map as it is.</summary>
   void GoBack();
 
+  /// <summary>Pause before the next move (playing the transcript a move at a time from then on).</summary>
+  void Pause()
+  {
+  }
+
   /// <summary>The room automap thinks the player is in, if it knows; null otherwise.</summary>
   Room CurrentRoom => null;
 
