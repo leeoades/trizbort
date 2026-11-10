@@ -50,6 +50,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   to ("To Front Porch") sit round it where those rooms were, joined the same way, and a portal back to it ("To
   Foyer") is left where it was, keeping the old joins. Automap goes through portals to the rooms they stand for,
   joining nothing across the map. Copies of rooms are never matched by name. One undo step.
+- **One way, two rooms.** A way out (a direction, or a command such as "enter closet") that leads to more than one
+  room, as after Keep Both, takes you to the one the game's heading names, then the one whose description starts
+  the same way. With no heading, automap waits for the next one instead of guessing.
 - **Same name, different place?** Going a direction to a room with the same name as the one you left, when the
   game shows a description that starts unlike any of that room's, automap asks whether it's a new room (a second
   "In the Chimney" further up) or the same one. A way already mapped as looping back never asks, and once you say

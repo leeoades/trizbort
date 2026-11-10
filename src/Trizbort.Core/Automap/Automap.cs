@@ -984,12 +984,17 @@ public sealed class Automap : IAutomapController
 
         // the command was the label of a join the user drew ("pull first peg"): a heading naming the room at its
         // other end (or the room it was made from, "Cupboard" for "Cupboard (-1)") is that room, not a journey;
-        // any other heading is mapped as usual
+        // any other heading is mapped as usual. Joins with the same label can lead to different rooms ("enter
+        // closet" from the cellar, to the shaft or, once it has come down, the closet): the heading, then the
+        // description, says which
         if (_followTo != null)
         {
-          var followed = _canvas.ResolveRoom(_followTo);
+          var named = _followTo.Select(_canvas.ResolveRoom)
+            .Where(other => other != null && other.Name.StartsWith(roomName.Trim(), StringComparison.OrdinalIgnoreCase))
+            .Distinct().ToList();
           _followTo = null;
-          if (followed != null && followed.Name.StartsWith(roomName.Trim(), StringComparison.OrdinalIgnoreCase))
+          var followed = OneOf(named, roomDescription);
+          if (followed != null)
           {
             await FollowAsync(followed, token);
             previousLine = line;
@@ -1045,7 +1050,7 @@ public sealed class Automap : IAutomapController
         // several rooms sharing a name needn't be asked about.
         RefreshLastKnownRoom();
         await ChangeStopAsync(roomName, token);
-        var room = VariantRoom(roomName, null);
+        var room = VariantRoom(roomName, roomDescription);
         _skipHeading = false;
         if (room == null)
         {
@@ -1213,11 +1218,16 @@ public sealed class Automap : IAutomapController
                 // player arrived somewhere new without a compass direction: a teleport, a magic word, "enter
                 // boat"... Join it from where they were, labelled with what they typed, if we know.
                 room = _canvas.CreateRoom(_lastKnownRoom, roomName);
-                if (_lastKnownRoom == null)
+                if (_lastKnownRoom == null && _startRoom == null)
                 {
                   room.IsStartRoom = true;
-                  _startRoom ??= room;
+                  _startRoom = room;
                   Trace("{0}: first room, {1}.", FormatTranscriptLineForDisplay(line), roomName);
+                }
+                else if (_lastKnownRoom == null)
+                {
+                  // automap lost track of where the player was (a skipped heading, a join to several rooms)
+                  Trace("{0}: {1}, joined to nothing.", FormatTranscriptLineForDisplay(line), roomName);
                 }
                 else if (_lastJourneyCommand != null)
                 {
@@ -1313,11 +1323,20 @@ public sealed class Automap : IAutomapController
     }
 
     // no room heading in the reply: the labelled join took the player along it ("The cupboard lurches downwards.")
+    // (only when it leads one place: with several, the reply doesn't say which)
     if (_followTo != null)
     {
-      var followed = _canvas.ResolveRoom(_followTo);
+      var ends = _followTo.Select(_canvas.ResolveRoom).Where(other => other != null).Distinct().ToList();
       _followTo = null;
-      if (followed != null) await FollowAsync(followed, token);
+      if (ends.Count == 1) await FollowAsync(ends[0], token);
+      else if (ends.Count > 1)
+      {
+        // somewhere along one of them, but not known which: join nothing until a heading says
+        Trace("\"{0}\" leads to more than one room; waiting to see where.", _lastCommand);
+        _lastKnownRoom = null;
+        _lastMoveDirection = null;
+        _lastJourneyCommand = null;
+      }
     }
   }
 
@@ -1368,7 +1387,7 @@ public sealed class Automap : IAutomapController
   ///   after coming up), the room it came from. Several rooms can share a name: two "In the Chimney" one above the
   ///   other.
   /// </summary>
-  private Room VariantRoom(string roomName, Room found)
+  private Room VariantRoom(string roomName, string roomDescription)
   {
     var here = _lastKnownRoom;
     if (here == null) return null;
@@ -1379,8 +1398,10 @@ public sealed class Automap : IAutomapController
     var direction = _lastMoveDirection.Value;
 
     // through a portal ("To Front Porch") to the room it stands for
-    var along = _canvas.RoomsAlong(here, direction).Select(Real)
-      .FirstOrDefault(other => other != null && other != here && NamedAs(other.Name, roomName));
+    // the way can lead to more than one room ("Keep Both"): the heading, then the description, says which
+    var along = OneOf(_canvas.RoomsAlong(here, direction).Select(Real)
+      .Where(other => other != null && other != here && NamedAs(other.Name, roomName)).Distinct().ToList(),
+      roomDescription);
     if (along != null) return along;
 
     // the natural way back along a one-way join that brought the player here, from a room by this name, until the
@@ -1648,7 +1669,19 @@ public sealed class Automap : IAutomapController
   ///   The room at the other end of a join labelled with the last command: the player is there once the game has
   ///   replied, unless the reply shows them somewhere else.
   /// </summary>
-  private Room _followTo;
+  private List<Room> _followTo;
+
+  /// <summary>
+  ///   Of the rooms a way leads to that the heading names, the one the player is in: the only one, or the one whose
+  ///   description starts the same way. With several and no description, the first; with several and a description
+  ///   none of them has, null (it's worked out as for any heading, asking if need be).
+  /// </summary>
+  private static Room OneOf(IReadOnlyList<Room> rooms, string description)
+  {
+    if (rooms.Count <= 1) return rooms.FirstOrDefault();
+    if (string.IsNullOrWhiteSpace(description)) return rooms[0];
+    return rooms.FirstOrDefault(room => room.Descriptions.Any(known => SameFirstSentence(known, description)));
+  }
 
   private async Task FollowAsync(Room room, CancellationToken token)
   {
@@ -1666,15 +1699,17 @@ public sealed class Automap : IAutomapController
   /// <summary>
   ///   A join from where the player is, labelled with the command they typed (or with it and the command it answers,
   ///   "pull peg" then "first" for "pull first peg"): the user drew it for a way automap can't see, such as a lift.
-  ///   Returns the room at its other end. Words count in any order, and "the", "a" and "an" don't count.
+  ///   Returns the rooms at the other ends of all such joins (one label can lead to different rooms at different
+  ///   times), or null. Words count in any order, and "the", "a" and "an" don't count.
   /// </summary>
-  private Room LabelledJoinEnd(string command, string asked)
+  private List<Room> LabelledJoinEnd(string command, string asked)
   {
     RefreshLastKnownRoom();
     var here = _lastKnownRoom;
     if (here == null) return null;
     var tries = new List<string> { command };
     if (asked != null) tries.Add(asked + " " + command);
+    var ends = new List<Room>();
 
     foreach (var connection in here.GetConnections())
     {
@@ -1685,10 +1720,10 @@ public sealed class Automap : IAutomapController
       var match = labels.Where(label => !string.IsNullOrWhiteSpace(label))
         .SelectMany(label => label.Split('/'))
         .FirstOrDefault(label => tries.Any(attempt => SameWords(label, attempt)));
-      if (match != null) return Real(to);
+      if (match != null && !ends.Contains(Real(to))) ends.Add(Real(to));
     }
 
-    return null;
+    return ends.Count == 0 ? null : ends;
   }
 
   private static readonly string[] _articles = { "the", "a", "an" };

@@ -147,6 +147,98 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
     Project.Current.Elements.OfType<Connection>().Count().ShouldBe(connections);
   }
 
+  private static Room Add(string name, float x, float y, string description = null)
+  {
+    var room = new Room(Project.Current) { Name = name, Position = new Vector(x, y) };
+    if (description != null) room.AddDescription(description);
+    Project.Current.Elements.Add(room);
+    return room;
+  }
+
+  private static void Join(Room from, CompassPoint side, Room to, string command = null)
+  {
+    var join = new Connection(Project.Current, new Vertex(from.PortAt(side)), new Vertex(to.PortAt(CompassPoint.South)))
+    {
+      Flow = ConnectionFlow.OneWay,
+      MidText = command ?? string.Empty
+    };
+    Project.Current.Elements.Add(join);
+  }
+
+  [Test]
+  public async Task OneCommand_LeadingToTwoRooms_TheHeadingSaysWhich()
+  {
+    // Hollywood Hijinx: from the cellar, "enter closet" leads to the shaft, or, once the closet has come down, into it
+    var cellar = Add("Cellar", 0, 0, "A dank cellar.");
+    var shaft = Add("Shaft", -200, -200, "A dark shaft under the closet.");
+    var closet = Add("Closet", 200, -200, "A coat closet with pegs.");
+    Join(cellar, CompassPoint.NorthWest, shaft, "enter closet");
+    Join(cellar, CompassPoint.NorthEast, closet, "enter closet");
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var lines = new[]
+    {
+      ">look", "Cellar", "A dank cellar.", "",
+      ">enter closet", "Closet", "A coat closet with pegs.", "",
+      ">north", "Coat Rack", "A rack of coats.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines);
+
+    var rack = AllRooms().Single(room => room.Name == "Coat Rack");
+    Joined(closet, rack).ShouldBeTrue();
+    Joined(shaft, rack).ShouldBeFalse();
+    Joined(cellar, rack).ShouldBeFalse();
+  }
+
+  [Test]
+  public async Task OneDirection_LeadingToTwoRoomsWithOneName_TheDescriptionSaysWhich()
+  {
+    var cellar = Add("Cellar", 0, 0, "A dank cellar.");
+    var first = Add("Shaft", -200, -200, "A dark shaft under the closet.");
+    var second = Add("Shaft", 200, -200, "A shaft, the closet's floor just above you.");
+    Join(cellar, CompassPoint.North, first);
+    Join(cellar, CompassPoint.North, second);
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var lines = new[]
+    {
+      ">look", "Cellar", "A dank cellar.", "",
+      ">north", "Shaft", "A shaft, the closet's floor just above you.", "",
+      ">east", "Ledge", "A narrow ledge.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines);
+
+    var ledge = AllRooms().Single(room => room.Name == "Ledge");
+    Joined(second, ledge).ShouldBeTrue();
+    Joined(first, ledge).ShouldBeFalse();
+  }
+
+  [Test]
+  public async Task OneCommand_LeadingToTwoRooms_WithNoHeading_JoinsNothingUntilAHeadingSays()
+  {
+    var cellar = Add("Cellar", 0, 0, "A dank cellar.");
+    var shaft = Add("Shaft", -200, -200, "A dark shaft under the closet.");
+    var closet = Add("Closet", 200, -200, "A coat closet with pegs.");
+    Join(cellar, CompassPoint.NorthWest, shaft, "enter closet");
+    Join(cellar, CompassPoint.NorthEast, closet, "enter closet");
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var lines = new[]
+    {
+      ">look", "Cellar", "A dank cellar.", "",
+      ">enter closet", "You squeeze in.", "",
+      ">north", "Coat Rack", "A rack of coats.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines);
+
+    var rack = AllRooms().Single(room => room.Name == "Coat Rack");
+    rack.GetConnections().ShouldBeEmpty();
+    rack.IsStartRoom.ShouldBeFalse();
+  }
+
   [Test]
   public async Task ANewRoomIsNeverOneOfItsCopies_ByName()
   {
