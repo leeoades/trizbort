@@ -153,6 +153,8 @@ public class CopyController
     newConnection.AutomapCommand = connection.AutomapCommand;
     newConnection.StartTravelled = connection.StartTravelled;
     newConnection.EndTravelled = connection.EndTravelled;
+    newConnection.AutomapWays = connection.AutomapWays;
+    newConnection.AutomapWaysFor = connection.AutomapWaysFor;
     newConnection.Name = connection.Name;
     newConnection.StartText = connection.StartText;
     newConnection.Style = connection.Style;
@@ -257,6 +259,8 @@ public class CopyController
       AutomapCommand = conn.AutomapCommand,
       StartTravelled = conn.StartTravelled,
       EndTravelled = conn.EndTravelled,
+      AutomapWays = conn.AutomapWays,
+      AutomapWaysFor = conn.AutomapWaysFor,
       Name = conn.Name,
       StartText = conn.StartText,
       Style = conn.Style,
@@ -346,6 +350,8 @@ public class CopyController
     public string AutomapCommand { get; set; }
     public string StartTravelled { get; set; }
     public string EndTravelled { get; set; }
+    public string AutomapWays { get; set; }
+    public string AutomapWaysFor { get; set; }
     public ConnectionFlow Flow { get; set; }
     public string MidText { get; set; }
     public string Name { get; set; }

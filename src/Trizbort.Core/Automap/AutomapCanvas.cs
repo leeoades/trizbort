@@ -50,15 +50,14 @@ public class AutomapCanvas : IAutomapCanvas
     }
 
     var connection = AddConnection(room, sourceCompassPoint, room, sourceCompassPoint);
-    switch (direction)
+    // an exit not yet taken: up and down are written in full, compass exits go unlabelled (the side says it)
+    var text = direction switch
     {
-      case MappableDirection.Up:
-        connection.StartText = Connection.Up;
-        break;
-      case MappableDirection.Down:
-        connection.StartText = Connection.Down;
-        break;
-    }
+      MappableDirection.Up => Connection.Up,
+      MappableDirection.Down => Connection.Down,
+      _ => null
+    };
+    JoinWays.Write(connection, new[] { JoinWay.Go(true, direction, false, text) }, LabelWord);
   }
 
   /// <summary>Whether a join (or stub) already leaves <paramref name="room" /> in <paramref name="direction" />.</summary>
@@ -67,8 +66,12 @@ public class AutomapCanvas : IAutomapCanvas
     foreach (var connection in CurrentProject.Elements.OfType<Connection>())
     {
       if (IsCommandJoin(connection)) continue;
-      if (connection.GetSourceRoom() == room && ListsDirection(EndWords(connection, true), direction)) return true;
-      if (connection.GetTargetRoom() == room && ListsDirection(EndWords(connection, false), direction)) return true;
+      var source = connection.GetSourceRoom();
+      var target = connection.GetTargetRoom();
+      if (source != room && target != room) continue;
+      var ways = JoinWays.Of(connection);
+      if (source == room && JoinWays.Lists(ways, true, direction)) return true;
+      if (target == room && JoinWays.Lists(ways, false, direction)) return true;
     }
 
     return false;
@@ -80,12 +83,17 @@ public class AutomapCanvas : IAutomapCanvas
   /// </summary>
   private bool TakeAsWayBack(Room room, MappableDirection direction)
   {
-    var cameBy = DirectionWord(CompassPointHelper.GetOpposite(direction));
+    var cameBy = CompassPointHelper.GetOpposite(direction);
     var join = CurrentProject.Elements.OfType<Connection>().FirstOrDefault(connection =>
-      connection.Flow == ConnectionFlow.OneWay && !IsCommandJoin(connection) &&
-      connection.GetTargetRoom() == room && connection.GetSourceRoom() != room &&
-      TravelledWords(connection, true).Contains(cameBy) && !WasTravelled(connection, false) &&
-      string.IsNullOrWhiteSpace(connection.EndText));
+    {
+      if (connection.Flow != ConnectionFlow.OneWay || IsCommandJoin(connection) ||
+          connection.GetTargetRoom() != room || connection.GetSourceRoom() == room ||
+          !string.IsNullOrWhiteSpace(connection.EndText))
+        return false;
+      var ways = JoinWays.Of(connection);
+      return ways.Any(way => way.AtStart && way.IsDirection && way.Seen && way.Direction == cameBy) &&
+             !JoinWays.SeenFrom(ways, false);
+    });
     if (join == null) return false;
 
     var from = join.GetSourceRoom();
@@ -95,7 +103,11 @@ public class AutomapCanvas : IAutomapCanvas
       if (ApproximateDirectionMatch(FacingPoint(room, from), point)) DockEnd(join, false, room, point);
     }
 
-    SetEndText(join, false, new List<string> { LabelWord(direction) });
+    // the guess this end made (the side it faced) gives way to the assumed way back
+    var joinWays = JoinWays.Of(join);
+    joinWays.RemoveAll(way => !way.AtStart && way.IsDirection && !way.Seen);
+    joinWays.Add(JoinWay.Go(false, direction, false));
+    JoinWays.Write(join, joinWays, LabelWord);
     return true;
   }
 
@@ -151,11 +163,9 @@ public class AutomapCanvas : IAutomapCanvas
       sourceIsStart = connection.GetSourceRoom() == source;
       // a guessed end is replaced when the player goes another way, and simply confirmed when they go that way
       sourceEndIsGuess = IsGuessedEnd(connection, sourceIsStart) &&
-                         !ListsDirection(EndWords(connection, sourceIsStart), directionFromSource);
+                         !JoinWays.Lists(JoinWays.Of(connection), sourceIsStart, directionFromSource);
       if (wrongWay) connection.Flow = ConnectionFlow.TwoWay;
     }
-
-    MarkTravelled(connection, sourceIsStart, directionFromSource);
 
     RecordDirection(connection, source, sourceIsStart, directionFromSource, sourceEndIsGuess, target,
       assumeTwoWayConnections);
@@ -174,20 +184,19 @@ public class AutomapCanvas : IAutomapCanvas
   /// </summary>
   private void TakeOverCommandJoins(Connection connection, Room source, Room target)
   {
-    if (IsCommandJoin(connection))
-    {
-      // the command join turned out to be a direction too: its commands stay as its label
-      connection.AutomapCommand = string.Empty;
-      connection.Style = ConnectionStyle.Solid;
-    }
-
+    List<JoinWay> ways = null;
+    var sourceIsStart = connection.GetSourceRoom() == source;
     foreach (var other in CurrentProject.Elements.OfType<Connection>().ToList())
     {
       if (other == connection || !IsCommandJoin(other)) continue;
       if (other.GetSourceRoom() != source || other.GetTargetRoom() != target) continue;
-      foreach (var command in CommandsOf(other)) connection.MidText = WithMethod(connection.MidText, command);
+      ways ??= JoinWays.Of(connection);
+      foreach (var command in JoinWays.Commands(JoinWays.Of(other)))
+        JoinWays.AddCommand(ways, sourceIsStart, command);
       CurrentProject.Elements.Remove(other);
     }
+
+    if (ways != null) JoinWays.Write(connection, ways, LabelWord);
   }
 
   /// <summary>A one-way command join ("enter closet") from <paramref name="from" /> to <paramref name="to" />, if any.</summary>
@@ -203,38 +212,13 @@ public class AutomapCanvas : IAutomapCanvas
   /// </summary>
   private void TurnCommandJoinIntoWayBack(Connection connection, Room here, CompassPoint side)
   {
-    var startWords = DirectionWords.SplitLabel(connection.StartText);
-    foreach (var command in CommandsOf(connection))
-      if (!startWords.Any(word => string.Equals(word, command, StringComparison.OrdinalIgnoreCase)))
-        startWords.Add(command);
-    connection.StartText = string.Join(" / ", startWords);
-    connection.MidText = string.Empty;
-    connection.AutomapCommand = string.Empty;
+    // its commands stay ways from the far room; once the direction back is recorded they're written on that end
+    // (JoinWays), and the side there says nothing
+    var ways = JoinWays.Of(connection);
     connection.Style = ConnectionStyle.Solid;
-    // the player left the far room along it by the command, so its side there says nothing
-    if (!TravelledWords(connection, true).Contains(ByCommand))
-      connection.StartTravelled = string.Join(" ", TravelledWords(connection, true).Append(ByCommand));
     // here, the join leaves on the direction's side, as a new join would
     DockEnd(connection, false, here, side);
-  }
-
-  /// <summary>Travelled from this end by a command, not a direction (<see cref="Connection.StartTravelled" />).</summary>
-  private const string ByCommand = "command";
-
-  /// <summary>The commands a join records: a command join's commands, or the ones listed in a join's middle label.</summary>
-  private static List<string> CommandsOf(Connection connection) =>
-    SplitMethods(IsCommandJoin(connection) ? connection.AutomapCommand : connection.MidText);
-
-  private static List<string> SplitMethods(string text) =>
-    (text ?? string.Empty).Split(" / ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
-
-  /// <summary>A " / " list of the ways along a join, with <paramref name="method" /> added if it isn't there yet.</summary>
-  private static string WithMethod(string text, string method)
-  {
-    var methods = SplitMethods(text);
-    if (methods.Any(m => string.Equals(m, method, StringComparison.OrdinalIgnoreCase))) return text;
-    methods.Add(method);
-    return string.Join(" / ", methods);
+    JoinWays.Write(connection, ways, LabelWord);
   }
 
   /// <summary>Whether <paramref name="connection" /> is a way from <paramref name="from" /> to <paramref name="to" />.</summary>
@@ -260,25 +244,20 @@ public class AutomapCanvas : IAutomapCanvas
     Room far,
     bool assumeTwoWayConnections)
   {
-    List<string> hereWords;
+    var ways = JoinWays.Of(connection);
     if (hereIsGuess)
     {
       // the guessed directions go; anything the user typed there stays
       DockEnd(connection, hereIsStart, here, CompassPointHelper.GetCompassDirection(direction));
-      hereWords = EndWords(connection, hereIsStart).Where(word => !DirectionWords.TryParse(word, out _)).ToList();
-    }
-    else
-    {
-      hereWords = EndWords(connection, hereIsStart);
+      ways.RemoveAll(way => way.AtStart == hereIsStart && way.IsDirection);
     }
 
-    var thereWords = EndWords(connection, !hereIsStart);
-    var added = AddWord(hereWords, LabelWord(direction));
+    var added = JoinWays.AddDirection(ways, hereIsStart, direction, seen: true);
     // assuming two-way joins, the way back is the opposite direction
     if (added && !hereIsGuess && assumeTwoWayConnections && connection.Flow == ConnectionFlow.TwoWay)
-      AddWord(thereWords, LabelWord(CompassPointHelper.GetOpposite(direction)));
+      JoinWays.AddDirection(ways, !hereIsStart, CompassPointHelper.GetOpposite(direction), seen: false);
 
-    var hereCompass = FirstCompass(hereWords);
+    var hereCompass = JoinWays.FirstCompass(ways, hereIsStart);
     if (hereCompass != null && !IsMainPoint(EndPoint(connection, hereIsStart)))
     {
       var point = CompassPointHelper.GetCompassDirection(hereCompass.Value);
@@ -292,7 +271,7 @@ public class AutomapCanvas : IAutomapCanvas
         DockEnd(connection, hereIsStart, here, point);
         if (!IsMainPoint(EndPoint(connection, !hereIsStart)))
         {
-          var thereCompass = FirstCompass(thereWords);
+          var thereCompass = JoinWays.FirstCompass(ways, !hereIsStart);
           DockEnd(connection, !hereIsStart, far,
             thereCompass != null
               ? CompassPointHelper.GetCompassDirection(thereCompass.Value)
@@ -301,34 +280,8 @@ public class AutomapCanvas : IAutomapCanvas
       }
     }
 
-    SetEndText(connection, hereIsStart, hereWords);
-    SetEndText(connection, !hereIsStart, thereWords);
+    JoinWays.Write(connection, ways, LabelWord);
   }
-
-  /// <summary>
-  ///   Record that the player set off from one end of a join in <paramref name="direction" />. Kept on the connection
-  ///   (<see cref="Connection.StartTravelled" />), so it is saved with the map and undone with the move that made it.
-  /// </summary>
-  private static void MarkTravelled(Connection connection, bool atStart, MappableDirection direction)
-  {
-    var words = TravelledWords(connection, atStart);
-    var word = DirectionWord(direction);
-    if (words.Contains(word)) return;
-    words.Add(word);
-    var text = string.Join(" ", words);
-    if (atStart) connection.StartTravelled = text;
-    else connection.EndTravelled = text;
-  }
-
-  private static List<string> TravelledWords(Connection connection, bool atStart)
-  {
-    var text = atStart ? connection.StartTravelled : connection.EndTravelled;
-    return string.IsNullOrWhiteSpace(text)
-      ? new List<string>()
-      : text.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
-  }
-
-  private static bool WasTravelled(Connection connection, bool atStart) => TravelledWords(connection, atStart).Count > 0;
 
   /// <summary>
   ///   Whether the exit drawn at one end of an existing join is only a guess: nobody has set off from that end, and it
@@ -338,8 +291,9 @@ public class AutomapCanvas : IAutomapCanvas
   /// </summary>
   private static bool IsGuessedEnd(Connection connection, bool atStart)
   {
-    if (WasTravelled(connection, atStart)) return false;
-    return connection.Flow == ConnectionFlow.OneWay ? !atStart : WasTravelled(connection, !atStart);
+    var ways = JoinWays.Of(connection);
+    if (JoinWays.SeenFrom(ways, atStart)) return false;
+    return connection.Flow == ConnectionFlow.OneWay ? !atStart : JoinWays.SeenFrom(ways, !atStart);
   }
 
   private static bool IsCompass(MappableDirection direction)
@@ -373,26 +327,6 @@ public class AutomapCanvas : IAutomapCanvas
   private static bool IsCompassWord(string word) =>
     DirectionWords.TryParse(word, out var direction) && IsCompass(direction);
 
-  private static MappableDirection? FirstCompass(IEnumerable<string> words)
-  {
-    foreach (var word in words)
-      if (DirectionWords.TryParse(word, out var direction) && IsCompass(direction))
-        return direction;
-    return null;
-  }
-
-  private static bool ListsDirection(IEnumerable<string> words, MappableDirection direction) =>
-    words.Any(word => DirectionWords.TryParse(word, out var listed) && listed == direction);
-
-  private static bool AddWord(List<string> words, string word)
-  {
-    if (DirectionWords.TryParse(word, out var direction) &&
-        words.Any(w => DirectionWords.TryParse(w, out var existing) && existing == direction))
-      return false;
-    if (words.Contains(word, StringComparer.OrdinalIgnoreCase)) return false;
-    words.Add(word);
-    return true;
-  }
 
   /// <summary>
   ///   A join made by <see cref="ConnectByCommand" /> ("xyzzy"). Marked by <see cref="Connection.AutomapCommand" />,
@@ -414,46 +348,6 @@ public class AutomapCanvas : IAutomapCanvas
     vertex.Port = room.PortAt(point);
   }
 
-  /// <summary>
-  ///   The directions written at one end of a join, plus the compass direction of the side it leaves the room from
-  ///   when no compass direction is written. Words that aren't directions (a label the user typed) are kept.
-  /// </summary>
-  private List<string> EndWords(Connection connection, bool atStart)
-  {
-    var text = atStart ? connection.StartText : connection.EndText;
-    var words = string.IsNullOrWhiteSpace(text)
-      ? new List<string>()
-      : text.Split('/').Select(word => word.Trim()).Where(word => word.Length > 0).ToList();
-    var point = EndPoint(connection, atStart);
-    // the side says the direction, unless the join is a command's, or the player left this end by a command: the
-    // side then only faces the other room
-    if (IsMainPoint(point) && !IsCommandJoin(connection) && !TravelledWords(connection, atStart).Contains(ByCommand) &&
-        !words.Any(IsCompassWord))
-      words.Insert(0, LabelWord(DirectionOfMainPoint(point)));
-    return words;
-  }
-
-  /// <summary>
-  ///   Write the directions at one end: none when the end's side already says it (a single compass direction),
-  ///   otherwise every direction, compass directions first.
-  /// </summary>
-  private static void SetEndText(Connection connection, bool atStart, List<string> words)
-  {
-    var ordered = words.Where(IsCompassWord).Concat(words.Where(word => !IsCompassWord(word))).ToList();
-    var point = EndPoint(connection, atStart);
-    var sideSaysIt = ordered.Count == 1 && IsMainPoint(point) &&
-                     DirectionWords.TryParse(ordered[0], out var only) && only == DirectionOfMainPoint(point);
-    var text = sideSaysIt ? string.Empty : string.Join(" / ", ordered);
-
-    if (atStart)
-    {
-      if (connection.StartText != text) connection.StartText = text;
-    }
-    else if (connection.EndText != text)
-    {
-      connection.EndText = text;
-    }
-  }
 
   /// <summary>
   ///   Move <paramref name="room" /> to sit <paramref name="fromAnchor" /> of <paramref name="anchor" />, if it is joined
@@ -558,7 +452,7 @@ public class AutomapCanvas : IAutomapCanvas
     var loop = CurrentProject.Elements.OfType<Connection>().FirstOrDefault(connection =>
       connection.GetSourceRoom(out var from) == room && connection.GetTargetRoom(out var to) == room &&
       from != to && !IsCommandJoin(connection));
-    var word = LabelWord(direction);
+    List<JoinWay> ways;
     if (loop == null)
     {
       var side = CompassPointHelper.GetCompassDirection(direction);
@@ -567,17 +461,16 @@ public class AutomapCanvas : IAutomapCanvas
       loop = AddConnection(room, side, room, back);
       loop.Flow = ConnectionFlow.OneWay;
       loop.Style = ConnectionStyle.Solid;
-      loop.StartText = word;
+      ways = new List<JoinWay>();
     }
     else
     {
-      var words = DirectionWords.SplitLabel(loop.StartText);
-      if (ListsDirection(words, direction)) return;
-      words.Add(word);
-      loop.StartText = string.Join(" / ", words);
+      ways = JoinWays.Of(loop);
+      if (JoinWays.Lists(ways, true, direction)) return;
     }
 
-    MarkTravelled(loop, true, direction);
+    JoinWays.AddDirection(ways, true, direction, seen: true);
+    JoinWays.Write(loop, ways, LabelWord);
 
     // a guessed arrow on the side the loop now uses moves off it (north into the forest, south loops back)
     FaceGuessedEnds();
@@ -599,25 +492,22 @@ public class AutomapCanvas : IAutomapCanvas
     // a command already known along a join between these rooms
     foreach (var connection in between)
     {
-      if (!CommandsOf(connection).Any(c => string.Equals(c, command, StringComparison.OrdinalIgnoreCase))) continue;
+      if (!JoinWays.Commands(JoinWays.Of(connection))
+            .Any(c => string.Equals(c, command, StringComparison.OrdinalIgnoreCase)))
+        continue;
       if (IsCommandJoin(connection) && !Leads(connection, source, target)) connection.Flow = ConnectionFlow.TwoWay;
       return;
     }
 
-    // a direction that leads there comes first; the command joins its label
-    var way = between.FirstOrDefault(connection => !IsCommandJoin(connection) && Leads(connection, source, target));
+    // a direction that leads there comes first; the command is another way along it. Or another command that leads
+    // there ("turn on lamp" as well as "light lamp"): one join lists both.
+    var way = between.FirstOrDefault(connection => !IsCommandJoin(connection) && Leads(connection, source, target)) ??
+              between.FirstOrDefault(connection => IsCommandJoin(connection) && Leads(connection, source, target));
     if (way != null)
     {
-      way.MidText = WithMethod(way.MidText, command);
-      return;
-    }
-
-    // another command that leads there ("turn on lamp" as well as "light lamp"): one join lists both
-    var other = between.FirstOrDefault(connection => IsCommandJoin(connection) && Leads(connection, source, target));
-    if (other != null)
-    {
-      other.AutomapCommand = WithMethod(other.AutomapCommand, command);
-      other.MidText = WithMethod(other.MidText, command);
+      var ways = JoinWays.Of(way);
+      JoinWays.AddCommand(ways, way.GetSourceRoom() == source, command);
+      JoinWays.Write(way, ways, LabelWord);
       return;
     }
 
@@ -627,8 +517,7 @@ public class AutomapCanvas : IAutomapCanvas
     var added = AddConnection(source, sourcePoint, target, FreeFacingPoint(target, source, null));
     added.Style = ConnectionStyle.Dashed;
     added.Flow = ConnectionFlow.OneWay;
-    added.MidText = command;
-    added.AutomapCommand = command;
+    JoinWays.Write(added, new[] { JoinWay.Typed(true, command) }, LabelWord);
   }
 
   /// <summary>The side of <paramref name="from" /> (one of the eight main points) that faces <paramref name="to" />.</summary>
@@ -819,10 +708,12 @@ public class AutomapCanvas : IAutomapCanvas
       var source = connection.GetSourceRoom(out var sourcePoint);
       var target = connection.GetTargetRoom(out var targetPoint);
       if (source == null || target == null || source == target) continue;
-      if (source == room && (sourcePoint == point || ListsDirection(EndWords(connection, true), direction)))
+      if (source != room && target != room) continue;
+      var ways = JoinWays.Of(connection);
+      if (source == room && (sourcePoint == point || JoinWays.Lists(ways, true, direction)))
         rooms.Add(target);
       else if (target == room && connection.Flow == ConnectionFlow.TwoWay &&
-               (targetPoint == point || ListsDirection(EndWords(connection, false), direction)))
+               (targetPoint == point || JoinWays.Lists(ways, false, direction)))
         rooms.Add(source);
     }
 

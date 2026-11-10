@@ -190,6 +190,39 @@ public class Connection : Element
 
   private string _endTravelled = string.Empty;
 
+  /// <summary>
+  ///   The ways along this connection automap knows of (each direction or command, from which end, and whether the
+  ///   player was seen going that way), as <see cref="Trizbort.Automap.JoinWays" /> writes them; empty when automap
+  ///   hasn't recorded any. The labels are drawn from them. Saved as the optional <c>automapWays</c> attribute.
+  /// </summary>
+  public string AutomapWays {
+    get { return _automapWays; }
+    set {
+      value = value ?? string.Empty;
+      if (_automapWays == value) return;
+      _automapWays = value;
+      RaiseChanged();
+    }
+  }
+
+  private string _automapWays = string.Empty;
+
+  /// <summary>
+  ///   The labels (and, where a label is left off because the side says it, the side) <see cref="AutomapWays" /> were
+  ///   drawn as. When the user has changed them since, the labels are what counts. Saved as <c>automapWaysFor</c>.
+  /// </summary>
+  public string AutomapWaysFor {
+    get { return _automapWaysFor; }
+    set {
+      value = value ?? string.Empty;
+      if (_automapWaysFor == value) return;
+      _automapWaysFor = value;
+      RaiseChanged();
+    }
+  }
+
+  private string _automapWaysFor = string.Empty;
+
   public string MidText {
     get { return _midText; }
     set {
@@ -536,6 +569,8 @@ public class Connection : Element
     AutomapCommand = element.Attribute("automapCommand").Text;
     StartTravelled = element.Attribute("automapStartTravelled").Text;
     EndTravelled = element.Attribute("automapEndTravelled").Text;
+    AutomapWays = element.Attribute("automapWays").Text;
+    AutomapWaysFor = element.Attribute("automapWaysFor").Text;
     EndText = element.Attribute("endText").Text != "" ? element.Attribute("endText").Text : element.Attribute("end").Text;
     if (element.Attribute("color").Text != "")
       ConnectionColor = ColorTranslator.FromHtml(element.Attribute("color").Text);
@@ -639,6 +674,10 @@ public class Connection : Element
       scribe.Attribute("automapStartTravelled", StartTravelled);
     if (!string.IsNullOrEmpty(EndTravelled))
       scribe.Attribute("automapEndTravelled", EndTravelled);
+    if (!string.IsNullOrEmpty(AutomapWays))
+      scribe.Attribute("automapWays", AutomapWays);
+    if (!string.IsNullOrEmpty(AutomapWaysFor))
+      scribe.Attribute("automapWaysFor", AutomapWaysFor);
     if (!string.IsNullOrEmpty(EndText))
       scribe.Attribute("endText", EndText);
 
