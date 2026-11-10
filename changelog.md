@@ -55,6 +55,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 - Dying no longer joins rooms: "yes" to "Do you want to be reincarnated?" isn't taken for a magic word, and a room
   shown after "You have died" or "*** The End ***" isn't joined to the room before.
+- Tracking only no longer changes the map at all: "see" (add object) and region commands in the transcript, and
+  ways that lead nowhere removing their stubs, are left alone too.
 
 ## [0.11.0-beta] - 2026-11-08
 

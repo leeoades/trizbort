@@ -630,6 +630,13 @@ public sealed class Automap : IAutomapController
   private async Task FlushPendingStubRemoval(CancellationToken token)
   {
     if (_pendingStubRemoval is not { } pending) return;
+    if (_suspended)
+    {
+      // tracking only: the map stays as it is
+      _pendingStubRemoval = null;
+      return;
+    }
+
     using (await BeginBatchAsync("Automap: " + pending.Room.Name, token)) RemovePendingStub();
   }
 
@@ -1378,7 +1385,8 @@ public sealed class Automap : IAutomapController
     {
       var regionName = command.Substring(_settings.AddRegionCommand.Length).Trim();
 
-      if (!string.IsNullOrEmpty(regionName) && _lastKnownRoom != null)
+      // tracking only: the map stays as it is
+      if (!string.IsNullOrEmpty(regionName) && _lastKnownRoom != null && !_suspended)
       {
         // region already exists, just set the room to it
         if (Settings.Regions.Find(p => p.RegionName.Equals(regionName, StringComparison.OrdinalIgnoreCase)) == null)
@@ -1395,7 +1403,8 @@ public sealed class Automap : IAutomapController
       // the user wants to add an object to the map
       var objectName = command.Substring(_settings.AddObjectCommand.Length).Trim();
 
-      if (!string.IsNullOrEmpty(objectName) && _lastKnownRoom != null)
+      // tracking only: the map stays as it is
+      if (!string.IsNullOrEmpty(objectName) && _lastKnownRoom != null && !_suspended)
       {
         if (!string.IsNullOrEmpty(_lastKnownRoom.Objects))
         {

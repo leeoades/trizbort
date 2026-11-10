@@ -358,6 +358,40 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task TrackingOnly_LeavesTheMapAlone_ObjectsAndStubsToo()
+  {
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, ">look\nHall\nA grand hall. A door leads north.\n\n>");
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count >= 5);
+      await Task.Delay(100);
+      var hall = Project.Current.Elements.OfType<Room>().Single();
+      Stubs().ShouldBe(new[] { "Hall North" });
+
+      // tracking only: "see" commands from the transcript and ways that lead nowhere change nothing
+      engine.Suspend();
+      File.AppendAllText(path, $"{settings.AddObjectCommand} brass lamp\nOk.\n\n>north\nThe door is locked.\n\n>");
+      await WaitFor(() => engine.ScreenLines().Any(line => line.Contains("locked")));
+      await Task.Delay(200);
+
+      string.IsNullOrEmpty(hall.Objects).ShouldBeTrue();
+      Stubs().ShouldBe(new[] { "Hall North" });
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
   public async Task SuspendedThenResumed_MapsFromTheNextRoom_JoiningItToNothing()
   {
     var path = Path.GetTempFileName();
