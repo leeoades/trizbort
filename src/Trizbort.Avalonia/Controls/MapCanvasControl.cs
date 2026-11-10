@@ -1000,6 +1000,10 @@ public class MapCanvasControl : Control
             return;
         }
 
+        // where automap thinks the player is, ringed whatever is selected
+        var automap = global::Trizbort.Automap.Automap.Instance;
+        RoomDrawingAdapter.AutomapRoom = automap.IsRunning ? automap.CurrentRoom : null;
+
         _transform.Origin = Origin;
         _transform.ZoomFactor = ZoomFactor;
         _transform.ViewportWidth = bounds.Width;

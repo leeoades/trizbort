@@ -232,6 +232,15 @@ public static class RoomDrawingAdapter
             DrawBadge(context, badge);
         }
 
+        // 8c. Where automap thinks the player is: a ring of its own, so it stays shown whatever is selected
+        if (AutomapRoom != null && ReferenceEquals(room, AutomapRoom))
+        {
+            var hereBounds = bounds;
+            hereBounds.Inflate(4);
+            var hereGeometry = CreateShapeGeometry(hereBounds, look.Shape, corners, handDrawn, seed);
+            context.DrawGeometry(null, _hereRing, hereGeometry);
+        }
+
         // 9. Draw Hover Adorner
         if (isHover && !isSelected)
         {
@@ -257,6 +266,15 @@ public static class RoomDrawingAdapter
     private static readonly IBrush _startFill = new SolidColorBrush(AvaloniaColor.FromArgb(230, 0xE6, 0xF7, 0xE6));
     private static readonly IPen _startPen = new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x3C, 0xA0, 0x4C)), 1.6);
     private static readonly IBrush _startMark = new SolidColorBrush(AvaloniaColor.FromRgb(0x3C, 0xA0, 0x4C));
+
+    /// <summary>
+    ///   The room automap thinks the player is in, while it runs (null otherwise): drawn with a ring, apart from the
+    ///   selection. Set by the map before drawing.
+    /// </summary>
+    internal static Room? AutomapRoom { get; set; }
+
+    private static readonly IPen _hereRing =
+        new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x1E, 0x88, 0xE5)), 3, new DashStyle(new double[] { 2, 1.2 }, 0));
     private static readonly IBrush _movesFill = new SolidColorBrush(AvaloniaColor.FromArgb(230, 0xE3, 0xEE, 0xFB));
     private static readonly IPen _movesPen = new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x3A, 0x72, 0xC4)), 1.6);
     private static readonly IBrush _movesMark = new SolidColorBrush(AvaloniaColor.FromRgb(0x3A, 0x72, 0xC4));

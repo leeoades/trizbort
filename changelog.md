@@ -60,6 +60,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **One way, two rooms.** A way out (a direction, or a command such as "enter closet") that leads to more than one
   room, as after Keep Both, takes you to the one the game's heading names, then the one whose description starts
   the same way. With no heading, automap waits for the next one instead of guessing.
+- **Where you are stays shown.** While automap runs, the room it thinks you're in has a blue dashed ring of its
+  own, so clicking about the map (which changes the selection) no longer loses it.
 - **Questions in brackets.** Infocom's "[Which peg do you mean, ...?]" counts as a question, so "pull peg" then
   "second" follows a join labelled "pull second peg".
 - **Same name, different place?** Going a direction to a room with the same name as the one you left, when the
