@@ -41,7 +41,7 @@ public partial class DisambiguateRoomsDialog : Window
         base.OnKeyDown(e);
         if (e.Key == Key.Escape && !e.Handled)
         {
-            // Same as closing the window: the view model's default result is "A New Room".
+            // Same as closing the window, or Cancel: the view model's default result maps nothing.
             e.Handled = true;
             Close();
         }

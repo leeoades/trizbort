@@ -53,6 +53,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **Disambiguate Rooms** lists the rooms with that name and then **<Add a new room>** (showing the description the
+  transcript gives), with **OK** and **Cancel**. Cancel maps nothing for it. **Auto-Choose the Rest**, which always
+  took the first room, is now **Don't ask again while automapping: guess**: the room whose description starts the
+  same way; if none does, a new room when you moved there, or the room you're in when you didn't.
 - A join's side gives its direction only when its label names none: drawn on the south side and labelled "down",
   it's down, not south too. On the right of a room with no label, it's still east. **Join Properties** shows that
   direction ("east") in the end's label box, so you can see it and change it; left as it is, the map still leaves
@@ -72,6 +76,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- Going a way you've been seen to go somewhere else, into a room already on the map (out of the closet led to the
+  foyer; after pulling the peg it leads to the cellar), now asks, as it does for a new room: keep the old way,
+  the new one, both, or split the room you left ("Closet (2)", reached by "pull peg"). Keeping the new way takes
+  it off the old join.
+- A command's join ("enter closet") leaving a room's corner is no longer labelled with the corner ("se") when the
+  map labels diagonal exits: its side only faces the other room.
 - Several rooms with one name (Hollywood Hijinx has three "In the Chimney"): the map says which first. A join the
   way you went leads to its room, and going back the way a one-way join came (down, after coming up) leads back to
   the room it came from, until you find otherwise. Otherwise the room whose description starts the same way is

@@ -973,11 +973,13 @@ When Trizbort isn't sure, it'll display the Disambiguate Rooms dialog, tell you 
 
 *Disambiguating between rooms.*
 
-The room Trizbort is talking about is described at the top. All the rooms Trizbort has seen with this same name are listed in the bottom left. If you click one of these, their description is shown in the bottom right. (Note that if you're not running the game in `>VERBOSE` mode, there may be missing descriptions.)
+The room Trizbort is talking about is described at the top. All the rooms Trizbort has seen with this same name are listed in the bottom left, followed by **<Add a new room>**. If you click one of these, its description is shown in the bottom right; for **<Add a new room>** that's the description the transcript gives. (Note that if you're not running the game in `>VERBOSE` mode, there may be missing descriptions.)
 
-If you click a room in the bottom left and then choose `This Room`, Trizbort will assume that these two rooms are the same and that its description has just changed. It will remember both versions of the description during this automapping session (though only the first description Trizbort sees is saved with the map.)
+Pick one and choose **OK**. Picking a room tells Trizbort the two are the same room and its description has just changed: it remembers both versions during this automapping session (though only the first description Trizbort sees is saved with the map). Picking **<Add a new room>** tells Trizbort they have the same name but are different, and it creates a new room.
 
-If you choose `A New Room`, Trizbort will assume that these two rooms have the same name but are different, and that it hasn't seen the latest one before. It will create a new room.
+**Cancel** (or closing the dialog) maps nothing for it: no room, no join. Automap carries on from the next room it can place.
+
+Tick **Don't ask again while automapping: guess** to stop being asked for the rest of the run. Automap then guesses: the room whose description starts the same way; if the game shows a description none of them has, a new room when you moved there, or the room you're in when you didn't. Before any of this, automap goes by the map: a join the way you went, or back the way a one-way join came, says which room it is, and you aren't asked.
 
 If you choose `I Don't Care Any More`, Trizbort will make its own choice arbitrarily and not ask you again during this automapping session.
 

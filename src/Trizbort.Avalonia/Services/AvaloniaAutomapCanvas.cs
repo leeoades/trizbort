@@ -154,6 +154,12 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
             : Dispatcher.UIThread.Invoke(() => _innerCanvas.RoomsAlong(room, direction));
     }
 
+    public void ForgetWay(Room from, MappableDirection direction, Room to)
+    {
+        if (Dispatcher.UIThread.CheckAccess()) _innerCanvas.ForgetWay(from, direction, to);
+        else Dispatcher.UIThread.Invoke(() => _innerCanvas.ForgetWay(from, direction, to));
+    }
+
     public Room ResolveRoom(Room room)
     {
         return Dispatcher.UIThread.CheckAccess()

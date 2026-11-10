@@ -5,60 +5,88 @@ using Trizbort.Editor;
 namespace Trizbort.Avalonia.ViewModels;
 
 /// <summary>
-///     State and outcome for the "which room does the transcript mean?" prompt. The result defaults to
-///     <see cref="RoomDisambiguation.CreateNew" />, which is what closing the window gives.
+///     One line in the "which room?" list: a room on the map, or the new room the transcript may be showing
+///     (<see cref="Room" /> null), with the description to compare.
+/// </summary>
+public sealed record DisambiguationChoice(string Name, string Description, Room? Room)
+{
+    public bool IsNewRoom => Room == null;
+}
+
+/// <summary>
+///     State and outcome for the "which room does the transcript mean?" prompt: the rooms with that name, and a new
+///     room, to pick from; OK takes the one picked, Cancel (or closing the window) maps nothing for it. "Don't ask
+///     again" lets automap guess for the rest of the run.
 /// </summary>
 public class DisambiguateRoomsViewModel : ViewModelBase
 {
-    private Room? _selectedRoom;
+    public const string NewRoomName = "<Add a new room>";
+
+    private DisambiguationChoice? _selected;
+    private bool _dontAskAgain;
 
     public DisambiguateRoomsViewModel(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates)
     {
         Candidates = candidates;
         ContextText = BuildContext(transcriptLine, roomDescription);
-        ThisRoomCommand = new RelayCommand(ChooseThisRoom, () => _selectedRoom != null);
-        NewRoomCommand = new RelayCommand(ChooseNewRoom);
-        AutoChooseRestCommand = new RelayCommand(ChooseAutoRest);
+        var description = Normalise(roomDescription).Trim();
+        Choices = candidates
+            .Select(room => new DisambiguationChoice(room.Name, room.PrimaryDescription ?? string.Empty, room))
+            .Append(new DisambiguationChoice(NewRoomName,
+                description.Length == 0 ? "(The transcript doesn't describe it.)" : description, null))
+            .ToList();
+        OkCommand = new RelayCommand(ChooseSelected, () => _selected != null);
+        CancelCommand = new RelayCommand(() => Complete(RoomDisambiguation.Nothing()));
         if (candidates.Count == 1)
         {
-            _selectedRoom = candidates[0];
+            _selected = Choices[0];
         }
     }
 
     public string IntroText =>
-        "Trizbort isn't sure which room the transcript is referring to." + "\n\n" +
-        "Either several rooms have the same name but different descriptions, " +
-        "or the room description has changed during play.";
+        "Trizbort isn't sure which room the transcript means. Several rooms have this name, or the room's " +
+        "description has changed during play. Pick the room it is, or add a new room.";
 
     public IReadOnlyList<Room> Candidates { get; }
 
+    /// <summary>The rooms with that name, then a new room.</summary>
+    public IReadOnlyList<DisambiguationChoice> Choices { get; }
+
     public string ContextText { get; }
 
-    public Room? SelectedRoom
+    public DisambiguationChoice? Selected
     {
-        get => _selectedRoom;
+        get => _selected;
         set
         {
-            if (SetProperty(ref _selectedRoom, value))
+            if (SetProperty(ref _selected, value))
             {
                 OnPropertyChanged(nameof(SelectedDescription));
-                OnPropertyChanged(nameof(CanChooseThisRoom));
-                ThisRoomCommand.NotifyCanExecuteChanged();
+                OkCommand.NotifyCanExecuteChanged();
             }
         }
     }
 
-    public string SelectedDescription => _selectedRoom?.PrimaryDescription ?? string.Empty;
+    public string SelectedDescription => _selected?.Description ?? string.Empty;
 
-    public bool CanChooseThisRoom => _selectedRoom != null;
+    /// <summary>Don't ask again while automapping: guess instead.</summary>
+    public bool DontAskAgain
+    {
+        get => _dontAskAgain;
+        set => SetProperty(ref _dontAskAgain, value);
+    }
 
-    public RelayCommand ThisRoomCommand { get; }
+    public string DontAskAgainTip =>
+        "For the rest of this run automap guesses instead of asking: the room whose description starts the same way; " +
+        "if the game shows a description none of them has, a new room when you moved, the room you're in when you " +
+        "didn't.";
 
-    public RelayCommand NewRoomCommand { get; }
+    public RelayCommand OkCommand { get; }
 
-    public RelayCommand AutoChooseRestCommand { get; }
+    public RelayCommand CancelCommand { get; }
 
-    public RoomDisambiguation Result { get; private set; } = RoomDisambiguation.CreateNew();
+    /// <summary>What closing the window gives: nothing mapped.</summary>
+    public RoomDisambiguation Result { get; private set; } = RoomDisambiguation.Nothing();
 
     public event EventHandler? CloseRequested;
 
@@ -74,27 +102,16 @@ public class DisambiguateRoomsViewModel : ViewModelBase
         return (text ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n');
     }
 
-    private void ChooseThisRoom()
+    private void ChooseSelected()
     {
-        if (_selectedRoom == null)
+        if (_selected == null)
         {
             return;
         }
 
-        Complete(RoomDisambiguation.Choose(_selectedRoom));
-    }
-
-    private void ChooseNewRoom() => Complete(RoomDisambiguation.CreateNew());
-
-    private void ChooseAutoRest()
-    {
-        if (Candidates.Count == 0)
-        {
-            Complete(RoomDisambiguation.CreateNew());
-            return;
-        }
-
-        Complete(RoomDisambiguation.ChooseFirstAndStopAsking(Candidates[0]));
+        Complete(_selected.Room == null
+            ? new RoomDisambiguation(null, true, DontAskAgain)
+            : new RoomDisambiguation(_selected.Room, false, DontAskAgain));
     }
 
     private void Complete(RoomDisambiguation result)
@@ -102,4 +119,12 @@ public class DisambiguateRoomsViewModel : ViewModelBase
         Result = result;
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }
+}
+
+/// <summary>The new-room line in the "which room?" list is in italics.</summary>
+public static class DisambiguationChoiceStyle
+{
+    public static readonly global::Avalonia.Data.Converters.IValueConverter Italic =
+        new global::Avalonia.Data.Converters.FuncValueConverter<bool, global::Avalonia.Media.FontStyle>(isNew =>
+            isNew ? global::Avalonia.Media.FontStyle.Italic : global::Avalonia.Media.FontStyle.Normal);
 }

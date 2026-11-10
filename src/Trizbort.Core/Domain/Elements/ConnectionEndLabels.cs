@@ -49,23 +49,18 @@ public static class ConnectionEndLabels
     var text = atStart ? connection.StartText : connection.EndText;
     if (!string.IsNullOrEmpty(text)) return text;
 
-    // the far end of a one-way join isn't a way out of its room
-    if (!atStart && connection.Flow == ConnectionFlow.OneWay) return text;
-
-    CompassPoint point;
-    var room = atStart ? connection.GetSourceRoom(out point) : connection.GetTargetRoom(out point);
-    if (room == null) return text;
-
-    return point switch
+    // only where the side is the way out (SideDirection): not the far end of a one-way join, and not a command's
+    // join ("enter closet" leaving the foyer's corner isn't south-east)
+    return SideDirection(connection, atStart) switch
     {
-      CompassPoint.North when Settings.LabelCompassExits => "n",
-      CompassPoint.East when Settings.LabelCompassExits => "e",
-      CompassPoint.South when Settings.LabelCompassExits => "s",
-      CompassPoint.West when Settings.LabelCompassExits => "w",
-      CompassPoint.NorthEast when Settings.LabelDiagonalExits => "ne",
-      CompassPoint.NorthWest when Settings.LabelDiagonalExits => "nw",
-      CompassPoint.SouthEast when Settings.LabelDiagonalExits => "se",
-      CompassPoint.SouthWest when Settings.LabelDiagonalExits => "sw",
+      MappableDirection.North when Settings.LabelCompassExits => "n",
+      MappableDirection.East when Settings.LabelCompassExits => "e",
+      MappableDirection.South when Settings.LabelCompassExits => "s",
+      MappableDirection.West when Settings.LabelCompassExits => "w",
+      MappableDirection.NorthEast when Settings.LabelDiagonalExits => "ne",
+      MappableDirection.NorthWest when Settings.LabelDiagonalExits => "nw",
+      MappableDirection.SouthEast when Settings.LabelDiagonalExits => "se",
+      MappableDirection.SouthWest when Settings.LabelDiagonalExits => "sw",
       _ => text
     };
   }

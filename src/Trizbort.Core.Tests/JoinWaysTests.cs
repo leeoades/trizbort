@@ -169,6 +169,31 @@ public class JoinWaysTests : IsolatedProjectTests
   }
 
   [Test]
+  public void ACommandsJoinOnACorner_IsNotLabelledWithTheCorner_EvenWhenDiagonalExitsAreLabelled()
+  {
+    var foyer = AddRoomAt("Foyer", 0, 0);
+    var closet = AddRoomAt("Closet", 300, -300);
+    var join = Join(foyer, CompassPoint.SouthEast, closet, CompassPoint.West);
+    JoinWays.Write(join, new[] { JoinWay.Typed(true, "enter closet") }, Word);
+    var labelled = Trizbort.Setup.Settings.LabelDiagonalExits;
+    try
+    {
+      Trizbort.Setup.Settings.LabelDiagonalExits = true;
+
+      ConnectionEndLabels.Text(join, true).ShouldBeEmpty();
+
+      // an ordinary join on the corner is still labelled with it
+      join.AutomapCommand = string.Empty;
+      join.MidText = string.Empty;
+      ConnectionEndLabels.Text(join, true).ShouldBe("se");
+    }
+    finally
+    {
+      Trizbort.Setup.Settings.LabelDiagonalExits = labelled;
+    }
+  }
+
+  [Test]
   public void Ways_AreSavedWithTheMap_AndStillCountAfterLoading()
   {
     var hall = AddRoomAt("Hall", 0, 0);

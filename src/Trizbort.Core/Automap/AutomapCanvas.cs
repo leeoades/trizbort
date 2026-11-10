@@ -729,6 +729,44 @@ public class AutomapCanvas : IAutomapCanvas
     return rooms;
   }
 
+  public void ForgetWay(Room from, MappableDirection direction, Room to)
+  {
+    from = ResolveRoom(from);
+    to = ResolveRoom(to);
+    if (from == null || to == null) return;
+    foreach (var connection in CurrentProject.Elements.OfType<Connection>().ToList())
+    {
+      var source = connection.GetSourceRoom();
+      var target = connection.GetTargetRoom();
+      bool fromIsStart;
+      if (source == from && target == to) fromIsStart = true;
+      else if (source == to && target == from) fromIsStart = false;
+      else continue;
+
+      var ways = JoinWays.Of(connection);
+      if (ways.RemoveAll(way => way.AtStart == fromIsStart && way.IsDirection && way.Direction == direction) == 0)
+        continue;
+      if (!ways.Any(way => way.Kind != JoinWayKind.Label))
+      {
+        CurrentProject.Elements.Remove(connection);
+        continue;
+      }
+
+      // nothing leads from this end any more: the join only goes the other way, one-way from its start
+      if (!ways.Any(way => way.AtStart == fromIsStart && way.Kind != JoinWayKind.Label))
+      {
+        connection.Flow = ConnectionFlow.OneWay;
+        if (fromIsStart)
+        {
+          connection.Reverse();
+          ways = ways.Select(way => way with { AtStart = !way.AtStart }).ToList();
+        }
+      }
+
+      JoinWays.Write(connection, ways, LabelWord);
+    }
+  }
+
   public RoomSearchResult FindRooms(string roomName, string roomDescription, RoomMatcher matcher)
   {
     var list = new List<Room>();

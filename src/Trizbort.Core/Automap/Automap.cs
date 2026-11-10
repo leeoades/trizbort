@@ -551,21 +551,50 @@ public sealed class Automap : IAutomapController
 
     var maybes = result.Maybes;
     if (maybes == null || maybes.Count == 0) return null;
-    if (_dontAskAboutAmbiguities) return maybes[0];
+    if (_dontAskAboutAmbiguities) return Guess(maybes, roomDescription);
     if (maybes.Count == 1 && (string.IsNullOrEmpty(roomDescription) || maybes[0].PrimaryDescription == null))
       return maybes[0];
 
     _askedWhichRoom = true;
     var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, maybes, token);
     token.ThrowIfCancellationRequested();
-    if (choice.AutoChooseRest)
+    return Answered(choice);
+  }
+
+  /// <summary>
+  ///   The user's answer: the room chosen, or null for a new room, or for nothing (the heading is then skipped).
+  ///   "Don't ask again" makes automap guess from then on (<see cref="Guess" />).
+  /// </summary>
+  private Room Answered(RoomDisambiguation choice)
+  {
+    if (choice.AutoChooseRest) _dontAskAboutAmbiguities = true;
+    if (choice.Skip)
     {
-      _dontAskAboutAmbiguities = true;
-      return maybes[0];
+      _skipHeading = true;
+      return null;
     }
 
-    return choice.NewRoom ? null : choice.Chosen;
+    return choice.NewRoom || choice.Chosen == null ? null : _canvas.ResolveRoom(choice.Chosen);
   }
+
+  /// <summary>
+  ///   Automap's guess, once the user has said not to ask: staying put (no move), the room the player is in; moving
+  ///   on, the room whose description starts the same way, or, when the game shows a description none of them has,
+  ///   a new room; otherwise the first.
+  /// </summary>
+  private Room Guess(IReadOnlyList<Room> candidates, string roomDescription)
+  {
+    if (candidates == null || candidates.Count == 0) return null;
+    var here = _lastKnownRoom;
+    if (_lastMoveDirection == null) return here != null && candidates.Contains(here) ? here : candidates[0];
+    var described = candidates.FirstOrDefault(room =>
+      room.Descriptions.Any(known => SameFirstSentence(known, roomDescription)));
+    if (described != null) return described;
+    return string.IsNullOrWhiteSpace(roomDescription) ? candidates[0] : null;
+  }
+
+  /// <summary>The user cancelled "which room?": nothing is mapped for this heading.</summary>
+  private bool _skipHeading;
 
   /// <summary>The user was asked which room a heading meant, by <see cref="FindRoomAsync" />.</summary>
   private bool _askedWhichRoom;
@@ -1015,6 +1044,7 @@ public sealed class Automap : IAutomapController
         // several rooms sharing a name needn't be asked about.
         RefreshLastKnownRoom();
         var room = VariantRoom(roomName, null);
+        _skipHeading = false;
         if (room == null)
         {
           _askedWhichRoom = false;
@@ -1026,9 +1056,43 @@ public sealed class Automap : IAutomapController
           if (!_askedWhichRoom) room = await WhichOfTheSameNameAsync(room, roomName, roomDescription, line, token);
         }
 
+        if (_skipHeading)
+        {
+          // the user said it's none of these, and not a new room either: map nothing for it, and don't join the next
+          // room from the wrong one
+          _skipHeading = false;
+          _lastKnownRoom = null;
+          _lastMoveDirection = null;
+          _lastJourneyCommand = null;
+          Trace("{0}: skipped, as the user asked.", FormatTranscriptLineForDisplay(line));
+          previousLine = line;
+          continue;
+        }
+
         AutomapSameDirectionResult? decision = null;
         Room otherRoom = null;
-        if (room == null && _lastKnownRoom != null && _lastMoveDirection != null)
+        // a room already on the map, reached a way the player has been seen to go somewhere else (out of the closet to
+        // the foyer, and now, after pulling the peg, to the cellar): ask, as for a new room, so the room left can be
+        // split
+        var elsewhere = room != null && room != _lastKnownRoom && _lastKnownRoom != null && _lastMoveDirection != null
+          ? SeenLeadingElsewhere(_lastKnownRoom, _lastMoveDirection.Value, room)
+          : null;
+        if (elsewhere != null)
+        {
+          otherRoom = elsewhere;
+          decision = await Prompts.ChooseSameDirectionAsync(_lastKnownRoom, otherRoom, roomName, token);
+          token.ThrowIfCancellationRequested();
+          if (decision == AutomapSameDirectionResult.Cancel)
+          {
+            Stop();
+            token.ThrowIfCancellationRequested();
+            throw new OperationCanceledException(token);
+          }
+
+          RefreshLastKnownRoom();
+          otherRoom = _canvas.ResolveRoom(otherRoom);
+        }
+        else if (room == null && _lastKnownRoom != null && _lastMoveDirection != null)
         {
           // is there already a connection in that direction?
           // The room at the other end of a connection already leaving this way. (The reference took the
@@ -1170,8 +1234,9 @@ public sealed class Automap : IAutomapController
             // player moved to existing room
             if (_lastKnownRoom != null && _lastMoveDirection != null)
             {
-              // player moved sensibly; ensure rooms are connected up
-              _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+              // player moved sensibly; ensure rooms are connected up (as the user said, if the way led somewhere else
+              // before)
+              ConnectToKnownRoom(room, otherRoom, decision, line);
               Trace(
                 "{0}: {1} is now {2} from {3}.",
                 FormatTranscriptLineForDisplay(line),
@@ -1351,20 +1416,82 @@ public sealed class Automap : IAutomapController
 
     // a room whose name no other room has is that room, whatever it says now (a revisit can show only what's lying
     // about); the question is only which of several, or whether the room you left is somewhere new
-    if (room.Descriptions.Count == 0 || _dontAskAboutAmbiguities || (sameName.Count < 2 && room != here)) return room;
+    if (room.Descriptions.Count == 0 || (sameName.Count < 2 && room != here)) return room;
     if (room == here && _lastMoveDirection != null && LoopsBack(room, _lastMoveDirection.Value)) return room;
-    if (sameName.Count == 0) sameName.Add(room);
+    if (!sameName.Contains(room)) sameName.Insert(0, room);
+    if (_dontAskAboutAmbiguities) return Guess(sameName, roomDescription);
 
     var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, sameName, token);
     token.ThrowIfCancellationRequested();
     RefreshLastKnownRoom();
-    if (choice.AutoChooseRest)
+    return Answered(choice);
+  }
+
+  /// <summary>
+  ///   A room the player was seen going <paramref name="direction" /> to from <paramref name="here" />, other than
+  ///   <paramref name="room" />: the map says that way leads somewhere else.
+  /// </summary>
+  private Room SeenLeadingElsewhere(Room here, MappableDirection direction, Room room)
+  {
+    foreach (var connection in here.GetConnections())
     {
-      _dontAskAboutAmbiguities = true;
-      return _canvas.ResolveRoom(room);
+      if (AutomapCanvas.IsCommandJoin(connection)) continue;
+      var source = connection.GetSourceRoom();
+      var target = connection.GetTargetRoom();
+      if (source == null || target == null || source == target) continue;
+      var hereIsStart = source == here;
+      if (!hereIsStart && connection.Flow == ConnectionFlow.OneWay) continue;
+      var other = hereIsStart ? target : source;
+      if (other == room) continue;
+      if (JoinWays.Of(connection).Any(way => way.AtStart == hereIsStart && way.IsDirection && way.Seen &&
+                                            way.Direction == direction))
+        return _canvas.ResolveRoom(other);
     }
 
-    return choice.NewRoom ? null : _canvas.ResolveRoom(choice.Chosen ?? room);
+    return null;
+  }
+
+  /// <summary>
+  ///   Joins the room the player left to <paramref name="room" />, already on the map, the way they went; or, when that
+  ///   way was seen leading to <paramref name="before" />, as the user decided: it still leads there (no join), it
+  ///   leads here instead, it leads to both, or the room left is really two places (split, as for a new room).
+  /// </summary>
+  private void ConnectToKnownRoom(Room room, Room before, AutomapSameDirectionResult? decision, string line)
+  {
+    var here = _lastKnownRoom;
+    var direction = _lastMoveDirection.Value;
+    if (before == null || decision == null || decision == AutomapSameDirectionResult.KeepBoth)
+    {
+      _canvas.Connect(here, direction, room, _settings.AssumeTwoWayConnections);
+      return;
+    }
+
+    switch (decision.Value)
+    {
+      case AutomapSameDirectionResult.KeepRoom1:
+        // the way still leads where it did; the player got here some other way
+        Trace("{0}: {1} still leads to {2}; not joined.", FormatTranscriptLineForDisplay(line),
+          direction.ToString().ToLower(), before.Name);
+        break;
+      case AutomapSameDirectionResult.KeepRoom2:
+        _canvas.ForgetWay(here, direction, before);
+        _canvas.Connect(here, direction, room, _settings.AssumeTwoWayConnections);
+        break;
+      case AutomapSameDirectionResult.Split:
+      {
+        var second = _canvas.CreateRoom(here, SplitName(here.Name));
+        foreach (var description in here.Descriptions) second.AddDescription(description);
+        second.IsDark = here.IsDark;
+        _canvas.ConnectByCommand(here, second, _doneInRoom ?? UnmappedWay);
+        _canvas.Connect(second, direction, room, _settings.AssumeTwoWayConnections);
+        Trace("{0}: {1} split; {2} is {3} from {4}.", FormatTranscriptLineForDisplay(line), here.Name, room.Name,
+          direction.ToString().ToLower(), second.Name);
+        break;
+      }
+      default:
+        _canvas.Connect(here, direction, room, _settings.AssumeTwoWayConnections);
+        break;
+    }
   }
 
   /// <summary>Whether the map has <paramref name="direction" /> leading from <paramref name="room" /> straight back in.</summary>

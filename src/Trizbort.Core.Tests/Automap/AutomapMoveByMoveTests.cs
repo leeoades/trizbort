@@ -324,6 +324,34 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task OutOfTheClosetToARoomAlreadyMapped_AfterOutLedToTheFoyer_AsksAndSplitsTheCloset()
+  {
+    // Hollywood Hijinx: out of the closet led to the foyer; after pulling a peg, the closet sinks, and out leads to
+    // the cellar, which is already on the map
+    var prompts = new SplitPrompts();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "Cellar", "A dank cellar.", "",
+      ">up", "Foyer", "An elegant foyer.", "",
+      ">enter closet", "Closet", "A coat closet with pegs.", "",
+      ">out", "Foyer", "",
+      ">enter closet", "Closet", "",
+      ">pull peg", "The closet lurches and sinks.", "",
+      ">out", "Cellar", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    prompts.AskedAbout.ShouldBe("Closet");
+    Rooms().ShouldBe(new[] { "Cellar", "Closet", "Closet (2)", "Foyer" });
+    Joins().ShouldContain("Closet -> Closet (2) pull peg");
+    Joins().ShouldContain("Closet (2) -> Cellar");
+    Joins().ShouldNotContain(join => join.StartsWith("Closet -> Cellar"));
+  }
+
+  [Test]
   public async Task Dying_AndBeingReincarnated_JoinsNothing()
   {
     var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
