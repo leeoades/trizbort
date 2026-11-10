@@ -1346,7 +1346,7 @@ public sealed class Automap : IAutomapController
 
   private string FormatTranscriptLineForDisplay(string line)
   {
-    var displayLine = line;
+    var displayLine = line ?? string.Empty;
     const int maxDisplayLineLength = 60;
     if (displayLine.Length > maxDisplayLineLength)
       displayLine = displayLine.Substring(0, maxDisplayLineLength - 3) + "...";
@@ -2591,9 +2591,10 @@ public sealed class Automap : IAutomapController
           //                    DeduceExitsFromDescription(m_lastKnownRoom, String.Join(" ", nextParagraph));
           //                  }
 
+          // (going back a move while waiting for the game's next line leaves no line read: show the command)
           Trace(
             "{0}: {1}{2}",
-            FormatTranscriptLineForDisplay(line),
+            FormatTranscriptLineForDisplay(line ?? ">" + command),
             _lastMoveDirection != null ? "GO " : string.Empty,
             _lastMoveDirection != null ? _lastMoveDirection.Value.ToString().ToUpperInvariant() : string.Empty);
         }

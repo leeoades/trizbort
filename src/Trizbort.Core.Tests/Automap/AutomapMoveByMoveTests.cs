@@ -603,6 +603,46 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task GoingBack_WhileWaitingForTheGamesNextLine_GoesBackAMove()
+  {
+    // a live game: the last move's reply is in, but no prompt yet; going back then crashed (no line read to show)
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Hall", "A grand hall. A door leads north.", "",
+      ">north", "Kitchen", "A small kitchen. The hall is south.", "",
+      ">south", "Hall", ""
+    });
+    string error = null;
+    var engine = new Trizbort.Automap.Automap((message, _) => error = message, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count == 11);
+      await Task.Delay(100);
+
+      engine.GoBack();
+      await WaitFor(() => engine.NextCommand == "south");
+      // and on again
+      engine.PlayNextMove();
+      await WaitFor(() => engine.NextCommand == null || run.IsCompleted);
+      await Task.Delay(200);
+      error.ShouldBeNull();
+      engine.IsRunning.ShouldBeTrue();
+      Rooms().ShouldBe(new[] { "Hall", "Kitchen" });
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
   public async Task TwoRoomsWithTheSameName_TheJoinOnTheMap_SaysWhichOneYouGoTo()
   {
     // the chimney goes on up into a second room also called "In the Chimney"; the user has drawn it, with a join
