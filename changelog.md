@@ -12,6 +12,74 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Added
+
+- **Automap panel.** While automapping, its controls are in a panel docked beside the map, in three parts:
+  **Where you are** (the room automap thinks you're in, with a green, amber or grey dot for mapping, not changing
+  the map, or in the dark, and Centre on Current Room); **Transcript** (Previous Move, Next Move, Pause, and the
+  game screen); and **Mapping** (Mapping or Tracking only, and why automap isn't mapping when it isn't). **Play to
+  the End** is at the bottom, away from the step buttons, and asks first when there are 20 or more moves left.
+
+- **Don't automap from here.** Mark a room (Room Properties, or the room's right-click menu) where automap has no
+  chance, such as a maze or a cupboard that turns out to be a lift. While you're in it, automap maps nothing; when you
+  come out it carries on from there, jumping to a room it knows or adding the new one joined by a dotted "?" join
+  for the way through. The room shows a small amber "no entry" sign in its top-left corner; hover over it for what
+  it means. Saved with the map; older versions ignore it.
+- **Darkness.** A heading that says it's too dark to see ("Darkness", "It is pitch black") isn't mapped as a room.
+  Automap remembers how you got there, and when you light the lamp maps the room you see as reached that way, with
+  no "light lamp" join, and marks it Dark.
+- **Merge Rooms** (Edit > Rooms, or the room menu, with two or more rooms selected) makes them one room: the one
+  selected last is kept, and gets the others' joins, descriptions and objects. Joins between them, and joins and
+  stubs left doubled, go. One undo step.
+- **Joins you draw are followed.** Type a command that a join from your room is labelled with ("pull first peg"),
+  and automap moves you along it once the game replies, unless the reply shows you somewhere else. A question and
+  your answer count together ("pull peg", "Which peg?", "first"), words in any order. A heading naming a copy of
+  a room ("Cupboard" in "Cupboard (-1)") means that copy when you're in it, or when your way there is known.
+- **Split a room in two.** When a way out you've mapped leads somewhere new, the question automap asks now also
+  offers **Split 'Cupboard' into separate rooms**: for a room that is really two places alike, such as a lift.
+  Automap adds "Cupboard (2)", joined from the cupboard by the last thing you did there ("pull peg, first"), and
+  joins the new room to it.
+- **Same name, different place?** Going a direction to a room with the same name as the one you left, when the
+  game shows a description that starts unlike any of that room's, automap asks whether it's a new room (a second
+  "In the Chimney" further up) or the same one. A way already mapped as looping back never asks, and once you say
+  it's the same room, its new description is kept, so it won't ask again.
+- **Automap: I'm Here** (the room's right-click menu, or Project > Automap > I'm Here, while automapping) tells automap which room you're in, when
+  it has lost track or got it wrong. It maps on from there.
+- **The map glides** when automap moves on to another room, and for Current Room, easing in and out so you can see
+  which way it went. Panning or zooming yourself stops it.
+- **Tracking only** (the automap panel, or Project > Automap > Tracking Only): automap follows you through rooms it
+  knows but changes nothing, so you can step back and forward through the transcript to check it, and fix the map.
+  Switch back to Mapping and it maps on from the next room it sees, joined to nothing.
+
+### Changed
+
+- The start room is shown by a small green "play" sign in its top-left corner, instead of a green glow round the
+  room. Hover over it for what it means.
+- The automap items in the Project menu are now together in a **Project > Automap** submenu, named as in the
+  automap panel: Start Automap..., Stop Automap, Play to the End, Pause, Next Move, Previous Move, Tracking Only, Centre on
+  Current Room and I'm Here.
+
+### Fixed
+
+- Dying no longer joins rooms: "yes" to "Do you want to be reincarnated?" isn't taken for a magic word, and a room
+  shown after "You have died" or "*** The End ***" isn't joined to the room before.
+- A command into a room and a direction back out are one join: "enter closet" from the foyer and "north" back
+  from the closet make a single two-way join, labelled "enter closet" at the foyer and north at the closet, not two
+  one-way joins. A command's join is no longer labelled with the corner it happens to leave from ("NW").
+- Going up into a room that mentions a way down (or any way back the way you came) no longer adds a stub beside
+  the join: automap assumes that way leads back, and labels the join's end with it. The join stays one-way until
+  you go that way. A way out already drawn on a join gets no stub either, wherever the join leaves the room.
+- Previous Move works after Play to the End: automap goes back to before the last move it played and pauses there.
+- Going back a move keeps the end of the transcript at the bottom of the game screen, with the lines played since
+  gone, instead of showing the top of the screen.
+- Two rooms with the same name, one beyond the other ("In the Chimney", and up to another "In the Chimney"): when
+  the map has a join that way to a room by that name, automap follows it, rather than taking you to be back in the
+  room you left and adding a loop. A join counts by its label ("n / up") wherever it leaves the room.
+- The label of a join leaving straight up or down from a room no longer overprints the room's objects listed on
+  that side: it goes on the other side of the line, as was intended.
+- Tracking only no longer changes the map at all: "see" (add object) and region commands in the transcript, and
+  ways that lead nowhere removing their stubs, are left alone too.
+
 ## [0.11.0-beta] - 2026-11-08
 
 This beta is about **Automap keeping your map tidy as you play**, and **playing a transcript a move at a time**.

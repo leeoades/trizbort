@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -90,11 +90,12 @@ public sealed class Automap : IAutomapController
   ///   is, and automap waits there. Returns the command it waits before.
   /// </summary>
   private async Task<(string Command, PeekingStreamReader Reader, Stream Stream)> GoBackAsync(
-    PeekingStreamReader reader, Stream stream, CancellationToken token)
+    PeekingStreamReader reader, Stream stream, CancellationToken token, bool fromTheEnd = false)
   {
     var back = Interlocked.Exchange(ref _movesBack, 0);
-    // the last point is the one automap is waiting at now
-    var target = Math.Max(0, _movePoints.Count - 1 - back);
+    // the last point is the one automap is waiting at now, unless it is waiting at the end of the transcript for the
+    // game to go on, past the last move it played
+    var target = Math.Max(0, _movePoints.Count - (fromTheEnd ? 0 : 1) - back);
     var point = _movePoints[target];
     _movePoints.RemoveRange(target + 1, _movePoints.Count - target - 1);
 
@@ -156,6 +157,13 @@ public sealed class Automap : IAutomapController
       {
         _linesRead++;
         return line;
+      }
+
+      // asked to go back a move while waiting for the game to go on: null tells the caller to go back
+      if (Volatile.Read(ref _movesBack) > 0)
+      {
+        if (_movePoints.Count > 0) return null;
+        Volatile.Write(ref _movesBack, 0);
       }
 
       Status = "Automapping is waiting for more text.";
@@ -630,6 +638,13 @@ public sealed class Automap : IAutomapController
   private async Task FlushPendingStubRemoval(CancellationToken token)
   {
     if (_pendingStubRemoval is not { } pending) return;
+    if (_suspended)
+    {
+      // tracking only: the map stays as it is
+      _pendingStubRemoval = null;
+      return;
+    }
+
     using (await BeginBatchAsync("Automap: " + pending.Room.Name, token)) RemovePendingStub();
   }
 
@@ -656,8 +671,170 @@ public sealed class Automap : IAutomapController
     }
   }
 
+  /// <summary>
+  ///   A room heading while automap isn't mapping. Suspended, it only follows the player through rooms it knows. In
+  ///   a room marked "don't automap from here", it waits until the player is somewhere else (another room with the
+  ///   same name, as in a maze, counts as still there). Leaving that room, it jumps to a room it knows, or adds a new
+  ///   one joined from the room by a dotted "?" line: there is a way through, not yet mapped. Resumed somewhere it
+  ///   didn't know (the player may have moved on, or gone back in the transcript), it waits for the next room it
+  ///   sees and maps from there, joining it to nothing.
+  /// </summary>
+  private async Task FollowWhilePausedAsync(
+    string roomName, string roomDescription, string line, bool pausedHere, CancellationToken token)
+  {
+    try
+    {
+      if (pausedHere && string.Equals(roomName, _lastKnownRoom.Name, StringComparison.OrdinalIgnoreCase))
+      {
+        Status = $"Not mapping in {_lastKnownRoom.Name}: waiting for you to leave.";
+        Trace("{0}: still in {1}, which automap doesn't map from.", FormatTranscriptLineForDisplay(line), roomName);
+        return;
+      }
+
+      var room = await FindRoomAsync(roomName, roomDescription, line, token);
+      token.ThrowIfCancellationRequested();
+      RefreshLastKnownRoom();
+      if (room != null) room = _canvas.ResolveRoom(room);
+
+      if (_suspended)
+      {
+        // follow the player, mapping nothing; somewhere new leaves automap not knowing where they are
+        if (room != null)
+        {
+          NowInRoom(room);
+          _pausedFrom = room;
+        }
+        else
+        {
+          _lastKnownRoom = null;
+        }
+
+        Status = room != null ? $"Automap is suspended (in {room.Name})." : "Automap is suspended (somewhere new).";
+        Trace("{0}: suspended, {1}.", FormatTranscriptLineForDisplay(line), room != null ? "in " + room.Name : "somewhere new");
+        return;
+      }
+
+      var from = pausedHere ? _lastKnownRoom : _canvas.ResolveRoom(_pausedFrom);
+      using (await BeginBatchAsync("Automap: " + roomName, token))
+      {
+        if (room != null) room = _canvas.ResolveRoom(room);
+        from = _canvas.ResolveRoom(from);
+        if (room == null)
+        {
+          // placed near where mapping stopped; joined to it only when leaving a room automap doesn't map from
+          room = _canvas.CreateRoom(from, roomName);
+          DeduceExitsFromDescription(room, roomDescription);
+          if (pausedHere && from != null) _canvas.ConnectByCommand(from, room, UnmappedWay);
+          Trace("{0}: {1}, reached from {2} by a way automap didn't map.", FormatTranscriptLineForDisplay(line),
+            roomName, from?.Name ?? "nowhere known");
+        }
+        else
+        {
+          Trace("{0}: back in {1}.", FormatTranscriptLineForDisplay(line), roomName);
+        }
+
+        room.AddDescription(roomDescription);
+        NowInRoom(room);
+        if (_settings.AutoTidy) _canvas.TidyAround(room);
+      }
+
+      _pausedFrom = null;
+      Status = "Automapping is processing the transcript.";
+    }
+    finally
+    {
+      _lastMoveDirection = null;
+      _lastJourneyCommand = null;
+    }
+  }
+
+  /// <summary>The label of a join automap adds for a way through it didn't map (see <see cref="FollowWhilePausedAsync" />).</summary>
+  public const string UnmappedWay = "?";
+
+  /// <summary>True while the user has suspended mapping: automap follows the player but doesn't change the map.</summary>
+  public bool Suspended => _suspended;
+
+  /// <summary>True while the player is somewhere dark, so automap waits to see the room before mapping it.</summary>
+  public bool InDark => _dark != null;
+
+  /// <summary>
+  ///   "I'm here": the user says the player is in <paramref name="room" /> (automap lost track, or got it wrong).
+  ///   Automap maps on from there; the move it was in the middle of, if any, isn't joined to anything.
+  /// </summary>
+  public void SetCurrentRoom(Room room)
+  {
+    if (room == null) return;
+    _lastKnownRoom = room;
+    _lastMoveDirection = null;
+    _lastJourneyCommand = null;
+    _pendingStubRemoval = null;
+    _pausedFrom = null;
+    _dark = null;
+    _followTo = null;
+    _doneInRoom = null;
+    _canvas?.SelectRoom(room);
+    Status = $"Automap: you're in {room.Name}.";
+  }
+
+  /// <summary>
+  ///   Stop mapping for now: automap keeps following the player through rooms it knows, and maps again after
+  ///   <see cref="Resume" />, from a room it knows or with a "?" join to somewhere new.
+  /// </summary>
+  public void Suspend()
+  {
+    if (_suspended) return;
+    _pausedFrom = _lastKnownRoom;
+    _suspended = true;
+    Status = "Automap is suspended.";
+  }
+
+  /// <summary>Map again (see <see cref="Suspend" />).</summary>
+  public void Resume()
+  {
+    if (!_suspended) return;
+    _suspended = false;
+    Status = "Automap will map again from the next room.";
+  }
+
+  private volatile bool _suspended;
+  private Room _pausedFrom;
+
+  /// <summary>How the player got somewhere dark, so the room can be mapped that way when it can be seen.</summary>
+  private sealed record DarkArrival(
+    Room From, MappableDirection? Direction, string Journey, (Room Room, MappableDirection Direction)? Stub);
+
+  private DarkArrival _dark;
+
+  /// <summary>The room about to be entered was first found in the dark: it's marked dark.</summary>
+  private bool _seenInTheDark;
+
+  /// <summary>
+  ///   Words in a room heading that mean the player can't see where they are ("Darkness", "It is pitch black"), so
+  ///   the heading isn't a room.
+  /// </summary>
+  private static readonly string[] _darkWords = { "darkness", "pitch dark", "pitch black", "too dark" };
+
+  /// <summary>A heading that says it's too dark to see ("Darkness", "It is pitch dark"), not a room's name.</summary>
+  public static bool IsDarkness(string roomName)
+  {
+    if (string.IsNullOrWhiteSpace(roomName)) return false;
+    var name = roomName.Trim();
+    if (string.Equals(name, "dark", StringComparison.OrdinalIgnoreCase)) return true;
+    return _darkWords.Any(word => System.Text.RegularExpressions.Regex.IsMatch(name,
+      @"\b" + System.Text.RegularExpressions.Regex.Escape(word) + @"\b",
+      System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+  }
+
   private void NowInRoom(Room room)
   {
+    if (room != _lastKnownRoom) _doneInRoom = null;
+    if (_seenInTheDark)
+    {
+      // found in the dark: it needs a light
+      room.IsDark = true;
+      _seenInTheDark = false;
+    }
+
     // the first room of the run, whether automap made it or found it already on the map
     _startRoom ??= room;
     _lastKnownRoom = room;
@@ -710,15 +887,91 @@ public sealed class Automap : IAutomapController
       StartedAgain();
 
     string previousLine = null;
+    // the game answered the last command with a question ("Which peg do you mean, the first or the second?"): the
+    // next command may answer it ("first"), and the two make one ("pull first peg")
+    var lastText = lines.LastOrDefault(text => !string.IsNullOrWhiteSpace(text));
+    if (lastText != null) _askedAbout = lastText.TrimEnd().EndsWith("?") && !string.IsNullOrWhiteSpace(_lastCommand) ? _lastCommand : null;
+
     for (var index = 0; index < lines.Count; ++index)
     {
       token.ThrowIfCancellationRequested();
       var line = lines[index];
+      if (IsDeathOrEnd(line))
+      {
+        // the player died, or the game ended: wherever they are next isn't reached from here
+        _lastMoveDirection = null;
+        _lastJourneyCommand = null;
+        Trace("{0}: the player died, or the game ended.", FormatTranscriptLineForDisplay(line));
+      }
+
       string roomName;
       if (ExtractRoomName(line, previousLine, out roomName))
       {
         string roomDescription;
         ExtractParagraph(lines, index + 1, out roomDescription);
+
+        // the command was the label of a join the user drew ("pull first peg"): a heading naming the room at its
+        // other end (or the room it was made from, "Cupboard" for "Cupboard (-1)") is that room, not a journey;
+        // any other heading is mapped as usual
+        if (_followTo != null)
+        {
+          var followed = _canvas.ResolveRoom(_followTo);
+          _followTo = null;
+          if (followed != null && followed.Name.StartsWith(roomName.Trim(), StringComparison.OrdinalIgnoreCase))
+          {
+            await FollowAsync(followed, token);
+            previousLine = line;
+            continue;
+          }
+        }
+
+        // not mapping for now: suspended by the user, or in a room marked "don't automap from here" (a maze, a
+        // cupboard that turns out to be a lift). Automap only follows where the player is until it can map again.
+        RefreshLastKnownRoom();
+        var pausedHere = !_suspended && _lastKnownRoom != null && _lastKnownRoom.AutomapPause;
+        var resuming = !_suspended && !pausedHere && _pausedFrom != null;
+        if (resuming && _lastKnownRoom != null) _pausedFrom = null; // resumed somewhere known: map from there
+        else if (_suspended || pausedHere || resuming)
+        {
+          await FollowWhilePausedAsync(roomName, roomDescription, line, pausedHere, token);
+          previousLine = line;
+          continue;
+        }
+
+        // somewhere dark: not a room yet. Automap remembers how the player got there, and maps the room when it can
+        // be seen (once the lamp is lit), as reached that way.
+        if (IsDarkness(roomName))
+        {
+          if (_dark == null) _dark = new DarkArrival(_lastKnownRoom, _lastMoveDirection, _lastJourneyCommand, _pendingStubRemoval);
+          else if (_lastMoveDirection != null) _dark = new DarkArrival(null, null, null, null); // moved on in the dark
+          _pendingStubRemoval = null; // the way leads somewhere: its stub stays until the room is seen
+          _lastMoveDirection = null;
+          _lastJourneyCommand = null;
+          Status = "Somewhere dark: the room will be mapped when it can be seen.";
+          Trace("{0}: somewhere dark, not mapped until it can be seen.", FormatTranscriptLineForDisplay(line));
+          previousLine = line;
+          continue;
+        }
+
+        if (_dark != null)
+        {
+          if (_lastMoveDirection == null)
+          {
+            // lit up where the player stands ("light lamp"): the room is where the move into the dark led
+            _lastKnownRoom = _dark.From == null ? null : _canvas.ResolveRoom(_dark.From);
+            _lastMoveDirection = _dark.Direction;
+            _lastJourneyCommand = _dark.Journey;
+            _pendingStubRemoval = _dark.Stub;
+            _seenInTheDark = true;
+          }
+          else
+          {
+            // moved on in the dark: where from isn't known
+            _lastKnownRoom = null;
+          }
+
+          _dark = null;
+        }
 
         // work out which room the transcript is referring to here, asking them if necessary.
         // All prompts happen before the batch below opens: the user can't undo while a batch is open.
@@ -727,6 +980,8 @@ public sealed class Automap : IAutomapController
         token.ThrowIfCancellationRequested();
         RefreshLastKnownRoom();
         if (room != null) room = _canvas.ResolveRoom(room);
+        room = VariantRoom(roomName, room);
+        room = await SameNameElsewhereAsync(room, roomName, roomDescription, line, token);
 
         AutomapSameDirectionResult? decision = null;
         Room otherRoom = null;
@@ -746,7 +1001,7 @@ public sealed class Automap : IAutomapController
                       .FirstOrDefault(room => room != null && room != _lastKnownRoom);
           if (otherRoom != null)
           {
-            decision = await Prompts.ChooseSameDirectionAsync(otherRoom, roomName, token);
+            decision = await Prompts.ChooseSameDirectionAsync(_lastKnownRoom, otherRoom, roomName, token);
             token.ThrowIfCancellationRequested();
             if (decision == AutomapSameDirectionResult.Cancel)
             {
@@ -792,6 +1047,21 @@ public sealed class Automap : IAutomapController
                     room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
                     _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
                     break;
+                  case AutomapSameDirectionResult.Split:
+                  {
+                    // the room the player left is a second place like it ("Cupboard (2)", down the lift), reached
+                    // from the first by what they did there; the way out joins the second to the new room
+                    var first = _lastKnownRoom;
+                    var second = _canvas.CreateRoom(first, SplitName(first.Name));
+                    foreach (var description in first.Descriptions) second.AddDescription(description);
+                    second.IsDark = first.IsDark;
+                    _canvas.ConnectByCommand(first, second, _doneInRoom ?? UnmappedWay);
+                    room = _canvas.CreateRoom(second, _lastMoveDirection.Value, roomName, line);
+                    _canvas.Connect(second, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    Trace("{0}: {1} split; {2} is {3} from {4}.", FormatTranscriptLineForDisplay(line), first.Name,
+                      roomName, _lastMoveDirection.Value.ToString().ToLower(), second.Name);
+                    break;
+                  }
                   default:
                     throw new ArgumentOutOfRangeException();
                 }
@@ -925,6 +1195,14 @@ public sealed class Automap : IAutomapController
 
       previousLine = line;
     }
+
+    // no room heading in the reply: the labelled join took the player along it ("The cupboard lurches downwards.")
+    if (_followTo != null)
+    {
+      var followed = _canvas.ResolveRoom(_followTo);
+      _followTo = null;
+      if (followed != null) await FollowAsync(followed, token);
+    }
   }
 
   private string FormatTranscriptLineForDisplay(string line)
@@ -952,13 +1230,177 @@ public sealed class Automap : IAutomapController
 
     // a command that isn't a direction may still take the player somewhere ("xyzzy", "enter boat")
     _lastJourneyCommand = _lastMoveDirection == null && IsPossibleJourney(command) ? command.Trim() : null;
+
+    // a join on the map labelled with this command takes the player along it, once the game has replied
+    var asked = _askedAbout;
+    _askedAbout = null;
+    // what the player did here, should the room turn out to be two (Split): the last such command, with the
+    // command it answered ("pull peg, first")
+    if (_lastJourneyCommand != null) _doneInRoom = asked != null ? asked.Trim() + ", " + command.Trim() : command.Trim();
+    _followTo = _lastJourneyCommand != null ? LabelledJoinEnd(command, asked) : null;
+  }
+
+  /// <summary>
+  ///   A copy of a room the user (or Split) made for the same place seen differently, "Cupboard (-1)" for a heading of
+  ///   "Cupboard": it's the room the heading means when the player is in it already (looking round), or when the way
+  ///   they just went is known to lead to it. Otherwise <paramref name="found" />, the room with the heading's name.
+  /// </summary>
+  private Room VariantRoom(string roomName, Room found)
+  {
+    var here = _lastKnownRoom;
+    if (here == null) return found;
+    if (_lastMoveDirection == null && _lastJourneyCommand == null)
+      return IsVariantOf(here.Name, roomName) ? here : found;
+    if (_lastMoveDirection == null) return found;
+
+    // the way the player went, as the map shows it (by its label, wherever it leaves the room), to another room by
+    // this name or a copy of it: two rooms called "In the Chimney", one above the other
+    var along = _canvas.RoomsAlong(here, _lastMoveDirection.Value)
+      .FirstOrDefault(other => other != null && other != here &&
+                               (IsVariantOf(other.Name, roomName) ||
+                                string.Equals(other.Name?.Trim(), roomName?.Trim(), StringComparison.OrdinalIgnoreCase)));
+    return along ?? found;
+  }
+
+  /// <summary>
+  ///   Moving by a direction to a room with the same name as the room you left, showing a description that starts
+  ///   unlike any of its own: it may be another room by that name (a second "In the Chimney" further up). Asks, since
+  ///   descriptions can change as a game goes on; returns null for a new room, or the room you left. Not asked for a
+  ///   way already mapped as leading back into the room, or when automap isn't mapping.
+  /// </summary>
+  private async Task<Room> SameNameElsewhereAsync(
+    Room room, string roomName, string roomDescription, string line, CancellationToken token)
+  {
+    var here = _lastKnownRoom;
+    if (room == null || room != here || _lastMoveDirection == null || _dontAskAboutAmbiguities || _suspended ||
+        room.AutomapPause || string.IsNullOrWhiteSpace(roomDescription) || room.Descriptions.Count == 0 ||
+        !string.Equals(room.Name?.Trim(), roomName?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+        room.Descriptions.Any(known => SameFirstSentence(known, roomDescription)) ||
+        LoopsBack(room, _lastMoveDirection.Value))
+      return room;
+
+    var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, new[] { room }, token);
+    token.ThrowIfCancellationRequested();
+    RefreshLastKnownRoom();
+    if (choice.AutoChooseRest) _dontAskAboutAmbiguities = true;
+    return choice.NewRoom ? null : _canvas.ResolveRoom(room);
+  }
+
+  /// <summary>Whether the map has <paramref name="direction" /> leading from <paramref name="room" /> straight back in.</summary>
+  private static bool LoopsBack(Room room, MappableDirection direction) =>
+    room.GetConnections().Any(connection =>
+      connection.GetSourceRoom(out var from) == room && connection.GetTargetRoom(out var to) == room && from != to &&
+      DirectionWords.SplitLabel(connection.StartText)
+        .Any(word => DirectionWords.TryParse(word, out var listed) && listed == direction));
+
+  /// <summary>"Cupboard (-1)" or "Cupboard 2" for "Cupboard": the name, then something more after a space or bracket.</summary>
+  private static bool IsVariantOf(string name, string heading)
+  {
+    if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(heading)) return false;
+    name = name.Trim();
+    heading = heading.Trim();
+    return name.Length > heading.Length && name.StartsWith(heading, StringComparison.OrdinalIgnoreCase) &&
+           !char.IsLetterOrDigit(name[heading.Length]);
+  }
+
+  /// <summary>The command the game answered with a question, if the last reply was one.</summary>
+  private string _askedAbout;
+
+  /// <summary>The last command, not a direction, the player typed in the room they're in (see Split).</summary>
+  private string _doneInRoom;
+
+  /// <summary>"Cupboard (2)" for "Cupboard", or the next number free.</summary>
+  private string SplitName(string name)
+  {
+    var names = new HashSet<string>(
+      Trizbort.Domain.Application.Project.Current.Elements.OfType<Room>().Select(room => room.Name),
+      StringComparer.OrdinalIgnoreCase);
+    for (var number = 2; ; number++)
+    {
+      var candidate = $"{name} ({number})";
+      if (!names.Contains(candidate)) return candidate;
+    }
+  }
+
+  /// <summary>
+  ///   The room at the other end of a join labelled with the last command: the player is there once the game has
+  ///   replied, unless the reply shows them somewhere else.
+  /// </summary>
+  private Room _followTo;
+
+  private async Task FollowAsync(Room room, CancellationToken token)
+  {
+    using (await BeginBatchAsync("Automap: " + room.Name, token))
+    {
+      NowInRoom(room);
+    }
+
+    _lastMoveDirection = null;
+    _lastJourneyCommand = null;
+    _pendingStubRemoval = null;
+    Trace("Automap: followed the join labelled \"{0}\" to {1}.", _lastCommand, room.Name);
+  }
+
+  /// <summary>
+  ///   A join from where the player is, labelled with the command they typed (or with it and the command it answers,
+  ///   "pull peg" then "first" for "pull first peg"): the user drew it for a way automap can't see, such as a lift.
+  ///   Returns the room at its other end. Words count in any order, and "the", "a" and "an" don't count.
+  /// </summary>
+  private Room LabelledJoinEnd(string command, string asked)
+  {
+    RefreshLastKnownRoom();
+    var here = _lastKnownRoom;
+    if (here == null) return null;
+    var tries = new List<string> { command };
+    if (asked != null) tries.Add(asked + " " + command);
+
+    foreach (var connection in here.GetConnections())
+    {
+      var to = OtherEnd(connection, here);
+      if (to == null || to == here) continue;
+      if (connection.Flow == ConnectionFlow.OneWay && connection.GetSourceRoom() != here) continue;
+      var labels = new[] { connection.MidText, connection.GetSourceRoom() == here ? connection.StartText : connection.EndText };
+      var match = labels.Where(label => !string.IsNullOrWhiteSpace(label))
+        .SelectMany(label => label.Split('/'))
+        .FirstOrDefault(label => tries.Any(attempt => SameWords(label, attempt)));
+      if (match != null) return to;
+    }
+
+    return null;
+  }
+
+  private static readonly string[] _articles = { "the", "a", "an" };
+
+  /// <summary>The same words, in any order, leaving out "the", "a" and "an".</summary>
+  private static bool SameWords(string a, string b)
+  {
+    static List<string> Words(string text) => text.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries)
+      .Select(word => word.ToLowerInvariant()).Where(word => !_articles.Contains(word)).OrderBy(word => word).ToList();
+    var first = Words(a);
+    return first.Count > 0 && first.SequenceEqual(Words(b));
   }
 
   private static readonly string[] _notJourneys =
   {
     "undo", "restore", "load", "restart", "quit", "q", "save", "look", "l", "again", "g", "oops", "script", "unscript",
-    "transcript"
+    "transcript",
+    // answers to the game's questions ("Do you want to be reincarnated?", "Are you sure you want to quit?")
+    "yes", "y", "no"
   };
+
+  /// <summary>
+  ///   The game says the player died, or the game is over ("You have died", "You are dead", "*** You have won ***").
+  ///   What follows (a reincarnation, a restart) is no journey from the room they were in.
+  /// </summary>
+  public static bool IsDeathOrEnd(string line)
+  {
+    if (string.IsNullOrWhiteSpace(line)) return false;
+    return _deathOrEnd.IsMatch(line);
+  }
+
+  private static readonly System.Text.RegularExpressions.Regex _deathOrEnd = new(
+    @"\byou(?: have|'ve| are|'re)? (?:died|dead|been killed)\b|\byou die\b|^\s*\*{2,}.*\*{2,}\s*$",
+    System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
   /// <summary>
   ///   A command that could take the player to another room without a compass direction. Not the automap commands,
@@ -985,7 +1427,8 @@ public sealed class Automap : IAutomapController
     {
       var regionName = command.Substring(_settings.AddRegionCommand.Length).Trim();
 
-      if (!string.IsNullOrEmpty(regionName) && _lastKnownRoom != null)
+      // tracking only: the map stays as it is
+      if (!string.IsNullOrEmpty(regionName) && _lastKnownRoom != null && !_suspended)
       {
         // region already exists, just set the room to it
         if (Settings.Regions.Find(p => p.RegionName.Equals(regionName, StringComparison.OrdinalIgnoreCase)) == null)
@@ -1002,7 +1445,8 @@ public sealed class Automap : IAutomapController
       // the user wants to add an object to the map
       var objectName = command.Substring(_settings.AddObjectCommand.Length).Trim();
 
-      if (!string.IsNullOrEmpty(objectName) && _lastKnownRoom != null)
+      // tracking only: the map stays as it is
+      if (!string.IsNullOrEmpty(objectName) && _lastKnownRoom != null && !_suspended)
       {
         if (!string.IsNullOrEmpty(_lastKnownRoom.Objects))
         {
@@ -1298,6 +1742,13 @@ public sealed class Automap : IAutomapController
     _gameName = string.Empty;
     _stepNow = false;
     _moveByMove = settings.MoveByMove;
+    _suspended = false;
+    _pausedFrom = null;
+    _dark = null;
+    _seenInTheDark = false;
+    _askedAbout = null;
+    _followTo = null;
+    _doneInRoom = null;
     Volatile.Write(ref _movesToPlay, 0);
     Volatile.Write(ref _movesBack, 0);
     _movePoints.Clear();
@@ -1372,6 +1823,37 @@ public sealed class Automap : IAutomapController
     {
       lock (_screen) return _screen.Count;
     }
+  }
+
+  /// <summary>
+  ///   How many moves are left to play in the transcript as it is now: the command automap is paused before, if
+  ///   any, and each command typed after it. Reads the transcript again, so call it once, not on a timer.
+  /// </summary>
+  public int MovesAhead()
+  {
+    var fileName = _settings.FileName;
+    if (!Running || string.IsNullOrEmpty(fileName)) return 0;
+    var skip = _linesRead;
+    var moves = string.IsNullOrWhiteSpace(NextCommand) ? 0 : 1;
+    try
+    {
+      using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+      using var reader = new StreamReader(stream);
+      var index = 0;
+      while (reader.ReadLine() is { } line)
+      {
+        if (index++ < skip) continue;
+        if (IsPrompt(line, out var command) && !string.IsNullOrWhiteSpace(command)) moves++;
+      }
+    }
+    catch (IOException)
+    {
+    }
+    catch (UnauthorizedAccessException)
+    {
+    }
+
+    return moves;
   }
 
   /// <summary>Pause before the next move.</summary>
@@ -1657,6 +2139,8 @@ public sealed class Automap : IAutomapController
       while (true)
       {
         tokenSource.Token.ThrowIfCancellationRequested();
+        string command = null;
+        var wentBack = false;
         if (_settings.ContinueTranscript)
         {
           // carrying on from the end of a game still running: the last line is usually its prompt, waiting for the
@@ -1669,37 +2153,59 @@ public sealed class Automap : IAutomapController
         {
           // ...read a line of text
           line = await WaitForNewLine(reader, tokenSource.Token);
-          atFileEnd = await reader.IsAtEndAsync(tokenSource.Token); // store this now so that it's still valid when we use it below
+          if (line == null)
+          {
+            // went back a move while waiting at the end of the transcript (after playing to the end)
+            (command, reader, stream) = await GoBackAsync(reader, stream, tokenSource.Token, true);
+            linesBetweenPrompts.Clear();
+            wentBack = true;
+          }
+          else
+          {
+            atFileEnd = await reader.IsAtEndAsync(tokenSource.Token); // store this now so that it's still valid when we use it below
+          }
         }
 
-        AddScreenLine(line);
+        if (!wentBack) AddScreenLine(line);
 
         //Trace("[" + line + "]");
-        string command;
-        if (IsPrompt(line, out command))
+        if (wentBack || IsPrompt(line, out command))
         {
           // this is a prompt line
 
-          // let's process everything leading up to it since the last prompt, but not necessarily this new prompt itself
-          await ProcessTranscriptText(linesBetweenPrompts, tokenSource.Token);
-          tokenSource.Token.ThrowIfCancellationRequested();
+          if (!wentBack)
+          {
+            // let's process everything leading up to it since the last prompt, but not necessarily this new prompt itself
+            await ProcessTranscriptText(linesBetweenPrompts, tokenSource.Token);
+            tokenSource.Token.ThrowIfCancellationRequested();
 
-          // we've now dealt with all lines to this point
-          linesBetweenPrompts.Clear();
+            // we've now dealt with all lines to this point
+            linesBetweenPrompts.Clear();
 
-          // the reply is all in: a direction tried that led nowhere loses its stub now, not when the player types
-          // the next command (playing live, or move by move, the map would show the stub until then)
-          await FlushPendingStubRemoval(tokenSource.Token);
+            // the reply is all in: a direction tried that led nowhere loses its stub now, not when the player types
+            // the next command (playing live, or move by move, the map would show the stub until then)
+            await FlushPendingStubRemoval(tokenSource.Token);
+          }
 
           // handle the case where we're at the end of the file, waiting for user input: the prompt has been
           // written but the command hasn't. When the prompt line already holds the command (">north"), keep it: an
           // interpreter writes that before the game's reply, so the next line is the reply, not the command.
-          if (atFileEnd && string.IsNullOrWhiteSpace(command))
+          if (!wentBack && atFileEnd && string.IsNullOrWhiteSpace(command))
             // we've already read the prompt, now just read the command when the player enters it
           {
             var typed = await WaitForNewLine(reader, tokenSource.Token);
-            AddScreenLine(typed);
-            command = typed.Trim();
+            if (typed == null)
+            {
+              // went back a move while waiting for the player's next command
+              (command, reader, stream) = await GoBackAsync(reader, stream, tokenSource.Token, true);
+              linesBetweenPrompts.Clear();
+              atFileEnd = false;
+            }
+            else
+            {
+              AddScreenLine(typed);
+              command = typed.Trim();
+            }
           }
 
           //                  var nextParagraph = getTextToNextPrompt(reader);

@@ -86,6 +86,8 @@ public sealed class Viewport
 
   public void SetView(Vector origin, float zoom)
   {
+    // anything else moving the view (the user panning or zooming) ends a glide
+    if (!_gliding) _glideElapsed = -1;
     if (!_fitting) _fitSource = null;
     var clamped = Math.Clamp(zoom, MinZoom, MaxZoom);
     if (_transform.Origin == origin && Math.Abs(_transform.ZoomFactor - clamped) <= 0.0001f) return;
@@ -222,8 +224,75 @@ public sealed class Viewport
     return bounds;
   }
 
+  // ---- Gliding: moving the view smoothly, so the user can see which way it went ----
+
+  private Vector _glideFrom;
+  private Vector _glideTo;
+  private double _glideElapsed = -1;
+  private double _glideMs;
+  private bool _gliding;
+
+  /// <summary>
+  ///   True when a UI animates <see cref="GlideTo" /> (calling <see cref="AdvanceGlide" /> each frame); otherwise a
+  ///   glide jumps straight there.
+  /// </summary>
+  public bool GlideEnabled { get; set; }
+
+  /// <summary>A glide has started: the UI should call <see cref="AdvanceGlide" /> each frame until it returns false.</summary>
+  public event EventHandler GlideStarted;
+
+  public bool IsGliding => _glideElapsed >= 0;
+
+  /// <summary>Where the view is going: the end of the glide in progress, or where it is.</summary>
+  public Vector TargetOrigin => IsGliding ? _glideTo : _transform.Origin;
+
+  /// <summary>
+  ///   Moves the view to <paramref name="origin" /> (the zoom stays), easing in and out over a moment so the user
+  ///   sees which way it went, longer for further. Jumps when <see cref="GlideEnabled" /> is off.
+  /// </summary>
+  public void GlideTo(Vector origin)
+  {
+    var distance = (origin - _transform.Origin).Length * _transform.ZoomFactor;
+    if (!GlideEnabled || distance < 1)
+    {
+      SetView(origin, _transform.ZoomFactor);
+      return;
+    }
+
+    _glideFrom = _transform.Origin;
+    _glideTo = origin;
+    _glideMs = Math.Clamp(250 + distance * 0.35, 250, 700);
+    var started = !IsGliding;
+    _glideElapsed = 0;
+    if (started) GlideStarted?.Invoke(this, EventArgs.Empty);
+  }
+
+  /// <summary>Moves a glide on by <paramref name="elapsedMs" />; returns false once it has arrived (or there is none).</summary>
+  public bool AdvanceGlide(double elapsedMs)
+  {
+    if (!IsGliding) return false;
+    _glideElapsed += Math.Max(0, elapsedMs);
+    var t = Math.Min(1, _glideElapsed / _glideMs);
+    // ease in and out (cubic)
+    var eased = t < 0.5 ? 4 * t * t * t : 1 - Math.Pow(-2 * t + 2, 3) / 2;
+    var at = _glideFrom + (_glideTo - _glideFrom) * (float)eased;
+    _gliding = true;
+    try
+    {
+      SetView(t >= 1 ? _glideTo : at, _transform.ZoomFactor);
+    }
+    finally
+    {
+      _gliding = false;
+    }
+
+    if (t >= 1) _glideElapsed = -1;
+    return IsGliding;
+  }
+
   private void ZoomTo(float newZoom, Vector clientPoint)
   {
+    if (!_gliding) _glideElapsed = -1;
     var before = _transform.Origin;
     var beforeZoom = _transform.ZoomFactor;
     _transform.ZoomAt(clientPoint, newZoom);

@@ -14,6 +14,12 @@ public sealed record EditorCommand
 
   public string Title { get; init; }
 
+  /// <summary>
+  ///   The title on a right-click menu, when it needs more than the menu bar's (which has its submenu to say what
+  ///   it's about): "Automap: I'm Here" for Project > Automap > I'm Here. Null to use <see cref="Title" />.
+  /// </summary>
+  public string ContextTitle { get; init; }
+
   /// <summary>Slash-separated menu location, e.g. <c>Edit/Rooms/Swap</c>. Null for hidden (key-only) commands.</summary>
   public string MenuPath { get; init; }
 

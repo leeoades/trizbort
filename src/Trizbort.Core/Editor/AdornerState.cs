@@ -43,8 +43,17 @@ public sealed record TooltipModel(string Title, string Body, string Footer, Tool
   ///   The tooltip for <paramref name="element" />, or null when tooltips are off, the element has none, or it has
   ///   neither a title nor a body.
   /// </summary>
-  public static TooltipModel Create(Element element)
+  public static TooltipModel Create(Element element) => Create(element, null);
+
+  /// <summary>
+  ///   As <see cref="Create(Element)" />, for the pointer at world point <paramref name="at" />: over a sign in a
+  ///   room's corner, the tooltip explains the sign (shown even when room tooltips are off).
+  /// </summary>
+  public static TooltipModel Create(Element element, Vector? at)
   {
+    if (element is Room badged && at != null && RoomBadges.At(badged, at.Value) is { } badge)
+      return new TooltipModel(badge.Title, badge.Description, string.Empty, TooltipElementKind.Room, element);
+
     if (element == null || !ApplicationSettingsController.AppSettings.ShowTooltips || !element.HasTooltip()) return null;
 
     if (element is Room room) room.CheckValidation();

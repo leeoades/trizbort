@@ -29,8 +29,34 @@ public interface IAutomapController
   /// <summary>Go back a move in the transcript and wait there, leaving the map as it is.</summary>
   void GoBack();
 
+  /// <summary>Pause before the next move (playing the transcript a move at a time from then on).</summary>
+  void Pause()
+  {
+  }
+
+  /// <summary>How many moves are left to play in the transcript, counting the one automap is paused before.</summary>
+  int MovesAhead() => 0;
+
   /// <summary>The room automap thinks the player is in, if it knows; null otherwise.</summary>
   Room CurrentRoom => null;
+
+  /// <summary>True while mapping is suspended (automap follows the player but doesn't change the map).</summary>
+  bool Suspended => false;
+
+  /// <summary>Tells automap the player is in <paramref name="room" />: it maps on from there.</summary>
+  void SetCurrentRoom(Room room)
+  {
+  }
+
+  /// <summary>Stop mapping for now, following the player through rooms already on the map.</summary>
+  void Suspend()
+  {
+  }
+
+  /// <summary>Map again after <see cref="Suspend" />.</summary>
+  void Resume()
+  {
+  }
 
   /// <summary>Raised with the new status text each time it is set. May be raised off the UI thread.</summary>
   event Action<string> StatusChanged;

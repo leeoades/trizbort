@@ -945,12 +945,12 @@ Whilst automapping, Trizbort displays a bar beneath the canvas, telling you what
 
 You can freely interact with the canvas, and do anything else you like in Trizbort, whilst automapping.
 
-In Trizbort: Recast the bar also has these buttons:
+In Trizbort: Recast the automap controls are in a panel docked beside the map while automap runs:
 
-- **Current Room** selects the room automap thinks you're in and centres the map on it.
-- **Next Move** (F10) and **Play to End** (F5), when playing the transcript a move at a time (an option when you start automapping). **Pause** stops before the next move.
-- **Previous Move** (F9) goes back a move in the transcript and waits there. The map is left as it is, so you can step through part of the game again; the room you were in then is selected.
-- **Hide Monitor** and **Show Monitor** hide and show the small game monitor in the corner of the map, which shows the game so far. Click the monitor for a larger window you can copy text from; it floats beside the map, and the map's keys and Undo still work.
+- **Where you are** shows the room automap thinks you're in. The dot beside it is green while automap is mapping, amber while it isn't changing the map, and grey when you're in the dark. **Centre on Current Room** selects that room and glides the map to it. If automap has lost track of where you are, right-click the room you're in and choose **Automap: I'm Here**.
+- **Transcript** moves through the game. **Next Move** (F10) plays one move and pauses; **Previous Move** (F9) goes back a move, leaving the map as it is, so you can step through part of the game again; and **Pause** stops before the next move while automap is playing. The game screen below shows the game so far; click it for a larger window you can copy text from.
+- **Play to the End** (F5), at the bottom of the panel, plays every move left without pausing, then follows the game as it goes on. With 20 or more moves left it asks first.
+- **Mapping** chooses between **Mapping** (adding rooms and joins as you go) and **Tracking only** (following where you are without changing the map). Tracking only lets you step back and forward to check automap follows the rooms you expect; fix the map if not, then switch back to Mapping, and it maps on from the next room it sees. The panel also says when automap isn't mapping because you're in a room marked Don't Automap From Here, or in the dark.
 
 ![Trizbort's appearance whilst automapping is in progress.](automapping_inprogress.png)
 
@@ -1065,7 +1065,15 @@ After moving into a new room on a complicated map, **check back and see where Tr
 
 **Trizbort doesn't mind where rooms are positioned on the map** during automapping: it will connect them up regardless. So you can freely move rooms around if you keep their connections intact.
 
-**Trizbort: Recast tidies the map as you go.** After each move, rooms nearby shift so that joins point the way their directions say, never run across a room, and cross each other as little as possible. A room you drag or nudge yourself is left where you put it (this is saved with the map). To tidy a whole map, or just the rooms you've selected, choose `Edit->Rooms->Tidy Map...`: **step by step** keeps the map familiar, and the **solver** lays everything out again. Tidy Map can be undone in one step.
+**Trizbort: Recast tidies the map as you go.** After each move, rooms nearby shift so that joins point the way their directions say, never run across a room, and cross each other as little as possible. A room you drag or nudge yourself is left where you put it (this is saved with the map).
+
+**Rooms automap can't map.** For a maze, or a room that moves (a cupboard that turns out to be a lift), tick **Don't automap from here** in the room's properties (or choose it from the room's right-click menu). The room shows a small amber "no entry" sign in its top-left corner. While you're in that room automap maps nothing; when you come out somewhere else it carries on from there, adding a dotted "?" join for the way through if the room is new. Relabel the join, or draw the real route, when you've worked it out. Automap follows joins you draw: when you type the command a join from your room is labelled with (such as `pull first peg`, or `pull peg` and then `first` when the game asks which), it moves you along that join. A heading of "Cupboard" counts as "Cupboard (-1)" when you're in that copy.
+
+When a way out you've already mapped suddenly leads somewhere new, automap asks what to do. As well as keeping one room or both, you can **split** the room you left into two: automap adds a copy ("Cupboard (2)"), joined from the original by the last thing you did there (such as `pull peg, first`), and joins the new room to the copy.
+
+**Dark rooms.** A heading that says it's too dark to see ("Darkness", "It is pitch black") isn't mapped as a room. When you light the lamp, the room you then see is mapped as reached the way you came in, and marked Dark.
+
+**Merging rooms.** If a place has ended up on the map twice, select both rooms, the one to keep last, and choose `Edit->Rooms->Merge Rooms`. The other room's joins, descriptions and objects move onto the one you keep. To tidy a whole map, or just the rooms you've selected, choose `Edit->Rooms->Tidy Map...`: **step by step** keeps the map familiar, and the **solver** lays everything out again. Tidy Map can be undone in one step.
 
 <a name="help_automap_tips_rearranging"></a>
 

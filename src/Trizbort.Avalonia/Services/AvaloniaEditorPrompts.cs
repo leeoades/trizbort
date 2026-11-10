@@ -76,6 +76,20 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         return Dispatcher.UIThread.InvokeAsync(() => ShowSameDirectionAsync(existing, newRoomName));
     }
 
+    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
+        Room from,
+        Room existing,
+        string newRoomName,
+        CancellationToken token = default)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            return ShowSameDirectionAsync(existing, newRoomName, from);
+        }
+
+        return Dispatcher.UIThread.InvokeAsync(() => ShowSameDirectionAsync(existing, newRoomName, from));
+    }
+
     public Task<RoomDisambiguation> DisambiguateRoomAsync(
         string transcriptLine,
         string roomDescription,
@@ -91,7 +105,7 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
             () => ShowDisambiguationAsync(transcriptLine, roomDescription, candidates));
     }
 
-    private async Task<AutomapSameDirectionResult> ShowSameDirectionAsync(Room existing, string newRoomName)
+    private async Task<AutomapSameDirectionResult> ShowSameDirectionAsync(Room existing, string newRoomName, Room? from = null)
     {
         var owner = _getOwner();
         if (owner == null)
@@ -99,7 +113,7 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
             return await NonInteractiveEditorPrompts.Instance.ChooseSameDirectionAsync(existing, newRoomName);
         }
 
-        var viewModel = new AutomapSameDirectionViewModel(existing, newRoomName);
+        var viewModel = new AutomapSameDirectionViewModel(existing, newRoomName) { FromName = from?.Name ?? string.Empty };
         var dialog = new AutomapSameDirectionDialog { DataContext = viewModel };
         await dialog.ShowDialog(owner);
         return viewModel.Result;

@@ -38,7 +38,7 @@ public sealed partial class EditorSession
 
     var bounds = element is Room room ? room.InnerBounds : element.UnionBoundsWith(Rect.Empty, false);
     if (bounds == Rect.Empty) return;
-    Viewport.CenterOn(bounds);
+    Viewport.GlideTo(bounds.Center);
   }
 
   // ---- Selection (022) ----

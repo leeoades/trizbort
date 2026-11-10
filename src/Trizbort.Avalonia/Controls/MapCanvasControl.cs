@@ -426,7 +426,82 @@ public class MapCanvasControl : Control
                 }
                 session = _fallbackSession;
             }
+
+            HookGlide(session.Viewport);
             return session;
+        }
+    }
+
+    private Viewport? _glideViewport;
+    private TimeSpan? _lastGlideFrame;
+    private bool _glideFrameRequested;
+
+    /// <summary>Animates the session's view when it glides (automap moving on, Current Room), a frame at a time.</summary>
+    private void HookGlide(Viewport viewport)
+    {
+        if (ReferenceEquals(_glideViewport, viewport))
+        {
+            return;
+        }
+
+        if (_glideViewport != null)
+        {
+            _glideViewport.GlideStarted -= OnGlideStarted;
+            _glideViewport.GlideEnabled = false;
+        }
+
+        _glideViewport = viewport;
+        viewport.GlideEnabled = true;
+        viewport.GlideStarted += OnGlideStarted;
+    }
+
+    private void OnGlideStarted(object? sender, EventArgs e)
+    {
+        if (!Dispatcher.UIThread.CheckAccess())
+        {
+            Dispatcher.UIThread.Post(() => OnGlideStarted(sender, e));
+            return;
+        }
+
+        _lastGlideFrame = null;
+        RequestGlideFrame();
+    }
+
+    private void RequestGlideFrame()
+    {
+        if (_glideFrameRequested)
+        {
+            return;
+        }
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null)
+        {
+            // not on screen: go straight there
+            _glideViewport?.AdvanceGlide(double.MaxValue);
+            return;
+        }
+
+        _glideFrameRequested = true;
+        topLevel.RequestAnimationFrame(OnGlideFrame);
+    }
+
+    private void OnGlideFrame(TimeSpan time)
+    {
+        _glideFrameRequested = false;
+        var viewport = _glideViewport;
+        if (viewport == null)
+        {
+            return;
+        }
+
+        var elapsed = _lastGlideFrame is { } last ? (time - last).TotalMilliseconds : 16;
+        _lastGlideFrame = time;
+        var more = viewport.AdvanceGlide(elapsed);
+        InvalidateVisual();
+        if (more)
+        {
+            RequestGlideFrame();
         }
     }
 

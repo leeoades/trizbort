@@ -163,8 +163,8 @@ public static class AppCommands
         {
             Id = "project.startAutomap",
             Title = "_Start Automap...",
-            MenuPath = "Project",
-            Group = "2-automap",
+            MenuPath = "Project/Automap",
+            Group = "2-automap/1-run",
             ShowInToolbar = true, ToolbarOrder = 110, ToolbarGroup = "4-tools", IconKey = "IconAutomap",
             CanExecuteFunc = s => !s.Automap.IsRunning,
             ExecuteAsyncFunc = Run(() => vm!.ToggleAutomapAsync())
@@ -173,8 +173,8 @@ public static class AppCommands
         {
             Id = "project.stopAutomap",
             Title = "Sto_p Automap",
-            MenuPath = "Project",
-            Group = "2-automap",
+            MenuPath = "Project/Automap",
+            Group = "2-automap/1-run",
             CanExecuteFunc = s => s.Automap.IsRunning,
             ExecuteAsyncFunc = Run(() =>
             {

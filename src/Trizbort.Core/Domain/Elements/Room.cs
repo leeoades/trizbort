@@ -29,6 +29,7 @@ public class Room : Element, ISizeable
   private HandDrawnStyle _handDrawnStyle;
   private bool _isDark;
   private bool _placedByHand;
+  private bool _automapPause;
   private bool _isEndRoom;
   private bool _isStartRoom;
   private CompassPoint _objectsPosition = DefaultObjectsPosition;
@@ -180,6 +181,22 @@ public class Room : Element, ISizeable
       if (_placedByHand != value)
       {
         _placedByHand = value;
+        RaiseChanged();
+      }
+    }
+  }
+
+  /// <summary>
+  ///   Automap doesn't map from this room (a maze, or a cupboard that turns out to be a lift): while the player is in
+  ///   it, automap only waits for them to be somewhere else, then carries on from there with a dotted "?" join for
+  ///   the way through. Saved with the map; older versions ignore it.
+  /// </summary>
+  public bool AutomapPause {
+    get { return _automapPause; }
+    set {
+      if (_automapPause != value)
+      {
+        _automapPause = value;
         RaiseChanged();
       }
     }
@@ -842,6 +859,7 @@ public class Room : Element, ISizeable
     ReferenceRoomId = element.Attribute("referenceRoom").ToInt();
     IsDark = element.Attribute("isDark").ToBool();
     PlacedByHand = element.Attribute("placedByHand").ToBool();
+    AutomapPause = element.Attribute("automapPause").ToBool();
     IsStartRoom = element.Attribute("isStartRoom").ToBool();
     IsEndRoom = element.Attribute("isEndRoom").ToBool();
     ZOrder = element.Attribute("ZOrder").ToInt();
@@ -1010,6 +1028,9 @@ public class Room : Element, ISizeable
 
     if (PlacedByHand)
       scribe.Attribute("placedByHand", PlacedByHand);
+
+    if (AutomapPause)
+      scribe.Attribute("automapPause", AutomapPause);
 
     if (IsStartRoom)
       scribe.Attribute("isStartRoom", IsStartRoom);

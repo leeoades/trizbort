@@ -147,6 +147,13 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
             : Dispatcher.UIThread.Invoke(() => _innerCanvas.BeginBatch(title));
     }
 
+    public IReadOnlyList<Room> RoomsAlong(Room room, MappableDirection direction)
+    {
+        return Dispatcher.UIThread.CheckAccess()
+            ? _innerCanvas.RoomsAlong(room, direction)
+            : Dispatcher.UIThread.Invoke(() => _innerCanvas.RoomsAlong(room, direction));
+    }
+
     public Room ResolveRoom(Room room)
     {
         return Dispatcher.UIThread.CheckAccess()

@@ -59,7 +59,7 @@
         </Border>
 
         <!-- Main Content Area / Canvas Container -->
-        <Grid Background="{DynamicResource SystemControlBackgroundAltMediumBrush}">
+        <Grid Background="{DynamicResource SystemControlBackgroundAltMediumBrush}" ColumnDefinitions="*,Auto">
             <controls:MapCanvasControl x:Name="CanvasControl"
                                        CommandService="{Binding CommandService}"
                                        HorizontalAlignment="Stretch"
@@ -85,27 +85,8 @@
                        Foreground="Gray"
                        IsHitTestVisible="False" />
 
-            <!-- AutomapBar overlay -->
-            <!-- the game as automap has read it so far, on a little monitor; click it for the whole transcript -->
-            <controls:TranscriptMonitor VerticalAlignment="Bottom"
-                                        HorizontalAlignment="Right"
-                                        Margin="0,0,12,52"
-                                        IsVisible="{Binding IsGameMonitorVisible}"
-                                        Text="{Binding AutomapScreenText}" />
-
-            <controls:AutomapBar VerticalAlignment="Bottom"
-                                 HorizontalAlignment="Stretch"
-                                 IsVisible="{Binding IsAutomapActive}"
-                                 Status="{Binding AutomapStatusText}"
-                                 IsMoveByMove="{Binding IsAutomapMoveByMove}"
-                                 CurrentRoomCommand="{Binding GoToAutomapRoomCommand}"
-                                 BackCommand="{Binding GoBackAutomapCommand}"
-                                 NextMoveCommand="{Binding PlayNextMoveCommand}"
-                                 PlayToEndCommand="{Binding PlayToEndCommand}"
-                                 PauseCommand="{Binding PauseAutomapCommand}"
-                                 IsMonitorShown="{Binding IsGameMonitorShown}"
-                                 ToggleMonitorCommand="{Binding ToggleGameMonitorCommand}"
-                                 StopCommand="{Binding StopAutomapCommand}" />
+            <!-- automap's controls, docked beside the map while it runs -->
+            <controls:AutomapPanel Grid.Column="1" IsVisible="{Binding IsAutomapActive}" />
         </Grid>
     </DockPanel>
 </Window>

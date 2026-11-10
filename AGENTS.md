@@ -11,6 +11,17 @@ If your change invalidates something documented there (new file format, new expo
 settings system, restructured controllers, etc.), update the relevant sub-document as part of
 the same change.
 
+## Keep the changelog up to date
+
+Every change a user would notice (a feature, a behaviour change, a fix) gets a line in the root
+[`changelog.md`](changelog.md) **in the same commit**, under `## [Unreleased]` in the right
+`### Added` / `### Changed` / `### Fixed` section (add the section if it's missing). Write for
+people using the app: what they'll see and how to use it, not class names. Internal refactors,
+tests and docs-only changes don't need an entry. When a change is about how to use the app, also
+update the user guide ([`Docs/index.md`](Docs/index.md)). At release time `[Unreleased]` becomes
+the version heading (e.g. `## [0.12.0-beta] - 2026-11-20`); the release workflow uses that section
+as the release notes. Legacy (WinForms) changes go in [`legacy/changelog.md`](legacy/changelog.md).
+
 ## Quick facts
 - The Avalonia app is **Trizbort: Recast** (v0.11 beta; "Recast" for short, and file names keep `TrizbortRecast` / `trizbort-recast` / `Trizbort Recast.app` as colons aren't allowed in file names); the WinForms app in `legacy/` is "Trizbort" / the reference. See decision D5 in `agent-docs/plans/avalonia-parity/decisions.md`.
 - Projects:

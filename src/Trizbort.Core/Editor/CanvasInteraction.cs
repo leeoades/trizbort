@@ -791,7 +791,7 @@ public sealed class CanvasInteraction : IDisposable
 
     // No tooltip while a button is down, the wheel was just used, or a drag is under way (legacy hid it on mouse down/wheel).
     var tooltip = _mode == CanvasDragMode.None && _pendingPort == null && !_tooltipSuppressed
-      ? TooltipModel.Create(_hoverElement)
+      ? TooltipModel.Create(_hoverElement, _lastWorld)
       : null;
 
     var state = new AdornerState(
@@ -823,6 +823,7 @@ public sealed class CanvasInteraction : IDisposable
            && a.Cursor == b.Cursor
            && ReferenceEquals(a.TooltipTarget, b.TooltipTarget)
            && a.Tooltip?.Kind == b.Tooltip?.Kind
+           && a.Tooltip?.Title == b.Tooltip?.Title
            && Equals(a.Marquee, b.Marquee)
            && Equals(a.PendingConnection, b.PendingConnection)
            && SameHandles(a.Handles, b.Handles)
