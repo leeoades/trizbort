@@ -258,7 +258,9 @@ public class AutomapCanvas : IAutomapCanvas
       JoinWays.AddDirection(ways, !hereIsStart, CompassPointHelper.GetOpposite(direction), seen: false);
 
     var hereCompass = JoinWays.FirstCompass(ways, hereIsStart);
-    if (hereCompass != null && !IsMainPoint(EndPoint(connection, hereIsStart)))
+    // the end moves to the compass side, unless the side it's on is one of its ways already. A side that only faced
+    // the other room (a command's join, "turn on lamp", a guess) isn't a way, and gives way to the direction.
+    if (hereCompass != null && !SideIsOneOfItsWays(connection, ways, hereIsStart))
     {
       var point = CompassPointHelper.GetCompassDirection(hereCompass.Value);
       // move the join to the compass side only if the rooms are (or can be put) that way round, so it doesn't loop
@@ -289,6 +291,13 @@ public class AutomapCanvas : IAutomapCanvas
   ///   guessed end another way replaces the guess; travelling from a known end adds a direction. Labels don't count:
   ///   automap writes the assumed way back ("down") itself.
   /// </summary>
+  /// <summary>Whether the side an end leaves from is a direction one of its ways lists.</summary>
+  private static bool SideIsOneOfItsWays(Connection connection, List<JoinWay> ways, bool atStart)
+  {
+    var point = EndPoint(connection, atStart);
+    return IsMainPoint(point) && JoinWays.Lists(ways, atStart, DirectionOfMainPoint(point));
+  }
+
   private static bool IsGuessedEnd(Connection connection, bool atStart)
   {
     var ways = JoinWays.Of(connection);

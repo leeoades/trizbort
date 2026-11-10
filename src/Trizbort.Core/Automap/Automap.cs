@@ -825,6 +825,34 @@ public sealed class Automap : IAutomapController
       System.Text.RegularExpressions.RegexOptions.IgnoreCase));
   }
 
+  /// <summary>
+  ///   The player went somewhere they can't see: automap remembers how they got there, and maps the room when it can
+  ///   be seen (once the lamp is lit), as reached that way.
+  /// </summary>
+  private void EnterTheDark(string line)
+  {
+    if (_dark == null) _dark = new DarkArrival(_lastKnownRoom, _lastMoveDirection, _lastJourneyCommand, _pendingStubRemoval);
+    else if (_lastMoveDirection != null) _dark = new DarkArrival(null, null, null, null); // moved on in the dark
+    _pendingStubRemoval = null; // the way leads somewhere: its stub stays until the room is seen
+    _lastMoveDirection = null;
+    _lastJourneyCommand = null;
+    Status = "Somewhere dark: the room will be mapped when it can be seen.";
+    Trace("{0}: somewhere dark, not mapped until it can be seen.", FormatTranscriptLineForDisplay(line));
+  }
+
+  /// <summary>
+  ///   A short first line of the game's answer that says it's dark ("It is pitch black.", "It's too dark to see."),
+  ///   rather than why the player can't go somewhere ("It's too dark to go that way.").
+  /// </summary>
+  public static bool IsDarkReply(string line)
+  {
+    if (string.IsNullOrWhiteSpace(line)) return false;
+    var text = line.Trim();
+    if (text.Length > 80 || !IsDarkness(text)) return false;
+    return !System.Text.RegularExpressions.Regex.IsMatch(text, @"\b(can't|cannot|can not|won't|go|going)\b",
+      System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+  }
+
   private void NowInRoom(Room room)
   {
     if (room != _lastKnownRoom) _doneInRoom = null;
@@ -892,6 +920,7 @@ public sealed class Automap : IAutomapController
     var lastText = lines.LastOrDefault(text => !string.IsNullOrWhiteSpace(text));
     if (lastText != null) _askedAbout = lastText.TrimEnd().EndsWith("?") && !string.IsNullOrWhiteSpace(_lastCommand) ? _lastCommand : null;
 
+    var firstReply = lines.FindIndex(text => !string.IsNullOrWhiteSpace(text));
     for (var index = 0; index < lines.Count; ++index)
     {
       token.ThrowIfCancellationRequested();
@@ -902,6 +931,15 @@ public sealed class Automap : IAutomapController
         _lastMoveDirection = null;
         _lastJourneyCommand = null;
         Trace("{0}: the player died, or the game ended.", FormatTranscriptLineForDisplay(line));
+      }
+
+      // the game answers a move with a sentence saying it's dark ("It is pitch black."), not a heading
+      if (index == firstReply && !_suspended && (_lastMoveDirection != null || _lastJourneyCommand != null) &&
+          IsDarkReply(line))
+      {
+        EnterTheDark(line);
+        previousLine = line;
+        continue;
       }
 
       string roomName;
@@ -942,13 +980,7 @@ public sealed class Automap : IAutomapController
         // be seen (once the lamp is lit), as reached that way.
         if (IsDarkness(roomName))
         {
-          if (_dark == null) _dark = new DarkArrival(_lastKnownRoom, _lastMoveDirection, _lastJourneyCommand, _pendingStubRemoval);
-          else if (_lastMoveDirection != null) _dark = new DarkArrival(null, null, null, null); // moved on in the dark
-          _pendingStubRemoval = null; // the way leads somewhere: its stub stays until the room is seen
-          _lastMoveDirection = null;
-          _lastJourneyCommand = null;
-          Status = "Somewhere dark: the room will be mapped when it can be seen.";
-          Trace("{0}: somewhere dark, not mapped until it can be seen.", FormatTranscriptLineForDisplay(line));
+          EnterTheDark(line);
           previousLine = line;
           continue;
         }

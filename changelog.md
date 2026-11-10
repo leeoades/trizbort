@@ -68,6 +68,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- A game that answers a move into the dark with a sentence ("It is pitch black.") rather than a heading is
+  understood as dark: lighting the lamp maps the room as reached by the move, not by "turn on flashlight".
+- A join's end moves to the side of a compass direction learnt later, when the side it was on only faced the
+  other room (a command's join, or a guess): north from the Front Porch now leaves from its top.
 - Dying no longer joins rooms: "yes" to "Do you want to be reincarnated?" isn't taken for a magic word, and a room
   shown after "You have died" or "*** The End ***" isn't joined to the room before.
 - A command into a room and a direction back out are one join: "enter closet" from the foyer and "north" back
