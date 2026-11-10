@@ -277,6 +277,50 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldBe(new[] { "Cupboard -> Cupboard (-1) Pull First Peg", "Cupboard (-1) -> Cellar" });
   }
 
+  private sealed class SplitPrompts : IEditorPrompts
+  {
+    public string AskedAbout;
+
+    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, System.Threading.CancellationToken token = default) =>
+      Task.FromResult(AutomapSameDirectionResult.KeepRoom1);
+
+    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room from, Room existing, string newRoomName, System.Threading.CancellationToken token = default)
+    {
+      AskedAbout = from?.Name;
+      return Task.FromResult(AutomapSameDirectionResult.Split);
+    }
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, System.Threading.CancellationToken token = default) =>
+      Task.FromResult(RoomDisambiguation.Choose(candidates[0]));
+  }
+
+  [Test]
+  public async Task SplittingTheRoomYouLeft_MakesItTwo_JoinedByWhatYouDidThere()
+  {
+    // the cupboard's way out led to the foyer; after pulling a peg it leads to a cellar
+    var prompts = new SplitPrompts();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "Foyer", "A grand foyer.", "",
+      ">enter cupboard", "Cupboard", "A cramped cupboard with pegs on the wall.", "",
+      ">out", "Foyer", "A grand foyer.", "",
+      ">enter cupboard", "Cupboard", "A cramped cupboard with pegs on the wall.", "",
+      ">pull peg", "Which peg do you mean, the first peg or the second peg?", "",
+      ">first", "The cupboard lurches and sinks.", "",
+      ">out", "Cellar", "A damp cellar.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    prompts.AskedAbout.ShouldBe("Cupboard");
+    Rooms().ShouldBe(new[] { "Cellar", "Cupboard", "Cupboard (2)", "Foyer" });
+    Joins().ShouldContain("Cupboard -> Cupboard (2) pull peg, first");
+    Joins().ShouldContain("Cupboard (2) -> Cellar");
+    Joins().ShouldNotContain(join => join.StartsWith("Cupboard -> Cellar"));
+  }
+
   [Test]
   public async Task Dying_AndBeingReincarnated_JoinsNothing()
   {

@@ -18,6 +18,20 @@ public interface IEditorPrompts
     string newRoomName,
     CancellationToken token = default);
 
+  /// <summary>
+  ///   As <see cref="ChooseSameDirectionAsync(Room, string, CancellationToken)" />, knowing the room the player left
+  ///   (<paramref name="from" />), so the user can also split it into two rooms
+  ///   (<see cref="AutomapSameDirectionResult.Split" />). Default implementation asks without that choice.
+  /// </summary>
+  Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
+    Room from,
+    Room existing,
+    string newRoomName,
+    CancellationToken token = default)
+  {
+    return ChooseSameDirectionAsync(existing, newRoomName, token);
+  }
+
   Task<RoomDisambiguation> DisambiguateRoomAsync(
     string transcriptLine,
     string roomDescription,

@@ -28,6 +28,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   and automap moves you along it once the game replies, unless the reply shows you somewhere else. A question and
   your answer count together ("pull peg", "Which peg?", "first"), words in any order. A heading naming a copy of
   a room ("Cupboard" in "Cupboard (-1)") means that copy when you're in it, or when your way there is known.
+- **Split a room in two.** When a way out you've mapped leads somewhere new, the question automap asks now also
+  offers **Split 'Cupboard' into separate rooms**: for a room that is really two places alike, such as a lift.
+  Automap adds "Cupboard (2)", joined from the cupboard by the last thing you did there ("pull peg, first"), and
+  joins the new room to it.
 - **Suspend Mapping** on the automap bar (and Project menu): automap follows you through rooms it knows but changes
   nothing until you resume, then maps on from the next room it sees, joined to nothing.
 

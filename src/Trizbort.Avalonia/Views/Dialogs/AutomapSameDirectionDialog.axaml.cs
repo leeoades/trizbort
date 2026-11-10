@@ -61,4 +61,6 @@ public partial class AutomapSameDirectionDialog : Window
     private void OnKeepNewClick(object? sender, RoutedEventArgs e) => _viewModel?.KeepNew();
 
     private void OnKeepBothClick(object? sender, RoutedEventArgs e) => _viewModel?.KeepBoth();
+
+    private void OnSplitClick(object? sender, RoutedEventArgs e) => _viewModel?.Split();
 }

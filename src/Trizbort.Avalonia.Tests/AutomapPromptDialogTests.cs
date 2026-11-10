@@ -212,7 +212,17 @@ public class AutomapPromptDialogTests
             DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry")
         };
         sameDirection.Show();
-        sameDirection.GetVisualDescendants().OfType<Button>().Count().ShouldBe(3);
+        // Split is offered only when the room the player left is known
+        sameDirection.GetVisualDescendants().OfType<Button>().Count(button => button.IsVisible).ShouldBe(3);
+        sameDirection.Close();
+
+        sameDirection = new AutomapSameDirectionDialog
+        {
+            DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" }
+        };
+        sameDirection.Show();
+        sameDirection.GetVisualDescendants().OfType<Button>().Count(button => button.IsVisible).ShouldBe(4);
+        sameDirection.GetVisualDescendants().OfType<Button>().ShouldContain(button => (button.Content as string) == "Split 'Cupboard' into separate rooms");
         sameDirection.Close();
 
         var disambiguate = new DisambiguateRoomsDialog

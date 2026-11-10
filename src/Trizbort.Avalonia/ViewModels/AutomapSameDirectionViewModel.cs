@@ -33,6 +33,15 @@ public class AutomapSameDirectionViewModel : ViewModelBase
 
     public string KeepBothLabel => "Keep Both";
 
+    /// <summary>The room the player left, when known: it can be split into two rooms (a lift, a moving room).</summary>
+    public string FromName { get; init; } = string.Empty;
+
+    public bool CanSplit => !string.IsNullOrEmpty(FromName);
+
+    public string SplitLabel => $"Split '{FromName}' into separate rooms";
+
+    public string SplitButtonText => SplitLabel.Replace("_", "__");
+
     /// <summary>Button text with underscores doubled so room names are not read as access keys.</summary>
     public string KeepExistingButtonText => KeepExistingLabel.Replace("_", "__");
 
@@ -47,6 +56,8 @@ public class AutomapSameDirectionViewModel : ViewModelBase
     public void KeepNew() => Complete(AutomapSameDirectionResult.KeepRoom2);
 
     public void KeepBoth() => Complete(AutomapSameDirectionResult.KeepBoth);
+
+    public void Split() => Complete(AutomapSameDirectionResult.Split);
 
     private void Complete(AutomapSameDirectionResult result)
     {

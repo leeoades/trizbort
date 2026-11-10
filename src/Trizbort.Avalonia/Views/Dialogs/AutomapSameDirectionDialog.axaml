@@ -4,12 +4,12 @@
         x:Class="Trizbort.Avalonia.Views.Dialogs.AutomapSameDirectionDialog"
         x:DataType="vm:AutomapSameDirectionViewModel"
         Title="Automapping"
-        Width="560" Height="170"
+        Width="600" SizeToContent="Height"
         CanResize="False"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
 
-    <Grid ColumnDefinitions="*,16,220" Margin="16">
+    <Grid ColumnDefinitions="*,16,260" Margin="16">
         <TextBlock Grid.Column="0" Text="{Binding Message}" TextWrapping="Wrap" VerticalAlignment="Top" />
 
         <StackPanel Grid.Column="2" Spacing="8">
@@ -19,6 +19,9 @@
                     Content="{Binding KeepNewButtonText}" Click="OnKeepNewClick" />
             <Button Classes="dialog-button" HorizontalAlignment="Stretch"
                     Content="Keep _Both" Click="OnKeepBothClick" />
+            <Button Classes="dialog-button" HorizontalAlignment="Stretch"
+                    IsVisible="{Binding CanSplit}" Content="{Binding SplitButtonText}" Click="OnSplitClick"
+                    ToolTip.Tip="The room you left is two places that look alike (a lift): make it two rooms, the second reached from the first by what you did there, and join the new room to the second" />
         </StackPanel>
     </Grid>
 </Window>

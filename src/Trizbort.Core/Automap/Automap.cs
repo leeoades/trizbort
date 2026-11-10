@@ -790,6 +790,7 @@ public sealed class Automap : IAutomapController
 
   private void NowInRoom(Room room)
   {
+    if (room != _lastKnownRoom) _doneInRoom = null;
     if (_seenInTheDark)
     {
       // found in the dark: it needs a light
@@ -962,7 +963,7 @@ public sealed class Automap : IAutomapController
                       .FirstOrDefault(room => room != null && room != _lastKnownRoom);
           if (otherRoom != null)
           {
-            decision = await Prompts.ChooseSameDirectionAsync(otherRoom, roomName, token);
+            decision = await Prompts.ChooseSameDirectionAsync(_lastKnownRoom, otherRoom, roomName, token);
             token.ThrowIfCancellationRequested();
             if (decision == AutomapSameDirectionResult.Cancel)
             {
@@ -1008,6 +1009,21 @@ public sealed class Automap : IAutomapController
                     room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
                     _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
                     break;
+                  case AutomapSameDirectionResult.Split:
+                  {
+                    // the room the player left is a second place like it ("Cupboard (2)", down the lift), reached
+                    // from the first by what they did there; the way out joins the second to the new room
+                    var first = _lastKnownRoom;
+                    var second = _canvas.CreateRoom(first, SplitName(first.Name));
+                    foreach (var description in first.Descriptions) second.AddDescription(description);
+                    second.IsDark = first.IsDark;
+                    _canvas.ConnectByCommand(first, second, _doneInRoom ?? UnmappedWay);
+                    room = _canvas.CreateRoom(second, _lastMoveDirection.Value, roomName, line);
+                    _canvas.Connect(second, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    Trace("{0}: {1} split; {2} is {3} from {4}.", FormatTranscriptLineForDisplay(line), first.Name,
+                      roomName, _lastMoveDirection.Value.ToString().ToLower(), second.Name);
+                    break;
+                  }
                   default:
                     throw new ArgumentOutOfRangeException();
                 }
@@ -1180,6 +1196,9 @@ public sealed class Automap : IAutomapController
     // a join on the map labelled with this command takes the player along it, once the game has replied
     var asked = _askedAbout;
     _askedAbout = null;
+    // what the player did here, should the room turn out to be two (Split): the last such command, with the
+    // command it answered ("pull peg, first")
+    if (_lastJourneyCommand != null) _doneInRoom = asked != null ? asked.Trim() + ", " + command.Trim() : command.Trim();
     _followTo = _lastJourneyCommand != null ? LabelledJoinEnd(command, asked) : null;
   }
 
@@ -1215,6 +1234,22 @@ public sealed class Automap : IAutomapController
 
   /// <summary>The command the game answered with a question, if the last reply was one.</summary>
   private string _askedAbout;
+
+  /// <summary>The last command, not a direction, the player typed in the room they're in (see Split).</summary>
+  private string _doneInRoom;
+
+  /// <summary>"Cupboard (2)" for "Cupboard", or the next number free.</summary>
+  private string SplitName(string name)
+  {
+    var names = new HashSet<string>(
+      Trizbort.Domain.Application.Project.Current.Elements.OfType<Room>().Select(room => room.Name),
+      StringComparer.OrdinalIgnoreCase);
+    for (var number = 2; ; number++)
+    {
+      var candidate = $"{name} ({number})";
+      if (!names.Contains(candidate)) return candidate;
+    }
+  }
 
   /// <summary>
   ///   The room at the other end of a join labelled with the last command: the player is there once the game has
@@ -1268,7 +1303,7 @@ public sealed class Automap : IAutomapController
   /// <summary>The same words, in any order, leaving out "the", "a" and "an".</summary>
   private static bool SameWords(string a, string b)
   {
-    static List<string> Words(string text) => text.Split(_wordSeparators, StringSplitOptions.RemoveEmptyEntries)
+    static List<string> Words(string text) => text.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries)
       .Select(word => word.ToLowerInvariant()).Where(word => !_articles.Contains(word)).OrderBy(word => word).ToList();
     var first = Words(a);
     return first.Count > 0 && first.SequenceEqual(Words(b));
@@ -1640,6 +1675,7 @@ public sealed class Automap : IAutomapController
     _seenInTheDark = false;
     _askedAbout = null;
     _followTo = null;
+    _doneInRoom = null;
     Volatile.Write(ref _movesToPlay, 0);
     Volatile.Write(ref _movesBack, 0);
     _movePoints.Clear();
