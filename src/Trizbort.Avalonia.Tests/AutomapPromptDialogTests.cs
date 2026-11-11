@@ -92,7 +92,7 @@ public class AutomapPromptDialogTests
     }
 
     [Test]
-    public void SameDirection_OptionsOnTheLeft_ExplainedOnTheRight_AMovingRoomChoosesHowItsShown()
+    public void SameDirection_OptionsOnTheLeft_ExplainedOnTheRight()
     {
         var vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry");
         vm.Options.Select(option => option.Result).ShouldBe(new[]
@@ -111,20 +111,11 @@ public class AutomapPromptDialogTests
         vm.OkCommand.CanExecute(null).ShouldBeFalse();
         vm.Selected = vm.Options[5];
         vm.Explanation.ShouldContain("takes you with it");
-        vm.ShowsMovingChoice.ShouldBeTrue();
-        vm.MovesAsStops.ShouldBeTrue();
         vm.OkCommand.Execute(null);
         vm.Result.ShouldBe(AutomapSameDirectionResult.Moves);
 
         vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" };
-        vm.Selected = vm.Options[5];
-        vm.MovesAsTwoRooms = true;
-        vm.OkCommand.Execute(null);
-        vm.Result.ShouldBe(AutomapSameDirectionResult.Split);
-
-        vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" };
         vm.Selected = vm.Options[4];
-        vm.ShowsMovingChoice.ShouldBeFalse();
         vm.OkCommand.Execute(null);
         vm.Result.ShouldBe(AutomapSameDirectionResult.DifferentRoom);
     }

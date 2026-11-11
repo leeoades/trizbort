@@ -23,17 +23,7 @@
             </ListBox>
 
             <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-                <StackPanel Spacing="10">
-                    <TextBlock x:Name="ExplanationText" Text="{Binding Explanation}" TextWrapping="Wrap" />
-                    <StackPanel Spacing="6" IsVisible="{Binding ShowsMovingChoice}">
-                        <RadioButton GroupName="Moving" IsChecked="{Binding MovesAsStops}">
-                            <TextBlock Text="{Binding MovesAsStopsText}" TextWrapping="Wrap" />
-                        </RadioButton>
-                        <RadioButton GroupName="Moving" IsChecked="{Binding MovesAsTwoRooms}">
-                            <TextBlock Text="{Binding MovesAsTwoRoomsText}" TextWrapping="Wrap" />
-                        </RadioButton>
-                    </StackPanel>
-                </StackPanel>
+                <TextBlock x:Name="ExplanationText" Text="{Binding Explanation}" TextWrapping="Wrap" />
             </ScrollViewer>
         </Grid>
 

@@ -5,18 +5,16 @@ using Trizbort.Domain.Elements;
 namespace Trizbort.Avalonia.ViewModels;
 
 /// <summary>One answer in the "same direction" question: what it's called, and what it does.</summary>
-public sealed record SameDirectionOption(string Title, string Explanation, AutomapSameDirectionResult Result,
-    bool HasMovingChoice = false);
+public sealed record SameDirectionOption(string Title, string Explanation, AutomapSameDirectionResult Result);
 
 /// <summary>
 ///     The "same direction" automap question: a way out already mapped now leads somewhere new. The answers are listed
-///     on the left; the one picked is explained on the right (with a further choice for a room that moves). OK takes
-///     it; Cancel (or closing) maps nothing for this move.
+///     on the left; the one picked is explained on the right. OK takes it; Cancel (or closing) maps nothing for this
+///     move.
 /// </summary>
 public class AutomapSameDirectionViewModel : ViewModelBase
 {
     private SameDirectionOption? _selected;
-    private bool _movesAsStops = true;
 
     public AutomapSameDirectionViewModel(string? existingName, string? newName)
     {
@@ -86,8 +84,10 @@ public class AutomapSameDirectionViewModel : ViewModelBase
                 $"moves the way you came in over to it, and joins '{NewName}' to it.",
                 AutomapSameDirectionResult.DifferentRoom));
             options.Add(new(MovesLabel,
-                $"'{FromName}' takes you with it, so its ways out lead to different places. How should it be shown?",
-                AutomapSameDirectionResult.Moves, HasMovingChoice: true));
+                $"'{FromName}' takes you with it, so its ways out lead to different places. Automap adds a copy of " +
+                $"'{FromName}' here, joined to it by what moved it (it asks you what), and from then on works out " +
+                "which place it's at from the way you get out.",
+                AutomapSameDirectionResult.Moves));
         }
 
         return options;
@@ -101,39 +101,12 @@ public class AutomapSameDirectionViewModel : ViewModelBase
             if (SetProperty(ref _selected, value))
             {
                 OnPropertyChanged(nameof(Explanation));
-                OnPropertyChanged(nameof(ShowsMovingChoice));
                 OkCommand.NotifyCanExecuteChanged();
             }
         }
     }
 
     public string Explanation => _selected?.Explanation ?? string.Empty;
-
-    public bool ShowsMovingChoice => _selected?.HasMovingChoice == true;
-
-    /// <summary>A moving room shown as a copy at each stop, automap keeping track of which (recommended).</summary>
-    public bool MovesAsStops
-    {
-        get => _movesAsStops;
-        set
-        {
-            if (SetProperty(ref _movesAsStops, value)) OnPropertyChanged(nameof(MovesAsTwoRooms));
-        }
-    }
-
-    /// <summary>A moving room shown as two separate rooms, joined by what the player did there ("pull peg").</summary>
-    public bool MovesAsTwoRooms
-    {
-        get => !_movesAsStops;
-        set => MovesAsStops = !value;
-    }
-
-    public string MovesAsStopsText =>
-        $"A copy of '{FromName}' at each place it stops, with its name. Automap works out which stop you're at from " +
-        "the way you go out, and won't ask again.";
-
-    public string MovesAsTwoRoomsText =>
-        $"Two separate rooms, '{FromName}' and '{FromName} (2)', joined by what you did there (such as \"pull peg\").";
 
     public RelayCommand OkCommand { get; }
 
@@ -147,8 +120,7 @@ public class AutomapSameDirectionViewModel : ViewModelBase
     private void Ok()
     {
         if (_selected == null) return;
-        var result = _selected.HasMovingChoice && !_movesAsStops ? AutomapSameDirectionResult.Split : _selected.Result;
-        Complete(result);
+        Complete(_selected.Result);
     }
 
     public void KeepExisting() => Complete(AutomapSameDirectionResult.KeepRoom1);

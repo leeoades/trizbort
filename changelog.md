@@ -47,8 +47,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   play, and the automap panel shows where you are in the transcript: "Move 12 of 4,567" (moves are the commands in
   the transcript, not the game's own turn count).
 - The question automap asks when a known way out leads somewhere new lists its answers on the left and explains the
-  one picked on the right, with OK and Cancel. **'X' moves** and **Split** are now one answer, with a choice
-  underneath: a copy at each stop, or two rooms joined by what you did. **Cancel** maps nothing for that move, where
+  one picked on the right, with OK and Cancel. **'X' moves** and **Split** are now one answer: a copy of the room
+  at each stop, joined by what moved it, with automap keeping track of which stop you're at. **Cancel** maps nothing for that move, where
   it used to stop automapping.
 - While automapping, the map keeps your room near the middle of the view, rather than just inside the edge, so you
   can see its exits and it isn't hidden by the minimap.
