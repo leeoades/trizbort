@@ -71,8 +71,9 @@ public class AutomapSameDirectionViewModel : ViewModelBase
                 "automap goes by the room the game shows.",
                 AutomapSameDirectionResult.KeepBoth),
             new($"The same place at different times",
-                $"'{ExistingName}' and '{NewName}' are one place under different circumstances (the bottom of a shaft, " +
-                "then the closet once it has come down into it). Keep both joins this way, and put the two rooms side " +
+                $"'{ExistingName}' and '{NewName}' are one place under different circumstances: a " +
+                "dry riverbed that becomes a river once the dam is opened, or a quiet hall that becomes a ballroom when " +
+                "the party starts, so the game names it differently. Keep both joins this way, and put the two rooms side " +
                 "by side so they read as a pair. From then on automap goes by the room the game shows.",
                 AutomapSameDirectionResult.SamePlace)
         };

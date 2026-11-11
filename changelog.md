@@ -38,8 +38,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Disambiguate Rooms** shows the room you pick on the map behind it, with the rooms around it, and puts the view
   back afterwards; **<Add a new room>** shows a faint dashed room where automap would put it. The dialog opens on the
   right of the window to leave the map in view.
-- **The same place at different times** in the question automap asks when a known way out leads somewhere new (the
-  shaft bottom, then the closet come down into it): both joins stay, and the two rooms go side by side.
+- **The same place at different times** in the question automap asks when a known way out leads somewhere new (a dry
+  riverbed that becomes a river once the dam is opened): both joins stay, and the two rooms go side by side.
 
 ### Changed
 
