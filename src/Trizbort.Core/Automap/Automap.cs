@@ -2402,6 +2402,83 @@ public sealed class Automap : IAutomapController
     return moves;
   }
 
+  /// <summary>
+  ///   Where automap is in the transcript: the moves (commands typed at a prompt) played so far, and the moves in the
+  ///   transcript as it is now. The transcript is read again only when it has changed, so this is cheap enough for a
+  ///   timer even on a long game.
+  /// </summary>
+  public (int Played, int Total) MoveCount()
+  {
+    var fileName = _settings.FileName;
+    if (!Running || string.IsNullOrEmpty(fileName)) return (0, 0);
+    var moves = TranscriptMoveLines(fileName);
+    var read = _linesRead;
+    // moves whose prompt has been read; the one automap is paused before hasn't been played yet
+    var lo = 0;
+    var hi = moves.Count;
+    while (lo < hi)
+    {
+      var mid = (lo + hi) / 2;
+      if (moves[mid] < read) lo = mid + 1;
+      else hi = mid;
+    }
+
+    var played = Math.Max(0, lo - (string.IsNullOrWhiteSpace(NextCommand) ? 0 : 1));
+    return (played, Math.Max(moves.Count, played));
+  }
+
+  /// <summary>Whether there's a move to play after where automap is in the transcript.</summary>
+  public bool HasNextMove
+  {
+    get
+    {
+      var (played, total) = MoveCount();
+      return played < total;
+    }
+  }
+
+  private string _movesFile;
+  private long _movesFileLength = -1;
+  private DateTime _movesFileWritten;
+  private List<int> _moveLines = new();
+
+  /// <summary>The line numbers of the transcript's moves (prompts with a command), kept until the file changes.</summary>
+  private List<int> TranscriptMoveLines(string fileName)
+  {
+    try
+    {
+      var info = new FileInfo(fileName);
+      if (!info.Exists) return _moveLines;
+      if (fileName == _movesFile && info.Length == _movesFileLength && info.LastWriteTimeUtc == _movesFileWritten)
+        return _moveLines;
+
+      var lines = new List<int>();
+      using (var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+      using (var reader = new StreamReader(stream))
+      {
+        var index = 0;
+        while (reader.ReadLine() is { } line)
+        {
+          if (IsPrompt(line, out var command) && !string.IsNullOrWhiteSpace(command)) lines.Add(index);
+          index++;
+        }
+      }
+
+      _moveLines = lines;
+      _movesFile = fileName;
+      _movesFileLength = info.Length;
+      _movesFileWritten = info.LastWriteTimeUtc;
+    }
+    catch (IOException)
+    {
+    }
+    catch (UnauthorizedAccessException)
+    {
+    }
+
+    return _moveLines;
+  }
+
   /// <summary>Pause before the next move.</summary>
   public void Pause()
   {

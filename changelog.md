@@ -35,6 +35,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **Previous Move**, **Next Move** and **Play to the End** are greyed out when there's nothing to go back to or
+  play, and the automap panel shows where you are in the transcript: "Move 12 of 4,567" (moves are the commands in
+  the transcript, not the game's own turn count).
 - The question automap asks when a known way out leads somewhere new lists its answers on the left and explains the
   one picked on the right, with OK and Cancel. **'X' moves** and **Split** are now one answer, with a choice
   underneath: a copy at each stop, or two rooms joined by what you did. **Cancel** maps nothing for that move, where

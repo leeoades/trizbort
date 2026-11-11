@@ -774,6 +774,56 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task TheMoveCount_SaysWhereAutomapIsInTheTranscript()
+  {
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Hall", "A grand hall.", "",
+      ">north", "Kitchen", "A small kitchen.", "",
+      ">south", "Hall", "",
+      ">"
+    });
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count >= 11);
+      await Task.Delay(200);
+
+      // at the end: nothing to play
+      engine.MoveCount().ShouldBe((3, 3));
+      engine.HasNextMove.ShouldBeFalse();
+
+      engine.GoBack();
+      await WaitFor(() => engine.NextCommand == "south");
+      engine.MoveCount().ShouldBe((2, 3));
+      engine.HasNextMove.ShouldBeTrue();
+      engine.CanGoBack.ShouldBeTrue();
+
+      // the game goes on: the count grows
+      File.WriteAllLines(path, new[]
+      {
+        ">look", "Hall", "A grand hall.", "",
+        ">north", "Kitchen", "A small kitchen.", "",
+        ">south", "Hall", "",
+        ">west", "Pantry", "A pantry.", "",
+        ">"
+      });
+      engine.MoveCount().Total.ShouldBe(4);
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
   public async Task GoingBack_WhileWaitingForTheGamesNextLine_GoesBackAMove()
   {
     // a live game: the last move's reply is in, but no prompt yet; going back then crashed (no line read to show)

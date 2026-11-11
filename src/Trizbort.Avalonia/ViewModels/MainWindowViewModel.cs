@@ -103,6 +103,22 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _automapTranscriptNote = string.Empty;
 
+    /// <summary>Where automap is in the transcript: "Move 12 of 4,567" (transcript moves, not the game's).</summary>
+    [ObservableProperty]
+    private string _automapMoveCount = string.Empty;
+
+    private bool _canGoBackAutomap;
+    private bool _hasNextAutomapMove;
+
+    /// <summary>Previous Move: there's a move to go back to.</summary>
+    public bool CanGoBackAutomap => _canGoBackAutomap;
+
+    /// <summary>Next Move: there's a move left to play.</summary>
+    public bool HasNextAutomapMove => _hasNextAutomapMove;
+
+    /// <summary>Play to the End: paused, with moves left to play.</summary>
+    public bool CanPlayToEnd => _hasNextAutomapMove && IsAutomapMoveByMove;
+
     /// <summary>What automap is doing with what it reads: mapping, tracking only, not mapping here, in the dark.</summary>
     [ObservableProperty]
     private string _automapMappingNote = string.Empty;
@@ -127,6 +143,24 @@ public partial class MainWindowViewModel : ViewModelBase
         AutomapRoomName = room?.Name ?? "Somewhere automap doesn't know";
         IsAutomapMoveByMove = engine.MoveByMove;
         IsAutomapSuspended = engine.Suspended;
+        var (played, total) = engine.MoveCount();
+        AutomapMoveCount = total == 0
+            ? string.Empty
+            : string.Format(System.Globalization.CultureInfo.CurrentCulture, "Move {0:N0} of {1:N0}", played, total);
+        var canGoBack = engine.CanGoBack;
+        var hasNext = played < total;
+        if (canGoBack != _canGoBackAutomap || hasNext != _hasNextAutomapMove)
+        {
+            _canGoBackAutomap = canGoBack;
+            _hasNextAutomapMove = hasNext;
+            OnPropertyChanged(nameof(CanGoBackAutomap));
+            OnPropertyChanged(nameof(HasNextAutomapMove));
+        }
+
+        OnPropertyChanged(nameof(CanPlayToEnd));
+        GoBackAutomapCommand.NotifyCanExecuteChanged();
+        PlayNextMoveCommand.NotifyCanExecuteChanged();
+        PlayToEndCommand.NotifyCanExecuteChanged();
         AutomapTranscriptNote = !engine.MoveByMove
             ? "Playing: following the game as it goes on."
             : string.IsNullOrWhiteSpace(engine.NextCommand)
@@ -610,7 +644,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>Play the transcript's next move, then pause.</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasNextAutomapMove))]
     public void PlayNextMove()
     {
         AutomapEngine.Instance.PlayNextMove();
@@ -618,7 +652,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>Play the rest of the transcript without pausing; asks first when there are many moves left.</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanPlayToEnd))]
     public async Task PlayToEndAsync()
     {
         var session = _commandService.Session;
@@ -635,7 +669,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>Go back a move in the transcript, leaving the map as it is; Next Move plays it again.</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanGoBackAutomap))]
     public void GoBackAutomap()
     {
         AutomapEngine.Instance.GoBack();

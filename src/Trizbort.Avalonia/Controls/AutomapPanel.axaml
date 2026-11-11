@@ -77,6 +77,8 @@
                     <StackPanel Spacing="6">
                         <TextBlock Classes="section" Text="TRANSCRIPT" />
                         <TextBlock Classes="note" x:Name="TranscriptNote" Text="{Binding AutomapTranscriptNote}" />
+                        <TextBlock Classes="small" x:Name="MoveCount" Text="{Binding AutomapMoveCount}"
+                                   ToolTip.Tip="Moves in the transcript: each command typed at the prompt" />
                         <Grid ColumnDefinitions="*,6,*">
                             <Button x:Name="PreviousMoveButton" Content="◀ Previous Move"
                                     Command="{Binding GoBackAutomapCommand}"

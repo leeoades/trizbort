@@ -49,6 +49,18 @@ public interface IAutomapController
   {
   }
 
+  /// <summary>Whether there's a move to play after where automap is in the transcript.</summary>
+  bool HasNextMove => true;
+
+  /// <summary>Whether there's a move to go back to.</summary>
+  bool CanGoBack => true;
+
+  /// <summary>
+  ///   Where automap is in the transcript: the moves (commands typed) played so far, and the moves in the transcript
+  ///   so far. Cheap enough to call on a timer.
+  /// </summary>
+  (int Played, int Total) MoveCount() => (0, 0);
+
   /// <summary>Whether the room automap has the player in can be split off as a different room: the way in is known.</summary>
   bool CanSplitCurrentRoom => false;
 
