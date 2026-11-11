@@ -159,6 +159,9 @@ is still a beta: keep backups and [report problems](https://github.com/leeoades/
 
 ### Fixed
 
+- Opening a map shows the whole map again: the view fitted to it, then jumped back to the map's origin, which can
+  be well away from the rooms.
+- The faint preview of a new room in Disambiguate Rooms is where automap would actually put it, the way you went.
 - A moving room's join to its stop is labelled with what moved it (`pull first peg`), not the last thing typed in
   it (`open closet door`, typed after the closet stopped). What moves it back (`pull second peg`) gets a join the other
   way, so pulling either peg later moves your location to the other stop.

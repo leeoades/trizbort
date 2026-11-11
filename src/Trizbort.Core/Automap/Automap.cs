@@ -1911,32 +1911,15 @@ public sealed class Automap : IAutomapController
   }
 
   /// <summary>
-  ///   Where a new room for the heading automap is asking about would go: the way the player went from the room they
-  ///   were in (beside it when that's not a compass way), the size of that room. Null when automap doesn't know
-  ///   where the player came from.
+  ///   Where a new room for the heading automap is asking about would go: where automap would put it, the way the
+  ///   player went from the room they were in (beside it after a command). Null when automap doesn't know where the
+  ///   player came from.
   /// </summary>
   public Rect? NewRoomPreview()
   {
     var from = CurrentRoom;
-    if (from == null) return null;
-    var point = _lastMoveDirection is { } direction
-      ? CompassPointHelper.GetCompassDirection(direction)
-      : CompassPoint.East;
-    var (dx, dy) = point switch
-    {
-      CompassPoint.North => (0, -1),
-      CompassPoint.NorthEast => (1, -1),
-      CompassPoint.East => (1, 0),
-      CompassPoint.SouthEast => (1, 1),
-      CompassPoint.South => (0, 1),
-      CompassPoint.SouthWest => (-1, 1),
-      CompassPoint.West => (-1, 0),
-      CompassPoint.NorthWest => (-1, -1),
-      _ => (1, 0)
-    };
-    var gap = Trizbort.Setup.Settings.PreferredDistanceBetweenRooms;
-    return new Rect(from.Position.X + dx * (from.Width + gap), from.Position.Y + dy * (from.Height + gap), from.Width,
-      from.Height);
+    if (from == null || _canvas == null) return null;
+    return _canvas.NewRoomBounds(from, _lastMoveDirection);
   }
 
   /// <summary>

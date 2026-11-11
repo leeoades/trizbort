@@ -446,7 +446,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 StopAutomap();
             }
             UpdateState();
-            _commandService.ResetZoom();
             StatusText = $"Opened map: {Path.GetFileName(Project.Current.FileName)}";
         }
     }
@@ -462,7 +461,6 @@ public partial class MainWindowViewModel : ViewModelBase
             StopAutomap();
         }
         UpdateState();
-        _commandService.ResetZoom();
         StatusText = $"Opened map: {Path.GetFileName(path)}";
     }
 

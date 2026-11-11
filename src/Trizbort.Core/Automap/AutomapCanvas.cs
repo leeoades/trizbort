@@ -661,7 +661,17 @@ public class AutomapCanvas : IAutomapCanvas
         _session.Viewport.VisibleWorldBounds.Center.X - room.Width / 2,
         _session.Viewport.VisibleWorldBounds.Center.Y - room.Height / 2);
     room.Position = Settings.Snap(room.Position);
+    PlaceClear(room);
 
+    room.ArbitraryAutomappedPosition = true;
+
+    CurrentProject.Elements.Add(room);
+    return room;
+  }
+
+  /// <summary>Moves <paramref name="room" /> left or right, further each time, until it's clear of every other room.</summary>
+  private void PlaceClear(Room room)
+  {
     var tryOtherSideNext = false;
     var tryLeft = true;
     var distance = 0;
@@ -683,11 +693,30 @@ public class AutomapCanvas : IAutomapCanvas
       var vectorX = tryLeft ? initialPosition.X - f : initialPosition.X + f;
       room.Position = Settings.Snap(new Vector(vectorX, room.Position.Y));
     }
+  }
 
-    room.ArbitraryAutomappedPosition = true;
+  /// <summary>
+  ///   Where <see cref="CreateRoom(Room, MappableDirection, string, string)" /> would put a new room reached from
+  ///   <paramref name="existing" /> going <paramref name="direction" /> (or <see cref="CreateRoom(Room, string)" />, by
+  ///   a command), without adding it: for a preview. Null when <paramref name="existing" /> isn't on the map.
+  /// </summary>
+  public Rect? NewRoomBounds(Room existing, MappableDirection? direction)
+  {
+    if (existing == null || !CurrentProject.Elements.Contains(existing)) return null;
+    var room = new Room(CurrentProject);
+    if (direction is { } way && way != MappableDirection.None)
+    {
+      var point = CompassPointHelper.GetCompassDirection(way);
+      if (MakeSpaceForNewRooms || !TryPlaceInClearSpace(room, existing, point))
+        PositionRelativeTo(room, existing, point, out _);
+    }
+    else
+    {
+      room.Position = Settings.Snap(existing.Position);
+      PlaceClear(room);
+    }
 
-    CurrentProject.Elements.Add(room);
-    return room;
+    return new Rect(room.Position.X, room.Position.Y, room.Width, room.Height);
   }
 
   public Room CreateRoom(Room existing, MappableDirection directionFromExisting, string roomName, string line)

@@ -82,6 +82,12 @@ public interface IAutomapCanvas
   void ForgetWay(Room from, MappableDirection direction, Room to)
   {
   }
+
+  /// <summary>
+  ///   Where a new room reached from <paramref name="existing" /> going <paramref name="direction" /> (null: by a
+  ///   command) would go, without adding it: for a preview. Null when not known.
+  /// </summary>
+  Trizbort.Domain.Misc.Rect? NewRoomBounds(Room existing, MappableDirection? direction) => null;
 }
 
 public delegate bool? RoomMatcher(string roomName, string roomDescription, Room room);
