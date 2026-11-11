@@ -119,6 +119,56 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
     Joined(stop, foyer).ShouldBeFalse();
   }
 
+  [TestCase(false)]
+  [TestCase(true)]
+  public async Task WhatMovedTheCloset_IsThePegPulled_NotTheDoorOpenedAfter_AndPullingItAgainMovesYouToo(bool backUp)
+  {
+    // Hollywood Hijinx: the door swings shut as the closet moves, so it's opened before going out. The join to the
+    // stop is labelled with the peg pulled (down, and a join back up), and pulling it later moves the location.
+    var prompts = new MovesPrompts();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new List<string>
+    {
+      ">look", "Cellar", "A dank cellar.", "",
+      ">up", "Foyer", "An elegant foyer.", "",
+      ">enter closet", "Closet", "A coat closet with pegs.", "",
+      ">out", "Foyer", "",
+      ">enter closet", "Closet", "",
+      ">pull first peg", "The closet moves down, then stops.", "",
+      ">out", "The closet door is closed.", "",
+      ">open closet door", "The closet door squeals as it opens.", "",
+      ">out", "Cellar", "",
+      ">enter closet", "Closet", "",
+      ">look", "Closet", "A coat closet with pegs.", "",
+      ">pull second peg", "The closet moves up, then stops.", "",
+      ">out", "The closet door is closed.", "",
+      ">open door", "The closet door whinnies as it opens.", "",
+      ">out", "Foyer", "",
+      ">in", "Closet", "",
+      ">see skis", "They're a large pair of downhill snow skis.", "",
+      ">pull first peg", "The closet moves down, then stops.", ""
+    };
+    if (backUp)
+      lines.AddRange(new[]
+      {
+        ">pull peg", "[Which peg do you mean, the first coat peg, the second coat peg, the third coat",
+        "peg, or the sawed-off peg?]", "",
+        ">second", "The closet moves up, then stops.", ""
+      });
+    lines.Add(">");
+
+    await RunToEnd(engine, lines.ToArray());
+
+    prompts.Asked.ShouldBe(1);
+    var closet = AllRooms().Single(room => room.Name == "Closet" && !room.IsReference);
+    var stop = AllRooms().Single(room => room.IsStop);
+    Connection From(Room a, Room b) => Project.Current.Elements.OfType<Connection>()
+      .Single(connection => connection.GetSourceRoom() == a && connection.GetTargetRoom() == b);
+    From(closet, stop).MidText.ShouldBe("pull first peg");
+    From(stop, closet).MidText.ShouldBe("pull second peg");
+    engine.CurrentRoom.ShouldBe(backUp ? closet : stop);
+  }
+
   [Test]
   public async Task AfterANewArea_AutomapGoesAlongTheSplitJoin_AndAddsNothing()
   {

@@ -813,7 +813,7 @@ public sealed class Automap : IAutomapController
     _pausedFrom = null;
     _dark = null;
     _followTo = null;
-    _doneInRoom = null;
+    _doneHere.Clear();
     _canvas?.SelectRoom(room);
     Status = $"Automap: you're in {room.Name}.";
   }
@@ -897,7 +897,7 @@ public sealed class Automap : IAutomapController
 
   private void NowInRoom(Room room)
   {
-    if (room != _lastKnownRoom) _doneInRoom = null;
+    if (room != _lastKnownRoom) _doneHere.Clear();
     if (_seenInTheDark)
     {
       // found in the dark: it needs a light
@@ -1401,7 +1401,7 @@ public sealed class Automap : IAutomapController
     _askedAbout = null;
     // what the player did here, should the room turn out to be two (Split): the last such command, with the
     // command it answered ("pull peg, first")
-    if (_lastJourneyCommand != null) _doneInRoom = asked != null ? asked.Trim() + ", " + command.Trim() : command.Trim();
+    if (_lastJourneyCommand != null) _doneHere.Add(asked != null ? asked.Trim() + ", " + command.Trim() : command.Trim());
     _followTo = _lastJourneyCommand != null ? LabelledJoinEnd(command, asked) : null;
   }
 
@@ -1636,7 +1636,7 @@ public sealed class Automap : IAutomapController
     stop.ReferenceRoomId = root.Id;
     stop.CopyStyleFrom(root);
     foreach (var description in root.Descriptions) stop.AddDescription(description);
-    _canvas.ConnectByCommand(here, stop, _doneInRoom ?? UnmappedWay);
+    _canvas.ConnectByCommand(here, stop, WhatMovedIt());
     return stop;
   }
 
@@ -1662,9 +1662,12 @@ public sealed class Automap : IAutomapController
     var stop = stops.FirstOrDefault(other => other != here && Along(other).Any(room => NamedAs(room.Name, roomName)));
     using (await BeginBatchAsync("Automap: " + root.Name + " moves", token))
     {
+      // what moved it this time is a way between the stops too ("pull second peg" back up), so the next time it's
+      // typed the location moves with the room
       if (stop == null) stop = NewStop(here);
       else if (!here.GetConnections().Any(connection => OtherEnd(connection, here) == stop))
-        _canvas.ConnectByCommand(here, stop, _doneInRoom ?? UnmappedWay);
+        _canvas.ConnectByCommand(here, stop, WhatMovedIt());
+      else if (CouldHaveMovedIt() is { } moved) _canvas.ConnectByCommand(here, stop, moved);
     }
 
     Trace("{0} is at another stop.", root.Name);
@@ -1690,8 +1693,36 @@ public sealed class Automap : IAutomapController
   /// <summary>The command the game answered with a question, if the last reply was one.</summary>
   private string _askedAbout;
 
-  /// <summary>The last command, not a direction, the player typed in the room they're in (see Split).</summary>
-  private string _doneInRoom;
+  /// <summary>The commands, not directions, the player typed in the room they're in, oldest first (see Split).</summary>
+  private readonly List<string> _doneHere = new();
+
+  /// <summary>
+  ///   Commands that don't move a room: the player opens the door, looks about or picks things up after pulling the
+  ///   peg that moved it, before going out to find it's somewhere else.
+  /// </summary>
+  private static readonly string[] _staysPut =
+  {
+    "open", "close", "shut", "look", "l", "examine", "x", "see", "read", "search", "listen", "smell", "touch", "feel",
+    "take", "get", "drop", "put", "inventory", "i", "lock", "unlock", "wait", "z", "score", "save", "light", "unlight"
+  };
+
+  /// <summary>
+  ///   What moved the room the player was in ("pull first peg"): the last command they typed in it that could have
+  ///   (not "open closet door", typed after it), else the last command, else <see cref="UnmappedWay" />.
+  /// </summary>
+  private string WhatMovedIt() => CouldHaveMovedIt() ?? (_doneHere.Count > 0 ? _doneHere[^1] : UnmappedWay);
+
+  /// <summary>The last command typed in the room that could have moved it, or null.</summary>
+  private string CouldHaveMovedIt()
+  {
+    for (var index = _doneHere.Count - 1; index >= 0; index--)
+    {
+      var words = _doneHere[index].Split(_wordSeparators, StringSplitOptions.RemoveEmptyEntries);
+      if (words.Length > 0 && !_staysPut.Contains(words[0], StringComparer.OrdinalIgnoreCase)) return _doneHere[index];
+    }
+
+    return null;
+  }
 
   /// <summary>"Cupboard (2)" for "Cupboard", or the next number free.</summary>
   /// <summary>
@@ -1724,7 +1755,7 @@ public sealed class Automap : IAutomapController
     var second = _canvas.CreateRoom(here, SplitName(here.Name));
     foreach (var description in here.Descriptions) second.AddDescription(description);
     second.IsDark = here.IsDark;
-    _canvas.ConnectByCommand(here, second, _doneInRoom ?? UnmappedWay);
+    _canvas.ConnectByCommand(here, second, WhatMovedIt());
     return second;
   }
 
@@ -1835,7 +1866,7 @@ public sealed class Automap : IAutomapController
     if (room == null) return false;
 
     _lastKnownRoom = room;
-    _doneInRoom = null;
+    _doneHere.Clear();
     _pendingStubRemoval = null;
     _canvas.SelectRoom(room);
     Status = $"Automap: you're in {room.Name}, not {here.Name}.";
@@ -2294,7 +2325,7 @@ public sealed class Automap : IAutomapController
     _seenInTheDark = false;
     _askedAbout = null;
     _followTo = null;
-    _doneInRoom = null;
+    _doneHere.Clear();
     Volatile.Write(ref _movesToPlay, 0);
     Volatile.Write(ref _movesBack, 0);
     _movePoints.Clear();

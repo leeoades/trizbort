@@ -151,6 +151,9 @@ is still a beta: keep backups and [report problems](https://github.com/leeoades/
 
 ### Fixed
 
+- A moving room's join to its stop is labelled with what moved it (`pull first peg`), not the last thing typed in
+  it (`open closet door`, typed after the closet stopped). What moves it back (`pull second peg`) gets a join the other
+  way, so pulling either peg later moves your location to the other stop.
 - Coming back north out of the closet no longer assumes the foyer leads south to it when south from the foyer is
   already the front porch, and the join's end doesn't move onto the side another join uses.
 - A game's question in brackets (Infocom's "[Which peg do you mean, ...?]") counts as a question, so "pull peg"
