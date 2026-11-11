@@ -41,6 +41,12 @@ public interface IAutomapCanvas
   /// </summary>
   void ConnectByCommand(Room source, Room target, string command);
 
+  /// <summary>
+  ///   As <see cref="ConnectByCommand" />, between two stops of a room that moves: a command join already leading the
+  ///   other way ("pull first peg" down) becomes two-way, with this command at its other end ("pull second peg").
+  /// </summary>
+  void ConnectStops(Room source, Room target, string command) => ConnectByCommand(source, target, command);
+
   void AddExitStub(Room room, MappableDirection direction);
 
   void RemoveExitStub(Room room, MappableDirection direction);

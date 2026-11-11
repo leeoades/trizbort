@@ -1189,8 +1189,9 @@ public sealed class Automap : IAutomapController
                     break;
                   case AutomapSameDirectionResult.SamePlace:
                     room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
-                    PutBeside(room, otherRoom, _lastMoveDirection.Value);
                     _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    // after joining, which may move it to line up with the way in
+                    PutBeside(room, otherRoom, _lastMoveDirection.Value);
                     Trace("{0}: {1} and {2} are one place at different times.", FormatTranscriptLineForDisplay(line),
                       otherRoom.Name, roomName);
                     break;
@@ -1573,8 +1574,9 @@ public sealed class Automap : IAutomapController
         break;
       }
       case AutomapSameDirectionResult.SamePlace:
-        PutBeside(room, before, direction);
         _canvas.Connect(here, direction, Near(here, room), _settings.AssumeTwoWayConnections);
+        // after joining, which may move it to line up with the way in
+        PutBeside(room, before, direction);
         Trace("{0}: {1} and {2} are one place at different times.", FormatTranscriptLineForDisplay(line), before.Name,
           room.Name);
         break;
@@ -1697,7 +1699,7 @@ public sealed class Automap : IAutomapController
     using (await BeginBatchAsync("Automap: " + root.Name + " moves", token))
     {
       if (stop == null) stop = NewStop(here, movedBy);
-      else if (newWay) _canvas.ConnectByCommand(here, stop, movedBy);
+      else if (newWay) _canvas.ConnectStops(here, stop, movedBy);
     }
 
     Trace("{0} is at another stop.", root.Name);
@@ -1835,6 +1837,9 @@ public sealed class Automap : IAutomapController
     room.Position = Trizbort.Setup.Settings.Snap(across
       ? new Vector(anchor.Position.X, anchor.Position.Y + anchor.Height + gap)
       : new Vector(anchor.Position.X + anchor.Width + gap, anchor.Position.Y));
+    // the pair stays together: tidying round them later leaves both where they are (drag them to move them)
+    room.PlacedByHand = true;
+    anchor.PlacedByHand = true;
   }
 
   /// <summary>How the player last came into a room: from where, which way, and what the game showed.</summary>

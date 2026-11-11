@@ -170,7 +170,7 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
     string backIn)
   {
     // Hollywood Hijinx: the door swings shut as the closet moves, so it's opened before going out. The join to the
-    // stop is labelled with the peg pulled (down, and a join back up), and pulling it later moves the location.
+    // stop is labelled with the peg pulled (down at one end, back up at the other), and pulling it later moves the location.
     var prompts = new MovesPrompts();
     var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
     var lines = new List<string>
@@ -214,10 +214,14 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
     prompts.WhatMoved[1].Suggested.ShouldBe(0);
     var closet = AllRooms().Single(room => room.Name == "Closet" && !room.IsReference);
     var stop = AllRooms().Single(room => room.IsStop);
-    Connection From(Room a, Room b) => Project.Current.Elements.OfType<Connection>()
-      .Single(connection => connection.GetSourceRoom() == a && connection.GetTargetRoom() == b);
-    From(closet, stop).MidText.ShouldBe("pull first peg");
-    From(stop, closet).MidText.ShouldBe("pull second peg");
+    // one join between the closets: down from one end, back up from the other
+    var join = Project.Current.Elements.OfType<Connection>().Single(connection =>
+      connection.GetSourceRoom() is { } from && connection.GetTargetRoom() is { } to &&
+      new[] { from, to }.Contains(closet) && new[] { from, to }.Contains(stop));
+    join.GetSourceRoom().ShouldBe(closet);
+    join.StartText.ShouldBe("pull first peg");
+    join.EndText.ShouldBe("pull second peg");
+    join.Flow.ShouldBe(ConnectionFlow.TwoWay);
     engine.CurrentRoom.ShouldBe(backUp ? closet : stop);
   }
 

@@ -79,7 +79,9 @@ public static class JoinWays
     if (connection.MidText != middle) connection.MidText = middle;
 
     var commandOnly = list.Any(way => way.IsCommand) && !list.Any(way => way.IsDirection);
-    var automapCommand = commandOnly ? middle : string.Empty;
+    var automapCommand = commandOnly
+      ? string.Join(" / ", Distinct(list.Where(way => way.IsCommand).Select(way => way.Text)))
+      : string.Empty;
     if (connection.AutomapCommand != automapCommand) connection.AutomapCommand = automapCommand;
     var startTravelled = Travelled(list, true);
     var endTravelled = Travelled(list, false);
@@ -142,11 +144,12 @@ public static class JoinWays
 
   /// <summary>
   ///   A command goes on its end's label when the player was seen going back from the other end by a direction ("in /
-  ///   enter closet" at the foyer, "north" seen back): it works from that end. Otherwise (a command join, or a way back
-  ///   only assumed) it goes in the middle.
+  ///   enter closet" at the foyer, "north" seen back), or by another command ("pull first peg" down, "pull second peg"
+  ///   back up): it works from that end. Otherwise (a command join one way, or a way back only assumed) it goes in the
+  ///   middle.
   /// </summary>
   private static bool OnEndLabel(List<JoinWay> ways, bool atStart) =>
-    ways.Any(way => way.AtStart != atStart && way.IsDirection && way.Seen);
+    ways.Any(way => way.AtStart != atStart && (way.IsDirection && way.Seen || way.IsCommand));
 
   private static string EndLabel(Connection connection, List<JoinWay> ways, bool atStart,
     Func<MappableDirection, string> word)
@@ -248,8 +251,10 @@ public static class JoinWays
           ways.Add(JoinWay.Written(atStart, w));
     }
 
+    // (a command join's commands written on its end labels are there already)
     foreach (var command in DirectionWords.SplitLabel(commandJoin ? connection.AutomapCommand : connection.MidText))
-      ways.Add(JoinWay.Typed(true, command));
+      if (!ways.Any(way => way.IsCommand && string.Equals(way.Text, command, StringComparison.OrdinalIgnoreCase)))
+        ways.Add(JoinWay.Typed(true, command));
     return ways;
   }
 

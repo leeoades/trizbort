@@ -499,6 +499,26 @@ public class AutomapCanvas : IAutomapCanvas
     FaceGuessedEnds();
   }
 
+  public void ConnectStops(Room source, Room target, string command)
+  {
+    if (source == null || target == null || source == target || string.IsNullOrWhiteSpace(command)) return;
+    command = command.Trim();
+    var back = CurrentProject.Elements.OfType<Connection>().FirstOrDefault(connection =>
+      IsCommandJoin(connection) && connection.Flow == ConnectionFlow.OneWay &&
+      connection.GetSourceRoom() == target && connection.GetTargetRoom() == source &&
+      !JoinWays.Commands(JoinWays.Of(connection)).Contains(command, StringComparer.OrdinalIgnoreCase));
+    if (back == null)
+    {
+      ConnectByCommand(source, target, command);
+      return;
+    }
+
+    var ways = JoinWays.Of(back);
+    JoinWays.AddCommand(ways, false, command);
+    back.Flow = ConnectionFlow.TwoWay;
+    JoinWays.Write(back, ways, LabelWord);
+  }
+
   public void ConnectByCommand(Room source, Room target, string command)
   {
     if (source == null || target == null || source == target || string.IsNullOrWhiteSpace(command)) return;

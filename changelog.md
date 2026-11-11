@@ -159,6 +159,12 @@ is still a beta: keep backups and [report problems](https://github.com/leeoades/
 
 ### Fixed
 
+- A moving room's way back ("pull second peg") goes on the other end of the join between its stops, which becomes
+  two-way, rather than on a second join.
+- A dashed join for a command meets each room on the side facing the other, and turns as the rooms move, rather than
+  running across both rooms.
+- **The same place at different times** keeps the two rooms side by side: joining them no longer moves one away, and
+  tidying leaves the pair where it is.
 - Opening a map shows the whole map again: the view fitted to it, then jumped back to the map's origin, which can
   be well away from the rooms.
 - The faint preview of a new room in Disambiguate Rooms is where automap would actually put it, the way you went.
