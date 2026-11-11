@@ -34,14 +34,13 @@ public static class RoomSplit
     var target = join.GetTargetRoom();
     var atStart = source == room;
     var other = atStart ? target : source;
-    if (source == target) return "a way round, back into " + room.Name;
     var ways = JoinWays.Of(join);
     string Words(bool fromStart) => string.Join(" / ", ways.Where(way => way.AtStart == fromStart)
       .Select(way => way.IsDirection ? way.Text ?? DirectionWords.Word(way.Direction) : way.Text)
       .Where(text => !string.IsNullOrWhiteSpace(text)).Distinct(StringComparer.OrdinalIgnoreCase));
     var outward = Words(atStart);
     var back = Words(!atStart);
-    var name = other?.Name ?? "nowhere";
+    var name = source == target ? room.Name + " itself" : other?.Name ?? "nowhere";
     var text = string.IsNullOrEmpty(outward) ? "to " + name : outward + " to " + name;
     if (string.IsNullOrEmpty(outward) && !string.IsNullOrEmpty(back)) text = "from " + name;
     if (!string.IsNullOrEmpty(back)) text += $" ({back} back)";
@@ -80,8 +79,11 @@ public static class RoomSplit
     foreach (var join in moving)
     {
       if (join.VertexList.Count == 0) continue;
-      if (join.GetSourceRoom(out var start) == room) join.VertexList[0].Port = second.PortAt(start);
-      if (join.GetTargetRoom(out var end) == room) join.VertexList[join.VertexList.Count - 1].Port = second.PortAt(end);
+      var source = join.GetSourceRoom(out var start);
+      var target = join.GetTargetRoom(out var end);
+      // a way round back into the room (up "In the Chimney" taken for the same chimney): it arrives in the new one
+      if (source == room && target != room) join.VertexList[0].Port = second.PortAt(start);
+      if (target == room) join.VertexList[join.VertexList.Count - 1].Port = second.PortAt(end);
     }
 
     return second;

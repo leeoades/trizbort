@@ -47,6 +47,23 @@ public class RoomSplitTests : IsolatedProjectTests
   }
 
   [Test]
+  public void SplittingOffAWayRound_MovesOnlyTheEndItArrivesAt()
+  {
+    // up "In the Chimney", taken for a loop back into the same chimney
+    var chimney = Add("In the Chimney", 0, 0);
+    var loop = new Connection(Project.Current, new Vertex(chimney.PortAt(CompassPoint.North)),
+      new Vertex(chimney.PortAt(CompassPoint.North)));
+    Project.Current.Elements.Add(loop);
+    JoinWays.Write(loop, new[] { JoinWay.Go(true, MappableDirection.Up, true, "up") }, DirectionWords.Word);
+    RoomSplit.Describe(loop, chimney).ShouldBe("up to In the Chimney itself");
+
+    var upper = RoomSplit.Split(Project.Current, chimney, new[] { loop });
+
+    loop.GetSourceRoom().ShouldBe(chimney);
+    loop.GetTargetRoom().ShouldBe(upper);
+  }
+
+  [Test]
   public void ANameAlreadyTaken_GetsTheNextNumber()
   {
     Add("Maze", 0, 0);

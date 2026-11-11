@@ -16,15 +16,17 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 - **Automap: This Is a Different Room** (the room's right-click menu, or Project > Automap): when automap took you
   to be in a room already on the map but it's another with the same name (its exits go elsewhere), it adds the
-  room ("Maze (2)"), moves the way you came in over to it, and carries on from there. One undo step.
+  room ("Maze (2)") the way you went, moves the way you came in over to it, and carries on from there. It works for
+  a way automap took for a loop back into the same room, too. One undo step.
 
 - **This is a different 'X'** in the question automap asks when a known way out leads somewhere new: the room you
   left is another with its name, so automap adds it, moves the way you came in over to it, and joins the new room to
   it.
 - **Split Room...** (Edit > Rooms, or the room menu): for a room that turns out to be two places with one name,
   even several moves later. Tick the joins that belong to the other place; they move to a new room ("Maze (2)") at
-  the same sides. The newest join (automap's way in) is ticked to start with, and while automapping you say where
-  you are now (the new room, the original, or somewhere else). One undo step.
+  the same sides. The newest join (automap's way in) is ticked to start with. When automap has you in that room,
+  you also say where you are now (the new room, the original, or somewhere else). A way taken for a loop (up from
+  "In the Chimney" to what automap took for the same chimney) arrives in the new room. One undo step.
 - **Disambiguate Rooms** shows the room you pick on the map behind it, with the rooms around it, and puts the view
   back afterwards. The dialog opens on the right of the window to leave the map in view.
 

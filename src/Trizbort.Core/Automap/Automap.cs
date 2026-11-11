@@ -1318,7 +1318,8 @@ public sealed class Automap : IAutomapController
         // but we won't join them up to this room.
         // we might end up caring if, for example, the user gives multiple commands at one prompt,
         // or they're moved to one room and then teleported to another.
-        if (_lastKnownRoom != null && _lastKnownRoom != arrivedFrom)
+        // (a move that came back to the same room counts: up "In the Chimney" to what automap took for the same one)
+        if (_lastKnownRoom != null && (_lastKnownRoom != arrivedFrom || arrivedBy != null || arrivedByJourney != null))
           _arrival = arrivedFrom != null && (arrivedBy != null || arrivedByJourney != null) && !_suspended
             ? new Arrival(arrivedFrom, arrivedBy, arrivedByJourney, _lastKnownRoom, roomDescription)
             : null;
@@ -1703,9 +1704,14 @@ public sealed class Automap : IAutomapController
     var arrival = _arrival;
     if (arrival == null || here == null || _canvas.ResolveRoom(arrival.To) != here) return null;
     var from = _canvas.ResolveRoom(arrival.From);
-    if (from == null || from == here) return null;
+    if (from == null || (from == here && arrival.Direction == null && arrival.Journey == null)) return null;
 
-    var room = _canvas.CreateRoom(here, SplitName(here.Name));
+    // the way the player went from the room they came from (up, from the chimney below, when automap took it for a
+    // loop back into the same chimney), else beside it
+    var name = SplitName(here.Name);
+    var room = arrival.Direction is { } way
+      ? _canvas.CreateRoom(from, way, name, name)
+      : _canvas.CreateRoom(here, name);
     if (!string.IsNullOrWhiteSpace(arrival.Description)) room.AddDescription(arrival.Description);
     room.IsDark = here.IsDark;
     if (arrival.Direction is { } direction)
@@ -1748,7 +1754,7 @@ public sealed class Automap : IAutomapController
   /// </summary>
   public bool CanSplitCurrentRoom =>
     Running && !_suspended && _arrival != null && CurrentRoom is { } here && _canvas.ResolveRoom(_arrival.To) == here &&
-    _canvas.ResolveRoom(_arrival.From) is { } from && from != here;
+    _canvas.ResolveRoom(_arrival.From) is { } from && (from != here || _arrival.Direction != null || _arrival.Journey != null);
 
   /// <summary>
   ///   "This is a different room": the room automap has the player in isn't the one on the map with its name, but

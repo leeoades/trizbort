@@ -389,6 +389,49 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task ThisIsADifferentRoom_AfterAWayTakenForALoop_PutsTheNewRoomThatWay()
+  {
+    // Hollywood Hijinx: up the chimney to another "In the Chimney", which automap took for the same one (a loop)
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Fireplace", "The fireplace opens to the east.", "",
+      ">up", "In the Chimney", "You're in the chimney, above the fireplace.", "",
+      ">up", "In the Chimney", "",
+      ">"
+    });
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count >= 11);
+      await Task.Delay(200);
+      var chimney = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "In the Chimney");
+      Project.Current.Elements.OfType<Connection>()
+        .ShouldContain(c => c.GetSourceRoom() == chimney && c.GetTargetRoom() == chimney);
+      engine.CanSplitCurrentRoom.ShouldBeTrue();
+
+      (await engine.SplitCurrentRoomAsync()).ShouldBeTrue();
+
+      var upper = engine.CurrentRoom;
+      upper.Name.ShouldBe("In the Chimney (2)");
+      upper.Position.Y.ShouldBeLessThan(chimney.Position.Y); // up, above it
+      Joins().ShouldContain("In the Chimney -> In the Chimney (2)");
+      Project.Current.Elements.OfType<Connection>()
+        .ShouldNotContain(c => c.GetSourceRoom() == chimney && c.GetTargetRoom() == chimney);
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
   public async Task ThisIsADifferentRoom_SplitsTheRoomYouAreIn_OffTheWayYouCameIn()
   {
     var path = Path.GetTempFileName();

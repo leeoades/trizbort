@@ -329,9 +329,8 @@ public sealed partial class CommandCatalogue
     var joins = RoomSplit.JoinsOf(room);
     if (joins.Count == 0) return;
     var suggested = RoomSplit.Suggested(room);
-    RoomSplitWhere? where = s.Automap.IsRunning
-      ? s.Automap.CurrentRoom == room ? RoomSplitWhere.New : RoomSplitWhere.Neither
-      : null;
+    // where the player is matters only when automap has them in the room being split
+    RoomSplitWhere? where = s.Automap.IsRunning && s.Automap.CurrentRoom == room ? RoomSplitWhere.New : null;
     var choice = await s.Prompts.ChooseRoomSplitAsync(room, RoomSplit.SplitName(s.Project, room.Name), joins,
       suggested == null ? new List<Connection>() : new List<Connection> { suggested }, where);
     if (choice == null) return;
