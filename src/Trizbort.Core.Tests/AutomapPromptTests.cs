@@ -203,6 +203,39 @@ public class AutomapPromptTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task Disambiguate_Cancel_MapsNothing()
+  {
+    AddHall("Alpha hall.");
+    AddHall("Beta hall.");
+    var prompts = new ScriptedPrompts();
+    prompts.DisambiguationResults.Enqueue(_ => RoomDisambiguation.Nothing());
+
+    await CreateParser(prompts)
+      .StartCl(new AutomapCanvas(), SettingsFor("Example Game\n\nHall\nZulu description.\n", false));
+
+    prompts.DisambiguationCalls.Count.ShouldBe(1);
+    RoomNames().Length.ShouldBe(2);
+    Project.Current.Elements.OfType<Room>().ShouldNotContain(room => room.Descriptions.Contains("Zulu description."));
+  }
+
+  [Test]
+  public async Task Disambiguate_DontAskAgain_ThenMovingToADescriptionNoneHas_GuessesANewRoom()
+  {
+    AddHall("Alpha hall.");
+    AddHall("Beta hall.");
+    var prompts = new ScriptedPrompts();
+    prompts.DisambiguationResults.Enqueue(candidates => RoomDisambiguation.ChooseFirstAndStopAsking(candidates[0]));
+
+    await CreateParser(prompts)
+      .StartCl(
+        new AutomapCanvas(),
+        SettingsFor("Example Game\n\nHall\nZulu description.\n\n>north\n\nHall\nYankee description.\n", false));
+
+    prompts.DisambiguationCalls.Count.ShouldBe(1);
+    RoomNames().Length.ShouldBe(3); // the third Hall, guessed new
+  }
+
+  [Test]
   public async Task Disambiguate_SingleCandidateNoDescription_DoesNotAsk()
   {
     var existing = AddHall(null);

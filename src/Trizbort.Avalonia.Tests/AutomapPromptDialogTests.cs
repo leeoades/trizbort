@@ -105,53 +105,57 @@ public class AutomapPromptDialogTests
     }
 
     [Test]
-    public void Disambiguate_ThisRoom_DisabledUntilSelection()
+    public void Disambiguate_ListsTheRooms_ThenANewRoom_WithTheTranscriptsDescription()
     {
         var vm = CreateDisambiguation(AddRoom("Hall", "One."), AddRoom("Hall", "Two."));
 
-        vm.ThisRoomCommand.CanExecute(null).ShouldBeFalse();
-        vm.SelectedRoom = vm.Candidates[1];
-        vm.ThisRoomCommand.CanExecute(null).ShouldBeTrue();
-    }
-
-    [Test]
-    public void Disambiguate_SingleCandidate_PreSelectedAndEnabled()
-    {
-        var room = AddRoom("Hall", "One.");
-        var vm = CreateDisambiguation(room);
-
-        vm.SelectedRoom.ShouldBeSameAs(room);
-        vm.ThisRoomCommand.CanExecute(null).ShouldBeTrue();
-    }
-
-    [Test]
-    public void Disambiguate_Selection_ShowsPrimaryDescription()
-    {
-        var vm = CreateDisambiguation(AddRoom("Hall", "One."), AddRoom("Hall", "Two."));
-
-        vm.SelectedDescription.ShouldBe(string.Empty);
-        vm.SelectedRoom = vm.Candidates[1];
+        vm.Choices.Select(choice => choice.Name).ShouldBe(new[] { "Hall", "Hall", DisambiguateRoomsViewModel.NewRoomName });
+        vm.Selected = vm.Choices[2];
+        vm.SelectedDescription.ShouldBe("A hall.");
+        vm.Selected = vm.Choices[1];
         vm.SelectedDescription.ShouldBe("Two.");
     }
 
     [Test]
-    public void Disambiguate_ThisRoom_ReturnsChosenRoom()
+    public void Disambiguate_Ok_DisabledUntilSelection()
     {
         var vm = CreateDisambiguation(AddRoom("Hall", "One."), AddRoom("Hall", "Two."));
-        vm.SelectedRoom = vm.Candidates[1];
 
-        vm.ThisRoomCommand.Execute(null);
+        vm.OkCommand.CanExecute(null).ShouldBeFalse();
+        vm.Selected = vm.Choices[1];
+        vm.OkCommand.CanExecute(null).ShouldBeTrue();
+    }
+
+    [Test]
+    public void Disambiguate_SingleCandidate_PreSelected()
+    {
+        var room = AddRoom("Hall", "One.");
+        var vm = CreateDisambiguation(room);
+
+        vm.Selected!.Room.ShouldBeSameAs(room);
+        vm.OkCommand.CanExecute(null).ShouldBeTrue();
+    }
+
+    [Test]
+    public void Disambiguate_Ok_ReturnsTheRoomPicked()
+    {
+        var vm = CreateDisambiguation(AddRoom("Hall", "One."), AddRoom("Hall", "Two."));
+        vm.Selected = vm.Choices[1];
+
+        vm.OkCommand.Execute(null);
 
         vm.Result.NewRoom.ShouldBeFalse();
+        vm.Result.Skip.ShouldBeFalse();
         vm.Result.Chosen.ShouldBeSameAs(vm.Candidates[1]);
     }
 
     [Test]
-    public void Disambiguate_NewRoom_ReturnsCreateNew()
+    public void Disambiguate_Ok_OnTheNewRoom_ReturnsCreateNew()
     {
         var vm = CreateDisambiguation(AddRoom("Hall", "One."), AddRoom("Hall", "Two."));
+        vm.Selected = vm.Choices[^1];
 
-        vm.NewRoomCommand.Execute(null);
+        vm.OkCommand.Execute(null);
 
         vm.Result.NewRoom.ShouldBeTrue();
         vm.Result.Chosen.ShouldBeNull();
@@ -159,22 +163,29 @@ public class AutomapPromptDialogTests
     }
 
     [Test]
-    public void Disambiguate_AutoChooseRest_ReturnsFlag()
+    public void Disambiguate_DontAskAgain_IsPassedOn_WithTheChoice()
     {
         var vm = CreateDisambiguation(AddRoom("Hall", "One."), AddRoom("Hall", "Two."));
+        vm.Selected = vm.Choices[0];
+        vm.DontAskAgain = true;
 
-        vm.AutoChooseRestCommand.Execute(null);
+        vm.OkCommand.Execute(null);
 
         vm.Result.AutoChooseRest.ShouldBeTrue();
         vm.Result.Chosen.ShouldBeSameAs(vm.Candidates[0]);
     }
 
     [Test]
-    public void Disambiguate_Close_IsNewRoom()
+    public void Disambiguate_CancelOrClose_MapsNothing()
     {
         var vm = CreateDisambiguation(AddRoom("Hall", "One."), AddRoom("Hall", "Two."));
+        vm.Result.Skip.ShouldBeTrue(); // closing the window
 
-        vm.Result.NewRoom.ShouldBeTrue();
+        vm.Selected = vm.Choices[0];
+        vm.CancelCommand.Execute(null);
+
+        vm.Result.Skip.ShouldBeTrue();
+        vm.Result.NewRoom.ShouldBeFalse();
         vm.Result.Chosen.ShouldBeNull();
     }
 
@@ -212,7 +223,7 @@ public class AutomapPromptDialogTests
             DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry")
         };
         sameDirection.Show();
-        // Split is offered only when the room the player left is known
+        // Moves and Split are offered only when the room the player left is known
         sameDirection.GetVisualDescendants().OfType<Button>().Count(button => button.IsVisible).ShouldBe(3);
         sameDirection.Close();
 
@@ -221,8 +232,9 @@ public class AutomapPromptDialogTests
             DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" }
         };
         sameDirection.Show();
-        sameDirection.GetVisualDescendants().OfType<Button>().Count(button => button.IsVisible).ShouldBe(4);
+        sameDirection.GetVisualDescendants().OfType<Button>().Count(button => button.IsVisible).ShouldBe(5);
         sameDirection.GetVisualDescendants().OfType<Button>().ShouldContain(button => (button.Content as string) == "Split 'Cupboard' into separate rooms");
+        sameDirection.GetVisualDescendants().OfType<Button>().ShouldContain(button => (button.Content as string) == "'Cupboard' moves (a lift, a vehicle)");
         sameDirection.Close();
 
         var disambiguate = new DisambiguateRoomsDialog
@@ -230,7 +242,7 @@ public class AutomapPromptDialogTests
             DataContext = CreateDisambiguation(AddRoom("Hall", "One."), AddRoom("Hall", "Two."))
         };
         disambiguate.Show();
-        disambiguate.GetVisualDescendants().OfType<Button>().Count(b => b.Command != null).ShouldBe(3);
+        disambiguate.GetVisualDescendants().OfType<Button>().Count(b => b.Command != null).ShouldBe(2); // OK, Cancel
         disambiguate.Close();
     }
 
@@ -282,7 +294,8 @@ public class AutomapPromptDialogTests
         {
             DisambiguationCalls++;
             var vm = new DisambiguateRoomsViewModel(transcriptLine, roomDescription, candidates);
-            vm.NewRoomCommand.Execute(null);
+            vm.Selected = vm.Choices[^1]; // a new room
+            vm.OkCommand.Execute(null);
             return Task.FromResult(vm.Result);
         }
     }

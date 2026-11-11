@@ -279,6 +279,68 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldBe(new[] { "Cupboard -> Cupboard (-1) Pull First Peg", "Cupboard (-1) -> Cellar" });
   }
 
+  [Test]
+  public async Task TheWayBackFromTheCloset_DoesntTakeTheFoyersSouthSide_WhenTheFrontPorchIsThere()
+  {
+    // Hollywood Hijinx: south from the foyer is the front porch; "in" to the closet, "north" back out
+    var porch = new Room(Project.Current) { Name = "Front Porch", Position = new Vector(0, 300), Size = new Vector(96, 64) };
+    var foyer = new Room(Project.Current) { Name = "Foyer", Position = new Vector(0, 0), Size = new Vector(96, 64) };
+    Project.Current.Elements.Add(porch);
+    Project.Current.Elements.Add(foyer);
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    new AutomapCanvas(Project.Current, engine).Connect(porch, MappableDirection.North, foyer, true);
+    var lines = new[]
+    {
+      ">look", "Foyer", "An elegant foyer.", "",
+      ">in", "Closet", "A small closet.", "",
+      ">out", "Foyer", "",
+      ">enter closet", "Closet", "",
+      ">north", "Foyer", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    var closet = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "Closet");
+    var join = Project.Current.Elements.OfType<Connection>().Single(connection =>
+      connection.GetSourceRoom() == foyer && connection.GetTargetRoom() == closet);
+    join.GetSourceRoom(out var side);
+    side.ShouldNotBe(CompassPoint.South);
+    join.StartText.ShouldBe("in / enter closet");
+    join.MidText.ShouldBeEmpty();
+  }
+
+  [Test]
+  public async Task AQuestionInBrackets_AndTheAnswer_FollowTheJoinLabelledWithBoth()
+  {
+    // Hollywood Hijinx: "pull peg", "[Which peg do you mean, ...?]", "second" follows the join end labelled
+    // "Pull second peg" back up
+    var cupboard = AddRoom("Cupboard");
+    var below = AddRoom("Cupboard (-1)", column: 1);
+    var lift = new Connection(Project.Current, new Vertex(cupboard.PortAt(CompassPoint.East)), new Vertex(below.PortAt(CompassPoint.West)))
+    {
+      StartText = "Pull first peg",
+      EndText = "Pull second peg"
+    };
+    Project.Current.Elements.Add(lift);
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var lines = new[]
+    {
+      ">look", "Cupboard", "A cramped cupboard with pegs on the wall.", "",
+      ">pull first peg", "The cupboard moves down, then stops.", "",
+      ">pull peg", "[Which peg do you mean, the first coat peg, the second coat peg, the third coat",
+      "peg, or the sawed-off peg?]", "",
+      ">second", "The cupboard moves up, then stops.", "",
+      ">north", "Hall", "A grand hall.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    Joins().ShouldContain("Cupboard -> Hall");
+    Joins().ShouldNotContain(join => join.StartsWith("Cupboard (-1) -> Hall"));
+  }
+
   private sealed class SplitPrompts : IEditorPrompts
   {
     public string AskedAbout;
@@ -321,6 +383,34 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldContain("Cupboard -> Cupboard (2) pull peg, first");
     Joins().ShouldContain("Cupboard (2) -> Cellar");
     Joins().ShouldNotContain(join => join.StartsWith("Cupboard -> Cellar"));
+  }
+
+  [Test]
+  public async Task OutOfTheClosetToARoomAlreadyMapped_AfterOutLedToTheFoyer_AsksAndSplitsTheCloset()
+  {
+    // Hollywood Hijinx: out of the closet led to the foyer; after pulling a peg, the closet sinks, and out leads to
+    // the cellar, which is already on the map
+    var prompts = new SplitPrompts();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "Cellar", "A dank cellar.", "",
+      ">up", "Foyer", "An elegant foyer.", "",
+      ">enter closet", "Closet", "A coat closet with pegs.", "",
+      ">out", "Foyer", "",
+      ">enter closet", "Closet", "",
+      ">pull peg", "The closet lurches and sinks.", "",
+      ">out", "Cellar", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    prompts.AskedAbout.ShouldBe("Closet");
+    Rooms().ShouldBe(new[] { "Cellar", "Closet", "Closet (2)", "Foyer" });
+    Joins().ShouldContain("Closet -> Closet (2) pull peg");
+    Joins().ShouldContain("Closet (2) -> Cellar");
+    Joins().ShouldNotContain(join => join.StartsWith("Closet -> Cellar"));
   }
 
   [Test]
@@ -544,6 +634,46 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task GoingBack_WhileWaitingForTheGamesNextLine_GoesBackAMove()
+  {
+    // a live game: the last move's reply is in, but no prompt yet; going back then crashed (no line read to show)
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Hall", "A grand hall. A door leads north.", "",
+      ">north", "Kitchen", "A small kitchen. The hall is south.", "",
+      ">south", "Hall", ""
+    });
+    string error = null;
+    var engine = new Trizbort.Automap.Automap((message, _) => error = message, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count == 11);
+      await Task.Delay(100);
+
+      engine.GoBack();
+      await WaitFor(() => engine.NextCommand == "south");
+      // and on again
+      engine.PlayNextMove();
+      await WaitFor(() => engine.NextCommand == null || run.IsCompleted);
+      await Task.Delay(200);
+      error.ShouldBeNull();
+      engine.IsRunning.ShouldBeTrue();
+      Rooms().ShouldBe(new[] { "Hall", "Kitchen" });
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
   public async Task TwoRoomsWithTheSameName_TheJoinOnTheMap_SaysWhichOneYouGoTo()
   {
     // the chimney goes on up into a second room also called "In the Chimney"; the user has drawn it, with a join
@@ -623,6 +753,47 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
 
     prompts.Asked.ShouldBe(0);
     Rooms().ShouldBe(new[] { "Forest" });
+  }
+
+  private sealed class SameDirectionPrompts : IEditorPrompts
+  {
+    public string AskedAbout;
+
+    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, System.Threading.CancellationToken token = default)
+    {
+      AskedAbout = existing?.Name;
+      return Task.FromResult(AutomapSameDirectionResult.KeepBoth);
+    }
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, System.Threading.CancellationToken token = default) =>
+      Task.FromResult(RoomDisambiguation.Choose(candidates[0]));
+  }
+
+  [Test]
+  public async Task AWayUpDrawnOnTheNorthSide_CountsAsTheWayUp_WhenUpLeadsSomewhereNew()
+  {
+    // the user drew the chimney going up from the fireplace on its north side, labelled "n / up"
+    var fireplace = new Room(Project.Current) { Name = "Fireplace", Position = new Vector(0, 300), Size = new Vector(96, 64) };
+    var chimney = new Room(Project.Current) { Name = "In the Chimney", Position = new Vector(0, 0), Size = new Vector(96, 64) };
+    Project.Current.Elements.Add(fireplace);
+    Project.Current.Elements.Add(chimney);
+    var drawn = new Connection(Project.Current, new Vertex(fireplace.PortAt(CompassPoint.North)), new Vertex(chimney.PortAt(CompassPoint.South)))
+      { StartText = "n / up" };
+    Project.Current.Elements.Add(drawn);
+
+    var prompts = new SameDirectionPrompts();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "Fireplace", "A big fireplace.", "",
+      ">up", "Roof", "On the roof.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    // up already leads to the chimney: automap asks rather than quietly adding a second way up
+    prompts.AskedAbout.ShouldBe("In the Chimney");
   }
 
   [Test]

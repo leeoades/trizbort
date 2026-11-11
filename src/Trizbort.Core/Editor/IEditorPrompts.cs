@@ -143,9 +143,17 @@ public interface IEditorPrompts
   }
 }
 
-public readonly record struct RoomDisambiguation(Room Chosen, bool NewRoom, bool AutoChooseRest)
+/// <summary>
+///   The answer to "which room does the transcript mean?": a room (<see cref="Chosen" />), a new room
+///   (<see cref="NewRoom" />), or neither (<see cref="Skip" />: map nothing for it). <see cref="AutoChooseRest" />: don't
+///   ask again while automapping, guess instead.
+/// </summary>
+public readonly record struct RoomDisambiguation(Room Chosen, bool NewRoom, bool AutoChooseRest, bool Skip = false)
 {
   public static RoomDisambiguation Choose(Room r) => new(r, false, false);
   public static RoomDisambiguation CreateNew() => new(null, true, false);
   public static RoomDisambiguation ChooseFirstAndStopAsking(Room first) => new(first, false, true);
+
+  /// <summary>Cancelled: map nothing for this heading.</summary>
+  public static RoomDisambiguation Nothing() => new(null, false, false, true);
 }

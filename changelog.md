@@ -12,6 +12,15 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+## [0.12.0-beta] - 2026-11-10
+
+This beta is about **automap understanding the places games play tricks with**: rooms that share a name, rooms
+that move (lifts, vehicles), ways that lead to different rooms at different times, darkness, and joins you draw
+yourself. Joins now remember each way along them, so their labels say exactly what you did. A long join can be
+**split** into two labelled stubs, and **Start a New Area Here** gives a part of the game (inside the house) room
+of its own. While automapping, a **panel** beside the map shows where you are, the transcript and the mapping. This
+is still a beta: keep backups and [report problems](https://github.com/leeoades/trizbort/issues).
+
 ### Added
 
 - **Automap panel.** While automapping, its controls are in a panel docked beside the map, in three parts:
@@ -39,6 +48,30 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   offers **Split 'Cupboard' into separate rooms**: for a room that is really two places alike, such as a lift.
   Automap adds "Cupboard (2)", joined from the cupboard by the last thing you did there ("pull peg, first"), and
   joins the new room to it.
+- **Rooms that move** (a lift, a car, a train). The same question offers **'Closet' moves (a lift, a vehicle)**:
+  the room is marked as moving, and a copy of it with its name stands for it at the new stop, joined from it by what
+  you did there ("pull peg"). Automap then works out which stop you're at from the way you go out, asking nothing
+  more as you ride up and down, and adds a stop for a new place. A moving room and its stops show a blue sign with
+  up and down arrows; Ctrl-click a stop to go to the room. Set it yourself with **Moves** in Room Properties or
+  **Room Moves** on the room menu. Saved as an optional `moves` attribute; older versions ignore it.
+- **Start a New Area Here** (the room menu, or Edit > Rooms) moves a room, such as the foyer on going into a house,
+  to clear space beside the map, so the area beyond it can be mapped on its own, and splits its joins to the rooms
+  it leaves behind. One undo step.
+- **Split Join** (the join menu, or Edit) draws a long join as a short stub out of each room, labelled with the
+  room at the other end ("to Building", "xyzzy: to Building", "from Debris Room" at the far end of a one-way join),
+  instead of a line across the map. It's still one join, so automap goes along it as usual. Click a label ("to
+  Debris Room") to move the map to that room, or Ctrl-click a stub. Saved as an optional `split` attribute; older
+  versions draw the whole line.
+- **Copies of rooms** (reference rooms, and a moving room's stops) are drawn in the look of the room they stand
+  for, and their properties show only their name and that room. New on their menu: **Go to the Room It Stands
+  For**, **Move Joins to the Room It Stands For**, and **Make It a Room of Its Own**. Darkness, start and end room
+  and the automap settings are greyed out for them. Automap goes through a copy to the room it stands for, and
+  never matches a copy by name.
+- **One way, two rooms.** A way out (a direction, or a command such as "enter closet") that leads to more than one
+  room, as after Keep Both, takes you to the one the game's heading names, then the one whose description starts
+  the same way. With no heading, automap waits for the next one instead of guessing.
+- **Where you are stays shown.** While automap runs, the room it thinks you're in has a blue dashed ring of its
+  own, so clicking about the map (which changes the selection) no longer loses it.
 - **Same name, different place?** Going a direction to a room with the same name as the one you left, when the
   game shows a description that starts unlike any of that room's, automap asks whether it's a new room (a second
   "In the Chimney" further up) or the same one. A way already mapped as looping back never asks, and once you say
@@ -53,6 +86,24 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- A command used from one end alongside a direction ("in" and "enter closet" into the closet, with "north" seen
+  back) is written on that end's label ("in / enter closet") instead of in the middle, since it works from that end.
+  A command stays in the middle while the way back is only assumed.
+- **Disambiguate Rooms** lists the rooms with that name and then **<Add a new room>** (showing the description the
+  transcript gives), with **OK** and **Cancel**. Cancel maps nothing for it. **Auto-Choose the Rest**, which always
+  took the first room, is now **Don't ask again while automapping: guess**: the room whose description starts the
+  same way; if none does, a new room when you moved there, or the room you're in when you didn't.
+- A join's side gives its direction only when its label names none: drawn on the south side and labelled "down",
+  it's down, not south too. On the right of a room with no label, it's still east. **Join Properties** shows that
+  direction ("east") in the end's label box, so you can see it and change it; left as it is, the map still leaves
+  it off.
+- **Joins remember their ways.** Each join keeps a list of the ways along it: every direction or command, from
+  which end, and whether you were seen going that way or automap only assumed it. Its labels are drawn from that
+  list ("north / up" at one end, "climb ladder" in the middle), so automap no longer has to guess from the label
+  text or from the side a join leaves a room. Change a join's labels, or move an end whose side gave its
+  direction, and automap goes by what you changed. Saved with the map; older versions keep the labels as before.
+- Going a way the map already shows leading somewhere else now asks, wherever the join leaves the room: up from a
+  room with a join drawn "n / up" on its north side.
 - The start room is shown by a small green "play" sign in its top-left corner, instead of a green glow round the
   room. Hover over it for what it means.
 - The automap items in the Project menu are now together in a **Project > Automap** submenu, named as in the
@@ -61,6 +112,28 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- Coming back north out of the closet no longer assumes the foyer leads south to it when south from the foyer is
+  already the front porch, and the join's end doesn't move onto the side another join uses.
+- A game's question in brackets (Infocom's "[Which peg do you mean, ...?]") counts as a question, so "pull peg"
+  then "second" follows a join labelled "pull second peg".
+- Going back a move while automap waited for a live game's next line no longer crashes when you carry on.
+- **Room Properties** fits a small screen (Linux, laptops): everything but OK and Cancel scrolls, and the dialog opens
+  no taller than the screen, so the buttons stay in reach.
+- Going a way you've been seen to go somewhere else, into a room already on the map (out of the closet led to the
+  foyer; after pulling the peg it leads to the cellar), now asks, as it does for a new room: keep the old way,
+  the new one, both, or split the room you left ("Closet (2)", reached by "pull peg"). Keeping the new way takes
+  it off the old join.
+- A command's join ("enter closet") leaving a room's corner is no longer labelled with the corner ("se") when the
+  map labels diagonal exits: its side only faces the other room.
+- Several rooms with one name (Hollywood Hijinx has three "In the Chimney"): the map says which first. A join the
+  way you went leads to its room, and going back the way a one-way join came (down, after coming up) leads back to
+  the room it came from, until you find otherwise. Otherwise the room whose description starts the same way is
+  the one; if none does, automap asks which, or whether it's a new room, offering them all. A name only one room
+  has is that room, whatever the game shows on a later visit.
+- A game that answers a move into the dark with a sentence ("It is pitch black.") rather than a heading is
+  understood as dark: lighting the lamp maps the room as reached by the move, not by "turn on flashlight".
+- A join's end moves to the side of a compass direction learnt later, when the side it was on only faced the
+  other room (a command's join, or a guess): north from the Front Porch now leaves from its top.
 - Dying no longer joins rooms: "yes" to "Do you want to be reincarnated?" isn't taken for a magic word, and a room
   shown after "You have died" or "*** The End ***" isn't joined to the room before.
 - A command into a room and a direction back out are one join: "enter closet" from the foyer and "north" back

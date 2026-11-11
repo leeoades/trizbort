@@ -14,6 +14,14 @@ public static class ConnectionStyleCommands
   private static readonly KeyGesture[] _oneWayGestures = { new KeyGesture(InputKey.A, ModifierKeys.None) };
   private static readonly KeyGesture[] _reverseGestures = { new KeyGesture(InputKey.V, ModifierKeys.None) };
 
+  /// <summary>A join between two different rooms, which can be drawn split.</summary>
+  private static bool CanSplit(Connection connection)
+  {
+    var source = connection.GetSourceRoom();
+    var target = connection.GetTargetRoom();
+    return source != null && target != null && source != target;
+  }
+
   public static void Register(CommandCatalogue catalogue)
   {
     catalogue.Register(new EditorCommand
@@ -70,6 +78,30 @@ public static class ConnectionStyleCommands
       ContextOrder = 53, ContextGroup = "5-connection",
       CanExecuteFunc = s => s.Selection.Connections.Any(),
       ExecuteAsyncFunc = s => Run(() => s.ReverseSelectedConnections())
+    });
+
+    catalogue.Register(new EditorCommand
+    {
+      Id = "connection.toggleSplit",
+      Title = "_Split Join",
+      MenuPath = "Edit",
+      Group = "3-connection",
+      Scope = CommandScope.Canvas,
+      ContextTargets = ContextTargets.Connection,
+      ContextOrder = 54, ContextGroup = "5-connection",
+      CanExecuteFunc = s => s.Selection.Connections.Any(CanSplit),
+      IsCheckedFunc = s => s.Selection.Connections.FirstOrDefault(CanSplit) is { Split: true },
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        // a long join drawn as a stub out of each room, labelled with the room at the other end ("to Building")
+        var joins = s.Selection.Connections.Where(CanSplit).ToList();
+        if (joins.Count == 0) return;
+        var on = !joins[0].Split;
+        s.Execute(on ? "Split join" : "Join up split join", () =>
+        {
+          foreach (var join in joins) join.Split = on;
+        });
+      })
     });
 
     // Rotation has no menu entry in the reference, so these are key-only.

@@ -8,11 +8,14 @@
         x:DataType="vm:RoomPropertiesViewModel"
         Title="Room Properties"
         Width="560" Height="840"
-        MinWidth="476" MinHeight="760"
+        MinWidth="476" MinHeight="320"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="16" Grid.IsSharedSizeScope="True">
+    <Grid RowDefinitions="*,Auto" Margin="16" Grid.IsSharedSizeScope="True">
+        <!-- everything but OK and Cancel scrolls, so the buttons stay in reach in a small window (a small screen) -->
+        <ScrollViewer Grid.Row="0" x:Name="ContentScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid RowDefinitions="Auto,*" MinHeight="640">
         <!-- Persistent header: visible on every tab, as in the reference dialog -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8" Margin="0,0,0,12">
             <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Name:" Target="{Binding #NameBox}" />
@@ -27,16 +30,20 @@
             <ComboBox Grid.Row="3" Grid.Column="2" x:Name="ReferenceCombo" ItemsSource="{Binding AvailableReferenceRooms}"
                       SelectedItem="{Binding SelectedReferenceRoom}" HorizontalAlignment="Stretch" />
 
-            <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="16">
+            <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="16" IsVisible="{Binding IsNotReferenceRoom}">
                 <CheckBox Content="_Start Room" IsChecked="{Binding IsStartRoom}" />
                 <CheckBox Content="_End Room" IsChecked="{Binding IsEndRoom}" />
                 <CheckBox Content="_Dark" IsChecked="{Binding IsDark}" />
+                <CheckBox Content="_Moves" IsChecked="{Binding Moves}"
+                          ToolTip.Tip="A lift, a car, a train: the room takes you with it. Automap shows it at each stop as a copy with its name, and works out which stop you're at from the way you go out" />
                 <CheckBox Content="Don't _automap from here" IsChecked="{Binding AutomapPause}"
                           ToolTip.Tip="For a maze, or a room that moves (a lift): automap stops mapping while you're in it, and carries on from wherever you come out, with a dotted ? join for the way through" />
             </StackPanel>
         </Grid>
 
-        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
+        <TextBlock Grid.Row="1" Text="{Binding ReferenceNote}" TextWrapping="Wrap" VerticalAlignment="Top"
+                   IsVisible="{Binding IsReferenceRoom}" />
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}" IsVisible="{Binding IsNotReferenceRoom}">
             <!-- Description & Objects -->
             <TabItem Header="Description &amp; Objects">
                 <Grid RowDefinitions="*,*,Auto" Margin="8" RowSpacing="12">
@@ -191,9 +198,11 @@
                 </StackPanel>
             </TabItem>
         </TabControl>
+        </Grid>
+        </ScrollViewer>
 
         <!-- OK / Cancel Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
             <Button Classes="dialog-button" Content="OK" IsDefault="True" Click="OnOkClick" />
             <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Click="OnCancelClick" />
         </StackPanel>

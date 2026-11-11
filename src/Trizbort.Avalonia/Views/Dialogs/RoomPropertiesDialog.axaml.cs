@@ -17,6 +17,19 @@ public partial class RoomPropertiesDialog : Window
         // Tunnel (and bubble, for events raised on a child) so Esc closes the open syntax hint before Cancel sees it.
         AddHandler(KeyDownEvent, OnDialogKeyDown, RoutingStrategies.Tunnel | RoutingStrategies.Bubble);
         ObjectsBox.AddHandler(InputElement.KeyDownEvent, OnObjectsKeyDown, RoutingStrategies.Tunnel);
+        Opened += (_, _) => FitToScreen();
+    }
+
+    /// <summary>
+    ///   A screen shorter than the dialog (a laptop, Linux with a panel) would hide OK and Cancel: open no taller than
+    ///   the screen's working area. The rest scrolls.
+    /// </summary>
+    private void FitToScreen()
+    {
+        var screen = Screens?.ScreenFromVisual(this);
+        if (screen == null) return;
+        var available = screen.WorkingArea.Height / screen.Scaling - 48;
+        if (available > MinHeight && Height > available) Height = available;
     }
 
     private void OnDialogKeyDown(object? sender, KeyEventArgs e)

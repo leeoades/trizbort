@@ -11,7 +11,10 @@ public enum RoomBadgeKind
   StartRoom,
 
   /// <summary>Automap doesn't map from here (<see cref="Room.AutomapPause" />).</summary>
-  NoAutomap
+  NoAutomap,
+
+  /// <summary>The room moves (a lift, a vehicle), or this is it at another of its stops (<see cref="Room.Moves" />).</summary>
+  Moves
 }
 
 /// <summary>A little round sign in a room's top left corner, at <see cref="Centre" />.</summary>
@@ -30,6 +33,7 @@ public readonly record struct RoomBadge(RoomBadgeKind Kind, Vector Centre, float
   public string Title => Kind switch
   {
     RoomBadgeKind.StartRoom => "Start room",
+    RoomBadgeKind.Moves => "Moving room",
     _ => "Don't automap from here"
   };
 
@@ -37,6 +41,8 @@ public readonly record struct RoomBadge(RoomBadgeKind Kind, Vector Centre, float
   public string Description => Kind switch
   {
     RoomBadgeKind.StartRoom => "The game starts here. Change it with Start Room in the room's menu or properties.",
+    RoomBadgeKind.Moves => "This room moves, taking you with it (a lift, a car, a train). Each room with this sign and " +
+                           "the same name is it at another stop. Ctrl-click a stop to go to the room itself.",
     _ => "Automap maps nothing while you're in this room (a maze, a lift...), and carries on where you come out. " +
          "Change it in the room's menu or properties."
   };
@@ -63,6 +69,7 @@ public static class RoomBadges
 
     if (room.IsStartRoom) Add(RoomBadgeKind.StartRoom);
     if (room.AutomapPause) Add(RoomBadgeKind.NoAutomap);
+    if (room.Moves || room.IsStop) Add(RoomBadgeKind.Moves);
     return badges;
   }
 

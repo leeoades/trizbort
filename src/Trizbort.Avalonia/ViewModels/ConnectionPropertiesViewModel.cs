@@ -1,6 +1,8 @@
 using System.Drawing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Trizbort.Domain.Elements;
+using Trizbort.Domain.Enums;
+using Trizbort.Domain.Misc;
 
 namespace Trizbort.Avalonia.ViewModels;
 
@@ -63,9 +65,13 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     {
         ConnectionName = connection.Name ?? string.Empty;
         ConnectionDescription = connection.Description ?? string.Empty;
-        StartText = connection.StartText ?? string.Empty;
+        // an end with no label shows the direction its side gives it ("east" on the right of a room), so it can be
+        // seen, and changed; left as it is, it stays hidden on the map
+        _startSide = ConnectionEndLabels.SideDirection(connection, true);
+        _endSide = ConnectionEndLabels.SideDirection(connection, false);
+        StartText = Shown(connection.StartText, _startSide);
         MidText = connection.MidText ?? string.Empty;
-        EndText = connection.EndText ?? string.Empty;
+        EndText = Shown(connection.EndText, _endSide);
         SelectedPreset = MatchPreset();
         IsDirectional = connection.Flow == ConnectionFlow.OneWay;
         IsDotted = connection.Style == ConnectionStyle.Dashed;
@@ -93,9 +99,9 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     {
         connection.Name = ConnectionName;
         connection.Description = ConnectionDescription;
-        connection.StartText = StartText;
+        connection.StartText = Stored(StartText, _startSide);
         connection.MidText = MidText;
-        connection.EndText = EndText;
+        connection.EndText = Stored(EndText, _endSide);
 
         connection.Flow = IsDirectional ? ConnectionFlow.OneWay : ConnectionFlow.TwoWay;
         connection.Style = IsDotted ? ConnectionStyle.Dashed : ConnectionStyle.Solid;
@@ -116,6 +122,22 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         {
             connection.Door = null;
         }
+    }
+
+    private MappableDirection? _startSide;
+    private MappableDirection? _endSide;
+
+    private static string Shown(string label, MappableDirection? side) =>
+        string.IsNullOrEmpty(label) && side != null ? DirectionWords.Word(side.Value) : label ?? string.Empty;
+
+    /// <summary>The side's own direction, alone, is left off the map, as before.</summary>
+    private static string Stored(string text, MappableDirection? side)
+    {
+        var parts = DirectionWords.SplitLabel(text);
+        return side != null && parts.Count == 1 && DirectionWords.TryParse(parts[0], out var direction) &&
+               direction == side
+            ? string.Empty
+            : text ?? string.Empty;
     }
 
     partial void OnStartTextChanged(string value) => UpdatePresetFromText();

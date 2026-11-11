@@ -140,6 +140,14 @@ public sealed class CanvasInteraction : IDisposable
     var shift = IsShift(input.Modifiers);
     var ctrl = IsCtrl(input.Modifiers);
 
+    // a split join's label ("to Debris Room") goes to the room it names
+    if (!shift && !ctrl && input.ClickCount == 1 && _session.JumpFromSplitLabel(world))
+    {
+      _gestureButton = PointerButton.None;
+      Refresh();
+      return true;
+    }
+
     if (IsReferenceJumpModifier(input.Modifiers) && TryJumpToReferencedRoom(world))
     {
       _gestureButton = PointerButton.None;
@@ -746,7 +754,9 @@ public sealed class CanvasInteraction : IDisposable
   private CursorKind DetermineCursor()
   {
     if (_mode == CanvasDragMode.Pan || _spaceHeld) return CursorKind.Pan;
-    if (_mode == CanvasDragMode.None && _referenceJumpHeld && _hoverElement is Room { IsReference: true })
+    if (_mode == CanvasDragMode.None && _session.SplitLabelAt(_lastWorld, out _) != null) return CursorKind.Hand;
+    if (_mode == CanvasDragMode.None && _referenceJumpHeld &&
+        _hoverElement is Room { IsReference: true } or Connection { IsDrawnSplit: true })
       return CursorKind.Hand;
     if (_mode == CanvasDragMode.MoveWaypoint || (_mode == CanvasDragMode.None && _hoverWaypoint.HasValue))
       return CursorKind.SizeAll;
@@ -857,6 +867,10 @@ public sealed class CanvasInteraction : IDisposable
 
   private bool TryJumpToReferencedRoom(Vector world)
   {
+    // a split join's stub goes to the room at its other end, selected or not
+    if (_hit.HitElement(world) is Connection { IsDrawnSplit: true } split)
+      return _session.JumpAlongSplitJoin(split, world);
+
     var selection = _session.Selection;
     if (selection.Count != 1 || selection.Primary is not Room { IsReference: true } room) return false;
     if (_hit.HitElement(world) != room) return false;

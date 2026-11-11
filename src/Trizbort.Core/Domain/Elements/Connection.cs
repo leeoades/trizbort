@@ -6,6 +6,7 @@ using System.Globalization;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Misc;
+using Trizbort.Setup;
 using Trizbort.Util;
 
 namespace Trizbort.Domain.Elements;
@@ -190,6 +191,96 @@ public class Connection : Element
 
   private string _endTravelled = string.Empty;
 
+  /// <summary>
+  ///   The ways along this connection automap knows of (each direction or command, from which end, and whether the
+  ///   player was seen going that way), as <see cref="Trizbort.Automap.JoinWays" /> writes them; empty when automap
+  ///   hasn't recorded any. The labels are drawn from them. Saved as the optional <c>automapWays</c> attribute.
+  /// </summary>
+  public string AutomapWays {
+    get { return _automapWays; }
+    set {
+      value = value ?? string.Empty;
+      if (_automapWays == value) return;
+      _automapWays = value;
+      RaiseChanged();
+    }
+  }
+
+  private string _automapWays = string.Empty;
+
+  /// <summary>
+  ///   The labels (and, where a label is left off because the side says it, the side) <see cref="AutomapWays" /> were
+  ///   drawn as. When the user has changed them since, the labels are what counts. Saved as <c>automapWaysFor</c>.
+  /// </summary>
+  public string AutomapWaysFor {
+    get { return _automapWaysFor; }
+    set {
+      value = value ?? string.Empty;
+      if (_automapWaysFor == value) return;
+      _automapWaysFor = value;
+      RaiseChanged();
+    }
+  }
+
+  private string _automapWaysFor = string.Empty;
+
+  /// <summary>
+  ///   Drawn as two short stubs, one out of each room, each labelled with the room at the other end ("to Building"),
+  ///   instead of a line across the map: for a long join, or one into another area of the map. It's still one join,
+  ///   between the same rooms, with the same ways. Saved as the optional <c>split</c> attribute; older versions draw
+  ///   the whole line.
+  /// </summary>
+  public bool Split {
+    get { return _split; }
+    set {
+      if (_split == value) return;
+      _split = value;
+      RaiseChanged();
+    }
+  }
+
+  private bool _split;
+
+  /// <summary>Whether the join is drawn split: <see cref="Split" />, between two different rooms.</summary>
+  public bool IsDrawnSplit =>
+    Split && VertexList.Count >= 2 && VertexList[0].Port?.Owner is Room start &&
+    VertexList[VertexList.Count - 1].Port?.Owner is Room end && start != end;
+
+  /// <summary>How far a split join's stubs reach out of their rooms.</summary>
+  public static float SplitStubLength => Math.Max(24f, Settings.GridSize * 1.25f);
+
+  /// <summary>
+  ///   Where a split join's stub out of its start (or end) room meets the room, and its tip, out from the room's side.
+  /// </summary>
+  public void GetSplitStub(bool atStart, out Vector foot, out Vector tip)
+  {
+    var vertex = atStart ? VertexList[0] : VertexList[VertexList.Count - 1];
+    foot = vertex.Position;
+    var outward = Vector.Zero;
+    if (vertex.Port is { HasStalk: true }) outward = vertex.Port.StalkPosition - foot;
+    if (outward.Length < 0.01f && vertex.Port?.Owner is Room room) outward = foot - room.InnerBounds.Center;
+    if (outward.Length < 0.01f) outward = new Vector(1, 0);
+    tip = foot + Vector.Normalize(outward) * SplitStubLength;
+  }
+
+  /// <summary>
+  ///   Where each of a split join's labels was last drawn (start, end), so a click on one can go to the room it names.
+  ///   Set by the drawing; not saved.
+  /// </summary>
+  public Rect?[] SplitLabelBounds { get; } = new Rect?[2];
+
+  /// <summary>Which of the split join's labels <paramref name="point" /> is on: true for the start's, false for the end's.</summary>
+  public bool? SplitLabelAt(Vector point)
+  {
+    if (!IsDrawnSplit) return null;
+    if (SplitLabelBounds[0] is { } start && start.Contains(point)) return true;
+    if (SplitLabelBounds[1] is { } end && end.Contains(point)) return false;
+    return null;
+  }
+
+  /// <summary>The room at the other end from the start (or end) of the join.</summary>
+  public Room FarRoom(bool fromStart) => fromStart ? GetTargetRoom() : GetSourceRoom();
+
   public string MidText {
     get { return _midText; }
     set {
@@ -234,7 +325,7 @@ public class Connection : Element
 
   public BoundList<Vertex> VertexList { get; } = new();
 
-  public bool SupportsCurveWaypoints => VertexList.Count == 2;
+  public bool SupportsCurveWaypoints => VertexList.Count == 2 && !IsDrawnSplit;
 
   public bool IsDangling =>
     VertexList.Count < 2 || VertexList[0].Port == null || VertexList[VertexList.Count - 1].Port == null;
@@ -435,7 +526,9 @@ public class Connection : Element
 
   public override string GetToolTipFooter()
   {
-    return string.Empty;
+    return IsDrawnSplit
+      ? $"Split join between {GetSourceRoom()?.Name} and {GetTargetRoom()?.Name}: Ctrl-click a stub to go to the room at its other end."
+      : string.Empty;
   }
 
   public override string GetToolTipHeader()
@@ -536,6 +629,9 @@ public class Connection : Element
     AutomapCommand = element.Attribute("automapCommand").Text;
     StartTravelled = element.Attribute("automapStartTravelled").Text;
     EndTravelled = element.Attribute("automapEndTravelled").Text;
+    AutomapWays = element.Attribute("automapWays").Text;
+    AutomapWaysFor = element.Attribute("automapWaysFor").Text;
+    Split = element.Attribute("split").ToBool();
     EndText = element.Attribute("endText").Text != "" ? element.Attribute("endText").Text : element.Attribute("end").Text;
     if (element.Attribute("color").Text != "")
       ConnectionColor = ColorTranslator.FromHtml(element.Attribute("color").Text);
@@ -639,6 +735,12 @@ public class Connection : Element
       scribe.Attribute("automapStartTravelled", StartTravelled);
     if (!string.IsNullOrEmpty(EndTravelled))
       scribe.Attribute("automapEndTravelled", EndTravelled);
+    if (!string.IsNullOrEmpty(AutomapWays))
+      scribe.Attribute("automapWays", AutomapWays);
+    if (!string.IsNullOrEmpty(AutomapWaysFor))
+      scribe.Attribute("automapWaysFor", AutomapWaysFor);
+    if (Split)
+      scribe.Attribute("split", Split);
     if (!string.IsNullOrEmpty(EndText))
       scribe.Attribute("endText", EndText);
 
@@ -688,6 +790,17 @@ public class Connection : Element
 
   public override Rect UnionBoundsWith(Rect rect, bool includeMargins)
   {
+    if (IsDrawnSplit)
+    {
+      foreach (var segment in GetSegments())
+      {
+        rect = rect.Union(segment.Start);
+        rect = rect.Union(segment.End);
+      }
+
+      return rect;
+    }
+
     foreach (var vertex in VertexList)
       rect = rect.Union(vertex.Position);
 
@@ -703,6 +816,14 @@ public class Connection : Element
 
   public List<LineSegment> GetSegments()
   {
+    if (IsDrawnSplit)
+    {
+      // two stubs: out of the start room, and into the end room
+      GetSplitStub(true, out var startFoot, out var startTip);
+      GetSplitStub(false, out var endFoot, out var endTip);
+      return new List<LineSegment> { new(startFoot, startTip), new(endTip, endFoot) };
+    }
+
     if (HasCurveWaypoints) return GetCurvedSegments(out _);
 
     var list = new List<LineSegment>();

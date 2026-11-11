@@ -74,6 +74,14 @@ public interface IAutomapCanvas
   ///   labels or the sides they leave from.
   /// </summary>
   IReadOnlyList<Room> RoomsAlong(Room room, MappableDirection direction) => Array.Empty<Room>();
+
+  /// <summary>
+  ///   <paramref name="direction" /> from <paramref name="from" /> doesn't lead to <paramref name="to" /> after all: it
+  ///   comes off the join between them (and the join goes if nothing else leads along it).
+  /// </summary>
+  void ForgetWay(Room from, MappableDirection direction, Room to)
+  {
+  }
 }
 
 public delegate bool? RoomMatcher(string roomName, string roomDescription, Room room);

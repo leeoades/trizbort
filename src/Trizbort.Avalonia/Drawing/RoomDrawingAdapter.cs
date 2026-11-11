@@ -104,8 +104,10 @@ public static class RoomDrawingAdapter
     {
         var bounds = room.InnerBounds;
         if (bounds.Width <= 0 || bounds.Height <= 0) return;
+        // a copy of a room (a portal, a moving room's stop) looks like the room
+        var look = Look(room);
 
-        var handDrawn = room.HandDrawnStyle switch
+        var handDrawn = look.HandDrawnStyle switch
         {
             HandDrawnStyle.HandDrawn => true,
             HandDrawnStyle.Straight => false,
@@ -113,22 +115,23 @@ public static class RoomDrawingAdapter
         };
         var seed = room.Id;
         var cache = _textCaches.GetOrCreateValue(room);
-        var corners = room.Corners;
+        var corners = look.Corners;
         var (tl, tr, br, bl) = corners != null ? (corners.TopLeft, corners.TopRight, corners.BottomRight, corners.BottomLeft) : (0f, 0f, 0f, 0f);
 
-        // 1. Draw End / Reference Outer Halo (behind room); the start room has a sign instead (8b)
-        if (room.IsEndRoom || room.IsReference)
+        // 1. Draw End / Reference Outer Halo (behind room); the start room, and a moving room's stops, have a sign
+        // instead (8b)
+        if (room.IsEndRoom || room.IsPortal)
         {
             var haloBounds = bounds;
             haloBounds.Inflate(5);
-            var haloKey = new GeometryKey(haloBounds, room.Shape, tl, tr, br, bl, handDrawn);
+            var haloKey = new GeometryKey(haloBounds, look.Shape, tl, tr, br, bl, handDrawn);
             if (cache.CachedHaloGeometry == null || !cache.LastHaloKey.Equals(haloKey))
             {
                 cache.LastHaloKey = haloKey;
-                cache.CachedHaloGeometry = CreateShapeGeometry(haloBounds, room.Shape, corners, handDrawn, seed);
+                cache.CachedHaloGeometry = CreateShapeGeometry(haloBounds, look.Shape, corners, handDrawn, seed);
             }
 
-            var haloBrush = room.IsReference
+            var haloBrush = room.IsPortal
                 ? CoreColor.LightBlue.ToBrush()
                 : Settings.Color[CoreColors.EndRoom].ToBrush();
 
@@ -141,51 +144,51 @@ public static class RoomDrawingAdapter
             var selBounds = bounds;
             var isPrimary = Project.Current.ActiveSelectedElement?.Id == room.Id;
             selBounds.Inflate(isPrimary ? 10 : 5);
-            var selKey = new GeometryKey(selBounds, room.Shape, tl, tr, br, bl, handDrawn);
+            var selKey = new GeometryKey(selBounds, look.Shape, tl, tr, br, bl, handDrawn);
             if (cache.CachedSelHaloGeometry == null || !cache.LastSelHaloKey.Equals(selKey))
             {
                 cache.LastSelHaloKey = selKey;
-                cache.CachedSelHaloGeometry = CreateShapeGeometry(selBounds, room.Shape, corners, handDrawn, seed);
+                cache.CachedSelHaloGeometry = CreateShapeGeometry(selBounds, look.Shape, corners, handDrawn, seed);
             }
 
             context.DrawGeometry(_selHaloBrush, null, cache.CachedSelHaloGeometry);
         }
 
         // 3. Build Base Geometry for Room Shape (Cached)
-        var baseKey = new GeometryKey(bounds, room.Shape, tl, tr, br, bl, handDrawn);
+        var baseKey = new GeometryKey(bounds, look.Shape, tl, tr, br, bl, handDrawn);
         if (cache.CachedGeometry == null || !cache.LastBaseKey.Equals(baseKey))
         {
             cache.LastBaseKey = baseKey;
-            cache.CachedGeometry = CreateShapeGeometry(bounds, room.Shape, corners, handDrawn, seed);
+            cache.CachedGeometry = CreateShapeGeometry(bounds, look.Shape, corners, handDrawn, seed);
         }
         var geometry = cache.CachedGeometry;
 
         // 4. Determine Primary Fill Brush
-        var fillBrush = ResolveRoomFillBrush(room);
+        var fillBrush = ResolveRoomFillBrush(look);
 
         // 5. Determine Border Pen
-        var borderColor = room.RoomBorderColor != CoreColor.Transparent ? room.RoomBorderColor : Settings.Color[CoreColors.Border];
-        var dashStyle = room.BorderStyle.ToDashStyle();
+        var borderColor = look.RoomBorderColor != CoreColor.Transparent ? look.RoomBorderColor : Settings.Color[CoreColors.Border];
+        var dashStyle = look.BorderStyle.ToDashStyle();
         var borderPen = borderColor.ToPen(Settings.LineWidth, dashStyle);
 
         // 6. Draw Primary Fill & Base Geometry
         // Legacy Room.cs:803 `BorderStyle != BorderDashStyle.None` guards the whole fill/second fill/dark/border block,
         // so a room with no border style draws only its text (I-025 R4, spiral "Fall to Carriage").
-        var drawBody = room.BorderStyle != BorderDashStyle.None;
+        var drawBody = look.BorderStyle != BorderDashStyle.None;
         if (drawBody) context.DrawGeometry(fillBrush, borderPen, geometry);
 
         // 7. Draw Second Fill (if configured)
-        if (drawBody && room.SecondFillColor != CoreColor.Transparent && !string.IsNullOrEmpty(room.SecondFillLocation))
+        if (drawBody && look.SecondFillColor != CoreColor.Transparent && !string.IsNullOrEmpty(look.SecondFillLocation))
         {
             if (cache.CachedSecondFillGeometry == null
-                || cache.LastSecondFillLoc != room.SecondFillLocation
+                || cache.LastSecondFillLoc != look.SecondFillLocation
                 || !cache.LastSecondFillBounds.Equals(bounds))
             {
-                var poly = GetSecondFillPolygon(bounds, room.SecondFillLocation);
+                var poly = GetSecondFillPolygon(bounds, look.SecondFillLocation);
                 if (poly != null && poly.Length > 0)
                 {
                     cache.CachedSecondFillGeometry = DrawingAdapters.ToPolygonGeometry(poly, true);
-                    cache.LastSecondFillLoc = room.SecondFillLocation;
+                    cache.LastSecondFillLoc = look.SecondFillLocation;
                     cache.LastSecondFillBounds = bounds;
                 }
                 else
@@ -198,17 +201,17 @@ public static class RoomDrawingAdapter
             {
                 using (context.PushGeometryClip(geometry))
                 {
-                    context.DrawGeometry(room.SecondFillColor.ToBrush(), null, cache.CachedSecondFillGeometry);
+                    context.DrawGeometry(look.SecondFillColor.ToBrush(), null, cache.CachedSecondFillGeometry);
                 }
             }
         }
 
         // 8. Draw Darkness Indicator
-        if (drawBody && room.IsDark)
+        if (drawBody && look.IsDark)
         {
             using (context.PushGeometryClip(geometry))
             {
-                var tri = GetDarknessTriangle(bounds, room.Shape, corners, Settings.DarknessStripeSize);
+                var tri = GetDarknessTriangle(bounds, look.Shape, corners, Settings.DarknessStripeSize);
                 var darkGeo = new StreamGeometry();
                 using (var darkCtx = darkGeo.Open())
                 {
@@ -227,6 +230,15 @@ public static class RoomDrawingAdapter
         foreach (var badge in RoomBadges.Of(room))
         {
             DrawBadge(context, badge);
+        }
+
+        // 8c. Where automap thinks the player is: a ring of its own, so it stays shown whatever is selected
+        if (AutomapRoom != null && ReferenceEquals(room, AutomapRoom))
+        {
+            var hereBounds = bounds;
+            hereBounds.Inflate(4);
+            var hereGeometry = CreateShapeGeometry(hereBounds, look.Shape, corners, handDrawn, seed);
+            context.DrawGeometry(null, _hereRing, hereGeometry);
         }
 
         // 9. Draw Hover Adorner
@@ -256,6 +268,18 @@ public static class RoomDrawingAdapter
     private static readonly IBrush _startMark = new SolidColorBrush(AvaloniaColor.FromRgb(0x3C, 0xA0, 0x4C));
 
     /// <summary>
+    ///   The room automap thinks the player is in, while it runs (null otherwise): drawn with a ring, apart from the
+    ///   selection. Set by the map before drawing.
+    /// </summary>
+    internal static Room? AutomapRoom { get; set; }
+
+    private static readonly IPen _hereRing =
+        new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x1E, 0x88, 0xE5)), 3, new DashStyle(new double[] { 2, 1.2 }, 0));
+    private static readonly IBrush _movesFill = new SolidColorBrush(AvaloniaColor.FromArgb(230, 0xE3, 0xEE, 0xFB));
+    private static readonly IPen _movesPen = new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x3A, 0x72, 0xC4)), 1.6);
+    private static readonly IBrush _movesMark = new SolidColorBrush(AvaloniaColor.FromRgb(0x3A, 0x72, 0xC4));
+
+    /// <summary>
     ///   A sign in a room's corner: the start room's green circle with a "play" triangle, or the amber "no entry"
     ///   circle with a bar through it on a room automap doesn't map from (a maze, a lift).
     /// </summary>
@@ -279,6 +303,28 @@ public static class RoomDrawingAdapter
                 }
 
                 context.DrawGeometry(_startMark, null, triangle);
+                break;
+            }
+            case RoomBadgeKind.Moves:
+            {
+                // a lift's buttons: a little triangle up, and one down
+                context.DrawEllipse(_movesFill, _movesPen, centre, radius, radius);
+                var size = radius * 0.45;
+                var gap = radius * 0.12;
+                var arrows = new StreamGeometry();
+                using (var g = arrows.Open())
+                {
+                    g.BeginFigure(new AvaloniaPoint(centre.X, centre.Y - gap - size), true);
+                    g.LineTo(new AvaloniaPoint(centre.X + size, centre.Y - gap));
+                    g.LineTo(new AvaloniaPoint(centre.X - size, centre.Y - gap));
+                    g.EndFigure(true);
+                    g.BeginFigure(new AvaloniaPoint(centre.X, centre.Y + gap + size), true);
+                    g.LineTo(new AvaloniaPoint(centre.X - size, centre.Y + gap));
+                    g.LineTo(new AvaloniaPoint(centre.X + size, centre.Y + gap));
+                    g.EndFigure(true);
+                }
+
+                context.DrawGeometry(_movesMark, null, arrows);
                 break;
             }
             default:
@@ -481,28 +527,33 @@ public static class RoomDrawingAdapter
         return Settings.Color[CoreColors.Canvas];
     }
 
+    /// <summary>The room whose style <paramref name="room" /> is drawn in: the room it's a copy of, or itself.</summary>
+    internal static Room Look(Room room) => room.ReferenceRoom ?? room;
+
     private static void DrawRoomText(Room room, AvaloniaDrawingContext context, CoreRect bounds, RoomTextCache cache)
     {
+        var look = Look(room);
         var textBounds = bounds;
-        if (room.Shape == RoomShape.Ellipse)
+        if (look.Shape == RoomShape.Ellipse)
             textBounds.Inflate(-11.5f, -11.5f);
         else
             textBounds.Inflate(-5, -5);
 
         if (textBounds.Width <= 0 || textBounds.Height <= 0) return;
 
-        var nameText = room.IsReference ? "To" : (room.Name ?? string.Empty);
-        var subtitleText = room.IsReference ? (room.ReferenceRoom?.Name ?? string.Empty) : (room.SubTitle ?? string.Empty);
+        // a portal reads "To Front Porch"; a moving room's stop is the room itself, so it keeps its own name
+        var nameText = room.IsPortal ? "To" : (room.Name ?? string.Empty);
+        var subtitleText = room.IsPortal ? (room.ReferenceRoom?.Name ?? string.Empty) : (room.SubTitle ?? string.Empty);
 
         var nameFont = Settings.RoomFontMetadata;
         // Legacy Room.cs:912-916: name (and, for reference rooms, subtitle) colour is the room colour or the region text colour.
-        var nameColor = ResolveRoomNameColor(room);
+        var nameColor = ResolveRoomNameColor(look);
 
         var hasSubtitle = !string.IsNullOrWhiteSpace(subtitleText);
         var subFont = Settings.SubtitleFontMetadata;
-        var subColor = room.IsReference
+        var subColor = room.IsPortal
             ? nameColor
-            : (room.RoomSubtitleColor != CoreColor.Transparent ? room.RoomSubtitleColor : Settings.Color[CoreColors.Subtitle]);
+            : (look.RoomSubtitleColor != CoreColor.Transparent ? look.RoomSubtitleColor : Settings.Color[CoreColors.Subtitle]);
 
         var isCacheValid = cache.LastName == nameText
                            && cache.LastSubtitle == subtitleText

@@ -522,6 +522,34 @@ public class NavigationKeyTests
   }
 
   [Test]
+  public void ClickingASplitJoinsLabel_GoesToTheRoomItNames()
+  {
+    // xyzzy: the building's end says "to Debris Room"
+    var building = AddRoomAt(0, 0, "Building");
+    var debris = AddRoomAt(3000, 0, "Debris Room");
+    var join = new Connection(_project, new Vertex(building.PortAt(CompassPoint.East)), new Vertex(debris.PortAt(CompassPoint.West)))
+    {
+      Split = true,
+      MidText = "xyzzy"
+    };
+    _project.Elements.Add(join);
+    // where the drawing put the labels
+    join.GetSplitStub(true, out _, out var startTip);
+    join.GetSplitStub(false, out _, out var endTip);
+    join.SplitLabelBounds[0] = new Rect(startTip.X + 3, startTip.Y - 6, 90, 12);
+    join.SplitLabelBounds[1] = new Rect(endTip.X - 93, endTip.Y - 6, 90, 12);
+
+    ClickAt(new Vector(startTip.X + 40, startTip.Y), ModifierKeys.None);
+
+    _session.Selection.Items.ShouldBe(new Element[] { debris });
+    _session.Viewport.Origin.ShouldBe(debris.InnerBounds.Center);
+
+    ClickAt(new Vector(endTip.X - 40, endTip.Y), ModifierKeys.None);
+
+    _session.Selection.Items.ShouldBe(new Element[] { building });
+  }
+
+  [Test]
   public void Click_WithoutCtrlDoesNotJump()
   {
     var (original, reference) = BuildReferencePair();

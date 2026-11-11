@@ -96,6 +96,34 @@ public class ConnectionPropertiesDialogLayoutTests
     }
 
     [AvaloniaTest]
+    public void RoomDialog_InAShortWindow_KeepsOkAndCancelInReach()
+    {
+        // a small screen (Linux, a laptop): the room dialog no taller than 420
+        EnsureStyles();
+        var window = new RoomPropertiesDialog { DataContext = new RoomPropertiesViewModel(), ShowInTaskbar = false, Height = 420 };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+        try
+        {
+            window.Bounds.Height.ShouldBeLessThanOrEqualTo(421);
+            var buttons = window.GetVisualDescendants().OfType<Button>()
+                .Where(b => b.Content as string is "OK" or "Cancel").ToList();
+            buttons.Count.ShouldBe(2);
+            foreach (var button in buttons)
+            {
+                var bottom = button.TranslatePoint(new Point(0, button.Bounds.Height), window);
+                bottom.ShouldNotBeNull();
+                bottom!.Value.Y.ShouldBeLessThanOrEqualTo(window.Bounds.Height + 1, (string)button.Content! + " below the window");
+            }
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
     public void ConnectionDialog_DefaultSize_NothingClipped_DoorOff()
     {
         var vm = new ConnectionPropertiesViewModel { HasDoor = false };
