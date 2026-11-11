@@ -14,6 +14,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **What Moved It?**: when a room that moves turns up somewhere new, automap asks which of the commands you typed in
+  it moved it (a question and your answer listed as one, "pull peg → second"), with its best guess picked; or
+  **Nothing I did** (a bus that moves by itself: the join is labelled "(by itself)" and never followed), or something
+  else you type. It asks once for each new way between stops (down, then the first time back up), then follows the
+  labelled joins as you play.
 - **Go Live**: stepping through move by move to the end of the transcript, then playing on in the game, no longer
   leaves automap silently paused. A bar in the automap panel says the game has gone on, with a Go Live button to map
   each move as you play.

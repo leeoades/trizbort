@@ -147,6 +147,18 @@ public interface IEditorPrompts
     IReadOnlyCollection<Connection> ticked, RoomSplitWhere? where, CancellationToken token = default) =>
     Task.FromResult(new RoomSplitChoice(ticked?.ToList() ?? new List<Connection>(), where ?? RoomSplitWhere.Neither));
 
+  /// <summary>
+  ///   A room that moves (<paramref name="room" />) has turned up somewhere new: you came out in
+  ///   <paramref name="comeOutIn" />. Which of the commands <paramref name="done" /> in it moved it
+  ///   (<paramref name="suggested" /> to start with; -1 for "nothing I did"), something else, or nothing the player did.
+  ///   Null for cancel (don't say). Without a UI, takes the suggestion.
+  /// </summary>
+  Task<WhatMovedItChoice> ChooseWhatMovedItAsync(Room room, string comeOutIn, IReadOnlyList<DoneInRoom> done,
+    int suggested, CancellationToken token = default) =>
+    Task.FromResult(suggested >= 0 && suggested < done.Count
+      ? new WhatMovedItChoice(done[suggested].Label)
+      : WhatMovedItChoice.Itself);
+
   Task<bool> OpenUriAsync(string uri, CancellationToken token = default)
   {
     return Task.FromResult(false);

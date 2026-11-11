@@ -74,6 +74,50 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
 
     public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, CancellationToken token = default) =>
       Task.FromResult(RoomDisambiguation.Choose(candidates[0]));
+
+    /// <summary>What "what moved it?" listed each time, and what it suggested.</summary>
+    public readonly List<(List<string> Done, int Suggested)> WhatMoved = new();
+
+    /// <summary>The answer to "what moved it?"; null takes the suggestion.</summary>
+    public WhatMovedItChoice Answer;
+
+    public Task<WhatMovedItChoice> ChooseWhatMovedItAsync(Room room, string comeOutIn, IReadOnlyList<DoneInRoom> done,
+      int suggested, CancellationToken token = default)
+    {
+      WhatMoved.Add((done.Select(item => item.Display).ToList(), suggested));
+      return Task.FromResult(Answer ?? (suggested >= 0 ? new WhatMovedItChoice(done[suggested].Label) : WhatMovedItChoice.Itself));
+    }
+  }
+
+  [Test]
+  public async Task NothingThePlayerDid_MovedTheBus_TheJoinSaysSo_AndReadingAgainDoesntMoveYou()
+  {
+    // reading on the bus doesn't move it: the user says nothing they did moved it
+    var prompts = new MovesPrompts { Answer = WhatMovedItChoice.Itself };
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "High Street", "A busy street.", "",
+      ">enter bus", "Bus", "A rattling bus.", "",
+      ">out", "High Street", "",
+      ">enter bus", "Bus", "",
+      ">read book", "You read a chapter.", "",
+      ">out", "Market", "A noisy market.", "",
+      ">enter bus", "Bus", "",
+      ">read book", "You read another chapter.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines);
+
+    prompts.WhatMoved.Count.ShouldBe(1);
+    prompts.WhatMoved[0].Done.ShouldBe(new[] { "read book" });
+    var bus = AllRooms().Single(room => room.Name == "Bus" && !room.IsReference);
+    var stop = AllRooms().Single(room => room.IsStop);
+    Project.Current.Elements.OfType<Connection>()
+      .Single(connection => connection.GetSourceRoom() == bus && connection.GetTargetRoom() == stop)
+      .MidText.ShouldBe(Trizbort.Automap.Automap.ByItself);
+    engine.CurrentRoom.ShouldBe(stop);
   }
 
   [Test]
@@ -160,6 +204,12 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
     await RunToEnd(engine, lines.ToArray());
 
     prompts.Asked.ShouldBe(1);
+    // asked once going down, and once coming back up; never again
+    prompts.WhatMoved.Count.ShouldBe(2);
+    prompts.WhatMoved[0].Done.ShouldBe(new[] { "pull first peg", "open closet door" });
+    prompts.WhatMoved[0].Suggested.ShouldBe(0);
+    prompts.WhatMoved[1].Done.ShouldBe(new[] { "pull second peg", "open door" });
+    prompts.WhatMoved[1].Suggested.ShouldBe(0);
     var closet = AllRooms().Single(room => room.Name == "Closet" && !room.IsReference);
     var stop = AllRooms().Single(room => room.IsStop);
     Connection From(Room a, Room b) => Project.Current.Elements.OfType<Connection>()

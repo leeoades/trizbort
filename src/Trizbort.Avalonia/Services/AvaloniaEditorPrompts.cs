@@ -220,6 +220,27 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         });
     }
 
+    /// <summary>What moved it?: which command moved a room that moves. Without a window, the suggestion.</summary>
+    public Task<WhatMovedItChoice> ChooseWhatMovedItAsync(Room room, string comeOutIn, IReadOnlyList<DoneInRoom> done,
+        int suggested, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            if (owner == null)
+            {
+                return suggested >= 0 && suggested < done.Count
+                    ? new WhatMovedItChoice(done[suggested].Label)
+                    : WhatMovedItChoice.Itself;
+            }
+
+            var viewModel = new WhatMovedItViewModel(room.Name, comeOutIn, done, suggested);
+            var dialog = new WhatMovedItDialog { DataContext = viewModel };
+            await dialog.ShowDialog(owner);
+            return viewModel.Result!;
+        });
+    }
+
     /// <summary>Tidy Map...: asks which rooms and which way. Without an owner window, takes the suggestion.</summary>
     public Task<TidyChoice?> ChooseTidyAsync(TidyChoice suggested, int selectedRooms, CancellationToken token = default)
     {
