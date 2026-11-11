@@ -642,6 +642,8 @@ public class MapCanvasControl : Control
         var button = point.Properties.IsMiddleButtonPressed ? PointerButton.Middle
             : point.Properties.IsRightButtonPressed ? PointerButton.Right
             : PointerButton.Left;
+        // looking only: every button drags the map about, as the middle one does
+        if (ViewOnly) button = PointerButton.Middle;
 
         var interaction = Interaction;
         var handled = interaction.OnPointerPressed(ToPointerInput(button, e.KeyModifiers, point.Position, e.ClickCount));
@@ -718,6 +720,7 @@ public class MapCanvasControl : Control
 
         var interaction = Interaction;
         var releasedButton = InputMapper.ToButton(e.GetCurrentPoint(this).Properties.PointerUpdateKind.GetMouseButton());
+        if (ViewOnly) releasedButton = PointerButton.Middle;
         if (interaction.IsGestureActive && interaction.GestureButton != PointerButton.None &&
             releasedButton != interaction.GestureButton)
         {
@@ -801,6 +804,12 @@ public class MapCanvasControl : Control
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
+        // looking only: keys would nudge or delete the room shown
+        if (ViewOnly)
+        {
+            e.Handled = true;
+            return;
+        }
 
         var interaction = Interaction;
         var keyInput = AvaloniaKeyMapper.ToKeyInput(e.Key, e.KeyModifiers, AvaloniaKeyMapper.IsMacOS);
@@ -995,6 +1004,12 @@ public class MapCanvasControl : Control
     ///     whether the transcript means a new room. Null when there's none. Set from the UI thread, then redraw.
     /// </summary>
     public static (CoreRect Bounds, string Name)? GhostRoom { get; set; }
+
+    /// <summary>
+    ///     The map can be looked around (dragged with any button, scrolled, zoomed) but not changed: while automap
+    ///     asks which room the transcript means, with the map behind the question. Set from the UI thread.
+    /// </summary>
+    public static bool ViewOnly { get; set; }
 
     private static readonly IBrush _ghostFill = new SolidColorBrush(AvaloniaColor.FromArgb(60, 0x1E, 0x88, 0xE5));
     private static readonly IPen _ghostPen =

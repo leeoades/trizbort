@@ -146,17 +146,27 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
                 Trizbort.Domain.Misc.Vector centre;
                 if (room == null)
                 {
-                    // a new room: shown faintly where automap would put it
-                    var where = global::Trizbort.Automap.Automap.Instance.NewRoomPreview();
-                    if (where == null)
+                    // a new room: shown faintly where automap would put it (else the room the player came from)
+                    Trizbort.Domain.Misc.Rect? where = null;
+                    try
                     {
-                        MapCanvasControl.GhostRoom = null;
+                        where = global::Trizbort.Automap.Automap.Instance.NewRoomPreview();
+                    }
+                    catch (Exception)
+                    {
+                        // no preview, but the question still works
+                    }
+
+                    MapCanvasControl.GhostRoom = where is { } ghost ? (ghost, newRoomName) : null;
+                    session.Selection.Set(new List<Element>());
+                    var from = global::Trizbort.Automap.Automap.Instance.CurrentRoom;
+                    if (where == null && (from == null || !session.Project.Elements.Contains(from)))
+                    {
+                        session.Invalidate(EditorChange.Adorners);
                         return;
                     }
 
-                    MapCanvasControl.GhostRoom = (where.Value, newRoomName);
-                    session.Selection.Set(new List<Element>());
-                    centre = where.Value.Center;
+                    centre = where?.Center ?? from!.InnerBounds.Center;
                 }
                 else
                 {
@@ -186,10 +196,23 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         }
         try
         {
-            await dialog.ShowDialog(owner);
+            if (session != null)
+            {
+                // not modal: the map behind can be looked around while deciding (but not changed)
+                MapCanvasControl.ViewOnly = true;
+                var closed = new TaskCompletionSource();
+                dialog.Closed += (_, _) => closed.TrySetResult();
+                dialog.Show(owner);
+                await closed.Task;
+            }
+            else
+            {
+                await dialog.ShowDialog(owner);
+            }
         }
         finally
         {
+            MapCanvasControl.ViewOnly = false;
             MapCanvasControl.GhostRoom = null;
             if (session != null && origin != null)
             {
