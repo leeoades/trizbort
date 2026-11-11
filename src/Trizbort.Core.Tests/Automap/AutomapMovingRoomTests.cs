@@ -163,9 +163,11 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
     Joined(stop, foyer).ShouldBeFalse();
   }
 
-  [TestCase(false)]
-  [TestCase(true)]
-  public async Task WhatMovedTheCloset_IsThePegPulled_NotTheDoorOpenedAfter_AndPullingItAgainMovesYouToo(bool backUp)
+  [TestCase(false, "enter closet")]
+  [TestCase(true, "enter closet")]
+  [TestCase(true, "s")]
+  public async Task WhatMovedTheCloset_IsThePegPulled_NotTheDoorOpenedAfter_AndPullingItAgainMovesYouToo(bool backUp,
+    string backIn)
   {
     // Hollywood Hijinx: the door swings shut as the closet moves, so it's opened before going out. The join to the
     // stop is labelled with the peg pulled (down, and a join back up), and pulling it later moves the location.
@@ -182,7 +184,7 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
       ">out", "The closet door is closed.", "",
       ">open closet door", "The closet door squeals as it opens.", "",
       ">out", "Cellar", "",
-      ">enter closet", "Closet", "",
+      ">" + backIn, "Closet", "",
       ">look", "Closet", "A coat closet with pegs.", "",
       ">pull second peg", "The closet moves up, then stops.", "",
       ">out", "The closet door is closed.", "",
