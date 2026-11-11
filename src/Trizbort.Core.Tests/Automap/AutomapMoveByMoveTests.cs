@@ -359,6 +359,74 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task SplittingARoomYouJustCameInto_MovesTheWayInToTheNewRoom()
+  {
+    // two maze rooms alike: east from the hall looked like the maze north of it, but its south leads to a pit
+    var prompts = new SplitPrompts();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "Hall", "A grand hall.", "",
+      ">north", "Maze", "Twisty little passages.", "",
+      ">south", "Hall", "",
+      ">east", "Maze", "Twisty little passages.", "",
+      ">south", "Pit", "A deep pit.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    prompts.AskedAbout.ShouldBe("Maze");
+    Rooms().ShouldBe(new[] { "Hall", "Maze", "Maze (2)", "Pit" });
+    Joins().ShouldContain("Hall -> Maze");
+    Joins().ShouldContain("Hall -> Maze (2)");
+    Joins().ShouldContain("Maze (2) -> Pit");
+    Joins().ShouldNotContain(join => join.StartsWith("Maze -> Pit") || join.StartsWith("Maze -> Maze (2)"));
+    var hallToMaze = Project.Current.Elements.OfType<Connection>().Single(c =>
+      c.GetSourceRoom()?.Name == "Hall" && c.GetTargetRoom()?.Name == "Maze");
+    JoinWays.Of(hallToMaze).ShouldNotContain(way => way.IsDirection && way.Direction == MappableDirection.East);
+  }
+
+  [Test]
+  public async Task ThisIsADifferentRoom_SplitsTheRoomYouAreIn_OffTheWayYouCameIn()
+  {
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Hall", "A grand hall.", "",
+      ">north", "Maze", "Twisty little passages.", "",
+      ">south", "Hall", "",
+      ">east", "Maze", "Twisty little passages.", "",
+      ">"
+    });
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count >= 13);
+      await Task.Delay(200);
+      engine.CurrentRoom.Name.ShouldBe("Maze");
+      engine.CanSplitCurrentRoom.ShouldBeTrue();
+
+      (await engine.SplitCurrentRoomAsync()).ShouldBeTrue();
+
+      engine.CurrentRoom.Name.ShouldBe("Maze (2)");
+      Rooms().ShouldBe(new[] { "Hall", "Maze", "Maze (2)" });
+      Joins().ShouldContain("Hall -> Maze");
+      Joins().ShouldContain("Hall -> Maze (2)");
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
   public async Task SplittingTheRoomYouLeft_MakesItTwo_JoinedByWhatYouDidThere()
   {
     // the cupboard's way out led to the foyer; after pulling a peg it leads to a cellar

@@ -899,13 +899,7 @@ If you don't have a transcript already, you'll want to start one in your interpr
 
 By default, Trizbort assumes you will have verbose mode, or its equivalent, turned on in the interpreter before you start the transcript, so that each time you enter a room its name and description are displayed. Trizbort likes room descriptions because it can use them to differentiate between rooms with the same name, and fill out the [description](#help_rooms_edit_desc) of each room on the map.
 
-**Assume no two rooms have the same name.**
-
-Trizbort normally uses both room names and descriptions to identify a room; this allows it to cope with rooms whose descriptions change, and with rooms with the same name but different descriptions.
-
-If you're pretty sure that the game gives every room a unique name you can check this option; otherwise it's best to leave it unchecked.
-
-If you state that the transcript isn't verbose, Trizbort knows it won't be getting room descriptions all the time and so can't use them to differentiate between rooms with the same name, and so is forced to assume that every room has a unique name.
+With a verbose transcript, automap tells rooms with the same name apart by the map first (a join the way you went leads to the room), then by description, and asks when it can't tell (see [Disambiguating Between Rooms](#help_automap_disambig)). If the transcript isn't verbose, it won't be getting room descriptions every time, so it takes a room's name to mean that room.
 
 **Guess possible exits from a room by reading its initial description.**
 
@@ -947,7 +941,7 @@ You can freely interact with the canvas, and do anything else you like in Trizbo
 
 In Trizbort: Recast the automap controls are in a panel docked beside the map while automap runs:
 
-- **Where you are** shows the room automap thinks you're in. The dot beside it is green while automap is mapping, amber while it isn't changing the map, and grey when you're in the dark. On the map, that room has a blue dashed ring, which stays whatever you select. **Centre on Current Room** selects that room and glides the map to it. If automap has lost track of where you are, right-click the room you're in and choose **Automap: I'm Here**.
+- **Where you are** shows the room automap thinks you're in. The dot beside it is green while automap is mapping, amber while it isn't changing the map, and grey when you're in the dark. On the map, that room has a blue dashed ring, which stays whatever you select. **Centre on Current Room** selects that room and glides the map to it. If automap has lost track of where you are, right-click the room you're in and choose **Automap: I'm Here**. If automap took you to be in a room already on the map, but it's really another with the same name (its exits go elsewhere), right-click it and choose **Automap: This Is a Different Room**: automap adds the room ("Maze (2)"), moves the way you came in over to it, and carries on from there. The same happens when you choose **Split** in the question automap asks when a known way out now leads somewhere else, unless you did something in the room first (pulled a peg in a lift), when the two are joined by what you did.
 - **Transcript** moves through the game. **Next Move** (F10) plays one move and pauses; **Previous Move** (F9) goes back a move, leaving the map as it is, so you can step through part of the game again; and **Pause** stops before the next move while automap is playing. The game screen below shows the game so far; click it for a larger window you can copy text from.
 - **Play to the End** (F5), at the bottom of the panel, plays every move left without pausing, then follows the game as it goes on. With 20 or more moves left it asks first.
 - **Mapping** chooses between **Mapping** (adding rooms and joins as you go) and **Tracking only** (following where you are without changing the map). Tracking only lets you step back and forward to check automap follows the rooms you expect; fix the map if not, then switch back to Mapping, and it maps on from the next room it sees. The panel also says when automap isn't mapping because you're in a room marked Don't Automap From Here, or in the dark.
@@ -997,7 +991,7 @@ Trizbort recognises room names in the transcript by applying a series of rules w
 
 Trizbort: Recast recognises short grid-reference names such as `Y2` and quoted headings such as `At "Y2"`. It keeps comma qualifiers in names such as `Garden, north` and `Maze of Twisty Little Passages, all different`, while still stripping positional decorations such as `, on the bed`.
 
-In Colossal Cave, the "all different" maze rooms actually share the heading `Maze`; their descriptions differ. To map them separately, use a verbose transcript, leave **Assume no two rooms have the same name** unchecked, and choose **A New Room** when a new maze description appears in the disambiguation dialog. On a later visit, a description with the same first sentence (ignoring case) reuses that room. Text after the first sentence can change, such as a door being open, without automap asking again.
+In Colossal Cave, the "all different" maze rooms actually share the heading `Maze`; their descriptions differ. To map them separately, use a verbose transcript and choose **<Add a new room>** when a new maze description appears in the disambiguation dialog. On a later visit, a description with the same first sentence (ignoring case) reuses that room. Text after the first sentence can change, such as a door being open, without automap asking again.
 
 Since Trizbort identifies rooms purely by name (and, if possible, description), geography which is intentionally confusing to the player (such as mazes where each room is called "Maze" with the description "A room in a maze") will not be mapped well by Trizbort. Likewise for games which have multiple locations called "Alley", "Cupboard", etc.
 

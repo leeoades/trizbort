@@ -38,11 +38,6 @@
                         <CheckBox x:Name="VerboseCheck" Content="Treat transcript as _VERBOSE; expect room descriptions."
                                   IsChecked="{Binding VerboseTranscript}" />
 
-                        <CheckBox Content="_Assume no two rooms have the same name."
-                                  Margin="16,0,0,0"
-                                  IsEnabled="{Binding IsAssumeRoomsWithSameNameEnabled}"
-                                  IsChecked="{Binding AssumeRoomsWithSameNameAreSameRoom}" />
-
                         <CheckBox Content="_Guess possible exits from a room by reading its initial description."
                                   IsChecked="{Binding GuessExits}" />
 

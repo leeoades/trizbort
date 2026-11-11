@@ -12,6 +12,24 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Added
+
+- **Automap: This Is a Different Room** (the room's right-click menu, or Project > Automap): when automap took you
+  to be in a room already on the map but it's another with the same name (its exits go elsewhere), it adds the
+  room ("Maze (2)"), moves the way you came in over to it, and carries on from there. One undo step.
+
+### Changed
+
+- **Split** in the question automap asks when a known way out leads somewhere new now does the same, moving the way
+  you came in over to the new room, unless you did something in the room first (pulled a peg in a lift): then, as
+  before, the two are joined by what you did.
+
+### Removed
+
+- The automap option **Assume no two rooms have the same name.** Automap now always tells rooms with the same name
+  apart by the map, then by description, asking when it can't tell; with a transcript that isn't verbose it still
+  takes a name to mean that room. The setting is ignored if it's in your settings file.
+
 ## [0.12.0-beta] - 2026-11-10
 
 This beta is about **automap understanding the places games play tricks with**: rooms that share a name, rooms

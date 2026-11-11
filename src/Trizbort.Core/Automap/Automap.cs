@@ -613,10 +613,6 @@ public sealed class Automap : IAutomapController
       // otherwise the user has to disambiguate potentially without descriptions, and very frequently.
       return true;
 
-    if (_settings.AssumeRoomsWithSameNameAreSameRoom)
-      // ignore the description
-      return true;
-
     if (string.IsNullOrEmpty(description))
       // a brief revisit (name only): it may be this room; a single candidate is taken as it
       return null;
@@ -1054,6 +1050,10 @@ public sealed class Automap : IAutomapController
         // several rooms sharing a name needn't be asked about.
         RefreshLastKnownRoom();
         await ChangeStopAsync(roomName, token);
+        // how the player came here, for "this is a different room" (SplitOffArrival)
+        var arrivedFrom = _lastKnownRoom;
+        var arrivedBy = _lastMoveDirection;
+        var arrivedByJourney = _lastJourneyCommand;
         var room = VariantRoom(roomName, roomDescription);
         _skipHeading = false;
         if (room == null)
@@ -1176,10 +1176,7 @@ public sealed class Automap : IAutomapController
                     // the room the player left is a second place like it ("Cupboard (2)", down the lift), reached
                     // from the first by what they did there; the way out joins the second to the new room
                     var first = _lastKnownRoom;
-                    var second = _canvas.CreateRoom(first, SplitName(first.Name));
-                    foreach (var description in first.Descriptions) second.AddDescription(description);
-                    second.IsDark = first.IsDark;
-                    _canvas.ConnectByCommand(first, second, _doneInRoom ?? UnmappedWay);
+                    var second = SplitRoom(first);
                     room = _canvas.CreateRoom(second, _lastMoveDirection.Value, roomName, line);
                     _canvas.Connect(second, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
                     Trace("{0}: {1} split; {2} is {3} from {4}.", FormatTranscriptLineForDisplay(line), first.Name,
@@ -1310,6 +1307,10 @@ public sealed class Automap : IAutomapController
         // but we won't join them up to this room.
         // we might end up caring if, for example, the user gives multiple commands at one prompt,
         // or they're moved to one room and then teleported to another.
+        if (_lastKnownRoom != null && _lastKnownRoom != arrivedFrom)
+          _arrival = arrivedFrom != null && (arrivedBy != null || arrivedByJourney != null) && !_suspended
+            ? new Arrival(arrivedFrom, arrivedBy, arrivedByJourney, _lastKnownRoom, roomDescription)
+            : null;
         _lastMoveDirection = null;
         _lastJourneyCommand = null;
       }
@@ -1527,10 +1528,7 @@ public sealed class Automap : IAutomapController
       }
       case AutomapSameDirectionResult.Split:
       {
-        var second = _canvas.CreateRoom(here, SplitName(here.Name));
-        foreach (var description in here.Descriptions) second.AddDescription(description);
-        second.IsDark = here.IsDark;
-        _canvas.ConnectByCommand(here, second, _doneInRoom ?? UnmappedWay);
+        var second = SplitRoom(here);
         _canvas.Connect(second, direction, room, _settings.AssumeTwoWayConnections);
         Trace("{0}: {1} split; {2} is {3} from {4}.", FormatTranscriptLineForDisplay(line), here.Name, room.Name,
           direction.ToString().ToLower(), second.Name);
@@ -1657,6 +1655,107 @@ public sealed class Automap : IAutomapController
   private string _doneInRoom;
 
   /// <summary>"Cupboard (2)" for "Cupboard", or the next number free.</summary>
+  /// <summary>How the player last came into a room: from where, which way, and what the game showed.</summary>
+  private sealed record Arrival(Room From, MappableDirection? Direction, string Journey, Room To, string Description);
+
+  private Arrival _arrival;
+
+  /// <summary>
+  ///   Splits <paramref name="here" />, the room the player left, into two places alike ("Cupboard (2)"). When
+  ///   something was done there first ("pull peg": a lift), the second is reached from the first by it. Otherwise
+  ///   automap took the player to be in a room already on the map when it was another with the same name: the way
+  ///   they came in now leads to the second (<see cref="SplitOffArrival" />).
+  /// </summary>
+  private Room SplitRoom(Room here)
+  {
+    if (_doneInRoom == null && SplitOffArrival(here) is { } different) return different;
+    var second = _canvas.CreateRoom(here, SplitName(here.Name));
+    foreach (var description in here.Descriptions) second.AddDescription(description);
+    second.IsDark = here.IsDark;
+    _canvas.ConnectByCommand(here, second, _doneInRoom ?? UnmappedWay);
+    return second;
+  }
+
+  /// <summary>
+  ///   <paramref name="here" /> isn't the room automap took it for, but another with its name: makes that room
+  ///   ("Maze (2)", with what the game showed on the way in), and moves the way the player came in over to it, taking
+  ///   it off the join to <paramref name="here" /> (and the join too, when nothing seen is left on it). Returns the new
+  ///   room, or null when the way in isn't known.
+  /// </summary>
+  private Room SplitOffArrival(Room here)
+  {
+    var arrival = _arrival;
+    if (arrival == null || here == null || _canvas.ResolveRoom(arrival.To) != here) return null;
+    var from = _canvas.ResolveRoom(arrival.From);
+    if (from == null || from == here) return null;
+
+    var room = _canvas.CreateRoom(here, SplitName(here.Name));
+    if (!string.IsNullOrWhiteSpace(arrival.Description)) room.AddDescription(arrival.Description);
+    room.IsDark = here.IsDark;
+    if (arrival.Direction is { } direction)
+    {
+      _canvas.ForgetWay(from, direction, here);
+      DropJoinIfNothingSeen(from, here);
+      _canvas.Connect(from, direction, room, _settings.AssumeTwoWayConnections);
+    }
+    else
+    {
+      foreach (var join in JoinsBetween(from, here))
+        if (JoinWays.Of(join).All(way => !way.Seen || (way.IsCommand && Matches(way.Text, arrival.Journey))))
+          Trizbort.Domain.Application.Project.Current.Elements.Remove(join);
+      _canvas.ConnectByCommand(from, room, arrival.Journey);
+    }
+
+    _arrival = arrival with { To = room };
+    return room;
+
+    static bool Matches(string one, string two) =>
+      string.Equals(one?.Trim(), two?.Trim(), StringComparison.OrdinalIgnoreCase);
+  }
+
+  private static List<Connection> JoinsBetween(Room one, Room two) =>
+    one.GetConnections().Where(join =>
+      (join.GetSourceRoom() == one && join.GetTargetRoom() == two) ||
+      (join.GetSourceRoom() == two && join.GetTargetRoom() == one)).Distinct().ToList();
+
+  /// <summary>Removes joins between the two rooms that only automap's assumptions are left on.</summary>
+  private static void DropJoinIfNothingSeen(Room one, Room two)
+  {
+    foreach (var join in JoinsBetween(one, two))
+      if (!JoinWays.Of(join).Any(way => way.Seen))
+        Trizbort.Domain.Application.Project.Current.Elements.Remove(join);
+  }
+
+  /// <summary>
+  ///   Whether the room automap has the player in can be split off as a different room (<see cref="SplitCurrentRoomAsync" />):
+  ///   the way they came in is known.
+  /// </summary>
+  public bool CanSplitCurrentRoom =>
+    Running && !_suspended && _arrival != null && CurrentRoom is { } here && _canvas.ResolveRoom(_arrival.To) == here &&
+    _canvas.ResolveRoom(_arrival.From) is { } from && from != here;
+
+  /// <summary>
+  ///   "This is a different room": the room automap has the player in isn't the one on the map with its name, but
+  ///   another (its exits go elsewhere). Makes the new room ("Maze (2)"), moves the way the player came in over to it,
+  ///   and carries on from there. One undo step. Returns false when the way in isn't known.
+  /// </summary>
+  public async Task<bool> SplitCurrentRoomAsync()
+  {
+    if (!CanSplitCurrentRoom) return false;
+    var here = CurrentRoom;
+    Room room;
+    using (await BeginBatchAsync("Automap: a different " + here.Name, CancellationToken.None))
+      room = SplitOffArrival(here);
+    if (room == null) return false;
+
+    _lastKnownRoom = room;
+    _doneInRoom = null;
+    _pendingStubRemoval = null;
+    _canvas.SelectRoom(room);
+    Status = $"Automap: you're in {room.Name}, not {here.Name}.";
+    return true;
+  }
+
   private string SplitName(string name)
   {
     var names = new HashSet<string>(
@@ -2289,7 +2388,7 @@ public sealed class Automap : IAutomapController
     details.AppendLine("Automap error");
     details.AppendLine("Transcript: " + _settings.FileName);
     details.AppendLine(
-      $"Settings: verbose transcript {_settings.VerboseTranscript}, same name = same room {_settings.AssumeRoomsWithSameNameAreSameRoom}, " +
+      $"Settings: verbose transcript {_settings.VerboseTranscript}, " +
       $"two-way connections {_settings.AssumeTwoWayConnections}, guess exits {_settings.GuessExits}, " +
       $"continue transcript {_settings.ContinueTranscript}, single step {_settings.SingleStep}");
     details.AppendLine("Current room: " + (_lastKnownRoom?.Name ?? "(none)"));
@@ -2353,9 +2452,6 @@ public sealed class Automap : IAutomapController
     InitializeRun(canvas, settings);
     using var tokenSource = new CancellationTokenSource();
     _tokenSource = tokenSource;
-    Debug.Assert(
-      _settings.AssumeRoomsWithSameNameAreSameRoom || _settings.VerboseTranscript,
-      "Must assume rooms with same name are same room unless transcript is verbose.");
     Status = "Automapping has started.";
     var ownsRun = false;
     try
@@ -2465,9 +2561,6 @@ public sealed class Automap : IAutomapController
     InitializeRun(canvas, settings);
     using var tokenSource = new CancellationTokenSource();
     _tokenSource = tokenSource;
-    Debug.Assert(
-      _settings.AssumeRoomsWithSameNameAreSameRoom || _settings.VerboseTranscript,
-      "Must assume rooms with same name are same room unless transcript is verbose.");
     Status = "Automapping has started.";
 
     // the transcript, reopened when automap goes back a move

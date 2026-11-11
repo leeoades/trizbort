@@ -308,7 +308,6 @@ public class AutomapPromptDialogTests
         var settings = AutomapSettings.Default;
         settings.FileName = _transcriptPath;
         settings.VerboseTranscript = true;
-        settings.AssumeRoomsWithSameNameAreSameRoom = false;
         settings.AssumeTwoWayConnections = true;
         settings.GuessExits = false;
 

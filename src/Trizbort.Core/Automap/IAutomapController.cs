@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Trizbort.Domain.Elements;
 
 namespace Trizbort.Automap;
@@ -47,6 +48,15 @@ public interface IAutomapController
   void SetCurrentRoom(Room room)
   {
   }
+
+  /// <summary>Whether the room automap has the player in can be split off as a different room: the way in is known.</summary>
+  bool CanSplitCurrentRoom => false;
+
+  /// <summary>
+  ///   "This is a different room": the room automap has the player in is another room with that name. Makes it, moves
+  ///   the way in over to it and carries on from there.
+  /// </summary>
+  Task<bool> SplitCurrentRoomAsync() => Task.FromResult(false);
 
   /// <summary>Stop mapping for now, following the player through rooms already on the map.</summary>
   void Suspend()

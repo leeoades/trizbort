@@ -107,7 +107,6 @@ public class AutomapIntegrationTests
         var original = AutomapSettings.Default;
         original.FileName = "/tmp/transcript.txt";
         original.VerboseTranscript = true;
-        original.AssumeRoomsWithSameNameAreSameRoom = true;
         original.GuessExits = false;
         original.AddObjectCommand = "take item";
         original.AddRegionCommand = "make zone";
@@ -120,8 +119,6 @@ public class AutomapIntegrationTests
         vm.FileName.ShouldBe("/tmp/transcript.txt");
         vm.CanStart.ShouldBeTrue();
         vm.VerboseTranscript.ShouldBeTrue();
-        vm.AssumeRoomsWithSameNameAreSameRoom.ShouldBeTrue();
-        vm.IsAssumeRoomsWithSameNameEnabled.ShouldBeTrue();
         vm.GuessExits.ShouldBeFalse();
         vm.AddObjectCommand.ShouldBe("take item");
         vm.AddRegionCommand.ShouldBe("make zone");
@@ -133,27 +130,12 @@ public class AutomapIntegrationTests
         exported.FileName.ShouldBe("/tmp/transcript.txt");
         exported.SingleStep.ShouldBeFalse();
         exported.VerboseTranscript.ShouldBeTrue();
-        exported.AssumeRoomsWithSameNameAreSameRoom.ShouldBeTrue();
         exported.GuessExits.ShouldBeFalse();
         exported.AddObjectCommand.ShouldBe("take item");
         exported.AddRegionCommand.ShouldBe("make zone");
         exported.ContinueTranscript.ShouldBeTrue();
         exported.AssumeTwoWayConnections.ShouldBeFalse();
         exported.AutoTidy.ShouldBeFalse();
-    }
-
-    [Test]
-    public void AutomapSettingsViewModel_VerboseTurnedBackOn_ResetsSameNameRooms()
-    {
-        var vm = new AutomapSettingsViewModel(new MockStorageService());
-        vm.Initialize(AutomapSettings.Default);
-
-        vm.VerboseTranscript = false;
-        vm.AssumeRoomsWithSameNameAreSameRoom.ShouldBeTrue();
-
-        vm.VerboseTranscript = true;
-        vm.IsAssumeRoomsWithSameNameEnabled.ShouldBeTrue();
-        vm.AssumeRoomsWithSameNameAreSameRoom.ShouldBeFalse();
     }
 
     [Test]
@@ -168,25 +150,6 @@ public class AutomapIntegrationTests
         vm.FileName = "transcript.txt";
         vm.CanStart.ShouldBeTrue();
         vm.IsFileNameMissing.ShouldBeFalse();
-    }
-
-    [Test]
-    public void AutomapSettingsViewModel_NonVerboseTranscript_ForcesSameNameRooms()
-    {
-        var storage = new MockStorageService();
-        var vm = new AutomapSettingsViewModel(storage);
-
-        vm.Initialize(AutomapSettings.Default);
-        vm.VerboseTranscript.ShouldBeTrue();
-        vm.IsAssumeRoomsWithSameNameEnabled.ShouldBeTrue();
-
-        vm.VerboseTranscript = false;
-        vm.IsAssumeRoomsWithSameNameEnabled.ShouldBeFalse();
-        vm.AssumeRoomsWithSameNameAreSameRoom.ShouldBeTrue();
-
-        var settings = vm.GetSettings();
-        settings.VerboseTranscript.ShouldBeFalse();
-        settings.AssumeRoomsWithSameNameAreSameRoom.ShouldBeTrue();
     }
 
     [Test]

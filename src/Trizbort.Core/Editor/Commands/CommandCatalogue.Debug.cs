@@ -123,6 +123,20 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "automap.differentRoom",
+      ContextOrder = 64, ContextGroup = "5-room",
+      Title = "This Is a _Different Room",
+      ContextTitle = "Automap: This Is a _Different Room",
+      MenuPath = "Project/Automap",
+      Group = "2-automap/4-where",
+      ContextTargets = ContextTargets.Room,
+      // automap took the player to be in a room on the map, but it's another with that name: split it off
+      CanExecuteFunc = s => s.Automap.IsRunning && s.Automap.CanSplitCurrentRoom && s.Selection.Count == 1 &&
+                            s.PrimaryRoom != null && s.PrimaryRoom == s.Automap.CurrentRoom,
+      ExecuteAsyncFunc = s => s.Automap.SplitCurrentRoomAsync()
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "automap.currentRoom",
       Title = "_Centre on Current Room",
       MenuPath = "Project/Automap",

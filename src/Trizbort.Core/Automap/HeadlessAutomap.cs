@@ -45,8 +45,6 @@ public static class HeadlessAutomap
     settings.FileName = transcriptPath;
     settings.SingleStep = false;
     settings.ContinueTranscript = false;
-    if (!settings.VerboseTranscript && !settings.AssumeRoomsWithSameNameAreSameRoom)
-      settings.AssumeRoomsWithSameNameAreSameRoom = true;
 
     try
     {
