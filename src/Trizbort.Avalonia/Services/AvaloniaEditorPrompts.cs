@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using Trizbort.Avalonia.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Automap;
 using Trizbort.Avalonia.ViewModels;
@@ -139,14 +140,36 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         var selection = session?.Selection.Items.ToList();
         if (session != null)
         {
+            var newRoomName = candidates.FirstOrDefault()?.Name ?? transcriptLine;
             viewModel.Preview = room =>
             {
-                if (room == null || !session.Project.Elements.Contains(room)) return;
-                session.Selection.Set(new List<Element> { room });
+                Trizbort.Domain.Misc.Vector centre;
+                if (room == null)
+                {
+                    // a new room: shown faintly where automap would put it
+                    var where = global::Trizbort.Automap.Automap.Instance.NewRoomPreview();
+                    if (where == null)
+                    {
+                        MapCanvasControl.GhostRoom = null;
+                        return;
+                    }
+
+                    MapCanvasControl.GhostRoom = (where.Value, newRoomName);
+                    session.Selection.Set(new List<Element>());
+                    centre = where.Value.Center;
+                }
+                else
+                {
+                    MapCanvasControl.GhostRoom = null;
+                    if (!session.Project.Elements.Contains(room)) return;
+                    session.Selection.Set(new List<Element> { room });
+                    centre = room.InnerBounds.Center;
+                }
+
                 // left of the middle, clear of the dialog on the right
                 var visible = session.Viewport.VisibleWorldBounds;
-                var centre = room.InnerBounds.Center;
                 session.Viewport.GlideTo(new Trizbort.Domain.Misc.Vector(centre.X + visible.Width / 5, centre.Y));
+                session.Invalidate(EditorChange.Adorners);
             };
             viewModel.Preview(viewModel.Selected?.Room);
         }
@@ -167,6 +190,7 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         }
         finally
         {
+            MapCanvasControl.GhostRoom = null;
             if (session != null && origin != null)
             {
                 session.Selection.Set(selection!.Where(element => session.Project.Elements.Contains(element)).ToList());

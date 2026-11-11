@@ -133,9 +133,9 @@ public class AutomapPromptTests : IsolatedProjectTests
   }
 
   [Test]
-  public async Task SameDirection_Cancel_StopsRun()
+  public async Task SameDirection_Cancel_MapsNothingForThatMove_AndCarriesOn()
   {
-    AddSameDirectionRooms(out _);
+    var first = AddSameDirectionRooms(out _);
     var prompts = new ScriptedPrompts();
     prompts.SameDirectionResults.Enqueue(AutomapSameDirectionResult.Cancel);
     var parser = CreateParser(prompts);
@@ -144,9 +144,10 @@ public class AutomapPromptTests : IsolatedProjectTests
 
     prompts.SameDirectionCalls.Count.ShouldBe(1);
     RoomNames().ShouldNotContain("Replacement Room");
-    RoomNames().ShouldNotContain("Third Room");
-    parser.Running.ShouldBeFalse();
-    parser.Status.ShouldBe("Automap is not running.");
+    // the next room is mapped, but joined to nothing: where it was reached from isn't known
+    var third = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "Third Room");
+    third.GetConnections().ShouldBeEmpty();
+    first.GetConnections().Count().ShouldBe(1);
   }
 
   [Test]

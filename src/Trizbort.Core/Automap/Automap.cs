@@ -597,6 +597,18 @@ public sealed class Automap : IAutomapController
   /// <summary>The user cancelled "which room?": nothing is mapped for this heading.</summary>
   private bool _skipHeading;
 
+  /// <summary>
+  ///   The user said to map nothing for this heading (Cancel): don't join the next room from the wrong one.
+  /// </summary>
+  private void SkipHeading(string line)
+  {
+    _skipHeading = false;
+    _lastKnownRoom = null;
+    _lastMoveDirection = null;
+    _lastJourneyCommand = null;
+    Trace("{0}: skipped, as the user asked.", FormatTranscriptLineForDisplay(line));
+  }
+
   /// <summary>The user was asked which room a heading meant, by <see cref="FindRoomAsync" />.</summary>
   private bool _askedWhichRoom;
 
@@ -1069,13 +1081,7 @@ public sealed class Automap : IAutomapController
 
         if (_skipHeading)
         {
-          // the user said it's none of these, and not a new room either: map nothing for it, and don't join the next
-          // room from the wrong one
-          _skipHeading = false;
-          _lastKnownRoom = null;
-          _lastMoveDirection = null;
-          _lastJourneyCommand = null;
-          Trace("{0}: skipped, as the user asked.", FormatTranscriptLineForDisplay(line));
+          SkipHeading(line);
           previousLine = line;
           continue;
         }
@@ -1095,9 +1101,9 @@ public sealed class Automap : IAutomapController
           token.ThrowIfCancellationRequested();
           if (decision == AutomapSameDirectionResult.Cancel)
           {
-            Stop();
-            token.ThrowIfCancellationRequested();
-            throw new OperationCanceledException(token);
+            SkipHeading(line);
+            previousLine = line;
+            continue;
           }
 
           RefreshLastKnownRoom();
@@ -1119,10 +1125,10 @@ public sealed class Automap : IAutomapController
             token.ThrowIfCancellationRequested();
             if (decision == AutomapSameDirectionResult.Cancel)
             {
-              // treat like a cancelled run
-              Stop();
-              token.ThrowIfCancellationRequested();
-              throw new OperationCanceledException(token);
+              // the user cancelled the question: map nothing for this move
+              SkipHeading(line);
+              previousLine = line;
+              continue;
             }
 
             // the user may have changed the map while the prompt was open
@@ -1160,6 +1166,13 @@ public sealed class Automap : IAutomapController
                   case AutomapSameDirectionResult.KeepBoth:
                     room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
                     _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    break;
+                  case AutomapSameDirectionResult.SamePlace:
+                    room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
+                    PutBeside(room, otherRoom, _lastMoveDirection.Value);
+                    _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    Trace("{0}: {1} and {2} are one place at different times.", FormatTranscriptLineForDisplay(line),
+                      otherRoom.Name, roomName);
                     break;
                   case AutomapSameDirectionResult.Moves:
                   {
@@ -1538,6 +1551,12 @@ public sealed class Automap : IAutomapController
           room.Name, direction.ToString().ToLower());
         break;
       }
+      case AutomapSameDirectionResult.SamePlace:
+        PutBeside(room, before, direction);
+        _canvas.Connect(here, direction, Near(here, room), _settings.AssumeTwoWayConnections);
+        Trace("{0}: {1} and {2} are one place at different times.", FormatTranscriptLineForDisplay(line), before.Name,
+          room.Name);
+        break;
       case AutomapSameDirectionResult.DifferentRoom:
       {
         var different = SplitOffArrival(here) ?? SplitRoom(here);
@@ -1675,6 +1694,22 @@ public sealed class Automap : IAutomapController
   private string _doneInRoom;
 
   /// <summary>"Cupboard (2)" for "Cupboard", or the next number free.</summary>
+  /// <summary>
+  ///   Puts <paramref name="room" /> right beside <paramref name="anchor" />, across the way the player went (east of it
+  ///   for north or south, south of it for east or west), close enough to read as a pair: one place at different
+  ///   times.
+  /// </summary>
+  private static void PutBeside(Room room, Room anchor, MappableDirection direction)
+  {
+    if (room == null || anchor == null || room == anchor) return;
+    var point = CompassPointHelper.GetCompassDirection(direction);
+    var across = point is CompassPoint.East or CompassPoint.West;
+    var gap = Trizbort.Setup.Settings.GridSize / 2f;
+    room.Position = Trizbort.Setup.Settings.Snap(across
+      ? new Vector(anchor.Position.X, anchor.Position.Y + anchor.Height + gap)
+      : new Vector(anchor.Position.X + anchor.Width + gap, anchor.Position.Y));
+  }
+
   /// <summary>How the player last came into a room: from where, which way, and what the game showed.</summary>
   private sealed record Arrival(Room From, MappableDirection? Direction, string Journey, Room To, string Description);
 
@@ -1746,6 +1781,35 @@ public sealed class Automap : IAutomapController
     foreach (var join in JoinsBetween(one, two))
       if (!JoinWays.Of(join).Any(way => way.Seen))
         Trizbort.Domain.Application.Project.Current.Elements.Remove(join);
+  }
+
+  /// <summary>
+  ///   Where a new room for the heading automap is asking about would go: the way the player went from the room they
+  ///   were in (beside it when that's not a compass way), the size of that room. Null when automap doesn't know
+  ///   where the player came from.
+  /// </summary>
+  public Rect? NewRoomPreview()
+  {
+    var from = CurrentRoom;
+    if (from == null) return null;
+    var point = _lastMoveDirection is { } direction
+      ? CompassPointHelper.GetCompassDirection(direction)
+      : CompassPoint.East;
+    var (dx, dy) = point switch
+    {
+      CompassPoint.North => (0, -1),
+      CompassPoint.NorthEast => (1, -1),
+      CompassPoint.East => (1, 0),
+      CompassPoint.SouthEast => (1, 1),
+      CompassPoint.South => (0, 1),
+      CompassPoint.SouthWest => (-1, 1),
+      CompassPoint.West => (-1, 0),
+      CompassPoint.NorthWest => (-1, -1),
+      _ => (1, 0)
+    };
+    var gap = Trizbort.Setup.Settings.PreferredDistanceBetweenRooms;
+    return new Rect(from.Position.X + dx * (from.Width + gap), from.Position.Y + dy * (from.Height + gap), from.Width,
+      from.Height);
   }
 
   /// <summary>

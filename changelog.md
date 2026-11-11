@@ -28,10 +28,17 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   you also say where you are now (the new room, the original, or somewhere else). A way taken for a loop (up from
   "In the Chimney" to what automap took for the same chimney) arrives in the new room. One undo step.
 - **Disambiguate Rooms** shows the room you pick on the map behind it, with the rooms around it, and puts the view
-  back afterwards. The dialog opens on the right of the window to leave the map in view.
+  back afterwards; **<Add a new room>** shows a faint dashed room where automap would put it. The dialog opens on the
+  right of the window to leave the map in view.
+- **The same place at different times** in the question automap asks when a known way out leads somewhere new (the
+  shaft bottom, then the closet come down into it): both joins stay, and the two rooms go side by side.
 
 ### Changed
 
+- The question automap asks when a known way out leads somewhere new lists its answers on the left and explains the
+  one picked on the right, with OK and Cancel. **'X' moves** and **Split** are now one answer, with a choice
+  underneath: a copy at each stop, or two rooms joined by what you did. **Cancel** maps nothing for that move, where
+  it used to stop automapping.
 - While automapping, the map keeps your room near the middle of the view, rather than just inside the edge, so you
   can see its exits and it isn't hidden by the minimap.
 

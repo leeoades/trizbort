@@ -389,6 +389,34 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task TheSamePlaceAtDifferentTimes_KeepsBothJoins_WithTheRoomsSideBySide()
+  {
+    // Hollywood Hijinx: south from the cellar is the shaft bottom, or the closet once it has come down
+    var prompts = new SplitPrompts { Answer = AutomapSameDirectionResult.SamePlace };
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "Cellar", "A musty cellar.", "",
+      ">south", "Shaft Bottom", "The bottom of a shaft.", "",
+      ">north", "Cellar", "",
+      ">south", "Closet", "A small closet.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    prompts.AskedAbout.ShouldBe("Cellar");
+    Joins().ShouldContain("Cellar -> Shaft Bottom");
+    Joins().ShouldContain("Cellar -> Closet");
+    var rooms = Project.Current.Elements.OfType<Room>().ToList();
+    var shaft = rooms.Single(room => room.Name == "Shaft Bottom");
+    var closet = rooms.Single(room => room.Name == "Closet");
+    closet.Position.Y.ShouldBe(shaft.Position.Y);
+    closet.Position.X.ShouldBeGreaterThan(shaft.Position.X);
+    (closet.Position.X - shaft.Position.X).ShouldBeLessThan(shaft.Width * 2);
+  }
+
+  [Test]
   public async Task ThisIsADifferentRoom_AfterAWayTakenForALoop_PutsTheNewRoomThatWay()
   {
     // Hollywood Hijinx: up the chimney to another "In the Chimney", which automap took for the same one (a loop)

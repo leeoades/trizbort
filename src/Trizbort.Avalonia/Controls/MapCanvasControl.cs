@@ -990,6 +990,17 @@ public class MapCanvasControl : Control
 
     #region Rendering Pipeline
 
+    /// <summary>
+    ///     A room that isn't on the map yet, drawn faintly with a dashed border where it would go: while automap asks
+    ///     whether the transcript means a new room. Null when there's none. Set from the UI thread, then redraw.
+    /// </summary>
+    public static (CoreRect Bounds, string Name)? GhostRoom { get; set; }
+
+    private static readonly IBrush _ghostFill = new SolidColorBrush(AvaloniaColor.FromArgb(60, 0x1E, 0x88, 0xE5));
+    private static readonly IPen _ghostPen =
+        new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x1E, 0x88, 0xE5)), 2, new DashStyle(new double[] { 3, 2 }, 0));
+    private static readonly IBrush _ghostText = new SolidColorBrush(AvaloniaColor.FromRgb(0x1E, 0x55, 0x9A));
+
     public override void Render(AvaloniaDrawingContext context)
     {
         base.Render(context);
@@ -1128,6 +1139,17 @@ public class MapCanvasControl : Control
             {
                 var marqueeRect = new AvaloniaRect(marquee.X, marquee.Y, marquee.Width, marquee.Height);
                 context.DrawRectangle(_marqueeFillBrush, _marqueeBorderPen, marqueeRect);
+            }
+
+            // 10. A room not on the map yet, shown while automap asks about it ("<Add a new room>")
+            if (GhostRoom is { } ghost)
+            {
+                var ghostRect = new AvaloniaRect(ghost.Bounds.X, ghost.Bounds.Y, ghost.Bounds.Width, ghost.Bounds.Height);
+                context.DrawRectangle(_ghostFill, _ghostPen, ghostRect, 6, 6);
+                var text = new FormattedText(ghost.Name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                    Typeface.Default, 12, _ghostText) { MaxTextWidth = Math.Max(1, ghostRect.Width - 8) };
+                context.DrawText(text, new Point(ghostRect.X + (ghostRect.Width - text.Width) / 2,
+                    ghostRect.Y + (ghostRect.Height - text.Height) / 2));
             }
         }
 
