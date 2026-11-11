@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Go Live**: stepping through move by move to the end of the transcript, then playing on in the game, no longer
+  leaves automap silently paused. A bar in the automap panel says the game has gone on, with a Go Live button to map
+  each move as you play.
 - **Automap: This Is a Different Room** (the room's right-click menu, or Project > Automap): when automap took you
   to be in a room already on the map but it's another with the same name (its exits go elsewhere), it adds the
   room ("Maze (2)") the way you went, moves the way you came in over to it, and carries on from there. It works for

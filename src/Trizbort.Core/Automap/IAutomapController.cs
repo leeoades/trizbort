@@ -49,6 +49,12 @@ public interface IAutomapController
   {
   }
 
+  /// <summary>
+  ///   Paused move by move before a command the game wrote while automap waited at the end of the transcript: the game
+  ///   is being played now (Play to the End follows it live).
+  /// </summary>
+  bool GameWentOn => false;
+
   /// <summary>Whether there's a move to play after where automap is in the transcript.</summary>
   bool HasNextMove => true;
 

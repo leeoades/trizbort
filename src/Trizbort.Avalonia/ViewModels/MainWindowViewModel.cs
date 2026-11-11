@@ -103,6 +103,10 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _automapTranscriptNote = string.Empty;
 
+    /// <summary>Paused move by move while the game goes on: the panel offers to go live.</summary>
+    [ObservableProperty]
+    private bool _isAutomapGameLive;
+
     /// <summary>Where automap is in the transcript: "Move 12 of 4,567" (transcript moves, not the game's).</summary>
     [ObservableProperty]
     private string _automapMoveCount = string.Empty;
@@ -161,8 +165,13 @@ public partial class MainWindowViewModel : ViewModelBase
         GoBackAutomapCommand.NotifyCanExecuteChanged();
         PlayNextMoveCommand.NotifyCanExecuteChanged();
         PlayToEndCommand.NotifyCanExecuteChanged();
+        IsAutomapGameLive = engine.MoveByMove && engine.GameWentOn;
         AutomapTranscriptNote = !engine.MoveByMove
             ? "Playing: following the game as it goes on."
+            : IsAutomapGameLive
+                ? string.IsNullOrWhiteSpace(engine.NextCommand)
+                    ? "The game has gone on: paused before its next move."
+                    : $"The game has gone on: paused before \"{engine.NextCommand}\"."
             : string.IsNullOrWhiteSpace(engine.NextCommand)
                 ? "Paused before the next move."
                 : $"Paused before \"{engine.NextCommand}\".";

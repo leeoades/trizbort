@@ -83,6 +83,44 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Test]
+  public async Task MoveByMove_AtTheEnd_WhenTheGameGoesOn_SaysSo_AndPlayToEndFollowsItLive()
+  {
+    // a new game, move by move left on: the player types look in the game
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, ">look\nHall\nA grand hall. A door leads north.\n\n>");
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    settings.MoveByMove = true;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.NextCommand == "look");
+      engine.GameWentOn.ShouldBeFalse();
+      engine.PlayNextMove();
+      await WaitFor(() => engine.Status == "Automapping is waiting for more text.");
+
+      File.AppendAllText(path, "north\nKitchen\nA small kitchen.\n\n>");
+      await WaitFor(() => engine.NextCommand == "north");
+      engine.GameWentOn.ShouldBeTrue();
+      engine.Status.ShouldContain("The game has gone on");
+      Rooms().ShouldBe(new[] { "Hall" });
+
+      engine.PlayToEnd();
+      await WaitFor(() => Rooms().Count == 2);
+      engine.GameWentOn.ShouldBeFalse();
+      engine.MoveByMove.ShouldBeFalse();
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
   private static List<string> Stubs() =>
     Project.Current.Elements.OfType<Connection>()
       .Select(connection => (source: connection.GetSourceRoom(out var from), target: connection.GetTargetRoom(out var to), from, to))

@@ -51,19 +51,31 @@ public sealed class Automap : IAutomapController
     token.ThrowIfCancellationRequested();
     if (Volatile.Read(ref _movesBack) > 0) return true;
     if (!_moveByMove) return false;
+    // the game went on while automap waited at the end of the transcript: it's being played now
+    var live = _waitedForGame;
+    _waitedForGame = false;
     if (TakeMove()) return false;
 
     NextCommand = command;
-    Status = string.IsNullOrWhiteSpace(command)
-      ? "Paused before the next move."
-      : "Paused before the next move: " + command;
+    GameWentOn = live;
+    Status = live
+      ? "The game has gone on: paused before " + (string.IsNullOrWhiteSpace(command) ? "its next move." : command)
+      : string.IsNullOrWhiteSpace(command)
+        ? "Paused before the next move."
+        : "Paused before the next move: " + command;
     while (_moveByMove && !TakeMove())
     {
-      if (Volatile.Read(ref _movesBack) > 0) return true;
+      if (Volatile.Read(ref _movesBack) > 0)
+      {
+        GameWentOn = false;
+        return true;
+      }
+
       await Task.Delay(50, token);
     }
 
     token.ThrowIfCancellationRequested();
+    GameWentOn = false;
     NextCommand = null;
     Status = "Automapping is processing the transcript.";
     return false;
@@ -167,6 +179,7 @@ public sealed class Automap : IAutomapController
       }
 
       Status = "Automapping is waiting for more text.";
+      _waitedForGame = true;
 
       await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
     }
@@ -2319,6 +2332,8 @@ public sealed class Automap : IAutomapController
     _gameName = string.Empty;
     _stepNow = false;
     _moveByMove = settings.MoveByMove;
+    _waitedForGame = false;
+    GameWentOn = false;
     _suspended = false;
     _pausedFrom = null;
     _dark = null;
@@ -2363,6 +2378,15 @@ public sealed class Automap : IAutomapController
 
   /// <summary>The command automap is paused before, while playing move by move; otherwise null.</summary>
   public string NextCommand { get; private set; }
+
+  /// <summary>
+  ///   Paused move by move before a command the game wrote while automap waited at the end of the transcript: the
+  ///   game is being played now, and automap won't map it until told to go on (Play to the End follows it live).
+  /// </summary>
+  public bool GameWentOn { get; private set; }
+
+  /// <summary>Automap waited at the end of the transcript for the game to go on (since the last move it paused before).</summary>
+  private volatile bool _waitedForGame;
 
   /// <summary>Play the next move of the transcript, then pause again.</summary>
   public void PlayNextMove()

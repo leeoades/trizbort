@@ -76,6 +76,19 @@
                     <!-- the transcript: moving through it -->
                     <StackPanel Spacing="6">
                         <TextBlock Classes="section" Text="TRANSCRIPT" />
+                        <!-- paused move by move, and the game has gone on: it's being played now -->
+                        <Border x:Name="GoLiveBar" IsVisible="{Binding IsAutomapGameLive}" CornerRadius="4"
+                                Padding="10,8" Background="#332196F3" BorderBrush="#2196F3" BorderThickness="1">
+                            <StackPanel Spacing="6">
+                                <TextBlock TextWrapping="Wrap" FontWeight="SemiBold"
+                                           Text="You're playing the game, but automap is paused." />
+                                <TextBlock Classes="small" TextWrapping="Wrap"
+                                           Text="Go live to map each move as you play it, or keep stepping with Next Move." />
+                                <Button x:Name="GoLiveButton" Content="Go Live" HorizontalAlignment="Left"
+                                        Command="{Binding PlayToEndCommand}"
+                                        ToolTip.Tip="Play the moves waiting, then follow the game as it goes on (F5)" />
+                            </StackPanel>
+                        </Border>
                         <TextBlock Classes="note" x:Name="TranscriptNote" Text="{Binding AutomapTranscriptNote}" />
                         <TextBlock Classes="small" x:Name="MoveCount" Text="{Binding AutomapMoveCount}"
                                    ToolTip.Tip="Moves in the transcript: each command typed at the prompt" />
