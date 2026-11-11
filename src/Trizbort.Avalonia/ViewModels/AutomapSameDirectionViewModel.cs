@@ -41,6 +41,8 @@ public class AutomapSameDirectionViewModel : ViewModelBase
     public string SplitLabel => $"Split '{FromName}' into separate rooms";
 
     public string SplitButtonText => SplitLabel.Replace("_", "__");
+    public string DifferentRoomLabel => $"This is a different '{FromName}'";
+    public string DifferentRoomButtonText => DifferentRoomLabel.Replace("_", "__");
     public string MovesLabel => $"'{FromName}' moves (a lift, a vehicle)";
     public string MovesButtonText => MovesLabel.Replace("_", "__");
 
@@ -61,6 +63,7 @@ public class AutomapSameDirectionViewModel : ViewModelBase
 
     public void Split() => Complete(AutomapSameDirectionResult.Split);
     public void Moves() => Complete(AutomapSameDirectionResult.Moves);
+    public void DifferentRoom() => Complete(AutomapSameDirectionResult.DifferentRoom);
 
     private void Complete(AutomapSameDirectionResult result)
     {

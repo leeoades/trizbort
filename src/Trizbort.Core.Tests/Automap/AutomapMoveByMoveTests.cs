@@ -344,6 +344,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   private sealed class SplitPrompts : IEditorPrompts
   {
     public string AskedAbout;
+    public AutomapSameDirectionResult Answer = AutomapSameDirectionResult.Split;
 
     public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, System.Threading.CancellationToken token = default) =>
       Task.FromResult(AutomapSameDirectionResult.KeepRoom1);
@@ -351,7 +352,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room from, Room existing, string newRoomName, System.Threading.CancellationToken token = default)
     {
       AskedAbout = from?.Name;
-      return Task.FromResult(AutomapSameDirectionResult.Split);
+      return Task.FromResult(Answer);
     }
 
     public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, System.Threading.CancellationToken token = default) =>
@@ -359,10 +360,10 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   }
 
   [Test]
-  public async Task SplittingARoomYouJustCameInto_MovesTheWayInToTheNewRoom()
+  public async Task ADifferentRoomYouJustCameInto_TakesTheWayIn_AndTheNewRoomJoinsIt()
   {
     // two maze rooms alike: east from the hall looked like the maze north of it, but its south leads to a pit
-    var prompts = new SplitPrompts();
+    var prompts = new SplitPrompts { Answer = AutomapSameDirectionResult.DifferentRoom };
     var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
     var lines = new[]
     {

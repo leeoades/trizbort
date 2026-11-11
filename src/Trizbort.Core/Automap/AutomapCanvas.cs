@@ -821,7 +821,7 @@ public class AutomapCanvas : IAutomapCanvas
     if (_session == null) return;
 
     _session.Selection.Set(new List<Element> { room });
-    _session.EnsureVisible(room);
+    _session.KeepInMiddle(room);
   }
 
   public IDisposable BeginBatch(string title)

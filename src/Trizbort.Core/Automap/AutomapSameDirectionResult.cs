@@ -18,5 +18,11 @@ public enum AutomapSameDirectionResult
   ///   of it (with its name) stands for it at the new stop, joined from it by what moved it, and the new room is joined
   ///   from the copy. From then on automap works out which stop the player is at from the way out.
   /// </summary>
-  Moves
+  Moves,
+
+  /// <summary>
+  ///   The room the player left isn't the one automap took it for, but another with its name: make that room ("Maze
+  ///   (2)"), move the way the player came into it over to it, and join the new room from it.
+  /// </summary>
+  DifferentRoom
 }

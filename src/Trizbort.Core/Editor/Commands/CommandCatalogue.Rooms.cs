@@ -153,6 +153,18 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "room.split",
+      ContextOrder = 63, ContextGroup = "5-room",
+      Title = "S_plit Room...",
+      MenuPath = "Edit/Rooms",
+      Group = "6-automap",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.SelectedRooms.Count == 1 && !s.SelectedRooms[0].IsReference &&
+                            RoomSplit.JoinsOf(s.SelectedRooms[0]).Count > 0,
+      ExecuteAsyncFunc = SplitRoomAsync
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "room.forceDark",
       Title = "_Force Darkness",
       MenuPath = "Edit/Rooms",
@@ -304,5 +316,35 @@ public sealed partial class CommandCatalogue
       CanExecuteFunc = s => s.SelectedRooms.Count == 2,
       ExecuteAsyncFunc = s => Run(() => swap(s))
     });
+  }
+
+  /// <summary>
+  ///   Split Room...: the room is two places with one name. Asks which joins go to the new room (the newest, automap's
+  ///   way in, to start with) and, while automapping, which room the player is in; then splits it, in one undo step.
+  /// </summary>
+  private static async Task SplitRoomAsync(EditorSession s)
+  {
+    var room = s.SelectedRooms.Count == 1 ? s.SelectedRooms[0] : null;
+    if (room == null || room.IsReference) return;
+    var joins = RoomSplit.JoinsOf(room);
+    if (joins.Count == 0) return;
+    var suggested = RoomSplit.Suggested(room);
+    RoomSplitWhere? where = s.Automap.IsRunning
+      ? s.Automap.CurrentRoom == room ? RoomSplitWhere.New : RoomSplitWhere.Neither
+      : null;
+    var choice = await s.Prompts.ChooseRoomSplitAsync(room, RoomSplit.SplitName(s.Project, room.Name), joins,
+      suggested == null ? new List<Connection>() : new List<Connection> { suggested }, where);
+    if (choice == null) return;
+
+    Room second = null;
+    s.Execute("Split " + room.Name, () => second = RoomSplit.Split(s.Project, room, choice.Moving));
+    if (second == null) return;
+    if (s.Automap.IsRunning)
+    {
+      if (choice.Where == RoomSplitWhere.New) s.Automap.SetCurrentRoom(second);
+      else if (choice.Where == RoomSplitWhere.Original) s.Automap.SetCurrentRoom(room);
+    }
+
+    s.Selection.Set(new List<Element> { second });
   }
 }

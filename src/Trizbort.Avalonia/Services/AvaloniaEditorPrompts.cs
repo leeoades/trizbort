@@ -132,9 +132,68 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         }
 
         var viewModel = new DisambiguateRoomsViewModel(transcriptLine, roomDescription, candidates);
+        // the room picked is shown on the map behind the dialog, with the rooms around it; the view and selection
+        // go back as they were afterwards
+        var session = App.Services?.GetService<ICommandService>()?.Session;
+        var origin = session?.Viewport.TargetOrigin;
+        var selection = session?.Selection.Items.ToList();
+        if (session != null)
+        {
+            viewModel.Preview = room =>
+            {
+                if (room == null || !session.Project.Elements.Contains(room)) return;
+                session.Selection.Set(new List<Element> { room });
+                // left of the middle, clear of the dialog on the right
+                var visible = session.Viewport.VisibleWorldBounds;
+                var centre = room.InnerBounds.Center;
+                session.Viewport.GlideTo(new Trizbort.Domain.Misc.Vector(centre.X + visible.Width / 5, centre.Y));
+            };
+            viewModel.Preview(viewModel.Selected?.Room);
+        }
+
         var dialog = new DisambiguateRoomsDialog { DataContext = viewModel };
-        await dialog.ShowDialog(owner);
+        if (session != null)
+        {
+            // on the right of the window, so the map shows the room picked
+            var scale = owner.RenderScaling;
+            dialog.WindowStartupLocation = WindowStartupLocation.Manual;
+            dialog.Position = new global::Avalonia.PixelPoint(
+                owner.Position.X + Math.Max(0, (int)((owner.Bounds.Width - dialog.Width - 24) * scale)),
+                owner.Position.Y + (int)(80 * scale));
+        }
+        try
+        {
+            await dialog.ShowDialog(owner);
+        }
+        finally
+        {
+            if (session != null && origin != null)
+            {
+                session.Selection.Set(selection!.Where(element => session.Project.Elements.Contains(element)).ToList());
+                session.Viewport.GlideTo(origin.Value);
+            }
+        }
+
         return viewModel.Result;
+    }
+
+    /// <summary>Split Room...: which joins go to the new room, and where the player is. Without a window, the suggestion.</summary>
+    public Task<RoomSplitChoice> ChooseRoomSplitAsync(Room room, string newName, IReadOnlyList<Connection> joins,
+        IReadOnlyCollection<Connection> ticked, RoomSplitWhere? where, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            if (owner == null)
+            {
+                return new RoomSplitChoice(ticked.ToList(), where ?? RoomSplitWhere.Neither);
+            }
+
+            var viewModel = new SplitRoomViewModel(room, newName, joins, ticked, where);
+            var dialog = new SplitRoomDialog { DataContext = viewModel };
+            await dialog.ShowDialog(owner);
+            return viewModel.Result!;
+        });
     }
 
     /// <summary>Tidy Map...: asks which rooms and which way. Without an owner window, takes the suggestion.</summary>

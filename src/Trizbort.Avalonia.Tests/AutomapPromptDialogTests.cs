@@ -232,7 +232,8 @@ public class AutomapPromptDialogTests
             DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" }
         };
         sameDirection.Show();
-        sameDirection.GetVisualDescendants().OfType<Button>().Count(button => button.IsVisible).ShouldBe(5);
+        sameDirection.GetVisualDescendants().OfType<Button>().Count(button => button.IsVisible).ShouldBe(6);
+        sameDirection.GetVisualDescendants().OfType<Button>().ShouldContain(button => (button.Content as string) == "This is a different 'Cupboard'");
         sameDirection.GetVisualDescendants().OfType<Button>().ShouldContain(button => (button.Content as string) == "Split 'Cupboard' into separate rooms");
         sameDirection.GetVisualDescendants().OfType<Button>().ShouldContain(button => (button.Content as string) == "'Cupboard' moves (a lift, a vehicle)");
         sameDirection.Close();

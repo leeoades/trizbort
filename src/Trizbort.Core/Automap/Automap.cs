@@ -1171,6 +1171,17 @@ public sealed class Automap : IAutomapController
                       stop.Name, roomName, _lastMoveDirection.Value.ToString().ToLower());
                     break;
                   }
+                  case AutomapSameDirectionResult.DifferentRoom:
+                  {
+                    // the room the player left is another with its name: the way in goes to it, and on from there
+                    var first = _lastKnownRoom;
+                    var different = SplitOffArrival(first) ?? SplitRoom(first);
+                    room = _canvas.CreateRoom(different, _lastMoveDirection.Value, roomName, line);
+                    _canvas.Connect(different, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    Trace("{0}: a different {1}; {2} is {3} from it.", FormatTranscriptLineForDisplay(line), first.Name,
+                      roomName, _lastMoveDirection.Value.ToString().ToLower());
+                    break;
+                  }
                   case AutomapSameDirectionResult.Split:
                   {
                     // the room the player left is a second place like it ("Cupboard (2)", down the lift), reached
@@ -1526,6 +1537,14 @@ public sealed class Automap : IAutomapController
           room.Name, direction.ToString().ToLower());
         break;
       }
+      case AutomapSameDirectionResult.DifferentRoom:
+      {
+        var different = SplitOffArrival(here) ?? SplitRoom(here);
+        _canvas.Connect(different, direction, Near(different, room), _settings.AssumeTwoWayConnections);
+        Trace("{0}: a different {1}; {2} is {3} from it.", FormatTranscriptLineForDisplay(line), here.Name, room.Name,
+          direction.ToString().ToLower());
+        break;
+      }
       case AutomapSameDirectionResult.Split:
       {
         var second = SplitRoom(here);
@@ -1661,14 +1680,11 @@ public sealed class Automap : IAutomapController
   private Arrival _arrival;
 
   /// <summary>
-  ///   Splits <paramref name="here" />, the room the player left, into two places alike ("Cupboard (2)"). When
-  ///   something was done there first ("pull peg": a lift), the second is reached from the first by it. Otherwise
-  ///   automap took the player to be in a room already on the map when it was another with the same name: the way
-  ///   they came in now leads to the second (<see cref="SplitOffArrival" />).
+  ///   Splits <paramref name="here" />, the room the player left, into two places alike ("Cupboard (2)"), the second
+  ///   reached from the first by what was done there ("pull peg": a lift).
   /// </summary>
   private Room SplitRoom(Room here)
   {
-    if (_doneInRoom == null && SplitOffArrival(here) is { } different) return different;
     var second = _canvas.CreateRoom(here, SplitName(here.Name));
     foreach (var description in here.Descriptions) second.AddDescription(description);
     second.IsDark = here.IsDark;

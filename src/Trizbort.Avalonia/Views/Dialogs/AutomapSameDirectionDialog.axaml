@@ -20,6 +20,9 @@
             <Button Classes="dialog-button" HorizontalAlignment="Stretch"
                     Content="Keep _Both" Click="OnKeepBothClick" />
             <Button Classes="dialog-button" HorizontalAlignment="Stretch"
+                    IsVisible="{Binding CanSplit}" Content="{Binding DifferentRoomButtonText}" Click="OnDifferentRoomClick"
+                    ToolTip.Tip="The room you left isn't the one on the map with its name, but another: add it, move the way you came into it over to it, and join the new room to it" />
+            <Button Classes="dialog-button" HorizontalAlignment="Stretch"
                     IsVisible="{Binding CanSplit}" Content="{Binding MovesButtonText}" Click="OnMovesClick"
                     ToolTip.Tip="The room you left moves, taking you with it (a lift, a car, a train): show it at this stop too, as a copy with its name, and keep track of which stop you're at from the way you go out" />
             <Button Classes="dialog-button" HorizontalAlignment="Stretch"

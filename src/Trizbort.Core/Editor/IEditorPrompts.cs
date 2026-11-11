@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Trizbort.Automap;
@@ -137,6 +138,15 @@ public interface IEditorPrompts
   ///   Opens a link in the default browser. Returns false when it could not be opened. Default implementation
   ///   returns false.
   /// </summary>
+  /// <summary>
+  ///   Split Room: which of <paramref name="room" />'s joins go to the new room (<paramref name="ticked" /> to start
+  ///   with), and, while automapping, which room the player is in (<paramref name="where" /> to start with; null
+  ///   doesn't ask). Null for cancel. Without a UI, takes the suggestion.
+  /// </summary>
+  Task<RoomSplitChoice> ChooseRoomSplitAsync(Room room, string newName, IReadOnlyList<Connection> joins,
+    IReadOnlyCollection<Connection> ticked, RoomSplitWhere? where, CancellationToken token = default) =>
+    Task.FromResult(new RoomSplitChoice(ticked?.ToList() ?? new List<Connection>(), where ?? RoomSplitWhere.Neither));
+
   Task<bool> OpenUriAsync(string uri, CancellationToken token = default)
   {
     return Task.FromResult(false);

@@ -64,4 +64,5 @@ public partial class AutomapSameDirectionDialog : Window
 
     private void OnSplitClick(object? sender, RoutedEventArgs e) => _viewModel?.Split();
     private void OnMovesClick(object? sender, RoutedEventArgs e) => _viewModel?.Moves();
+    private void OnDifferentRoomClick(object? sender, RoutedEventArgs e) => _viewModel?.DifferentRoom();
 }
