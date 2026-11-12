@@ -210,6 +210,7 @@ public sealed partial class CommandCatalogue
     });
 
     // Shapes (027). Primary+E is Ellipse (the legacy canvas wrongly set square corners).
+    RegisterResetObjectList(catalogue);
     RegisterShape(catalogue, "room.shape.square", "S_quare Corners", InputKey.H, RoomShape.SquareCorners, 53);
     RegisterShape(catalogue, "room.shape.ellipse", "_Ellipse", InputKey.E, RoomShape.Ellipse, 54);
     RegisterShape(catalogue, "room.shape.rounded", "_Rounded Edges", InputKey.R, RoomShape.RoundedCorners, 55);
@@ -318,6 +319,28 @@ public sealed partial class CommandCatalogue
   ///   Split Room...: the room is two places with one name. Asks which joins go to the new room (the newest, automap's
   ///   way in, to start with) and, while automapping, which room the player is in; then splits it, in one undo step.
   /// </summary>
+  /// <summary>Reset Object List Position: the selected rooms' object lists go back to automatic.</summary>
+  private static void RegisterResetObjectList(CommandCatalogue catalogue)
+  {
+    catalogue.Register(new EditorCommand
+    {
+      Id = "room.resetObjectList",
+      Title = "Reset Object List _Position",
+      MenuPath = "Edit/Rooms",
+      Group = "3-shape",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.SelectedRooms.Any(room => room.ObjectsPlaced),
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        var rooms = s.SelectedRooms.Where(room => room.ObjectsPlaced).ToList();
+        s.Execute("Reset object list position", () =>
+        {
+          foreach (var room in rooms) room.ResetObjectListPosition();
+        });
+      })
+    });
+  }
+
   /// <summary>
   ///   Move to a New Area...: the rooms selected, with the branches of the map hanging off them the user picks, move
   ///   together to clear space beside the map.

@@ -864,7 +864,9 @@ public static class ConnectionDrawingAdapter
         if (vertex?.Port?.Owner is not Room room) return false;
         if (string.IsNullOrWhiteSpace(ObjectList.FormatForDisplay(room.Objects))) return false;
         var bounds = room.InnerBounds;
-        return room.ObjectsPosition switch
+        // where it was last drawn: an automatic list moves out of the way
+        if (room.ObjectsDrawnInside) return false;
+        return room.ObjectsDrawnAt switch
         {
             CompassPoint.South => anchor.Y >= bounds.Center.Y,
             CompassPoint.North => anchor.Y <= bounds.Center.Y,

@@ -341,9 +341,9 @@ On the map, nested objects are drawn indented under the object that holds them, 
 
 Since you are only allowed one text orientation, there's no good and natural way to allow many objects in a room without spacing rooms out or enlarging them.
 
-The arrow buttons to the right of the object list in a room's Properties dialog indicate on which side of the room the list will appear on the map; they don't do anything else. On the map, Trizbort will automatically align the object list so that its nearest edges are flush with the room, to make it clearer which objects are in each room.
+**Where the object list goes.** A room's object list is *automatic* until you move it: it goes at the map's default spot (below the room, unless you change it in Map Settings), and if that spot would cross a join, another room or another room's object list, it moves to the first clear side (above, right, left, then the corners). Drag the object list on the map to put it anywhere you like, beside the room or, once the room is selected, inside it; it moves with the room from then on. **Room > Reset Object List Position** on the room's right-click menu (or **Reset** under Object List Position in Room Properties) makes it automatic again.
 
-If you click the button showing a box in the middle of the arrow buttons, the object list will appear inside the room, beneath the room's name and, if available, the subtitle, rather than outside the room. At first when you do this it might look on the canvas like the object list has vanished; this happens if your room isn't big enough for the object list. You may need to make the room bigger in order to see the whole list.
+To change the default spot for the whole map, open Map Settings, Rooms, and drag the sample object list next to the Default Room to one of nine spots: a side or corner of the room, or inside it. An object list inside a room sits at its bottom left, beneath the name; if the room isn't big enough, make it bigger to see the whole list.
 
 > **Tip**
 >
@@ -681,6 +681,7 @@ The Other tab gives you control over miscellaneous settings which don't fit into
 | --- | --- |
 | Darkness Stripe Size | The width and height of the stripe Trizbort draws in the top right corner of rooms the user labeled dark. |
 | Object List Offset | The distance, in pixels, between a room and its object list, assuming the object list is drawn outside the room. If the object list is drawn inside the room, this is the distance of the bottom left of the object list from the bottom left corner of the room. |
+| Object List Position | Where object lists go unless you've dragged them: drag the sample list to a side or corner of the Default Room, or inside it. A list moves to another side if this one would cross a join or another room. |
 | Resize/Drag Handle Size | This controls the size, in pixels, of [handles](#help_rooms_select) and [ports](#help_conn_ports). If you're zoomed in or out, handles and ports will be scaled accordingly. |
 | Snap to Element Distance | To make it easier to select and drag rooms and connections, Trizbort allows you a small margin for error when selecting or dragging rooms and connections. You can increase this value if you have trouble selecting or dragging, or decrease it if you are very precise when selecting and dragging. Using very large or very small values may make Trizbort notably harder to use. |
 

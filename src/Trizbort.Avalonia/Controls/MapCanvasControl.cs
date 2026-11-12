@@ -1301,24 +1301,75 @@ public class MapCanvasControl : Control
             ConnectionDrawingAdapter.RebuildSpatialIndex(elements, spatialLines, spatialVersion);
         }
 
-        foreach (var element in elements)
+        // automatic object lists keep clear of the joins, rooms and other lists around them
+        var previousObstacles = RoomDrawingAdapter.ObjectListObstacles;
+        if (drawRoomsAndLabels) RoomDrawingAdapter.ObjectListObstacles = ObjectListObstaclesFor(elements);
+        try
         {
-            var selected = selectedSet?.Contains(element) ?? false;
-            var hover = element == hoverElement;
+            foreach (var element in elements)
+            {
+                var selected = selectedSet?.Contains(element) ?? false;
+                var hover = element == hoverElement;
 
-            if (element is Room room)
-            {
-                if (drawRoomsAndLabels) room.DrawRoom(context, selected, hover);
-            }
-            else if (element is MapLabel label)
-            {
-                if (drawRoomsAndLabels) label.DrawMapLabel(context, selected, hover);
-            }
-            else if (element is Connection conn)
-            {
-                if (drawConnections) conn.DrawConnection(context, selected, hover, spatialLines, spatialVersion);
+                if (element is Room room)
+                {
+                    if (drawRoomsAndLabels) room.DrawRoom(context, selected, hover);
+                }
+                else if (element is MapLabel label)
+                {
+                    if (drawRoomsAndLabels) label.DrawMapLabel(context, selected, hover);
+                }
+                else if (element is Connection conn)
+                {
+                    if (drawConnections) conn.DrawConnection(context, selected, hover, spatialLines, spatialVersion);
+                }
             }
         }
+        finally
+        {
+            RoomDrawingAdapter.ObjectListObstacles = previousObstacles;
+        }
+    }
+
+    /// <summary>How far around a room an automatic object list looks for things in its way.</summary>
+    private const float ObjectListSearch = 320;
+
+    /// <summary>
+    ///     What an automatic object list near a room must keep clear of: the segments of the joins, and the other rooms
+    ///     and their object lists (where they were last drawn), within <see cref="ObjectListSearch" /> of it.
+    /// </summary>
+    private static Func<Room, (IReadOnlyList<Trizbort.Domain.Misc.LineSegment> Segments, IReadOnlyList<CoreRect> Obstacles)>
+        ObjectListObstaclesFor(IReadOnlyList<Element> elements)
+    {
+        var segments = new List<(Trizbort.Domain.Misc.LineSegment Segment, CoreRect Box)>();
+        foreach (var connection in elements.OfType<Connection>())
+        {
+            foreach (var segment in connection.GetSegments())
+            {
+                var left = Math.Min(segment.Start.X, segment.End.X);
+                var top = Math.Min(segment.Start.Y, segment.End.Y);
+                segments.Add((segment, new CoreRect(left, top,
+                    Math.Max(1, Math.Abs(segment.End.X - segment.Start.X)),
+                    Math.Max(1, Math.Abs(segment.End.Y - segment.Start.Y)))));
+            }
+        }
+
+        var rooms = elements.OfType<Room>().ToList();
+        return room =>
+        {
+            var near = room.InnerBounds;
+            near.Inflate(ObjectListSearch, ObjectListSearch);
+            var nearSegments = segments.Where(item => item.Box.IntersectsWith(near)).Select(item => item.Segment).ToList();
+            var obstacles = new List<CoreRect>();
+            foreach (var other in rooms)
+            {
+                if (ReferenceEquals(other, room)) continue;
+                if (other.InnerBounds.IntersectsWith(near)) obstacles.Add(other.InnerBounds);
+                if (other.ObjectListBounds is { } list && list.IntersectsWith(near)) obstacles.Add(list);
+            }
+
+            return (nearSegments, obstacles);
+        };
     }
 
     /// <summary>

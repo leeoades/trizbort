@@ -294,9 +294,86 @@ public class Room : Element, ISizeable
     }
   }
 
-  public bool ObjectsCustomPosition { get; set; }
-  public int ObjectsCustomPositionDown { get; set; }
-  public int ObjectsCustomPositionRight { get; set; }
+  public bool ObjectsCustomPosition {
+    get { return _objectsCustomPosition; }
+    set {
+      if (_objectsCustomPosition == value) return;
+      _objectsCustomPosition = value;
+      RaiseChanged();
+    }
+  }
+
+  public int ObjectsCustomPositionDown {
+    get { return _objectsCustomPositionDown; }
+    set {
+      if (_objectsCustomPositionDown == value) return;
+      _objectsCustomPositionDown = value;
+      RaiseChanged();
+    }
+  }
+
+  public int ObjectsCustomPositionRight {
+    get { return _objectsCustomPositionRight; }
+    set {
+      if (_objectsCustomPositionRight == value) return;
+      _objectsCustomPositionRight = value;
+      RaiseChanged();
+    }
+  }
+
+  private bool _objectsCustomPosition;
+  private int _objectsCustomPositionDown;
+  private int _objectsCustomPositionRight;
+  private bool _objectsPlaced;
+  private bool _objectsInside;
+
+  /// <summary>
+  ///   Whether the object list was put where it is by hand (dragged, or set in an older map): at
+  ///   <see cref="ObjectsPosition" /> (or inside, <see cref="ObjectsInside" />), nudged by the custom offsets. Otherwise
+  ///   it's automatic: at the map's default spot (<see cref="Settings.DefaultObjectsPosition" />), or the first other
+  ///   spot clear of joins, rooms and other object lists.
+  /// </summary>
+  public bool ObjectsPlaced {
+    get { return _objectsPlaced; }
+    set {
+      if (_objectsPlaced == value) return;
+      _objectsPlaced = value;
+      RaiseChanged();
+    }
+  }
+
+  /// <summary>An object list placed by hand inside the room (rather than beside it at <see cref="ObjectsPosition" />).</summary>
+  public bool ObjectsInside {
+    get { return _objectsInside; }
+    set {
+      if (_objectsInside == value) return;
+      _objectsInside = value;
+      RaiseChanged();
+    }
+  }
+
+  /// <summary>Reset Object List Position: back to automatic, at the map's default spot unless that's in the way.</summary>
+  public void ResetObjectListPosition()
+  {
+    ObjectsPlaced = false;
+    ObjectsInside = false;
+    ObjectsPosition = DefaultObjectsPosition;
+    ObjectsCustomPosition = false;
+    ObjectsCustomPositionDown = 0;
+    ObjectsCustomPositionRight = 0;
+  }
+
+  /// <summary>Where the object list was last drawn, on the map (null: not drawn). Set by the drawing; not saved.</summary>
+  [JsonIgnore]
+  public Rect? ObjectListBounds { get; set; }
+
+  /// <summary>The side the object list was last drawn at (automatic lists move). Set by the drawing; not saved.</summary>
+  [JsonIgnore]
+  public CompassPoint ObjectsDrawnAt { get; set; } = DefaultObjectsPosition;
+
+  /// <summary>Whether the object list was last drawn inside the room. Set by the drawing; not saved.</summary>
+  [JsonIgnore]
+  public bool ObjectsDrawnInside { get; set; }
 
   public CompassPoint ObjectsPosition {
     get { return _objectsPosition; }
@@ -967,6 +1044,12 @@ public class Room : Element, ISizeable
     ObjectsCustomPosition = element["objects"].Attribute("custom").ToBool();
     ObjectsCustomPositionRight = element["objects"].Attribute("customRight").ToInt();
     ObjectsCustomPositionDown = element["objects"].Attribute("customDown").ToInt();
+    // placed by hand: said so (this version), or set anywhere but the old default in an older map
+    var placed = element["objects"].Attribute("placed");
+    ObjectsPlaced = placed.Text != ""
+      ? placed.ToBool()
+      : ObjectsCustomPosition || ObjectsPosition != DefaultObjectsPosition;
+    ObjectsInside = element["objects"].Attribute("inside").ToBool();
   }
 
   public bool MatchDescription(string description)
@@ -1091,12 +1174,16 @@ public class Room : Element, ISizeable
 
     scribe.Attribute("ZOrder", ZOrder);
 
-    if (!string.IsNullOrEmpty(Objects) || ObjectsPosition != DefaultObjectsPosition)
+    if (!string.IsNullOrEmpty(Objects) || ObjectsPosition != DefaultObjectsPosition || ObjectsPlaced)
     {
       scribe.StartElement("objects");
 
       if (ObjectsPosition != DefaultObjectsPosition)
         scribe.Attribute("at", ObjectsPosition);
+
+      // older versions ignore these: a list placed inside the room shows at "at" (south) there
+      if (ObjectsPlaced) scribe.Attribute("placed", true);
+      if (ObjectsPlaced && ObjectsInside) scribe.Attribute("inside", true);
 
       if (ObjectsCustomPosition)
       {

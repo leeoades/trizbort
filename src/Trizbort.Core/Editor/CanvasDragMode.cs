@@ -9,5 +9,6 @@ public enum CanvasDragMode
   MoveElement,
   MoveResizeHandle,
   MovePort,
-  MoveWaypoint
+  MoveWaypoint,
+  MoveObjectList
 }

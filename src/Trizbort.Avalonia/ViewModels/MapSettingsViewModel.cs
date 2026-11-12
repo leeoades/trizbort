@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
+using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using Region = Trizbort.Domain.Misc.Region;
@@ -251,6 +252,14 @@ public partial class MapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private float _objectListOffsetFromRoom = 4.0f;
 
+    /// <summary>Where object lists go unless placed by hand: the side or corner (see <see cref="DefaultObjectsInside" />).</summary>
+    [ObservableProperty]
+    private CompassPoint _defaultObjectsPosition = CompassPoint.South;
+
+    /// <summary>Object lists go inside rooms unless placed by hand.</summary>
+    [ObservableProperty]
+    private bool _defaultObjectsInside;
+
     [ObservableProperty]
     private float _lineWidth = 2.0f;
 
@@ -367,6 +376,8 @@ public partial class MapSettingsViewModel : ViewModelBase
         DefaultRoomShape = Settings.DefaultRoomShape;
         DarknessStripeSize = Settings.DarknessStripeSize;
         ObjectListOffsetFromRoom = Settings.ObjectListOffsetFromRoom;
+        DefaultObjectsPosition = Settings.DefaultObjectsPosition;
+        DefaultObjectsInside = Settings.DefaultObjectsInside;
 
         LineWidth = Settings.LineWidth;
         ConnectionArrowSize = Settings.ConnectionArrowSize;
@@ -423,6 +434,8 @@ public partial class MapSettingsViewModel : ViewModelBase
         Settings.DefaultRoomShape = DefaultRoomShape;
         Settings.DarknessStripeSize = DarknessStripeSize;
         Settings.ObjectListOffsetFromRoom = ObjectListOffsetFromRoom;
+        Settings.DefaultObjectsPosition = DefaultObjectsPosition;
+        Settings.DefaultObjectsInside = DefaultObjectsInside;
 
         Settings.LineWidth = LineWidth;
         Settings.ConnectionArrowSize = ConnectionArrowSize;

@@ -14,6 +14,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Object lists out of the way, and draggable.** A room's object list goes at the map's default spot unless that
+  would cross a join, another room or another object list, when it moves to the first clear side. Drag a list on the
+  map to put it anywhere (inside the room too, once it's selected); **Reset Object List Position** makes it automatic
+  again. The default spot is set in Map Settings by dragging a sample list round a Default Room. Room Properties'
+  Position and Custom Position settings are replaced by this. Older maps keep any list placed away from the default.
 - **Move to a New Area...** (was Start a New Area Here) works on all the rooms selected, which move together keeping
   their layout, and offers to take along the parts of the map joined to the rest only through them (the house beyond
   the foyer), highlighting on the map every room that will move.

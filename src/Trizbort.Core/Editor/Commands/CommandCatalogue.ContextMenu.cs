@@ -14,6 +14,7 @@ public sealed partial class CommandCatalogue
     Arrange("room.setStart", "Roo_m", 51, "5-room");
     Arrange("room.setEnd", "Roo_m", 52, "5-room");
     Arrange("room.toggleMoves", "Roo_m", 53, "5-room");
+    Arrange("room.resetObjectList", "Roo_m", 53, "5-room");
     Arrange("room.shape.square", "S_hape", 54, "5-room");
     Arrange("room.shape.ellipse", "S_hape", 55, "5-room");
     Arrange("room.shape.rounded", "S_hape", 56, "5-room");
