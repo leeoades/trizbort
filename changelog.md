@@ -161,7 +161,7 @@ is still a beta: keep backups and [report problems](https://github.com/leeoades/
 
 - Disambiguate Rooms: choosing **<Add a new room>** scrolls the map to where it would go too (or to the room you
   came from, when automap can't say), and the map behind the question can be dragged, scrolled and zoomed while you
-  decide. It can't be changed until you answer.
+  decide. It can't be changed, and the menus, toolbar, automap panel and shortcuts are off, until you answer.
 - A moving room's way back ("pull second peg") goes on the other end of the join between its stops, which becomes
   two-way, rather than on a second join.
 - A dashed join for a command meets each room on the side facing the other, and turns as the rooms move, rather than

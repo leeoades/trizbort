@@ -194,12 +194,15 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
                 owner.Position.X + Math.Max(0, (int)((owner.Bounds.Width - dialog.Width - 24) * scale)),
                 owner.Position.Y + (int)(80 * scale));
         }
+        Action? unlock = null;
         try
         {
             if (session != null)
             {
-                // not modal: the map behind can be looked around while deciding (but not changed)
+                // not modal: the map behind can be looked around while deciding (but not changed); the menus,
+                // toolbar, automap panel and shortcuts are off until the question is answered
                 MapCanvasControl.ViewOnly = true;
+                unlock = LockAllButTheMap(owner);
                 var closed = new TaskCompletionSource();
                 dialog.Closed += (_, _) => closed.TrySetResult();
                 dialog.Show(owner);
@@ -212,6 +215,7 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         }
         finally
         {
+            unlock?.Invoke();
             MapCanvasControl.ViewOnly = false;
             MapCanvasControl.GhostRoom = null;
             if (session != null && origin != null)
@@ -222,6 +226,27 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         }
 
         return viewModel.Result;
+    }
+
+    /// <summary>
+    ///     Turns off everything in <paramref name="owner" /> but the map: the menu, the toolbar, the automap panel and
+    ///     the window's shortcuts. Returns how to turn them back on as they were.
+    /// </summary>
+    private static Action LockAllButTheMap(Window owner)
+    {
+        var controls = new List<Control>();
+        if (owner.FindControl<Control>("MainMenu") is { } menu) controls.Add(menu);
+        if (owner.FindControl<Control>("Toolbar") is { } toolbar) controls.Add(toolbar);
+        controls.AddRange(global::Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(owner).OfType<AutomapPanel>());
+        var wasEnabled = controls.Select(control => control.IsEnabled).ToList();
+        foreach (var control in controls) control.IsEnabled = false;
+        var keys = owner.KeyBindings.ToList();
+        owner.KeyBindings.Clear();
+        return () =>
+        {
+            for (var index = 0; index < controls.Count; index++) controls[index].IsEnabled = wasEnabled[index];
+            foreach (var binding in keys) owner.KeyBindings.Add(binding);
+        };
     }
 
     /// <summary>Split Room...: which joins go to the new room, and where the player is. Without a window, the suggestion.</summary>
