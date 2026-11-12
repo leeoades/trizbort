@@ -251,8 +251,16 @@ public static class JoinWays
           ways.Add(JoinWay.Written(atStart, w));
     }
 
-    // (a command join's commands written on its end labels are there already)
-    foreach (var command in DirectionWords.SplitLabel(commandJoin ? connection.AutomapCommand : connection.MidText))
+    // (a command join's commands written on its end labels are there already). A command join's command counts only
+    // while its label still says it: the user clearing the label (or changing it) is the user saying it's not so
+    var labels = new[] { connection.MidText, connection.StartText, connection.EndText }
+      .SelectMany(DirectionWords.SplitLabel).ToList();
+    var commands = commandJoin
+      ? DirectionWords.SplitLabel(connection.AutomapCommand)
+        .Where(command => labels.Contains(command, StringComparer.OrdinalIgnoreCase))
+        .Concat(DirectionWords.SplitLabel(connection.MidText))
+      : DirectionWords.SplitLabel(connection.MidText);
+    foreach (var command in commands)
       if (!ways.Any(way => way.IsCommand && string.Equals(way.Text, command, StringComparison.OrdinalIgnoreCase)))
         ways.Add(JoinWay.Typed(true, command));
     return ways;

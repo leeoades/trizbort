@@ -89,6 +89,48 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
     }
   }
 
+  [TestCase(false)]
+  [TestCase(true)]
+  public async Task AJoinLabelledWithTheWrongCommand_ClearedOrDeleted_AutomapAsksAgainNextTime(bool delete)
+  {
+    // an older map: the join down was labelled with the door opened after the peg was pulled
+    var prompts = new MovesPrompts { Answer = new WhatMovedItChoice("open closet door") };
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    string[] Trip(string look) => new[]
+    {
+      ">look", "Foyer", look, "",
+      ">enter closet", "Closet", "A coat closet with pegs.", "",
+      ">pull first peg", "The closet moves down, then stops.", "",
+      ">open closet door", "The closet door squeals as it opens.", "",
+      ">out", "Cellar", "A dank cellar.", "",
+      ">"
+    };
+    var first = new[] { ">look", "Cellar", "A dank cellar.", "", ">up", "Foyer", "An elegant foyer.", "",
+      ">enter closet", "Closet", "A coat closet with pegs.", "", ">out", "Foyer", "" };
+    await RunToEnd(engine, first.Concat(Trip("An elegant foyer.").Skip(4)).ToArray());
+    prompts.WhatMoved.Count.ShouldBe(1);
+    var closet = AllRooms().Single(room => room.Name == "Closet" && !room.IsReference);
+    var stop = AllRooms().Single(room => room.IsStop);
+    Connection Join() => Project.Current.Elements.OfType<Connection>().SingleOrDefault(connection =>
+      connection.GetSourceRoom() == closet && connection.GetTargetRoom() == stop);
+    Join().MidText.ShouldBe("open closet door");
+
+    // the user puts it right: clears the label, or deletes the join
+    if (delete) Project.Current.Elements.Remove(Join());
+    else Join().MidText = string.Empty;
+
+    prompts.Answer = null;
+    engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    await RunToEnd(engine, Trip("An elegant foyer."));
+
+    prompts.WhatMoved.Count.ShouldBe(2);
+    prompts.WhatMoved[1].Done.ShouldBe(new[] { "pull first peg", "open closet door" });
+    prompts.WhatMoved[1].Suggested.ShouldBe(0);
+    Join().ShouldNotBeNull().MidText.ShouldBe("pull first peg");
+    Project.Current.Elements.OfType<Connection>().Count(connection =>
+      connection.GetSourceRoom() == closet && connection.GetTargetRoom() == stop).ShouldBe(1);
+  }
+
   [Test]
   public async Task NothingThePlayerDid_MovedTheBus_TheJoinSaysSo_AndReadingAgainDoesntMoveYou()
   {

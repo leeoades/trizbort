@@ -161,6 +161,8 @@ is still a beta: keep backups and [report problems](https://github.com/leeoades/
 
 ### Fixed
 
+- Clearing the label of a join between a moving room's stops (or deleting the join) now makes automap ask what moved
+  it again next time; before, a cleared label still counted as the old command.
 - Disambiguate Rooms: choosing **<Add a new room>** scrolls the map to where it would go too (or to the room you
   came from, when automap can't say), and the map behind the question can be dragged, scrolled and zoomed while you
   decide. It can't be changed, and the menus, toolbar, automap panel and shortcuts are off, until you answer.
