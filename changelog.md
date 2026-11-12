@@ -14,6 +14,14 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Move to a New Area...** (was Start a New Area Here) works on all the rooms selected, which move together keeping
+  their layout, and offers to take along the parts of the map joined to the rest only through them (the house beyond
+  the foyer), highlighting on the map every room that will move.
+- **Bring 'X' to 'Y'...** on a split join's right-click menu: moves the room at one end beside the other, joined whole
+  again, with the parts of the map hanging off it if you like.
+- The right-click menus are grouped into submenus: Room, Shape, Swap, Rooms, Automap, Add and Arrange for a room; Line
+  and Label for a join. Don't Automap From Here is now **Automap > Disable Automap on This Room** (or Enable, once
+  it's off).
 - **Tidy the map as I go** in the automap panel: switch automap's tidying on or off while it runs (it was only in
   the Start Automap settings). The choice is remembered for the next run.
 - **What Moved It?**: when a room that moves turns up somewhere new, automap asks which of the commands you typed in

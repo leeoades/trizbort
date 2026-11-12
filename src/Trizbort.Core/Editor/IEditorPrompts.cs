@@ -148,6 +148,15 @@ public interface IEditorPrompts
     Task.FromResult(new RoomSplitChoice(ticked?.ToList() ?? new List<Connection>(), where ?? RoomSplitWhere.Neither));
 
   /// <summary>
+  ///   Move to a New Area (or bringing a room across a split join): which of the <paramref name="branches" /> of the
+  ///   map hanging off <paramref name="moving" /> go along too. <paramref name="title" /> says what's being done
+  ///   ("Move 'Foyer' to a New Area"). Null for cancel. Without a UI, takes them all.
+  /// </summary>
+  Task<IReadOnlyList<AreaBranch>> ChooseAreaBranchesAsync(string title, IReadOnlyList<Room> moving,
+    IReadOnlyList<AreaBranch> branches, CancellationToken token = default) =>
+    Task.FromResult(branches);
+
+  /// <summary>
   ///   A room that moves (<paramref name="room" />) has turned up somewhere new: you came out in
   ///   <paramref name="comeOutIn" />. Which of the commands <paramref name="done" /> in it moved it
   ///   (<paramref name="suggested" /> to start with; -1 for "nothing I did"), something else, or nothing the player did.

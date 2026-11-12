@@ -55,6 +55,12 @@ public sealed record EditorCommand
   /// <summary>A separator is drawn in the context menu whenever this changes between neighbouring items.</summary>
   public string ContextGroup { get; init; }
 
+  /// <summary>
+  ///   The right-click menu's submenu the command is in ("S_hape"), placed where its first command would be; null at
+  ///   the top. (On empty map, where the menu is short, there are no submenus.)
+  /// </summary>
+  public string ContextSubmenu { get; init; }
+
   public Func<EditorSession, bool> CanExecuteFunc { get; init; }
 
   public Func<EditorSession, bool> IsCheckedFunc { get; init; }

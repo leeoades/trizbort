@@ -268,6 +268,77 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         });
     }
 
+    /// <summary>
+    ///     Move to a New Area: which branches of the map go too. The rooms that would move are highlighted on the map
+    ///     behind the dialog, zoomed out to show them all; the map can be looked around but not changed meanwhile. The
+    ///     view and selection go back as they were afterwards. Without a window, all of them.
+    /// </summary>
+    public Task<IReadOnlyList<AreaBranch>> ChooseAreaBranchesAsync(string title, IReadOnlyList<Room> moving,
+        IReadOnlyList<AreaBranch> branches, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            if (owner == null) return branches;
+
+            var viewModel = new AreaBranchesViewModel(title, moving, branches);
+            var dialog = new AreaBranchesDialog { DataContext = viewModel };
+            var session = App.Services?.GetService<ICommandService>()?.Session;
+            if (session == null)
+            {
+                await dialog.ShowDialog(owner);
+                return viewModel.Result!;
+            }
+
+            var origin = session.Viewport.TargetOrigin;
+            var zoom = session.Viewport.ZoomFactor;
+            var selection = session.Selection.Items.ToList();
+            viewModel.Preview = rooms =>
+            {
+                var shown = rooms.Where(session.Project.Elements.Contains).Cast<Element>().ToList();
+                session.Selection.Set(shown);
+                if (shown.Count > 0)
+                {
+                    // zoomed out (never in) to show them all, left of the dialog on the right
+                    session.Viewport.FitToMap(shown);
+                    var fitted = Math.Min(session.Viewport.ZoomFactor, zoom);
+                    var centre = session.Viewport.Origin;
+                    session.Viewport.SetView(centre, fitted);
+                    var visible = session.Viewport.VisibleWorldBounds;
+                    session.Viewport.SetView(new Trizbort.Domain.Misc.Vector(centre.X + visible.Width / 6, centre.Y), fitted);
+                }
+
+                session.Invalidate(EditorChange.Adorners);
+            };
+            viewModel.Preview(viewModel.RoomsToMove());
+
+            var scale = owner.RenderScaling;
+            dialog.WindowStartupLocation = WindowStartupLocation.Manual;
+            dialog.Position = new global::Avalonia.PixelPoint(
+                owner.Position.X + Math.Max(0, (int)((owner.Bounds.Width - dialog.Width - 24) * scale)),
+                owner.Position.Y + (int)(80 * scale));
+
+            MapCanvasControl.ViewOnly = true;
+            var unlock = LockAllButTheMap(owner);
+            try
+            {
+                var closed = new TaskCompletionSource();
+                dialog.Closed += (_, _) => closed.TrySetResult();
+                dialog.Show(owner);
+                await closed.Task;
+            }
+            finally
+            {
+                unlock();
+                MapCanvasControl.ViewOnly = false;
+                session.Selection.Set(selection.Where(element => session.Project.Elements.Contains(element)).ToList());
+                session.Viewport.SetView(origin, zoom);
+            }
+
+            return viewModel.Result!;
+        });
+    }
+
     /// <summary>What moved it?: which command moved a room that moves. Without a window, the suggestion.</summary>
     public Task<WhatMovedItChoice> ChooseWhatMovedItAsync(Room room, string comeOutIn, IReadOnlyList<DoneInRoom> done,
         int suggested, CancellationToken token = default)
