@@ -10,6 +10,15 @@ namespace Trizbort.Avalonia.Tests;
 public class ContextMenuSettingsOrderTests
 {
     [TestCase(ContextTargets.Room)]
+    [TestCase(ContextTargets.Connection)]
+    [TestCase(ContextTargets.Label)]
+    public void SettingsCommands_AreOnlyOnTheEmptyMapsMenu(ContextTargets target)
+    {
+        var catalogue = AppCommands.CreateCatalogue(null);
+        catalogue.ForContext(target).Select(c => c.Id)
+            .ShouldNotContain(id => id == "edit.mapSettings" || id == "edit.mapTheme" || id == "edit.appSettings");
+    }
+
     [TestCase(ContextTargets.Empty)]
     public void SettingsCommands_AreContiguousAndLastInContextMenu(ContextTargets target)
     {

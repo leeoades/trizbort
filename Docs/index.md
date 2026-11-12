@@ -1175,8 +1175,7 @@ Trizbort also allows right-clicking for general editing. The menu keeps Properti
 - SET REGION will be available if any room is currently highlighted. It has a sub-menu, which can be accessed with the right arrow or by typing `S`. You can use the up/down arrows to choose a region.
 - DARK will be available if any room is currently highlighted. `K` will toggle it.
 - PROPERTIES will be available if any room or connector is currently highlighted. It will go to the last one. Typing `P` will open the resulting properties dialogue. If more than one room is highlighted, the last room highlighted will be shown. If no rooms are highlighted, you will get the last connector.
-- MAP SETTINGS will go to `Tools->Map Settings`. You can also type `M`.
-- APPLICATION SETTINGS will go to `Tools->Application Settings`. You can also type `A`.
+- MAP SETTINGS, MAP THEME and APPLICATION SETTINGS are on the menu you get by right-clicking an empty part of the map (not a room or a join). MAP SETTINGS will go to `Edit->Map Settings`; you can also type `M`. APPLICATION SETTINGS will go to `Edit->Application Settings`; you can also type `A`.
 
 ![Right-clicking for the context menu.](right_click.png)
 
