@@ -128,6 +128,19 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         }
     }
 
+    public void ConnectStops(Room source, Room target, string command)
+    {
+        if (Dispatcher.UIThread.CheckAccess()) _innerCanvas.ConnectStops(source, target, command);
+        else Dispatcher.UIThread.Invoke(() => _innerCanvas.ConnectStops(source, target, command));
+    }
+
+    public Trizbort.Domain.Misc.Rect? NewRoomBounds(Room existing, MappableDirection? direction)
+    {
+        return Dispatcher.UIThread.CheckAccess()
+            ? _innerCanvas.NewRoomBounds(existing, direction)
+            : Dispatcher.UIThread.Invoke(() => _innerCanvas.NewRoomBounds(existing, direction));
+    }
+
     public void RemoveRoom(Room otherRoom)
     {
         if (Dispatcher.UIThread.CheckAccess())

@@ -161,6 +161,8 @@ is still a beta: keep backups and [report problems](https://github.com/leeoades/
 
 ### Fixed
 
+- In the app (not the tests), the new-room preview in Disambiguate Rooms and the single two-way join between a
+  moving room's stops did nothing: the app's automap canvas didn't pass them on. They do now.
 - Clearing the label of a join between a moving room's stops (or deleting the join) now makes automap ask what moved
   it again next time; before, a cleared label still counted as the old command.
 - Disambiguate Rooms: choosing **<Add a new room>** scrolls the map to where it would go too (or to the room you
