@@ -123,6 +123,9 @@
                                          ToolTip.Tip="Follow where you are without changing the map" />
                         </StackPanel>
                         <TextBlock Classes="note" x:Name="MappingNote" Text="{Binding AutomapMappingNote}" />
+                        <CheckBox x:Name="AutoTidyBox" Content="Tidy the map as I go" FontSize="12"
+                                  IsChecked="{Binding IsAutomapAutoTidy}"
+                                  ToolTip.Tip="Rearrange the rooms near you after each move, making space for new rooms. Off: rooms stay where automap first puts them, and you tidy by hand (Tidy Map...)" />
                         <TextBlock Classes="small"
                                    Text="Tracking only lets you step back and forward through the transcript to check automap follows the rooms you expect. Fix the map if not, then switch back to Mapping." />
                     </StackPanel>

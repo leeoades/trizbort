@@ -2447,6 +2447,20 @@ public sealed class Automap : IAutomapController
   /// <summary>True while the run waits before each move (see <see cref="AutomapSettings.MoveByMove" />).</summary>
   public bool MoveByMove => _moveByMove;
 
+  /// <summary>
+  ///   Whether automap tidies the rooms around the player as it goes (and makes space for new rooms), or leaves
+  ///   rooms where they are put. Can be switched while automap runs; takes effect from the next move.
+  /// </summary>
+  public bool AutoTidy
+  {
+    get => _settings.AutoTidy;
+    set
+    {
+      _settings.AutoTidy = value;
+      if (_canvas != null) _canvas.MakeSpaceForNewRooms = value;
+    }
+  }
+
   /// <summary>The command automap is paused before, while playing move by move; otherwise null.</summary>
   public string NextCommand { get; private set; }
 

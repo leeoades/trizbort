@@ -63,6 +63,22 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isAutomapMoveByMove;
 
+    /// <summary>
+    ///     The automap panel's Tidy the map as I go: automap rearranges the rooms near the player after each move.
+    ///     Kept in the automap settings, so the next run starts the same way.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isAutomapAutoTidy = ApplicationSettingsController.AppSettings.Automap.AutoTidy;
+
+    partial void OnIsAutomapAutoTidyChanged(bool value)
+    {
+        AutomapEngine.Instance.AutoTidy = value;
+        var settings = ApplicationSettingsController.AppSettings.Automap;
+        if (settings.AutoTidy == value) return;
+        settings.AutoTidy = value;
+        ApplicationSettingsController.AppSettings.Automap = settings;
+    }
+
     /// <summary>True while mapping is suspended: automap follows the player but doesn't change the map.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsAutomapMapping))]
@@ -795,6 +811,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         IsAutomapActive = true;
         IsAutomapMoveByMove = settings.MoveByMove;
+        IsAutomapAutoTidy = settings.AutoTidy;
         AutomapStatusText = "Automapping has started.";
         ResetAutomapScreen();
         AutomapEngine.Instance.ScreenChanged += OnAutomapScreenChanged;

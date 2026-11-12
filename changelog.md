@@ -14,6 +14,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Tidy the map as I go** in the automap panel: switch automap's tidying on or off while it runs (it was only in
+  the Start Automap settings). The choice is remembered for the next run.
 - **What Moved It?**: when a room that moves turns up somewhere new, automap asks which of the commands you typed in
   it moved it (a question and your answer listed as one, "pull peg → second"), with its best guess picked; or
   **Nothing I did** (a bus that moves by itself: the join is labelled "(by itself)" and never followed), or something
