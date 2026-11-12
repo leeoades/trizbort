@@ -20,8 +20,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Bring 'X' to 'Y'...** on a split join's right-click menu: moves the room at one end beside the other, joined whole
   again, with the parts of the map hanging off it if you like.
 - The right-click menus are grouped into submenus: Room, Shape, Swap, Rooms, Automap, Add and Arrange for a room; Line
-  and Label for a join. Map Settings, Map Theme and Application Settings are only on the empty map's right-click
-  menu, not a room's or a join's. Don't Automap From Here is now **Automap > Disable Automap on This Room** (or Enable, once
+  and Label for a join. Map Settings and Map Theme are only on the empty map's right-click menu, not a room's or
+  a join's, and Application Settings is on no right-click menu (it's on the Edit menu). Don't Automap From Here is now **Automap > Disable Automap on This Room** (or Enable, once
   it's off).
 - **Tidy the map as I go** in the automap panel: switch automap's tidying on or off while it runs (it was only in
   the Start Automap settings). The choice is remembered for the next run.

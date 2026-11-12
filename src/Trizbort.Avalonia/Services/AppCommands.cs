@@ -153,8 +153,7 @@ public static class AppCommands
             MenuPath = "Edit",
             Group = "4-settings",
             Gestures = new[] { new KeyGesture(InputKey.OemComma, primary) },
-            ContextTargets = ContextTargets.Empty,
-            ContextOrder = 92, ContextGroup = "9-settings",
+            // not on any right-click menu: it's about the app, not the map (Edit menu, or Ctrl+,)
             ExecuteAsyncFunc = Run(() => vm!.ShowAppSettingsAsync())
         });
 

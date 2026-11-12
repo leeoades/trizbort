@@ -19,6 +19,13 @@ public class ContextMenuSettingsOrderTests
             .ShouldNotContain(id => id == "edit.mapSettings" || id == "edit.mapTheme" || id == "edit.appSettings");
     }
 
+    [Test]
+    public void ApplicationSettings_IsOnNoRightClickMenu()
+    {
+        AppCommands.CreateCatalogue(null).ForContext(ContextTargets.Any).Select(c => c.Id)
+            .ShouldNotContain("edit.appSettings");
+    }
+
     [TestCase(ContextTargets.Empty)]
     public void SettingsCommands_AreContiguousAndLastInContextMenu(ContextTargets target)
     {
@@ -31,11 +38,11 @@ public class ContextMenuSettingsOrderTests
             .Select(x => x.Command)
             .ToList();
 
-        var settingsIds = new[] { "edit.mapSettings", "edit.mapTheme", "edit.appSettings" };
-        ordered.Skip(ordered.Count - 3).Select(c => c.Id).ShouldBe(settingsIds);
+        var settingsIds = new[] { "edit.mapSettings", "edit.mapTheme" };
+        ordered.Skip(ordered.Count - 2).Select(c => c.Id).ShouldBe(settingsIds);
 
         var settingsGroup = ordered[^1].ContextGroup;
-        ordered.Skip(ordered.Count - 3).ShouldAllBe(c => c.ContextGroup == settingsGroup);
-        ordered[^4].ContextGroup.ShouldNotBe(settingsGroup);
+        ordered.Skip(ordered.Count - 2).ShouldAllBe(c => c.ContextGroup == settingsGroup);
+        ordered[^3].ContextGroup.ShouldNotBe(settingsGroup);
     }
 }
