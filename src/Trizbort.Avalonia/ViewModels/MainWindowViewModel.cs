@@ -182,6 +182,7 @@ public partial class MainWindowViewModel : ViewModelBase
         PlayNextMoveCommand.NotifyCanExecuteChanged();
         PlayToEndCommand.NotifyCanExecuteChanged();
         IsAutomapGameLive = engine.MoveByMove && engine.GameWentOn;
+        IsAutomapAwaitingCommand = engine.MoveByMove && engine.NextCommand != null;
         AutomapTranscriptNote = !engine.MoveByMove
             ? "Playing: following the game as it goes on."
             : IsAutomapGameLive
@@ -225,6 +226,13 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _automapPanelTimer?.Stop();
     }
+
+    /// <summary>
+    ///     Paused before a command, move by move: the game monitor shows a flashing cursor after it, as if it had been
+    ///     typed but not yet entered.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isAutomapAwaitingCommand;
 
     /// <summary>The end of the transcript read so far, as much as fits on the little game monitor.</summary>
     [ObservableProperty]
