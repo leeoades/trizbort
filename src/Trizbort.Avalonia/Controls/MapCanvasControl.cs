@@ -1301,9 +1301,19 @@ public class MapCanvasControl : Control
             ConnectionDrawingAdapter.RebuildSpatialIndex(elements, spatialLines, spatialVersion);
         }
 
-        // automatic object lists keep clear of the joins, rooms and other lists around them
+        // automatic object lists keep clear of the joins, rooms and other lists around them; join end labels keep
+        // clear of those and of each other
         var previousObstacles = RoomDrawingAdapter.ObjectListObstacles;
+        var previousClashes = ConnectionDrawingAdapter.LabelClashes;
+        var previousDrawn = ConnectionDrawingAdapter.LabelDrawn;
         if (drawRoomsAndLabels) RoomDrawingAdapter.ObjectListObstacles = ObjectListObstaclesFor(elements);
+        if (drawConnections)
+        {
+            var (clashes, drawn) = LabelClashesFor(elements);
+            ConnectionDrawingAdapter.LabelClashes = clashes;
+            ConnectionDrawingAdapter.LabelDrawn = drawn;
+        }
+
         try
         {
             foreach (var element in elements)
@@ -1328,7 +1338,77 @@ public class MapCanvasControl : Control
         finally
         {
             RoomDrawingAdapter.ObjectListObstacles = previousObstacles;
+            ConnectionDrawingAdapter.LabelClashes = previousClashes;
+            ConnectionDrawingAdapter.LabelDrawn = previousDrawn;
         }
+    }
+
+    /// <summary>
+    ///     What a join's end label must keep clear of: the other joins' lines, the rooms, their object lists (where last
+    ///     drawn) and the labels drawn so far this frame. Counted with the things near it only.
+    /// </summary>
+    private static (Func<Connection, CoreRect, int> Clashes, Action<CoreRect> Drawn) LabelClashesFor(
+        IReadOnlyList<Element> elements)
+    {
+        var segments = new List<(Connection Owner, Trizbort.Domain.Misc.LineSegment Segment, CoreRect Box)>();
+        foreach (var connection in elements.OfType<Connection>())
+        {
+            foreach (var segment in connection.GetSegments())
+            {
+                var left = Math.Min(segment.Start.X, segment.End.X);
+                var top = Math.Min(segment.Start.Y, segment.End.Y);
+                segments.Add((connection, segment, new CoreRect(left, top,
+                    Math.Max(1, Math.Abs(segment.End.X - segment.Start.X)),
+                    Math.Max(1, Math.Abs(segment.End.Y - segment.Start.Y)))));
+            }
+        }
+
+        // the segments by the cells of a coarse grid they cross, so a label looks only at those near it
+        const float cell = 128;
+        var cells = new Dictionary<(int, int), List<int>>();
+        for (var index = 0; index < segments.Count; index++)
+        {
+            var box = segments[index].Box;
+            for (var cx = (int)Math.Floor(box.Left / cell); cx <= (int)Math.Floor(box.Right / cell); cx++)
+            for (var cy = (int)Math.Floor(box.Top / cell); cy <= (int)Math.Floor(box.Bottom / cell); cy++)
+            {
+                if (!cells.TryGetValue((cx, cy), out var list)) cells[(cx, cy)] = list = new List<int>();
+                list.Add(index);
+            }
+        }
+
+        var rooms = elements.OfType<Room>().ToList();
+        var labels = new List<CoreRect>();
+        int Clashes(Connection owner, CoreRect bounds)
+        {
+            var count = 0;
+            var seen = new HashSet<int>();
+            for (var cx = (int)Math.Floor(bounds.Left / cell); cx <= (int)Math.Floor(bounds.Right / cell); cx++)
+            for (var cy = (int)Math.Floor(bounds.Top / cell); cy <= (int)Math.Floor(bounds.Bottom / cell); cy++)
+            {
+                if (!cells.TryGetValue((cx, cy), out var near)) continue;
+                foreach (var index in near)
+                {
+                    if (!seen.Add(index)) continue;
+                    var (other, segment, box) = segments[index];
+                    if (!ReferenceEquals(other, owner) && box.IntersectsWith(bounds) && segment.IntersectsWith(bounds))
+                        count++;
+                }
+            }
+
+            foreach (var room in rooms)
+            {
+                if (room.InnerBounds.IntersectsWith(bounds)) count++;
+                if (room.ObjectListBounds is { } list && list.IntersectsWith(bounds)) count++;
+            }
+
+            foreach (var label in labels)
+                if (label.IntersectsWith(bounds))
+                    count++;
+            return count;
+        }
+
+        return (Clashes, labels.Add);
     }
 
     /// <summary>How far around a room an automatic object list looks for things in its way.</summary>

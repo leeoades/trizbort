@@ -497,6 +497,8 @@ Connections, like rooms, also have their own Properties dialog. You can bring it
 
 The Properties dialog shows all the ways you can customize a connection. The most popular ones have radio buttons, but you can also specify labels for the start, middle and/or end of the line. The middle label has no technical use, but it's handy to indicate any special actions which have to be taken in game in order to travel along this route, such as "pull lever" or "feed iguana". Of course, you can do this with the start or end labels as well.
 
+A start or end label that would sit on another line, a room, an object list or another label moves out of the way by itself: first to the other side of its line, then a little further along the line from its room, until it's clear.
+
 Trizbort doesn't mind how you label the start and end of a line, if at all; you might prefer to indicate up/down connections with "U" and "D" or "top" and "bottom". However, if you export your map to an IF development system, Trizbort will ignore custom labels.
 
 <a name="help_conn_color"></a>

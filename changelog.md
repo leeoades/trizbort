@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Join end labels out of the way.** A label at the end of a join ("n", "pull peg") that would sit on another join,
+  a room, an object list or another label moves across to the other side of its line, or slides along the line away
+  from the room, to the first clear place.
 - **Object lists out of the way, and draggable.** A room's object list goes at the map's default spot unless that
   would cross a join, another room or another object list, when it moves to the first clear side. Drag a list on the
   map to put it anywhere (inside the room too, once it's selected); **Reset Object List Position** makes it automatic
