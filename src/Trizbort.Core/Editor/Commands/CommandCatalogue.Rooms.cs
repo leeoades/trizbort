@@ -264,6 +264,7 @@ public sealed partial class CommandCatalogue
     var moves = await session.Prompts.RunWithProgressAsync(title, "Tidying the map...", plan.ExpectedMs, plan.Run);
     if (moves == null || moves.Count == 0) return;
 
+    var before = RoomGlide.Positions(session.Project.Elements);
     session.Execute(title, () =>
     {
       // asked to tidy them, so they're no longer where the user put them by hand
@@ -271,6 +272,8 @@ public sealed partial class CommandCatalogue
       LayoutTidy.TidyPlan.Apply(moves);
       GuessedEnds.Face(session.Project.Elements, plan.Rooms.ToList());
     });
+    // the rooms slide to their new places on screen rather than jumping
+    RoomGlide.Start(before);
   }
 
   private static void RegisterShape(

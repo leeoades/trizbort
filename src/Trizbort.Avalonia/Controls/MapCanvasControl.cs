@@ -50,6 +50,7 @@ public class MapCanvasControl : Control
     private readonly HashSet<Element> _selectedSet = new();
     private int _spatialVersion = 1;
     private int _builtSpatialVersion = 0;
+    private bool _wasGliding;
 
     internal int SpatialVersion => _spatialVersion;
     internal int InvalidationCount { get; private set; }
@@ -1045,6 +1046,14 @@ public class MapCanvasControl : Control
         var transformMatrix = Matrix.CreateTranslation(-Origin.X, -Origin.Y)
                               * Matrix.CreateScale(ZoomFactor, ZoomFactor)
                               * Matrix.CreateTranslation(halfWidth, halfHeight);
+
+        // rooms a tidy just moved slide to their new places: they're drawn part-way there, frame by frame, and the
+        // joins are worked out afresh each frame (and once more when they arrive) so they follow
+        var gliding = RoomGlide.IsActive;
+        if (gliding || _wasGliding) _spatialVersion++;
+        _wasGliding = gliding;
+        if (gliding) TopLevel.GetTopLevel(this)?.RequestAnimationFrame(_ => InvalidateVisual());
+        using var shown = RoomGlide.Show();
 
         using (context.PushTransform(transformMatrix))
         {

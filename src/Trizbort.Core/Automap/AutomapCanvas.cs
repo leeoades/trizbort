@@ -634,9 +634,12 @@ public class AutomapCanvas : IAutomapCanvas
     room = ResolveRoom(room);
     if (room == null) return;
     var unchanged = MapShape() == _tidiedMap;
+    var before = RoomGlide.Positions(CurrentProject.Elements);
     var moved = LayoutTidy.TidyAround(CurrentProject.Elements.ToList(), room, onlyIfCluttered: unchanged);
     if (moved > 0)
     {
+      // the rooms slide to their new places on screen rather than jumping
+      RoomGlide.Start(before);
       FaceGuessedEnds();
       _session?.EnsureVisible(room);
     }

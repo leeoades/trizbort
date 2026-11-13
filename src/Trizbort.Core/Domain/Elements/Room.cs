@@ -408,6 +408,12 @@ public class Room : Element, ISizeable
     }
   }
 
+  /// <summary>
+  ///   Puts the room at <paramref name="position" /> without telling anyone it moved: for drawing a room part-way
+  ///   along a slide (<see cref="RoomGlide" />), then putting it back.
+  /// </summary>
+  internal void ShowAt(Vector position) => _position = position;
+
   public string PrimaryDescription => _descriptions.Count > 0 ? _descriptions[0] : null;
 
   public List<RoomValidationState> ValidationState { get; set; } = new();

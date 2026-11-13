@@ -14,6 +14,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Tidied rooms slide into place.** When automap tidies the map as you go, or you use Tidy Map, the rooms that move
+  slide to their new places, with their joins following, instead of jumping.
 - **A bigger game screen, and a cursor after the next command.** Drag the automap panel's left edge to widen it; the
   game screen grows with it (double-click the edge for the usual width). While paused before a command, a cursor
   flashes after it, so it reads as typed but not yet played.
