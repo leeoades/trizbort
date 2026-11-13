@@ -83,6 +83,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   apart by the map, then by description, asking when it can't tell; with a transcript that isn't verbose it still
   takes a name to mean that room. The setting is ignored if it's in your settings file.
 
+### Fixed
+
+- **Tidying no longer drags rooms towards the far end of a split join.** A split join leads somewhere drawn apart
+  on purpose (often another area), so the tidy now leaves its rooms where they are.
+
 ## [0.12.0-beta] - 2026-11-10
 
 This beta is about **automap understanding the places games play tricks with**: rooms that share a name, rooms

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -311,6 +311,9 @@ public static partial class LayoutTidy
         }
 
         if (a == null || b == null || a == b) continue;
+        // a split join isn't drawn across the map (it's for a long join or one into another area), so it doesn't
+        // pull its rooms together or get in anyone's way
+        if (connection.Split) continue;
         if (!_index.TryGetValue(a, out var ia) || !_index.TryGetValue(b, out var ib)) continue;
         var join = new Join { A = ia, B = ib };
         if (connection.VertexList.Count >= 2)

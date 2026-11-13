@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<trizbort version="1.0.0.0">
+	<info />
+	<map>
+		<room id="1" stableId="24079166-6d9d-4168-9d56-f42d68ca73fc" name="Hall" subtitle="" x="0" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="2" stableId="712cf7b0-aed0-4329-aa2b-173ed67eca80" name="Library" subtitle="" x="0" y="-128" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="3" stableId="3dbdbf75-60a6-401b-8a28-f19ce9f873b1" name="Study" subtitle="" x="160" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="4" stableId="f823f71f-fa8b-417c-abf9-2990c5bdc10a" name="Gallery" subtitle="" x="160" y="-128" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="5" stableId="05ddc429-8bb6-4d7e-8a2a-6249c24a74e8" name="Chapel" subtitle="" x="32" y="-160" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="6" name="" description="" startText="" endText="" automapStartTravelled="north" automapEndTravelled="south" ZOrder="0">
+			<dock index="0" id="1" port="n" />
+			<dock index="1" id="2" port="s" />
+		</line>
+		<line id="7" name="" description="" startText="" endText="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="1" port="e" />
+			<dock index="1" id="3" port="w" />
+		</line>
+		<line id="8" name="" description="" startText="" endText="" automapStartTravelled="north" automapEndTravelled="south" ZOrder="0">
+			<dock index="0" id="3" port="n" />
+			<dock index="1" id="4" port="s" />
+		</line>
+		<line id="9" name="" description="" startText="" endText="" automapStartTravelled="west" automapEndTravelled="east" ZOrder="0">
+			<dock index="0" id="4" port="w" />
+			<dock index="1" id="5" port="e" />
+		</line>
+	</map>
+	<settings>
+		<colors>
+			<canvas>White</canvas>
+			<border>MidnightBlue</border>
+			<line>MidnightBlue</line>
+			<selectedLine>Gold</selectedLine>
+			<hoverLine>DarkOrange</hoverLine>
+			<subTitle>MidnightBlue</subTitle>
+			<smallText>MidnightBlue</smallText>
+			<lineText>MidnightBlue</lineText>
+			<grid>#E7E7E7</grid>
+			<startRoom>GreenYellow</startRoom>
+			<endRoom>Red</endRoom>
+		</colors>
+		<regions>
+			<NoRegion Name="NoRegion" TextColor="Blue">White</NoRegion>
+		</regions>
+		<fonts>
+			<room size="13">Arial</room>
+			<object size="11">Arial</object>
+			<subTitle size="9">Arial</subTitle>
+			<line size="9">Arial</line>
+		</fonts>
+		<grid>
+			<snapTo>yes</snapTo>
+			<visible>yes</visible>
+			<showOrigin>yes</showOrigin>
+			<size>32</size>
+		</grid>
+		<lines>
+			<width>2</width>
+			<arrowSize>12</arrowSize>
+			<textOffset>4</textOffset>
+			<handDrawn>no</handDrawn>
+			<labelDiagonalExits>yes</labelDiagonalExits>
+			<labelCompassExits>no</labelCompassExits>
+		</lines>
+		<rooms>
+			<darknessStripeSize>24</darknessStripeSize>
+			<objectListOffset>4</objectListOffset>
+			<defaultObjectsAt>s</defaultObjectsAt>
+			<defaultObjectsInside>no</defaultObjectsInside>
+			<connectionStalkLength>32</connectionStalkLength>
+			<preferredDistanceBetweenRooms>64</preferredDistanceBetweenRooms>
+			<defaultRoomName>Cave</defaultRoomName>
+			<defaultRoomShape>0</defaultRoomShape>
+		</rooms>
+		<ui>
+			<handleSize>12</handleSize>
+			<snapToElementSize>16</snapToElementSize>
+		</ui>
+		<margins>
+			<documentSpecific>no</documentSpecific>
+			<horizontal>0</horizontal>
+			<vertical>0</vertical>
+			<wrapDashes>no</wrapDashes>
+		</margins>
+		<keypadNavigation>
+			<creationModifier>control</creationModifier>
+			<unexploredModifier>alt</unexploredModifier>
+		</keypadNavigation>
+	</settings>
+</trizbort>
