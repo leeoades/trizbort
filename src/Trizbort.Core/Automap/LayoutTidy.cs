@@ -171,6 +171,23 @@ public static partial class LayoutTidy
       });
   }
 
+  /// <summary>
+  ///   Gets ready for automap to rethink the layout of <paramref name="rooms" /> with the solver, after a move left
+  ///   joins pointing the wrong way. Like <see cref="PlanTidy" />: takes a copy now, and <see cref="TidyPlan.Run" />
+  ///   may run on any thread. Deterministic, so the same transcript always makes the same map; rooms stay near where
+  ///   they are unless moving them puts more joins the right way.
+  /// </summary>
+  public static TidyPlan PlanRethink(IList<Element> elements, IEnumerable<Room> rooms, int workMs)
+  {
+    var map = new LayoutMap(elements ?? new List<Element>());
+    var movable = (rooms ?? Enumerable.Empty<Room>()).Where(map.Contains).ToList();
+    return new TidyPlan(map, movable, TidyMethod.Thorough, workMs, token =>
+    {
+      Solve(map, movable, workMs, token, deterministic: true);
+      return true;
+    });
+  }
+
   /// <summary>How long Tidy Map's quick tidy may take.</summary>
   public const int QuickPlanMs = 3000;
 
@@ -304,6 +321,21 @@ public static partial class LayoutTidy
       _stepX = _gap + width;
       _stepY = _gap + height;
 
+      // Sides of rooms the player has actually left by: a join end there that nobody has travelled (the way back
+      // that two-way joins assume) is contradicted when another join, travelled, leaves the same room the same way
+      // to somewhere else. West from Southeast Junction leads to the Patio, so the assumed way west back to South
+      // Junction is wrong and says nothing about where South Junction is.
+      var travelledFrom = new HashSet<(Room, CompassPoint)>();
+      foreach (var connection in elements.OfType<Connection>())
+      {
+        if (connection.Split) continue;
+        var start = connection.GetSourceRoom(out var startPoint);
+        var end = connection.GetTargetRoom(out var endPoint);
+        if (start == null || end == null || start == end) continue;
+        if (!string.IsNullOrWhiteSpace(connection.StartTravelled)) travelledFrom.Add((start, startPoint));
+        if (!string.IsNullOrWhiteSpace(connection.EndTravelled)) travelledFrom.Add((end, endPoint));
+      }
+
       var pairOf = new Dictionary<(int, int), int>();
       foreach (var connection in elements.OfType<Connection>())
       {
@@ -343,11 +375,14 @@ public static partial class LayoutTidy
           // A compass end beats up, down, in and out, which don't say much about where a room is drawn.
           var fromA = FloorDirection(connection.StartText, point) ?? CompassPointHelper.GetAutomapDirectionVector(point);
           var fromB = FloorDirection(connection.EndText, targetPoint) ?? CompassPointHelper.GetAutomapDirectionVector(targetPoint);
-          var aIsCompass = IsMainPoint(point);
+          // an assumed way back that another way out of the room contradicts (see travelledFrom)
+          var aContradicted = string.IsNullOrWhiteSpace(connection.StartTravelled) && travelledFrom.Contains((a, point));
+          var bContradicted = string.IsNullOrWhiteSpace(connection.EndTravelled) && travelledFrom.Contains((b, targetPoint));
+          var aIsCompass = IsMainPoint(point) && !aContradicted;
           // the far end of a one-way join nobody has come back along only faces the room it came from: it says
           // nothing about where that room should be
-          var bIsGuess = connection.Flow == ConnectionFlow.OneWay && string.IsNullOrWhiteSpace(connection.EndTravelled) &&
-                         string.IsNullOrWhiteSpace(connection.EndText);
+          var bIsGuess = (connection.Flow == ConnectionFlow.OneWay && string.IsNullOrWhiteSpace(connection.EndTravelled) &&
+                          string.IsNullOrWhiteSpace(connection.EndText)) || bContradicted;
           var bIsCompass = IsMainPoint(targetPoint) && !bIsGuess;
           double x, y;
           if (bIsGuess && !aIsCompass)
@@ -380,7 +415,9 @@ public static partial class LayoutTidy
 
           join.WantX = Math.Sign(x);
           join.WantY = Math.Sign(y);
-          join.Pull = aIsCompass || bIsCompass ? CompassPull : SoftPull;
+          // with its way back contradicted, all a join says is roughly which way the other room is: the path bends
+          // somewhere, so it pulls gently
+          join.Pull = (aIsCompass || bIsCompass) && !aContradicted && !bContradicted ? CompassPull : SoftPull;
         }
 
         _joins.Add(join);

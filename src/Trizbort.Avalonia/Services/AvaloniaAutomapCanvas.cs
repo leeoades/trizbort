@@ -96,12 +96,22 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
     {
         if (Dispatcher.UIThread.CheckAccess())
         {
+            _innerCanvas.RethinkElsewhere = false;
             _innerCanvas.TidyAround(room);
+            return;
         }
-        else
+
+        // the quick tidy on the UI thread; a rethink (the solver, up to a second or two) is worked out here, on
+        // automap's thread, so the window stays responsive, then put on the map on the UI thread
+        var plan = Dispatcher.UIThread.Invoke(() =>
         {
-            Dispatcher.UIThread.Invoke(() => _innerCanvas.TidyAround(room));
-        }
+            _innerCanvas.RethinkElsewhere = true;
+            _innerCanvas.TidyAround(room);
+            return _innerCanvas.TakeRethink();
+        });
+        if (plan == null) return;
+        var moves = plan.Run();
+        Dispatcher.UIThread.Invoke(() => _innerCanvas.FinishRethink(plan, moves));
     }
 
     public void SelectRoom(Room room)

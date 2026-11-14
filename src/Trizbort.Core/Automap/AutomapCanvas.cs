@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Trizbort.Editor;
@@ -645,6 +645,75 @@ public class AutomapCanvas : IAutomapCanvas
     }
 
     _tidiedMap = MapShape();
+    if (unchanged) return;
+    var rethink = PlanRethink();
+    if (rethink == null) return;
+    if (RethinkElsewhere) _rethink = rethink;
+    else FinishRethink(rethink, rethink.Run());
+  }
+
+  /// <summary>How much work the map may do to rethink its layout after a move (see <see cref="PlanRethink" />).</summary>
+  private const int RethinkMs = 1000;
+
+  // joins not pointing their way after the last tidy
+  private int _misfits;
+
+  // a rethink waiting to be worked out (see RethinkElsewhere)
+  private LayoutTidy.TidyPlan _rethink;
+
+  /// <summary>
+  ///   True when the caller works out rethinks itself, off the map's thread (see <see cref="TakeRethink" />), so the
+  ///   window stays responsive while the solver thinks. Otherwise <see cref="TidyAround" /> does it there and then.
+  /// </summary>
+  public bool RethinkElsewhere { get; set; }
+
+  /// <summary>The rethink <see cref="TidyAround" /> left to be worked out, if any (see <see cref="RethinkElsewhere" />).</summary>
+  public LayoutTidy.TidyPlan TakeRethink()
+  {
+    var plan = _rethink;
+    _rethink = null;
+    return plan;
+  }
+
+  /// <summary>
+  ///   When the map has just learnt something that leaves more joins pointing the wrong way than before (South
+  ///   Junction turns out to be south of the junctions automap had put below it), nudging rooms a step at a time
+  ///   can't put it right: the solver lays out every room not placed by hand again, and the result is kept only if no
+  ///   fewer joins point their way. Plans that on a copy of the layout; null when the map doesn't need it.
+  /// </summary>
+  private LayoutTidy.TidyPlan PlanRethink()
+  {
+    var elements = CurrentProject.Elements.ToList();
+    var (natural, total) = LayoutTidy.NaturalJoins(elements);
+    var misfits = total - natural;
+    var worse = misfits > _misfits;
+    _misfits = misfits;
+    if (!worse) return null;
+    var rooms = elements.OfType<Room>().Where(r => !r.PlacedByHand).ToList();
+    return rooms.Count == 0 ? null : LayoutTidy.PlanRethink(elements, rooms, RethinkMs);
+  }
+
+  /// <summary>
+  ///   Puts the rooms where a rethink said (on the map's thread), sliding them there. Rooms deleted meanwhile are
+  ///   left out. Returns how many rooms moved.
+  /// </summary>
+  public int FinishRethink(LayoutTidy.TidyPlan plan, IReadOnlyDictionary<Room, Vector> moves)
+  {
+    if (plan == null || moves == null || moves.Count == 0) return 0;
+    var present = CurrentProject.Elements.OfType<Room>().ToHashSet();
+    var before = RoomGlide.Positions(CurrentProject.Elements);
+    var moved = LayoutTidy.TidyPlan.Apply(moves.Where(move => present.Contains(move.Key))
+      .ToDictionary(move => move.Key, move => move.Value));
+    if (moved > 0)
+    {
+      RoomGlide.Start(before);
+      FaceGuessedEnds();
+    }
+
+    var (natural, total) = LayoutTidy.NaturalJoins(CurrentProject.Elements.ToList());
+    _misfits = total - natural;
+    _tidiedMap = MapShape();
+    return moved;
   }
 
   /// <summary>What the map is made of, ignoring where the rooms are: its rooms, its joins and their directions.</summary>

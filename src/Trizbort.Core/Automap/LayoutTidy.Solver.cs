@@ -35,11 +35,16 @@ public static partial class LayoutTidy
   ///   Lays out <paramref name="rooms" /> (others stay put) with the solver, then polishes with the step-by-step tidy.
   ///   Returns how many rooms moved, or -1 if the solver found no layout in time (nothing is changed then).
   /// </summary>
-  public static int SolverTidy(IList<Element> elements, IEnumerable<Room> rooms, int timeLimitMs = 5000)
+  /// <param name="deterministic">
+  ///   Always give the same layout for the same map (one search thread, and a limit on the work done rather than on
+  ///   the time taken), as automap needs: the same transcript must make the same map.
+  /// </param>
+  public static int SolverTidy(
+    IList<Element> elements, IEnumerable<Room> rooms, int timeLimitMs = 5000, bool deterministic = false)
   {
     if (elements == null || rooms == null) return 0;
     var map = new LayoutMap(elements);
-    var result = Solve(map, rooms.Where(map.Contains).ToList(), timeLimitMs, CancellationToken.None);
+    var result = Solve(map, rooms.Where(map.Contains).ToList(), timeLimitMs, CancellationToken.None, deterministic);
     return result < 0 ? -1 : TidyPlan.Apply(map.Moves());
   }
 
@@ -47,7 +52,8 @@ public static partial class LayoutTidy
   ///   The solver tidy on <paramref name="map" />'s copy of the layout; the rooms themselves aren't moved. Returns 1
   ///   when it changed the layout, 0 when it kept it (nothing better, or cancelled) and -1 when it found no layout.
   /// </summary>
-  private static int Solve(LayoutMap map, List<Room> rooms, int timeLimitMs, CancellationToken token)
+  private static int Solve(
+    LayoutMap map, List<Room> rooms, int timeLimitMs, CancellationToken token, bool deterministic = false)
   {
     var movable = rooms.Select(map.IndexOf).Where(i => i >= 0).ToHashSet();
     var n = map.Rooms.Count;
@@ -56,7 +62,7 @@ public static partial class LayoutTidy
     map.Commit = false;
     try
     {
-      return Solve(map, rooms, movable, n, timeLimitMs, token);
+      return Solve(map, rooms, movable, n, timeLimitMs, token, deterministic);
     }
     finally
     {
@@ -65,7 +71,8 @@ public static partial class LayoutTidy
   }
 
   private static int Solve(
-    LayoutMap map, List<Room> rooms, HashSet<int> movable, int n, int timeLimitMs, CancellationToken token)
+    LayoutMap map, List<Room> rooms, HashSet<int> movable, int n, int timeLimitMs, CancellationToken token,
+    bool deterministic)
   {
     var stepX = map.StepX;
     var stepY = map.StepY;
@@ -189,7 +196,9 @@ public static partial class LayoutTidy
     model.Maximize(LinearExpr.Sum(objective));
     var solver = new CpSolver
     {
-      StringParameters = $"max_time_in_seconds:{timeLimitMs / 1000.0:0.0###}, num_workers:8"
+      StringParameters = deterministic
+        ? $"max_deterministic_time:{timeLimitMs / 1000.0:0.0###}, num_workers:1, random_seed:1"
+        : $"max_time_in_seconds:{timeLimitMs / 1000.0:0.0###}, num_workers:8"
     };
     CpSolverStatus status;
     using (token.Register(() => solver.StopSearch()))
@@ -204,7 +213,8 @@ public static partial class LayoutTidy
     var solvedAt = map.Snapshot();
     // polish: rooms off joins, fewer crossings, lined up; kept only if it doesn't cost a join pointing its way
     map.Rebase();
-    map.Tidy(rooms, Math.Max(500, timeLimitMs / 5), null, null, StayPut / 20, token);
+    // (the polish stops when nothing improves; deterministically, it isn't cut short by the clock)
+    map.Tidy(rooms, deterministic ? 5000 : Math.Max(500, timeLimitMs / 5), null, null, StayPut / 20, token);
     if (token.IsCancellationRequested) return 0;
     if (map.NaturalCount() < solved) map.Restore(solvedAt);
 

@@ -14,6 +14,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **The map rethinks itself when it learns it was wrong.** When a move shows that rooms were laid out the wrong way
+  round (going back south reaches a room automap had drawn above you), tidying as you go now lays the map out again
+  instead of nudging rooms a step at a time, and the rooms slide to their new places. It works this out in the
+  background, so the window stays responsive, and the same transcript always makes the same map.
 - **Rooms you've placed by hand make way.** Tidying never moves a room you put somewhere yourself back to where it
   thinks the room should go, but it can now slide it aside, with the rooms around it, when a new room needs the
   space. Before, such a room never moved, so new rooms had to go somewhere awkward around it.
@@ -88,6 +92,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **A way back that turns out to be wrong no longer holds rooms in place.** Two-way joins assume the way back
+  (east there, so west back). When west from that room actually leads somewhere else, the tidy now stops treating
+  the assumed way back as fixed, so the path can bend around the house as it does in the game.
 - **Tidying no longer drags rooms towards the far end of a split join.** A split join leads somewhere drawn apart
   on purpose (often another area), so the tidy now leaves its rooms where they are.
 

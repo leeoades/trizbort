@@ -396,6 +396,54 @@ public class LayoutTidyTests : IsolatedProjectTests
   }
 
   [Test]
+  public void AnAssumedWayBack_ThatAnotherWayContradicts_LetsThePathBend()
+  {
+    // Hollywood Hijinx, move 12 of the old transcript: east from South Junction to Southeast Junction (the way back
+    // west only assumed), then west from Southeast Junction to the Patio. The Patio belongs west of Southeast
+    // Junction, where South Junction is, so the assumed way back is wrong: the path round the house bends, and
+    // Southeast Junction moves off South Junction's row to make room, instead of the Patio going somewhere odd.
+    var south = AddRoomAt("South Junction", 0, 0);
+    var porch = AddRoomAt("Front Porch", 0, -1);
+    var southEast = AddRoomAt("Southeast Junction", 1, 0);
+    var patio = AddRoomAt("Patio", -1, 1);
+    var toPorch = Join(south, CompassPoint.North, porch, CompassPoint.South);
+    toPorch.StartTravelled = "north";
+    toPorch.EndTravelled = "south";
+    Join(south, CompassPoint.East, southEast, CompassPoint.West).StartTravelled = "east";
+    Join(southEast, CompassPoint.West, patio, CompassPoint.East).StartTravelled = "west";
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), patio);
+
+    Cell(patio).Row.ShouldBe(Cell(southEast).Row);
+    Cell(patio).Column.ShouldBeLessThan(Cell(southEast).Column);
+    Cell(southEast).Row.ShouldNotBe(Cell(south).Row);
+    Overlaps().ShouldBe(0);
+  }
+
+  [Test]
+  public void ARethink_TurnsTheMapRoundWhenAJoinPointsTheWrongWay_TheSameWayEveryTime()
+  {
+    // automap put the Garden and the Shed above the Hall, then learnt that the Garden is south of it: nudging can't
+    // fix that (the Shed is in the way), the rethink lays the rooms out again with the Garden below
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 0, -1);
+    var shed = AddRoomAt("Shed", 0, -2);
+    Join(hall, CompassPoint.South, garden, CompassPoint.North);
+    Join(garden, CompassPoint.South, shed, CompassPoint.North);
+    var elements = Project.Current.Elements.ToList();
+    var rooms = elements.OfType<Room>().ToList();
+
+    var first = LayoutTidy.PlanRethink(elements, rooms, 300).Run();
+    var second = LayoutTidy.PlanRethink(elements, rooms, 300).Run();
+    LayoutTidy.TidyPlan.Apply(first);
+
+    first.ShouldBe(second);
+    Cell(garden).Row.ShouldBeGreaterThan(Cell(hall).Row);
+    Cell(shed).Row.ShouldBeGreaterThan(Cell(garden).Row);
+    LayoutTidy.NaturalJoins(Project.Current.Elements.ToList()).ShouldBe((2, 2));
+  }
+
+  [Test]
   public void ARoomPlacedByHand_IsNotPulledBackIntoLine()
   {
     // the user put the Garden a little below the Hall's east: the tidy would line it up, but leaves it be
