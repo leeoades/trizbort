@@ -48,14 +48,24 @@ public partial class TranscriptWindow : Window
         {
             if (e.Property != TextBox.TextProperty) return;
             if (TranscriptBox.SelectionStart != TranscriptBox.SelectionEnd) return;
-            Dispatcher.UIThread.Post(() => TranscriptBox.CaretIndex = TranscriptBox.Text?.Length ?? 0,
-                DispatcherPriority.Background);
+            Dispatcher.UIThread.Post(FollowTheEnd, DispatcherPriority.Background);
         };
         Opened += (_, _) => TranscriptBox.CaretIndex = TranscriptBox.Text?.Length ?? 0;
         AddHandler(KeyDownEvent, OnKeyForTheMap, RoutingStrategies.Tunnel);
     }
 
     private ScrollViewer? _scroller;
+
+    /// <summary>
+    ///   Shows the end of the transcript: the caret goes there and the view scrolls down to it (the caret alone doesn't
+    ///   scroll the view while the window isn't focused, as when going back a move from the main window).
+    /// </summary>
+    private void FollowTheEnd()
+    {
+        if (HasSelection) return;
+        TranscriptBox.CaretIndex = TranscriptBox.Text?.Length ?? 0;
+        _scroller?.ScrollToEnd();
+    }
 
     private bool HasSelection => TranscriptBox.SelectionStart != TranscriptBox.SelectionEnd;
 

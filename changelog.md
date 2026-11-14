@@ -101,6 +101,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **No lag between a move in the game and the map.** Automap laid the map out again while you waited, for up to
+  a second every few moves; it now works the new layout out in the background and carries on, and the rooms slide
+  into place when it's ready (as an undo step of its own).
+- **The full transcript window stays at the end when going back a move.** It used to jump to the top.
 - **Relaying out the map no longer throws a room far away.** Going down from the Cannon Emplacement to the Cliff
   sent the Front Porch above the Cannon, on a long slanting line across the map. A join that's north at one end and
   south at the other now only counts as pointing its way when it's straight, and a relayout is thrown away if it

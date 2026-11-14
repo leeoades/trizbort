@@ -776,17 +776,17 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         lock (_screenLines) _screenRefreshPending = false;
         var engine = AutomapEngine.Instance;
-        if (engine.ScreenLineCount < _screenLineCount)
+        var wentBack = engine.ScreenLineCount < _screenLineCount;
+        if (wentBack)
         {
-            // automap went back a move: start the screen again from what it has now
+            // automap went back a move: start the screen again from what it has now (without blanking it first,
+            // which would scroll the transcript window back to the top)
             _screenLines.Clear();
             _screenLineCount = 0;
-            AutomapScreenText = string.Empty;
-            if (_isTranscriptWindowOpen) AutomapTranscriptText = string.Empty;
         }
 
         var lines = engine.ScreenLines(_screenLineCount);
-        if (lines.Count == 0) return;
+        if (lines.Count == 0 && !wentBack) return;
         _screenLines.AddRange(lines);
         _screenLineCount += lines.Count;
         AutomapScreenText = MonitorText(_screenLines, MonitorColumns, MonitorRows);

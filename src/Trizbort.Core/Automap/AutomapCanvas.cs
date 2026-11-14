@@ -650,7 +650,12 @@ public class AutomapCanvas : IAutomapCanvas
     if (unchanged) return;
     var rethink = PlanRethink();
     if (rethink == null) return;
-    if (RethinkElsewhere) _rethink = rethink;
+    if (RethinkElsewhere)
+    {
+      _rethink = rethink;
+      _planned = rethink;
+      _plannedShape = _tidiedMap;
+    }
     else FinishRethink(rethink, rethink.Run());
   }
 
@@ -679,6 +684,10 @@ public class AutomapCanvas : IAutomapCanvas
 
   // a rethink waiting to be worked out (see RethinkElsewhere)
   private LayoutTidy.TidyPlan _rethink;
+
+  // the latest rethink worked out elsewhere, and what the map was made of when it was planned
+  private LayoutTidy.TidyPlan _planned;
+  private string _plannedShape;
 
   /// <summary>
   ///   True when the caller works out rethinks itself, off the map's thread (see <see cref="TakeRethink" />), so the
@@ -727,6 +736,33 @@ public class AutomapCanvas : IAutomapCanvas
     return rooms.Count == 0
       ? null
       : LayoutTidy.PlanRethink(elements, rooms, repeatable ? RepeatableRethinkWork : RethinkMs, repeatable);
+  }
+
+  /// <summary>
+  ///   Puts the rooms where a rethink worked out in the background said (on the map's thread), as its own undo step,
+  ///   while automap carries on. Nothing happens if a later rethink has been planned since, or if the map has changed
+  ///   since (rooms or joins added): the layout would be out of date, so the next move plans another. Returns how many
+  ///   rooms moved, or -1 if the user is part-way through a change of their own (a drag) and it should be tried again
+  ///   shortly.
+  /// </summary>
+  public int FinishRethinkInTheBackground(LayoutTidy.TidyPlan plan, IReadOnlyDictionary<Room, Vector> moves)
+  {
+    if (plan == null || plan != _planned) return 0;
+    if (MapShape() != _plannedShape)
+    {
+      _planned = null;
+      // plan again at the next move
+      _sizeAtRethink = int.MinValue / 2;
+      return 0;
+    }
+
+    var batch = BeginBatch("Tidy the map");
+    if (batch == null) return -1;
+    using (batch)
+    {
+      _planned = null;
+      return FinishRethink(plan, moves);
+    }
   }
 
   /// <summary>
