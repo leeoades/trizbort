@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -30,6 +30,92 @@ public static partial class LayoutTidy
   private const int ExactWeight = 20;
   private const int LengthWeight = 3;
   private const int MoveWeight = 1;
+
+  /// <summary>How far (in squares) beyond a join's rooms the solver looks for rooms that could end up on it.</summary>
+  private const int LineReach = 4;
+
+  /// <summary>
+  ///   When <paramref name="satisfied" />, the slanting join from <paramref name="a" /> to <paramref name="b" />
+  ///   (towards <paramref name="wx" />, <paramref name="wy" />) has no room within the box between them: every other
+  ///   room nearby is in the same columns as one of them or beyond, or in the same rows or beyond.
+  /// </summary>
+  private static void KeepOutOfTheBox(
+    CpModel model, BoolVar satisfied, int a, int b, int wx, int wy, IntVar[] x, IntVar[] y, long[] widthCells,
+    long[] heightCells, long[] cellX, long[] cellY, int j)
+  {
+    var n = x.Length;
+    var (leftRoom, rightRoom) = wx > 0 ? (a, b) : (b, a);
+    var (topRoom, bottomRoom) = wy > 0 ? (a, b) : (b, a);
+    var left = Math.Min(cellX[a], cellX[b]) - LineReach;
+    var right = Math.Max(cellX[a], cellX[b]) + LineReach;
+    var top = Math.Min(cellY[a], cellY[b]) - LineReach;
+    var bottom = Math.Max(cellY[a], cellY[b]) + LineReach;
+    for (var c = 0; c < n; c++)
+    {
+      if (c == a || c == b || cellX[c] < left || cellX[c] > right || cellY[c] < top || cellY[c] > bottom) continue;
+      var west = model.NewBoolVar($"bw{j}_{c}");
+      var east = model.NewBoolVar($"be{j}_{c}");
+      var north = model.NewBoolVar($"bn{j}_{c}");
+      var south = model.NewBoolVar($"bs{j}_{c}");
+      model.Add(x[c] + widthCells[c] <= x[leftRoom] + widthCells[leftRoom]).OnlyEnforceIf(west);
+      model.Add(x[c] >= x[rightRoom]).OnlyEnforceIf(east);
+      model.Add(y[c] + heightCells[c] <= y[topRoom] + heightCells[topRoom]).OnlyEnforceIf(north);
+      model.Add(y[c] >= y[bottomRoom]).OnlyEnforceIf(south);
+      model.AddBoolOr(new ILiteral[] { west, east, north, south }).OnlyEnforceIf(satisfied);
+    }
+  }
+
+  /// <summary>
+  ///   When <paramref name="exact" />, the straight join from <paramref name="a" /> to <paramref name="b" /> (going
+  ///   <paramref name="wx" />, <paramref name="wy" />) has no room on it: every other room nearby is wholly to one side
+  ///   of the line, or no further along it than the rooms at its ends.
+  /// </summary>
+  private static void KeepOffTheLine(
+    CpModel model, BoolVar exact, int a, int b, int wx, int wy, IntVar[] x, IntVar[] y, long[] widthCells,
+    long[] heightCells, long[] cellX, long[] cellY, int j)
+  {
+    var n = x.Length;
+    // the room the join starts from in its direction, and the one it ends at
+    var (first, last) = (wx < 0 || wy < 0) ? (b, a) : (a, b);
+    var left = Math.Min(cellX[a], cellX[b]) - LineReach;
+    var right = Math.Max(cellX[a], cellX[b]) + LineReach;
+    var top = Math.Min(cellY[a], cellY[b]) - LineReach;
+    var bottom = Math.Max(cellY[a], cellY[b]) + LineReach;
+    for (var c = 0; c < n; c++)
+    {
+      if (c == a || c == b || cellX[c] < left || cellX[c] > right || cellY[c] < top || cellY[c] > bottom) continue;
+      var before = model.NewBoolVar($"lb{j}_{c}");
+      var after = model.NewBoolVar($"la{j}_{c}");
+      var oneSide = model.NewBoolVar($"l1{j}_{c}");
+      var otherSide = model.NewBoolVar($"l2{j}_{c}");
+      if (wx == 0)
+      {
+        // upright: the line is down the middle of a's column, between first's bottom and last's top
+        var line = 2 * x[a] + widthCells[a];
+        model.Add(2 * x[c] + 2 * widthCells[c] <= line).OnlyEnforceIf(oneSide);
+        model.Add(2 * x[c] >= line).OnlyEnforceIf(otherSide);
+        model.Add(y[c] + heightCells[c] <= y[first] + heightCells[first]).OnlyEnforceIf(before);
+        model.Add(y[c] >= y[last]).OnlyEnforceIf(after);
+      }
+      else
+      {
+        // level: the line is along the middle of a's row, between first's right and last's left
+        var line = 2 * y[a] + heightCells[a];
+        model.Add(2 * y[c] + 2 * heightCells[c] <= line).OnlyEnforceIf(oneSide);
+        model.Add(2 * y[c] >= line).OnlyEnforceIf(otherSide);
+        model.Add(x[c] + widthCells[c] <= x[first] + widthCells[first]).OnlyEnforceIf(before);
+        model.Add(x[c] >= x[last]).OnlyEnforceIf(after);
+      }
+
+      model.AddBoolOr(new ILiteral[] { oneSide, otherSide, before, after }).OnlyEnforceIf(exact);
+    }
+  }
+
+  /// <summary>Bonus for two rooms near each other sharing a column (or a row), joined or not.</summary>
+  private const int AlignWeight = 4;
+
+  /// <summary>How many squares apart (across a column, or down a row) rooms count as near, for lining up.</summary>
+  private const int AlignReach = 3;
 
   /// <summary>
   ///   Lays out <paramref name="rooms" /> (others stay put) with the solver, then polishes with the step-by-step tidy.
@@ -184,6 +270,13 @@ public static partial class LayoutTidy
         model.Add(1000 * wy * dy <= 2414 * wx * dx).OnlyEnforceIf(satisfied);
       }
 
+      // a slanting join (diagonal, or a bend) runs across no room: while it points its way, no room sits within
+      // the box its two rooms span, where the line runs
+      if (wx != 0 && wy != 0) KeepOutOfTheBox(model, satisfied, a, b, wx, wy, x, y, widthCells, heightCells, cellX, cellY, j);
+
+      // a bend is drawn slanting: it needn't be exactly diagonal (straight joins come first)
+      if (join.Bent) continue;
+
       // exactly that way: level, upright, or as many squares across as down
       var exact = model.NewBoolVar($"e{j}");
       objective.Add(ExactWeight * exact);
@@ -191,7 +284,41 @@ public static partial class LayoutTidy
       if (wy == 0) model.Add(dy == 0).OnlyEnforceIf(exact);
       else if (wx == 0) model.Add(dx == 0).OnlyEnforceIf(exact);
       else model.Add(wx * dx == wy * dy).OnlyEnforceIf(exact);
+
+      // a straight join (exact or not) runs across no room: each room near it is to one side of the line, or
+      // beyond its ends
+      if (wx == 0 || wy == 0)
+      {
+        var straight = model.NewBoolVar($"st{j}");
+        var across = wx == 0 ? dx : dy;
+        model.Add(across == 0).OnlyEnforceIf(straight);
+        model.Add(across != 0).OnlyEnforceIf(straight.Not());
+        model.AddImplication(exact, straight);
+        KeepOffTheLine(model, straight, a, b, wx, wy, x, y, widthCells, heightCells, cellX, cellY, j);
+      }
     }
+
+    // rooms near each other line up in rows and columns, joined or not, so the map reads as a grid
+    for (var a = 0; a < n; a++)
+      for (var b = a + 1; b < n; b++)
+      {
+        if (!movable.Contains(a) && !movable.Contains(b)) continue;
+        var apartX = Math.Abs(cellX[a] - cellX[b]);
+        var apartY = Math.Abs(cellY[a] - cellY[b]);
+        if (apartX <= AlignReach && apartY <= AlignReach * 2)
+        {
+          var column = model.NewBoolVar($"c{a}_{b}");
+          model.Add(2 * x[a] + widthCells[a] == 2 * x[b] + widthCells[b]).OnlyEnforceIf(column);
+          objective.Add(AlignWeight * column);
+        }
+
+        if (apartY <= AlignReach && apartX <= AlignReach * 2)
+        {
+          var row = model.NewBoolVar($"r{a}_{b}");
+          model.Add(2 * y[a] + heightCells[a] == 2 * y[b] + heightCells[b]).OnlyEnforceIf(row);
+          objective.Add(AlignWeight * row);
+        }
+      }
 
     model.Maximize(LinearExpr.Sum(objective));
     var solver = new CpSolver

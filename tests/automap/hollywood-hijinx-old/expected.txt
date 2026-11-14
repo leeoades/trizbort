@@ -40,7 +40,5 @@ Southwest Junction [north] <-> [south] Northwest Junction
 Southwest Junction [south] <-> [west] South Junction
 Top Landing [southsouthwest "d"] <-> [northnorthwest "u"] Middle of Beach Stairs
 
-natural joins: 18 of 20
-exact joins: 15 of 20
-not natural: Patio -> Garden, South
-not natural: Southeast Junction -> Patio
+natural joins: 20 of 20
+exact joins: 18 of 20

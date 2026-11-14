@@ -118,6 +118,9 @@ public static partial class LayoutTidy
     return (joins.Count(map.IsNatural), joins.Count);
   }
 
+  /// <summary>How many things are wrong with the layout: joins not pointing their way, and rooms a join runs across.</summary>
+  public static int Problems(IList<Element> elements) => new LayoutMap(elements).ProblemCount();
+
   /// <summary>The joins that aren't naturally placed (see <see cref="NaturalJoins" />), from room to room.</summary>
   public static List<(Room From, Room To)> UnnaturalJoins(IList<Element> elements)
   {
@@ -174,16 +177,20 @@ public static partial class LayoutTidy
   /// <summary>
   ///   Gets ready for automap to rethink the layout of <paramref name="rooms" /> with the solver, after a move left
   ///   joins pointing the wrong way. Like <see cref="PlanTidy" />: takes a copy now, and <see cref="TidyPlan.Run" />
-  ///   may run on any thread. Deterministic, so the same transcript always makes the same map; rooms stay near where
-  ///   they are unless moving them puts more joins the right way.
+  ///   may run on any thread. Rooms stay near where they are unless moving them puts more joins the right way.
   /// </summary>
-  public static TidyPlan PlanRethink(IList<Element> elements, IEnumerable<Room> rooms, int workMs)
+  /// <param name="deterministic">
+  ///   The same map always gives the same layout (one search thread, limited by work rather than time): for automap
+  ///   without the app (tests, the command line). Otherwise the search uses every thread for up to
+  ///   <paramref name="workMs" /> milliseconds, which finds better layouts sooner but not always the same one.
+  /// </param>
+  public static TidyPlan PlanRethink(IList<Element> elements, IEnumerable<Room> rooms, int workMs, bool deterministic = true)
   {
     var map = new LayoutMap(elements ?? new List<Element>());
     var movable = (rooms ?? Enumerable.Empty<Room>()).Where(map.Contains).ToList();
     return new TidyPlan(map, movable, TidyMethod.Thorough, workMs, token =>
     {
-      Solve(map, movable, workMs, token, deterministic: true);
+      Solve(map, movable, workMs, token, deterministic);
       return true;
     });
   }
@@ -248,6 +255,13 @@ public static partial class LayoutTidy
 
     public double WantY;
     public double Pull;
+
+    /// <summary>
+    ///   The path bends: both ends have compass directions that aren't opposite (east from South Junction arrives at
+    ///   Southeast Junction from the south). It is drawn slanting, so it needn't be exactly diagonal, and it gives way
+    ///   to straight joins.
+    /// </summary>
+    public bool Bent;
 
     /// <summary>Where the join meets each room, from the room's centre: the line is drawn between these points.</summary>
     public double AX, AY, BX, BY;
@@ -415,6 +429,8 @@ public static partial class LayoutTidy
 
           join.WantX = Math.Sign(x);
           join.WantY = Math.Sign(y);
+          join.Bent = aIsCompass && bIsCompass &&
+                      (Math.Sign(fromA.X) != -Math.Sign(fromB.X) || Math.Sign(fromA.Y) != -Math.Sign(fromB.Y));
           // with its way back contradicted, all a join says is roughly which way the other room is: the path bends
           // somewhere, so it pulls gently
           join.Pull = (aIsCompass || bIsCompass) && !aContradicted && !bContradicted ? CompassPull : SoftPull;
@@ -650,7 +666,7 @@ public static partial class LayoutTidy
           {
             if (OutOfTime(clock, timeLimitMs)) return Apply();
             var join = _joins[j];
-            if (join.Pull <= 0 || members.Contains(join.A) == members.Contains(join.B)) continue;
+            if (join.Pull <= 0 || join.Bent || members.Contains(join.A) == members.Contains(join.B)) continue;
             var (sx, sy) = ExactShift(join);
             if (Math.Abs(sx) < 0.5 && Math.Abs(sy) < 0.5) continue;
             // the shift is for B; moving A instead goes the other way
@@ -1025,7 +1041,7 @@ public static partial class LayoutTidy
       var off = AngleBetween(ax, ay, join.WantX, join.WantY);
       var cost = off <= NaturalAngle ? 0 : 1 + (off - NaturalAngle) / 45;
       cost += LengthCost * Math.Max(0, distance - want);
-      if (off <= NaturalAngle && !IsExact(join)) cost += InexactCost;
+      if (off <= NaturalAngle && !join.Bent && !IsExact(join)) cost += InexactCost;
       return join.Pull * cost;
     }
 
@@ -1190,6 +1206,20 @@ public static partial class LayoutTidy
     }
 
     public int NaturalCount() => DirectedJoins.Count(IsNatural);
+
+    /// <summary>
+    ///   What's wrong with the layout, counted: joins not pointing their way, and rooms a join runs across. (Joins
+    ///   crossing each other are left to the step-by-step tidy.)
+    /// </summary>
+    public int ProblemCount()
+    {
+      var problems = DirectedJoins.Count(join => !IsNatural(join));
+      foreach (var join in _joins)
+        for (var room = 0; room < _rooms.Count; room++)
+          if (room != join.A && room != join.B && SegmentHitsRoom(join, room))
+            problems++;
+      return problems;
+    }
 
     /// <summary>
     ///   An end labelled up or down, off the compass points, wherever it meets its room (it moves round to keep clear

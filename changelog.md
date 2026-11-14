@@ -17,7 +17,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **The map rethinks itself when it learns it was wrong.** When a move shows that rooms were laid out the wrong way
   round (going back south reaches a room automap had drawn above you), tidying as you go now lays the map out again
   instead of nudging rooms a step at a time, and the rooms slide to their new places. It works this out in the
-  background, so the window stays responsive, and the same transcript always makes the same map.
+  background, so the window stays responsive.
+- **Tidier layouts from Tidy Map and the rethink.** Rooms near each other now line up in rows and columns even when
+  they aren't joined. A straight join never runs across a room, and a slanting one keeps rooms out of its way. A
+  path that bends (east from one room arriving from the south at the next) is drawn slanting, and no longer pushes
+  rooms apart to make itself an exact diagonal at the cost of straight joins elsewhere.
 - **Rooms you've placed by hand make way.** Tidying never moves a room you put somewhere yourself back to where it
   thinks the room should go, but it can now slide it aside, with the rooms around it, when a new room needs the
   space. Before, such a room never moved, so new rooms had to go somewhere awkward around it.
