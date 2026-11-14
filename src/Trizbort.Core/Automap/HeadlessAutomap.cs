@@ -24,8 +24,13 @@ public static class HeadlessAutomap
   ///   read to its end. Marks the project as not dirty afterwards, as the legacy command line did, so that exiting does
   ///   not ask about unsaved changes. Never throws for automap failures.
   /// </summary>
+  /// <param name="repeatableLayout">
+  ///   True (the default) for the same map every time from the same transcript, as tests need; false to lay the map
+  ///   out as the app does, with a faster search that may differ from run to run.
+  /// </param>
   public static async Task<HeadlessAutomapResult> RunAsync(
-    Project project, string transcriptPath, AutomapSettings settings, IEditorPrompts prompts)
+    Project project, string transcriptPath, AutomapSettings settings, IEditorPrompts prompts,
+    bool repeatableLayout = true)
   {
     if (project == null) throw new ArgumentNullException(nameof(project));
     if (string.IsNullOrWhiteSpace(transcriptPath))
@@ -48,7 +53,7 @@ public static class HeadlessAutomap
 
     try
     {
-      await engine.StartCl(new AutomapCanvas(project, engine), settings);
+      await engine.StartCl(new AutomapCanvas(project, engine) { RepeatableLayout = repeatableLayout }, settings);
     }
     catch (Exception ex)
     {

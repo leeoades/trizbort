@@ -1208,6 +1208,20 @@ public static partial class LayoutTidy
     public int NaturalCount() => DirectedJoins.Count(IsNatural);
 
     /// <summary>
+    ///   Everything wrong with the layout, counted: joins not pointing their way, rooms a join runs across, and joins
+    ///   crossing each other.
+    /// </summary>
+    public int FaultCount()
+    {
+      var faults = ProblemCount();
+      for (var j = 0; j < _joins.Count; j++)
+        for (var k = j + 1; k < _joins.Count; k++)
+          if (Cross(_joins[j], _joins[k]))
+            faults++;
+      return faults;
+    }
+
+    /// <summary>
     ///   What's wrong with the layout, counted: joins not pointing their way, and rooms a join runs across. (Joins
     ///   crossing each other are left to the step-by-step tidy.)
     /// </summary>

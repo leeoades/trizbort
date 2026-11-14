@@ -625,9 +625,10 @@ public class AutomapCanvas : IAutomapCanvas
   private string _tidiedMap;
 
   /// <summary>
-  ///   Tidies the rooms around <paramref name="room" /> when the map has changed since the last tidy (a new room, a
-  ///   new join, or a join that learned a direction). Walking around rooms automap already knows leaves the map, and
-  ///   anything the user moved by hand, alone, unless a room nearby sits on another room or on a join.
+  ///   Tidies the map after a move. The step-by-step tidy only clears up rooms sitting on each other or on joins near
+  ///   <paramref name="room" />: making the map neat (lined up, balanced) is the solver's job, which it does when the
+  ///   map has changed (see <see cref="PlanRethink" />), and the step-by-step tidy would undo it. Walking around rooms
+  ///   automap already knows leaves the map alone.
   /// </summary>
   public void TidyAround(Room room)
   {
@@ -635,7 +636,8 @@ public class AutomapCanvas : IAutomapCanvas
     if (room == null) return;
     var unchanged = MapShape() == _tidiedMap;
     var before = RoomGlide.Positions(CurrentProject.Elements);
-    var moved = LayoutTidy.TidyAround(CurrentProject.Elements.ToList(), room, onlyIfCluttered: unchanged);
+    // only where rooms clash: the step-by-step tidy knows nothing of lining up or balancing
+    var moved = LayoutTidy.TidyAround(CurrentProject.Elements.ToList(), room, onlyIfCluttered: true);
     if (moved > 0)
     {
       // the rooms slide to their new places on screen rather than jumping
@@ -658,8 +660,22 @@ public class AutomapCanvas : IAutomapCanvas
   /// </summary>
   private const int RethinkMs = 1000;
 
+  /// <summary>
+  ///   How much work a repeatable rethink may do (see <see cref="RepeatableLayout" />): less than the app's search, as
+  ///   it runs on one thread and is only for tests and the command line.
+  /// </summary>
+  private const int RepeatableRethinkWork = 300;
+
   // what was wrong with the layout after the last tidy (see LayoutTidy.Problems)
   private int _problems;
+
+  /// <summary>
+  ///   How many new rooms and joins the map may gain before it is rethought anyway (see <see cref="PlanRethink" />).
+  /// </summary>
+  private const int RethinkEvery = 3;
+
+  // how many rooms and joins the map had at the last rethink
+  private int _sizeAtRethink;
 
   // a rethink waiting to be worked out (see RethinkElsewhere)
   private LayoutTidy.TidyPlan _rethink;
@@ -669,6 +685,14 @@ public class AutomapCanvas : IAutomapCanvas
   ///   window stays responsive while the solver thinks. Otherwise <see cref="TidyAround" /> does it there and then.
   /// </summary>
   public bool RethinkElsewhere { get; set; }
+
+  /// <summary>
+  ///   Whether a rethink gives the same layout every time for the same map (one search thread, limited by work), or
+  ///   searches on every thread for up to <see cref="RethinkMs" /> milliseconds, finding better layouts sooner but not
+  ///   always the same one. Unset: the faster search when rethinking elsewhere (the app), the repeatable one otherwise
+  ///   (tests, the command line), so a transcript always makes the same map there.
+  /// </summary>
+  public bool? RepeatableLayout { get; set; }
 
   /// <summary>The rethink <see cref="TidyAround" /> left to be worked out, if any (see <see cref="RethinkElsewhere" />).</summary>
   public LayoutTidy.TidyPlan TakeRethink()
@@ -682,8 +706,9 @@ public class AutomapCanvas : IAutomapCanvas
   ///   When the map has just learnt something that leaves its layout worse than before (more joins pointing the wrong
   ///   way, or running across rooms), as when South Junction turns out to be south of the
   ///   junctions automap had put below it: nudging rooms a step at a time can't put that right, so the solver lays out
-  ///   every room not placed by hand again, and the result is kept only if no fewer joins point their way. Plans that
-  ///   on a copy of the layout; null when the map doesn't need it.
+  ///   every room not placed by hand again, and the result is kept only if no fewer joins point their way. It also
+  ///   does so every few new rooms or joins, to line rooms up and balance them as the map grows. Plans that on a copy
+  ///   of the layout; null when the map doesn't need it.
   /// </summary>
   private LayoutTidy.TidyPlan PlanRethink()
   {
@@ -691,11 +716,17 @@ public class AutomapCanvas : IAutomapCanvas
     var problems = LayoutTidy.Problems(elements);
     var worse = problems > _problems;
     _problems = problems;
-    if (!worse) return null;
     var rooms = elements.OfType<Room>().Where(r => !r.PlacedByHand).ToList();
-    // in the app the search runs in the background on every thread; without it (tests, the command line) it runs
-    // the same way every time, so a transcript always makes the same map
-    return rooms.Count == 0 ? null : LayoutTidy.PlanRethink(elements, rooms, RethinkMs, !RethinkElsewhere);
+    // and every few new rooms or joins anyway: a layout that has nothing wrong can still be made neater (lined up,
+    // balanced), and a join that closes a loop often shows how
+    var size = elements.Count(element => element is Room || element is Connection);
+    var grown = size >= _sizeAtRethink + RethinkEvery;
+    if (!worse && !grown) return null;
+    _sizeAtRethink = size;
+    var repeatable = RepeatableLayout ?? !RethinkElsewhere;
+    return rooms.Count == 0
+      ? null
+      : LayoutTidy.PlanRethink(elements, rooms, repeatable ? RepeatableRethinkWork : RethinkMs, repeatable);
   }
 
   /// <summary>

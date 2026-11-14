@@ -117,6 +117,23 @@ public static partial class LayoutTidy
   /// <summary>How many squares apart (across a column, or down a row) rooms count as near, for lining up.</summary>
   private const int AlignReach = 3;
 
+  /// <summary>Bonus for a room halfway between the rooms its opposite joins lead to (west and east, north and south).</summary>
+  private const int SymmetryWeight = 12;
+
+  /// <summary>Bonus for rooms that aren't joined not sitting as close as joined ones.</summary>
+  private const int ApartWeight = 24;
+
+  /// <summary>
+  ///   Which side of its room a join leaves from the middle of, from where it meets the room: west (-1, 0), north
+  ///   (0, -1) and so on; (0, 0) for a corner, or anywhere else (up and down leave a little off the middle).
+  /// </summary>
+  private static (int X, int Y) Side(double offsetX, double offsetY)
+  {
+    if (Math.Abs(offsetY) < 1 && Math.Abs(offsetX) >= 1) return (Math.Sign(offsetX), 0);
+    if (Math.Abs(offsetX) < 1 && Math.Abs(offsetY) >= 1) return (0, Math.Sign(offsetY));
+    return (0, 0);
+  }
+
   /// <summary>
   ///   Lays out <paramref name="rooms" /> (others stay put) with the solver, then polishes with the step-by-step tidy.
   ///   Returns how many rooms moved, or -1 if the solver found no layout in time (nothing is changed then).
@@ -298,6 +315,61 @@ public static partial class LayoutTidy
       }
     }
 
+    // symmetry: a room with joins leaving from opposite sides (west and east, north and south) sits halfway between
+    // the rooms they lead to, like the Patio between the south-west and south-east junctions
+    var sides = new List<(int Other, int Sx, int Sy)>[n];
+    for (var i = 0; i < n; i++) sides[i] = new List<(int, int, int)>();
+    foreach (var join in map.Joins)
+    {
+      if (join.A == join.B || join.Pull <= 0) continue;
+      var (ax, ay) = Side(join.AX, join.AY);
+      var (bx, by) = Side(join.BX, join.BY);
+      if (ax != 0 || ay != 0) sides[join.A].Add((join.B, ax, ay));
+      if (bx != 0 || by != 0) sides[join.B].Add((join.A, bx, by));
+    }
+
+    for (var r = 0; r < n; r++)
+      foreach (var one in sides[r].Where(side => side.Sx > 0 || side.Sy > 0))
+        foreach (var other in sides[r].Where(side => side.Sx == -one.Sx && side.Sy == -one.Sy && side.Other != one.Other))
+        {
+          if (!movable.Contains(r) && !movable.Contains(one.Other) && !movable.Contains(other.Other)) continue;
+          var balanced = model.NewBoolVar($"sym{r}_{one.Other}_{other.Other}");
+          if (one.Sx != 0)
+            model.Add(2 * x[one.Other] + widthCells[one.Other] + 2 * x[other.Other] + widthCells[other.Other] ==
+                      2 * (2 * x[r] + widthCells[r])).OnlyEnforceIf(balanced);
+          else
+            model.Add(2 * y[one.Other] + heightCells[one.Other] + 2 * y[other.Other] + heightCells[other.Other] ==
+                      2 * (2 * y[r] + heightCells[r])).OnlyEnforceIf(balanced);
+          objective.Add(SymmetryWeight * balanced);
+        }
+
+    // rooms that aren't joined don't sit as close as joined ones, side by side or one above the other, so it's
+    // clear there's no way between them
+    var joined = map.Joins.Select(join => join.A < join.B ? (join.A, join.B) : (join.B, join.A)).ToHashSet();
+    for (var a = 0; a < n; a++)
+      for (var b = a + 1; b < n; b++)
+      {
+        if ((!movable.Contains(a) && !movable.Contains(b)) || joined.Contains((a, b))) continue;
+        if (Math.Abs(cellX[a] - cellX[b]) > AlignReach || Math.Abs(cellY[a] - cellY[b]) > AlignReach) continue;
+        // apart: not in the next square across or down, in the same row or column
+        var apart = model.NewBoolVar($"ap{a}_{b}");
+        var otherColumn = model.NewBoolVar($"apc{a}_{b}");
+        var farAbove = model.NewBoolVar($"apu{a}_{b}");
+        var farBelow = model.NewBoolVar($"apd{a}_{b}");
+        model.Add(2 * x[a] + widthCells[a] != 2 * x[b] + widthCells[b]).OnlyEnforceIf(otherColumn);
+        model.Add(y[b] >= y[a] + heightCells[a] + 1).OnlyEnforceIf(farBelow);
+        model.Add(y[a] >= y[b] + heightCells[b] + 1).OnlyEnforceIf(farAbove);
+        var otherRow = model.NewBoolVar($"apr{a}_{b}");
+        var farRight = model.NewBoolVar($"apx{a}_{b}");
+        var farLeft = model.NewBoolVar($"apy{a}_{b}");
+        model.Add(2 * y[a] + heightCells[a] != 2 * y[b] + heightCells[b]).OnlyEnforceIf(otherRow);
+        model.Add(x[b] >= x[a] + widthCells[a] + 1).OnlyEnforceIf(farRight);
+        model.Add(x[a] >= x[b] + widthCells[b] + 1).OnlyEnforceIf(farLeft);
+        model.AddBoolOr(new ILiteral[] { otherColumn, farAbove, farBelow }).OnlyEnforceIf(apart);
+        model.AddBoolOr(new ILiteral[] { otherRow, farLeft, farRight }).OnlyEnforceIf(apart);
+        objective.Add(ApartWeight * apart);
+      }
+
     // rooms near each other line up in rows and columns, joined or not, so the map reads as a grid
     for (var a = 0; a < n; a++)
       for (var b = a + 1; b < n; b++)
@@ -337,13 +409,16 @@ public static partial class LayoutTidy
       map.PlaceTopLeft(i, originX + solver.Value(x[i]) * stepX, originY + solver.Value(y[i]) * stepY);
 
     var solved = map.NaturalCount();
+    var solvedFaults = map.FaultCount();
     var solvedAt = map.Snapshot();
-    // polish: rooms off joins, fewer crossings, lined up; kept only if it doesn't cost a join pointing its way
+    // polish: rooms off joins, fewer crossings. The step-by-step tidy knows nothing of lining up or balancing, so its
+    // result is kept only if it leaves fewer faults (and no fewer joins pointing their way); otherwise the solver's
+    // neat layout stands
     map.Rebase();
     // (the polish stops when nothing improves; deterministically, it isn't cut short by the clock)
     map.Tidy(rooms, deterministic ? 5000 : Math.Max(500, timeLimitMs / 5), null, null, StayPut / 20, token);
     if (token.IsCancellationRequested) return 0;
-    if (map.NaturalCount() < solved) map.Restore(solvedAt);
+    if (map.NaturalCount() < solved || map.FaultCount() >= solvedFaults) map.Restore(solvedAt);
 
     // never worse than it was
     if (map.NaturalCount() < naturalBefore)

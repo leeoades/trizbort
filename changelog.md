@@ -18,6 +18,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   round (going back south reaches a room automap had drawn above you), tidying as you go now lays the map out again
   instead of nudging rooms a step at a time, and the rooms slide to their new places. It works this out in the
   background, so the window stays responsive.
+- **Balanced layouts.** A room with ways out on opposite sides now sits halfway between the rooms they lead to (the
+  Patio between the south-west and south-east junctions, the Cannon Emplacement between the north ones), so
+  symmetric places come out symmetric. Rooms that aren't joined keep further apart than joined ones, so it's clear
+  there's no way between them. While automapping, the map is laid out again every few new rooms or joins, and the
+  quick tidy after each move only clears up rooms that clash, so it no longer undoes the neat layout.
 - **Tidier layouts from Tidy Map and the rethink.** Rooms near each other now line up in rows and columns even when
   they aren't joined. A straight join never runs across a room, and a slanting one keeps rooms out of its way. A
   path that bends (east from one room arriving from the south at the next) is drawn slanting, and no longer pushes

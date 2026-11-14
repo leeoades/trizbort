@@ -32,7 +32,8 @@ public class AutomapLayoutRuns : IsolatedProjectTests
     Project.Current = project;
     var settings = AutomapSettings.Default;
     settings.AutoTidy = true;
-    var result = await HeadlessAutomap.RunAsync(project, transcript, settings, new Prompts(sameDirection));
+    var repeatable = Environment.GetEnvironmentVariable("TRIZBORT_LAYOUT_AS_APP") != "1";
+    var result = await HeadlessAutomap.RunAsync(project, transcript, settings, new Prompts(sameDirection), repeatable);
     TestContext.Out.WriteLine(result.Succeeded ? "mapped" : "error: " + result.Error);
 
     var outFolder = Environment.GetEnvironmentVariable("TRIZBORT_LAYOUT_OUT") ?? Path.GetTempPath();
