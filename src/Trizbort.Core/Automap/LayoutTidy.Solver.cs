@@ -209,6 +209,7 @@ public static partial class LayoutTidy
     var maxY = cellY.Max() + reach;
 
     var naturalBefore = map.NaturalCount();
+    var faultsBefore = map.FaultCount();
     var before = map.Snapshot();
 
     var model = new CpModel();
@@ -298,6 +299,9 @@ public static partial class LayoutTidy
       var exact = model.NewBoolVar($"e{j}");
       objective.Add(ExactWeight * exact);
       model.AddImplication(exact, satisfied);
+      // north at one end and south at the other only points its way when it's dead straight: a long slanting line
+      // that's merely roughly north doesn't count (cardinal directions shouldn't bend)
+      if (join.Straight) model.AddImplication(satisfied, exact);
       if (wy == 0) model.Add(dy == 0).OnlyEnforceIf(exact);
       else if (wx == 0) model.Add(dx == 0).OnlyEnforceIf(exact);
       else model.Add(wx * dx == wy * dy).OnlyEnforceIf(exact);
@@ -421,7 +425,8 @@ public static partial class LayoutTidy
     if (map.NaturalCount() < solved || map.FaultCount() >= solvedFaults) map.Restore(solvedAt);
 
     // never worse than it was
-    if (map.NaturalCount() < naturalBefore)
+    // and no more joins running across rooms or crossing each other
+    if (map.NaturalCount() < naturalBefore || map.FaultCount() > faultsBefore)
     {
       map.Restore(before);
       return 0;

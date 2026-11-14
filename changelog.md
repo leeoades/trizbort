@@ -101,6 +101,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **Relaying out the map no longer throws a room far away.** Going down from the Cannon Emplacement to the Cliff
+  sent the Front Porch above the Cannon, on a long slanting line across the map. A join that's north at one end and
+  south at the other now only counts as pointing its way when it's straight, and a relayout is thrown away if it
+  leaves more lines crossing or running across rooms than before.
 - **A way back that turns out to be wrong no longer holds rooms in place.** Two-way joins assume the way back
   (east there, so west back). When west from that room actually leads somewhere else, the tidy now stops treating
   the assumed way back as fixed, so the path can bend around the house as it does in the game.

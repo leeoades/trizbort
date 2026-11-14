@@ -22,6 +22,7 @@ public class AutomapLayoutRuns : IsolatedProjectTests
   [TestCase("hollywood-hijinx-nov-6", AutomapSameDirectionResult.KeepRoom1)]
   [TestCase("hollywood-hijinx-old", AutomapSameDirectionResult.KeepBoth)]
   [TestCase("hollywood-hijinx-opening", AutomapSameDirectionResult.KeepRoom1)]
+  [TestCase("hollywood-hijinx-down-to-cliff", AutomapSameDirectionResult.KeepRoom1)]
   public async Task Run(string scenario, AutomapSameDirectionResult sameDirection)
   {
     var root = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);

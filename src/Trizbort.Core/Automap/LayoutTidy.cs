@@ -263,6 +263,12 @@ public static partial class LayoutTidy
     /// </summary>
     public bool Bent;
 
+    /// <summary>
+    ///   North at one end and south at the other (or east and west): a compass join that should be drawn dead
+    ///   straight, not just roughly that way.
+    /// </summary>
+    public bool Straight;
+
     /// <summary>Where the join meets each room, from the room's centre: the line is drawn between these points.</summary>
     public double AX, AY, BX, BY;
   }
@@ -431,6 +437,7 @@ public static partial class LayoutTidy
           join.WantY = Math.Sign(y);
           join.Bent = aIsCompass && bIsCompass &&
                       (Math.Sign(fromA.X) != -Math.Sign(fromB.X) || Math.Sign(fromA.Y) != -Math.Sign(fromB.Y));
+          join.Straight = aIsCompass && bIsCompass && !join.Bent && (Math.Sign(x) == 0 || Math.Sign(y) == 0);
           // with its way back contradicted, all a join says is roughly which way the other room is: the path bends
           // somewhere, so it pulls gently
           join.Pull = (aIsCompass || bIsCompass) && !aContradicted && !bContradicted ? CompassPull : SoftPull;
