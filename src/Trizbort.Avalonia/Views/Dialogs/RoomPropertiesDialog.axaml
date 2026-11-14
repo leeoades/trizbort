@@ -73,27 +73,16 @@
                         </Grid>
                     </HeaderedContentControl>
 
-                    <HeaderedContentControl Grid.Row="2" Classes="group" Header="Position">
-                        <StackPanel Spacing="8">
-                            <Grid ColumnDefinitions="Auto,12,*">
-                                <Label Grid.Column="0" Classes="field-label" Content="_Position:" Target="{Binding #PositionCombo}" />
-                                <ComboBox Grid.Column="2" x:Name="PositionCombo" ItemsSource="{Binding AvailableObjectPositions}"
-                                          SelectedItem="{Binding ObjectsPosition}" HorizontalAlignment="Left" MinWidth="140" />
-                            </Grid>
-                            <HeaderedContentControl Classes="group" Header="Custom Position">
-                                <StackPanel Spacing="8">
-                                    <CheckBox Content="_Custom Position" IsChecked="{Binding UseCustomPosition}" />
-                                    <Grid ColumnDefinitions="Auto,12,120,24,Auto,12,120" IsEnabled="{Binding UseCustomPosition}" Margin="16,0,0,0">
-                                        <Label Grid.Column="0" Classes="field-label" Content="Do_wn:" Target="{Binding #DownBox}" />
-                                        <NumericUpDown Grid.Column="2" x:Name="DownBox" Value="{Binding CustomPositionDown}"
-                                                       Minimum="-1000" Maximum="1000" FormatString="0" />
-                                        <Label Grid.Column="4" Classes="field-label" Content="Ri_ght:" Target="{Binding #RightBox}" />
-                                        <NumericUpDown Grid.Column="6" x:Name="RightBox" Value="{Binding CustomPositionRight}"
-                                                       Minimum="-1000" Maximum="1000" FormatString="0" />
-                                    </Grid>
-                                </StackPanel>
-                            </HeaderedContentControl>
-                        </StackPanel>
+                    <!-- where the object list is drawn: dragged on the map, or automatic -->
+                    <HeaderedContentControl Grid.Row="2" Classes="group" Header="Object List Position">
+                        <Grid ColumnDefinitions="*,12,Auto">
+                            <TextBlock x:Name="ObjectListPositionText" Text="{Binding ObjectListPositionText}"
+                                       TextWrapping="Wrap" VerticalAlignment="Center" />
+                            <Button Grid.Column="2" x:Name="ResetObjectListButton" Content="_Reset"
+                                    Command="{Binding ResetObjectListPositionCommand}"
+                                    IsEnabled="{Binding ObjectListPlaced}"
+                                    ToolTip.Tip="Put the object list back at the default spot (or out of the way of joins)" />
+                        </Grid>
                     </HeaderedContentControl>
                 </Grid>
             </TabItem>

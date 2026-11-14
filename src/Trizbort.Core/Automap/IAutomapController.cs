@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Trizbort.Domain.Elements;
 
 namespace Trizbort.Automap;
@@ -47,6 +48,33 @@ public interface IAutomapController
   void SetCurrentRoom(Room room)
   {
   }
+
+  /// <summary>
+  ///   Paused move by move before a command the game wrote while automap waited at the end of the transcript: the game
+  ///   is being played now (Play to the End follows it live).
+  /// </summary>
+  bool GameWentOn => false;
+
+  /// <summary>Whether there's a move to play after where automap is in the transcript.</summary>
+  bool HasNextMove => true;
+
+  /// <summary>Whether there's a move to go back to.</summary>
+  bool CanGoBack => true;
+
+  /// <summary>
+  ///   Where automap is in the transcript: the moves (commands typed) played so far, and the moves in the transcript
+  ///   so far. Cheap enough to call on a timer.
+  /// </summary>
+  (int Played, int Total) MoveCount() => (0, 0);
+
+  /// <summary>Whether the room automap has the player in can be split off as a different room: the way in is known.</summary>
+  bool CanSplitCurrentRoom => false;
+
+  /// <summary>
+  ///   "This is a different room": the room automap has the player in is another room with that name. Makes it, moves
+  ///   the way in over to it and carries on from there.
+  /// </summary>
+  Task<bool> SplitCurrentRoomAsync() => Task.FromResult(false);
 
   /// <summary>Stop mapping for now, following the player through rooms already on the map.</summary>
   void Suspend()

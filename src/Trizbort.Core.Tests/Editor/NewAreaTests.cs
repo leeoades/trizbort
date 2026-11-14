@@ -68,6 +68,90 @@ public class NewAreaTests : IsolatedProjectTests
     join.Distance(new Vector(1000, -100), false).ShouldBeGreaterThan(100);
   }
 
+  /// <summary>Garden - Porch - Foyer, with the house beyond the foyer: Living Room - Dining Room, Living Room - Study.</summary>
+  private static (Room Garden, Room Porch, Room Foyer, Room Living, Room Dining, Room Study) House()
+  {
+    var garden = Add("Garden", -400, 0);
+    var porch = Add("Front Porch", 0, 0);
+    var foyer = Add("Foyer", 0, -200);
+    var living = Add("Living Room", -200, -200);
+    var dining = Add("Dining Room", -200, -400);
+    var study = Add("Study", -400, -200);
+    var canvas = new AutomapCanvas(Project.Current);
+    canvas.Connect(garden, MappableDirection.East, porch, true);
+    canvas.Connect(porch, MappableDirection.North, foyer, true);
+    canvas.Connect(foyer, MappableDirection.West, living, true);
+    canvas.Connect(living, MappableDirection.North, dining, true);
+    canvas.Connect(living, MappableDirection.West, study, true);
+    garden.IsStartRoom = true;
+    return (garden, porch, foyer, living, dining, study);
+  }
+
+  private static Connection JoinOf(Room a, Room b) =>
+    Project.Current.Elements.OfType<Connection>().Single(join =>
+      (join.GetSourceRoom() == a && join.GetTargetRoom() == b) || (join.GetSourceRoom() == b && join.GetTargetRoom() == a));
+
+  [Test]
+  public void TheHouseBeyondTheFoyer_IsABranch_TheGardenSideIsnt()
+  {
+    var (_, _, foyer, living, dining, study) = House();
+
+    var branches = NewArea.Branches(Project.Current, new[] { foyer });
+
+    var branch = branches.ShouldHaveSingleItem();
+    branch.Via.ShouldBe(foyer);
+    branch.First.ShouldBe(living);
+    branch.Rooms.ShouldBe(new[] { living, dining, study }, ignoreOrder: true);
+    branch.Description.ShouldBe("Living Room and 2 more rooms");
+  }
+
+  [Test]
+  public void AJoinBackAnotherWay_MeansNoBranch()
+  {
+    var (garden, _, foyer, _, _, study) = House();
+    new AutomapCanvas(Project.Current).Connect(study, MappableDirection.South, garden, true);
+
+    NewArea.Branches(Project.Current, new[] { foyer }).ShouldBeEmpty();
+  }
+
+  [Test]
+  public void MovingSeveralRooms_KeepsTheirLayout_AndSplitsOnlyTheJoinsToRoomsLeftBehind()
+  {
+    var (_, porch, foyer, living, dining, study) = House();
+    var before = new[] { foyer, living, dining, study }.Select(room => room.Position).ToList();
+
+    var split = NewArea.Start(Project.Current, new[] { foyer, living, dining, study });
+
+    split.ShouldHaveSingleItem().ShouldBe(JoinOf(porch, foyer));
+    var moved = new[] { foyer, living, dining, study }.Select(room => room.Position).ToList();
+    var delta = moved[0] - before[0];
+    delta.X.ShouldBeGreaterThan(0);
+    for (var index = 0; index < moved.Count; index++) (moved[index] - before[index]).ShouldBe(delta);
+    JoinOf(foyer, living).Split.ShouldBeFalse();
+    JoinOf(living, dining).Split.ShouldBeFalse();
+    study.Position.X.ShouldBeGreaterThan(porch.Position.X + porch.Width);
+  }
+
+  [Test]
+  public void BringingARoomAcrossASplitJoin_PutsItBesideTheOtherEnd_AndJoinsThemWhole()
+  {
+    var (_, _, foyer, living, dining, study) = House();
+    NewArea.Start(Project.Current, foyer);
+    var join = JoinOf(foyer, living);
+    join.Split.ShouldBeTrue();
+
+    NewArea.Bring(join, living, new[] { study });
+
+    join.Split.ShouldBeFalse();
+    // the join leaves the foyer on its west side: the living room goes west of it
+    (living.Position.X + living.Width).ShouldBeLessThan(foyer.Position.X);
+    living.Position.Y.ShouldBe(foyer.Position.Y);
+    // the study came too, still west of the living room; the dining room was left behind
+    (study.Position.X + study.Width).ShouldBeLessThan(living.Position.X);
+    JoinOf(living, study).Split.ShouldBeFalse();
+    JoinOf(living, dining).Split.ShouldBeTrue();
+  }
+
   [Test]
   public void ACopy_OrARoomWithNoJoins_CantStartAnArea()
   {

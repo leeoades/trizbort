@@ -84,11 +84,40 @@ public class AutomapPromptDialogTests
     }
 
     [Test]
-    public void SameDirection_CloseWithoutChoice_IsKeepRoom1()
+    public void SameDirection_CloseWithoutChoice_IsCancel_MappingNothing()
     {
         var vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry");
 
-        vm.Result.ShouldBe(AutomapSameDirectionResult.KeepRoom1);
+        vm.Result.ShouldBe(AutomapSameDirectionResult.Cancel);
+    }
+
+    [Test]
+    public void SameDirection_OptionsOnTheLeft_ExplainedOnTheRight()
+    {
+        var vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry");
+        vm.Options.Select(option => option.Result).ShouldBe(new[]
+        {
+            AutomapSameDirectionResult.KeepRoom1, AutomapSameDirectionResult.KeepRoom2, AutomapSameDirectionResult.KeepBoth,
+            AutomapSameDirectionResult.SamePlace
+        });
+
+        vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" };
+        vm.Options.Select(option => option.Title).ShouldBe(new[]
+        {
+            "Keep 'Kitchen'", "Keep 'Pantry'", "Keep Both", "The same place at different times",
+            "This is a different 'Cupboard'",
+            "'Cupboard' moves (a lift, a vehicle)"
+        });
+        vm.OkCommand.CanExecute(null).ShouldBeFalse();
+        vm.Selected = vm.Options[5];
+        vm.Explanation.ShouldContain("takes you with it");
+        vm.OkCommand.Execute(null);
+        vm.Result.ShouldBe(AutomapSameDirectionResult.Moves);
+
+        vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" };
+        vm.Selected = vm.Options[4];
+        vm.OkCommand.Execute(null);
+        vm.Result.ShouldBe(AutomapSameDirectionResult.DifferentRoom);
     }
 
     [Test]
@@ -223,8 +252,10 @@ public class AutomapPromptDialogTests
             DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry")
         };
         sameDirection.Show();
-        // Moves and Split are offered only when the room the player left is known
-        sameDirection.GetVisualDescendants().OfType<Button>().Count(button => button.IsVisible).ShouldBe(3);
+        // OK and Cancel; the answers are in the list, the first picked to start with
+        sameDirection.GetVisualDescendants().OfType<Button>()
+            .Count(button => button.IsVisible && (button.Content as string) is "OK" or "Cancel").ShouldBe(2);
+        ((AutomapSameDirectionViewModel)sameDirection.DataContext!).Selected!.Result.ShouldBe(AutomapSameDirectionResult.KeepRoom1);
         sameDirection.Close();
 
         sameDirection = new AutomapSameDirectionDialog
@@ -232,9 +263,7 @@ public class AutomapPromptDialogTests
             DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" }
         };
         sameDirection.Show();
-        sameDirection.GetVisualDescendants().OfType<Button>().Count(button => button.IsVisible).ShouldBe(5);
-        sameDirection.GetVisualDescendants().OfType<Button>().ShouldContain(button => (button.Content as string) == "Split 'Cupboard' into separate rooms");
-        sameDirection.GetVisualDescendants().OfType<Button>().ShouldContain(button => (button.Content as string) == "'Cupboard' moves (a lift, a vehicle)");
+        sameDirection.GetVisualDescendants().OfType<ListBoxItem>().Count().ShouldBe(6);
         sameDirection.Close();
 
         var disambiguate = new DisambiguateRoomsDialog
@@ -308,7 +337,6 @@ public class AutomapPromptDialogTests
         var settings = AutomapSettings.Default;
         settings.FileName = _transcriptPath;
         settings.VerboseTranscript = true;
-        settings.AssumeRoomsWithSameNameAreSameRoom = false;
         settings.AssumeTwoWayConnections = true;
         settings.GuessExits = false;
 

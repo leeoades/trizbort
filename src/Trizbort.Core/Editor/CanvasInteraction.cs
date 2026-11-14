@@ -66,6 +66,13 @@ public sealed class CanvasInteraction : IDisposable
   private Connection _dragNewConnection;
   private Port _newConnectionFrom;
 
+  // dragging a room's object list
+  private Room _dragObjectsRoom;
+  private Vector _dragObjectsStart;
+  private bool _dragObjectsMoved;
+  private int _dragObjectsRight;
+  private int _dragObjectsDown;
+
   private Port _pendingPort;
   private Vector _pendingStartClient;
   private Vector _pendingStartWorld;
@@ -227,6 +234,20 @@ public sealed class CanvasInteraction : IDisposable
       return true;
     }
 
+    // a room's object list: dragged anywhere (beside the room, or inside it once the room's selected)
+    var listRoom = shift || ctrl ? null : HitObjectList(world, selection);
+    if (listRoom != null)
+    {
+      if (!selection.Contains(listRoom)) _session.Select(new Element[] { listRoom }, true);
+      BeginTransaction("Move object list");
+      _mode = CanvasDragMode.MoveObjectList;
+      _dragObjectsRoom = listRoom;
+      _dragObjectsStart = world;
+      _dragObjectsMoved = false;
+      Refresh();
+      return true;
+    }
+
     var element = _hit.HitElement(world);
     if (element != null)
     {
@@ -306,6 +327,10 @@ public sealed class CanvasInteraction : IDisposable
 
       case CanvasDragMode.MoveResizeHandle:
         if (_dragHandle != null) _dragHandleLast = MapEditing.Resize(_dragHandle, _dragHandleLast, world);
+        break;
+
+      case CanvasDragMode.MoveObjectList:
+        MoveObjectList(world);
         break;
 
       case CanvasDragMode.MovePort:
@@ -546,6 +571,64 @@ public sealed class CanvasInteraction : IDisposable
     }
   }
 
+  /// <summary>
+  ///   The room whose object list is under <paramref name="world" />, topmost first. A list inside its room counts only
+  ///   once the room is selected, so the room can still be dragged by it otherwise.
+  /// </summary>
+  private Room HitObjectList(Vector world, Selection selection)
+  {
+    var elements = _session.Project.Elements;
+    for (var index = elements.Count - 1; index >= 0; index--)
+    {
+      if (elements[index] is not Room room || room.ObjectListBounds is not { } list) continue;
+      if (world.X < list.Left || world.X > list.Right || world.Y < list.Top || world.Y > list.Bottom) continue;
+      var bounds = room.InnerBounds;
+      var inRoom = world.X >= bounds.Left && world.X <= bounds.Right && world.Y >= bounds.Top && world.Y <= bounds.Bottom;
+      if (inRoom && !selection.Contains(room)) continue;
+      return room;
+    }
+
+    return null;
+  }
+
+  /// <summary>
+  ///   Drags the object list: once it moves, it's placed by hand at the spot it was drawn at, nudged by how far it's
+  ///   been dragged (any distance, any way).
+  /// </summary>
+  private void MoveObjectList(Vector world)
+  {
+    var room = _dragObjectsRoom;
+    if (room == null) return;
+    var moved = world - _dragObjectsStart;
+    if (!_dragObjectsMoved)
+    {
+      if (Math.Abs(moved.X) * _session.Viewport.ZoomFactor <= ClickTolerance &&
+          Math.Abs(moved.Y) * _session.Viewport.ZoomFactor <= ClickTolerance)
+        return;
+      _dragObjectsMoved = true;
+      if (!room.ObjectsPlaced)
+      {
+        room.ObjectsPosition = room.ObjectsDrawnAt;
+        room.ObjectsInside = room.ObjectsDrawnInside;
+        room.ObjectsCustomPositionRight = 0;
+        room.ObjectsCustomPositionDown = 0;
+        room.ObjectsPlaced = true;
+      }
+      else if (!room.ObjectsCustomPosition)
+      {
+        room.ObjectsCustomPositionRight = 0;
+        room.ObjectsCustomPositionDown = 0;
+      }
+
+      room.ObjectsCustomPosition = true;
+      _dragObjectsRight = room.ObjectsCustomPositionRight;
+      _dragObjectsDown = room.ObjectsCustomPositionDown;
+    }
+
+    room.ObjectsCustomPositionRight = _dragObjectsRight + (int)Math.Round(moved.X);
+    room.ObjectsCustomPositionDown = _dragObjectsDown + (int)Math.Round(moved.Y);
+  }
+
   private void UpdateHover(Vector world)
   {
     var element = _hit.HitElement(world);
@@ -671,6 +754,7 @@ public sealed class CanvasInteraction : IDisposable
     _newConnectionFrom = null;
     _pendingPort = null;
     _panMoved = false;
+    _dragObjectsRoom = null;
   }
 
   private void BeginTransaction(string title)

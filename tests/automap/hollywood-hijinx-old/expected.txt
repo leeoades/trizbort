@@ -40,7 +40,6 @@ Southwest Junction [north] <-> [south] Northwest Junction
 Southwest Junction [south] <-> [west] South Junction
 Top Landing [southsouthwest "d"] <-> [northnorthwest "u"] Middle of Beach Stairs
 
-natural joins: 18 of 20
-exact joins: 12 of 20
-not natural: Garden, East -> Garden, South
-not natural: Northwest Junction -> Cannon Emplacement
+natural joins: 19 of 20
+exact joins: 16 of 20
+not natural: Garden, South -> Garden, West

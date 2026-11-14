@@ -34,17 +34,19 @@ public sealed partial class CommandCatalogue
     {
       Id = "room.toggleAutomapPause",
       ContextOrder = 62, ContextGroup = "5-room",
-      Title = "Don't _Automap From Here",
+      Title = "_Disable Automap on This Room",
+      DynamicTitle = s => s.PrimaryRoom != null && s.PrimaryRoom.AutomapPause
+        ? "_Enable Automap on This Room"
+        : "_Disable Automap on This Room",
       MenuPath = "Edit/Rooms",
       Group = "6-automap",
       ContextTargets = ContextTargets.Room,
       CanExecuteFunc = s => s.Selection.Rooms.Any(room => !room.IsReference),
-      IsCheckedFunc = s => s.PrimaryRoom != null && s.PrimaryRoom.AutomapPause,
       ExecuteAsyncFunc = s => Run(() =>
       {
         var rooms = s.Selection.Rooms.ToList();
         var on = !(s.PrimaryRoom ?? rooms[0]).AutomapPause;
-        s.Execute(on ? "Don't automap from here" : "Automap from here", () =>
+        s.Execute(on ? "Disable automap on " + (s.PrimaryRoom ?? rooms[0]).Name : "Enable automap on " + (s.PrimaryRoom ?? rooms[0]).Name, () =>
         {
           foreach (var room in rooms) room.AutomapPause = on;
         });
@@ -120,18 +122,12 @@ public sealed partial class CommandCatalogue
     {
       Id = "room.newArea",
       ContextOrder = 65, ContextGroup = "5-room",
-      Title = "Start a New _Area Here",
+      Title = "Move to a New _Area...",
       MenuPath = "Edit/Rooms",
       Group = "6-automap",
       ContextTargets = ContextTargets.Room,
-      CanExecuteFunc = s => s.SelectedRooms.Count == 1 && NewArea.CanStart(s.PrimaryRoom ?? s.SelectedRooms[0]),
-      ExecuteAsyncFunc = s => Run(() =>
-      {
-        var room = s.PrimaryRoom ?? s.SelectedRooms[0];
-        s.Execute("Start a new area at " + room.Name, () => NewArea.Start(s.Project, room));
-        s.Selection.Set(new List<Element> { room });
-        s.EnsureVisible(room);
-      })
+      CanExecuteFunc = s => NewArea.CanMove(s.SelectedRooms),
+      ExecuteAsyncFunc = MoveToNewAreaAsync
     });
     catalogue.Register(new EditorCommand
     {
@@ -150,6 +146,18 @@ public sealed partial class CommandCatalogue
         s.Execute("Merge rooms into " + keep.Name, () => RoomMerge.Merge(s.Project.Elements, keep, rooms));
         s.Selection.Set(new List<Element> { keep });
       })
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "room.split",
+      ContextOrder = 63, ContextGroup = "5-room",
+      Title = "S_plit Room...",
+      MenuPath = "Edit/Rooms",
+      Group = "6-automap",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.SelectedRooms.Count == 1 && !s.SelectedRooms[0].IsReference &&
+                            RoomSplit.JoinsOf(s.SelectedRooms[0]).Count > 0,
+      ExecuteAsyncFunc = SplitRoomAsync
     });
     catalogue.Register(new EditorCommand
     {
@@ -202,6 +210,7 @@ public sealed partial class CommandCatalogue
     });
 
     // Shapes (027). Primary+E is Ellipse (the legacy canvas wrongly set square corners).
+    RegisterResetObjectList(catalogue);
     RegisterShape(catalogue, "room.shape.square", "S_quare Corners", InputKey.H, RoomShape.SquareCorners, 53);
     RegisterShape(catalogue, "room.shape.ellipse", "_Ellipse", InputKey.E, RoomShape.Ellipse, 54);
     RegisterShape(catalogue, "room.shape.rounded", "_Rounded Edges", InputKey.R, RoomShape.RoundedCorners, 55);
@@ -255,6 +264,7 @@ public sealed partial class CommandCatalogue
     var moves = await session.Prompts.RunWithProgressAsync(title, "Tidying the map...", plan.ExpectedMs, plan.Run);
     if (moves == null || moves.Count == 0) return;
 
+    var before = RoomGlide.Positions(session.Project.Elements);
     session.Execute(title, () =>
     {
       // asked to tidy them, so they're no longer where the user put them by hand
@@ -262,6 +272,8 @@ public sealed partial class CommandCatalogue
       LayoutTidy.TidyPlan.Apply(moves);
       GuessedEnds.Face(session.Project.Elements, plan.Rooms.ToList());
     });
+    // the rooms slide to their new places on screen rather than jumping
+    RoomGlide.Start(before);
   }
 
   private static void RegisterShape(
@@ -304,5 +316,100 @@ public sealed partial class CommandCatalogue
       CanExecuteFunc = s => s.SelectedRooms.Count == 2,
       ExecuteAsyncFunc = s => Run(() => swap(s))
     });
+  }
+
+  /// <summary>
+  ///   Split Room...: the room is two places with one name. Asks which joins go to the new room (the newest, automap's
+  ///   way in, to start with) and, while automapping, which room the player is in; then splits it, in one undo step.
+  /// </summary>
+  /// <summary>Reset Object List Position: the selected rooms' object lists go back to automatic.</summary>
+  private static void RegisterResetObjectList(CommandCatalogue catalogue)
+  {
+    catalogue.Register(new EditorCommand
+    {
+      Id = "room.resetObjectList",
+      Title = "Reset Object List _Position",
+      MenuPath = "Edit/Rooms",
+      Group = "3-shape",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.SelectedRooms.Any(room => room.ObjectsPlaced),
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        var rooms = s.SelectedRooms.Where(room => room.ObjectsPlaced).ToList();
+        s.Execute("Reset object list position", () =>
+        {
+          foreach (var room in rooms) room.ResetObjectListPosition();
+        });
+      })
+    });
+  }
+
+  /// <summary>
+  ///   Move to a New Area...: the rooms selected, with the branches of the map hanging off them the user picks, move
+  ///   together to clear space beside the map.
+  /// </summary>
+  private static async Task MoveToNewAreaAsync(EditorSession s)
+  {
+    var rooms = s.SelectedRooms.ToList();
+    if (!NewArea.CanMove(rooms)) return;
+    var names = rooms.Count == 1 ? "'" + rooms[0].Name + "'" : rooms.Count + " rooms";
+    var branches = NewArea.Branches(s.Project, rooms);
+    var chosen = branches.Count == 0
+      ? branches
+      : await s.Prompts.ChooseAreaBranchesAsync("Move " + names + " to a New Area", rooms, branches);
+    if (chosen == null) return;
+
+    var moving = rooms.Concat(chosen.SelectMany(branch => branch.Rooms)).Distinct().ToList();
+    s.Execute("Move " + names + " to a new area", () => NewArea.Start(s.Project, moving));
+    s.Selection.Set(moving.Where(s.Project.Elements.Contains).Cast<Element>().ToList());
+    s.EnsureVisible(rooms[0]);
+  }
+
+  /// <summary>
+  ///   Bring 'X' to 'Y': the room at one end of a split join (with the branches hanging off it the user picks) moves
+  ///   beside the room at the other end, and the join is whole again.
+  /// </summary>
+  internal static async Task BringAcrossAsync(EditorSession s, bool end)
+  {
+    var join = s.Selection.Connections.Count() == 1 ? s.Selection.Connections.First() : null;
+    if (join == null || !join.IsDrawnSplit) return;
+    var room = end ? join.GetTargetRoom() : join.GetSourceRoom();
+    var to = end ? join.GetSourceRoom() : join.GetTargetRoom();
+    var branches = NewArea.Branches(s.Project, new[] { room }, to);
+    var chosen = branches.Count == 0
+      ? branches
+      : await s.Prompts.ChooseAreaBranchesAsync("Bring '" + room.Name + "' to '" + to.Name + "'", new[] { room },
+        branches);
+    if (chosen == null) return;
+
+    var with = chosen.SelectMany(branch => branch.Rooms).Distinct().ToList();
+    s.Execute("Bring " + room.Name + " to " + to.Name, () => NewArea.Bring(join, room, with));
+    s.Selection.Set(new List<Element> { room });
+    s.EnsureVisible(room);
+  }
+
+  private static async Task SplitRoomAsync(EditorSession s)
+  {
+    var room = s.SelectedRooms.Count == 1 ? s.SelectedRooms[0] : null;
+    if (room == null || room.IsReference) return;
+    var joins = RoomSplit.JoinsOf(room);
+    if (joins.Count == 0) return;
+    var suggested = RoomSplit.Suggested(room);
+    // where the player is matters only when automap has them in the room being split
+    RoomSplitWhere? where = s.Automap.IsRunning && s.Automap.CurrentRoom == room ? RoomSplitWhere.New : null;
+    var choice = await s.Prompts.ChooseRoomSplitAsync(room, RoomSplit.SplitName(s.Project, room.Name), joins,
+      suggested == null ? new List<Connection>() : new List<Connection> { suggested }, where);
+    if (choice == null) return;
+
+    Room second = null;
+    s.Execute("Split " + room.Name, () => second = RoomSplit.Split(s.Project, room, choice.Moving));
+    if (second == null) return;
+    if (s.Automap.IsRunning)
+    {
+      if (choice.Where == RoomSplitWhere.New) s.Automap.SetCurrentRoom(second);
+      else if (choice.Where == RoomSplitWhere.Original) s.Automap.SetCurrentRoom(room);
+    }
+
+    s.Selection.Set(new List<Element> { second });
   }
 }

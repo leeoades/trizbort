@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<trizbort version="1.0.0.0">
+	<info />
+	<map>
+		<room id="1" stableId="529bd9a0-58d3-4183-9c01-556ae4457e97" name="Corridor 1" subtitle="" x="160" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="2" stableId="9a90af81-b4aa-4f0b-bbf8-ceb11fafc19c" name="Corridor 2" subtitle="" x="320" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="3" stableId="86984ef1-2e13-400c-85be-eb783e64da09" name="Corridor 3" subtitle="" x="480" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="4" stableId="37be9a78-d350-4488-8f3e-12b25ca0e155" name="Corridor 4" subtitle="" x="640" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="5" stableId="613ee5da-e53b-4056-930c-ab72c9278fea" name="Corridor 5" subtitle="" x="800" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="6" stableId="c462b429-e733-4f37-a979-8a371c48aebc" name="Corridor 6" subtitle="" x="960" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="7" stableId="97a13aee-58f7-4d79-a51d-c2a879abe758" name="Corridor 7" subtitle="" x="1120" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="8" stableId="7dadfd07-3605-41a4-827a-22eec24713f0" name="Corridor 8" subtitle="" x="1280" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="9" stableId="6d869935-b3a2-4cde-8234-5884278b0e39" name="Guard Room" subtitle="" x="1280" y="-128" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="10" stableId="65f11e37-afc4-4417-8ca9-3109543d20d5" name="Armoury" subtitle="" x="480" y="128" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="11" name="" description="" startText="" endText="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="1" port="e" />
+			<dock index="1" id="2" port="w" />
+		</line>
+		<line id="12" name="" description="" startText="" endText="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="2" port="e" />
+			<dock index="1" id="3" port="w" />
+		</line>
+		<line id="13" name="" description="" startText="" endText="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="3" port="e" />
+			<dock index="1" id="4" port="w" />
+		</line>
+		<line id="14" name="" description="" startText="" endText="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="4" port="e" />
+			<dock index="1" id="5" port="w" />
+		</line>
+		<line id="15" name="" description="" startText="" endText="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="5" port="e" />
+			<dock index="1" id="6" port="w" />
+		</line>
+		<line id="16" name="" description="" startText="" endText="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="6" port="e" />
+			<dock index="1" id="7" port="w" />
+		</line>
+		<line id="17" name="" description="" startText="" endText="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="7" port="e" />
+			<dock index="1" id="8" port="w" />
+		</line>
+		<line id="18" name="" description="" startText="" endText="" automapStartTravelled="north" automapEndTravelled="south" ZOrder="0">
+			<dock index="0" id="8" port="n" />
+			<dock index="1" id="9" port="s" />
+		</line>
+		<line id="19" name="" description="" startText="" endText="" automapStartTravelled="south" automapEndTravelled="north" ZOrder="0">
+			<dock index="0" id="3" port="s" />
+			<dock index="1" id="10" port="n" />
+		</line>
+	</map>
+	<settings>
+		<colors>
+			<canvas>White</canvas>
+			<border>MidnightBlue</border>
+			<line>MidnightBlue</line>
+			<selectedLine>Gold</selectedLine>
+			<hoverLine>DarkOrange</hoverLine>
+			<subTitle>MidnightBlue</subTitle>
+			<smallText>MidnightBlue</smallText>
+			<lineText>MidnightBlue</lineText>
+			<grid>#E7E7E7</grid>
+			<startRoom>GreenYellow</startRoom>
+			<endRoom>Red</endRoom>
+		</colors>
+		<regions>
+			<NoRegion Name="NoRegion" TextColor="Blue">White</NoRegion>
+		</regions>
+		<fonts>
+			<room size="13">Arial</room>
+			<object size="11">Arial</object>
+			<subTitle size="9">Arial</subTitle>
+			<line size="9">Arial</line>
+		</fonts>
+		<grid>
+			<snapTo>yes</snapTo>
+			<visible>yes</visible>
+			<showOrigin>yes</showOrigin>
+			<size>32</size>
+		</grid>
+		<lines>
+			<width>2</width>
+			<arrowSize>12</arrowSize>
+			<textOffset>4</textOffset>
+			<handDrawn>no</handDrawn>
+			<labelDiagonalExits>yes</labelDiagonalExits>
+			<labelCompassExits>no</labelCompassExits>
+		</lines>
+		<rooms>
+			<darknessStripeSize>24</darknessStripeSize>
+			<objectListOffset>4</objectListOffset>
+			<defaultObjectsAt>s</defaultObjectsAt>
+			<defaultObjectsInside>no</defaultObjectsInside>
+			<connectionStalkLength>32</connectionStalkLength>
+			<preferredDistanceBetweenRooms>64</preferredDistanceBetweenRooms>
+			<defaultRoomName>Cave</defaultRoomName>
+			<defaultRoomShape>0</defaultRoomShape>
+		</rooms>
+		<ui>
+			<handleSize>12</handleSize>
+			<snapToElementSize>16</snapToElementSize>
+		</ui>
+		<margins>
+			<documentSpecific>no</documentSpecific>
+			<horizontal>0</horizontal>
+			<vertical>0</vertical>
+			<wrapDashes>no</wrapDashes>
+		</margins>
+		<keypadNavigation>
+			<creationModifier>control</creationModifier>
+			<unexploredModifier>alt</unexploredModifier>
+		</keypadNavigation>
+	</settings>
+</trizbort>

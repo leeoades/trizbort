@@ -12,6 +12,109 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Added
+
+- **The map rethinks itself when it learns it was wrong.** When a move shows that rooms were laid out the wrong way
+  round (going back south reaches a room automap had drawn above you), tidying as you go now lays the map out again
+  instead of nudging rooms a step at a time, and the rooms slide to their new places. It works this out in the
+  background, so the window stays responsive.
+- **Balanced layouts.** A room with ways out on opposite sides now sits halfway between the rooms they lead to (the
+  Patio between the south-west and south-east junctions, the Cannon Emplacement between the north ones), so
+  symmetric places come out symmetric. Rooms that aren't joined keep further apart than joined ones, so it's clear
+  there's no way between them. While automapping, the map is laid out again every few new rooms or joins, and the
+  quick tidy after each move only clears up rooms that clash, so it no longer undoes the neat layout.
+- **Tidier layouts from Tidy Map and the rethink.** Rooms near each other now line up in rows and columns even when
+  they aren't joined. A straight join never runs across a room, and a slanting one keeps rooms out of its way. A
+  path that bends (east from one room arriving from the south at the next) is drawn slanting, and no longer pushes
+  rooms apart to make itself an exact diagonal at the cost of straight joins elsewhere.
+- **Rooms you've placed by hand make way.** Tidying never moves a room you put somewhere yourself back to where it
+  thinks the room should go, but it can now slide it aside, with the rooms around it, when a new room needs the
+  space. Before, such a room never moved, so new rooms had to go somewhere awkward around it.
+- **Tidied rooms slide into place.** When automap tidies the map as you go, or you use Tidy Map, the rooms that move
+  slide to their new places, with their joins following, instead of jumping.
+- **A bigger game screen, and a cursor after the next command.** Drag the automap panel's left edge to widen it; the
+  game screen grows with it (double-click the edge for the usual width). While paused before a command, a cursor
+  flashes after it, so it reads as typed but not yet played. The full transcript window shows the same cursor.
+- **Join end labels out of the way.** A label at the end of a join ("n", "pull peg") that would sit on another join,
+  a room, an object list or another label moves across to the other side of its line, or slides along the line away
+  from the room, to the first clear place.
+- **Object lists out of the way, and draggable.** A room's object list goes at the map's default spot unless that
+  would cross a join, another room or another object list, when it moves to the first clear side. Drag a list on the
+  map to put it anywhere (inside the room too, once it's selected); **Reset Object List Position** makes it automatic
+  again. The default spot is set in Map Settings by dragging a sample list round a Default Room. Room Properties'
+  Position and Custom Position settings are replaced by this. Older maps keep any list placed away from the default.
+- **Move to a New Area...** (was Start a New Area Here) works on all the rooms selected, which move together keeping
+  their layout, and offers to take along the parts of the map joined to the rest only through them (the house beyond
+  the foyer), highlighting on the map every room that will move.
+- **Bring 'X' to 'Y'...** on a split join's right-click menu: moves the room at one end beside the other, joined whole
+  again, with the parts of the map hanging off it if you like.
+- The right-click menus are grouped into submenus: Room, Shape, Swap, Rooms, Automap, Add and Arrange for a room; Line
+  and Label for a join. Map Settings and Map Theme are only on the empty map's right-click menu, not a room's or
+  a join's, and Application Settings is on no right-click menu (it's on the Edit menu). Don't Automap From Here is now **Automap > Disable Automap on This Room** (or Enable, once
+  it's off).
+- **Tidy the map as I go** in the automap panel: switch automap's tidying on or off while it runs (it was only in
+  the Start Automap settings). The choice is remembered for the next run.
+- **What Moved It?**: when a room that moves turns up somewhere new, automap asks which of the commands you typed in
+  it moved it (a question and your answer listed as one, "pull peg → second"), with its best guess picked; or
+  **Nothing I did** (a bus that moves by itself: the join is labelled "(by itself)" and never followed), or something
+  else you type. It asks once for each new way between stops (down, then the first time back up), then follows the
+  labelled joins as you play.
+- **Go Live**: stepping through move by move to the end of the transcript, then playing on in the game, no longer
+  leaves automap silently paused. A bar in the automap panel says the game has gone on, with a Go Live button to map
+  each move as you play.
+- **Automap: This Is a Different Room** (the room's right-click menu, or Project > Automap): when automap took you
+  to be in a room already on the map but it's another with the same name (its exits go elsewhere), it adds the
+  room ("Maze (2)") the way you went, moves the way you came in over to it, and carries on from there. It works for
+  a way automap took for a loop back into the same room, too. One undo step.
+
+- **This is a different 'X'** in the question automap asks when a known way out leads somewhere new: the room you
+  left is another with its name, so automap adds it, moves the way you came in over to it, and joins the new room to
+  it.
+- **Split Room...** (Edit > Rooms, or the room menu): for a room that turns out to be two places with one name,
+  even several moves later. Tick the joins that belong to the other place; they move to a new room ("Maze (2)") at
+  the same sides. The newest join (automap's way in) is ticked to start with. When automap has you in that room,
+  you also say where you are now (the new room, the original, or somewhere else). A way taken for a loop (up from
+  "In the Chimney" to what automap took for the same chimney) arrives in the new room. One undo step.
+- **Disambiguate Rooms** shows the room you pick on the map behind it, with the rooms around it, and puts the view
+  back afterwards; **<Add a new room>** shows a faint dashed room where automap would put it. The dialog opens on the
+  right of the window to leave the map in view.
+- **The same place at different times** in the question automap asks when a known way out leads somewhere new (a dry
+  riverbed that becomes a river once the dam is opened): both joins stay, and the two rooms go side by side.
+
+### Changed
+
+- **Previous Move**, **Next Move** and **Play to the End** are greyed out when there's nothing to go back to or
+  play, and the automap panel shows where you are in the transcript: "Move 12 of 4,567" (moves are the commands in
+  the transcript, not the game's own turn count).
+- The question automap asks when a known way out leads somewhere new lists its answers on the left and explains the
+  one picked on the right, with OK and Cancel. **'X' moves** and **Split** are now one answer: a copy of the room
+  at each stop, joined by what moved it, with automap keeping track of which stop you're at. **Cancel** maps nothing for that move, where
+  it used to stop automapping.
+- While automapping, the map keeps your room near the middle of the view, rather than just inside the edge, so you
+  can see its exits and it isn't hidden by the minimap.
+
+### Removed
+
+- The automap option **Assume no two rooms have the same name.** Automap now always tells rooms with the same name
+  apart by the map, then by description, asking when it can't tell; with a transcript that isn't verbose it still
+  takes a name to mean that room. The setting is ignored if it's in your settings file.
+
+### Fixed
+
+- **No lag between a move in the game and the map.** Automap laid the map out again while you waited, for up to
+  a second every few moves; it now works the new layout out in the background and carries on, and the rooms slide
+  into place when it's ready (as an undo step of its own).
+- **The full transcript window stays at the end when going back a move.** It used to jump to the top.
+- **Relaying out the map no longer throws a room far away.** Going down from the Cannon Emplacement to the Cliff
+  sent the Front Porch above the Cannon, on a long slanting line across the map. A join that's north at one end and
+  south at the other now only counts as pointing its way when it's straight, and a relayout is thrown away if it
+  leaves more lines crossing or running across rooms than before.
+- **A way back that turns out to be wrong no longer holds rooms in place.** Two-way joins assume the way back
+  (east there, so west back). When west from that room actually leads somewhere else, the tidy now stops treating
+  the assumed way back as fixed, so the path can bend around the house as it does in the game.
+- **Tidying no longer drags rooms towards the far end of a split join.** A split join leads somewhere drawn apart
+  on purpose (often another area), so the tidy now leaves its rooms where they are.
+
 ## [0.12.0-beta] - 2026-11-10
 
 This beta is about **automap understanding the places games play tricks with**: rooms that share a name, rooms
@@ -112,6 +215,25 @@ is still a beta: keep backups and [report problems](https://github.com/leeoades/
 
 ### Fixed
 
+- In the app (not the tests), the new-room preview in Disambiguate Rooms and the single two-way join between a
+  moving room's stops did nothing: the app's automap canvas didn't pass them on. They do now.
+- Clearing the label of a join between a moving room's stops (or deleting the join) now makes automap ask what moved
+  it again next time; before, a cleared label still counted as the old command.
+- Disambiguate Rooms: choosing **<Add a new room>** scrolls the map to where it would go too (or to the room you
+  came from, when automap can't say), and the map behind the question can be dragged, scrolled and zoomed while you
+  decide. It can't be changed, and the menus, toolbar, automap panel and shortcuts are off, until you answer.
+- A moving room's way back ("pull second peg") goes on the other end of the join between its stops, which becomes
+  two-way, rather than on a second join.
+- A dashed join for a command meets each room on the side facing the other, and turns as the rooms move, rather than
+  running across both rooms.
+- **The same place at different times** keeps the two rooms side by side: joining them no longer moves one away, and
+  tidying leaves the pair where it is.
+- Opening a map shows the whole map again: the view fitted to it, then jumped back to the map's origin, which can
+  be well away from the rooms.
+- The faint preview of a new room in Disambiguate Rooms is where automap would actually put it, the way you went.
+- A moving room's join to its stop is labelled with what moved it (`pull first peg`), not the last thing typed in
+  it (`open closet door`, typed after the closet stopped). What moves it back (`pull second peg`) gets a join the other
+  way, so pulling either peg later moves your location to the other stop.
 - Coming back north out of the closet no longer assumes the foyer leads south to it when south from the foyer is
   already the front porch, and the join's end doesn't move onto the side another join uses.
 - A game's question in brackets (Infocom's "[Which peg do you mean, ...?]") counts as a question, so "pull peg"

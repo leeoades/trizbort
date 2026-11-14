@@ -53,7 +53,6 @@ public class AutomapUndoTests : IsolatedProjectTests
     var settings = AutomapSettings.Default;
     settings.FileName = Files.File("transcript.txt");
     File.WriteAllText(settings.FileName, text);
-    settings.AssumeRoomsWithSameNameAreSameRoom = true;
     settings.AssumeTwoWayConnections = true;
     settings.GuessExits = false;
     return settings;

@@ -202,6 +202,8 @@ public class CopyController
     newRoom.ObjectsCustomPositionDown = room.ObjectsCustomPositionDown;
     newRoom.ObjectsCustomPositionRight = room.ObjectsCustomPositionRight;
     newRoom.ObjectsCustomPosition = room.ObjectsCustomPosition;
+    newRoom.ObjectsPlaced = room.ObjectsPlaced;
+    newRoom.ObjectsInside = room.ObjectsInside;
     newRoom.Size = room.Size;
     newRoom.ReferenceRoomId = room.ReferenceRoomId;
   }
@@ -239,6 +241,8 @@ public class CopyController
       ObjectsCustomPositionDown = room.ObjectsCustomPositionDown,
       ObjectsCustomPositionRight = room.ObjectsCustomPositionRight,
       ObjectsCustomPosition = room.ObjectsCustomPosition,
+      ObjectsPlaced = room.ObjectsPlaced,
+      ObjectsInside = room.ObjectsInside,
       Position = room.Position,
       Size = room.Size,
       ReferenceRoomId = room.ReferenceRoomId
@@ -384,6 +388,8 @@ public class CopyController
     public string Name { get; set; }
     public string Objects { get; set; }
     public bool ObjectsCustomPosition { get; set; }
+  public bool ObjectsPlaced { get; set; }
+  public bool ObjectsInside { get; set; }
     public int ObjectsCustomPositionDown { get; set; }
     public int ObjectsCustomPositionRight { get; set; }
     public CompassPoint ObjectsPosition { get; set; }

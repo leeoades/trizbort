@@ -287,6 +287,32 @@ public static class Settings
     set { SetFont(ref _objectFontMeta, ref _objectFont, value); }
   }
 
+  /// <summary>
+  ///   Where a room's object list goes unless it's placed by hand: beside the room at this side or corner (or inside
+  ///   it, <see cref="DefaultObjectsInside" />). Set by dragging the sample list on the Default Room in Map Settings.
+  /// </summary>
+  public static CompassPoint DefaultObjectsPosition {
+    get { return _defaultObjectsPosition; }
+    set {
+      if (_defaultObjectsPosition == value) return;
+      _defaultObjectsPosition = value;
+      RaiseChanged();
+    }
+  }
+
+  /// <summary>Object lists go inside rooms unless placed by hand (see <see cref="DefaultObjectsPosition" />).</summary>
+  public static bool DefaultObjectsInside {
+    get { return _defaultObjectsInside; }
+    set {
+      if (_defaultObjectsInside == value) return;
+      _defaultObjectsInside = value;
+      RaiseChanged();
+    }
+  }
+
+  private static CompassPoint _defaultObjectsPosition = CompassPoint.South;
+  private static bool _defaultObjectsInside;
+
   public static float ObjectListOffsetFromRoom {
     get { return _objectListOffsetFromRoom; }
     set {
@@ -454,6 +480,8 @@ public static class Settings
 
     DarknessStripeSize = element["rooms"]["darknessStripeSize"].ToFloat(_darknessStripeSize);
     ObjectListOffsetFromRoom = element["rooms"]["objectListOffset"].ToFloat(_objectListOffsetFromRoom);
+    DefaultObjectsPosition = element["rooms"]["defaultObjectsAt"].ToCompassPoint(CompassPoint.South);
+    DefaultObjectsInside = element["rooms"]["defaultObjectsInside"].ToBool(false);
     ConnectionStalkLength = element["rooms"]["connectionStalkLength"].ToFloat(_connectionStalkLength);
     PreferredDistanceBetweenRooms =
       element["rooms"]["preferredDistanceBetweenRooms"]
@@ -537,6 +565,8 @@ public static class Settings
 
     DarknessStripeSize = 24.0f;
     ObjectListOffsetFromRoom = 4.0f;
+    DefaultObjectsPosition = CompassPoint.South;
+    DefaultObjectsInside = false;
 
     ConnectionStalkLength = 32.0f;
     PreferredDistanceBetweenRooms = ConnectionStalkLength * 2;
@@ -599,6 +629,8 @@ public static class Settings
     scribe.StartElement("rooms");
     scribe.Element("darknessStripeSize", _darknessStripeSize);
     scribe.Element("objectListOffset", _objectListOffsetFromRoom);
+    scribe.Element("defaultObjectsAt", _defaultObjectsPosition);
+    scribe.Element("defaultObjectsInside", _defaultObjectsInside);
     scribe.Element("connectionStalkLength", _connectionStalkLength);
     scribe.Element("preferredDistanceBetweenRooms", _preferredDistanceBetweenRooms);
     scribe.Element("defaultRoomName", DefaultRoomName);

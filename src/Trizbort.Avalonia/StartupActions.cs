@@ -40,7 +40,6 @@ public static class StartupActions
             if (recovered)
             {
                 vm.UpdateState();
-                vm.CommandService?.ResetZoom();
                 vm.StatusText = "Recovered unsaved changes";
             }
         }
@@ -241,7 +240,6 @@ public static class StartupActions
             if (await storage.OpenMapFromPathAsync(path, owner))
             {
                 vm.UpdateState();
-                vm.CommandService.ResetZoom();
                 vm.StatusText = $"Opened map: {Path.GetFileName(path)}";
             }
             else
@@ -278,7 +276,6 @@ public static class StartupActions
         if (await storage.OpenMapFromPathAsync(path, owner))
         {
             vm.UpdateState();
-            vm.CommandService.ResetZoom();
             vm.StatusText = $"Opened map: {Path.GetFileName(path)}";
         }
     }

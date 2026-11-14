@@ -125,6 +125,7 @@ public sealed class UndoStack
 
     var step = _undo[_undo.Count - 1];
     var opposite = SnapshotMemento.Capture(session);
+    RoomGlide.Stop(); // the rooms go straight back
     step.Memento.Restore(session);
 
     _undo.RemoveAt(_undo.Count - 1);
@@ -140,6 +141,7 @@ public sealed class UndoStack
 
     var step = _redo[_redo.Count - 1];
     var opposite = SnapshotMemento.Capture(session);
+    RoomGlide.Stop(); // the rooms go straight back
     step.Memento.Restore(session);
 
     _redo.RemoveAt(_redo.Count - 1);

@@ -743,7 +743,6 @@ public class FileExportAutomapSmokeTests
         var settings = AutomapSettings.Default;
         settings.FileName = await WriteTranscriptAsync("Game\n\nCave\nZulu cave.\n\n>look\n\n");
         settings.VerboseTranscript = true;
-        settings.AssumeRoomsWithSameNameAreSameRoom = false;
         var vm = CreateVm(new RecordingDialogService(), new StubStorageService());
 
         await vm.StartAutomapAsync(settings);

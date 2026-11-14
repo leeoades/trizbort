@@ -24,6 +24,42 @@ public class AutomapConnectByCommandTests : IsolatedProjectTests
   private static Connection[] Connections() => Project.Current.Elements.OfType<Connection>().ToArray();
 
   [Test]
+  public void AfterTheRoomsMove_ACommandJoinFacesEachRoom_RatherThanRunningAcrossThem()
+  {
+    // the closet's stop was put east of the closet, then moved to the west, by the cellar
+    var closet = AddRoomAt("Closet", 0, 0);
+    var stop = AddRoomAt("Closet", 400, 0);
+    new AutomapCanvas().ConnectByCommand(closet, stop, "pull first peg");
+    stop.Position = new Vector(-400, -100);
+
+    GuessedEnds.Face(Project.Current.Elements.ToList());
+
+    var connection = Connections().ShouldHaveSingleItem();
+    connection.GetSourceRoom(out var sourcePoint);
+    connection.GetTargetRoom(out var targetPoint);
+    sourcePoint.ShouldBeOneOf(CompassPoint.West, CompassPoint.WestNorthWest);
+    targetPoint.ShouldBeOneOf(CompassPoint.East, CompassPoint.EastSouthEast);
+  }
+
+  [Test]
+  public void BetweenStops_WhatMovesItBack_GoesOnTheSameJoin_LabelledAtEachEnd()
+  {
+    var closet = AddRoomAt("Closet", 0, 0);
+    var stop = AddRoomAt("Closet", 400, 0);
+    var canvas = new AutomapCanvas();
+
+    canvas.ConnectByCommand(closet, stop, "pull first peg");
+    canvas.ConnectStops(stop, closet, "pull second peg");
+
+    var connection = Connections().ShouldHaveSingleItem();
+    connection.Flow.ShouldBe(ConnectionFlow.TwoWay);
+    connection.StartText.ShouldBe("pull first peg");
+    connection.EndText.ShouldBe("pull second peg");
+    connection.MidText.ShouldBeEmpty();
+    connection.Style.ShouldBe(ConnectionStyle.Dashed);
+  }
+
+  [Test]
   public void NewJoin_IsOneWayDottedAndLabelled()
   {
     var building = AddRoomAt("Inside Building", 0, 0);

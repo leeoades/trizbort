@@ -51,19 +51,31 @@ public sealed class Automap : IAutomapController
     token.ThrowIfCancellationRequested();
     if (Volatile.Read(ref _movesBack) > 0) return true;
     if (!_moveByMove) return false;
+    // the game went on while automap waited at the end of the transcript: it's being played now
+    var live = _waitedForGame;
+    _waitedForGame = false;
     if (TakeMove()) return false;
 
     NextCommand = command;
-    Status = string.IsNullOrWhiteSpace(command)
-      ? "Paused before the next move."
-      : "Paused before the next move: " + command;
+    GameWentOn = live;
+    Status = live
+      ? "The game has gone on: paused before " + (string.IsNullOrWhiteSpace(command) ? "its next move." : command)
+      : string.IsNullOrWhiteSpace(command)
+        ? "Paused before the next move."
+        : "Paused before the next move: " + command;
     while (_moveByMove && !TakeMove())
     {
-      if (Volatile.Read(ref _movesBack) > 0) return true;
+      if (Volatile.Read(ref _movesBack) > 0)
+      {
+        GameWentOn = false;
+        return true;
+      }
+
       await Task.Delay(50, token);
     }
 
     token.ThrowIfCancellationRequested();
+    GameWentOn = false;
     NextCommand = null;
     Status = "Automapping is processing the transcript.";
     return false;
@@ -167,6 +179,7 @@ public sealed class Automap : IAutomapController
       }
 
       Status = "Automapping is waiting for more text.";
+      _waitedForGame = true;
 
       await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
     }
@@ -597,6 +610,18 @@ public sealed class Automap : IAutomapController
   /// <summary>The user cancelled "which room?": nothing is mapped for this heading.</summary>
   private bool _skipHeading;
 
+  /// <summary>
+  ///   The user said to map nothing for this heading (Cancel): don't join the next room from the wrong one.
+  /// </summary>
+  private void SkipHeading(string line)
+  {
+    _skipHeading = false;
+    _lastKnownRoom = null;
+    _lastMoveDirection = null;
+    _lastJourneyCommand = null;
+    Trace("{0}: skipped, as the user asked.", FormatTranscriptLineForDisplay(line));
+  }
+
   /// <summary>The user was asked which room a heading meant, by <see cref="FindRoomAsync" />.</summary>
   private bool _askedWhichRoom;
 
@@ -611,10 +636,6 @@ public sealed class Automap : IAutomapController
       // transcript is not verbose;
       // must assume room with same name is same room,
       // otherwise the user has to disambiguate potentially without descriptions, and very frequently.
-      return true;
-
-    if (_settings.AssumeRoomsWithSameNameAreSameRoom)
-      // ignore the description
       return true;
 
     if (string.IsNullOrEmpty(description))
@@ -805,7 +826,7 @@ public sealed class Automap : IAutomapController
     _pausedFrom = null;
     _dark = null;
     _followTo = null;
-    _doneInRoom = null;
+    _doneHere.Clear();
     _canvas?.SelectRoom(room);
     Status = $"Automap: you're in {room.Name}.";
   }
@@ -889,7 +910,7 @@ public sealed class Automap : IAutomapController
 
   private void NowInRoom(Room room)
   {
-    if (room != _lastKnownRoom) _doneInRoom = null;
+    if (room != _lastKnownRoom) _doneHere.Clear();
     if (_seenInTheDark)
     {
       // found in the dark: it needs a light
@@ -1054,6 +1075,10 @@ public sealed class Automap : IAutomapController
         // several rooms sharing a name needn't be asked about.
         RefreshLastKnownRoom();
         await ChangeStopAsync(roomName, token);
+        // how the player came here, for "this is a different room" (SplitOffArrival)
+        var arrivedFrom = _lastKnownRoom;
+        var arrivedBy = _lastMoveDirection;
+        var arrivedByJourney = _lastJourneyCommand;
         var room = VariantRoom(roomName, roomDescription);
         _skipHeading = false;
         if (room == null)
@@ -1069,18 +1094,14 @@ public sealed class Automap : IAutomapController
 
         if (_skipHeading)
         {
-          // the user said it's none of these, and not a new room either: map nothing for it, and don't join the next
-          // room from the wrong one
-          _skipHeading = false;
-          _lastKnownRoom = null;
-          _lastMoveDirection = null;
-          _lastJourneyCommand = null;
-          Trace("{0}: skipped, as the user asked.", FormatTranscriptLineForDisplay(line));
+          SkipHeading(line);
           previousLine = line;
           continue;
         }
 
         AutomapSameDirectionResult? decision = null;
+        // for a room that moves, or splits in two: what did it ("pull first peg"), asked once the user has said
+        string movedBy = null;
         Room otherRoom = null;
         // a room already on the map, reached a way the player has been seen to go somewhere else (out of the closet to
         // the foyer, and now, after pulling the peg, to the cellar): ask, as for a new room, so the room left can be
@@ -1095,11 +1116,13 @@ public sealed class Automap : IAutomapController
           token.ThrowIfCancellationRequested();
           if (decision == AutomapSameDirectionResult.Cancel)
           {
-            Stop();
-            token.ThrowIfCancellationRequested();
-            throw new OperationCanceledException(token);
+            SkipHeading(line);
+            previousLine = line;
+            continue;
           }
 
+          if (decision is AutomapSameDirectionResult.Moves or AutomapSameDirectionResult.Split)
+            movedBy = await AskWhatMovedItAsync(_lastKnownRoom, roomName, token);
           RefreshLastKnownRoom();
           otherRoom = _canvas.ResolveRoom(otherRoom);
         }
@@ -1119,11 +1142,14 @@ public sealed class Automap : IAutomapController
             token.ThrowIfCancellationRequested();
             if (decision == AutomapSameDirectionResult.Cancel)
             {
-              // treat like a cancelled run
-              Stop();
-              token.ThrowIfCancellationRequested();
-              throw new OperationCanceledException(token);
+              // the user cancelled the question: map nothing for this move
+              SkipHeading(line);
+              previousLine = line;
+              continue;
             }
+
+            if (decision is AutomapSameDirectionResult.Moves or AutomapSameDirectionResult.Split)
+              movedBy = await AskWhatMovedItAsync(_lastKnownRoom, roomName, token);
 
             // the user may have changed the map while the prompt was open
             RefreshLastKnownRoom();
@@ -1161,14 +1187,33 @@ public sealed class Automap : IAutomapController
                     room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
                     _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
                     break;
+                  case AutomapSameDirectionResult.SamePlace:
+                    room = _canvas.CreateRoom(_lastKnownRoom, _lastMoveDirection.Value, roomName, line);
+                    _canvas.Connect(_lastKnownRoom, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    // after joining, which may move it to line up with the way in
+                    PutBeside(room, otherRoom, _lastMoveDirection.Value);
+                    Trace("{0}: {1} and {2} are one place at different times.", FormatTranscriptLineForDisplay(line),
+                      otherRoom.Name, roomName);
+                    break;
                   case AutomapSameDirectionResult.Moves:
                   {
                     // the room the player left moves (a lift): it's at another stop now, a copy of it there
-                    var stop = NewStop(_lastKnownRoom);
+                    var stop = NewStop(_lastKnownRoom, movedBy);
                     room = _canvas.CreateRoom(stop, _lastMoveDirection.Value, roomName, line);
                     _canvas.Connect(stop, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
                     Trace("{0}: {1} moves; {2} is {3} from this stop.", FormatTranscriptLineForDisplay(line),
                       stop.Name, roomName, _lastMoveDirection.Value.ToString().ToLower());
+                    break;
+                  }
+                  case AutomapSameDirectionResult.DifferentRoom:
+                  {
+                    // the room the player left is another with its name: the way in goes to it, and on from there
+                    var first = _lastKnownRoom;
+                    var different = SplitOffArrival(first) ?? SplitRoom(first, WhatMovedIt());
+                    room = _canvas.CreateRoom(different, _lastMoveDirection.Value, roomName, line);
+                    _canvas.Connect(different, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
+                    Trace("{0}: a different {1}; {2} is {3} from it.", FormatTranscriptLineForDisplay(line), first.Name,
+                      roomName, _lastMoveDirection.Value.ToString().ToLower());
                     break;
                   }
                   case AutomapSameDirectionResult.Split:
@@ -1176,10 +1221,7 @@ public sealed class Automap : IAutomapController
                     // the room the player left is a second place like it ("Cupboard (2)", down the lift), reached
                     // from the first by what they did there; the way out joins the second to the new room
                     var first = _lastKnownRoom;
-                    var second = _canvas.CreateRoom(first, SplitName(first.Name));
-                    foreach (var description in first.Descriptions) second.AddDescription(description);
-                    second.IsDark = first.IsDark;
-                    _canvas.ConnectByCommand(first, second, _doneInRoom ?? UnmappedWay);
+                    var second = SplitRoom(first, movedBy);
                     room = _canvas.CreateRoom(second, _lastMoveDirection.Value, roomName, line);
                     _canvas.Connect(second, _lastMoveDirection.Value, room, _settings.AssumeTwoWayConnections);
                     Trace("{0}: {1} split; {2} is {3} from {4}.", FormatTranscriptLineForDisplay(line), first.Name,
@@ -1262,7 +1304,7 @@ public sealed class Automap : IAutomapController
             {
               // player moved sensibly; ensure rooms are connected up (as the user said, if the way led somewhere else
               // before)
-              ConnectToKnownRoom(room, otherRoom, decision, line);
+              ConnectToKnownRoom(room, otherRoom, decision, movedBy, line);
               Trace(
                 "{0}: {1} is now {2} from {3}.",
                 FormatTranscriptLineForDisplay(line),
@@ -1310,6 +1352,11 @@ public sealed class Automap : IAutomapController
         // but we won't join them up to this room.
         // we might end up caring if, for example, the user gives multiple commands at one prompt,
         // or they're moved to one room and then teleported to another.
+        // (a move that came back to the same room counts: up "In the Chimney" to what automap took for the same one)
+        if (_lastKnownRoom != null && (_lastKnownRoom != arrivedFrom || arrivedBy != null || arrivedByJourney != null))
+          _arrival = arrivedFrom != null && (arrivedBy != null || arrivedByJourney != null) && !_suspended
+            ? new Arrival(arrivedFrom, arrivedBy, arrivedByJourney, _lastKnownRoom, roomDescription)
+            : null;
         _lastMoveDirection = null;
         _lastJourneyCommand = null;
       }
@@ -1375,7 +1422,7 @@ public sealed class Automap : IAutomapController
     _askedAbout = null;
     // what the player did here, should the room turn out to be two (Split): the last such command, with the
     // command it answered ("pull peg, first")
-    if (_lastJourneyCommand != null) _doneInRoom = asked != null ? asked.Trim() + ", " + command.Trim() : command.Trim();
+    if (_lastJourneyCommand != null) _doneHere.Add(new DoneInRoom(command.Trim(), asked?.Trim()));
     _followTo = _lastJourneyCommand != null ? LabelledJoinEnd(command, asked) : null;
   }
 
@@ -1495,7 +1542,8 @@ public sealed class Automap : IAutomapController
   ///   way was seen leading to <paramref name="before" />, as the user decided: it still leads there (no join), it
   ///   leads here instead, it leads to both, or the room left is really two places (split, as for a new room).
   /// </summary>
-  private void ConnectToKnownRoom(Room room, Room before, AutomapSameDirectionResult? decision, string line)
+  private void ConnectToKnownRoom(Room room, Room before, AutomapSameDirectionResult? decision, string movedBy,
+    string line)
   {
     var here = _lastKnownRoom;
     var direction = _lastMoveDirection.Value;
@@ -1518,19 +1566,31 @@ public sealed class Automap : IAutomapController
         break;
       case AutomapSameDirectionResult.Moves:
       {
-        var stop = NewStop(here);
+        var stop = NewStop(here, movedBy);
         _canvas.Connect(stop, direction, Near(stop, room), _settings.AssumeTwoWayConnections);
         _lastKnownRoom = stop;
         Trace("{0}: {1} moves; {2} is {3} from this stop.", FormatTranscriptLineForDisplay(line), stop.Name,
           room.Name, direction.ToString().ToLower());
         break;
       }
+      case AutomapSameDirectionResult.SamePlace:
+        _canvas.Connect(here, direction, Near(here, room), _settings.AssumeTwoWayConnections);
+        // after joining, which may move it to line up with the way in
+        PutBeside(room, before, direction);
+        Trace("{0}: {1} and {2} are one place at different times.", FormatTranscriptLineForDisplay(line), before.Name,
+          room.Name);
+        break;
+      case AutomapSameDirectionResult.DifferentRoom:
+      {
+        var different = SplitOffArrival(here) ?? SplitRoom(here, WhatMovedIt());
+        _canvas.Connect(different, direction, Near(different, room), _settings.AssumeTwoWayConnections);
+        Trace("{0}: a different {1}; {2} is {3} from it.", FormatTranscriptLineForDisplay(line), here.Name, room.Name,
+          direction.ToString().ToLower());
+        break;
+      }
       case AutomapSameDirectionResult.Split:
       {
-        var second = _canvas.CreateRoom(here, SplitName(here.Name));
-        foreach (var description in here.Descriptions) second.AddDescription(description);
-        second.IsDark = here.IsDark;
-        _canvas.ConnectByCommand(here, second, _doneInRoom ?? UnmappedWay);
+        var second = SplitRoom(here, movedBy);
         _canvas.Connect(second, direction, room, _settings.AssumeTwoWayConnections);
         Trace("{0}: {1} split; {2} is {3} from {4}.", FormatTranscriptLineForDisplay(line), here.Name, room.Name,
           direction.ToString().ToLower(), second.Name);
@@ -1591,7 +1651,7 @@ public sealed class Automap : IAutomapController
   ///   A new stop for the moving room the player is in (it's somewhere else now): a copy of it, with its name,
   ///   beside <paramref name="here" /> and joined from it by what moved it ("pull peg"). The room is marked as moving.
   /// </summary>
-  private Room NewStop(Room here)
+  private Room NewStop(Room here, string movedBy)
   {
     var root = MovingRoot(here);
     root.Moves = true;
@@ -1599,7 +1659,7 @@ public sealed class Automap : IAutomapController
     stop.ReferenceRoomId = root.Id;
     stop.CopyStyleFrom(root);
     foreach (var description in root.Descriptions) stop.AddDescription(description);
-    _canvas.ConnectByCommand(here, stop, _doneInRoom ?? UnmappedWay);
+    _canvas.ConnectByCommand(here, stop, movedBy ?? WhatMovedIt());
     return stop;
   }
 
@@ -1623,11 +1683,23 @@ public sealed class Automap : IAutomapController
     var stops = Trizbort.Domain.Application.Project.Current.Elements.OfType<Room>()
       .Where(other => other == root || other.ReferenceRoomId == root.Id && other.IsStop).ToList();
     var stop = stops.FirstOrDefault(other => other != here && Along(other).Any(room => NamedAs(room.Name, roomName)));
+    // a way between the stops not known yet (a new stop, or back up for the first time): ask what moved it ("pull
+    // second peg"), once. It's labelled on the join, so the next time it's typed the location moves with the room
+    string movedBy = null;
+    var newWay = stop == null || !LeadsByCommand(here, stop);
+    if (newWay)
+    {
+      movedBy = await AskWhatMovedItAsync(here, roomName, token);
+      token.ThrowIfCancellationRequested();
+      here = _canvas.ResolveRoom(here);
+      if (here == null) return;
+      if (stop != null) stop = _canvas.ResolveRoom(stop);
+    }
+
     using (await BeginBatchAsync("Automap: " + root.Name + " moves", token))
     {
-      if (stop == null) stop = NewStop(here);
-      else if (!here.GetConnections().Any(connection => OtherEnd(connection, here) == stop))
-        _canvas.ConnectByCommand(here, stop, _doneInRoom ?? UnmappedWay);
+      if (stop == null) stop = NewStop(here, movedBy);
+      else if (newWay) _canvas.ConnectStops(here, stop, movedBy);
     }
 
     Trace("{0} is at another stop.", root.Name);
@@ -1653,10 +1725,238 @@ public sealed class Automap : IAutomapController
   /// <summary>The command the game answered with a question, if the last reply was one.</summary>
   private string _askedAbout;
 
-  /// <summary>The last command, not a direction, the player typed in the room they're in (see Split).</summary>
-  private string _doneInRoom;
+  /// <summary>The commands, not directions, the player typed in the room they're in, oldest first (see Split).</summary>
+  private readonly List<DoneInRoom> _doneHere = new();
+
+  /// <summary>The label of a join between a moving room's stops when nothing the player did moved it.</summary>
+  public const string ByItself = "(by itself)";
+
+  /// <summary>
+  ///   Commands that don't move a room: the player opens the door, looks about or picks things up after pulling the
+  ///   peg that moved it, before going out to find it's somewhere else.
+  /// </summary>
+  private static readonly string[] _staysPut =
+  {
+    "open", "close", "shut", "look", "l", "examine", "x", "see", "read", "search", "listen", "smell", "touch", "feel",
+    "take", "get", "drop", "put", "inventory", "i", "lock", "unlock", "wait", "z", "score", "save", "light", "unlight"
+  };
+
+  /// <summary>
+  ///   What moved the room the player was in ("pull first peg"): the last command they typed in it that could have
+  ///   (not "open closet door", typed after it), else the last command, else <see cref="UnmappedWay" />.
+  /// </summary>
+  private string WhatMovedIt()
+  {
+    var index = CouldHaveMovedIt(null);
+    return index >= 0 ? _doneHere[index].Label : _doneHere.Count > 0 ? _doneHere[^1].Label : UnmappedWay;
+  }
+
+  private static string FirstWord(string text) =>
+    text?.Split(_wordSeparators, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+
+  /// <summary>
+  ///   Of the commands typed in the room, the newest that could have moved it: one starting like a command known to
+  ///   move <paramref name="verbs" /> ("pull second peg" after "pull first peg"), else one that isn't opening the door
+  ///   or looking about. -1 for none.
+  /// </summary>
+  private int CouldHaveMovedIt(ICollection<string> verbs)
+  {
+    if (verbs is { Count: > 0 })
+      for (var index = _doneHere.Count - 1; index >= 0; index--)
+        if (verbs.Contains(FirstWord(_doneHere[index].Label)))
+          return index;
+    for (var index = _doneHere.Count - 1; index >= 0; index--)
+    {
+      var word = FirstWord(_doneHere[index].Label);
+      if (word != null && !_staysPut.Contains(word, StringComparer.OrdinalIgnoreCase)) return index;
+    }
+
+    return -1;
+  }
+
+  /// <summary>The joins between a moving room and its stops.</summary>
+  private static IEnumerable<Connection> JoinsBetweenStops(Room root) =>
+    Trizbort.Domain.Application.Project.Current.Elements.OfType<Connection>().Where(connection =>
+      connection.GetSourceRoom() is { } from && connection.GetTargetRoom() is { } to && from != to &&
+      MovingRootOrNull(from) == root && MovingRootOrNull(to) == root);
+
+  /// <summary>
+  ///   Asks what moved the room the player was in (<paramref name="here" />), now they've come out in
+  ///   <paramref name="comeOutIn" />: one of the commands typed in it, or nothing they did. The command suggested is one
+  ///   like those known to move it, else the newest that could have; "nothing" when it has moved by itself before and
+  ///   nothing typed looks like what moves it. Returns the label for the join.
+  /// </summary>
+  private async Task<string> AskWhatMovedItAsync(Room here, string comeOutIn, CancellationToken token)
+  {
+    if (_doneHere.Count == 0) return ByItself;
+    var root = MovingRootOrNull(here) ?? here;
+    var known = JoinsBetweenStops(root).SelectMany(connection => JoinWays.Commands(JoinWays.Of(connection))).ToList();
+    var verbs = new HashSet<string>(known.Where(command => command != ByItself && command != UnmappedWay)
+      .Select(FirstWord).Where(word => word != null), StringComparer.OrdinalIgnoreCase);
+    var suggested = CouldHaveMovedIt(verbs);
+    if (known.Contains(ByItself) && (suggested < 0 || !verbs.Contains(FirstWord(_doneHere[suggested].Label))))
+      suggested = -1;
+
+    var choice = await Prompts.ChooseWhatMovedItAsync(root, comeOutIn, _doneHere.ToList(), suggested, token);
+    if (choice == null) return UnmappedWay;
+    if (choice.ByItself) return ByItself;
+    return string.IsNullOrWhiteSpace(choice.Command) ? UnmappedWay : choice.Command.Trim();
+  }
+
+  /// <summary>
+  ///   Whether a join labelled with what moves it (not "?") leads from <paramref name="here" /> to
+  ///   <paramref name="stop" />: the way between them is known.
+  /// </summary>
+  private static bool LeadsByCommand(Room here, Room stop)
+  {
+    foreach (var connection in here.GetConnections())
+    {
+      if (OtherEnd(connection, here) != stop) continue;
+      var fromStart = connection.GetSourceRoom() == here;
+      if (!fromStart && connection.Flow == ConnectionFlow.OneWay) continue;
+      if (JoinWays.Of(connection).Any(way => way.IsCommand && way.Text != UnmappedWay &&
+                                             (connection.Flow == ConnectionFlow.TwoWay || way.AtStart == fromStart)))
+        return true;
+    }
+
+    return false;
+  }
 
   /// <summary>"Cupboard (2)" for "Cupboard", or the next number free.</summary>
+  /// <summary>
+  ///   Puts <paramref name="room" /> right beside <paramref name="anchor" />, across the way the player went (east of it
+  ///   for north or south, south of it for east or west), close enough to read as a pair: one place at different
+  ///   times.
+  /// </summary>
+  private static void PutBeside(Room room, Room anchor, MappableDirection direction)
+  {
+    if (room == null || anchor == null || room == anchor) return;
+    var point = CompassPointHelper.GetCompassDirection(direction);
+    var across = point is CompassPoint.East or CompassPoint.West;
+    var gap = Trizbort.Setup.Settings.GridSize / 2f;
+    room.Position = Trizbort.Setup.Settings.Snap(across
+      ? new Vector(anchor.Position.X, anchor.Position.Y + anchor.Height + gap)
+      : new Vector(anchor.Position.X + anchor.Width + gap, anchor.Position.Y));
+    // the pair stays together: tidying round them later leaves both where they are (drag them to move them)
+    room.PlacedByHand = true;
+    anchor.PlacedByHand = true;
+  }
+
+  /// <summary>How the player last came into a room: from where, which way, and what the game showed.</summary>
+  private sealed record Arrival(Room From, MappableDirection? Direction, string Journey, Room To, string Description);
+
+  private Arrival _arrival;
+
+  /// <summary>
+  ///   Splits <paramref name="here" />, the room the player left, into two places alike ("Cupboard (2)"), the second
+  ///   reached from the first by what was done there ("pull peg": a lift).
+  /// </summary>
+  private Room SplitRoom(Room here, string movedBy)
+  {
+    var second = _canvas.CreateRoom(here, SplitName(here.Name));
+    foreach (var description in here.Descriptions) second.AddDescription(description);
+    second.IsDark = here.IsDark;
+    _canvas.ConnectByCommand(here, second, movedBy ?? WhatMovedIt());
+    return second;
+  }
+
+  /// <summary>
+  ///   <paramref name="here" /> isn't the room automap took it for, but another with its name: makes that room
+  ///   ("Maze (2)", with what the game showed on the way in), and moves the way the player came in over to it, taking
+  ///   it off the join to <paramref name="here" /> (and the join too, when nothing seen is left on it). Returns the new
+  ///   room, or null when the way in isn't known.
+  /// </summary>
+  private Room SplitOffArrival(Room here)
+  {
+    var arrival = _arrival;
+    if (arrival == null || here == null || _canvas.ResolveRoom(arrival.To) != here) return null;
+    var from = _canvas.ResolveRoom(arrival.From);
+    if (from == null || (from == here && arrival.Direction == null && arrival.Journey == null)) return null;
+
+    // the way the player went from the room they came from (up, from the chimney below, when automap took it for a
+    // loop back into the same chimney), else beside it
+    var name = SplitName(here.Name);
+    var room = arrival.Direction is { } way
+      ? _canvas.CreateRoom(from, way, name, name)
+      : _canvas.CreateRoom(here, name);
+    if (!string.IsNullOrWhiteSpace(arrival.Description)) room.AddDescription(arrival.Description);
+    room.IsDark = here.IsDark;
+    if (arrival.Direction is { } direction)
+    {
+      _canvas.ForgetWay(from, direction, here);
+      DropJoinIfNothingSeen(from, here);
+      _canvas.Connect(from, direction, room, _settings.AssumeTwoWayConnections);
+    }
+    else
+    {
+      foreach (var join in JoinsBetween(from, here))
+        if (JoinWays.Of(join).All(way => !way.Seen || (way.IsCommand && Matches(way.Text, arrival.Journey))))
+          Trizbort.Domain.Application.Project.Current.Elements.Remove(join);
+      _canvas.ConnectByCommand(from, room, arrival.Journey);
+    }
+
+    _arrival = arrival with { To = room };
+    return room;
+
+    static bool Matches(string one, string two) =>
+      string.Equals(one?.Trim(), two?.Trim(), StringComparison.OrdinalIgnoreCase);
+  }
+
+  private static List<Connection> JoinsBetween(Room one, Room two) =>
+    one.GetConnections().Where(join =>
+      (join.GetSourceRoom() == one && join.GetTargetRoom() == two) ||
+      (join.GetSourceRoom() == two && join.GetTargetRoom() == one)).Distinct().ToList();
+
+  /// <summary>Removes joins between the two rooms that only automap's assumptions are left on.</summary>
+  private static void DropJoinIfNothingSeen(Room one, Room two)
+  {
+    foreach (var join in JoinsBetween(one, two))
+      if (!JoinWays.Of(join).Any(way => way.Seen))
+        Trizbort.Domain.Application.Project.Current.Elements.Remove(join);
+  }
+
+  /// <summary>
+  ///   Where a new room for the heading automap is asking about would go: where automap would put it, the way the
+  ///   player went from the room they were in (beside it after a command). Null when automap doesn't know where the
+  ///   player came from.
+  /// </summary>
+  public Rect? NewRoomPreview()
+  {
+    var from = CurrentRoom;
+    if (from == null || _canvas == null) return null;
+    return _canvas.NewRoomBounds(from, _lastMoveDirection);
+  }
+
+  /// <summary>
+  ///   Whether the room automap has the player in can be split off as a different room (<see cref="SplitCurrentRoomAsync" />):
+  ///   the way they came in is known.
+  /// </summary>
+  public bool CanSplitCurrentRoom =>
+    Running && !_suspended && _arrival != null && CurrentRoom is { } here && _canvas.ResolveRoom(_arrival.To) == here &&
+    _canvas.ResolveRoom(_arrival.From) is { } from && (from != here || _arrival.Direction != null || _arrival.Journey != null);
+
+  /// <summary>
+  ///   "This is a different room": the room automap has the player in isn't the one on the map with its name, but
+  ///   another (its exits go elsewhere). Makes the new room ("Maze (2)"), moves the way the player came in over to it,
+  ///   and carries on from there. One undo step. Returns false when the way in isn't known.
+  /// </summary>
+  public async Task<bool> SplitCurrentRoomAsync()
+  {
+    if (!CanSplitCurrentRoom) return false;
+    var here = CurrentRoom;
+    Room room;
+    using (await BeginBatchAsync("Automap: a different " + here.Name, CancellationToken.None))
+      room = SplitOffArrival(here);
+    if (room == null) return false;
+
+    _lastKnownRoom = room;
+    _doneHere.Clear();
+    _pendingStubRemoval = null;
+    _canvas.SelectRoom(room);
+    Status = $"Automap: you're in {room.Name}, not {here.Name}.";
+    return true;
+  }
+
   private string SplitName(string name)
   {
     var names = new HashSet<string>(
@@ -2103,13 +2403,15 @@ public sealed class Automap : IAutomapController
     _gameName = string.Empty;
     _stepNow = false;
     _moveByMove = settings.MoveByMove;
+    _waitedForGame = false;
+    GameWentOn = false;
     _suspended = false;
     _pausedFrom = null;
     _dark = null;
     _seenInTheDark = false;
     _askedAbout = null;
     _followTo = null;
-    _doneInRoom = null;
+    _doneHere.Clear();
     Volatile.Write(ref _movesToPlay, 0);
     Volatile.Write(ref _movesBack, 0);
     _movePoints.Clear();
@@ -2145,8 +2447,31 @@ public sealed class Automap : IAutomapController
   /// <summary>True while the run waits before each move (see <see cref="AutomapSettings.MoveByMove" />).</summary>
   public bool MoveByMove => _moveByMove;
 
+  /// <summary>
+  ///   Whether automap tidies the rooms around the player as it goes (and makes space for new rooms), or leaves
+  ///   rooms where they are put. Can be switched while automap runs; takes effect from the next move.
+  /// </summary>
+  public bool AutoTidy
+  {
+    get => _settings.AutoTidy;
+    set
+    {
+      _settings.AutoTidy = value;
+      if (_canvas != null) _canvas.MakeSpaceForNewRooms = value;
+    }
+  }
+
   /// <summary>The command automap is paused before, while playing move by move; otherwise null.</summary>
   public string NextCommand { get; private set; }
+
+  /// <summary>
+  ///   Paused move by move before a command the game wrote while automap waited at the end of the transcript: the
+  ///   game is being played now, and automap won't map it until told to go on (Play to the End follows it live).
+  /// </summary>
+  public bool GameWentOn { get; private set; }
+
+  /// <summary>Automap waited at the end of the transcript for the game to go on (since the last move it paused before).</summary>
+  private volatile bool _waitedForGame;
 
   /// <summary>Play the next move of the transcript, then pause again.</summary>
   public void PlayNextMove()
@@ -2215,6 +2540,83 @@ public sealed class Automap : IAutomapController
     }
 
     return moves;
+  }
+
+  /// <summary>
+  ///   Where automap is in the transcript: the moves (commands typed at a prompt) played so far, and the moves in the
+  ///   transcript as it is now. The transcript is read again only when it has changed, so this is cheap enough for a
+  ///   timer even on a long game.
+  /// </summary>
+  public (int Played, int Total) MoveCount()
+  {
+    var fileName = _settings.FileName;
+    if (!Running || string.IsNullOrEmpty(fileName)) return (0, 0);
+    var moves = TranscriptMoveLines(fileName);
+    var read = _linesRead;
+    // moves whose prompt has been read; the one automap is paused before hasn't been played yet
+    var lo = 0;
+    var hi = moves.Count;
+    while (lo < hi)
+    {
+      var mid = (lo + hi) / 2;
+      if (moves[mid] < read) lo = mid + 1;
+      else hi = mid;
+    }
+
+    var played = Math.Max(0, lo - (string.IsNullOrWhiteSpace(NextCommand) ? 0 : 1));
+    return (played, Math.Max(moves.Count, played));
+  }
+
+  /// <summary>Whether there's a move to play after where automap is in the transcript.</summary>
+  public bool HasNextMove
+  {
+    get
+    {
+      var (played, total) = MoveCount();
+      return played < total;
+    }
+  }
+
+  private string _movesFile;
+  private long _movesFileLength = -1;
+  private DateTime _movesFileWritten;
+  private List<int> _moveLines = new();
+
+  /// <summary>The line numbers of the transcript's moves (prompts with a command), kept until the file changes.</summary>
+  private List<int> TranscriptMoveLines(string fileName)
+  {
+    try
+    {
+      var info = new FileInfo(fileName);
+      if (!info.Exists) return _moveLines;
+      if (fileName == _movesFile && info.Length == _movesFileLength && info.LastWriteTimeUtc == _movesFileWritten)
+        return _moveLines;
+
+      var lines = new List<int>();
+      using (var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+      using (var reader = new StreamReader(stream))
+      {
+        var index = 0;
+        while (reader.ReadLine() is { } line)
+        {
+          if (IsPrompt(line, out var command) && !string.IsNullOrWhiteSpace(command)) lines.Add(index);
+          index++;
+        }
+      }
+
+      _moveLines = lines;
+      _movesFile = fileName;
+      _movesFileLength = info.Length;
+      _movesFileWritten = info.LastWriteTimeUtc;
+    }
+    catch (IOException)
+    {
+    }
+    catch (UnauthorizedAccessException)
+    {
+    }
+
+    return _moveLines;
   }
 
   /// <summary>Pause before the next move.</summary>
@@ -2289,7 +2691,7 @@ public sealed class Automap : IAutomapController
     details.AppendLine("Automap error");
     details.AppendLine("Transcript: " + _settings.FileName);
     details.AppendLine(
-      $"Settings: verbose transcript {_settings.VerboseTranscript}, same name = same room {_settings.AssumeRoomsWithSameNameAreSameRoom}, " +
+      $"Settings: verbose transcript {_settings.VerboseTranscript}, " +
       $"two-way connections {_settings.AssumeTwoWayConnections}, guess exits {_settings.GuessExits}, " +
       $"continue transcript {_settings.ContinueTranscript}, single step {_settings.SingleStep}");
     details.AppendLine("Current room: " + (_lastKnownRoom?.Name ?? "(none)"));
@@ -2353,9 +2755,6 @@ public sealed class Automap : IAutomapController
     InitializeRun(canvas, settings);
     using var tokenSource = new CancellationTokenSource();
     _tokenSource = tokenSource;
-    Debug.Assert(
-      _settings.AssumeRoomsWithSameNameAreSameRoom || _settings.VerboseTranscript,
-      "Must assume rooms with same name are same room unless transcript is verbose.");
     Status = "Automapping has started.";
     var ownsRun = false;
     try
@@ -2465,9 +2864,6 @@ public sealed class Automap : IAutomapController
     InitializeRun(canvas, settings);
     using var tokenSource = new CancellationTokenSource();
     _tokenSource = tokenSource;
-    Debug.Assert(
-      _settings.AssumeRoomsWithSameNameAreSameRoom || _settings.VerboseTranscript,
-      "Must assume rooms with same name are same room unless transcript is verbose.");
     Status = "Automapping has started.";
 
     // the transcript, reopened when automap goes back a move

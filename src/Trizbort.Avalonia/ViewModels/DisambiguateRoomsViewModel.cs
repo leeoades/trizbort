@@ -63,9 +63,15 @@ public class DisambiguateRoomsViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(SelectedDescription));
                 OkCommand.NotifyCanExecuteChanged();
+                Preview?.Invoke(value?.Room);
             }
         }
     }
+
+    /// <summary>
+    ///     Shows the room picked on the map, with the rooms around it (null for a new room), while the dialog is open.
+    /// </summary>
+    public Action<Room?>? Preview { get; set; }
 
     public string SelectedDescription => _selected?.Description ?? string.Empty;
 

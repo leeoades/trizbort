@@ -1,0 +1,33 @@
+current: Cliff
+
+rooms:
+Cannon Emplacement
+Cliff
+Entrance to Hedge Maze
+Front Porch
+Northeast Junction
+Northwest Junction
+Patio
+South Junction (start)
+Southeast Junction
+Southwest Junction
+
+connections:
+Cannon Emplacement [east] <-> [north] Northeast Junction
+Cannon Emplacement [southsouthwest "d"] <-> [northnorthwest "u"] Cliff
+Cliff [east] stub
+Cliff [southsouthwest] stub
+Entrance to Hedge Maze [west] <-> [east] Northwest Junction
+Northeast Junction [east] stub
+Northeast Junction [west] <-> [east] Entrance to Hedge Maze
+Northwest Junction [north] <-> [west] Cannon Emplacement
+Northwest Junction [south] <-> [north] Southwest Junction
+Patio [west] <-> [east] Southwest Junction
+South Junction [east] <-> [south] Southeast Junction
+South Junction [north] <-> [south] Front Porch
+South Junction [west] <-> [south] Southwest Junction
+Southeast Junction [north] <-> [south] Northeast Junction
+Southeast Junction [west] <-> [east] Patio
+
+natural joins: 12 of 12
+exact joins: 8 of 12

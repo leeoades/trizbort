@@ -27,12 +27,6 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     private bool _verboseTranscript = true;
 
     [ObservableProperty]
-    private bool _assumeRoomsWithSameNameAreSameRoom;
-
-    [ObservableProperty]
-    private bool _isAssumeRoomsWithSameNameEnabled = true;
-
-    [ObservableProperty]
     private bool _assumeTwoWayConnections = true;
 
     [ObservableProperty]
@@ -73,8 +67,6 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         ContinueTranscript = settings.ContinueTranscript;
         SingleStep = IsDebugEnabled && settings.SingleStep;
         VerboseTranscript = settings.VerboseTranscript;
-        IsAssumeRoomsWithSameNameEnabled = settings.VerboseTranscript;
-        AssumeRoomsWithSameNameAreSameRoom = !settings.VerboseTranscript || settings.AssumeRoomsWithSameNameAreSameRoom;
         AssumeTwoWayConnections = settings.AssumeTwoWayConnections;
         GuessExits = settings.GuessExits;
         AutoTidy = settings.AutoTidy;
@@ -82,13 +74,6 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         MoveByMove = settings.MoveByMove;
         AddObjectCommand = string.IsNullOrEmpty(settings.AddObjectCommand) ? "tb see" : settings.AddObjectCommand;
         AddRegionCommand = string.IsNullOrEmpty(settings.AddRegionCommand) ? "tb region" : settings.AddRegionCommand;
-    }
-
-    partial void OnVerboseTranscriptChanged(bool value)
-    {
-        IsAssumeRoomsWithSameNameEnabled = value;
-        // Legacy parity: non-verbose forces "same name" on; turning verbose back on resets it to off.
-        AssumeRoomsWithSameNameAreSameRoom = !value;
     }
 
     [RelayCommand]
@@ -107,7 +92,6 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         settings.FileName = FileName?.Trim() ?? string.Empty;
         settings.SingleStep = IsDebugEnabled && SingleStep;
         settings.VerboseTranscript = VerboseTranscript;
-        settings.AssumeRoomsWithSameNameAreSameRoom = !VerboseTranscript || AssumeRoomsWithSameNameAreSameRoom;
         settings.GuessExits = GuessExits;
         settings.AutoTidy = AutoTidy;
         settings.AbbreviateDirections = AbbreviateDirections;

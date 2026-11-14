@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.AreaBranchesDialog"
+        x:DataType="vm:AreaBranchesViewModel"
+        Title="{Binding Title}"
+        Width="460" Height="380"
+        MinWidth="360" MinHeight="260"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,12,*,8,Auto,12,Auto" Margin="16">
+        <TextBlock Grid.Row="0" Text="{Binding IntroText}" TextWrapping="Wrap" />
+
+        <!-- each branch hanging off the rooms being moved, ticked to go along -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="BranchList" ItemsSource="{Binding Branches}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AreaBranchItem">
+                        <CheckBox IsChecked="{Binding IsChecked}" Margin="0,2" ToolTip.Tip="{Binding RoomNames}">
+                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+                        </CheckBox>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="4" x:Name="SummaryText" Text="{Binding Summary}" Opacity="0.8" TextWrapping="Wrap" />
+
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Classes="dialog-button" Content="OK" IsDefault="True" Command="{Binding OkCommand}" />
+            <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Command="{Binding CancelCommand}"
+                    ToolTip.Tip="Move nothing" />
+        </StackPanel>
+    </Grid>
+</Window>

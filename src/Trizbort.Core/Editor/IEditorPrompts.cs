@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Trizbort.Automap;
@@ -137,6 +138,36 @@ public interface IEditorPrompts
   ///   Opens a link in the default browser. Returns false when it could not be opened. Default implementation
   ///   returns false.
   /// </summary>
+  /// <summary>
+  ///   Split Room: which of <paramref name="room" />'s joins go to the new room (<paramref name="ticked" /> to start
+  ///   with), and, while automapping, which room the player is in (<paramref name="where" /> to start with; null
+  ///   doesn't ask). Null for cancel. Without a UI, takes the suggestion.
+  /// </summary>
+  Task<RoomSplitChoice> ChooseRoomSplitAsync(Room room, string newName, IReadOnlyList<Connection> joins,
+    IReadOnlyCollection<Connection> ticked, RoomSplitWhere? where, CancellationToken token = default) =>
+    Task.FromResult(new RoomSplitChoice(ticked?.ToList() ?? new List<Connection>(), where ?? RoomSplitWhere.Neither));
+
+  /// <summary>
+  ///   Move to a New Area (or bringing a room across a split join): which of the <paramref name="branches" /> of the
+  ///   map hanging off <paramref name="moving" /> go along too. <paramref name="title" /> says what's being done
+  ///   ("Move 'Foyer' to a New Area"). Null for cancel. Without a UI, takes them all.
+  /// </summary>
+  Task<IReadOnlyList<AreaBranch>> ChooseAreaBranchesAsync(string title, IReadOnlyList<Room> moving,
+    IReadOnlyList<AreaBranch> branches, CancellationToken token = default) =>
+    Task.FromResult(branches);
+
+  /// <summary>
+  ///   A room that moves (<paramref name="room" />) has turned up somewhere new: you came out in
+  ///   <paramref name="comeOutIn" />. Which of the commands <paramref name="done" /> in it moved it
+  ///   (<paramref name="suggested" /> to start with; -1 for "nothing I did"), something else, or nothing the player did.
+  ///   Null for cancel (don't say). Without a UI, takes the suggestion.
+  /// </summary>
+  Task<WhatMovedItChoice> ChooseWhatMovedItAsync(Room room, string comeOutIn, IReadOnlyList<DoneInRoom> done,
+    int suggested, CancellationToken token = default) =>
+    Task.FromResult(suggested >= 0 && suggested < done.Count
+      ? new WhatMovedItChoice(done[suggested].Label)
+      : WhatMovedItChoice.Itself);
+
   Task<bool> OpenUriAsync(string uri, CancellationToken token = default)
   {
     return Task.FromResult(false);

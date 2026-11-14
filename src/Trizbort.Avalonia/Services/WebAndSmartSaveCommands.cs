@@ -36,7 +36,6 @@ public static class WebAndSmartSaveCommands
         if (!opened) return;
 
         if (vm.IsAutomapActive) vm.StopAutomap();
-        vm.CommandService.ResetZoom();
         vm.StatusText = $"Opened map: {MapUrl.FileName(new Uri(session.Project.FileName))}";
     }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -31,15 +31,123 @@ public static partial class LayoutTidy
   private const int LengthWeight = 3;
   private const int MoveWeight = 1;
 
+  /// <summary>How far (in squares) beyond a join's rooms the solver looks for rooms that could end up on it.</summary>
+  private const int LineReach = 4;
+
+  /// <summary>
+  ///   When <paramref name="satisfied" />, the slanting join from <paramref name="a" /> to <paramref name="b" />
+  ///   (towards <paramref name="wx" />, <paramref name="wy" />) has no room within the box between them: every other
+  ///   room nearby is in the same columns as one of them or beyond, or in the same rows or beyond.
+  /// </summary>
+  private static void KeepOutOfTheBox(
+    CpModel model, BoolVar satisfied, int a, int b, int wx, int wy, IntVar[] x, IntVar[] y, long[] widthCells,
+    long[] heightCells, long[] cellX, long[] cellY, int j)
+  {
+    var n = x.Length;
+    var (leftRoom, rightRoom) = wx > 0 ? (a, b) : (b, a);
+    var (topRoom, bottomRoom) = wy > 0 ? (a, b) : (b, a);
+    var left = Math.Min(cellX[a], cellX[b]) - LineReach;
+    var right = Math.Max(cellX[a], cellX[b]) + LineReach;
+    var top = Math.Min(cellY[a], cellY[b]) - LineReach;
+    var bottom = Math.Max(cellY[a], cellY[b]) + LineReach;
+    for (var c = 0; c < n; c++)
+    {
+      if (c == a || c == b || cellX[c] < left || cellX[c] > right || cellY[c] < top || cellY[c] > bottom) continue;
+      var west = model.NewBoolVar($"bw{j}_{c}");
+      var east = model.NewBoolVar($"be{j}_{c}");
+      var north = model.NewBoolVar($"bn{j}_{c}");
+      var south = model.NewBoolVar($"bs{j}_{c}");
+      model.Add(x[c] + widthCells[c] <= x[leftRoom] + widthCells[leftRoom]).OnlyEnforceIf(west);
+      model.Add(x[c] >= x[rightRoom]).OnlyEnforceIf(east);
+      model.Add(y[c] + heightCells[c] <= y[topRoom] + heightCells[topRoom]).OnlyEnforceIf(north);
+      model.Add(y[c] >= y[bottomRoom]).OnlyEnforceIf(south);
+      model.AddBoolOr(new ILiteral[] { west, east, north, south }).OnlyEnforceIf(satisfied);
+    }
+  }
+
+  /// <summary>
+  ///   When <paramref name="exact" />, the straight join from <paramref name="a" /> to <paramref name="b" /> (going
+  ///   <paramref name="wx" />, <paramref name="wy" />) has no room on it: every other room nearby is wholly to one side
+  ///   of the line, or no further along it than the rooms at its ends.
+  /// </summary>
+  private static void KeepOffTheLine(
+    CpModel model, BoolVar exact, int a, int b, int wx, int wy, IntVar[] x, IntVar[] y, long[] widthCells,
+    long[] heightCells, long[] cellX, long[] cellY, int j)
+  {
+    var n = x.Length;
+    // the room the join starts from in its direction, and the one it ends at
+    var (first, last) = (wx < 0 || wy < 0) ? (b, a) : (a, b);
+    var left = Math.Min(cellX[a], cellX[b]) - LineReach;
+    var right = Math.Max(cellX[a], cellX[b]) + LineReach;
+    var top = Math.Min(cellY[a], cellY[b]) - LineReach;
+    var bottom = Math.Max(cellY[a], cellY[b]) + LineReach;
+    for (var c = 0; c < n; c++)
+    {
+      if (c == a || c == b || cellX[c] < left || cellX[c] > right || cellY[c] < top || cellY[c] > bottom) continue;
+      var before = model.NewBoolVar($"lb{j}_{c}");
+      var after = model.NewBoolVar($"la{j}_{c}");
+      var oneSide = model.NewBoolVar($"l1{j}_{c}");
+      var otherSide = model.NewBoolVar($"l2{j}_{c}");
+      if (wx == 0)
+      {
+        // upright: the line is down the middle of a's column, between first's bottom and last's top
+        var line = 2 * x[a] + widthCells[a];
+        model.Add(2 * x[c] + 2 * widthCells[c] <= line).OnlyEnforceIf(oneSide);
+        model.Add(2 * x[c] >= line).OnlyEnforceIf(otherSide);
+        model.Add(y[c] + heightCells[c] <= y[first] + heightCells[first]).OnlyEnforceIf(before);
+        model.Add(y[c] >= y[last]).OnlyEnforceIf(after);
+      }
+      else
+      {
+        // level: the line is along the middle of a's row, between first's right and last's left
+        var line = 2 * y[a] + heightCells[a];
+        model.Add(2 * y[c] + 2 * heightCells[c] <= line).OnlyEnforceIf(oneSide);
+        model.Add(2 * y[c] >= line).OnlyEnforceIf(otherSide);
+        model.Add(x[c] + widthCells[c] <= x[first] + widthCells[first]).OnlyEnforceIf(before);
+        model.Add(x[c] >= x[last]).OnlyEnforceIf(after);
+      }
+
+      model.AddBoolOr(new ILiteral[] { oneSide, otherSide, before, after }).OnlyEnforceIf(exact);
+    }
+  }
+
+  /// <summary>Bonus for two rooms near each other sharing a column (or a row), joined or not.</summary>
+  private const int AlignWeight = 4;
+
+  /// <summary>How many squares apart (across a column, or down a row) rooms count as near, for lining up.</summary>
+  private const int AlignReach = 3;
+
+  /// <summary>Bonus for a room halfway between the rooms its opposite joins lead to (west and east, north and south).</summary>
+  private const int SymmetryWeight = 12;
+
+  /// <summary>Bonus for rooms that aren't joined not sitting as close as joined ones.</summary>
+  private const int ApartWeight = 24;
+
+  /// <summary>
+  ///   Which side of its room a join leaves from the middle of, from where it meets the room: west (-1, 0), north
+  ///   (0, -1) and so on; (0, 0) for a corner, or anywhere else (up and down leave a little off the middle).
+  /// </summary>
+  private static (int X, int Y) Side(double offsetX, double offsetY)
+  {
+    if (Math.Abs(offsetY) < 1 && Math.Abs(offsetX) >= 1) return (Math.Sign(offsetX), 0);
+    if (Math.Abs(offsetX) < 1 && Math.Abs(offsetY) >= 1) return (0, Math.Sign(offsetY));
+    return (0, 0);
+  }
+
   /// <summary>
   ///   Lays out <paramref name="rooms" /> (others stay put) with the solver, then polishes with the step-by-step tidy.
   ///   Returns how many rooms moved, or -1 if the solver found no layout in time (nothing is changed then).
   /// </summary>
-  public static int SolverTidy(IList<Element> elements, IEnumerable<Room> rooms, int timeLimitMs = 5000)
+  /// <param name="deterministic">
+  ///   Always give the same layout for the same map (one search thread, and a limit on the work done rather than on
+  ///   the time taken), as automap needs: the same transcript must make the same map.
+  /// </param>
+  public static int SolverTidy(
+    IList<Element> elements, IEnumerable<Room> rooms, int timeLimitMs = 5000, bool deterministic = false)
   {
     if (elements == null || rooms == null) return 0;
     var map = new LayoutMap(elements);
-    var result = Solve(map, rooms.Where(map.Contains).ToList(), timeLimitMs, CancellationToken.None);
+    var result = Solve(map, rooms.Where(map.Contains).ToList(), timeLimitMs, CancellationToken.None, deterministic);
     return result < 0 ? -1 : TidyPlan.Apply(map.Moves());
   }
 
@@ -47,7 +155,8 @@ public static partial class LayoutTidy
   ///   The solver tidy on <paramref name="map" />'s copy of the layout; the rooms themselves aren't moved. Returns 1
   ///   when it changed the layout, 0 when it kept it (nothing better, or cancelled) and -1 when it found no layout.
   /// </summary>
-  private static int Solve(LayoutMap map, List<Room> rooms, int timeLimitMs, CancellationToken token)
+  private static int Solve(
+    LayoutMap map, List<Room> rooms, int timeLimitMs, CancellationToken token, bool deterministic = false)
   {
     var movable = rooms.Select(map.IndexOf).Where(i => i >= 0).ToHashSet();
     var n = map.Rooms.Count;
@@ -56,7 +165,7 @@ public static partial class LayoutTidy
     map.Commit = false;
     try
     {
-      return Solve(map, rooms, movable, n, timeLimitMs, token);
+      return Solve(map, rooms, movable, n, timeLimitMs, token, deterministic);
     }
     finally
     {
@@ -65,7 +174,8 @@ public static partial class LayoutTidy
   }
 
   private static int Solve(
-    LayoutMap map, List<Room> rooms, HashSet<int> movable, int n, int timeLimitMs, CancellationToken token)
+    LayoutMap map, List<Room> rooms, HashSet<int> movable, int n, int timeLimitMs, CancellationToken token,
+    bool deterministic)
   {
     var stepX = map.StepX;
     var stepY = map.StepY;
@@ -99,6 +209,7 @@ public static partial class LayoutTidy
     var maxY = cellY.Max() + reach;
 
     var naturalBefore = map.NaturalCount();
+    var faultsBefore = map.FaultCount();
     var before = map.Snapshot();
 
     var model = new CpModel();
@@ -177,19 +288,120 @@ public static partial class LayoutTidy
         model.Add(1000 * wy * dy <= 2414 * wx * dx).OnlyEnforceIf(satisfied);
       }
 
+      // a slanting join (diagonal, or a bend) runs across no room: while it points its way, no room sits within
+      // the box its two rooms span, where the line runs
+      if (wx != 0 && wy != 0) KeepOutOfTheBox(model, satisfied, a, b, wx, wy, x, y, widthCells, heightCells, cellX, cellY, j);
+
+      // a bend is drawn slanting: it needn't be exactly diagonal (straight joins come first)
+      if (join.Bent) continue;
+
       // exactly that way: level, upright, or as many squares across as down
       var exact = model.NewBoolVar($"e{j}");
       objective.Add(ExactWeight * exact);
       model.AddImplication(exact, satisfied);
+      // north at one end and south at the other only points its way when it's dead straight: a long slanting line
+      // that's merely roughly north doesn't count (cardinal directions shouldn't bend)
+      if (join.Straight) model.AddImplication(satisfied, exact);
       if (wy == 0) model.Add(dy == 0).OnlyEnforceIf(exact);
       else if (wx == 0) model.Add(dx == 0).OnlyEnforceIf(exact);
       else model.Add(wx * dx == wy * dy).OnlyEnforceIf(exact);
+
+      // a straight join (exact or not) runs across no room: each room near it is to one side of the line, or
+      // beyond its ends
+      if (wx == 0 || wy == 0)
+      {
+        var straight = model.NewBoolVar($"st{j}");
+        var across = wx == 0 ? dx : dy;
+        model.Add(across == 0).OnlyEnforceIf(straight);
+        model.Add(across != 0).OnlyEnforceIf(straight.Not());
+        model.AddImplication(exact, straight);
+        KeepOffTheLine(model, straight, a, b, wx, wy, x, y, widthCells, heightCells, cellX, cellY, j);
+      }
     }
+
+    // symmetry: a room with joins leaving from opposite sides (west and east, north and south) sits halfway between
+    // the rooms they lead to, like the Patio between the south-west and south-east junctions
+    var sides = new List<(int Other, int Sx, int Sy)>[n];
+    for (var i = 0; i < n; i++) sides[i] = new List<(int, int, int)>();
+    foreach (var join in map.Joins)
+    {
+      if (join.A == join.B || join.Pull <= 0) continue;
+      var (ax, ay) = Side(join.AX, join.AY);
+      var (bx, by) = Side(join.BX, join.BY);
+      if (ax != 0 || ay != 0) sides[join.A].Add((join.B, ax, ay));
+      if (bx != 0 || by != 0) sides[join.B].Add((join.A, bx, by));
+    }
+
+    for (var r = 0; r < n; r++)
+      foreach (var one in sides[r].Where(side => side.Sx > 0 || side.Sy > 0))
+        foreach (var other in sides[r].Where(side => side.Sx == -one.Sx && side.Sy == -one.Sy && side.Other != one.Other))
+        {
+          if (!movable.Contains(r) && !movable.Contains(one.Other) && !movable.Contains(other.Other)) continue;
+          var balanced = model.NewBoolVar($"sym{r}_{one.Other}_{other.Other}");
+          if (one.Sx != 0)
+            model.Add(2 * x[one.Other] + widthCells[one.Other] + 2 * x[other.Other] + widthCells[other.Other] ==
+                      2 * (2 * x[r] + widthCells[r])).OnlyEnforceIf(balanced);
+          else
+            model.Add(2 * y[one.Other] + heightCells[one.Other] + 2 * y[other.Other] + heightCells[other.Other] ==
+                      2 * (2 * y[r] + heightCells[r])).OnlyEnforceIf(balanced);
+          objective.Add(SymmetryWeight * balanced);
+        }
+
+    // rooms that aren't joined don't sit as close as joined ones, side by side or one above the other, so it's
+    // clear there's no way between them
+    var joined = map.Joins.Select(join => join.A < join.B ? (join.A, join.B) : (join.B, join.A)).ToHashSet();
+    for (var a = 0; a < n; a++)
+      for (var b = a + 1; b < n; b++)
+      {
+        if ((!movable.Contains(a) && !movable.Contains(b)) || joined.Contains((a, b))) continue;
+        if (Math.Abs(cellX[a] - cellX[b]) > AlignReach || Math.Abs(cellY[a] - cellY[b]) > AlignReach) continue;
+        // apart: not in the next square across or down, in the same row or column
+        var apart = model.NewBoolVar($"ap{a}_{b}");
+        var otherColumn = model.NewBoolVar($"apc{a}_{b}");
+        var farAbove = model.NewBoolVar($"apu{a}_{b}");
+        var farBelow = model.NewBoolVar($"apd{a}_{b}");
+        model.Add(2 * x[a] + widthCells[a] != 2 * x[b] + widthCells[b]).OnlyEnforceIf(otherColumn);
+        model.Add(y[b] >= y[a] + heightCells[a] + 1).OnlyEnforceIf(farBelow);
+        model.Add(y[a] >= y[b] + heightCells[b] + 1).OnlyEnforceIf(farAbove);
+        var otherRow = model.NewBoolVar($"apr{a}_{b}");
+        var farRight = model.NewBoolVar($"apx{a}_{b}");
+        var farLeft = model.NewBoolVar($"apy{a}_{b}");
+        model.Add(2 * y[a] + heightCells[a] != 2 * y[b] + heightCells[b]).OnlyEnforceIf(otherRow);
+        model.Add(x[b] >= x[a] + widthCells[a] + 1).OnlyEnforceIf(farRight);
+        model.Add(x[a] >= x[b] + widthCells[b] + 1).OnlyEnforceIf(farLeft);
+        model.AddBoolOr(new ILiteral[] { otherColumn, farAbove, farBelow }).OnlyEnforceIf(apart);
+        model.AddBoolOr(new ILiteral[] { otherRow, farLeft, farRight }).OnlyEnforceIf(apart);
+        objective.Add(ApartWeight * apart);
+      }
+
+    // rooms near each other line up in rows and columns, joined or not, so the map reads as a grid
+    for (var a = 0; a < n; a++)
+      for (var b = a + 1; b < n; b++)
+      {
+        if (!movable.Contains(a) && !movable.Contains(b)) continue;
+        var apartX = Math.Abs(cellX[a] - cellX[b]);
+        var apartY = Math.Abs(cellY[a] - cellY[b]);
+        if (apartX <= AlignReach && apartY <= AlignReach * 2)
+        {
+          var column = model.NewBoolVar($"c{a}_{b}");
+          model.Add(2 * x[a] + widthCells[a] == 2 * x[b] + widthCells[b]).OnlyEnforceIf(column);
+          objective.Add(AlignWeight * column);
+        }
+
+        if (apartY <= AlignReach && apartX <= AlignReach * 2)
+        {
+          var row = model.NewBoolVar($"r{a}_{b}");
+          model.Add(2 * y[a] + heightCells[a] == 2 * y[b] + heightCells[b]).OnlyEnforceIf(row);
+          objective.Add(AlignWeight * row);
+        }
+      }
 
     model.Maximize(LinearExpr.Sum(objective));
     var solver = new CpSolver
     {
-      StringParameters = $"max_time_in_seconds:{timeLimitMs / 1000.0:0.0###}, num_workers:8"
+      StringParameters = deterministic
+        ? $"max_deterministic_time:{timeLimitMs / 1000.0:0.0###}, num_workers:1, random_seed:1"
+        : $"max_time_in_seconds:{timeLimitMs / 1000.0:0.0###}, num_workers:8"
     };
     CpSolverStatus status;
     using (token.Register(() => solver.StopSearch()))
@@ -201,15 +413,20 @@ public static partial class LayoutTidy
       map.PlaceTopLeft(i, originX + solver.Value(x[i]) * stepX, originY + solver.Value(y[i]) * stepY);
 
     var solved = map.NaturalCount();
+    var solvedFaults = map.FaultCount();
     var solvedAt = map.Snapshot();
-    // polish: rooms off joins, fewer crossings, lined up; kept only if it doesn't cost a join pointing its way
+    // polish: rooms off joins, fewer crossings. The step-by-step tidy knows nothing of lining up or balancing, so its
+    // result is kept only if it leaves fewer faults (and no fewer joins pointing their way); otherwise the solver's
+    // neat layout stands
     map.Rebase();
-    map.Tidy(rooms, Math.Max(500, timeLimitMs / 5), null, null, StayPut / 20, token);
+    // (the polish stops when nothing improves; deterministically, it isn't cut short by the clock)
+    map.Tidy(rooms, deterministic ? 5000 : Math.Max(500, timeLimitMs / 5), null, null, StayPut / 20, token);
     if (token.IsCancellationRequested) return 0;
-    if (map.NaturalCount() < solved) map.Restore(solvedAt);
+    if (map.NaturalCount() < solved || map.FaultCount() >= solvedFaults) map.Restore(solvedAt);
 
     // never worse than it was
-    if (map.NaturalCount() < naturalBefore)
+    // and no more joins running across rooms or crossing each other
+    if (map.NaturalCount() < naturalBefore || map.FaultCount() > faultsBefore)
     {
       map.Restore(before);
       return 0;

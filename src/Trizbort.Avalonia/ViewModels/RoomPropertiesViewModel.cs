@@ -40,6 +40,26 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private int _customPositionRight;
 
+    /// <summary>The object list was put where it is by hand (dragged on the map); otherwise it's automatic.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ObjectListPositionText))]
+    private bool _objectListPlaced;
+
+    public string ObjectListPositionText => ObjectListPlaced
+        ? "Placed by hand (drag it on the map to move it)."
+        : "Automatic: at the map's default spot, or out of the way of joins and other rooms.";
+
+    /// <summary>Back to automatic (on OK).</summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void ResetObjectListPosition()
+    {
+        ObjectListPlaced = false;
+        ObjectsPosition = CompassPoint.South;
+        UseCustomPosition = false;
+        CustomPositionDown = 0;
+        CustomPositionRight = 0;
+    }
+
     [ObservableProperty]
     private bool _isDark;
 
@@ -289,6 +309,7 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         UseCustomPosition = room.ObjectsCustomPosition;
         CustomPositionDown = room.ObjectsCustomPositionDown;
         CustomPositionRight = room.ObjectsCustomPositionRight;
+        ObjectListPlaced = room.ObjectsPlaced;
         IsDark = room.IsDark;
         AutomapPause = room.AutomapPause;
         Moves = room.Moves;
@@ -350,6 +371,9 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         room.ObjectsCustomPosition = UseCustomPosition;
         room.ObjectsCustomPositionDown = CustomPositionDown;
         room.ObjectsCustomPositionRight = CustomPositionRight;
+        // anywhere but the plain default spot is a place of its own
+        if (ObjectListPlaced || UseCustomPosition || ObjectsPosition != CompassPoint.South) room.ObjectsPlaced = true;
+        else room.ResetObjectListPosition();
         room.IsDark = IsDark;
         room.AutomapPause = AutomapPause;
         room.Moves = Moves;

@@ -54,13 +54,12 @@ public class AutomapPromptTests : IsolatedProjectTests
     return new Parser((message, title) => throw new AssertionException(title + ": " + message), prompts);
   }
 
-  private AutomapSettings SettingsFor(string text, bool sameNameIsSameRoom)
+  private AutomapSettings SettingsFor(string text)
   {
     var settings = AutomapSettings.Default;
     settings.FileName = Files.File("transcript.txt");
     File.WriteAllText(settings.FileName, text);
     settings.VerboseTranscript = true;
-    settings.AssumeRoomsWithSameNameAreSameRoom = sameNameIsSameRoom;
     settings.AssumeTwoWayConnections = true;
     settings.GuessExits = false;
     return settings;
@@ -98,7 +97,7 @@ public class AutomapPromptTests : IsolatedProjectTests
     var prompts = new ScriptedPrompts();
     prompts.SameDirectionResults.Enqueue(AutomapSameDirectionResult.KeepRoom1);
 
-    await CreateParser(prompts).StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript, true));
+    await CreateParser(prompts).StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript));
 
     prompts.SameDirectionCalls.Count.ShouldBe(1);
     prompts.SameDirectionCalls[0].Existing.ShouldBeSameAs(original);
@@ -114,7 +113,7 @@ public class AutomapPromptTests : IsolatedProjectTests
     var prompts = new ScriptedPrompts();
     prompts.SameDirectionResults.Enqueue(AutomapSameDirectionResult.KeepRoom2);
 
-    await CreateParser(prompts).StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript, true));
+    await CreateParser(prompts).StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript));
 
     RoomNames().ShouldContain("Replacement Room");
     Project.Current.Elements.OfType<Room>().ShouldNotContain(original);
@@ -127,27 +126,28 @@ public class AutomapPromptTests : IsolatedProjectTests
     var prompts = new ScriptedPrompts();
     prompts.SameDirectionResults.Enqueue(AutomapSameDirectionResult.KeepBoth);
 
-    await CreateParser(prompts).StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript, true));
+    await CreateParser(prompts).StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript));
 
     RoomNames().ShouldContain("Replacement Room");
     Project.Current.Elements.OfType<Room>().ShouldContain(original);
   }
 
   [Test]
-  public async Task SameDirection_Cancel_StopsRun()
+  public async Task SameDirection_Cancel_MapsNothingForThatMove_AndCarriesOn()
   {
-    AddSameDirectionRooms(out _);
+    var first = AddSameDirectionRooms(out _);
     var prompts = new ScriptedPrompts();
     prompts.SameDirectionResults.Enqueue(AutomapSameDirectionResult.Cancel);
     var parser = CreateParser(prompts);
 
-    await parser.StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript, true));
+    await parser.StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript));
 
     prompts.SameDirectionCalls.Count.ShouldBe(1);
     RoomNames().ShouldNotContain("Replacement Room");
-    RoomNames().ShouldNotContain("Third Room");
-    parser.Running.ShouldBeFalse();
-    parser.Status.ShouldBe("Automap is not running.");
+    // the next room is mapped, but joined to nothing: where it was reached from isn't known
+    var third = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "Third Room");
+    third.GetConnections().ShouldBeEmpty();
+    first.GetConnections().Count().ShouldBe(1);
   }
 
   [Test]
@@ -159,7 +159,7 @@ public class AutomapPromptTests : IsolatedProjectTests
     prompts.DisambiguationResults.Enqueue(candidates => RoomDisambiguation.Choose(candidates[1]));
 
     await CreateParser(prompts)
-      .StartCl(new AutomapCanvas(), SettingsFor("Example Game\n\nHall\nZulu description.\n", false));
+      .StartCl(new AutomapCanvas(), SettingsFor("Example Game\n\nHall\nZulu description.\n"));
 
     prompts.DisambiguationCalls.Count.ShouldBe(1);
     prompts.DisambiguationCalls[0].Line.ShouldBe("Hall");
@@ -177,7 +177,7 @@ public class AutomapPromptTests : IsolatedProjectTests
     prompts.DisambiguationResults.Enqueue(_ => RoomDisambiguation.CreateNew());
 
     await CreateParser(prompts)
-      .StartCl(new AutomapCanvas(), SettingsFor("Example Game\n\nHall\nZulu description.\n", false));
+      .StartCl(new AutomapCanvas(), SettingsFor("Example Game\n\nHall\nZulu description.\n"));
 
     prompts.DisambiguationCalls.Count.ShouldBe(1);
     RoomNames().Length.ShouldBe(3);
@@ -194,7 +194,7 @@ public class AutomapPromptTests : IsolatedProjectTests
     await CreateParser(prompts)
       .StartCl(
         new AutomapCanvas(),
-        SettingsFor("Example Game\n\nHall\nZulu description.\n\n>look\n\nHall\nYankee description.\n", false));
+        SettingsFor("Example Game\n\nHall\nZulu description.\n\n>look\n\nHall\nYankee description.\n"));
 
     prompts.DisambiguationCalls.Count.ShouldBe(1);
     RoomNames().Length.ShouldBe(2);
@@ -211,7 +211,7 @@ public class AutomapPromptTests : IsolatedProjectTests
     prompts.DisambiguationResults.Enqueue(_ => RoomDisambiguation.Nothing());
 
     await CreateParser(prompts)
-      .StartCl(new AutomapCanvas(), SettingsFor("Example Game\n\nHall\nZulu description.\n", false));
+      .StartCl(new AutomapCanvas(), SettingsFor("Example Game\n\nHall\nZulu description.\n"));
 
     prompts.DisambiguationCalls.Count.ShouldBe(1);
     RoomNames().Length.ShouldBe(2);
@@ -229,7 +229,7 @@ public class AutomapPromptTests : IsolatedProjectTests
     await CreateParser(prompts)
       .StartCl(
         new AutomapCanvas(),
-        SettingsFor("Example Game\n\nHall\nZulu description.\n\n>north\n\nHall\nYankee description.\n", false));
+        SettingsFor("Example Game\n\nHall\nZulu description.\n\n>north\n\nHall\nYankee description.\n"));
 
     prompts.DisambiguationCalls.Count.ShouldBe(1);
     RoomNames().Length.ShouldBe(3); // the third Hall, guessed new
@@ -242,7 +242,7 @@ public class AutomapPromptTests : IsolatedProjectTests
     var prompts = new ScriptedPrompts();
 
     await CreateParser(prompts)
-      .StartCl(new AutomapCanvas(), SettingsFor("Example Game\n\nHall\nZulu description.\n", false));
+      .StartCl(new AutomapCanvas(), SettingsFor("Example Game\n\nHall\nZulu description.\n"));
 
     prompts.DisambiguationCalls.ShouldBeEmpty();
     RoomNames().Length.ShouldBe(1);
@@ -260,10 +260,10 @@ public class AutomapPromptTests : IsolatedProjectTests
     var parser = CreateParser(prompts);
     var canvas = new AutomapCanvas();
 
-    await parser.StartCl(canvas, SettingsFor("Example Game\n\nHall\nZulu description.\n", false));
+    await parser.StartCl(canvas, SettingsFor("Example Game\n\nHall\nZulu description.\n"));
     prompts.DisambiguationCalls.Count.ShouldBe(1);
 
-    await parser.StartCl(canvas, SettingsFor("Example Game\n\nHall\nXray description.\n", false));
+    await parser.StartCl(canvas, SettingsFor("Example Game\n\nHall\nXray description.\n"));
     prompts.DisambiguationCalls.Count.ShouldBe(2);
   }
 
@@ -275,7 +275,7 @@ public class AutomapPromptTests : IsolatedProjectTests
     var prompts = new ScriptedPrompts { Gate = gate.Task };
     prompts.SameDirectionResults.Enqueue(AutomapSameDirectionResult.KeepRoom2);
 
-    var run = CreateParser(prompts).StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript, true));
+    var run = CreateParser(prompts).StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript));
     // Wait until the engine is parked on the prompt, then check it is not blocking or finishing.
     for (var i = 0; i < 100 && prompts.SameDirectionCalls.Count == 0; i++) await Task.Delay(50);
     prompts.SameDirectionCalls.Count.ShouldBe(1);
@@ -298,12 +298,12 @@ public class AutomapPromptTests : IsolatedProjectTests
     AddHall("Beta hall.");
     var parser = CreateParser(NonInteractiveEditorPrompts.Instance);
 
-    await parser.StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript, true));
+    await parser.StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript));
     RoomNames().ShouldNotContain("Replacement Room");
 
     await parser.StartCl(
       new AutomapCanvas(),
-      SettingsFor("Example Game\n\nHall\nZulu description.\n", false));
+      SettingsFor("Example Game\n\nHall\nZulu description.\n"));
     RoomNames().Count(name => name == "Hall").ShouldBe(2);
 
     new Parser().Prompts.ShouldBeSameAs(NonInteractiveEditorPrompts.Instance);

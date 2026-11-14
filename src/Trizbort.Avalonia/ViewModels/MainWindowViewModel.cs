@@ -63,6 +63,22 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isAutomapMoveByMove;
 
+    /// <summary>
+    ///     The automap panel's Tidy the map as I go: automap rearranges the rooms near the player after each move.
+    ///     Kept in the automap settings, so the next run starts the same way.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isAutomapAutoTidy = ApplicationSettingsController.AppSettings.Automap.AutoTidy;
+
+    partial void OnIsAutomapAutoTidyChanged(bool value)
+    {
+        AutomapEngine.Instance.AutoTidy = value;
+        var settings = ApplicationSettingsController.AppSettings.Automap;
+        if (settings.AutoTidy == value) return;
+        settings.AutoTidy = value;
+        ApplicationSettingsController.AppSettings.Automap = settings;
+    }
+
     /// <summary>True while mapping is suspended: automap follows the player but doesn't change the map.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsAutomapMapping))]
@@ -103,6 +119,26 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _automapTranscriptNote = string.Empty;
 
+    /// <summary>Paused move by move while the game goes on: the panel offers to go live.</summary>
+    [ObservableProperty]
+    private bool _isAutomapGameLive;
+
+    /// <summary>Where automap is in the transcript: "Move 12 of 4,567" (transcript moves, not the game's).</summary>
+    [ObservableProperty]
+    private string _automapMoveCount = string.Empty;
+
+    private bool _canGoBackAutomap;
+    private bool _hasNextAutomapMove;
+
+    /// <summary>Previous Move: there's a move to go back to.</summary>
+    public bool CanGoBackAutomap => _canGoBackAutomap;
+
+    /// <summary>Next Move: there's a move left to play.</summary>
+    public bool HasNextAutomapMove => _hasNextAutomapMove;
+
+    /// <summary>Play to the End: paused, with moves left to play.</summary>
+    public bool CanPlayToEnd => _hasNextAutomapMove && IsAutomapMoveByMove;
+
     /// <summary>What automap is doing with what it reads: mapping, tracking only, not mapping here, in the dark.</summary>
     [ObservableProperty]
     private string _automapMappingNote = string.Empty;
@@ -127,8 +163,32 @@ public partial class MainWindowViewModel : ViewModelBase
         AutomapRoomName = room?.Name ?? "Somewhere automap doesn't know";
         IsAutomapMoveByMove = engine.MoveByMove;
         IsAutomapSuspended = engine.Suspended;
+        var (played, total) = engine.MoveCount();
+        AutomapMoveCount = total == 0
+            ? string.Empty
+            : string.Format(System.Globalization.CultureInfo.CurrentCulture, "Move {0:N0} of {1:N0}", played, total);
+        var canGoBack = engine.CanGoBack;
+        var hasNext = played < total;
+        if (canGoBack != _canGoBackAutomap || hasNext != _hasNextAutomapMove)
+        {
+            _canGoBackAutomap = canGoBack;
+            _hasNextAutomapMove = hasNext;
+            OnPropertyChanged(nameof(CanGoBackAutomap));
+            OnPropertyChanged(nameof(HasNextAutomapMove));
+        }
+
+        OnPropertyChanged(nameof(CanPlayToEnd));
+        GoBackAutomapCommand.NotifyCanExecuteChanged();
+        PlayNextMoveCommand.NotifyCanExecuteChanged();
+        PlayToEndCommand.NotifyCanExecuteChanged();
+        IsAutomapGameLive = engine.MoveByMove && engine.GameWentOn;
+        IsAutomapAwaitingCommand = engine.MoveByMove && engine.NextCommand != null;
         AutomapTranscriptNote = !engine.MoveByMove
             ? "Playing: following the game as it goes on."
+            : IsAutomapGameLive
+                ? string.IsNullOrWhiteSpace(engine.NextCommand)
+                    ? "The game has gone on: paused before its next move."
+                    : $"The game has gone on: paused before \"{engine.NextCommand}\"."
             : string.IsNullOrWhiteSpace(engine.NextCommand)
                 ? "Paused before the next move."
                 : $"Paused before \"{engine.NextCommand}\".";
@@ -166,6 +226,13 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _automapPanelTimer?.Stop();
     }
+
+    /// <summary>
+    ///     Paused before a command, move by move: the game monitor shows a flashing cursor after it, as if it had been
+    ///     typed but not yet entered.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isAutomapAwaitingCommand;
 
     /// <summary>The end of the transcript read so far, as much as fits on the little game monitor.</summary>
     [ObservableProperty]
@@ -403,7 +470,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 StopAutomap();
             }
             UpdateState();
-            _commandService.ResetZoom();
             StatusText = $"Opened map: {Path.GetFileName(Project.Current.FileName)}";
         }
     }
@@ -419,7 +485,6 @@ public partial class MainWindowViewModel : ViewModelBase
             StopAutomap();
         }
         UpdateState();
-        _commandService.ResetZoom();
         StatusText = $"Opened map: {Path.GetFileName(path)}";
     }
 
@@ -610,7 +675,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>Play the transcript's next move, then pause.</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasNextAutomapMove))]
     public void PlayNextMove()
     {
         AutomapEngine.Instance.PlayNextMove();
@@ -618,7 +683,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>Play the rest of the transcript without pausing; asks first when there are many moves left.</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanPlayToEnd))]
     public async Task PlayToEndAsync()
     {
         var session = _commandService.Session;
@@ -635,7 +700,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>Go back a move in the transcript, leaving the map as it is; Next Move plays it again.</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanGoBackAutomap))]
     public void GoBackAutomap()
     {
         AutomapEngine.Instance.GoBack();
@@ -711,17 +776,17 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         lock (_screenLines) _screenRefreshPending = false;
         var engine = AutomapEngine.Instance;
-        if (engine.ScreenLineCount < _screenLineCount)
+        var wentBack = engine.ScreenLineCount < _screenLineCount;
+        if (wentBack)
         {
-            // automap went back a move: start the screen again from what it has now
+            // automap went back a move: start the screen again from what it has now (without blanking it first,
+            // which would scroll the transcript window back to the top)
             _screenLines.Clear();
             _screenLineCount = 0;
-            AutomapScreenText = string.Empty;
-            if (_isTranscriptWindowOpen) AutomapTranscriptText = string.Empty;
         }
 
         var lines = engine.ScreenLines(_screenLineCount);
-        if (lines.Count == 0) return;
+        if (lines.Count == 0 && !wentBack) return;
         _screenLines.AddRange(lines);
         _screenLineCount += lines.Count;
         AutomapScreenText = MonitorText(_screenLines, MonitorColumns, MonitorRows);
@@ -754,6 +819,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         IsAutomapActive = true;
         IsAutomapMoveByMove = settings.MoveByMove;
+        IsAutomapAutoTidy = settings.AutoTidy;
         AutomapStatusText = "Automapping has started.";
         ResetAutomapScreen();
         AutomapEngine.Instance.ScreenChanged += OnAutomapScreenChanged;

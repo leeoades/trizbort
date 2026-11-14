@@ -50,6 +50,7 @@ public class MapCanvasControl : Control
     private readonly HashSet<Element> _selectedSet = new();
     private int _spatialVersion = 1;
     private int _builtSpatialVersion = 0;
+    private bool _wasGliding;
 
     internal int SpatialVersion => _spatialVersion;
     internal int InvalidationCount { get; private set; }
@@ -642,6 +643,8 @@ public class MapCanvasControl : Control
         var button = point.Properties.IsMiddleButtonPressed ? PointerButton.Middle
             : point.Properties.IsRightButtonPressed ? PointerButton.Right
             : PointerButton.Left;
+        // looking only: every button drags the map about, as the middle one does
+        if (ViewOnly) button = PointerButton.Middle;
 
         var interaction = Interaction;
         var handled = interaction.OnPointerPressed(ToPointerInput(button, e.KeyModifiers, point.Position, e.ClickCount));
@@ -718,6 +721,7 @@ public class MapCanvasControl : Control
 
         var interaction = Interaction;
         var releasedButton = InputMapper.ToButton(e.GetCurrentPoint(this).Properties.PointerUpdateKind.GetMouseButton());
+        if (ViewOnly) releasedButton = PointerButton.Middle;
         if (interaction.IsGestureActive && interaction.GestureButton != PointerButton.None &&
             releasedButton != interaction.GestureButton)
         {
@@ -801,6 +805,12 @@ public class MapCanvasControl : Control
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
+        // looking only: keys would nudge or delete the room shown
+        if (ViewOnly)
+        {
+            e.Handled = true;
+            return;
+        }
 
         var interaction = Interaction;
         var keyInput = AvaloniaKeyMapper.ToKeyInput(e.Key, e.KeyModifiers, AvaloniaKeyMapper.IsMacOS);
@@ -990,6 +1000,23 @@ public class MapCanvasControl : Control
 
     #region Rendering Pipeline
 
+    /// <summary>
+    ///     A room that isn't on the map yet, drawn faintly with a dashed border where it would go: while automap asks
+    ///     whether the transcript means a new room. Null when there's none. Set from the UI thread, then redraw.
+    /// </summary>
+    public static (CoreRect Bounds, string Name)? GhostRoom { get; set; }
+
+    /// <summary>
+    ///     The map can be looked around (dragged with any button, scrolled, zoomed) but not changed: while automap
+    ///     asks which room the transcript means, with the map behind the question. Set from the UI thread.
+    /// </summary>
+    public static bool ViewOnly { get; set; }
+
+    private static readonly IBrush _ghostFill = new SolidColorBrush(AvaloniaColor.FromArgb(60, 0x1E, 0x88, 0xE5));
+    private static readonly IPen _ghostPen =
+        new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x1E, 0x88, 0xE5)), 2, new DashStyle(new double[] { 3, 2 }, 0));
+    private static readonly IBrush _ghostText = new SolidColorBrush(AvaloniaColor.FromRgb(0x1E, 0x55, 0x9A));
+
     public override void Render(AvaloniaDrawingContext context)
     {
         base.Render(context);
@@ -1019,6 +1046,14 @@ public class MapCanvasControl : Control
         var transformMatrix = Matrix.CreateTranslation(-Origin.X, -Origin.Y)
                               * Matrix.CreateScale(ZoomFactor, ZoomFactor)
                               * Matrix.CreateTranslation(halfWidth, halfHeight);
+
+        // rooms a tidy just moved slide to their new places: they're drawn part-way there, frame by frame, and the
+        // joins are worked out afresh each frame (and once more when they arrive) so they follow
+        var gliding = RoomGlide.IsActive;
+        if (gliding || _wasGliding) _spatialVersion++;
+        _wasGliding = gliding;
+        if (gliding) TopLevel.GetTopLevel(this)?.RequestAnimationFrame(_ => InvalidateVisual());
+        using var shown = RoomGlide.Show();
 
         using (context.PushTransform(transformMatrix))
         {
@@ -1128,6 +1163,17 @@ public class MapCanvasControl : Control
             {
                 var marqueeRect = new AvaloniaRect(marquee.X, marquee.Y, marquee.Width, marquee.Height);
                 context.DrawRectangle(_marqueeFillBrush, _marqueeBorderPen, marqueeRect);
+            }
+
+            // 10. A room not on the map yet, shown while automap asks about it ("<Add a new room>")
+            if (GhostRoom is { } ghost)
+            {
+                var ghostRect = new AvaloniaRect(ghost.Bounds.X, ghost.Bounds.Y, ghost.Bounds.Width, ghost.Bounds.Height);
+                context.DrawRectangle(_ghostFill, _ghostPen, ghostRect, 6, 6);
+                var text = new FormattedText(ghost.Name, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                    Typeface.Default, 12, _ghostText) { MaxTextWidth = Math.Max(1, ghostRect.Width - 8) };
+                context.DrawText(text, new Point(ghostRect.X + (ghostRect.Width - text.Width) / 2,
+                    ghostRect.Y + (ghostRect.Height - text.Height) / 2));
             }
         }
 
@@ -1264,24 +1310,155 @@ public class MapCanvasControl : Control
             ConnectionDrawingAdapter.RebuildSpatialIndex(elements, spatialLines, spatialVersion);
         }
 
-        foreach (var element in elements)
+        // automatic object lists keep clear of the joins, rooms and other lists around them; join end labels keep
+        // clear of those and of each other
+        var previousObstacles = RoomDrawingAdapter.ObjectListObstacles;
+        var previousClashes = ConnectionDrawingAdapter.LabelClashes;
+        var previousDrawn = ConnectionDrawingAdapter.LabelDrawn;
+        if (drawRoomsAndLabels) RoomDrawingAdapter.ObjectListObstacles = ObjectListObstaclesFor(elements);
+        if (drawConnections)
         {
-            var selected = selectedSet?.Contains(element) ?? false;
-            var hover = element == hoverElement;
+            var (clashes, drawn) = LabelClashesFor(elements);
+            ConnectionDrawingAdapter.LabelClashes = clashes;
+            ConnectionDrawingAdapter.LabelDrawn = drawn;
+        }
 
-            if (element is Room room)
+        try
+        {
+            foreach (var element in elements)
             {
-                if (drawRoomsAndLabels) room.DrawRoom(context, selected, hover);
-            }
-            else if (element is MapLabel label)
-            {
-                if (drawRoomsAndLabels) label.DrawMapLabel(context, selected, hover);
-            }
-            else if (element is Connection conn)
-            {
-                if (drawConnections) conn.DrawConnection(context, selected, hover, spatialLines, spatialVersion);
+                var selected = selectedSet?.Contains(element) ?? false;
+                var hover = element == hoverElement;
+
+                if (element is Room room)
+                {
+                    if (drawRoomsAndLabels) room.DrawRoom(context, selected, hover);
+                }
+                else if (element is MapLabel label)
+                {
+                    if (drawRoomsAndLabels) label.DrawMapLabel(context, selected, hover);
+                }
+                else if (element is Connection conn)
+                {
+                    if (drawConnections) conn.DrawConnection(context, selected, hover, spatialLines, spatialVersion);
+                }
             }
         }
+        finally
+        {
+            RoomDrawingAdapter.ObjectListObstacles = previousObstacles;
+            ConnectionDrawingAdapter.LabelClashes = previousClashes;
+            ConnectionDrawingAdapter.LabelDrawn = previousDrawn;
+        }
+    }
+
+    /// <summary>
+    ///     What a join's end label must keep clear of: the other joins' lines, the rooms, their object lists (where last
+    ///     drawn) and the labels drawn so far this frame. Counted with the things near it only.
+    /// </summary>
+    private static (Func<Connection, CoreRect, int> Clashes, Action<CoreRect> Drawn) LabelClashesFor(
+        IReadOnlyList<Element> elements)
+    {
+        var segments = new List<(Connection Owner, Trizbort.Domain.Misc.LineSegment Segment, CoreRect Box)>();
+        foreach (var connection in elements.OfType<Connection>())
+        {
+            foreach (var segment in connection.GetSegments())
+            {
+                var left = Math.Min(segment.Start.X, segment.End.X);
+                var top = Math.Min(segment.Start.Y, segment.End.Y);
+                segments.Add((connection, segment, new CoreRect(left, top,
+                    Math.Max(1, Math.Abs(segment.End.X - segment.Start.X)),
+                    Math.Max(1, Math.Abs(segment.End.Y - segment.Start.Y)))));
+            }
+        }
+
+        // the segments by the cells of a coarse grid they cross, so a label looks only at those near it
+        const float cell = 128;
+        var cells = new Dictionary<(int, int), List<int>>();
+        for (var index = 0; index < segments.Count; index++)
+        {
+            var box = segments[index].Box;
+            for (var cx = (int)Math.Floor(box.Left / cell); cx <= (int)Math.Floor(box.Right / cell); cx++)
+            for (var cy = (int)Math.Floor(box.Top / cell); cy <= (int)Math.Floor(box.Bottom / cell); cy++)
+            {
+                if (!cells.TryGetValue((cx, cy), out var list)) cells[(cx, cy)] = list = new List<int>();
+                list.Add(index);
+            }
+        }
+
+        var rooms = elements.OfType<Room>().ToList();
+        var labels = new List<CoreRect>();
+        int Clashes(Connection owner, CoreRect bounds)
+        {
+            var count = 0;
+            var seen = new HashSet<int>();
+            for (var cx = (int)Math.Floor(bounds.Left / cell); cx <= (int)Math.Floor(bounds.Right / cell); cx++)
+            for (var cy = (int)Math.Floor(bounds.Top / cell); cy <= (int)Math.Floor(bounds.Bottom / cell); cy++)
+            {
+                if (!cells.TryGetValue((cx, cy), out var near)) continue;
+                foreach (var index in near)
+                {
+                    if (!seen.Add(index)) continue;
+                    var (other, segment, box) = segments[index];
+                    if (!ReferenceEquals(other, owner) && box.IntersectsWith(bounds) && segment.IntersectsWith(bounds))
+                        count++;
+                }
+            }
+
+            foreach (var room in rooms)
+            {
+                if (room.InnerBounds.IntersectsWith(bounds)) count++;
+                if (room.ObjectListBounds is { } list && list.IntersectsWith(bounds)) count++;
+            }
+
+            foreach (var label in labels)
+                if (label.IntersectsWith(bounds))
+                    count++;
+            return count;
+        }
+
+        return (Clashes, labels.Add);
+    }
+
+    /// <summary>How far around a room an automatic object list looks for things in its way.</summary>
+    private const float ObjectListSearch = 320;
+
+    /// <summary>
+    ///     What an automatic object list near a room must keep clear of: the segments of the joins, and the other rooms
+    ///     and their object lists (where they were last drawn), within <see cref="ObjectListSearch" /> of it.
+    /// </summary>
+    private static Func<Room, (IReadOnlyList<Trizbort.Domain.Misc.LineSegment> Segments, IReadOnlyList<CoreRect> Obstacles)>
+        ObjectListObstaclesFor(IReadOnlyList<Element> elements)
+    {
+        var segments = new List<(Trizbort.Domain.Misc.LineSegment Segment, CoreRect Box)>();
+        foreach (var connection in elements.OfType<Connection>())
+        {
+            foreach (var segment in connection.GetSegments())
+            {
+                var left = Math.Min(segment.Start.X, segment.End.X);
+                var top = Math.Min(segment.Start.Y, segment.End.Y);
+                segments.Add((segment, new CoreRect(left, top,
+                    Math.Max(1, Math.Abs(segment.End.X - segment.Start.X)),
+                    Math.Max(1, Math.Abs(segment.End.Y - segment.Start.Y)))));
+            }
+        }
+
+        var rooms = elements.OfType<Room>().ToList();
+        return room =>
+        {
+            var near = room.InnerBounds;
+            near.Inflate(ObjectListSearch, ObjectListSearch);
+            var nearSegments = segments.Where(item => item.Box.IntersectsWith(near)).Select(item => item.Segment).ToList();
+            var obstacles = new List<CoreRect>();
+            foreach (var other in rooms)
+            {
+                if (ReferenceEquals(other, room)) continue;
+                if (other.InnerBounds.IntersectsWith(near)) obstacles.Add(other.InnerBounds);
+                if (other.ObjectListBounds is { } list && list.IntersectsWith(near)) obstacles.Add(list);
+            }
+
+            return (nearSegments, obstacles);
+        };
     }
 
     /// <summary>
