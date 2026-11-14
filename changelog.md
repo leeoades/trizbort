@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Rooms you've placed by hand make way.** Tidying never moves a room you put somewhere yourself back to where it
+  thinks the room should go, but it can now slide it aside, with the rooms around it, when a new room needs the
+  space. Before, such a room never moved, so new rooms had to go somewhere awkward around it.
 - **Tidied rooms slide into place.** When automap tidies the map as you go, or you use Tidy Map, the rooms that move
   slide to their new places, with their joins following, instead of jumping.
 - **A bigger game screen, and a cursor after the next command.** Drag the automap panel's left edge to widen it; the

@@ -376,6 +376,43 @@ public class LayoutTidyTests : IsolatedProjectTests
   }
 
   [Test]
+  public void ARoomPlacedByHand_IsPushedAside_WhenANewRoomNeedsItsPlace()
+  {
+    // east from the Hall leads to the Kitchen, but the user put the Shed there: the Kitchen takes its place east of
+    // the Hall and the Shed slides out of the way, still marked as placed by hand
+    var hall = AddRoomAt("Hall", 0, 0);
+    var shed = AddRoomAt("Shed", 1, 0);
+    shed.PlacedByHand = true;
+    var kitchen = AddRoomAt("Kitchen", 1, 1);
+    Join(hall, CompassPoint.East, kitchen, CompassPoint.West);
+    var shedWas = shed.Position;
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), kitchen);
+
+    Cell(kitchen).ShouldBe((1f, 0f));
+    shed.Position.ShouldNotBe(shedWas);
+    shed.PlacedByHand.ShouldBeTrue();
+    Overlaps().ShouldBe(0);
+  }
+
+  [Test]
+  public void ARoomPlacedByHand_IsNotPulledBackIntoLine()
+  {
+    // the user put the Garden a little below the Hall's east: the tidy would line it up, but leaves it be
+    var hall = AddRoomAt("Hall", 0, 0);
+    var garden = AddRoomAt("Garden", 2, 1);
+    garden.PlacedByHand = true;
+    var cellar = AddRoomAt("Cellar", 0, 1);
+    Join(hall, CompassPoint.East, garden, CompassPoint.West);
+    Join(hall, CompassPoint.South, cellar, CompassPoint.North);
+    var gardenWas = garden.Position;
+
+    LayoutTidy.TidyAround(Project.Current.Elements.ToList(), hall);
+
+    garden.Position.ShouldBe(gardenWas);
+  }
+
+  [Test]
   public void ANewRoomSlightlyOutOfLine_LinesUpWithTheRoomItCameFrom()
   {
     // east from the Hall to the Garden, drawn a little low; north-east from the Garden to the Shed, a little left

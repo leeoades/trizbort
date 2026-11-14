@@ -58,6 +58,9 @@ public static partial class LayoutTidy
   private const double SoftPull = 0.25;
   private const double StayPut = 0.2;
 
+  /// <summary>How much more a room placed by hand prefers to stay where it is, when it has to be pushed aside.</summary>
+  private const double PlacedByHandStay = 4;
+
   /// <summary>A join counts as naturally placed when it points within this many degrees of its direction.</summary>
   private const double NaturalAngle = 22.6;
 
@@ -96,10 +99,12 @@ public static partial class LayoutTidy
     var near = map.Neighbourhood(centre, radius, false);
     var all = map.Neighbourhood(centre, radius);
     var free = map.JoinCount(centre) <= 1 ? centre : null;
-    // rooms the user placed by hand stay where they were put
+    // rooms the user placed by hand are never pulled back to where the tidy would put them, but they slide out of
+    // the way when other rooms need the space
     var movable = all.Where(room => !room.PlacedByHand || room == free).ToList();
+    var pushOnly = all.Where(room => room.PlacedByHand && room != free).ToList();
     if (movable.Count == 0) return 0;
-    return map.Tidy(movable, timeLimitMs, free, movable.Except(near).ToList());
+    return map.Tidy(movable, timeLimitMs, free, movable.Except(near).ToList(), pushOnly: pushOnly);
   }
 
   /// <summary>
@@ -526,9 +531,16 @@ public static partial class LayoutTidy
     private double _stayPut = StayPut;
     private bool _rearrange;
 
+    // rooms that only move when another room pushes them (placed by hand): the tidy never moves them on its own
+    private HashSet<int> _pushOnly = new();
+
+    /// <summary>
+    ///   Tidies <paramref name="movableRooms" />. Rooms in <paramref name="pushOnly" /> (placed by hand) never move on
+    ///   their own account, but are pushed aside along with the others when those need the space.
+    /// </summary>
     public int Tidy(
       List<Room> movableRooms, int timeLimitMs, Room free, List<Room> roomsInTheWay = null, double stayPut = StayPut,
-      CancellationToken cancel = default)
+      CancellationToken cancel = default, List<Room> pushOnly = null)
     {
       _cancel = cancel;
       _stayPut = stayPut;
@@ -536,12 +548,16 @@ public static partial class LayoutTidy
       _inTheWay = roomsInTheWay == null ? new HashSet<int>() : roomsInTheWay.Select(room => _index[room]).ToHashSet();
       if (movableRooms.Count == 0) return 0;
       _free = free != null && _index.TryGetValue(free, out var freeIndex) ? freeIndex : -1;
-      _movable = movableRooms.Select(room => _index[room]).ToHashSet();
-      var movable = movableRooms.Select(room => _index[room]).ToHashSet();
+      // the rooms that may move on their own; pushed rooms are also counted and may be pushed
+      var initiators = movableRooms.Select(room => _index[room]).ToHashSet();
+      _pushOnly = (pushOnly ?? new List<Room>()).Where(_index.ContainsKey).Select(room => _index[room])
+        .Where(i => !initiators.Contains(i)).ToHashSet();
+      _movable = initiators.Concat(_pushOnly).ToHashSet();
+      var movable = initiators.Concat(_pushOnly).ToHashSet();
       BuildGroups();
       var clock = Stopwatch.StartNew();
       var score = Score(movable);
-      score = ClearTheWay(movable, score);
+      score = ClearTheWay(movable, initiators, score);
 
       for (var pass = 0; pass < 12; pass++)
       {
@@ -560,8 +576,8 @@ public static partial class LayoutTidy
           }
         }
         // move a room, or a whole group, one step; a group with a room that has to stay put stays put
-        var units = movable.Select(room => new List<int> { room }).Concat(movable.Select(room => _group[room])
-            .Distinct().Select(group => _members[group]).Where(unit => unit.Count > 1 && unit.All(movable.Contains)))
+        var units = initiators.Select(room => new List<int> { room }).Concat(initiators.Select(room => _group[room])
+            .Distinct().Select(group => _members[group]).Where(unit => unit.Count > 1 && unit.All(initiators.Contains)))
           .ToList();
         foreach (var unit in units)
           for (var dx = -1; dx <= 1; dx++)
@@ -633,7 +649,7 @@ public static partial class LayoutTidy
 
         // Make space: move a room and every movable room beyond it, in that direction, one step further out,
         // so a group keeps its shape (like moving the map apart, but only near the change).
-        foreach (var room in movable)
+        foreach (var room in initiators)
           for (var dx = -1; dx <= 1; dx++)
             for (var dy = -1; dy <= 1; dy++)
             {
@@ -669,7 +685,7 @@ public static partial class LayoutTidy
         // Make space across the map: move a room one step and shift every room at or beyond the spot it moves to,
         // anywhere on the map, one step further the same way. Going south into a garden where the Patio is moves
         // the hedge and everything above it up, instead of pushing the garden off to one side.
-        foreach (var room in movable)
+        foreach (var room in initiators)
           for (var dx = -1; dx <= 1; dx++)
             for (var dy = -1; dy <= 1; dy++)
             {
@@ -825,15 +841,16 @@ public static partial class LayoutTidy
     ///   across, left or right from one going up or down, by one step or two, whichever leaves the map best (fewest
     ///   joins crossing). For rooms further away, which the usual moves don't reach; done first.
     /// </summary>
-    private double ClearTheWay(HashSet<int> movable, double score)
+    private double ClearTheWay(HashSet<int> movable, HashSet<int> initiators, double score)
     {
       for (var j = 0; j < _joins.Count; j++)
       {
         var join = _joins[j];
-        if (!movable.Contains(join.A) && !movable.Contains(join.B)) continue;
+        if (!initiators.Contains(join.A) && !initiators.Contains(join.B)) continue;
         for (var room = 0; room < _rooms.Count; room++)
         {
-          if (room == join.A || room == join.B || !_inTheWay.Contains(room) || !movable.Contains(room)) continue;
+          // a room placed by hand on a join stays there: the user chose it
+          if (room == join.A || room == join.B || !_inTheWay.Contains(room) || !initiators.Contains(room)) continue;
           if (!SegmentHitsRoom(join, room)) continue;
 
           var across = Math.Abs(_x[join.B] - _x[join.A]) / _stepX >= Math.Abs(_y[join.B] - _y[join.A]) / _stepY;
@@ -949,7 +966,7 @@ public static partial class LayoutTidy
         if (room == _free) continue;
         var mx = (_x[room] - _startX[room]) / _stepX;
         var my = (_y[room] - _startY[room]) / _stepY;
-        score += _stayPut * (mx * mx + my * my);
+        score += _stayPut * (mx * mx + my * my) * (_pushOnly.Contains(room) ? PlacedByHandStay : 1);
       }
 
       return score;
