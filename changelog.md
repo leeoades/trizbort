@@ -34,7 +34,7 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   slide to their new places, with their joins following, instead of jumping.
 - **A bigger game screen, and a cursor after the next command.** Drag the automap panel's left edge to widen it; the
   game screen grows with it (double-click the edge for the usual width). While paused before a command, a cursor
-  flashes after it, so it reads as typed but not yet played.
+  flashes after it, so it reads as typed but not yet played. The full transcript window shows the same cursor.
 - **Join end labels out of the way.** A label at the end of a join ("n", "pull peg") that would sit on another join,
   a room, an object list or another label moves across to the other side of its line, or slides along the line away
   from the room, to the first clear place.

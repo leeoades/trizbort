@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
@@ -20,8 +20,8 @@ public partial class TranscriptMonitor : UserControl
     public static readonly StyledProperty<bool> ShowsCursorProperty =
         AvaloniaProperty.Register<TranscriptMonitor, bool>(nameof(ShowsCursor));
 
-    /// <summary>The cursor: a block, as on an old terminal.</summary>
-    private const string Cursor = "█";
+    /// <summary>The cursor: a block, as on an old terminal (the transcript window shows it too).</summary>
+    internal const string CursorBlock = "█";
 
     private static TranscriptWindow? _window;
     private readonly DispatcherTimer _blink = new() { Interval = TimeSpan.FromMilliseconds(530) };
@@ -87,7 +87,7 @@ public partial class TranscriptMonitor : UserControl
     private void ShowText()
     {
         var text = Text ?? string.Empty;
-        ScreenText.Text = ShowsCursor ? text + (_cursorOn ? Cursor : " ") : text;
+        ScreenText.Text = ShowsCursor ? text + (_cursorOn ? CursorBlock : " ") : text;
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
