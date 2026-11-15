@@ -444,6 +444,29 @@ public class LayoutTidyTests : IsolatedProjectTests
   }
 
   [Test]
+  public void TheSolver_DoesntPullOneAreaIntoLineWithAnother()
+  {
+    // the grounds (placed by hand) and the house drawn apart from them, with no join between: tidying the house
+    // leaves it where it is, rather than lining it up with the grounds
+    var west = AddRoomAt("Southwest Junction", 0, 0);
+    var patio = AddRoomAt("Patio", 1, 0);
+    var east = AddRoomAt("Southeast Junction", 2, 0);
+    Join(west, CompassPoint.East, patio, CompassPoint.West);
+    Join(patio, CompassPoint.East, east, CompassPoint.West);
+    foreach (var room in new[] { west, patio, east }) room.PlacedByHand = true;
+    var fireplace = AddRoomAt("Fireplace", 5, 3);
+    var chimney = AddRoomAt("In the Chimney", 5, 2);
+    Join(fireplace, CompassPoint.North, chimney, CompassPoint.South);
+    var fireplaceWas = fireplace.Position;
+    var chimneyWas = chimney.Position;
+
+    LayoutTidy.SolverTidy(Project.Current.Elements.ToList(), new[] { fireplace, chimney }, 1000, deterministic: true);
+
+    fireplace.Position.ShouldBe(fireplaceWas);
+    chimney.Position.ShouldBe(chimneyWas);
+  }
+
+  [Test]
   public void ARoomPlacedByHand_IsNotPulledBackIntoLine()
   {
     // the user put the Garden a little below the Hall's east: the tidy would line it up, but leaves it be

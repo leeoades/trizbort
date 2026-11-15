@@ -648,7 +648,7 @@ public class AutomapCanvas : IAutomapCanvas
 
     _tidiedMap = MapShape();
     if (unchanged) return;
-    var rethink = PlanRethink();
+    var rethink = PlanRethink(room);
     if (rethink == null) return;
     if (RethinkElsewhere)
     {
@@ -719,13 +719,15 @@ public class AutomapCanvas : IAutomapCanvas
   ///   does so every few new rooms or joins, to line rooms up and balance them as the map grows. Plans that on a copy
   ///   of the layout; null when the map doesn't need it.
   /// </summary>
-  private LayoutTidy.TidyPlan PlanRethink()
+  private LayoutTidy.TidyPlan PlanRethink(Room here)
   {
     var elements = CurrentProject.Elements.ToList();
     var problems = LayoutTidy.Problems(elements);
     var worse = problems > _problems;
     _problems = problems;
-    var rooms = elements.OfType<Room>().Where(r => !r.PlacedByHand).ToList();
+    // only the area the player is in (the rooms joined to it, split joins aside): another area, like the house
+    // drawn apart from its garden, stays where it is
+    var rooms = AreaOf(here).Where(r => !r.PlacedByHand).ToList();
     // and every few new rooms or joins anyway: a layout that has nothing wrong can still be made neater (lined up,
     // balanced), and a join that closes a loop often shows how
     var size = elements.Count(element => element is Room || element is Connection);
@@ -736,6 +738,33 @@ public class AutomapCanvas : IAutomapCanvas
     return rooms.Count == 0
       ? null
       : LayoutTidy.PlanRethink(elements, rooms, repeatable ? RepeatableRethinkWork : RethinkMs, repeatable);
+  }
+
+  /// <summary>
+  ///   The rooms joined to <paramref name="room" />, directly or through other rooms, and the room itself. A split
+  ///   join doesn't count: it leads into another area.
+  /// </summary>
+  private HashSet<Room> AreaOf(Room room)
+  {
+    var joinsOf = new Dictionary<Room, List<Room>>();
+    foreach (var connection in CurrentProject.Elements.OfType<Connection>())
+    {
+      if (connection.Split) continue;
+      var a = connection.GetSourceRoom();
+      var b = connection.GetTargetRoom();
+      if (a == null || b == null || a == b) continue;
+      (joinsOf.TryGetValue(a, out var fromA) ? fromA : joinsOf[a] = new List<Room>()).Add(b);
+      (joinsOf.TryGetValue(b, out var fromB) ? fromB : joinsOf[b] = new List<Room>()).Add(a);
+    }
+
+    var area = new HashSet<Room> { room };
+    var queue = new Queue<Room>(area);
+    while (queue.Count > 0)
+      if (joinsOf.TryGetValue(queue.Dequeue(), out var next))
+        foreach (var other in next)
+          if (area.Add(other))
+            queue.Enqueue(other);
+    return area;
   }
 
   /// <summary>

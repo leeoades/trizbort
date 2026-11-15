@@ -101,6 +101,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **Laying out one area no longer drags another across the map.** Going east on the roof moved the chimney, the
+  roof and the living room over into the grounds. Automap now only lays out the area you're in (the rooms joined to
+  it, a split join leading into another area), and rooms only line up with others in the same area.
 - **No lag between a move in the game and the map.** Automap laid the map out again while you waited, for up to
   a second every few moves; it now works the new layout out in the background and carries on, and the rooms slide
   into place when it's ready (as an undo step of its own).

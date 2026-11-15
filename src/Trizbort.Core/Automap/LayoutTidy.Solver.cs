@@ -35,6 +35,21 @@ public static partial class LayoutTidy
   private const int LineReach = 4;
 
   /// <summary>
+  ///   Which area each room is in: rooms joined to each other, directly or through other rooms, share an area. A split
+  ///   join doesn't count (the map leaves it out), so a house drawn apart from its garden is an area of its own.
+  /// </summary>
+  private static int[] Areas(LayoutMap map, int n)
+  {
+    var area = Enumerable.Range(0, n).ToArray();
+    int Find(int i) => area[i] == i ? i : area[i] = Find(area[i]);
+    foreach (var join in map.Joins)
+      if (join.A != join.B)
+        area[Find(join.A)] = Find(join.B);
+    for (var i = 0; i < n; i++) area[i] = Find(i);
+    return area;
+  }
+
+  /// <summary>
   ///   When <paramref name="satisfied" />, the slanting join from <paramref name="a" /> to <paramref name="b" />
   ///   (towards <paramref name="wx" />, <paramref name="wy" />) has no room within the box between them: every other
   ///   room nearby is in the same columns as one of them or beyond, or in the same rows or beyond.
@@ -374,11 +389,14 @@ public static partial class LayoutTidy
         objective.Add(ApartWeight * apart);
       }
 
-    // rooms near each other line up in rows and columns, joined or not, so the map reads as a grid
+    // rooms near each other line up in rows and columns, joined or not, so the map reads as a grid; but only within
+    // an area (rooms joined to each other, split joins aside): one area isn't pulled into line with another
+    var area = Areas(map, n);
     for (var a = 0; a < n; a++)
       for (var b = a + 1; b < n; b++)
       {
         if (!movable.Contains(a) && !movable.Contains(b)) continue;
+        if (area[a] != area[b]) continue;
         var apartX = Math.Abs(cellX[a] - cellX[b]);
         var apartY = Math.Abs(cellY[a] - cellY[b]);
         if (apartX <= AlignReach && apartY <= AlignReach * 2)
