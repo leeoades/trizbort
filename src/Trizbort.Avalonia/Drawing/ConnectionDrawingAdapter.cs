@@ -755,7 +755,7 @@ public static class ConnectionDrawingAdapter
                 cache.CachedStartText = null;
             }
             var startVertex = connection.VertexList.Count > 0 ? connection.VertexList[0] : null;
-            DrawSingleAnnotation(context, startText, segments[0], font, typeface, brush, true, startVertex, ref cache.CachedStartText);
+            DrawSingleAnnotation(context, startText, segments[0], font, typeface, brush, true, startVertex, ref cache.CachedStartText, connection);
         }
 
         var endText = ConnectionEndLabels.Text(connection, false);
@@ -767,7 +767,7 @@ public static class ConnectionDrawingAdapter
                 cache.CachedEndText = null;
             }
             var endVertex = connection.VertexList.Count > 1 ? connection.VertexList[^1] : null;
-            DrawSingleAnnotation(context, endText, segments[^1], font, typeface, brush, false, endVertex, ref cache.CachedEndText);
+            DrawSingleAnnotation(context, endText, segments[^1], font, typeface, brush, false, endVertex, ref cache.CachedEndText, connection);
         }
 
         // a split join says at the tip of each stub where it goes, the command with it
@@ -801,7 +801,7 @@ public static class ConnectionDrawingAdapter
                     var ratio = seg.Length > 0.001f ? middle / seg.Length : 0.5f;
                     var midPoint = seg.Start + seg.Delta * ratio;
                     var dummySeg = new CoreLineSegment(midPoint - seg.Delta * 0.01f, midPoint + seg.Delta * 0.01f);
-                    DrawSingleAnnotation(context, connection.MidText, dummySeg, font, typeface, brush, null, null, ref cache.CachedMidText);
+                    DrawSingleAnnotation(context, connection.MidText, dummySeg, font, typeface, brush, null, null, ref cache.CachedMidText, connection);
                     break;
                 }
             }
@@ -855,7 +855,9 @@ public static class ConnectionDrawingAdapter
 
         context.DrawText(text, new AvaloniaPoint(x, y));
         // clickable: it goes to the room it names
-        connection.SplitLabelBounds[atStart ? 0 : 1] = new CoreRect((float)x, (float)y, (float)text.Width, (float)text.Height);
+        var labelBounds = new CoreRect((float)x, (float)y, (float)text.Width, (float)text.Height);
+        connection.SplitLabelBounds[atStart ? 0 : 1] = labelBounds;
+        LabelDrawn?.Invoke(labelBounds);
     }
 
     /// <summary>Whether the room at this end lists its objects above or below itself, on the side this end is at.</summary>
@@ -864,12 +866,69 @@ public static class ConnectionDrawingAdapter
         if (vertex?.Port?.Owner is not Room room) return false;
         if (string.IsNullOrWhiteSpace(ObjectList.FormatForDisplay(room.Objects))) return false;
         var bounds = room.InnerBounds;
-        return room.ObjectsPosition switch
+        // where it was last drawn: an automatic list moves out of the way
+        if (room.ObjectsDrawnInside) return false;
+        return room.ObjectsDrawnAt switch
         {
             CompassPoint.South => anchor.Y >= bounds.Center.Y,
             CompassPoint.North => anchor.Y <= bounds.Center.Y,
             _ => false
         };
+    }
+
+    /// <summary>
+    ///     How many things a label at these bounds would be in the way of, or be overlapped by: other joins' lines,
+    ///     rooms, object lists and the labels drawn before it. Set by the map canvas for each frame; null (labels where
+    ///     they always go) elsewhere, such as image export.
+    /// </summary>
+    public static Func<Connection, CoreRect, int>? LabelClashes { get; set; }
+
+    /// <summary>Told each label's bounds once it's drawn, so the labels after it keep clear of it.</summary>
+    public static Action<CoreRect>? LabelDrawn { get; set; }
+
+    /// <summary>How far along its join an end label may slide to get out of the way, at most.</summary>
+    private static readonly float[] SlideSteps = { 0, 10, 20, 32, 48, 64 };
+
+    /// <summary>
+    ///     An end label out of the way: where it always goes, else on the other side of its line, else slid along the
+    ///     line away from the room (a little at a time, both sides), whichever first clashes with nothing; failing that,
+    ///     the one clashing least. Returns the top-left to draw it at.
+    /// </summary>
+    private static (double X, double Y) OutOfTheWay(Connection connection, CoreLineSegment segment, bool isStart,
+        double x, double y, double width, double height)
+    {
+        if (LabelClashes == null) return (x, y);
+        var along = isStart ? segment.End - segment.Start : segment.Start - segment.End;
+        var length = along.Length;
+        if (length < 0.01f) return (x, y);
+        along = CoreVector.Normalize(along);
+        var anchor = isStart ? segment.Start : segment.End;
+        var normal = new CoreVector(-along.Y, along.X);
+        var centre = new CoreVector((float)(x + width / 2), (float)(y + height / 2));
+        var side = (centre.X - anchor.X) * normal.X + (centre.Y - anchor.Y) * normal.Y;
+        var flipped = centre - normal * (2 * side);
+        var reach = Math.Min(64f, length * 0.4f);
+
+        (double X, double Y) best = (x, y);
+        var bestClashes = int.MaxValue;
+        foreach (var step in SlideSteps)
+        {
+            if (step > reach) break;
+            foreach (var at in new[] { centre, flipped })
+            {
+                var moved = at + along * step;
+                var bounds = new CoreRect((float)(moved.X - width / 2), (float)(moved.Y - height / 2), (float)width, (float)height);
+                var clashes = LabelClashes(connection, bounds);
+                if (clashes == 0) return (bounds.Left, bounds.Top);
+                if (clashes < bestClashes)
+                {
+                    bestClashes = clashes;
+                    best = (bounds.Left, bounds.Top);
+                }
+            }
+        }
+
+        return best;
     }
 
     private static void DrawSingleAnnotation(
@@ -881,7 +940,8 @@ public static class ConnectionDrawingAdapter
         IBrush brush,
         bool? isStart,
         Vertex? vertex,
-        ref FormattedText? cachedFormattedText)
+        ref FormattedText? cachedFormattedText,
+        Connection? connection = null)
     {
         var delta = segment.Delta;
         CoreVector anchor;
@@ -984,6 +1044,15 @@ public static class ConnectionDrawingAdapter
             drawY -= cachedFormattedText.Height;
         }
 
+        // an end label in the way of something moves: across its line, or along it
+        if (isStart != null && connection != null)
+        {
+            (drawX, drawY) = OutOfTheWay(connection, segment, isStart.Value, drawX, drawY,
+                cachedFormattedText.Width, cachedFormattedText.Height);
+        }
+
         if (TextRenderingGate.IsEnabled) context.DrawText(cachedFormattedText, new AvaloniaPoint(drawX, drawY));
+        LabelDrawn?.Invoke(new CoreRect((float)drawX, (float)drawY, (float)cachedFormattedText.Width,
+            (float)cachedFormattedText.Height));
     }
 }

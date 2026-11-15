@@ -8,7 +8,6 @@ public struct AutomapSettings
         FileName = string.Empty,
         SingleStep = false,
         VerboseTranscript = true,
-        AssumeRoomsWithSameNameAreSameRoom = false,
         GuessExits = true,
         AddObjectCommand = "tb see",
         AddRegionCommand = "tb region",
@@ -25,7 +24,6 @@ public struct AutomapSettings
   public string FileName;
   public bool SingleStep;
   public bool VerboseTranscript;
-  public bool AssumeRoomsWithSameNameAreSameRoom;
   public bool GuessExits;
   public string AddObjectCommand;
   public string AddRegionCommand;

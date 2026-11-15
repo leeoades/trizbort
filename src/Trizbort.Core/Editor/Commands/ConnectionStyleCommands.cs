@@ -22,6 +22,38 @@ public static class ConnectionStyleCommands
     return source != null && target != null && source != target;
   }
 
+  /// <summary>The split join selected, alone: the one Bring 'X' to 'Y' works on.</summary>
+  private static Connection SplitJoin(EditorSession s) =>
+    s.Selection.Connections.Count() == 1 && s.Selection.Connections.First() is { IsDrawnSplit: true } join ? join : null;
+
+  private static void RegisterBring(CommandCatalogue catalogue, string id, bool end)
+  {
+    string Title(EditorSession s)
+    {
+      var join = SplitJoin(s);
+      if (join == null) return end ? "_Bring the Far Room Here" : "Bring the _Near Room Here";
+      var room = end ? join.GetTargetRoom() : join.GetSourceRoom();
+      var to = end ? join.GetSourceRoom() : join.GetTargetRoom();
+      return (end ? "_Bring '" : "B_ring '") + Escape(room.Name) + "' to '" + Escape(to.Name) + "'...";
+    }
+
+    catalogue.Register(new EditorCommand
+    {
+      Id = id,
+      Title = end ? "_Bring the Far Room Here" : "Bring the _Near Room Here",
+      DynamicTitle = Title,
+      MenuPath = "Edit",
+      Group = "3-connection",
+      Scope = CommandScope.Canvas,
+      ContextTargets = ContextTargets.Connection,
+      CanExecuteFunc = s => SplitJoin(s) != null,
+      ExecuteAsyncFunc = s => CommandCatalogue.BringAcrossAsync(s, end)
+    });
+  }
+
+  /// <summary>A room's name in a menu title: its underscores aren't mnemonics.</summary>
+  private static string Escape(string name) => (name ?? string.Empty).Replace("_", "__");
+
   public static void Register(CommandCatalogue catalogue)
   {
     catalogue.Register(new EditorCommand
@@ -103,6 +135,10 @@ public static class ConnectionStyleCommands
         });
       })
     });
+
+    // a split join: bring the room at one end across to the other, and join them whole again
+    RegisterBring(catalogue, "connection.bringEnd", true);
+    RegisterBring(catalogue, "connection.bringStart", false);
 
     // Rotation has no menu entry in the reference, so these are key-only.
     RegisterRotate(catalogue, "connection.rotate.cw", "Rotate Connector Clockwise", InputKey.OemOpenBrackets, ModifierKeys.None, true, false);

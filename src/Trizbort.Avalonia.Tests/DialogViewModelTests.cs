@@ -240,9 +240,11 @@ public class DialogViewModelTests
         vm.CustomPositionDown = 3;
         vm.UseCustomPosition = false;
         vm.ApplyTo(room);
+        // no nudge, at the default spot: the object list is automatic again
         room.ObjectsCustomPosition.ShouldBeFalse();
-        room.ObjectsCustomPositionDown.ShouldBe(3);
-        room.ObjectsCustomPositionRight.ShouldBe(-7);
+        room.ObjectsPlaced.ShouldBeFalse();
+        room.ObjectsCustomPositionDown.ShouldBe(0);
+        room.ObjectsCustomPositionRight.ShouldBe(0);
         room.BorderStyle.ShouldBe(BorderDashStyle.None);
     }
 

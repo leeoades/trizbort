@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Trizbort.Editor;
@@ -94,7 +94,7 @@ public class AutomapCanvas : IAutomapCanvas
       return ways.Any(way => way.AtStart && way.IsDirection && way.Seen && way.Direction == cameBy) &&
              !JoinWays.SeenFrom(ways, false);
     });
-    if (join == null) return false;
+    if (join == null || SeenGoing(room, direction, join)) return false;
 
     var from = join.GetSourceRoom();
     if (IsCompass(direction))
@@ -257,7 +257,7 @@ public class AutomapCanvas : IAutomapCanvas
     // to lead somewhere else (north out of the closet: the foyer's south is the front porch)
     var back = CompassPointHelper.GetOpposite(direction);
     if (added && !hereIsGuess && assumeTwoWayConnections && connection.Flow == ConnectionFlow.TwoWay &&
-        !RoomsAlong(far, back).Any(other => other != null && other != here))
+        !RoomsAlong(far, back).Any(other => other != null && other != here) && !SeenGoing(far, back, connection))
       JoinWays.AddDirection(ways, !hereIsStart, back, seen: false);
 
     var hereCompass = JoinWays.FirstCompass(ways, hereIsStart);
@@ -288,6 +288,42 @@ public class AutomapCanvas : IAutomapCanvas
     }
 
     JoinWays.Write(connection, ways, LabelWord);
+    ForgetGuessesElsewhere(connection, here, direction);
+  }
+
+  /// <summary>
+  ///   Whether the player was seen going <paramref name="direction" /> from <paramref name="room" /> along a join
+  ///   other than <paramref name="except" />: that way is known, so it isn't assumed as the way back along another.
+  /// </summary>
+  private bool SeenGoing(Room room, MappableDirection direction, Connection except) =>
+    CurrentProject.Elements.OfType<Connection>().Any(connection =>
+    {
+      if (connection == except) return false;
+      var source = connection.GetSourceRoom();
+      var target = connection.GetTargetRoom();
+      if (source != room && target != room) return false;
+      return JoinWays.Of(connection).Any(way => way.IsDirection && way.Seen && way.Direction == direction &&
+                                                ((way.AtStart && source == room) || (!way.AtStart && target == room)));
+    });
+
+  /// <summary>
+  ///   The player went <paramref name="direction" /> from <paramref name="here" /> along <paramref name="taken" />: a
+  ///   way back assumed along another join from here the same way was wrong, and goes (in a maze, south and back north
+  ///   often leads somewhere else). Ways the player was seen to go stay: a way can lead to two places ("Keep Both").
+  /// </summary>
+  private void ForgetGuessesElsewhere(Connection taken, Room here, MappableDirection direction)
+  {
+    foreach (var connection in CurrentProject.Elements.OfType<Connection>().ToList())
+    {
+      if (connection == taken) continue;
+      var source = connection.GetSourceRoom();
+      var target = connection.GetTargetRoom();
+      if (source == target || (source != here && target != here)) continue;
+      var hereIsStart = source == here;
+      if (JoinWays.Of(connection).Any(way =>
+            way.AtStart == hereIsStart && way.IsDirection && !way.Seen && way.Direction == direction))
+        ForgetWay(here, direction, hereIsStart ? target : source, onlyGuessed: true);
+    }
   }
 
   /// <summary>
@@ -499,6 +535,26 @@ public class AutomapCanvas : IAutomapCanvas
     FaceGuessedEnds();
   }
 
+  public void ConnectStops(Room source, Room target, string command)
+  {
+    if (source == null || target == null || source == target || string.IsNullOrWhiteSpace(command)) return;
+    command = command.Trim();
+    var back = CurrentProject.Elements.OfType<Connection>().FirstOrDefault(connection =>
+      IsCommandJoin(connection) && connection.Flow == ConnectionFlow.OneWay &&
+      connection.GetSourceRoom() == target && connection.GetTargetRoom() == source &&
+      !JoinWays.Commands(JoinWays.Of(connection)).Contains(command, StringComparer.OrdinalIgnoreCase));
+    if (back == null)
+    {
+      ConnectByCommand(source, target, command);
+      return;
+    }
+
+    var ways = JoinWays.Of(back);
+    JoinWays.AddCommand(ways, false, command);
+    back.Flow = ConnectionFlow.TwoWay;
+    JoinWays.Write(back, ways, LabelWord);
+  }
+
   public void ConnectByCommand(Room source, Room target, string command)
   {
     if (source == null || target == null || source == target || string.IsNullOrWhiteSpace(command)) return;
@@ -605,23 +661,195 @@ public class AutomapCanvas : IAutomapCanvas
   private string _tidiedMap;
 
   /// <summary>
-  ///   Tidies the rooms around <paramref name="room" /> when the map has changed since the last tidy (a new room, a
-  ///   new join, or a join that learned a direction). Walking around rooms automap already knows leaves the map, and
-  ///   anything the user moved by hand, alone, unless a room nearby sits on another room or on a join.
+  ///   Tidies the map after a move. The step-by-step tidy only clears up rooms sitting on each other or on joins near
+  ///   <paramref name="room" />: making the map neat (lined up, balanced) is the solver's job, which it does when the
+  ///   map has changed (see <see cref="PlanRethink" />), and the step-by-step tidy would undo it. Walking around rooms
+  ///   automap already knows leaves the map alone.
   /// </summary>
   public void TidyAround(Room room)
   {
     room = ResolveRoom(room);
     if (room == null) return;
     var unchanged = MapShape() == _tidiedMap;
-    var moved = LayoutTidy.TidyAround(CurrentProject.Elements.ToList(), room, onlyIfCluttered: unchanged);
+    var before = RoomGlide.Positions(CurrentProject.Elements);
+    // only where rooms clash: the step-by-step tidy knows nothing of lining up or balancing
+    var moved = LayoutTidy.TidyAround(CurrentProject.Elements.ToList(), room, onlyIfCluttered: true);
     if (moved > 0)
     {
+      // the rooms slide to their new places on screen rather than jumping
+      RoomGlide.Start(before);
       FaceGuessedEnds();
       _session?.EnsureVisible(room);
     }
 
     _tidiedMap = MapShape();
+    if (unchanged) return;
+    var rethink = PlanRethink(room);
+    if (rethink == null) return;
+    if (RethinkElsewhere)
+    {
+      _rethink = rethink;
+      _planned = rethink;
+      _plannedShape = _tidiedMap;
+    }
+    else FinishRethink(rethink, rethink.Run());
+  }
+
+  /// <summary>
+  ///   How long (in the app, in milliseconds) or how much work (without it) the map may spend rethinking its layout
+  ///   after a move (see <see cref="PlanRethink" />).
+  /// </summary>
+  private const int RethinkMs = 1000;
+
+  /// <summary>
+  ///   How much work a repeatable rethink may do (see <see cref="RepeatableLayout" />): less than the app's search, as
+  ///   it runs on one thread and is only for tests and the command line.
+  /// </summary>
+  private const int RepeatableRethinkWork = 300;
+
+  // what was wrong with the layout after the last tidy (see LayoutTidy.Problems)
+  private int _problems;
+
+  /// <summary>
+  ///   How many new rooms and joins the map may gain before it is rethought anyway (see <see cref="PlanRethink" />).
+  /// </summary>
+  private const int RethinkEvery = 3;
+
+  // how many rooms and joins the map had at the last rethink
+  private int _sizeAtRethink;
+
+  // a rethink waiting to be worked out (see RethinkElsewhere)
+  private LayoutTidy.TidyPlan _rethink;
+
+  // the latest rethink worked out elsewhere, and what the map was made of when it was planned
+  private LayoutTidy.TidyPlan _planned;
+  private string _plannedShape;
+
+  /// <summary>
+  ///   True when the caller works out rethinks itself, off the map's thread (see <see cref="TakeRethink" />), so the
+  ///   window stays responsive while the solver thinks. Otherwise <see cref="TidyAround" /> does it there and then.
+  /// </summary>
+  public bool RethinkElsewhere { get; set; }
+
+  /// <summary>
+  ///   Whether a rethink gives the same layout every time for the same map (one search thread, limited by work), or
+  ///   searches on every thread for up to <see cref="RethinkMs" /> milliseconds, finding better layouts sooner but not
+  ///   always the same one. Unset: the faster search when rethinking elsewhere (the app), the repeatable one otherwise
+  ///   (tests, the command line), so a transcript always makes the same map there.
+  /// </summary>
+  public bool? RepeatableLayout { get; set; }
+
+  /// <summary>The rethink <see cref="TidyAround" /> left to be worked out, if any (see <see cref="RethinkElsewhere" />).</summary>
+  public LayoutTidy.TidyPlan TakeRethink()
+  {
+    var plan = _rethink;
+    _rethink = null;
+    return plan;
+  }
+
+  /// <summary>
+  ///   When the map has just learnt something that leaves its layout worse than before (more joins pointing the wrong
+  ///   way, or running across rooms), as when South Junction turns out to be south of the
+  ///   junctions automap had put below it: nudging rooms a step at a time can't put that right, so the solver lays out
+  ///   every room not placed by hand again, and the result is kept only if no fewer joins point their way. It also
+  ///   does so every few new rooms or joins, to line rooms up and balance them as the map grows. Plans that on a copy
+  ///   of the layout; null when the map doesn't need it.
+  /// </summary>
+  private LayoutTidy.TidyPlan PlanRethink(Room here)
+  {
+    var elements = CurrentProject.Elements.ToList();
+    var problems = LayoutTidy.Problems(elements);
+    var worse = problems > _problems;
+    _problems = problems;
+    // only the area the player is in (the rooms joined to it, split joins aside): another area, like the house
+    // drawn apart from its garden, stays where it is
+    var rooms = AreaOf(here).Where(r => !r.PlacedByHand).ToList();
+    // and every few new rooms or joins anyway: a layout that has nothing wrong can still be made neater (lined up,
+    // balanced), and a join that closes a loop often shows how
+    var size = elements.Count(element => element is Room || element is Connection);
+    var grown = size >= _sizeAtRethink + RethinkEvery;
+    if (!worse && !grown) return null;
+    _sizeAtRethink = size;
+    var repeatable = RepeatableLayout ?? !RethinkElsewhere;
+    return rooms.Count == 0
+      ? null
+      : LayoutTidy.PlanRethink(elements, rooms, repeatable ? RepeatableRethinkWork : RethinkMs, repeatable);
+  }
+
+  /// <summary>
+  ///   The rooms joined to <paramref name="room" />, directly or through other rooms, and the room itself. A split
+  ///   join doesn't count: it leads into another area.
+  /// </summary>
+  private HashSet<Room> AreaOf(Room room)
+  {
+    var joinsOf = new Dictionary<Room, List<Room>>();
+    foreach (var connection in CurrentProject.Elements.OfType<Connection>())
+    {
+      if (connection.Split) continue;
+      var a = connection.GetSourceRoom();
+      var b = connection.GetTargetRoom();
+      if (a == null || b == null || a == b) continue;
+      (joinsOf.TryGetValue(a, out var fromA) ? fromA : joinsOf[a] = new List<Room>()).Add(b);
+      (joinsOf.TryGetValue(b, out var fromB) ? fromB : joinsOf[b] = new List<Room>()).Add(a);
+    }
+
+    var area = new HashSet<Room> { room };
+    var queue = new Queue<Room>(area);
+    while (queue.Count > 0)
+      if (joinsOf.TryGetValue(queue.Dequeue(), out var next))
+        foreach (var other in next)
+          if (area.Add(other))
+            queue.Enqueue(other);
+    return area;
+  }
+
+  /// <summary>
+  ///   Puts the rooms where a rethink worked out in the background said (on the map's thread), as its own undo step,
+  ///   while automap carries on. Nothing happens if a later rethink has been planned since, or if the map has changed
+  ///   since (rooms or joins added): the layout would be out of date, so the next move plans another. Returns how many
+  ///   rooms moved, or -1 if the user is part-way through a change of their own (a drag) and it should be tried again
+  ///   shortly.
+  /// </summary>
+  public int FinishRethinkInTheBackground(LayoutTidy.TidyPlan plan, IReadOnlyDictionary<Room, Vector> moves)
+  {
+    if (plan == null || plan != _planned) return 0;
+    if (MapShape() != _plannedShape)
+    {
+      _planned = null;
+      // plan again at the next move
+      _sizeAtRethink = int.MinValue / 2;
+      return 0;
+    }
+
+    var batch = BeginBatch("Tidy the map");
+    if (batch == null) return -1;
+    using (batch)
+    {
+      _planned = null;
+      return FinishRethink(plan, moves);
+    }
+  }
+
+  /// <summary>
+  ///   Puts the rooms where a rethink said (on the map's thread), sliding them there. Rooms deleted meanwhile are
+  ///   left out. Returns how many rooms moved.
+  /// </summary>
+  public int FinishRethink(LayoutTidy.TidyPlan plan, IReadOnlyDictionary<Room, Vector> moves)
+  {
+    if (plan == null || moves == null || moves.Count == 0) return 0;
+    var present = CurrentProject.Elements.OfType<Room>().ToHashSet();
+    var before = RoomGlide.Positions(CurrentProject.Elements);
+    var moved = LayoutTidy.TidyPlan.Apply(moves.Where(move => present.Contains(move.Key))
+      .ToDictionary(move => move.Key, move => move.Value));
+    if (moved > 0)
+    {
+      RoomGlide.Start(before);
+      FaceGuessedEnds();
+    }
+
+    _problems = LayoutTidy.Problems(CurrentProject.Elements.ToList());
+    _tidiedMap = MapShape();
+    return moved;
   }
 
   /// <summary>What the map is made of, ignoring where the rooms are: its rooms, its joins and their directions.</summary>
@@ -661,7 +889,17 @@ public class AutomapCanvas : IAutomapCanvas
         _session.Viewport.VisibleWorldBounds.Center.X - room.Width / 2,
         _session.Viewport.VisibleWorldBounds.Center.Y - room.Height / 2);
     room.Position = Settings.Snap(room.Position);
+    PlaceClear(room);
 
+    room.ArbitraryAutomappedPosition = true;
+
+    CurrentProject.Elements.Add(room);
+    return room;
+  }
+
+  /// <summary>Moves <paramref name="room" /> left or right, further each time, until it's clear of every other room.</summary>
+  private void PlaceClear(Room room)
+  {
     var tryOtherSideNext = false;
     var tryLeft = true;
     var distance = 0;
@@ -683,11 +921,30 @@ public class AutomapCanvas : IAutomapCanvas
       var vectorX = tryLeft ? initialPosition.X - f : initialPosition.X + f;
       room.Position = Settings.Snap(new Vector(vectorX, room.Position.Y));
     }
+  }
 
-    room.ArbitraryAutomappedPosition = true;
+  /// <summary>
+  ///   Where <see cref="CreateRoom(Room, MappableDirection, string, string)" /> would put a new room reached from
+  ///   <paramref name="existing" /> going <paramref name="direction" /> (or <see cref="CreateRoom(Room, string)" />, by
+  ///   a command), without adding it: for a preview. Null when <paramref name="existing" /> isn't on the map.
+  /// </summary>
+  public Rect? NewRoomBounds(Room existing, MappableDirection? direction)
+  {
+    if (existing == null || !CurrentProject.Elements.Contains(existing)) return null;
+    var room = new Room(CurrentProject);
+    if (direction is { } way && way != MappableDirection.None)
+    {
+      var point = CompassPointHelper.GetCompassDirection(way);
+      if (MakeSpaceForNewRooms || !TryPlaceInClearSpace(room, existing, point))
+        PositionRelativeTo(room, existing, point, out _);
+    }
+    else
+    {
+      room.Position = Settings.Snap(existing.Position);
+      PlaceClear(room);
+    }
 
-    CurrentProject.Elements.Add(room);
-    return room;
+    return new Rect(room.Position.X, room.Position.Y, room.Width, room.Height);
   }
 
   public Room CreateRoom(Room existing, MappableDirection directionFromExisting, string roomName, string line)
@@ -743,7 +1000,13 @@ public class AutomapCanvas : IAutomapCanvas
     return rooms;
   }
 
-  public void ForgetWay(Room from, MappableDirection direction, Room to)
+  public void ForgetWay(Room from, MappableDirection direction, Room to) => ForgetWay(from, direction, to, false);
+
+  /// <summary>
+  ///   No longer has <paramref name="direction" /> lead from <paramref name="from" /> to <paramref name="to" />; with
+  ///   <paramref name="onlyGuessed" />, only where it was assumed, not seen.
+  /// </summary>
+  private void ForgetWay(Room from, MappableDirection direction, Room to, bool onlyGuessed)
   {
     from = ResolveRoom(from);
     to = ResolveRoom(to);
@@ -758,7 +1021,8 @@ public class AutomapCanvas : IAutomapCanvas
       else continue;
 
       var ways = JoinWays.Of(connection);
-      if (ways.RemoveAll(way => way.AtStart == fromIsStart && way.IsDirection && way.Direction == direction) == 0)
+      if (ways.RemoveAll(way => way.AtStart == fromIsStart && way.IsDirection && way.Direction == direction &&
+                                (!onlyGuessed || !way.Seen)) == 0)
         continue;
       if (!ways.Any(way => way.Kind != JoinWayKind.Label))
       {
@@ -821,7 +1085,7 @@ public class AutomapCanvas : IAutomapCanvas
     if (_session == null) return;
 
     _session.Selection.Set(new List<Element> { room });
-    _session.EnsureVisible(room);
+    _session.KeepInMiddle(room);
   }
 
   public IDisposable BeginBatch(string title)

@@ -4,27 +4,33 @@
         x:Class="Trizbort.Avalonia.Views.Dialogs.AutomapSameDirectionDialog"
         x:DataType="vm:AutomapSameDirectionViewModel"
         Title="Automapping"
-        Width="600" SizeToContent="Height"
-        CanResize="False"
+        Width="680" Height="380"
+        MinWidth="520" MinHeight="320"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
 
-    <Grid ColumnDefinitions="*,16,260" Margin="16">
-        <TextBlock Grid.Column="0" Text="{Binding Message}" TextWrapping="Wrap" VerticalAlignment="Top" />
+    <Grid RowDefinitions="Auto,12,*,12,Auto" Margin="16">
+        <TextBlock Grid.Row="0" Text="{Binding Message}" TextWrapping="Wrap" />
 
-        <StackPanel Grid.Column="2" Spacing="8">
-            <Button x:Name="KeepExistingButton" Classes="dialog-button" HorizontalAlignment="Stretch"
-                    IsDefault="True" Content="{Binding KeepExistingButtonText}" Click="OnKeepExistingClick" />
-            <Button Classes="dialog-button" HorizontalAlignment="Stretch"
-                    Content="{Binding KeepNewButtonText}" Click="OnKeepNewClick" />
-            <Button Classes="dialog-button" HorizontalAlignment="Stretch"
-                    Content="Keep _Both" Click="OnKeepBothClick" />
-            <Button Classes="dialog-button" HorizontalAlignment="Stretch"
-                    IsVisible="{Binding CanSplit}" Content="{Binding MovesButtonText}" Click="OnMovesClick"
-                    ToolTip.Tip="The room you left moves, taking you with it (a lift, a car, a train): show it at this stop too, as a copy with its name, and keep track of which stop you're at from the way you go out" />
-            <Button Classes="dialog-button" HorizontalAlignment="Stretch"
-                    IsVisible="{Binding CanSplit}" Content="{Binding SplitButtonText}" Click="OnSplitClick"
-                    ToolTip.Tip="The room you left is two places that look alike (a lift): make it two rooms, the second reached from the first by what you did there, and join the new room to the second" />
+        <Grid Grid.Row="2" ColumnDefinitions="260,16,*">
+            <!-- the answers on the left; the one picked explained on the right -->
+            <ListBox Grid.Column="0" x:Name="OptionList" ItemsSource="{Binding Options}" SelectedItem="{Binding Selected}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SameDirectionOption">
+                        <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="ExplanationText" Text="{Binding Explanation}" TextWrapping="Wrap" />
+            </ScrollViewer>
+        </Grid>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Classes="dialog-button" Content="OK" IsDefault="True" Command="{Binding OkCommand}" />
+            <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Command="{Binding CancelCommand}"
+                    ToolTip.Tip="Map nothing for this move: automap carries on from the next room it can place" />
         </StackPanel>
     </Grid>
 </Window>

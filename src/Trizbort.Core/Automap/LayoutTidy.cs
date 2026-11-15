@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -58,6 +58,9 @@ public static partial class LayoutTidy
   private const double SoftPull = 0.25;
   private const double StayPut = 0.2;
 
+  /// <summary>How much more a room placed by hand prefers to stay where it is, when it has to be pushed aside.</summary>
+  private const double PlacedByHandStay = 4;
+
   /// <summary>A join counts as naturally placed when it points within this many degrees of its direction.</summary>
   private const double NaturalAngle = 22.6;
 
@@ -96,10 +99,12 @@ public static partial class LayoutTidy
     var near = map.Neighbourhood(centre, radius, false);
     var all = map.Neighbourhood(centre, radius);
     var free = map.JoinCount(centre) <= 1 ? centre : null;
-    // rooms the user placed by hand stay where they were put
+    // rooms the user placed by hand are never pulled back to where the tidy would put them, but they slide out of
+    // the way when other rooms need the space
     var movable = all.Where(room => !room.PlacedByHand || room == free).ToList();
+    var pushOnly = all.Where(room => room.PlacedByHand && room != free).ToList();
     if (movable.Count == 0) return 0;
-    return map.Tidy(movable, timeLimitMs, free, movable.Except(near).ToList());
+    return map.Tidy(movable, timeLimitMs, free, movable.Except(near).ToList(), pushOnly: pushOnly);
   }
 
   /// <summary>
@@ -112,6 +117,9 @@ public static partial class LayoutTidy
     var joins = map.DirectedJoins.ToList();
     return (joins.Count(map.IsNatural), joins.Count);
   }
+
+  /// <summary>How many things are wrong with the layout: joins not pointing their way, and rooms a join runs across.</summary>
+  public static int Problems(IList<Element> elements) => new LayoutMap(elements).ProblemCount();
 
   /// <summary>The joins that aren't naturally placed (see <see cref="NaturalJoins" />), from room to room.</summary>
   public static List<(Room From, Room To)> UnnaturalJoins(IList<Element> elements)
@@ -164,6 +172,27 @@ public static partial class LayoutTidy
         map.Tidy(movable, QuickPlanMs, null, null, StayPut / 20, token);
         return true;
       });
+  }
+
+  /// <summary>
+  ///   Gets ready for automap to rethink the layout of <paramref name="rooms" /> with the solver, after a move left
+  ///   joins pointing the wrong way. Like <see cref="PlanTidy" />: takes a copy now, and <see cref="TidyPlan.Run" />
+  ///   may run on any thread. Rooms stay near where they are unless moving them puts more joins the right way.
+  /// </summary>
+  /// <param name="deterministic">
+  ///   The same map always gives the same layout (one search thread, limited by work rather than time): for automap
+  ///   without the app (tests, the command line). Otherwise the search uses every thread for up to
+  ///   <paramref name="workMs" /> milliseconds, which finds better layouts sooner but not always the same one.
+  /// </param>
+  public static TidyPlan PlanRethink(IList<Element> elements, IEnumerable<Room> rooms, int workMs, bool deterministic = true)
+  {
+    var map = new LayoutMap(elements ?? new List<Element>());
+    var movable = (rooms ?? Enumerable.Empty<Room>()).Where(map.Contains).ToList();
+    return new TidyPlan(map, movable, TidyMethod.Thorough, workMs, token =>
+    {
+      Solve(map, movable, workMs, token, deterministic);
+      return true;
+    });
   }
 
   /// <summary>How long Tidy Map's quick tidy may take.</summary>
@@ -226,6 +255,19 @@ public static partial class LayoutTidy
 
     public double WantY;
     public double Pull;
+
+    /// <summary>
+    ///   The path bends: both ends have compass directions that aren't opposite (east from South Junction arrives at
+    ///   Southeast Junction from the south). It is drawn slanting, so it needn't be exactly diagonal, and it gives way
+    ///   to straight joins.
+    /// </summary>
+    public bool Bent;
+
+    /// <summary>
+    ///   North at one end and south at the other (or east and west): a compass join that should be drawn dead
+    ///   straight, not just roughly that way.
+    /// </summary>
+    public bool Straight;
 
     /// <summary>Where the join meets each room, from the room's centre: the line is drawn between these points.</summary>
     public double AX, AY, BX, BY;
@@ -299,6 +341,21 @@ public static partial class LayoutTidy
       _stepX = _gap + width;
       _stepY = _gap + height;
 
+      // Sides of rooms the player has actually left by: a join end there that nobody has travelled (the way back
+      // that two-way joins assume) is contradicted when another join, travelled, leaves the same room the same way
+      // to somewhere else. West from Southeast Junction leads to the Patio, so the assumed way west back to South
+      // Junction is wrong and says nothing about where South Junction is.
+      var travelledFrom = new HashSet<(Room, CompassPoint)>();
+      foreach (var connection in elements.OfType<Connection>())
+      {
+        if (connection.Split) continue;
+        var start = connection.GetSourceRoom(out var startPoint);
+        var end = connection.GetTargetRoom(out var endPoint);
+        if (start == null || end == null || start == end) continue;
+        if (!string.IsNullOrWhiteSpace(connection.StartTravelled)) travelledFrom.Add((start, startPoint));
+        if (!string.IsNullOrWhiteSpace(connection.EndTravelled)) travelledFrom.Add((end, endPoint));
+      }
+
       var pairOf = new Dictionary<(int, int), int>();
       foreach (var connection in elements.OfType<Connection>())
       {
@@ -311,6 +368,9 @@ public static partial class LayoutTidy
         }
 
         if (a == null || b == null || a == b) continue;
+        // a split join isn't drawn across the map (it's for a long join or one into another area), so it doesn't
+        // pull its rooms together or get in anyone's way
+        if (connection.Split) continue;
         if (!_index.TryGetValue(a, out var ia) || !_index.TryGetValue(b, out var ib)) continue;
         var join = new Join { A = ia, B = ib };
         if (connection.VertexList.Count >= 2)
@@ -335,11 +395,14 @@ public static partial class LayoutTidy
           // A compass end beats up, down, in and out, which don't say much about where a room is drawn.
           var fromA = FloorDirection(connection.StartText, point) ?? CompassPointHelper.GetAutomapDirectionVector(point);
           var fromB = FloorDirection(connection.EndText, targetPoint) ?? CompassPointHelper.GetAutomapDirectionVector(targetPoint);
-          var aIsCompass = IsMainPoint(point);
+          // an assumed way back that another way out of the room contradicts (see travelledFrom)
+          var aContradicted = string.IsNullOrWhiteSpace(connection.StartTravelled) && travelledFrom.Contains((a, point));
+          var bContradicted = string.IsNullOrWhiteSpace(connection.EndTravelled) && travelledFrom.Contains((b, targetPoint));
+          var aIsCompass = IsMainPoint(point) && !aContradicted;
           // the far end of a one-way join nobody has come back along only faces the room it came from: it says
           // nothing about where that room should be
-          var bIsGuess = connection.Flow == ConnectionFlow.OneWay && string.IsNullOrWhiteSpace(connection.EndTravelled) &&
-                         string.IsNullOrWhiteSpace(connection.EndText);
+          var bIsGuess = (connection.Flow == ConnectionFlow.OneWay && string.IsNullOrWhiteSpace(connection.EndTravelled) &&
+                          string.IsNullOrWhiteSpace(connection.EndText)) || bContradicted;
           var bIsCompass = IsMainPoint(targetPoint) && !bIsGuess;
           double x, y;
           if (bIsGuess && !aIsCompass)
@@ -372,7 +435,12 @@ public static partial class LayoutTidy
 
           join.WantX = Math.Sign(x);
           join.WantY = Math.Sign(y);
-          join.Pull = aIsCompass || bIsCompass ? CompassPull : SoftPull;
+          join.Bent = aIsCompass && bIsCompass &&
+                      (Math.Sign(fromA.X) != -Math.Sign(fromB.X) || Math.Sign(fromA.Y) != -Math.Sign(fromB.Y));
+          join.Straight = aIsCompass && bIsCompass && !join.Bent && (Math.Sign(x) == 0 || Math.Sign(y) == 0);
+          // with its way back contradicted, all a join says is roughly which way the other room is: the path bends
+          // somewhere, so it pulls gently
+          join.Pull = (aIsCompass || bIsCompass) && !aContradicted && !bContradicted ? CompassPull : SoftPull;
         }
 
         _joins.Add(join);
@@ -523,9 +591,16 @@ public static partial class LayoutTidy
     private double _stayPut = StayPut;
     private bool _rearrange;
 
+    // rooms that only move when another room pushes them (placed by hand): the tidy never moves them on its own
+    private HashSet<int> _pushOnly = new();
+
+    /// <summary>
+    ///   Tidies <paramref name="movableRooms" />. Rooms in <paramref name="pushOnly" /> (placed by hand) never move on
+    ///   their own account, but are pushed aside along with the others when those need the space.
+    /// </summary>
     public int Tidy(
       List<Room> movableRooms, int timeLimitMs, Room free, List<Room> roomsInTheWay = null, double stayPut = StayPut,
-      CancellationToken cancel = default)
+      CancellationToken cancel = default, List<Room> pushOnly = null)
     {
       _cancel = cancel;
       _stayPut = stayPut;
@@ -533,12 +608,16 @@ public static partial class LayoutTidy
       _inTheWay = roomsInTheWay == null ? new HashSet<int>() : roomsInTheWay.Select(room => _index[room]).ToHashSet();
       if (movableRooms.Count == 0) return 0;
       _free = free != null && _index.TryGetValue(free, out var freeIndex) ? freeIndex : -1;
-      _movable = movableRooms.Select(room => _index[room]).ToHashSet();
-      var movable = movableRooms.Select(room => _index[room]).ToHashSet();
+      // the rooms that may move on their own; pushed rooms are also counted and may be pushed
+      var initiators = movableRooms.Select(room => _index[room]).ToHashSet();
+      _pushOnly = (pushOnly ?? new List<Room>()).Where(_index.ContainsKey).Select(room => _index[room])
+        .Where(i => !initiators.Contains(i)).ToHashSet();
+      _movable = initiators.Concat(_pushOnly).ToHashSet();
+      var movable = initiators.Concat(_pushOnly).ToHashSet();
       BuildGroups();
       var clock = Stopwatch.StartNew();
       var score = Score(movable);
-      score = ClearTheWay(movable, score);
+      score = ClearTheWay(movable, initiators, score);
 
       for (var pass = 0; pass < 12; pass++)
       {
@@ -557,8 +636,8 @@ public static partial class LayoutTidy
           }
         }
         // move a room, or a whole group, one step; a group with a room that has to stay put stays put
-        var units = movable.Select(room => new List<int> { room }).Concat(movable.Select(room => _group[room])
-            .Distinct().Select(group => _members[group]).Where(unit => unit.Count > 1 && unit.All(movable.Contains)))
+        var units = initiators.Select(room => new List<int> { room }).Concat(initiators.Select(room => _group[room])
+            .Distinct().Select(group => _members[group]).Where(unit => unit.Count > 1 && unit.All(initiators.Contains)))
           .ToList();
         foreach (var unit in units)
           for (var dx = -1; dx <= 1; dx++)
@@ -594,7 +673,7 @@ public static partial class LayoutTidy
           {
             if (OutOfTime(clock, timeLimitMs)) return Apply();
             var join = _joins[j];
-            if (join.Pull <= 0 || members.Contains(join.A) == members.Contains(join.B)) continue;
+            if (join.Pull <= 0 || join.Bent || members.Contains(join.A) == members.Contains(join.B)) continue;
             var (sx, sy) = ExactShift(join);
             if (Math.Abs(sx) < 0.5 && Math.Abs(sy) < 0.5) continue;
             // the shift is for B; moving A instead goes the other way
@@ -630,7 +709,7 @@ public static partial class LayoutTidy
 
         // Make space: move a room and every movable room beyond it, in that direction, one step further out,
         // so a group keeps its shape (like moving the map apart, but only near the change).
-        foreach (var room in movable)
+        foreach (var room in initiators)
           for (var dx = -1; dx <= 1; dx++)
             for (var dy = -1; dy <= 1; dy++)
             {
@@ -666,7 +745,7 @@ public static partial class LayoutTidy
         // Make space across the map: move a room one step and shift every room at or beyond the spot it moves to,
         // anywhere on the map, one step further the same way. Going south into a garden where the Patio is moves
         // the hedge and everything above it up, instead of pushing the garden off to one side.
-        foreach (var room in movable)
+        foreach (var room in initiators)
           for (var dx = -1; dx <= 1; dx++)
             for (var dy = -1; dy <= 1; dy++)
             {
@@ -822,15 +901,16 @@ public static partial class LayoutTidy
     ///   across, left or right from one going up or down, by one step or two, whichever leaves the map best (fewest
     ///   joins crossing). For rooms further away, which the usual moves don't reach; done first.
     /// </summary>
-    private double ClearTheWay(HashSet<int> movable, double score)
+    private double ClearTheWay(HashSet<int> movable, HashSet<int> initiators, double score)
     {
       for (var j = 0; j < _joins.Count; j++)
       {
         var join = _joins[j];
-        if (!movable.Contains(join.A) && !movable.Contains(join.B)) continue;
+        if (!initiators.Contains(join.A) && !initiators.Contains(join.B)) continue;
         for (var room = 0; room < _rooms.Count; room++)
         {
-          if (room == join.A || room == join.B || !_inTheWay.Contains(room) || !movable.Contains(room)) continue;
+          // a room placed by hand on a join stays there: the user chose it
+          if (room == join.A || room == join.B || !_inTheWay.Contains(room) || !initiators.Contains(room)) continue;
           if (!SegmentHitsRoom(join, room)) continue;
 
           var across = Math.Abs(_x[join.B] - _x[join.A]) / _stepX >= Math.Abs(_y[join.B] - _y[join.A]) / _stepY;
@@ -946,7 +1026,7 @@ public static partial class LayoutTidy
         if (room == _free) continue;
         var mx = (_x[room] - _startX[room]) / _stepX;
         var my = (_y[room] - _startY[room]) / _stepY;
-        score += _stayPut * (mx * mx + my * my);
+        score += _stayPut * (mx * mx + my * my) * (_pushOnly.Contains(room) ? PlacedByHandStay : 1);
       }
 
       return score;
@@ -968,7 +1048,7 @@ public static partial class LayoutTidy
       var off = AngleBetween(ax, ay, join.WantX, join.WantY);
       var cost = off <= NaturalAngle ? 0 : 1 + (off - NaturalAngle) / 45;
       cost += LengthCost * Math.Max(0, distance - want);
-      if (off <= NaturalAngle && !IsExact(join)) cost += InexactCost;
+      if (off <= NaturalAngle && !join.Bent && !IsExact(join)) cost += InexactCost;
       return join.Pull * cost;
     }
 
@@ -1133,6 +1213,34 @@ public static partial class LayoutTidy
     }
 
     public int NaturalCount() => DirectedJoins.Count(IsNatural);
+
+    /// <summary>
+    ///   Everything wrong with the layout, counted: joins not pointing their way, rooms a join runs across, and joins
+    ///   crossing each other.
+    /// </summary>
+    public int FaultCount()
+    {
+      var faults = ProblemCount();
+      for (var j = 0; j < _joins.Count; j++)
+        for (var k = j + 1; k < _joins.Count; k++)
+          if (Cross(_joins[j], _joins[k]))
+            faults++;
+      return faults;
+    }
+
+    /// <summary>
+    ///   What's wrong with the layout, counted: joins not pointing their way, and rooms a join runs across. (Joins
+    ///   crossing each other are left to the step-by-step tidy.)
+    /// </summary>
+    public int ProblemCount()
+    {
+      var problems = DirectedJoins.Count(join => !IsNatural(join));
+      foreach (var join in _joins)
+        for (var room = 0; room < _rooms.Count; room++)
+          if (room != join.A && room != join.B && SegmentHitsRoom(join, room))
+            problems++;
+      return problems;
+    }
 
     /// <summary>
     ///   An end labelled up or down, off the compass points, wherever it meets its room (it moves round to keep clear

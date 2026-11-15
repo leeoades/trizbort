@@ -1,9 +1,13 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Threading;
 using Trizbort.Automap;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
+using Trizbort.Domain.Misc;
 using Trizbort.Editor;
 using AutomapEngine = Trizbort.Automap.Automap;
 
@@ -96,12 +100,53 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
     {
         if (Dispatcher.UIThread.CheckAccess())
         {
+            _innerCanvas.RethinkElsewhere = false;
             _innerCanvas.TidyAround(room);
+            return;
         }
-        else
+
+        // the quick tidy on the UI thread; a rethink (the solver, up to a second) is worked out in the background
+        // while automap carries on, then put on the map on the UI thread as its own undo step
+        var plan = Dispatcher.UIThread.Invoke(() =>
         {
-            Dispatcher.UIThread.Invoke(() => _innerCanvas.TidyAround(room));
-        }
+            _innerCanvas.RethinkElsewhere = true;
+            _innerCanvas.TidyAround(room);
+            return _innerCanvas.TakeRethink();
+        });
+        if (plan == null) return;
+
+        // a newer rethink replaces one still being worked out
+        _rethinkCancel?.Cancel();
+        var cancel = new CancellationTokenSource();
+        _rethinkCancel = cancel;
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                var moves = plan.Run(cancel.Token);
+                if (!cancel.IsCancellationRequested) ApplyRethink(plan, moves, cancel.Token, 0);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine("Rethinking the layout failed: " + ex.Message);
+            }
+        });
+    }
+
+    private CancellationTokenSource? _rethinkCancel;
+
+    /// <summary>Puts a rethink on the map, waiting while the user is part-way through a change of their own.</summary>
+    private void ApplyRethink(
+        LayoutTidy.TidyPlan plan, IReadOnlyDictionary<Room, Vector>? moves, CancellationToken token, int attempt)
+    {
+        if (moves == null) return;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (token.IsCancellationRequested) return;
+            if (_innerCanvas.FinishRethinkInTheBackground(plan, moves) < 0 && attempt < 100)
+                DispatcherTimer.RunOnce(() => ApplyRethink(plan, moves, token, attempt + 1),
+                    TimeSpan.FromMilliseconds(100));
+        });
     }
 
     public void SelectRoom(Room room)
@@ -126,6 +171,19 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         {
             Dispatcher.UIThread.Invoke(() => _innerCanvas.ConnectByCommand(source, target, command));
         }
+    }
+
+    public void ConnectStops(Room source, Room target, string command)
+    {
+        if (Dispatcher.UIThread.CheckAccess()) _innerCanvas.ConnectStops(source, target, command);
+        else Dispatcher.UIThread.Invoke(() => _innerCanvas.ConnectStops(source, target, command));
+    }
+
+    public Trizbort.Domain.Misc.Rect? NewRoomBounds(Room existing, MappableDirection? direction)
+    {
+        return Dispatcher.UIThread.CheckAccess()
+            ? _innerCanvas.NewRoomBounds(existing, direction)
+            : Dispatcher.UIThread.Invoke(() => _innerCanvas.NewRoomBounds(existing, direction));
     }
 
     public void RemoveRoom(Room otherRoom)

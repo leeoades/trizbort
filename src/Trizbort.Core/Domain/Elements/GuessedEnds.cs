@@ -45,6 +45,12 @@ public static class GuessedEnds
         if (FaceFloorEnd(list, connection, false)) moved++;
       }
 
+      if (IsFreeCommandJoin(connection))
+      {
+        moved += FaceCommandJoin(list, connection, rooms);
+        continue;
+      }
+
       if (!IsGuessedFarEnd(connection)) continue;
       var source = connection.GetSourceRoom();
       var target = connection.GetTargetRoom(out var current);
@@ -57,6 +63,55 @@ public static class GuessedEnds
     }
 
     return moved;
+  }
+
+  /// <summary>
+  ///   A dashed join automap made for a command ("pull first peg"), with no direction either way: no side of either
+  ///   room means anything, so each end meets its room on the side facing the other room, and the line never runs
+  ///   across either room.
+  /// </summary>
+  public static bool IsFreeCommandJoin(Connection connection) =>
+    !string.IsNullOrEmpty(connection.AutomapCommand) && connection.VertexList.Count == 2;
+
+  private static int FaceCommandJoin(IList<Element> elements, Connection connection, ICollection<Room> rooms)
+  {
+    var source = connection.GetSourceRoom(out var startPoint);
+    var target = connection.GetTargetRoom(out var endPoint);
+    if (source == null || target == null || source == target) return 0;
+    if (rooms != null && !rooms.Contains(source) && !rooms.Contains(target)) return 0;
+    var moved = 0;
+    // an end already on a side facing the other room is left where it is
+    if (!Faces(source, connection.VertexList[0].Position, target))
+    {
+      var start = FreeFacingPoint(elements, source, target, connection, target.InnerBounds.Center, startPoint);
+      if (start != startPoint)
+      {
+        connection.VertexList[0].Port = source.PortAt(start);
+        moved++;
+      }
+    }
+
+    var last = connection.VertexList.Count - 1;
+    if (!Faces(target, connection.VertexList[last].Position, source))
+    {
+      var end = FreeFacingPoint(elements, target, source, connection, connection.VertexList[0].Position, endPoint);
+      if (end != endPoint)
+      {
+        connection.VertexList[last].Port = target.PortAt(end);
+        moved++;
+      }
+    }
+
+    return moved;
+  }
+
+  /// <summary>Whether <paramref name="point" /> on <paramref name="room" /> is on its side towards <paramref name="other" />.</summary>
+  private static bool Faces(Room room, Vector point, Room other)
+  {
+    var centre = room.InnerBounds.Center;
+    var toward = other.InnerBounds.Center - centre;
+    var outward = point - centre;
+    return toward.X * outward.X + toward.Y * outward.Y > 0;
   }
 
   /// <summary>

@@ -20,7 +20,7 @@
                         <Border Width="560" Height="420" Padding="14,10" ClipToBounds="True">
                             <!-- the end of the text always shows, at the bottom, however much there is -->
                             <controls:BottomAnchor x:Name="Screen">
-                            <TextBlock x:Name="ScreenText" Text="{Binding Text, ElementName=root}"
+                            <TextBlock x:Name="ScreenText"
                                        FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, Liberation Mono, Menlo, monospace"
                                        FontSize="18"
                                        Foreground="#5CFF8A"

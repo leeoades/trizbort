@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.SplitRoomDialog"
+        x:DataType="vm:SplitRoomViewModel"
+        Title="Split Room"
+        Width="520" SizeToContent="Height"
+        MinWidth="420"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="16" Spacing="12">
+        <TextBlock Text="{Binding IntroText}" TextWrapping="Wrap" />
+
+        <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="JoinList" ItemsSource="{Binding Joins}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SplitRoomJoin">
+                        <CheckBox Content="{Binding Text}" IsChecked="{Binding Moves}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <StackPanel Spacing="4" IsVisible="{Binding AsksWhere}">
+            <TextBlock Text="Where are you now?" />
+            <RadioButton GroupName="SplitWhere" Content="{Binding InNewText}" IsChecked="{Binding InNew}" />
+            <RadioButton GroupName="SplitWhere" Content="{Binding InOriginalText}" IsChecked="{Binding InOriginal}" />
+            <RadioButton GroupName="SplitWhere" Content="Somewhere else" IsChecked="{Binding InNeither}" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Classes="dialog-button" Content="OK" IsDefault="True" Command="{Binding OkCommand}" />
+            <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Command="{Binding CancelCommand}" />
+        </StackPanel>
+    </StackPanel>
+</Window>

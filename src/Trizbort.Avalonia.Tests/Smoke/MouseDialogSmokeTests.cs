@@ -329,7 +329,7 @@ public class MouseDialogSmokeTests
 
             headers.ShouldContain("Add Room");
             headers.ShouldContain("Map Settings...");
-            headers.ShouldContain("Application Settings...");
+            headers.ShouldNotContain("Application Settings...");
             headers.ShouldNotContain("Properties...");
             canvas.LastContextMenu.Close();
         }

@@ -29,10 +29,11 @@
 
     <!-- Automap's controls, docked beside the map while it runs: where you are, the transcript (moving through
          it) and mapping (whether automap changes the map). -->
-    <Border Width="280"
+    <Border x:Name="PanelBorder" Width="280"
             Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
             BorderThickness="1,0,0,0">
+        <Grid>
         <DockPanel>
             <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="12,10,12,8">
                 <TextBlock Text="Automap" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
@@ -76,7 +77,22 @@
                     <!-- the transcript: moving through it -->
                     <StackPanel Spacing="6">
                         <TextBlock Classes="section" Text="TRANSCRIPT" />
+                        <!-- paused move by move, and the game has gone on: it's being played now -->
+                        <Border x:Name="GoLiveBar" IsVisible="{Binding IsAutomapGameLive}" CornerRadius="4"
+                                Padding="10,8" Background="#332196F3" BorderBrush="#2196F3" BorderThickness="1">
+                            <StackPanel Spacing="6">
+                                <TextBlock TextWrapping="Wrap" FontWeight="SemiBold"
+                                           Text="You're playing the game, but automap is paused." />
+                                <TextBlock Classes="small" TextWrapping="Wrap"
+                                           Text="Go live to map each move as you play it, or keep stepping with Next Move." />
+                                <Button x:Name="GoLiveButton" Content="Go Live" HorizontalAlignment="Left"
+                                        Command="{Binding PlayToEndCommand}"
+                                        ToolTip.Tip="Play the moves waiting, then follow the game as it goes on (F5)" />
+                            </StackPanel>
+                        </Border>
                         <TextBlock Classes="note" x:Name="TranscriptNote" Text="{Binding AutomapTranscriptNote}" />
+                        <TextBlock Classes="small" x:Name="MoveCount" Text="{Binding AutomapMoveCount}"
+                                   ToolTip.Tip="Moves in the transcript: each command typed at the prompt" />
                         <Grid ColumnDefinitions="*,6,*">
                             <Button x:Name="PreviousMoveButton" Content="◀ Previous Move"
                                     Command="{Binding GoBackAutomapCommand}"
@@ -88,9 +104,12 @@
                         <Button x:Name="PauseButton" Content="Pause" IsVisible="{Binding !IsAutomapMoveByMove}"
                                 Command="{Binding PauseAutomapCommand}"
                                 ToolTip.Tip="Pause before the next move, to step through the transcript a move at a time" />
-                        <controls:TranscriptMonitor HorizontalAlignment="Center" Margin="0,4,0,0"
-                                                    IsVisible="{Binding IsGameMonitorShown}"
-                                                    Text="{Binding AutomapScreenText}" />
+                        <!-- scaled with the panel: drag the panel's left edge to make it bigger -->
+                        <Viewbox x:Name="MonitorBox" Width="240" Stretch="Uniform" HorizontalAlignment="Center"
+                                 Margin="0,4,0,0" IsVisible="{Binding IsGameMonitorShown}">
+                            <controls:TranscriptMonitor Text="{Binding AutomapScreenText}"
+                                                        ShowsCursor="{Binding IsAutomapAwaitingCommand}" />
+                        </Viewbox>
                         <CheckBox Content="Show the game screen" FontSize="12"
                                   IsChecked="{Binding IsGameMonitorShown, Mode=OneWay}"
                                   Command="{Binding ToggleGameMonitorCommand}" />
@@ -108,6 +127,9 @@
                                          ToolTip.Tip="Follow where you are without changing the map" />
                         </StackPanel>
                         <TextBlock Classes="note" x:Name="MappingNote" Text="{Binding AutomapMappingNote}" />
+                        <CheckBox x:Name="AutoTidyBox" Content="Tidy the map as I go" FontSize="12"
+                                  IsChecked="{Binding IsAutomapAutoTidy}"
+                                  ToolTip.Tip="Rearrange the rooms near you after each move, making space for new rooms. Off: rooms stay where automap first puts them, and you tidy by hand (Tidy Map...)" />
                         <TextBlock Classes="small"
                                    Text="Tracking only lets you step back and forward through the transcript to check automap follows the rooms you expect. Fix the map if not, then switch back to Mapping." />
                     </StackPanel>
@@ -116,5 +138,9 @@
                 </StackPanel>
             </ScrollViewer>
         </DockPanel>
+        <!-- drag to make the panel (and the game screen in it) wider; double-click for the usual width -->
+        <Border x:Name="ResizeGrip" Width="6" HorizontalAlignment="Left" Background="Transparent"
+                Cursor="SizeWestEast" ToolTip.Tip="Drag to make the panel wider (double-click: the usual width)" />
+        </Grid>
     </Border>
 </UserControl>

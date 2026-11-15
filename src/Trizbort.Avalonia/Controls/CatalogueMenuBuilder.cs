@@ -162,19 +162,49 @@ public static class CatalogueMenuBuilder
             .ThenBy(x => x.Index)
             .Select(x => x.Command);
 
+        // on empty map the menu is short: no submenus
+        var useSubmenus = target != ContextTargets.Empty;
+        var submenus = new Dictionary<string, (MenuItem Item, List<MenuItem> Children, string? Group)>();
         string? previousGroup = null;
         foreach (var command in commands)
         {
             var group = command.ContextGroup ?? string.Empty;
+            // CreateMenuItem sets the enabled state itself (items in a closed menu are not attached yet). A title
+            // for a submenu ("Room" under Add) needs the whole title when there's no submenu.
+            var inSubmenu = useSubmenus && command.ContextSubmenu != null;
+            var item = CreateMenuItem(command, session, commandFor, refreshers, showGesture: false,
+                header: inSubmenu || command.ContextSubmenu == null ? command.ContextTitle : null);
+
+            if (inSubmenu && command.ContextSubmenu is { } name)
+            {
+                if (!submenus.TryGetValue(name, out var submenu))
+                {
+                    // the submenu goes where its first command would have
+                    if (previousGroup != null && group != previousGroup) menu.Items.Add(new Separator());
+                    previousGroup = group;
+                    submenu = (new MenuItem { Header = name }, new List<MenuItem>(), null);
+                    menu.Items.Add(submenu.Item);
+                }
+
+                if (submenu.Group != null && submenu.Group != group) submenu.Item.Items.Add(new Separator());
+                submenu.Item.Items.Add(item);
+                submenu.Children.Add(item);
+                submenus[name] = (submenu.Item, submenu.Children, group);
+                continue;
+            }
+
             if (previousGroup != null && group != previousGroup)
             {
                 menu.Items.Add(new Separator());
             }
             previousGroup = group;
+            menu.Items.Add(item);
+        }
 
-            // CreateMenuItem sets the enabled state itself (items in a closed menu are not attached yet).
-            menu.Items.Add(CreateMenuItem(command, session, commandFor, refreshers, showGesture: false,
-                header: command.ContextTitle));
+        // a submenu with nothing it can do is greyed out (after its items have worked out their own state)
+        foreach (var (item, children, _) in submenus.Values)
+        {
+            refreshers.Add(() => item.IsEnabled = children.Any(child => child.IsEnabled));
         }
 
         // A context menu is rebuilt each time it is shown, so it only listens to the session while it is open.

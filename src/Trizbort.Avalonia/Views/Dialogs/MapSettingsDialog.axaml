@@ -97,7 +97,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="12" Margin="8" Grid.IsSharedSizeScope="True">
                         <HeaderedContentControl Classes="group" Header="Room">
-                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
                                 <ColumnDefinition Width="12" />
@@ -119,6 +119,16 @@
                             <NumericUpDown Grid.Row="3" Grid.Column="2" x:Name="DarknessBox" Value="{Binding DarknessStripeSize}" Minimum="4" Maximum="128" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
                             <Label Grid.Row="4" Grid.Column="0" Classes="field-label" Content="_Object List Offset:" Target="{Binding #ObjectOffsetBox}" />
                             <NumericUpDown Grid.Row="4" Grid.Column="2" x:Name="ObjectOffsetBox" Value="{Binding ObjectListOffsetFromRoom}" Minimum="0" Maximum="64" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
+                            <!-- drag the sample object list to where object lists go unless placed by hand -->
+                            <Label Grid.Row="5" Grid.Column="0" Classes="field-label" Content="Object _List Position:" Target="{Binding #ObjectSpotPicker}" VerticalAlignment="Top" />
+                            <StackPanel Grid.Row="5" Grid.Column="2" Spacing="4">
+                                <controls:ObjectSpotPicker x:Name="ObjectSpotPicker" HorizontalAlignment="Left"
+                                                           Side="{Binding DefaultObjectsPosition}"
+                                                           Inside="{Binding DefaultObjectsInside}"
+                                                           ToolTip.Tip="Drag the object list to where it goes for rooms that haven't had theirs placed by hand" />
+                                <TextBlock Classes="hint" TextWrapping="Wrap"
+                                           Text="Drag the object list to one of the nine spots. A room's list moves elsewhere if that spot is in the way of a join or another room, unless you've dragged it on the map." />
+                            </StackPanel>
                         </Grid>
                         </HeaderedContentControl>
                         <HeaderedContentControl Classes="group" Header="Advanced">

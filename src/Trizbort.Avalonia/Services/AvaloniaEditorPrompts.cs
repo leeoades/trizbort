@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
+using Trizbort.Avalonia.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Automap;
 using Trizbort.Avalonia.ViewModels;
@@ -132,9 +133,231 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         }
 
         var viewModel = new DisambiguateRoomsViewModel(transcriptLine, roomDescription, candidates);
+        // the room picked is shown on the map behind the dialog, with the rooms around it; the view and selection
+        // go back as they were afterwards
+        var session = App.Services?.GetService<ICommandService>()?.Session;
+        var origin = session?.Viewport.TargetOrigin;
+        var selection = session?.Selection.Items.ToList();
+        if (session != null)
+        {
+            var newRoomName = candidates.FirstOrDefault()?.Name ?? transcriptLine;
+            viewModel.Preview = room =>
+            {
+                Trizbort.Domain.Misc.Vector centre;
+                if (room == null)
+                {
+                    // a new room: shown faintly where automap would put it (else the room the player came from)
+                    Trizbort.Domain.Misc.Rect? where = null;
+                    try
+                    {
+                        where = global::Trizbort.Automap.Automap.Instance.NewRoomPreview();
+                    }
+                    catch (Exception)
+                    {
+                        // no preview, but the question still works
+                    }
+
+                    MapCanvasControl.GhostRoom = where is { } ghost ? (ghost, newRoomName) : null;
+                    session.Selection.Set(new List<Element>());
+                    var from = global::Trizbort.Automap.Automap.Instance.CurrentRoom;
+                    if (where == null && (from == null || !session.Project.Elements.Contains(from)))
+                    {
+                        session.Invalidate(EditorChange.Adorners);
+                        return;
+                    }
+
+                    centre = where?.Center ?? from!.InnerBounds.Center;
+                }
+                else
+                {
+                    MapCanvasControl.GhostRoom = null;
+                    if (!session.Project.Elements.Contains(room)) return;
+                    session.Selection.Set(new List<Element> { room });
+                    centre = room.InnerBounds.Center;
+                }
+
+                // left of the middle, clear of the dialog on the right
+                var visible = session.Viewport.VisibleWorldBounds;
+                session.Viewport.GlideTo(new Trizbort.Domain.Misc.Vector(centre.X + visible.Width / 5, centre.Y));
+                session.Invalidate(EditorChange.Adorners);
+            };
+            viewModel.Preview(viewModel.Selected?.Room);
+        }
+
         var dialog = new DisambiguateRoomsDialog { DataContext = viewModel };
-        await dialog.ShowDialog(owner);
+        if (session != null)
+        {
+            // on the right of the window, so the map shows the room picked
+            var scale = owner.RenderScaling;
+            dialog.WindowStartupLocation = WindowStartupLocation.Manual;
+            dialog.Position = new global::Avalonia.PixelPoint(
+                owner.Position.X + Math.Max(0, (int)((owner.Bounds.Width - dialog.Width - 24) * scale)),
+                owner.Position.Y + (int)(80 * scale));
+        }
+        Action? unlock = null;
+        try
+        {
+            if (session != null)
+            {
+                // not modal: the map behind can be looked around while deciding (but not changed); the menus,
+                // toolbar, automap panel and shortcuts are off until the question is answered
+                MapCanvasControl.ViewOnly = true;
+                unlock = LockAllButTheMap(owner);
+                var closed = new TaskCompletionSource();
+                dialog.Closed += (_, _) => closed.TrySetResult();
+                dialog.Show(owner);
+                await closed.Task;
+            }
+            else
+            {
+                await dialog.ShowDialog(owner);
+            }
+        }
+        finally
+        {
+            unlock?.Invoke();
+            MapCanvasControl.ViewOnly = false;
+            MapCanvasControl.GhostRoom = null;
+            if (session != null && origin != null)
+            {
+                session.Selection.Set(selection!.Where(element => session.Project.Elements.Contains(element)).ToList());
+                session.Viewport.GlideTo(origin.Value);
+            }
+        }
+
         return viewModel.Result;
+    }
+
+    /// <summary>
+    ///     Turns off everything in <paramref name="owner" /> but the map: the menu, the toolbar, the automap panel and
+    ///     the window's shortcuts. Returns how to turn them back on as they were.
+    /// </summary>
+    private static Action LockAllButTheMap(Window owner)
+    {
+        var controls = new List<Control>();
+        if (owner.FindControl<Control>("MainMenu") is { } menu) controls.Add(menu);
+        if (owner.FindControl<Control>("Toolbar") is { } toolbar) controls.Add(toolbar);
+        controls.AddRange(global::Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(owner).OfType<AutomapPanel>());
+        var wasEnabled = controls.Select(control => control.IsEnabled).ToList();
+        foreach (var control in controls) control.IsEnabled = false;
+        var keys = owner.KeyBindings.ToList();
+        owner.KeyBindings.Clear();
+        return () =>
+        {
+            for (var index = 0; index < controls.Count; index++) controls[index].IsEnabled = wasEnabled[index];
+            foreach (var binding in keys) owner.KeyBindings.Add(binding);
+        };
+    }
+
+    /// <summary>Split Room...: which joins go to the new room, and where the player is. Without a window, the suggestion.</summary>
+    public Task<RoomSplitChoice> ChooseRoomSplitAsync(Room room, string newName, IReadOnlyList<Connection> joins,
+        IReadOnlyCollection<Connection> ticked, RoomSplitWhere? where, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            if (owner == null)
+            {
+                return new RoomSplitChoice(ticked.ToList(), where ?? RoomSplitWhere.Neither);
+            }
+
+            var viewModel = new SplitRoomViewModel(room, newName, joins, ticked, where);
+            var dialog = new SplitRoomDialog { DataContext = viewModel };
+            await dialog.ShowDialog(owner);
+            return viewModel.Result!;
+        });
+    }
+
+    /// <summary>
+    ///     Move to a New Area: which branches of the map go too. The rooms that would move are highlighted on the map
+    ///     behind the dialog, zoomed out to show them all; the map can be looked around but not changed meanwhile. The
+    ///     view and selection go back as they were afterwards. Without a window, all of them.
+    /// </summary>
+    public Task<IReadOnlyList<AreaBranch>> ChooseAreaBranchesAsync(string title, IReadOnlyList<Room> moving,
+        IReadOnlyList<AreaBranch> branches, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            if (owner == null) return branches;
+
+            var viewModel = new AreaBranchesViewModel(title, moving, branches);
+            var dialog = new AreaBranchesDialog { DataContext = viewModel };
+            var session = App.Services?.GetService<ICommandService>()?.Session;
+            if (session == null)
+            {
+                await dialog.ShowDialog(owner);
+                return viewModel.Result!;
+            }
+
+            var origin = session.Viewport.TargetOrigin;
+            var zoom = session.Viewport.ZoomFactor;
+            var selection = session.Selection.Items.ToList();
+            viewModel.Preview = rooms =>
+            {
+                var shown = rooms.Where(session.Project.Elements.Contains).Cast<Element>().ToList();
+                session.Selection.Set(shown);
+                if (shown.Count > 0)
+                {
+                    // zoomed out (never in) to show them all, left of the dialog on the right
+                    session.Viewport.FitToMap(shown);
+                    var fitted = Math.Min(session.Viewport.ZoomFactor, zoom);
+                    var centre = session.Viewport.Origin;
+                    session.Viewport.SetView(centre, fitted);
+                    var visible = session.Viewport.VisibleWorldBounds;
+                    session.Viewport.SetView(new Trizbort.Domain.Misc.Vector(centre.X + visible.Width / 6, centre.Y), fitted);
+                }
+
+                session.Invalidate(EditorChange.Adorners);
+            };
+            viewModel.Preview(viewModel.RoomsToMove());
+
+            var scale = owner.RenderScaling;
+            dialog.WindowStartupLocation = WindowStartupLocation.Manual;
+            dialog.Position = new global::Avalonia.PixelPoint(
+                owner.Position.X + Math.Max(0, (int)((owner.Bounds.Width - dialog.Width - 24) * scale)),
+                owner.Position.Y + (int)(80 * scale));
+
+            MapCanvasControl.ViewOnly = true;
+            var unlock = LockAllButTheMap(owner);
+            try
+            {
+                var closed = new TaskCompletionSource();
+                dialog.Closed += (_, _) => closed.TrySetResult();
+                dialog.Show(owner);
+                await closed.Task;
+            }
+            finally
+            {
+                unlock();
+                MapCanvasControl.ViewOnly = false;
+                session.Selection.Set(selection.Where(element => session.Project.Elements.Contains(element)).ToList());
+                session.Viewport.SetView(origin, zoom);
+            }
+
+            return viewModel.Result!;
+        });
+    }
+
+    /// <summary>What moved it?: which command moved a room that moves. Without a window, the suggestion.</summary>
+    public Task<WhatMovedItChoice> ChooseWhatMovedItAsync(Room room, string comeOutIn, IReadOnlyList<DoneInRoom> done,
+        int suggested, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            if (owner == null)
+            {
+                return suggested >= 0 && suggested < done.Count
+                    ? new WhatMovedItChoice(done[suggested].Label)
+                    : WhatMovedItChoice.Itself;
+            }
+
+            var viewModel = new WhatMovedItViewModel(room.Name, comeOutIn, done, suggested);
+            var dialog = new WhatMovedItDialog { DataContext = viewModel };
+            await dialog.ShowDialog(owner);
+            return viewModel.Result!;
+        });
     }
 
     /// <summary>Tidy Map...: asks which rooms and which way. Without an owner window, takes the suggestion.</summary>

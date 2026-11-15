@@ -74,6 +74,92 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
 
     public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, CancellationToken token = default) =>
       Task.FromResult(RoomDisambiguation.Choose(candidates[0]));
+
+    /// <summary>What "what moved it?" listed each time, and what it suggested.</summary>
+    public readonly List<(List<string> Done, int Suggested)> WhatMoved = new();
+
+    /// <summary>The answer to "what moved it?"; null takes the suggestion.</summary>
+    public WhatMovedItChoice Answer;
+
+    public Task<WhatMovedItChoice> ChooseWhatMovedItAsync(Room room, string comeOutIn, IReadOnlyList<DoneInRoom> done,
+      int suggested, CancellationToken token = default)
+    {
+      WhatMoved.Add((done.Select(item => item.Display).ToList(), suggested));
+      return Task.FromResult(Answer ?? (suggested >= 0 ? new WhatMovedItChoice(done[suggested].Label) : WhatMovedItChoice.Itself));
+    }
+  }
+
+  [TestCase(false)]
+  [TestCase(true)]
+  public async Task AJoinLabelledWithTheWrongCommand_ClearedOrDeleted_AutomapAsksAgainNextTime(bool delete)
+  {
+    // an older map: the join down was labelled with the door opened after the peg was pulled
+    var prompts = new MovesPrompts { Answer = new WhatMovedItChoice("open closet door") };
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    string[] Trip(string look) => new[]
+    {
+      ">look", "Foyer", look, "",
+      ">enter closet", "Closet", "A coat closet with pegs.", "",
+      ">pull first peg", "The closet moves down, then stops.", "",
+      ">open closet door", "The closet door squeals as it opens.", "",
+      ">out", "Cellar", "A dank cellar.", "",
+      ">"
+    };
+    var first = new[] { ">look", "Cellar", "A dank cellar.", "", ">up", "Foyer", "An elegant foyer.", "",
+      ">enter closet", "Closet", "A coat closet with pegs.", "", ">out", "Foyer", "" };
+    await RunToEnd(engine, first.Concat(Trip("An elegant foyer.").Skip(4)).ToArray());
+    prompts.WhatMoved.Count.ShouldBe(1);
+    var closet = AllRooms().Single(room => room.Name == "Closet" && !room.IsReference);
+    var stop = AllRooms().Single(room => room.IsStop);
+    Connection Join() => Project.Current.Elements.OfType<Connection>().SingleOrDefault(connection =>
+      connection.GetSourceRoom() == closet && connection.GetTargetRoom() == stop);
+    Join().MidText.ShouldBe("open closet door");
+
+    // the user puts it right: clears the label, or deletes the join
+    if (delete) Project.Current.Elements.Remove(Join());
+    else Join().MidText = string.Empty;
+
+    prompts.Answer = null;
+    engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    await RunToEnd(engine, Trip("An elegant foyer."));
+
+    prompts.WhatMoved.Count.ShouldBe(2);
+    prompts.WhatMoved[1].Done.ShouldBe(new[] { "pull first peg", "open closet door" });
+    prompts.WhatMoved[1].Suggested.ShouldBe(0);
+    Join().ShouldNotBeNull().MidText.ShouldBe("pull first peg");
+    Project.Current.Elements.OfType<Connection>().Count(connection =>
+      connection.GetSourceRoom() == closet && connection.GetTargetRoom() == stop).ShouldBe(1);
+  }
+
+  [Test]
+  public async Task NothingThePlayerDid_MovedTheBus_TheJoinSaysSo_AndReadingAgainDoesntMoveYou()
+  {
+    // reading on the bus doesn't move it: the user says nothing they did moved it
+    var prompts = new MovesPrompts { Answer = WhatMovedItChoice.Itself };
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "High Street", "A busy street.", "",
+      ">enter bus", "Bus", "A rattling bus.", "",
+      ">out", "High Street", "",
+      ">enter bus", "Bus", "",
+      ">read book", "You read a chapter.", "",
+      ">out", "Market", "A noisy market.", "",
+      ">enter bus", "Bus", "",
+      ">read book", "You read another chapter.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines);
+
+    prompts.WhatMoved.Count.ShouldBe(1);
+    prompts.WhatMoved[0].Done.ShouldBe(new[] { "read book" });
+    var bus = AllRooms().Single(room => room.Name == "Bus" && !room.IsReference);
+    var stop = AllRooms().Single(room => room.IsStop);
+    Project.Current.Elements.OfType<Connection>()
+      .Single(connection => connection.GetSourceRoom() == bus && connection.GetTargetRoom() == stop)
+      .MidText.ShouldBe(Trizbort.Automap.Automap.ByItself);
+    engine.CurrentRoom.ShouldBe(stop);
   }
 
   [Test]
@@ -117,6 +203,68 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
     Joined(closet, foyer).ShouldBeTrue();
     Joined(closet, cellar).ShouldBeFalse();
     Joined(stop, foyer).ShouldBeFalse();
+  }
+
+  [TestCase(false, "enter closet")]
+  [TestCase(true, "enter closet")]
+  [TestCase(true, "s")]
+  public async Task WhatMovedTheCloset_IsThePegPulled_NotTheDoorOpenedAfter_AndPullingItAgainMovesYouToo(bool backUp,
+    string backIn)
+  {
+    // Hollywood Hijinx: the door swings shut as the closet moves, so it's opened before going out. The join to the
+    // stop is labelled with the peg pulled (down at one end, back up at the other), and pulling it later moves the location.
+    var prompts = new MovesPrompts();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new List<string>
+    {
+      ">look", "Cellar", "A dank cellar.", "",
+      ">up", "Foyer", "An elegant foyer.", "",
+      ">enter closet", "Closet", "A coat closet with pegs.", "",
+      ">out", "Foyer", "",
+      ">enter closet", "Closet", "",
+      ">pull first peg", "The closet moves down, then stops.", "",
+      ">out", "The closet door is closed.", "",
+      ">open closet door", "The closet door squeals as it opens.", "",
+      ">out", "Cellar", "",
+      ">" + backIn, "Closet", "",
+      ">look", "Closet", "A coat closet with pegs.", "",
+      ">pull second peg", "The closet moves up, then stops.", "",
+      ">out", "The closet door is closed.", "",
+      ">open door", "The closet door whinnies as it opens.", "",
+      ">out", "Foyer", "",
+      ">in", "Closet", "",
+      ">see skis", "They're a large pair of downhill snow skis.", "",
+      ">pull first peg", "The closet moves down, then stops.", ""
+    };
+    if (backUp)
+      lines.AddRange(new[]
+      {
+        ">pull peg", "[Which peg do you mean, the first coat peg, the second coat peg, the third coat",
+        "peg, or the sawed-off peg?]", "",
+        ">second", "The closet moves up, then stops.", ""
+      });
+    lines.Add(">");
+
+    await RunToEnd(engine, lines.ToArray());
+
+    prompts.Asked.ShouldBe(1);
+    // asked once going down, and once coming back up; never again
+    prompts.WhatMoved.Count.ShouldBe(2);
+    prompts.WhatMoved[0].Done.ShouldBe(new[] { "pull first peg", "open closet door" });
+    prompts.WhatMoved[0].Suggested.ShouldBe(0);
+    prompts.WhatMoved[1].Done.ShouldBe(new[] { "pull second peg", "open door" });
+    prompts.WhatMoved[1].Suggested.ShouldBe(0);
+    var closet = AllRooms().Single(room => room.Name == "Closet" && !room.IsReference);
+    var stop = AllRooms().Single(room => room.IsStop);
+    // one join between the closets: down from one end, back up from the other
+    var join = Project.Current.Elements.OfType<Connection>().Single(connection =>
+      connection.GetSourceRoom() is { } from && connection.GetTargetRoom() is { } to &&
+      new[] { from, to }.Contains(closet) && new[] { from, to }.Contains(stop));
+    join.GetSourceRoom().ShouldBe(closet);
+    join.StartText.ShouldBe("pull first peg");
+    join.EndText.ShouldBe("pull second peg");
+    join.Flow.ShouldBe(ConnectionFlow.TwoWay);
+    engine.CurrentRoom.ShouldBe(backUp ? closet : stop);
   }
 
   [Test]

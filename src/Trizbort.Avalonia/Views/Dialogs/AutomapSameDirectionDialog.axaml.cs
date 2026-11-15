@@ -1,7 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Trizbort.Avalonia.ViewModels;
 
 namespace Trizbort.Avalonia.Views.Dialogs;
@@ -34,7 +32,12 @@ public partial class AutomapSameDirectionDialog : Window
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
-        KeepExistingButton.Focus();
+        if (_viewModel != null && _viewModel.Selected == null && _viewModel.Options.Count > 0)
+        {
+            _viewModel.Selected = _viewModel.Options[0];
+        }
+
+        OptionList.Focus();
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
@@ -42,12 +45,9 @@ public partial class AutomapSameDirectionDialog : Window
         base.OnKeyDown(e);
         if (e.Key == Key.Escape && !e.Handled)
         {
+            // the same as Cancel, or closing the window: the view model's result maps nothing for this move
             e.Handled = true;
-            _viewModel?.KeepExisting();
-            if (_viewModel == null)
-            {
-                Close();
-            }
+            Close();
         }
     }
 
@@ -55,13 +55,4 @@ public partial class AutomapSameDirectionDialog : Window
     {
         Close();
     }
-
-    private void OnKeepExistingClick(object? sender, RoutedEventArgs e) => _viewModel?.KeepExisting();
-
-    private void OnKeepNewClick(object? sender, RoutedEventArgs e) => _viewModel?.KeepNew();
-
-    private void OnKeepBothClick(object? sender, RoutedEventArgs e) => _viewModel?.KeepBoth();
-
-    private void OnSplitClick(object? sender, RoutedEventArgs e) => _viewModel?.Split();
-    private void OnMovesClick(object? sender, RoutedEventArgs e) => _viewModel?.Moves();
 }

@@ -69,7 +69,6 @@ public class AutomapRegressionTests : IsolatedProjectTests
     var settings = AutomapSettings.Default;
     settings.FileName = Files.File("transcript.txt");
     File.WriteAllText(settings.FileName, text);
-    settings.AssumeRoomsWithSameNameAreSameRoom = true;
     settings.AssumeTwoWayConnections = twoWay;
     settings.GuessExits = guess;
     return settings;
@@ -234,7 +233,6 @@ public class AutomapRegressionTests : IsolatedProjectTests
     var settings = SettingsFor(
       ">look\n\nMaze\n" + firstDescription + "\n\n>u\n\nMaze\n" + secondDescription +
       "\n\n>d\n\nMaze\n" + firstDescription + "\n");
-    settings.AssumeRoomsWithSameNameAreSameRoom = false;
     await parser.StartCl(new AutomapCanvas(), settings);
 
     prompts.ShouldBe(1);
@@ -265,7 +263,6 @@ public class AutomapRegressionTests : IsolatedProjectTests
       ">look\n\nHall\n" + firstDescription + "\n\n>open door\n\nHall\n" + changedDescription +
       "\n\n>look\n\nHall\n" + changedDescription.ToUpperInvariant() +
       "\n\n>look\n\nHall\n" + firstDescription + "\n");
-    settings.AssumeRoomsWithSameNameAreSameRoom = false;
     await parser.StartCl(new AutomapCanvas(), settings);
 
     prompts.ShouldBe(1);
@@ -285,7 +282,6 @@ public class AutomapRegressionTests : IsolatedProjectTests
         (_, __) => throw new AssertionException("Should not ask which room this is")));
     var settings = SettingsFor(
       ">look\n\nHall\n" + closed + "\n\n>open door\n\n>look\n\nHall\n" + open + "\n");
-    settings.AssumeRoomsWithSameNameAreSameRoom = false;
 
     await parser.StartCl(new AutomapCanvas(), settings);
 

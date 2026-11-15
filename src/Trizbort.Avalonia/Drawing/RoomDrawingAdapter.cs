@@ -8,6 +8,7 @@ using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using CoreRect = Trizbort.Domain.Misc.Rect;
 using CoreVector = Trizbort.Domain.Misc.Vector;
+using CoreLineSegment = Trizbort.Domain.Misc.LineSegment;
 using CoreColor = System.Drawing.Color;
 using CoreColors = Trizbort.Domain.Misc.Colors;
 using AvaloniaPoint = Avalonia.Point;
@@ -628,119 +629,85 @@ public static class RoomDrawingAdapter
         }
     }
 
+    /// <summary>
+    ///     What an automatic object list must keep clear of, near a room: the joins' segments and the other rooms and
+    ///     object lists. Set by the map canvas for each frame; null (no avoidance) elsewhere, such as image export.
+    /// </summary>
+    public static Func<Room, (IReadOnlyList<CoreLineSegment> Segments, IReadOnlyList<CoreRect> Obstacles)>? ObjectListObstacles { get; set; }
+
     private static void DrawObjectsList(Room room, AvaloniaDrawingContext context, CoreRect bounds, RoomTextCache cache)
     {
         var displayText = ObjectList.FormatForDisplay(room.Objects);
-        if (string.IsNullOrWhiteSpace(displayText)) return;
+        if (string.IsNullOrWhiteSpace(displayText))
+        {
+            room.ObjectListBounds = null;
+            return;
+        }
 
         var objFont = Settings.ObjectFontMetadata;
         var objColor = room.RoomObjectTextColor != CoreColor.Transparent
             ? room.RoomObjectTextColor
             : Settings.Color[CoreColors.SmallText];
 
-        var isObjectsCacheValid = cache.LastObjectsText == displayText
-                                  && cache.LastObjectsPos == room.ObjectsPosition
-                                  && cache.LastObjectsCustom == room.ObjectsCustomPosition
-                                  && Math.Abs(cache.LastCustomRight - room.ObjectsCustomPositionRight) < 0.01
-                                  && Math.Abs(cache.LastCustomDown - room.ObjectsCustomPositionDown) < 0.01
-                                  && cache.LastObjFontName == objFont.Name
-                                  && cache.LastObjFontStyle == (int)objFont.Style
-                                  && Math.Abs(cache.LastObjectFontSize - objFont.Size) < 0.01f
-                                  && cache.LastObjectColor == (uint)objColor.ToArgb()
-                                  && Math.Abs(cache.LastObjectOffset - Settings.ObjectListOffsetFromRoom) < 0.01f
-                                  && cache.LastObjectBounds.Equals(bounds);
-
-        if (!isObjectsCacheValid || cache.CachedObjects == null)
+        // the text itself is kept while it, its font and its colour stay the same
+        var isTextCacheValid = cache.LastObjectsText == displayText
+                               && cache.LastObjFontName == objFont.Name
+                               && cache.LastObjFontStyle == (int)objFont.Style
+                               && Math.Abs(cache.LastObjectFontSize - objFont.Size) < 0.01f
+                               && cache.LastObjectColor == (uint)objColor.ToArgb();
+        if (!isTextCacheValid || cache.CachedObjects == null)
         {
             cache.LastObjectsText = displayText;
-            cache.LastObjectsPos = room.ObjectsPosition;
-            cache.LastObjectsCustom = room.ObjectsCustomPosition;
-            cache.LastCustomRight = room.ObjectsCustomPositionRight;
-            cache.LastCustomDown = room.ObjectsCustomPositionDown;
             cache.LastObjFontName = objFont.Name;
             cache.LastObjFontStyle = (int)objFont.Style;
             cache.LastObjectFontSize = objFont.Size;
             cache.LastObjectColor = (uint)objColor.ToArgb();
-            cache.LastObjectOffset = Settings.ObjectListOffsetFromRoom;
-            cache.LastObjectBounds = bounds;
-
-            var objTypeface = objFont.ToTypeface();
-            var objBrush = objColor.ToBrush();
-
-            var formattedObj = new FormattedText(
+            var formatted = new FormattedText(
                 displayText,
                 CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
-                objTypeface,
+                objFont.ToTypeface(),
                 objFont.Size,
-                objBrush)
+                objColor.ToBrush())
             {
                 TextAlignment = TextAlignment.Left
             };
-            formattedObj.ConstrainToNaturalWidth();
-
-            double drawX;
-            double drawY;
-
-            var isOutside = room.ObjectsPosition switch
-            {
-                CompassPoint.North or CompassPoint.NorthEast or CompassPoint.East or
-                CompassPoint.SouthEast or CompassPoint.South or CompassPoint.SouthWest or
-                CompassPoint.West or CompassPoint.NorthWest => true,
-                _ => false
-            };
-
-            if (!isOutside)
-            {
-                // Object list appears inside the room below its name
-                // Matches WinForms RoomDrawingExtensions.DrawText / SetAlignmentFromCardinalOrOrdinalDirection
-                var height = bounds.Height / 2 - objFont.Size / 2;
-                var insideBounds = new CoreRect(
-                    bounds.Left + Settings.ObjectListOffsetFromRoom,
-                    bounds.Bottom - height,
-                    bounds.Width - Settings.ObjectListOffsetFromRoom,
-                    height - Settings.ObjectListOffsetFromRoom);
-
-                drawX = insideBounds.Left + (room.ObjectsCustomPosition ? room.ObjectsCustomPositionRight : 0);
-                drawY = bounds.Bottom - Settings.ObjectListOffsetFromRoom - formattedObj.Height + (room.ObjectsCustomPosition ? room.ObjectsCustomPositionDown : 0);
-            }
-            else
-            {
-                var expandedBounds = bounds;
-                expandedBounds.Inflate(Settings.ObjectListOffsetFromRoom, Settings.ObjectListOffsetFromRoom);
-                var pos = expandedBounds.GetCorner(room.ObjectsPosition);
-
-                if (room.ObjectsPosition == CompassPoint.North || room.ObjectsPosition == CompassPoint.South)
-                {
-                    pos.X += Settings.ObjectListOffsetFromRoom + (room.ObjectsCustomPosition ? room.ObjectsCustomPositionRight : 0);
-                    pos.Y += room.ObjectsCustomPosition ? room.ObjectsCustomPositionDown : 0;
-                }
-                else
-                {
-                    pos.X += room.ObjectsCustomPosition ? room.ObjectsCustomPositionRight : 0;
-                    pos.Y += room.ObjectsCustomPosition ? room.ObjectsCustomPositionDown : 0;
-                }
-
-                drawX = pos.X;
-                drawY = pos.Y;
-
-                if (room.ObjectsPosition is CompassPoint.West or CompassPoint.NorthWest or CompassPoint.SouthWest)
-                {
-                    drawX -= formattedObj.Width;
-                    formattedObj.TextAlignment = TextAlignment.Right;
-                }
-
-                if (room.ObjectsPosition is CompassPoint.North or CompassPoint.NorthEast or CompassPoint.NorthWest)
-                {
-                    drawY -= formattedObj.Height;
-                }
-            }
-
-            cache.CachedObjects = formattedObj;
-            cache.CachedObjectsDrawX = drawX;
-            cache.CachedObjectsDrawY = drawY;
+            formatted.ConstrainToNaturalWidth();
+            cache.CachedObjects = formatted;
         }
 
-        if (TextRenderingGate.IsEnabled) context.DrawText(cache.CachedObjects, new AvaloniaPoint(cache.CachedObjectsDrawX, cache.CachedObjectsDrawY));
+        var text = cache.CachedObjects;
+        var width = (float)text.Width;
+        var height = (float)text.Height;
+
+        // placed by hand: where it was put; automatic: the default spot, or the first one clear of what's around it
+        ObjectListSpot spot;
+        float right = 0, down = 0;
+        if (room.ObjectsPlaced)
+        {
+            spot = new ObjectListSpot(room.ObjectsPosition, room.ObjectsInside);
+            if (room.ObjectsCustomPosition)
+            {
+                right = room.ObjectsCustomPositionRight;
+                down = room.ObjectsCustomPositionDown;
+            }
+        }
+        else
+        {
+            spot = ObjectListSpot.Default;
+            if (!spot.Inside && ObjectListObstacles?.Invoke(room) is { } around)
+                spot = ObjectListPlacement.Choose(bounds, width, height, spot, around.Segments, around.Obstacles);
+        }
+
+        var at = ObjectListPlacement.Bounds(bounds, spot, width, height, right, down);
+        text.TextAlignment = !spot.Inside && spot.Side is CompassPoint.West or CompassPoint.NorthWest or CompassPoint.SouthWest
+            ? TextAlignment.Right
+            : TextAlignment.Left;
+        room.ObjectListBounds = at;
+        room.ObjectsDrawnAt = spot.Side;
+        room.ObjectsDrawnInside = spot.Inside;
+
+        // right-aligned text is laid out from the left of its own width
+        if (TextRenderingGate.IsEnabled) context.DrawText(text, new AvaloniaPoint(at.Left, at.Top));
     }
 }

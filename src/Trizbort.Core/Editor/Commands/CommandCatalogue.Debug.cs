@@ -59,7 +59,8 @@ public sealed partial class CommandCatalogue
       Group = "2-automap/2-transcript",
       Scope = CommandScope.Canvas,
       Gestures = new[] { new KeyGesture(InputKey.F5, none) },
-      CanExecuteFunc = s => s.Automap.IsRunning,
+      // with moves left to play
+      CanExecuteFunc = s => s.Automap.IsRunning && s.Automap.HasNextMove,
       ExecuteAsyncFunc = PlayToEndAsync
     });
     catalogue.Register(new EditorCommand
@@ -80,7 +81,7 @@ public sealed partial class CommandCatalogue
       Scope = CommandScope.Canvas,
       // F10, as stepping over a line in a debugger; F5 plays to the end
       Gestures = new[] { new KeyGesture(InputKey.F10, none) },
-      CanExecuteFunc = s => s.Automap.IsRunning,
+      CanExecuteFunc = s => s.Automap.IsRunning && s.Automap.HasNextMove,
       ExecuteAsyncFunc = s => Run(() => s.Automap.PlayNextMove())
     });
     catalogue.Register(new EditorCommand
@@ -92,7 +93,7 @@ public sealed partial class CommandCatalogue
       Scope = CommandScope.Canvas,
       // F9, beside F10 for the next move: read the transcript again from the move before, map left as it is
       Gestures = new[] { new KeyGesture(InputKey.F9, none) },
-      CanExecuteFunc = s => s.Automap.IsRunning,
+      CanExecuteFunc = s => s.Automap.IsRunning && s.Automap.CanGoBack,
       ExecuteAsyncFunc = s => Run(() => s.Automap.GoBack())
     });
     catalogue.Register(new EditorCommand
@@ -120,6 +121,20 @@ public sealed partial class CommandCatalogue
       ContextTargets = ContextTargets.Room,
       CanExecuteFunc = s => s.Automap.IsRunning && s.PrimaryRoom != null && s.Selection.Count == 1,
       ExecuteAsyncFunc = s => Run(() => s.Automap.SetCurrentRoom(s.PrimaryRoom))
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "automap.differentRoom",
+      ContextOrder = 64, ContextGroup = "5-room",
+      Title = "This Is a _Different Room",
+      ContextTitle = "Automap: This Is a _Different Room",
+      MenuPath = "Project/Automap",
+      Group = "2-automap/4-where",
+      ContextTargets = ContextTargets.Room,
+      // automap took the player to be in a room on the map, but it's another with that name: split it off
+      CanExecuteFunc = s => s.Automap.IsRunning && s.Automap.CanSplitCurrentRoom && s.Selection.Count == 1 &&
+                            s.PrimaryRoom != null && s.PrimaryRoom == s.Automap.CurrentRoom,
+      ExecuteAsyncFunc = s => s.Automap.SplitCurrentRoomAsync()
     });
     catalogue.Register(new EditorCommand
     {

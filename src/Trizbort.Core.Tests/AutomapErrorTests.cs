@@ -138,6 +138,26 @@ public class AutomapErrorTests : IsolatedProjectTests
       return _inner.BeginBatch(title);
     }
 
+    public void ConnectStops(Room source, Room target, string command)
+    {
+      _inner.ConnectStops(source, target, command);
+    }
+
+    public IReadOnlyList<Room> RoomsAlong(Room room, MappableDirection direction)
+    {
+      return _inner.RoomsAlong(room, direction);
+    }
+
+    public void ForgetWay(Room from, MappableDirection direction, Room to)
+    {
+      _inner.ForgetWay(from, direction, to);
+    }
+
+    public Trizbort.Domain.Misc.Rect? NewRoomBounds(Room existing, MappableDirection? direction)
+    {
+      return _inner.NewRoomBounds(existing, direction);
+    }
+
     public Room ResolveRoom(Room room)
     {
       return _inner.ResolveRoom(room);

@@ -55,6 +55,40 @@ public class ContextMenuModelTests
   }
 
   [Test]
+  public void TheRoomMenu_IsGroupedIntoSubmenus()
+  {
+    string Submenu(string id) => _catalogue.Find(id).ContextSubmenu;
+    Submenu("edit.properties").ShouldBeNull();
+    Submenu("edit.cut").ShouldBeNull();
+    Submenu("room.toggleDark").ShouldBe("Roo_m");
+    Submenu("room.shape.ellipse").ShouldBe("S_hape");
+    Submenu("room.swap.names").ShouldBe("S_wap");
+    Submenu("room.newArea").ShouldBe("Room_s");
+    Submenu("room.toggleAutomapPause").ShouldBe("_Automap");
+    Submenu("automap.imHere").ShouldBe("_Automap");
+    _catalogue.Find("automap.imHere").ContextTitle.ShouldBeNull();
+    Submenu("project.addRoom").ShouldBe("A_dd");
+    _catalogue.Find("project.addRoom").ContextTitle.ShouldBe("_Room");
+    Submenu("connection.reverse").ShouldBe("_Line");
+    Submenu("connection.label.up").ShouldBe("La_bel");
+    Submenu("connection.toggleSplit").ShouldBeNull();
+    Ids(ContextTargets.Connection).ShouldContain("connection.bringEnd");
+  }
+
+  [Test]
+  public void AutomapOnThisRoom_SaysDisableOrEnable()
+  {
+    var room = _session.AddRoom(new Vector(0, 0));
+    _session.Selection.Set(new Element[] { room });
+    var command = _catalogue.Find("room.toggleAutomapPause");
+
+    command.TitleFor(_session).ShouldBe("_Disable Automap on This Room");
+    command.ExecuteAsync(_session).Wait();
+    room.AutomapPause.ShouldBeTrue();
+    command.TitleFor(_session).ShouldBe("_Enable Automap on This Room");
+  }
+
+  [Test]
   public void Room_ShowsRoomItems()
   {
     var ids = Ids(ContextTargets.Room);

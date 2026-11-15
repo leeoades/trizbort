@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<trizbort version="1.0.0.0">
+	<info />
+	<map>
+		<room id="1" stableId="6256b451-7d8a-4ff1-956b-080ee655396e" name="Square" subtitle="" x="0" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="2" stableId="519831cd-628a-4b51-856f-574b2228da56" name="Market" subtitle="" x="0" y="-160" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="3" stableId="329564d7-5558-466d-b1b6-c0587d4ddbb6" name="Quay" subtitle="" x="0" y="160" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="4" stableId="05d052e5-5f29-4908-a741-1fa0060b5ae8" name="Inn" subtitle="" x="192" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="5" stableId="0e5b72ee-5d82-403d-badd-b4fee5b0a4bd" name="Church" subtitle="" x="-192" y="0" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="6" stableId="e3fd904f-07b7-47aa-8741-22737d4c8833" name="Belfry" subtitle="" x="-192" y="-256" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="7" stableId="98ba37de-a12b-4c28-a822-33ba7a4e2aaa" name="Crypt" subtitle="" x="192" y="256" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="8" stableId="98a7e081-6f2f-459b-bd02-0ae90cda3153" name="Well" subtitle="" x="128" y="-96" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="9" name="" description="" automapStartTravelled="north" automapEndTravelled="south" ZOrder="0">
+			<dock index="0" id="1" port="n" />
+			<dock index="1" id="2" port="s" />
+		</line>
+		<line id="10" name="" description="" automapStartTravelled="south" automapEndTravelled="north" ZOrder="0">
+			<dock index="0" id="1" port="s" />
+			<dock index="1" id="3" port="n" />
+		</line>
+		<line id="11" name="" description="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="1" port="e" />
+			<dock index="1" id="4" port="w" />
+		</line>
+		<line id="12" name="" description="" automapStartTravelled="west" automapEndTravelled="east" ZOrder="0">
+			<dock index="0" id="1" port="w" />
+			<dock index="1" id="5" port="e" />
+		</line>
+		<line id="13" name="" description="" startText="u" automapStartTravelled="up" automapEndTravelled="down" endText="d" ZOrder="0">
+			<dock index="0" id="1" port="nnw" />
+			<dock index="1" id="6" port="sse" />
+		</line>
+		<line id="14" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="up" endText="u" ZOrder="0">
+			<dock index="0" id="1" port="sse" />
+			<dock index="1" id="7" port="nnw" />
+		</line>
+		<line id="15" name="" description="" startText="in" automapStartTravelled="in" automapEndTravelled="out" endText="out" ZOrder="0">
+			<dock index="0" id="1" port="ne" />
+			<dock index="1" id="8" port="sw" />
+		</line>
+	</map>
+	<settings>
+		<colors>
+			<canvas>White</canvas>
+			<border>MidnightBlue</border>
+			<line>MidnightBlue</line>
+			<selectedLine>Gold</selectedLine>
+			<hoverLine>DarkOrange</hoverLine>
+			<subTitle>MidnightBlue</subTitle>
+			<smallText>MidnightBlue</smallText>
+			<lineText>MidnightBlue</lineText>
+			<grid>#E7E7E7</grid>
+			<startRoom>GreenYellow</startRoom>
+			<endRoom>Red</endRoom>
+		</colors>
+		<regions>
+			<NoRegion Name="NoRegion" TextColor="Blue">White</NoRegion>
+		</regions>
+		<fonts>
+			<room size="13">Arial</room>
+			<object size="11">Arial</object>
+			<subTitle size="9">Arial</subTitle>
+			<line size="9">Arial</line>
+		</fonts>
+		<grid>
+			<snapTo>yes</snapTo>
+			<visible>yes</visible>
+			<showOrigin>yes</showOrigin>
+			<size>32</size>
+		</grid>
+		<lines>
+			<width>2</width>
+			<arrowSize>12</arrowSize>
+			<textOffset>4</textOffset>
+			<handDrawn>no</handDrawn>
+			<labelDiagonalExits>yes</labelDiagonalExits>
+			<labelCompassExits>no</labelCompassExits>
+		</lines>
+		<rooms>
+			<darknessStripeSize>24</darknessStripeSize>
+			<objectListOffset>4</objectListOffset>
+			<defaultObjectsAt>s</defaultObjectsAt>
+			<defaultObjectsInside>no</defaultObjectsInside>
+			<connectionStalkLength>32</connectionStalkLength>
+			<preferredDistanceBetweenRooms>64</preferredDistanceBetweenRooms>
+			<defaultRoomName>Cave</defaultRoomName>
+			<defaultRoomShape>0</defaultRoomShape>
+		</rooms>
+		<ui>
+			<handleSize>12</handleSize>
+			<snapToElementSize>16</snapToElementSize>
+		</ui>
+		<margins>
+			<documentSpecific>no</documentSpecific>
+			<horizontal>0</horizontal>
+			<vertical>0</vertical>
+			<wrapDashes>no</wrapDashes>
+		</margins>
+		<keypadNavigation>
+			<creationModifier>control</creationModifier>
+			<unexploredModifier>alt</unexploredModifier>
+		</keypadNavigation>
+	</settings>
+</trizbort>

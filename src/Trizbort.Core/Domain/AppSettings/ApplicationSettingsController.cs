@@ -185,8 +185,6 @@ public static class ApplicationSettingsController
           settingsAutomap.FileName = automap["transcriptFileName"].ToText(AppSettings.Automap.FileName);
           settingsAutomap.VerboseTranscript =
             automap["verboseTranscript"].ToBool(AppSettings.Automap.VerboseTranscript);
-          settingsAutomap.AssumeRoomsWithSameNameAreSameRoom = automap["assumeRoomsWithSameNameAreSameRoom"]
-            .ToBool(AppSettings.Automap.AssumeRoomsWithSameNameAreSameRoom);
           settingsAutomap.GuessExits = automap["guessExits"].ToBool(AppSettings.Automap.GuessExits);
           settingsAutomap.AutoTidy = automap["autoTidy"].ToBool(AppSettings.Automap.AutoTidy);
           settingsAutomap.AddObjectCommand = automap["addObjectCommand"].ToText(AppSettings.Automap.AddObjectCommand);

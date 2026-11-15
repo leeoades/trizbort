@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.WhatMovedItDialog"
+        x:DataType="vm:WhatMovedItViewModel"
+        Title="What Moved It?"
+        Width="620" Height="360"
+        MinWidth="480" MinHeight="280"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,12,*,12,Auto" Margin="16">
+        <TextBlock Grid.Row="0" Text="{Binding IntroText}" TextWrapping="Wrap" />
+
+        <Grid Grid.Row="2" ColumnDefinitions="260,16,*">
+            <!-- what was typed in the room, then "nothing I did" and "something else"; the one picked explained -->
+            <ListBox Grid.Column="0" x:Name="OptionList" ItemsSource="{Binding Options}" SelectedItem="{Binding Selected}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:WhatMovedItOption">
+                        <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="10">
+                    <TextBlock x:Name="ExplanationText" Text="{Binding Explanation}" TextWrapping="Wrap" />
+                    <TextBox x:Name="OtherBox" IsVisible="{Binding AsksOther}" Text="{Binding OtherText}"
+                             Watermark="e.g. push button" />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Classes="dialog-button" Content="OK" IsDefault="True" Command="{Binding OkCommand}" />
+            <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Command="{Binding CancelCommand}"
+                    ToolTip.Tip="Don't say: the join is labelled '?', and automap asks again next time" />
+        </StackPanel>
+    </Grid>
+</Window>

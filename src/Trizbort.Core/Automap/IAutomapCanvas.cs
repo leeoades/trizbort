@@ -5,6 +5,8 @@ using Trizbort.Domain.Enums;
 
 namespace Trizbort.Automap;
 
+// No default members: a wrapper (AvaloniaAutomapCanvas) that forgot one would silently do nothing in the app while the
+// tests, on AutomapCanvas itself, pass.
 public interface IAutomapCanvas
 {
   /// <summary>
@@ -41,6 +43,12 @@ public interface IAutomapCanvas
   /// </summary>
   void ConnectByCommand(Room source, Room target, string command);
 
+  /// <summary>
+  ///   As <see cref="ConnectByCommand" />, between two stops of a room that moves: a command join already leading the
+  ///   other way ("pull first peg" down) becomes two-way, with this command at its other end ("pull second peg").
+  /// </summary>
+  void ConnectStops(Room source, Room target, string command);
+
   void AddExitStub(Room room, MappableDirection direction);
 
   void RemoveExitStub(Room room, MappableDirection direction);
@@ -73,15 +81,19 @@ public interface IAutomapCanvas
   ///   The rooms the map shows <paramref name="direction" /> leading to from <paramref name="room" />, by the joins'
   ///   labels or the sides they leave from.
   /// </summary>
-  IReadOnlyList<Room> RoomsAlong(Room room, MappableDirection direction) => Array.Empty<Room>();
+  IReadOnlyList<Room> RoomsAlong(Room room, MappableDirection direction);
 
   /// <summary>
   ///   <paramref name="direction" /> from <paramref name="from" /> doesn't lead to <paramref name="to" /> after all: it
   ///   comes off the join between them (and the join goes if nothing else leads along it).
   /// </summary>
-  void ForgetWay(Room from, MappableDirection direction, Room to)
-  {
-  }
+  void ForgetWay(Room from, MappableDirection direction, Room to);
+
+  /// <summary>
+  ///   Where a new room reached from <paramref name="existing" /> going <paramref name="direction" /> (null: by a
+  ///   command) would go, without adding it: for a preview. Null when not known.
+  /// </summary>
+  Trizbort.Domain.Misc.Rect? NewRoomBounds(Room existing, MappableDirection? direction);
 }
 
 public delegate bool? RoomMatcher(string roomName, string roomDescription, Room room);

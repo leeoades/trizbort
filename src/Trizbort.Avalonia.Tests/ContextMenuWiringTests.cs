@@ -50,6 +50,14 @@ public class ContextMenuWiringTests
 
     private static string Plain(object? header) => (header?.ToString() ?? string.Empty).Replace("_", string.Empty);
 
+    /// <summary>The item headed <paramref name="header" />, at the top of the menu or in one of its submenus.</summary>
+    private static MenuItem Find(ItemCollection items, string header) =>
+        FindOrNull(items, header) ?? throw new InvalidOperationException("No menu item " + header);
+
+    private static MenuItem? FindOrNull(ItemCollection items, string header) =>
+        items.OfType<MenuItem>().FirstOrDefault(m => Plain(m.Header) == header) ??
+        items.OfType<MenuItem>().Select(m => FindOrNull(m.Items, header)).FirstOrDefault(found => found != null);
+
     [AvaloniaTest]
     public void Room_Menu_HasSetRegionSubmenuWithCurrentTicked()
     {
@@ -58,7 +66,9 @@ public class ContextMenuWiringTests
         _service.Select(room);
 
         var menu = CatalogueMenuBuilder.BuildContextMenu(_catalogue!, _service.Session, ContextTargets.Room);
-        var setRegion = menu.Items.OfType<MenuItem>().First(m => Plain(m.Header) == "Set Region");
+        // in the Rooms submenu
+        var setRegion = Find(menu.Items, "Set Region");
+        Plain(((MenuItem)setRegion.Parent!).Header).ShouldBe("Rooms");
         setRegion.IsEnabled.ShouldBeTrue();
         setRegion.Items.OfType<MenuItem>().Select(m => Plain(m.Header))
             .ShouldBe(new[] { Region.DefaultRegion, "Alpha", "Zebra" });
@@ -73,7 +83,7 @@ public class ContextMenuWiringTests
         _service.Select(room);
 
         var menu = CatalogueMenuBuilder.BuildContextMenu(_catalogue!, _service.Session, ContextTargets.Room);
-        var setRegion = menu.Items.OfType<MenuItem>().First(m => Plain(m.Header) == "Set Region");
+        var setRegion = Find(menu.Items, "Set Region");
         var zebra = setRegion.Items.OfType<MenuItem>().First(m => Plain(m.Header) == "Zebra");
         zebra.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(MenuItem.ClickEvent));
 

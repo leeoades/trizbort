@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<trizbort version="1.0.0.0">
+	<info />
+	<map>
+		<room id="1" stableId="d13d27a3-9ff8-4249-a8cb-4f5d4b300778" name="South Junction" subtitle="" x="-864" y="1664" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" isStartRoom="yes" description="You're standing in front of the house where you spent many of your summers as a youngster. The old place is not as big as it seemed to you then, but it is still quite large. Stone pathways wind east and west around the house, and a larger main walkway leads north." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>statue</objects>
+		</room>
+		<room id="3" stableId="22c9a1ce-b8ba-4db1-b5bc-62ae958d7c68" name="Southeast Junction" subtitle="" x="-576" y="1344" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is the southeastern corner of a large backyard whose main feature is an elaborate garden. The stone walkway splits in three directions here: north, along the perimeter of the garden; south, around the side of the house; and west, where the walkway ends at a couple of steps leading up." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="5" name="" description="" automapStartTravelled="east" automapEndTravelled="south" automapWays="s,d,east,1,e;e,d,south,1,s" automapWaysFor="|||East|South" ZOrder="0">
+			<dock index="0" id="1" port="e" />
+			<dock index="1" id="3" port="s" />
+		</line>
+		<room id="7" stableId="eb28f302-ca2e-403c-b4a8-bfc66055babe" name="Patio" subtitle="" x="-864" y="1344" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is a large fieldstone patio spanning the entire width of the back of the house. In the daytime you can look out onto Aunt Hildegarde's beautiful garden, said to be the envy of the Malibu colony. This is where Uncle Buddy and Aunt Hildegarde would often entertain." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>orange punch card</objects>
+		</room>
+		<line id="9" name="" description="" automapStartTravelled="west" automapEndTravelled="east" ZOrder="0">
+			<dock index="0" id="3" port="w" />
+			<dock index="1" id="7" port="e" />
+		</line>
+		<room id="2" stableId="d2f4ebbd-9076-4be3-a412-3ccecc3329e7" name="Front Porch" subtitle="" x="-864" y="1536" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're standing on the front porch of the house. Next to the front door is a regulation mailbox endorsed by Buck Palace. Beneath the mailbox is a doorbell once rung by Sonny Tufts. To the south is a walkway." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects at="n" placed="yes" custom="yes" customRight="52" customDown="45">mailbox|- The Status Line|- yellowed piece of paper|- business card</objects>
+		</room>
+		<line id="10" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="1" port="n" />
+			<dock index="1" id="2" port="s" />
+		</line>
+		<room id="4" stableId="7870298a-34b4-4f47-b9ab-fcbcf79cbd3f" name="Southwest Junction" subtitle="" x="-1152" y="1344" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is the southwestern corner of a large backyard whose main feature is an elaborate garden. The stone walkway splits in three directions here: north, along the perimeter of the garden; south, around the side of the house; and east, where the walkway ends at the foot of a couple of steps." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="11" name="" description="" automapStartTravelled="west" automapEndTravelled="south" automapWays="s,d,west,1,w;e,d,south,1,s" automapWaysFor="|||West|South" ZOrder="0">
+			<dock index="0" id="1" port="w" />
+			<dock index="1" id="4" port="s" />
+		</line>
+		<line id="13" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="4" port="e" />
+			<dock index="1" id="7" port="w" />
+		</line>
+		<room id="12" stableId="f9e631db-5882-4eef-9ecb-975a83e5f0dc" name="Northwest Junction" subtitle="" x="-1152" y="800" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="In this corner of the backyard you can make out the enormous hedge, which is part of the estate's hedge maze. The stone walkway splits in three directions here: north, along the dark and towering hedge; south, past the fragrant and inviting garden; and east, where the walkway cuts a straight and narrow path between the hedge and the garden." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="15" name="" description="" automapStartTravelled="north" automapEndTravelled="south" ZOrder="0">
+			<dock index="0" id="4" port="n" />
+			<dock index="1" id="12" port="s" />
+		</line>
+		<room id="17" stableId="caa9e4d8-f213-4939-85b9-87cbd269d820" name="Entrance to Hedge Maze" subtitle="" x="-864" y="800" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is the entrance to the hedge maze. Aunt Hildegarde told you never to go into the maze without the map, and of course you would go in anyway and she would have to come in and find you." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="18" name="" description="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="12" port="e" />
+			<dock index="1" id="17" port="w" />
+		</line>
+		<room id="19" stableId="5d4ae389-a01a-412f-ba19-2bc49c06349c" name="Northeast Junction" subtitle="" x="-576" y="800" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="In this corner of the backyard you can make out the enormous hedge, which is part of the estate's hedge maze. The stone walkway splits in three directions here: north, along the dark and towering hedge; south, past the fragrant and inviting garden; and west, where the walkway cuts a straight and narrow path between the hedge and the garden. A slightly worn path in the grass heads east." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="20" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="17" port="e" />
+			<dock index="1" id="19" port="w" />
+		</line>
+		<line id="22" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="19" port="s" />
+			<dock index="1" id="3" port="n" />
+		</line>
+		<room id="6" stableId="4f84540c-ab13-459c-a54b-215b04b8d5a1" name="Cannon Emplacement" subtitle="" x="-864" y="480" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is a cannon emplacement complete with a Civil War-style cannon and a neatly stacked pyramid of cannon balls. During the day this area affords a spectacular view of the coastline. Stone walkways lead east and west, and a steep path leads down." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="16" name="" description="" automapStartTravelled="north" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="12" port="n" />
+			<dock index="1" id="6" port="w" />
+		</line>
+		<line id="24" name="" description="" automapStartTravelled="east" automapEndTravelled="north" ZOrder="0">
+			<dock index="0" id="6" port="e" />
+			<dock index="1" id="19" port="n" />
+		</line>
+		<room id="21" stableId="feae113d-f9fd-4f02-a1e9-c1e25aa7dfa5" name="Cliff" subtitle="" x="-864" y="352" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This cliff affords the same spectacular view as from the cannon emplacement above. Far below you and stretching east, are the white sands of a beach, illuminated by the moon's glow. You can hear the faint sound of waves lapping at the shore. Nearby in the ground is a closed hatch." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects placed="yes" custom="yes" customRight="30" customDown="3">ladder|hatch</objects>
+		</room>
+		<line id="25" name="" description="" startText="north / down" automapStartTravelled="down north" automapEndTravelled="up south" endText="south / up" ZOrder="0">
+			<dock index="0" id="6" port="n" />
+			<dock index="1" id="21" port="s" />
+		</line>
+		<room id="23" stableId="7779aa7d-08f3-41af-a1ec-bfa79fd5477d" name="Top Landing" subtitle="" x="-384" y="800" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is a rickety landing at the top of a long flight of old, wooden stairs leading down to the beach far below. You and Cousin Herman would race down these stairs in the summertime to see who would get to the water first. Usually Cousin Herman would trip you and win. A path in the grass leads west." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="26" name="" description="" automapStartTravelled="east" automapEndTravelled="west" ZOrder="0">
+			<dock index="0" id="19" port="e" />
+			<dock index="1" id="23" port="w" />
+		</line>
+		<room id="27" stableId="eccd9d02-3a3f-40a8-ba35-ff4ce45faa2a" name="Middle of Beach Stairs" subtitle="" x="-384" y="672" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're about halfway down the steep staircase, which creaks under your weight. There are several steps missing here. It's quite a gap: probably more than you could jump across. On the other side of the gap, the stairs continue down. Climbing up the stairs returns to the landing." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="29" name="" description="" startText="north / down" automapStartTravelled="down north" automapEndTravelled="up south" endText="south / up" ZOrder="0">
+			<dock index="0" id="23" port="n" />
+			<dock index="1" id="27" port="s" />
+		</line>
+		<room id="14" stableId="ddefde15-59dc-477a-af2e-021c201a7400" name="Garden, North" subtitle="" x="-864" y="960" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in the orchid section of the garden. Tender orchid petals of every color surround a small pond here. The stone walkway leads north, southeast and southwest." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="28" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="17" port="s" />
+			<dock index="1" id="14" port="n" />
+		</line>
+		<room id="30" stableId="fcc584be-ddea-4bab-9f74-aab679ed78d6" name="Garden, East" subtitle="" x="-704" y="1088" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in the overpoweringly fragrant rose bush section of the garden. As you admire the roses you notice one somewhat sickly rose bush. Something about the sight of this particular rose bush makes you feel a bit queasy. The stone walkway leads northwest and southwest." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="31" name="" description="" automapStartTravelled="southeast" automapEndTravelled="northwest" ZOrder="0">
+			<dock index="0" id="14" port="se" />
+			<dock index="1" id="30" port="nw" />
+		</line>
+		<room id="33" stableId="4b2adcd8-607d-492b-81bb-c6e248cb4d79" name="Garden, South" subtitle="" x="-864" y="1216" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're standing on a stone walkway in Aunt Hildegarde's much envied garden where she would spend hours tending to her flowers, bushes and trees. The garden was off limits to you as a child because of an incident one summer when you and Cousin Herman were playing in the garden. You suggested pretending to be wild African animals and climbed a tree and began to screech as if a baboon while Cousin Herman ran off toward the roses shouting something about being a rhinoceros." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="36" name="" description="" automapStartTravelled="southwest" automapEndTravelled="northeast" ZOrder="0">
+			<dock index="0" id="30" port="sw" />
+			<dock index="1" id="33" port="ne" />
+		</line>
+		<room id="37" stableId="2b8308f0-a8bb-4cc8-88a8-33ef066aba0a" name="Garden, West" subtitle="" x="-1024" y="1088" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're standing on a stone walkway in the tulip section of the garden. The walkway leads northeast and southeast." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects at="e" placed="yes" custom="yes" customRight="-93" customDown="42">small shovel</objects>
+		</room>
+		<line id="38" name="" description="" automapStartTravelled="northwest" automapEndTravelled="southeast" automapWays="s,d,northwest,1,nw;e,d,southeast,1,se" automapWaysFor="|||NorthWest|SouthEast" ZOrder="0">
+			<dock index="0" id="33" port="nw" />
+			<dock index="1" id="37" port="se" />
+		</line>
+		<line id="39" name="" description="" automapStartTravelled="northeast" automapEndTravelled="southwest" automapWays="s,d,northeast,1,ne;e,d,southwest,1,sw" automapWaysFor="|||NorthEast|SouthWest" ZOrder="0">
+			<dock index="0" id="37" port="ne" />
+			<dock index="1" id="14" port="sw" />
+		</line>
+		<line id="32" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="33" port="s" />
+			<dock index="1" id="7" port="n" />
+		</line>
+		<room id="8" stableId="de28a405-431f-46d0-82b6-2a5e5a444eed" name="Hedge Maze" subtitle="" x="-864" y="672" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a hedge maze of astonishing complexity. Paths lead north, south, east and west." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="34" name="" description="" automapStartTravelled="north" automapEndTravelled="south" ZOrder="0">
+			<dock index="0" id="17" port="n" />
+			<dock index="1" id="8" port="s" />
+		</line>
+		<line id="35" name="" description="" ZOrder="0">
+			<dock index="0" id="8" port="n" />
+			<dock index="1" id="8" port="n" />
+		</line>
+		<line id="41" name="" description="" ZOrder="0">
+			<dock index="0" id="8" port="e" />
+			<dock index="1" id="8" port="e" />
+		</line>
+		<line id="42" name="" description="" ZOrder="0">
+			<dock index="0" id="8" port="w" />
+			<dock index="1" id="8" port="w" />
+		</line>
+		<room id="40" stableId="7673bf55-ed4b-4f66-b268-c81c78793019" name="Foyer" subtitle="" x="864" y="896" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is the elegant foyer, covered in rich mahogany paneling. Your footsteps echo sharply in this large, hollow space. A broad, graceful staircase sweeps upstairs. Pillared archways beckon you east, west and north. The front door to the south is open. There is a coat closet by the front door. The door to the closet is closed." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="43" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" split="yes" ZOrder="0">
+			<dock index="0" id="2" port="n" />
+			<dock index="1" id="40" port="s" />
+		</line>
+		<line id="44" name="" description="" automapWays="s,d,north,0,n" automapWaysFor="|||North|" ZOrder="0">
+			<dock index="0" id="40" port="n" />
+			<dock index="1" id="40" port="n" />
+		</line>
+		<line id="45" name="" description="" automapWays="s,d,east,0,e" automapWaysFor="|||East|" ZOrder="0">
+			<dock index="0" id="40" port="e" />
+			<dock index="1" id="40" port="e" />
+		</line>
+		<room id="46" stableId="35c0ee81-550e-4112-8ef2-c5738860f88f" name="Living Room" subtitle="" x="672" y="896" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is the living room where Uncle Buddy and Aunt Hildegarde used to spend their evenings. Most of the west wall is covered by a grand stone fireplace with a mantle over it. A long sofa, several cushy chairs and a telephone fill the room. Most of the hardwood floor is covered by a monstrous Persian rug. A doorway leads north and an archway exits to the east." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="47" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="40" port="w" />
+			<dock index="1" id="46" port="e" />
+		</line>
+		<room id="50" stableId="20885901-0bbe-4f72-bfd2-51e721d32275" name="Closet" subtitle="Ground Floor" x="1024" y="1216" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" moves="yes" description="You're in a small closet. Mounted at an angle on the back wall of the closet are three coat pegs. To the left of the first peg there is a hole the size of a peg. To the right of the third peg there is a peg which has been sawed-off, flush with the wall. The door to the north is open." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="51" name="" description="" startText="in / enter closet" automapStartTravelled="in" automapEndTravelled="out north" automapWays="s,d,in,1,in;e,d,out,1,out;s,c,,1,enter%20closet;e,d,north,1,n" automapWaysFor="in|enter closet|n / out||" endText="n / out" ZOrder="0">
+			<dock index="0" id="40" port="sse" />
+			<dock index="1" id="50" port="n" />
+		</line>
+		<room id="52" stableId="c1a41274-a83d-496a-a3ee-f5f0abe9ca49" name="Closet" subtitle="Floor -1" x="479.99997" y="1216" w="96" h="64" region="NoRegion" referenceRoom="50" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're in a small closet. Mounted at an angle on the back wall of the closet are three coat pegs. To the left of the first peg there is a hole the size of a peg. To the right of the third peg there is a peg which has been sawed-off, flush with the wall. The door to the north is open." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="53" name="" description="" style="dashed" startText="Pull first peg" automapCommand="open door" automapWays="s,c,,1,open%20door" automapWaysFor="|open door|||" endText="Pull second peg" ZOrder="0">
+			<dock index="0" id="50" port="w" />
+			<dock index="1" id="52" port="e" />
+		</line>
+		<room id="54" stableId="2a6976a8-790a-43d4-a90d-7c583b007119" name="Cellar" subtitle="" x="479.99997" y="1088" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a musty cellar. One of Uncle Buddy's old movie props, a huge, over- teched computer is here. There is an open closet door to the south. A staircase leads up." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="55" name="" description="" startText="n / out" automapStartTravelled="out north" automapEndTravelled="south" automapWays="s,d,out,1,out;e,d,south,1,s;s,d,north,1,n" automapWaysFor="n / out||||South" ZOrder="0">
+			<dock index="0" id="52" port="n" />
+			<dock index="1" id="54" port="s" />
+		</line>
+		<room id="56" stableId="ca0620b5-3449-467b-87a5-d7b3b68eef9e" name="Kitchen" subtitle="" x="479.99997" y="768" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is Aunt Hildegarde's kitchen. It is a fairly large, sterile area with several pieces of commercial-grade equipment to handle the vast amount of food needed for Hollywood parties. It is not exactly the kind of homey kitchen most people's aunts have. The whole family remembers the Christmas everyone received fruit cakes with serial numbers on them. A doorway leads to the east and stairs lead down from here." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="57" name="" description="" startText="u" automapStartTravelled="up" automapEndTravelled="down" automapWays="s,d,up,1,u;e,d,down,1,d" automapWaysFor="u||d||" endText="d" ZOrder="0">
+			<dock index="0" id="54" port="nnw" />
+			<dock index="1" id="56" port="s" />
+		</line>
+		<room id="58" stableId="2137f686-c148-4b53-ae23-eeece6235fb5" name="Dining Room" subtitle="" x="672" y="768" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is the dining room with a long, walnut table and seating for twelve. You remember more than one evening falling asleep at the table while Uncle Buddy rambled on about the way Hollywood used to be. A large picture window looks out on the garden. Doorways lead east, west and south." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="59" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="56" port="e" />
+			<dock index="1" id="58" port="w" />
+		</line>
+		<line id="61" name="" description="" automapWays="s,d,east,0,e" automapWaysFor="|||East|" ZOrder="0">
+			<dock index="0" id="58" port="e" />
+			<dock index="1" id="58" port="e" />
+		</line>
+		<line id="60" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="58" port="s" />
+			<dock index="1" id="46" port="n" />
+		</line>
+		<room id="48" stableId="7e1ce5df-9319-4b12-b06e-b574a4818f54" name="Fireplace" subtitle="" x="128" y="896" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="The fireplace is finely crafted masonry, but has long been neglected. The mortar is crumbling in a number of places. One brick, about waist high, seems particularly loose. The fireplace opens to the east." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>brick|indigo punch card</objects>
+		</room>
+		<line id="49" name="" description="" startText="enter fireplace" automapStartTravelled="command" automapEndTravelled="east" automapWays="s,c,,1,enter%20fireplace;e,d,east,1,e" automapWaysFor="enter fireplace||||East" ZOrder="0">
+			<dock index="0" id="46" port="w" />
+			<dock index="1" id="48" port="e" />
+		</line>
+		<room id="62" stableId="946856d1-e285-4538-b808-ca20b037e551" name="In the Chimney" subtitle="" x="128" y="768" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're in the chimney, above the fireplace. You can see a couple of holes here in the chimney where bricks used to be. The chimney continues upward and the fireplace is below." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="63" name="" description="" startText="u" automapStartTravelled="up" automapEndTravelled="down" automapWays="s,d,up,1,u;e,d,down,1,d" automapWaysFor="u||d||" endText="d" ZOrder="0">
+			<dock index="0" id="48" port="nnw" />
+			<dock index="1" id="62" port="s" />
+		</line>
+		<room id="64" stableId="af3f4a6e-4888-4a0b-af6c-d47d45bcd9b5" name="In the Chimney" subtitle="" x="128" y="640" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're inside the chimney. You can see a couple of holes here in the chimney where bricks used to be. The chimney continues upward and downward." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="65" name="" description="" startText="u" automapStartTravelled="up" automapEndTravelled="down" automapWays="s,d,up,1,u;e,d,down,1,d" automapWaysFor="u||d||" endText="d" ZOrder="0">
+			<dock index="0" id="62" port="nnw" />
+			<dock index="1" id="64" port="s" />
+		</line>
+		<room id="66" stableId="e54245d1-a939-424f-bb61-21ae7aa3f1a3" name="West End of Roof" subtitle="" x="128" y="512" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're doing your best to keep your balance here on the roof. During a fierce storm you can see Linda Ronstadt's house wash into the ocean from here. A chimney juts up from the roof here and there is another chimney to the east, near the end of the roof." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="67" name="" description="" startText="u" automapStartTravelled="up" automapEndTravelled="down" automapWays="s,d,up,1,u;e,d,down,1,d" automapWaysFor="u||d||" endText="d" ZOrder="0">
+			<dock index="0" id="64" port="nnw" />
+			<dock index="1" id="66" port="ssw" />
+		</line>
+		<room id="68" stableId="f9dac3d6-195a-49f2-ab35-7e29cb9231b5" name="East End of Roof" subtitle="" x="288.00006" y="512" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is the east end of the roof. A chimney juts up from the roof here and there is another chimney off to the west, near the end of the roof." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="69" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="66" port="e" />
+			<dock index="1" id="68" port="w" />
+		</line>
+		<room id="70" stableId="534a489b-0a9f-464e-8ee5-54f14cfd2fff" name="In the Chimney" subtitle="" x="288.00006" y="640" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="no" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're standing in the chimney. There are a couple of holes here in the chimney where bricks used to be. This chimney doesn't lead any further down, only up." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>penguin</objects>
+		</room>
+		<line id="71" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="up" automapWays="s,d,down,1,d;e,d,up,1,u" automapWaysFor="d||u||" endText="u" ZOrder="0">
+			<dock index="0" id="68" port="ssw" />
+			<dock index="1" id="70" port="nnw" />
+		</line>
+	</map>
+	<settings>
+		<colors>
+			<canvas>White</canvas>
+			<border>MidnightBlue</border>
+			<line>MidnightBlue</line>
+			<selectedLine>Gold</selectedLine>
+			<hoverLine>DarkOrange</hoverLine>
+			<subTitle>MidnightBlue</subTitle>
+			<smallText>MidnightBlue</smallText>
+			<lineText>MidnightBlue</lineText>
+			<grid>#E7E7E7</grid>
+			<startRoom>GreenYellow</startRoom>
+			<endRoom>Red</endRoom>
+		</colors>
+		<regions>
+			<NoRegion Name="NoRegion" TextColor="Blue">White</NoRegion>
+		</regions>
+		<fonts>
+			<room size="13">Arial</room>
+			<object size="11">Arial</object>
+			<subTitle size="9">Arial</subTitle>
+			<line size="9">Arial</line>
+		</fonts>
+		<grid>
+			<snapTo>yes</snapTo>
+			<visible>yes</visible>
+			<showOrigin>yes</showOrigin>
+			<size>32</size>
+		</grid>
+		<lines>
+			<width>2</width>
+			<arrowSize>12</arrowSize>
+			<textOffset>4</textOffset>
+			<handDrawn>no</handDrawn>
+			<labelDiagonalExits>yes</labelDiagonalExits>
+			<labelCompassExits>no</labelCompassExits>
+		</lines>
+		<rooms>
+			<darknessStripeSize>24</darknessStripeSize>
+			<objectListOffset>4</objectListOffset>
+			<defaultObjectsAt>s</defaultObjectsAt>
+			<defaultObjectsInside>no</defaultObjectsInside>
+			<connectionStalkLength>32</connectionStalkLength>
+			<preferredDistanceBetweenRooms>64</preferredDistanceBetweenRooms>
+			<defaultRoomName>Cave</defaultRoomName>
+			<defaultRoomShape>0</defaultRoomShape>
+		</rooms>
+		<ui>
+			<handleSize>12</handleSize>
+			<snapToElementSize>16</snapToElementSize>
+		</ui>
+		<margins>
+			<documentSpecific>no</documentSpecific>
+			<horizontal>0</horizontal>
+			<vertical>0</vertical>
+			<wrapDashes>no</wrapDashes>
+		</margins>
+		<keypadNavigation>
+			<creationModifier>control</creationModifier>
+			<unexploredModifier>alt</unexploredModifier>
+		</keypadNavigation>
+	</settings>
+</trizbort>

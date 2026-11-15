@@ -56,6 +56,31 @@ public sealed partial class EditorSession
     Viewport.GlideTo(Viewport.TargetOrigin + new Vector(dx, dy));
   }
 
+  /// <summary>
+  ///   Keeps automap's room near the middle of the view, where its exits and the rooms around it show (and clear of
+  ///   the minimap in the corner): once any of it is outside the middle half of the view, the map glides to centre it.
+  /// </summary>
+  public void KeepInMiddle(Element element)
+  {
+    if (element == null) return;
+
+    var bounds = element is Room room ? room.InnerBounds : element.UnionBoundsWith(Rect.Empty, false);
+    if (bounds == Rect.Empty) return;
+
+    // judged from where the view is going, when it's on its way somewhere
+    var visible = Viewport.VisibleWorldBounds;
+    var shift = Viewport.TargetOrigin - Viewport.Origin;
+    var middle = visible.Center + shift;
+    var halfWidth = visible.Width / 4;
+    var halfHeight = visible.Height / 4;
+    var centre = bounds.Center;
+    if (Math.Abs(centre.X - middle.X) + bounds.Width / 2 <= halfWidth &&
+        Math.Abs(centre.Y - middle.Y) + bounds.Height / 2 <= halfHeight)
+      return;
+
+    Viewport.GlideTo(centre);
+  }
+
   private static float PanToFit(float low, float high, float visibleLow, float visibleHigh, float margin)
   {
     // too big to fit with a margin: centre it

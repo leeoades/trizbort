@@ -130,7 +130,8 @@ public static class AppCommands
             MenuPath = "Edit",
             Group = "4-settings",
             Gestures = new[] { new KeyGesture(InputKey.OemComma, primary | ModifierKeys.Shift) },
-            ContextTargets = ContextTargets.Any,
+            // right-click the empty map for these: a room's or join's menu is about the room or join
+            ContextTargets = ContextTargets.Empty,
             ContextOrder = 90, ContextGroup = "9-settings",
             ShowInToolbar = true, ToolbarOrder = 120, ToolbarGroup = "4-tools", IconKey = "IconSettings",
             ExecuteAsyncFunc = Run(() => vm!.ShowMapSettingsAsync())
@@ -141,7 +142,7 @@ public static class AppCommands
             Title = "Map _Theme...",
             MenuPath = "Edit",
             Group = "4-settings",
-            ContextTargets = ContextTargets.Any,
+            ContextTargets = ContextTargets.Empty,
             ContextOrder = 91, ContextGroup = "9-settings",
             ExecuteAsyncFunc = Run(() => vm!.ShowMapThemeAsync())
         });
@@ -152,8 +153,7 @@ public static class AppCommands
             MenuPath = "Edit",
             Group = "4-settings",
             Gestures = new[] { new KeyGesture(InputKey.OemComma, primary) },
-            ContextTargets = ContextTargets.Any,
-            ContextOrder = 92, ContextGroup = "9-settings",
+            // not on any right-click menu: it's about the app, not the map (Edit menu, or Ctrl+,)
             ExecuteAsyncFunc = Run(() => vm!.ShowAppSettingsAsync())
         });
 

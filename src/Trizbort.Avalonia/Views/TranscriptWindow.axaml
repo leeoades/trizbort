@@ -47,8 +47,8 @@
             </Grid>
         </Border>
         <!-- read-only but selectable, so text can be copied into a room's description or a label -->
+        <!-- the text, and the cursor after it when paused before a command, are set in code -->
         <TextBox x:Name="TranscriptBox"
-                 Text="{Binding AutomapTranscriptText, Mode=OneWay}"
                  IsReadOnly="True"
                  AcceptsReturn="True"
                  TextWrapping="Wrap"

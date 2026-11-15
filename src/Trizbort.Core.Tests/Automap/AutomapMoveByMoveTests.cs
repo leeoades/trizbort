@@ -83,6 +83,44 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Test]
+  public async Task MoveByMove_AtTheEnd_WhenTheGameGoesOn_SaysSo_AndPlayToEndFollowsItLive()
+  {
+    // a new game, move by move left on: the player types look in the game
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, ">look\nHall\nA grand hall. A door leads north.\n\n>");
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    settings.MoveByMove = true;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.NextCommand == "look");
+      engine.GameWentOn.ShouldBeFalse();
+      engine.PlayNextMove();
+      await WaitFor(() => engine.Status == "Automapping is waiting for more text.");
+
+      File.AppendAllText(path, "north\nKitchen\nA small kitchen.\n\n>");
+      await WaitFor(() => engine.NextCommand == "north");
+      engine.GameWentOn.ShouldBeTrue();
+      engine.Status.ShouldContain("The game has gone on");
+      Rooms().ShouldBe(new[] { "Hall" });
+
+      engine.PlayToEnd();
+      await WaitFor(() => Rooms().Count == 2);
+      engine.GameWentOn.ShouldBeFalse();
+      engine.MoveByMove.ShouldBeFalse();
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
   private static List<string> Stubs() =>
     Project.Current.Elements.OfType<Connection>()
       .Select(connection => (source: connection.GetSourceRoom(out var from), target: connection.GetTargetRoom(out var to), from, to))
@@ -344,6 +382,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
   private sealed class SplitPrompts : IEditorPrompts
   {
     public string AskedAbout;
+    public AutomapSameDirectionResult Answer = AutomapSameDirectionResult.Split;
 
     public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, System.Threading.CancellationToken token = default) =>
       Task.FromResult(AutomapSameDirectionResult.KeepRoom1);
@@ -351,11 +390,150 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room from, Room existing, string newRoomName, System.Threading.CancellationToken token = default)
     {
       AskedAbout = from?.Name;
-      return Task.FromResult(AutomapSameDirectionResult.Split);
+      return Task.FromResult(Answer);
     }
 
     public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, System.Threading.CancellationToken token = default) =>
       Task.FromResult(RoomDisambiguation.Choose(candidates[0]));
+  }
+
+  [Test]
+  public async Task ADifferentRoomYouJustCameInto_TakesTheWayIn_AndTheNewRoomJoinsIt()
+  {
+    // two maze rooms alike: east from the hall looked like the maze north of it, but its south leads to a pit
+    var prompts = new SplitPrompts { Answer = AutomapSameDirectionResult.DifferentRoom };
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "Hall", "A grand hall.", "",
+      ">north", "Maze", "Twisty little passages.", "",
+      ">south", "Hall", "",
+      ">east", "Maze", "Twisty little passages.", "",
+      ">south", "Pit", "A deep pit.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    prompts.AskedAbout.ShouldBe("Maze");
+    Rooms().ShouldBe(new[] { "Hall", "Maze", "Maze (2)", "Pit" });
+    Joins().ShouldContain("Hall -> Maze");
+    Joins().ShouldContain("Hall -> Maze (2)");
+    Joins().ShouldContain("Maze (2) -> Pit");
+    Joins().ShouldNotContain(join => join.StartsWith("Maze -> Pit") || join.StartsWith("Maze -> Maze (2)"));
+    var hallToMaze = Project.Current.Elements.OfType<Connection>().Single(c =>
+      c.GetSourceRoom()?.Name == "Hall" && c.GetTargetRoom()?.Name == "Maze");
+    JoinWays.Of(hallToMaze).ShouldNotContain(way => way.IsDirection && way.Direction == MappableDirection.East);
+  }
+
+  [Test]
+  public async Task TheSamePlaceAtDifferentTimes_KeepsBothJoins_WithTheRoomsSideBySide()
+  {
+    // Hollywood Hijinx: south from the cellar is the shaft bottom, or the closet once it has come down
+    var prompts = new SplitPrompts { Answer = AutomapSameDirectionResult.SamePlace };
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, prompts);
+    var lines = new[]
+    {
+      ">look", "Cellar", "A musty cellar.", "",
+      ">south", "Shaft Bottom", "The bottom of a shaft.", "",
+      ">north", "Cellar", "",
+      ">south", "Closet", "A small closet.", "",
+      ">"
+    };
+
+    await RunToEnd(engine, lines, lines.Length);
+
+    prompts.AskedAbout.ShouldBe("Cellar");
+    Joins().ShouldContain("Cellar -> Shaft Bottom");
+    Joins().ShouldContain("Cellar -> Closet");
+    var rooms = Project.Current.Elements.OfType<Room>().ToList();
+    var shaft = rooms.Single(room => room.Name == "Shaft Bottom");
+    var closet = rooms.Single(room => room.Name == "Closet");
+    closet.Position.Y.ShouldBe(shaft.Position.Y);
+    closet.Position.X.ShouldBeGreaterThan(shaft.Position.X);
+    (closet.Position.X - shaft.Position.X).ShouldBeLessThan(shaft.Width * 2);
+  }
+
+  [Test]
+  public async Task ThisIsADifferentRoom_AfterAWayTakenForALoop_PutsTheNewRoomThatWay()
+  {
+    // Hollywood Hijinx: up the chimney to another "In the Chimney", which automap took for the same one (a loop)
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Fireplace", "The fireplace opens to the east.", "",
+      ">up", "In the Chimney", "You're in the chimney, above the fireplace.", "",
+      ">up", "In the Chimney", "",
+      ">"
+    });
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count >= 11);
+      await Task.Delay(200);
+      var chimney = Project.Current.Elements.OfType<Room>().Single(room => room.Name == "In the Chimney");
+      Project.Current.Elements.OfType<Connection>()
+        .ShouldContain(c => c.GetSourceRoom() == chimney && c.GetTargetRoom() == chimney);
+      engine.CanSplitCurrentRoom.ShouldBeTrue();
+
+      (await engine.SplitCurrentRoomAsync()).ShouldBeTrue();
+
+      var upper = engine.CurrentRoom;
+      upper.Name.ShouldBe("In the Chimney (2)");
+      upper.Position.Y.ShouldBeLessThan(chimney.Position.Y); // up, above it
+      Joins().ShouldContain("In the Chimney -> In the Chimney (2)");
+      Project.Current.Elements.OfType<Connection>()
+        .ShouldNotContain(c => c.GetSourceRoom() == chimney && c.GetTargetRoom() == chimney);
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
+  public async Task ThisIsADifferentRoom_SplitsTheRoomYouAreIn_OffTheWayYouCameIn()
+  {
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Hall", "A grand hall.", "",
+      ">north", "Maze", "Twisty little passages.", "",
+      ">south", "Hall", "",
+      ">east", "Maze", "Twisty little passages.", "",
+      ">"
+    });
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count >= 13);
+      await Task.Delay(200);
+      engine.CurrentRoom.Name.ShouldBe("Maze");
+      engine.CanSplitCurrentRoom.ShouldBeTrue();
+
+      (await engine.SplitCurrentRoomAsync()).ShouldBeTrue();
+
+      engine.CurrentRoom.Name.ShouldBe("Maze (2)");
+      Rooms().ShouldBe(new[] { "Hall", "Maze", "Maze (2)" });
+      Joins().ShouldContain("Hall -> Maze");
+      Joins().ShouldContain("Hall -> Maze (2)");
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
   }
 
   [Test]
@@ -624,6 +802,56 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
 
       engine.Stop();
       await run;
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  [Test]
+  public async Task TheMoveCount_SaysWhereAutomapIsInTheTranscript()
+  {
+    var path = Path.GetTempFileName();
+    File.WriteAllLines(path, new[]
+    {
+      ">look", "Hall", "A grand hall.", "",
+      ">north", "Kitchen", "A small kitchen.", "",
+      ">south", "Hall", "",
+      ">"
+    });
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count >= 11);
+      await Task.Delay(200);
+
+      // at the end: nothing to play
+      engine.MoveCount().ShouldBe((3, 3));
+      engine.HasNextMove.ShouldBeFalse();
+
+      engine.GoBack();
+      await WaitFor(() => engine.NextCommand == "south");
+      engine.MoveCount().ShouldBe((2, 3));
+      engine.HasNextMove.ShouldBeTrue();
+      engine.CanGoBack.ShouldBeTrue();
+
+      // the game goes on: the count grows
+      File.WriteAllLines(path, new[]
+      {
+        ">look", "Hall", "A grand hall.", "",
+        ">north", "Kitchen", "A small kitchen.", "",
+        ">south", "Hall", "",
+        ">west", "Pantry", "A pantry.", "",
+        ">"
+      });
+      engine.MoveCount().Total.ShouldBe(4);
     }
     finally
     {

@@ -22,6 +22,14 @@ public class CanvasRenderBenchmark
     // These numbers are CPU rasterization into RenderTargetBitmap; they do not
     // prove (or disprove) 60 FPS on a GPU/compositor path.
     private const double MaxAverageFrameMs = 45.0;
+
+    // The build server's shared machines are slower and vary from run to run (45 to 70 ms for the same code), so
+    // there the time only catches a gross slowdown; allocations don't vary and are checked the same everywhere.
+    private const double MaxAverageFrameMsOnBuildServer = 150.0;
+
+    private static bool OnBuildServer =>
+        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")) ||
+        string.Equals(Environment.GetEnvironmentVariable("CI"), "true", StringComparison.OrdinalIgnoreCase);
     private const double MaxAverageAllocKb = 8192.0;
 
     [AvaloniaTest]
@@ -114,8 +122,10 @@ public class CanvasRenderBenchmark
             TestContext.Out.WriteLine($"Average allocations: {avgAllocKb:F1} KB / frame");
             TestContext.Out.WriteLine($"Headless equivalent: {1000.0 / avgTimeMs:F1} FPS — 60 FPS on GPU/compositor is unverified by this test");
 
-            Assert.That(avgTimeMs, Is.LessThan(MaxAverageFrameMs),
-                $"Headless CPU render averaged {avgTimeMs:F2} ms/frame; threshold is ~2x the ~21 ms fitted-view baseline.");
+            var maxFrameMs = OnBuildServer ? MaxAverageFrameMsOnBuildServer : MaxAverageFrameMs;
+            Assert.That(avgTimeMs, Is.LessThan(maxFrameMs),
+                $"Headless CPU render averaged {avgTimeMs:F2} ms/frame; threshold is {maxFrameMs} ms" +
+                (OnBuildServer ? " on the build server." : ", ~2x the ~21 ms fitted-view baseline."));
             Assert.That(avgAllocKb, Is.LessThan(MaxAverageAllocKb),
                 $"Headless CPU render averaged {avgAllocKb:F0} KB/frame; threshold is ~2x the ~4 MB fitted-view baseline.");
         }
