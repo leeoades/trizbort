@@ -36,6 +36,7 @@ public class AutomapArrivalTests : IsolatedProjectTests
       .Where(x => x.source != null && x.source == x.target && x.from == x.to)
       .Select(x => x.source.Name + " " + x.from).OrderBy(name => name).ToList();
 
+  [Category("InternalOnly")]
   [TestCase(true)]
   [TestCase(false)]
   public async Task GoingWestToANewRoom_ArrivesAtItsEastSide_TakenToBeTheWayBack(bool assumeTwoWay)
@@ -171,6 +172,7 @@ public class AutomapArrivalTests : IsolatedProjectTests
     Trizbort.Automap.Automap.IsDarkness(heading).ShouldBe(dark);
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task SomewhereDark_IsMappedWhenItCanBeSeen_AsReachedTheWayYouCameIn()
   {
