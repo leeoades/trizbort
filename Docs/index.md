@@ -72,6 +72,7 @@ The version of this guide for 1.5+ may be found at [Jason Lautzenheiser's Trizbo
     - [Starting Automapping](#help_automap_start)
     - [Automapping Options](#help_automap_options)
     - [Whilst Automapping](#help_automap_mid)
+    - [Directions](#help_automap_directions)
     - [Disambiguating Between Rooms](#help_automap_disambig)
     - [How It Works (or: When It Doesn't)](#help_automap_how)
       - [Room Names](#help_automap_roomname)
@@ -960,6 +961,17 @@ Trizbort may say various things during automapping, including:
 
 - *Automapping is processing the transcript.* Trizbort is hard at work going through the transcript. As Trizbort finds mention of rooms and directions of travel in the transcript, it will add rooms and connections to the canvas. You can still interact with the canvas, stop automapping or exit Trizbort whilst this is going on.
 - *Automapping is waiting for more text.* Trizbort has reached the end of the transcript. If the interpreter is still running and scripting is still on, then as you take actions in game the transcript will grow, and Trizbort will notice and continue automapping. Some interpreters don't update the transcript as frequently as others, in which case Trizbort may appear to be a few turns behind the game.
+
+<a name="help_automap_directions"></a>
+
+#### Directions
+
+Trizbort can give you directions from one room to another, like a satnav: the commands to type, following the joins on the map. It only knows what the map shows, so it can't solve puzzles on the way.
+
+- **Navigate to Here** (a room's right-click menu, or **Project > Directions** for the selected room): while automapping, the directions start from where automap has you. The **Directions** panel opens beside the map with the commands to type, in order, and follows you as you play. Each step you take drops off the top; go another way and it reroutes from wherever you are; and it says when you've arrived. Without automapping, the directions start from the room you chose with **Navigate from Here...**.
+- **Navigate from Here...** chooses where the directions start; then choose **Navigate to Here** on where you want to go. **Go** works the directions out again, **Swap** gives them back the other way, and **From Where You Are** starts them from the room automap has you in.
+- Each step says which room it leads to; click it to see that room on the map. A way automap only assumed (the way back along a join, which nobody has gone yet) is marked as assumed, and the directions prefer ways you've been seen to go when there's a choice. **Copy Commands** copies the commands, one a line, to paste into the game.
+- When the map shows no way there (a one-way join, or a part of the map not yet joined to the rest), the panel says so.
 
 <a name="help_automap_disambig"></a>
 

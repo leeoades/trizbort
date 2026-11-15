@@ -30,6 +30,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Add Current Room** in the automap panel. When you cancel the question about a way that now leads somewhere new,
   and the room is new, automap still knows you're there: the panel shows "Room C (not on the map)", and Add Current
   Room puts it on the map beside the room you came from (not joined) and maps on from there.
+- **Directions**, like a satnav. Right-click a room and choose **Navigate to Here**: while automapping, a Directions
+  panel beside the map lists the commands to type to get there from where you are, following the joins on the map.
+  As you play, each step drops off the top; go another way and it reroutes; and it says when you've arrived, or that
+  the map shows no way there. **Navigate from Here...** chooses where to start instead, so you can get directions
+  without automapping. Ways automap only assumed are marked, and ways you've been are preferred. **Copy Commands**
+  copies them to paste into the game.
 
 ### Fixed
 

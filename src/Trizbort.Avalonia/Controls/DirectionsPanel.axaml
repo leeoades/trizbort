@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+             x:Class="Trizbort.Avalonia.Controls.DirectionsPanel"
+             x:DataType="vm:MainWindowViewModel">
+    <UserControl.Styles>
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Opacity" Value="0.7" />
+        </Style>
+        <Style Selector="TextBlock.small">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <!-- Directions (satnav): the commands that lead from one room to another along the map's joins. From where
+         automap has you, they follow you as you play. -->
+    <Border x:Name="PanelBorder" Width="240"
+            Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            BorderThickness="1,0,0,0">
+        <DockPanel>
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="12,10,12,8">
+                <TextBlock Text="Directions" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button Grid.Column="1" x:Name="CloseButton" Content="Close" Padding="12,3" HorizontalAlignment="Right"
+                        Command="{Binding CloseDirectionsCommand}" ToolTip.Tip="Close the directions" />
+            </Grid>
+
+            <StackPanel DockPanel.Dock="Top" Margin="12,0,12,8" Spacing="6">
+                <TextBlock Classes="section" Text="FROM" />
+                <TextBlock x:Name="FromName" Text="{Binding DirectionsFrom}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <Button x:Name="WhereYouAreButton" Content="From Where You Are"
+                        Command="{Binding DirectionsFromWhereYouAreCommand}"
+                        ToolTip.Tip="Start from the room automap has you in, and follow you as you play" />
+                <TextBlock Classes="section" Text="TO" Margin="0,4,0,0" />
+                <TextBlock x:Name="ToName" Text="{Binding DirectionsTo}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <Grid ColumnDefinitions="*,6,*" Margin="0,4,0,0">
+                    <Button x:Name="GoButton" Content="Go" Command="{Binding GoDirectionsCommand}"
+                            ToolTip.Tip="Work out the directions" />
+                    <Button Grid.Column="2" x:Name="SwapButton" Content="⇅ Swap" Command="{Binding SwapDirectionsCommand}"
+                            ToolTip.Tip="Directions back the other way" />
+                </Grid>
+                <TextBlock x:Name="Status" Text="{Binding DirectionsStatus}" FontSize="12" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel DockPanel.Dock="Bottom" Margin="12,8,12,10" Spacing="4">
+                <Button x:Name="CopyButton" Content="Copy Commands" Click="OnCopy"
+                        IsEnabled="{Binding HasDirectionsSteps}"
+                        ToolTip.Tip="Copy the commands, one a line, to paste into the game" />
+                <TextBlock Classes="small"
+                           Text="Follows the joins on the map: it can't solve puzzles. Click a step to see where it goes." />
+            </StackPanel>
+
+            <ListBox x:Name="Steps" Margin="8,0" ItemsSource="{Binding DirectionsSteps}"
+                     SelectionChanged="OnStepSelected" Background="Transparent">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DirectionStepItem">
+                        <StackPanel Spacing="1">
+                            <TextBlock Text="{Binding Text}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Where}" FontSize="11" Opacity="0.75" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+    </Border>
+</UserControl>
