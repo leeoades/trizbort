@@ -1,0 +1,13 @@
+current: Room E
+
+rooms:
+Room A (start)
+Room B
+Room E
+
+connections:
+Room A [east] <-> [west] Room B
+Room B [north] <-> [south] Room E
+
+natural joins: 2 of 2
+exact joins: 2 of 2

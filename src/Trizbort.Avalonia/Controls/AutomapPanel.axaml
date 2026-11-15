@@ -85,9 +85,15 @@
                             <TextBlock Grid.Column="1" x:Name="RoomName" Text="{Binding AutomapRoomName}"
                                        FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
                         </Grid>
-                        <Button x:Name="CentreButton" Content="Centre on Current Room"
-                                Command="{Binding GoToAutomapRoomCommand}"
-                                ToolTip.Tip="Select the room automap thinks you're in, and glide the map to it" />
+                        <StackPanel Spacing="6">
+                            <Button x:Name="CentreButton" Content="Centre on Current Room"
+                                    Command="{Binding GoToAutomapRoomCommand}"
+                                    ToolTip.Tip="Select the room automap thinks you're in, and glide the map to it" />
+                            <!-- the room you're in isn't on the map (you cancelled the question about it) -->
+                            <Button x:Name="AddRoomButton" Content="Add Current Room"
+                                    Command="{Binding AddAutomapRoomCommand}"
+                                    ToolTip.Tip="Put the room you're in on the map, beside the room you came from, and map on from there" />
+                        </StackPanel>
                         <TextBlock Classes="small"
                                    Text="Wrong room? Right-click the room you're in and choose Automap: I'm Here." />
                     </StackPanel>

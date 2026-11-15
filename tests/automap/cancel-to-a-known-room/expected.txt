@@ -1,0 +1,15 @@
+current: Room D
+
+rooms:
+Room A (start)
+Room B
+Room C
+Room D
+
+connections:
+Room A [east] <-> [west] Room B
+Room A [north] <-> [south] Room C
+Room C [west] <-> [east] Room D
+
+natural joins: 3 of 3
+exact joins: 3 of 3
