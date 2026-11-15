@@ -82,6 +82,13 @@ public partial class MainWindowViewModel
         foreach (var step in directions.Steps)
             DirectionsSteps.Add(new DirectionStepItem(number++, step.Command, step.To, step.Assumed));
         HasDirectionsSteps = DirectionsSteps.Count > 0;
+        // the route glows blue on the map while the directions are open
+        var glow = directions.IsOpen && directions.Steps.Count > 0 ? directions.Steps : null;
+        if (!ReferenceEquals(glow, Trizbort.Avalonia.Drawing.RouteGlow.Route))
+        {
+            Trizbort.Avalonia.Drawing.RouteGlow.Route = glow;
+            _commandService.InvalidateCanvas();
+        }
         if (_canGoDirections != directions.CanGo)
         {
             _canGoDirections = directions.CanGo;

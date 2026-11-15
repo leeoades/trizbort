@@ -9,10 +9,11 @@ using Trizbort.Domain.Misc;
 namespace Trizbort.Navigation;
 
 /// <summary>
-///   One step of a route: <see cref="Command" /> typed in <see cref="From" /> leads to <see cref="To" />.
-///   <see cref="Assumed" /> when automap only assumed the way (the way back of a join), and nobody has gone it.
+///   One step of a route: <see cref="Command" /> typed in <see cref="From" /> leads to <see cref="To" />, along
+///   <see cref="Join" />. <see cref="Assumed" /> when automap only assumed the way (the way back of a join), and nobody
+///   has gone it.
 /// </summary>
-public sealed record RouteStep(Room From, Room To, string Command, bool Assumed);
+public sealed record RouteStep(Room From, Room To, string Command, bool Assumed, Connection Join = null);
 
 /// <summary>
 ///   Satnav for the map: the shortest list of commands that leads from one room to another along the map's joins
@@ -99,7 +100,7 @@ public static class RouteFinder
         var stepCost = (assumed ? AssumedCost : SeenCost) +
                        way.Kind switch { JoinWayKind.Direction => 0, JoinWayKind.Command => 0.01, _ => 0.02 };
         if (!ways.TryGetValue(from, out var leaving)) ways[from] = leaving = new List<(RouteStep, double)>();
-        leaving.Add((new RouteStep(from, to, command, assumed), stepCost));
+        leaving.Add((new RouteStep(from, to, command, assumed, connection), stepCost));
       }
     }
 
