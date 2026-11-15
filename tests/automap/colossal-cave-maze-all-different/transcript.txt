@@ -1,0 +1,2015 @@
+Start of a transcript of
+ADVENTURE
+The Interactive Original
+By Will Crowther (1976) and Don Woods (1977)
+Reconstructed in three steps by:
+Donald Ekman, David M. Baggett (1993) and Graham Nelson (1994)
+[In memoriam Stephen Bishop (1820?-1857): GN]
+
+Release 9 / Serial number 060321 / Inform v6.30 Library 6/11 S
+Standard interpreter 1.1 (4F) / Library serial number 040227
+
+>look
+
+At End Of Road
+You are standing at the end of a road before a small brick building. Around you
+is a forest. A small stream flows out of the building and down a gully.
+
+>
+I beg your pardon?
+
+>look
+
+At End Of Road
+You are standing at the end of a road before a small brick building. Around you
+is a forest. A small stream flows out of the building and down a gully.
+
+>look
+
+At End Of Road
+You are standing at the end of a road before a small brick building. Around you
+is a forest. A small stream flows out of the building and down a gully.
+
+>look
+
+At End Of Road
+You are standing at the end of a road before a small brick building. Around you
+is a forest. A small stream flows out of the building and down a gully.
+
+>in
+
+Inside Building
+You are inside a building, a well house for a large spring.
+
+There are some keys on the ground here.
+
+There is tasty food here.
+
+There is a shiny brass lamp nearby.
+
+There is an empty bottle here.
+
+>get lamp
+Taken.
+
+>out
+
+At End Of Road
+
+>s
+
+In A Valley
+You are in a valley in the forest beside a stream tumbling along a rocky bed.
+
+>s
+
+At Slit In Streambed
+At your feet all the water of the stream splashes into a 2-inch slit in the
+rock. Downstream the streambed is bare rock.
+
+>s
+
+Outside Grate
+You are in a 20-foot depression floored with bare dirt. Set into the dirt is a
+strong steel grate mounted in concrete. A dry streambed leads into the
+depression.
+
+>n
+
+At Slit In Streambed
+
+>n
+
+In A Valley
+
+>n
+
+At End Of Road
+
+>e
+
+Inside Building
+
+There are some keys on the ground here.
+
+There is tasty food here.
+
+There is an empty bottle here.
+
+>get keys
+Taken.
+
+>w
+
+At End Of Road
+
+>s
+
+In A Valley
+
+>s
+
+At Slit In Streambed
+
+>s
+
+Outside Grate
+
+>open grate
+It seems to be locked.
+
+>unlock grate
+What do you want to unlock the steel grate with?
+
+>keys
+You unlock the steel grate.
+
+>open grate
+You open the steel grate.
+
+>d
+
+Below the Grate
+You are in a small chamber beneath a 3x3 steel grate to the surface. A low crawl
+over cobbles leads inward to the west.
+
+The grate stands open.
+
+>w
+
+In Cobble Crawl
+You are crawling over cobbles in a low passage. There is a dim light at the east
+end of the passage.
+
+There is a small wicker cage discarded nearby.
+
+>e
+
+Below the Grate
+
+The grate stands open.
+
+>u
+
+Outside Grate
+
+The grate stands open.
+
+>d
+
+Below the Grate
+
+The grate stands open.
+
+>w
+
+In Cobble Crawl
+
+There is a small wicker cage discarded nearby.
+
+>w
+
+Darkness
+It is pitch dark, and you can't see a thing.
+
+>turn on lamp
+You switch the brass lantern on.
+
+In Debris Room
+You are in a debris room filled with stuff washed in from the surface. A low
+wide passage with cobbles becomes plugged with mud and debris here, but an
+awkward canyon leads upward and west. 
+
+A note on the wall says, "Magic word XYZZY."
+
+A three foot black rod with a rusty star on one end lies nearby.
+
+>e
+
+In Cobble Crawl
+
+There is a small wicker cage discarded nearby.
+
+>w
+
+In Debris Room
+
+A three foot black rod with a rusty star on one end lies nearby.
+
+>w
+
+Sloping E/W Canyon
+You are in an awkward sloping east/west canyon.
+
+>w
+
+Orange River Chamber
+You are in a splendid chamber thirty feet high. The walls are frozen rivers of
+orange stone. An awkward canyon and a good passage exit from east and west sides
+of the chamber.
+
+A cheerful little bird is sitting here singing.
+
+>w
+
+At Top of Small Pit
+At your feet is a small pit breathing traces of white mist. A west passage ends
+here except for a small crack leading on. 
+
+Rough stone steps lead down the pit.
+
+>e
+
+Orange River Chamber
+
+A cheerful little bird is sitting here singing.
+
+>e
+
+Sloping E/W Canyon
+
+>e
+
+In Debris Room
+
+A three foot black rod with a rusty star on one end lies nearby.
+
+>e
+
+In Cobble Crawl
+
+There is a small wicker cage discarded nearby.
+
+>get cage
+Taken.
+
+>w
+
+In Debris Room
+
+A three foot black rod with a rusty star on one end lies nearby.
+
+>w
+
+Sloping E/W Canyon
+
+>w
+
+Orange River Chamber
+
+A cheerful little bird is sitting here singing.
+
+>get bird
+You catch the bird in the wicker cage.
+
+>w
+
+At Top of Small Pit
+
+>d
+
+In Hall of Mists
+You are at one end of a vast hall stretching forward out of sight to the west.
+There are openings to either side. Nearby, a wide stone staircase leads
+downward. The hall is filled with wisps of white mist swaying to and fro almost
+as if alive. A cold wind blows up the staircase. There is a passage at the top
+of a dome behind you. 
+
+Rough stone steps lead up the dome.
+
+[Your score has just gone up by twenty-five points.]
+
+>d
+
+Hall of the Mountain King
+You are in the hall of the mountain king, with passages off in all directions.
+
+A huge green fierce snake bars the way!
+
+>open cage
+(releasing the little bird)
+The little bird attacks the green snake, and in an astounding flurry drives the
+snake away.
+
+>
+I beg your pardon?
+
+>n
+
+Low N/S Passage
+You are in a low N/S passage at a hole in the floor. The hole goes down to an
+E/W passage.
+
+There are bars of silver here!
+
+>n
+
+At "Y2"
+You are in a large room, with a passage to the south, a passage to the west, and
+a wall of broken rock to the east. There is a large "Y2" on a rock in the room's
+center.
+
+A hollow voice says, "Plugh."
+
+>look
+
+At "Y2"
+You are in a large room, with a passage to the south, a passage to the west, and
+a wall of broken rock to the east. There is a large "Y2" on a rock in the room's
+center.
+
+>sw
+You can't go that way.
+
+A threatening little dwarf comes out of the shadows!
+
+>se
+You can't go that way.
+
+Tiring of this, the dwarf slips away.
+
+>jump
+You jump on the spot, fruitlessly.
+
+>w
+
+At Window on Pit
+You're at a low window overlooking a huge pit, which extends up out of sight. A
+floor is indistinctly visible over 50 feet below. Traces of white mist cover the
+floor of the pit, becoming thicker to the right. Marks in the dust around the
+window would seem to indicate that someone has been here recently. Directly
+across the pit from you and 25 feet away there is a similar window looking into
+a lighted room. A shadowy figure can be seen there peering back at you.
+
+>e
+
+At "Y2"
+
+>e
+
+Jumble of Rock
+You are in a jumble of rock, with cracks everywhere.
+
+>w
+You can't go that way.
+
+>u
+
+In Hall of Mists
+
+>d
+
+Hall of the Mountain King
+
+A cheerful little bird is sitting here singing.
+
+>w
+
+In West Side Chamber
+You are in the west side chamber of the hall of the mountain king. A passage
+continues west and up here.
+
+There are many coins here!
+
+>w
+
+N/S and E/W Crossover
+You are at a crossover of a high N/S passage and a low E/W one.
+
+>w
+
+At East End of Long Hall
+You are at the east end of a very long hall apparently without side chambers. To
+the east a low wide crawl slants up. To the north a round two foot hole slants
+down.
+
+>w
+
+At West End of Long Hall
+You are at the west end of a very long featureless hall. The hall joins up with
+a narrow north/south passage.
+
+>w
+You can't go that way.
+
+>e
+
+At East End of Long Hall
+
+>e
+
+At West End of Hall of Mists
+You are at the west end of the hall of mists. A low wide crawl continues west
+and another goes north. To the south is a little passage 6 feet off the floor.
+
+>e
+
+West Side of Fissure
+You are on the west side of the fissure in the hall of mists.
+
+There are diamonds here!
+
+>e
+The fissure is too wide.
+
+>w
+
+At West End of Hall of Mists
+
+A threatening little dwarf comes out of the shadows!
+
+>w
+
+At East End of Long Hall
+
+The dwarf stalks after you...
+
+>s
+You can't go that way.
+
+The dwarf throws a nasty little axe at you, misses, curses, and runs away.
+
+>se
+You can't go that way.
+
+>d
+
+N/S and E/W Crossover
+
+>e
+
+In West Side Chamber
+
+There are many coins here!
+
+>e
+
+Hall of the Mountain King
+
+A cheerful little bird is sitting here singing.
+
+>u
+
+In Hall of Mists
+
+>d
+
+Hall of the Mountain King
+
+A cheerful little bird is sitting here singing.
+
+>n
+
+Low N/S Passage
+
+There are bars of silver here!
+
+>se
+You can't go that way.
+
+>sw
+You can't go that way.
+
+Out from the shadows behind you pounces a bearded pirate! "Har, har," he
+chortles. "I'll just take all this booty and hide it away with me chest deep in
+the maze!" He snatches your treasure and vanishes into the gloom.
+
+>s
+
+Hall of the Mountain King
+
+A cheerful little bird is sitting here singing.
+
+>w
+
+In West Side Chamber
+
+There are many coins here!
+
+>w
+
+N/S and E/W Crossover
+
+>w
+
+At East End of Long Hall
+
+There is a little axe here.
+
+>w
+
+At West End of Long Hall
+
+>verbose
+ADVENTURE is now in its "verbose" mode, which always gives long descriptions of
+locations (even if you've been there before).
+
+>s
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+There are faint rustling noises from the darkness behind you. As you turn toward
+them, you spot a bearded pirate. He is carrying a large chest. 
+
+"Shiver me timbers!" he cries, "I've been spotted! I'd best hie meself off to
+the maze to hide me chest!" 
+
+With that, he vanishes into the gloom.
+
+>s
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>s
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>s
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>s
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>s
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>s
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>s
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>s
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>s
+You'll have to go back the way you came.
+
+>n
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>n
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+>n
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>n
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>n
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>n
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>n
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+>n
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>n
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>n
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>n
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>n
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+>n
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>e
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>e
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>w
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>w
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>s
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>s
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+>s
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>s
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>w
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>e
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>w
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+>s
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>n
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>s
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>e
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+>w
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>w
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>sw
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>w
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+>s
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>e
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>w
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>w
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>n
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>se
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>sw
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>w
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>sw
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>se
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>se
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>se
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+>se
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>se
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>s
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>se
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>se
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>se
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>se
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>s
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+>sw
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>sw
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>w
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+>d
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>u
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>d
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>d
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>d
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>d
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>d
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>ne
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>nw
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+A threatening little dwarf comes out of the shadows!
+
+>nw
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+The dwarf stalks after you...
+
+The dwarf throws a nasty little knife at you, but misses!
+
+>nw
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+The dwarf stalks after you...
+
+The dwarf throws a nasty little knife at you, but misses!
+
+>ne
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+The dwarf stalks after you...
+
+The dwarf throws a nasty little knife at you, but misses!
+
+>nw
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+The dwarf stalks after you...
+
+The dwarf throws a nasty little knife at you, and hits!
+
+
+Oh dear, you seem to have gotten yourself killed. I might be able to help you
+out, but I've never really done this before. Do you want me to try to
+reincarnate you?
+
+> ne
+Please answer yes or no.> y
+All right. But don't blame me if something goes wr...... 
+
+
+
+--- POOF!! --- 
+
+You are engulfed in a cloud of orange smoke. Coughing and gasping, you emerge
+from the smoke and find that you're....
+
+Inside Building
+You are inside a building, a well house for a large spring.
+
+There is tasty food here.
+
+There is an empty bottle here.
+
+[Your score has just gone down by ten points.]
+
+>w
+
+At End Of Road
+You are standing at the end of a road before a small brick building. Around you
+is a forest. A small stream flows out of the building and down a gully.
+
+There is a shiny brass lamp nearby.
+
+>get lamp
+Taken.
+
+>s
+
+In A Valley
+You are in a valley in the forest beside a stream tumbling along a rocky bed.
+
+>s
+
+At Slit In Streambed
+At your feet all the water of the stream splashes into a 2-inch slit in the
+rock. Downstream the streambed is bare rock.
+
+>s
+
+Outside Grate
+You are in a 20-foot depression floored with bare dirt. Set into the dirt is a
+strong steel grate mounted in concrete. A dry streambed leads into the
+depression.
+
+The grate stands open.
+
+>d
+
+Below the Grate
+You are in a small chamber beneath a 3x3 steel grate to the surface. A low crawl
+over cobbles leads inward to the west.
+
+The grate stands open.
+
+>w
+
+In Cobble Crawl
+You are crawling over cobbles in a low passage. There is a dim light at the east
+end of the passage.
+
+>w
+
+Darkness
+It is pitch dark, and you can't see a thing.
+
+>turn on lamp
+You switch the brass lantern on.
+
+In Debris Room
+You are in a debris room filled with stuff washed in from the surface. A low
+wide passage with cobbles becomes plugged with mud and debris here, but an
+awkward canyon leads upward and west. 
+
+A note on the wall says, "Magic word XYZZY."
+
+A three foot black rod with a rusty star on one end lies nearby.
+
+>w
+
+Sloping E/W Canyon
+You are in an awkward sloping east/west canyon.
+
+>w
+
+Orange River Chamber
+You are in a splendid chamber thirty feet high. The walls are frozen rivers of
+orange stone. An awkward canyon and a good passage exit from east and west sides
+of the chamber.
+
+>w
+
+At Top of Small Pit
+At your feet is a small pit breathing traces of white mist. A west passage ends
+here except for a small crack leading on. 
+
+Rough stone steps lead down the pit.
+
+>d
+
+In Hall of Mists
+You are at one end of a vast hall stretching forward out of sight to the west.
+There are openings to either side. Nearby, a wide stone staircase leads
+downward. The hall is filled with wisps of white mist swaying to and fro almost
+as if alive. A cold wind blows up the staircase. There is a passage at the top
+of a dome behind you. 
+
+Rough stone steps lead up the dome.
+
+>d
+
+Hall of the Mountain King
+You are in the hall of the mountain king, with passages off in all directions.
+
+A cheerful little bird is sitting here singing.
+
+>w
+
+In West Side Chamber
+You are in the west side chamber of the hall of the mountain king. A passage
+continues west and up here.
+
+There are many coins here!
+
+>w
+
+N/S and E/W Crossover
+You are at a crossover of a high N/S passage and a low E/W one.
+
+>w
+
+At East End of Long Hall
+You are at the east end of a very long hall apparently without side chambers. To
+the east a low wide crawl slants up. To the north a round two foot hole slants
+down.
+
+There is a little axe here.
+
+>w
+
+At West End of Long Hall
+You are at the west end of a very long featureless hall. The hall joins up with
+a narrow north/south passage.
+
+>s
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>w
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>nw
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>s
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>w
+You'll have to go back the way you came.
+
+>e
+You'll have to go back the way you came.
+
+>sw
+You'll have to go back the way you came.
+
+>se
+You'll have to go back the way you came.
+
+>w
+You'll have to go back the way you came.
+
+>nw
+You'll have to go back the way you came.
+
+>d
+You'll have to go back the way you came.
+
+>u
+You'll have to go back the way you came.
+
+>n
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>s
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>verbose
+ADVENTURE is now in its "verbose" mode, which always gives long descriptions of
+locations (even if you've been there before).
+
+>look
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>n
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>w
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>s
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+You can see a set of keys and a wicker cage (which is empty) here.
+
+>e
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>w
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>s
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>e
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>n
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>w
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>s
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>s
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>s
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>s
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>e
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>e
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>s
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>s
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>s
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>s
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>s
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>ne
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>s
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>s
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>s
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>s
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>s
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>look
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>n
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>e
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>s
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>s
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>s
+You'll have to go back the way you came.
+
+>s
+You'll have to go back the way you came.
+
+>look
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>n
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>se
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>s
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>s
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>s
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>look
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>n
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>n
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+You can see a set of keys and a wicker cage (which is empty) here.
+
+>ne
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>ne
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>e
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>n
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+You can see a set of keys and a wicker cage (which is empty) here.
+
+>e
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>s
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>sw
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>e
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>s
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>s
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>ne
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>s
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>w
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>s
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>n
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>s
+
+Dead End, near Vending Machine
+You have reached a dead end. There is a massive vending machine here. 
+
+Hmmm... There is a message here scrawled in the dust in a flowery script.
+
+>n
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>u
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>d
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>u
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>u
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>u
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>u
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>u
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>u
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>u
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>u
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>u
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>u
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>u
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>u
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>u
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>u
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>u
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>u
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>u
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>u
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>d
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>d
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+You can see a set of keys and a wicker cage (which is empty) here.
+
+>d
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>d
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>w
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>u
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+You can see a set of keys and a wicker cage (which is empty) here.
+
+>u
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>w
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>w
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>d
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>d
+
+At West End of Long Hall
+You are at the west end of a very long featureless hall. The hall joins up with
+a narrow north/south passage.
+
+>s
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>d
+
+At West End of Long Hall
+You are at the west end of a very long featureless hall. The hall joins up with
+a narrow north/south passage.
+
+>s
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>u
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>e
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>d
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>d
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>d
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>d
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>d
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>d
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>d
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>d
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>e
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>d
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+You can see a set of keys and a wicker cage (which is empty) here.
+
+>u
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>d
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+>u
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>d
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>d
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>d
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+A threatening little dwarf comes out of the shadows!
+
+>d
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+The dwarf stalks after you...
+
+Tiring of this, the dwarf slips away.
+
+>d
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>d
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>u
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>e
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>e
+
+Maze
+You are in a little maze of twisting passages, all different.
+
+>e
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>u
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>w
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>w
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>w
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>s
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>s
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>s
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>d
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+You can see a set of keys and a wicker cage (which is empty) here.
+
+>d
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>d
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>d
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+You can see a set of keys and a wicker cage (which is empty) here.
+
+>d
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+>d
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+>e
+
+Maze
+You are in a twisting little maze of passages, all different.
+
+>d
+
+Maze
+You are in a twisty maze of little passages, all different.
+
+>w
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>w
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>w
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>d
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>d
+
+At West End of Long Hall
+You are at the west end of a very long featureless hall. The hall joins up with
+a narrow north/south passage.
+
+>s
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>d
+
+At West End of Long Hall
+You are at the west end of a very long featureless hall. The hall joins up with
+a narrow north/south passage.
+
+>s
+
+Maze
+You are in a maze of twisty little passages, all different.
+Your lamp is getting dim. You'd best start wrapping this up, unless you can find
+some fresh batteries. I seem to recall there's a vending machine in the maze.
+Bring some coins with you.
+
+>s
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>n
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>d
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>d
+
+At West End of Long Hall
+You are at the west end of a very long featureless hall. The hall joins up with
+a narrow north/south passage.
+
+>s
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+>s
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>n
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>d
+
+Maze
+You are in a maze of twisty little passages, all different.
+
+A threatening little dwarf comes out of the shadows!
+
+>s
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+The dwarf stalks after you...
+
+>d
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+The dwarf stalks after you...
+
+>d
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+The dwarf stalks after you...
+
+>d
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+The dwarf stalks after you...
+
+>d
+
+Maze
+You are in a little twisty maze of passages, all different.
+
+The dwarf stalks after you...
+
+The dwarf throws a nasty little knife at you, but misses!
+
+>e
+
+Maze
+You are in a maze of little twisty passages, all different.
+
+The dwarf stalks after you...
+
+>d
+
+Maze
+You are in a twisty little maze of passages, all different.
+
+The dwarf stalks after you...
+
+>d
+
+Maze
+You are in a little maze of twisty passages, all different.
+
+You can see a set of keys and a wicker cage (which is empty) here.
+
+>n
+
+Maze
+You are in a twisting maze of little passages, all different.
+
+>d
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>n
+
+Maze
+You are in a maze of little twisting passages, all different.
+
+>e
+
+Maze
+You are in a maze of twisting little passages, all different.
+
+>save
+Ok.
+
+>

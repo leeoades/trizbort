@@ -12,6 +12,14 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+## [0.13.0-beta] - 2026-11-15
+
+This beta is about **neater maps as you play**. Tidying as you go now lays the map out again when it learns it was
+wrong, balances symmetric places, keeps rooms that aren't joined further apart, and slides rooms into their new
+places instead of making them jump, all without holding up the game. Rooms you've placed by hand make way rather
+than being pulled back. Automap also keeps track of you in mazes whose rooms share a name but not a description.
+This is still a beta: keep backups and [report problems](https://github.com/leeoades/trizbort/issues).
+
 ### Added
 
 - **The map rethinks itself when it learns it was wrong.** When a move shows that rooms were laid out the wrong way
@@ -101,6 +109,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **Mazes whose rooms share a name keep track of where you are.** In Colossal Cave's maze of twisty little
+  passages, all different, every room is called "Maze". Automap used to follow a join the map already had, often
+  only the assumed way back, to whichever "Maze" was at its end, whatever the game's description said; in a maze the
+  way back often leads somewhere else, so from the first wrong guess it followed its own mistakes and lost track of
+  you. With a verbose transcript the description now decides which room you're in, and a way back that was only
+  assumed goes as soon as you find that way leads somewhere else.
 - **Laying out one area no longer drags another across the map.** Going east on the roof moved the chimney, the
   roof and the living room over into the grounds. Automap now only lays out the area you're in (the rooms joined to
   it, a split join leading into another area), and rooms only line up with others in the same area.

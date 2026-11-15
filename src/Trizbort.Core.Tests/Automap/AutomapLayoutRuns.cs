@@ -23,7 +23,8 @@ public class AutomapLayoutRuns : IsolatedProjectTests
   [TestCase("hollywood-hijinx-old", AutomapSameDirectionResult.KeepBoth)]
   [TestCase("hollywood-hijinx-opening", AutomapSameDirectionResult.KeepRoom1)]
   [TestCase("hollywood-hijinx-down-to-cliff", AutomapSameDirectionResult.KeepRoom1)]
-  public async Task Run(string scenario, AutomapSameDirectionResult sameDirection)
+  [TestCase("colossal-cave-maze-all-different", AutomapSameDirectionResult.KeepBoth, true)]
+  public async Task Run(string scenario, AutomapSameDirectionResult sameDirection, bool byDescription = false)
   {
     var root = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
     while (root != null && !File.Exists(Path.Combine(root.FullName, "Trizbort.sln"))) root = root.Parent;
@@ -34,11 +35,11 @@ public class AutomapLayoutRuns : IsolatedProjectTests
     var settings = AutomapSettings.Default;
     settings.AutoTidy = true;
     var repeatable = Environment.GetEnvironmentVariable("TRIZBORT_LAYOUT_AS_APP") != "1";
-    var result = await HeadlessAutomap.RunAsync(project, transcript, settings, new Prompts(sameDirection), repeatable);
+    var result = await HeadlessAutomap.RunAsync(project, transcript, settings, new Prompts(sameDirection, byDescription), repeatable);
     TestContext.Out.WriteLine(result.Succeeded ? "mapped" : "error: " + result.Error);
 
     var outFolder = Environment.GetEnvironmentVariable("TRIZBORT_LAYOUT_OUT") ?? Path.GetTempPath();
-    var path = Path.Combine(outFolder, scenario + ".trizbort");
+    var path = Path.Combine(outFolder, $"{scenario}-{sameDirection}{(byDescription ? "-by-description" : "")}.trizbort");
     project.FileName = path;
     Assert.That(project.Save(), Is.True, "saving " + path);
     TestContext.Out.WriteLine("saved " + path);
@@ -80,7 +81,15 @@ public class AutomapLayoutRuns : IsolatedProjectTests
   private sealed class Prompts : IEditorPrompts
   {
     private readonly AutomapSameDirectionResult _sameDirection;
-    public Prompts(AutomapSameDirectionResult sameDirection) => _sameDirection = sameDirection;
+    private readonly bool _byDescription;
+
+    // byDescription: "which room?" is answered as a player would, by the description: the room that has it, or a new
+    // room when none does
+    public Prompts(AutomapSameDirectionResult sameDirection, bool byDescription = false)
+    {
+      _sameDirection = sameDirection;
+      _byDescription = byDescription;
+    }
 
     public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
       Trizbort.Domain.Elements.Room existing, string newRoomName, System.Threading.CancellationToken token = default)
@@ -90,7 +99,13 @@ public class AutomapLayoutRuns : IsolatedProjectTests
       string transcriptLine, string roomDescription,
       System.Collections.Generic.IReadOnlyList<Trizbort.Domain.Elements.Room> candidates,
       System.Threading.CancellationToken token = default)
-      => NonInteractiveEditorPrompts.Instance.DisambiguateRoomAsync(transcriptLine, roomDescription, candidates, token);
+    {
+      if (!_byDescription)
+        return NonInteractiveEditorPrompts.Instance.DisambiguateRoomAsync(transcriptLine, roomDescription, candidates, token);
+      var described = candidates.FirstOrDefault(room =>
+        room.Descriptions.Any(known => Trizbort.Automap.Automap.SameFirstSentence(known, roomDescription)));
+      return Task.FromResult(described != null ? RoomDisambiguation.Choose(described) : RoomDisambiguation.CreateNew());
+    }
 
     public Task<bool> ConfirmAsync(string message, string title, System.Threading.CancellationToken token = default)
       => NonInteractiveEditorPrompts.Instance.ConfirmAsync(message, title, token);

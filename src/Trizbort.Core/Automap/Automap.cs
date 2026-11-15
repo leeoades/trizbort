@@ -1453,7 +1453,7 @@ public sealed class Automap : IAutomapController
     var along = OneOf(_canvas.RoomsAlong(here, direction).Select(Real)
       .Where(other => other != null && other != here && NamedAs(other.Name, roomName)).Distinct().ToList(),
       roomDescription);
-    if (along != null) return along;
+    if (along != null && Shows(along, roomDescription)) return along;
 
     // the natural way back along a one-way join that brought the player here, from a room by this name, until the
     // player finds it leads somewhere else
@@ -1468,8 +1468,17 @@ public sealed class Automap : IAutomapController
         return !JoinWays.SeenFrom(ways, false) &&
                ways.Any(way => way.AtStart && way.IsDirection && way.Seen && way.Direction == cameBy);
       }).From;
-    return back == null ? null : _canvas.ResolveRoom(back);
+    return back == null || !Shows(back, roomDescription) ? null : _canvas.ResolveRoom(back);
   }
+
+  /// <summary>
+  ///   Whether the game's description fits a room the map says the player went to: in a verbose transcript, a room
+  ///   that has descriptions must have this one (its first sentence). In a maze of rooms with one name and different
+  ///   descriptions, the way back often goes somewhere else: the description, not the join, says where the player is.
+  /// </summary>
+  private bool Shows(Room room, string roomDescription) =>
+    !_settings.VerboseTranscript || string.IsNullOrWhiteSpace(roomDescription) || room.Descriptions.Count == 0 ||
+    room.Descriptions.Any(known => SameFirstSentence(known, roomDescription));
 
   /// <summary>The room's name is the heading, or a copy of it ("Cupboard (-1)" for "Cupboard").</summary>
   private static bool NamedAs(string name, string heading) =>

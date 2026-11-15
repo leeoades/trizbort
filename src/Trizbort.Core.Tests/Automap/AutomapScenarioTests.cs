@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Trizbort.Automap;
@@ -59,9 +60,10 @@ public class AutomapScenarioTests : IsolatedProjectTests
     HeadlessAutomapResult result;
     try
     {
-      var settings = LoadSettings(folder, out var sameDirectionAnswer);
+      var settings = LoadSettings(folder, out var sameDirectionAnswer, out var whichRoomByDescription);
       result = await HeadlessAutomap.RunAsync(
-        project, Path.Combine(folder, TranscriptFile), settings, new ScenarioPrompts(sameDirectionAnswer));
+        project, Path.Combine(folder, TranscriptFile), settings,
+        new ScenarioPrompts(sameDirectionAnswer, whichRoomByDescription));
     }
     finally
     {
@@ -95,6 +97,12 @@ public class AutomapScenarioTests : IsolatedProjectTests
 
     var expectedLines = AutomapMapSummary.Normalise(File.ReadAllText(expectedPath));
     var actualLines = AutomapMapSummary.Normalise(actual);
+    if (!LayoutRepeatsHere)
+    {
+      expectedLines = WithoutLayout(expectedLines);
+      actualLines = WithoutLayout(actualLines);
+    }
+
     var matches = expectedLines.SequenceEqual(actualLines);
     var knownIssuePath = Path.Combine(folder, KnownIssueFile);
 
@@ -114,6 +122,26 @@ public class AutomapScenarioTests : IsolatedProjectTests
     Assert.Fail($"tests/automap/{name}: the map differs from {ExpectedFile} (full map in {ActualFile}).\n\n{report}");
   }
 
+  /// <summary>
+  ///   Whether the layout comes out as in expected.txt. The layout search (CP-SAT, in the relayout as the map grows)
+  ///   doesn't lay a map out quite the same on every system, even when repeatable, and expected.txt files are approved
+  ///   on Windows. Elsewhere a scenario is compared on what's connected to what (<see cref="WithoutLayout" />).
+  /// </summary>
+  private static bool LayoutRepeatsHere => OperatingSystem.IsWindows();
+
+  /// <summary>
+  ///   A map summary without what depends on the layout: the measures of how neat it is, and the side an up, down,
+  ///   in or out join leaves from (<c>[southsouthwest "d"]</c> becomes <c>["d"]</c>). Compass joins leave from their
+  ///   direction's side, wherever the rooms are.
+  /// </summary>
+  private static List<string> WithoutLayout(IEnumerable<string> lines) =>
+    lines.Where(line => !LayoutMeasure.IsMatch(line))
+      .Select(line => LabelledSide.Replace(line, "[\""))
+      .ToList();
+
+  private static Regex LayoutMeasure { get; } = new(@"^(natural joins|exact joins|not natural|not exact):");
+  private static Regex LabelledSide { get; } = new(@"\[[a-z]+ """);
+
   /// <summary>The tests/automap folder of this repository, found by walking up from the test output folder.</summary>
   private static string ScenarioRoot()
   {
@@ -125,11 +153,14 @@ public class AutomapScenarioTests : IsolatedProjectTests
 
   /// <summary>
   ///   Defaults as in the app's Automap Settings dialog, overridden by "Name = value" lines in settings.txt.
-  ///   <c>SameDirectionAnswer</c> (KeepRoom1, KeepRoom2, KeepBoth) is the answer to "there's already a room that way".
+  ///   <c>SameDirectionAnswer</c> (KeepRoom1, KeepRoom2, KeepBoth) is the answer to "there's already a room that way";
+  ///   <c>WhichRoomAnswer</c> (First, ByDescription) the answer to "which room is this?".
   /// </summary>
-  private static AutomapSettings LoadSettings(string folder, out AutomapSameDirectionResult sameDirectionAnswer)
+  private static AutomapSettings LoadSettings(
+    string folder, out AutomapSameDirectionResult sameDirectionAnswer, out bool whichRoomByDescription)
   {
     sameDirectionAnswer = AutomapSameDirectionResult.KeepRoom1;
+    whichRoomByDescription = false;
     object settings = AutomapSettings.Default;
     var path = Path.Combine(folder, SettingsFile);
     if (!File.Exists(path)) return (AutomapSettings)settings;
@@ -148,6 +179,14 @@ public class AutomapScenarioTests : IsolatedProjectTests
         continue;
       }
 
+      if (string.Equals(key, "WhichRoomAnswer", StringComparison.OrdinalIgnoreCase))
+      {
+        whichRoomByDescription = value.Equals("ByDescription", StringComparison.OrdinalIgnoreCase) ? true
+          : value.Equals("First", StringComparison.OrdinalIgnoreCase) ? false
+          : throw new FormatException($"{SettingsFile}: WhichRoomAnswer is First or ByDescription, not '{value}'.");
+        continue;
+      }
+
       var field = typeof(AutomapSettings).GetField(key, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase)
                   ?? throw new FormatException($"{SettingsFile}: unknown setting '{key}'.");
       field.SetValue(settings, Convert.ChangeType(value, field.FieldType));
@@ -156,14 +195,20 @@ public class AutomapScenarioTests : IsolatedProjectTests
     return (AutomapSettings)settings;
   }
 
-  /// <summary>The app's non-interactive answers, except "there's already a room that way", which a scenario may set.</summary>
+  /// <summary>
+  ///   The app's non-interactive answers, except "there's already a room that way" and "which room is this?", which a
+  ///   scenario may set. By description, "which room?" is answered as a player would: the room with the description the
+  ///   game shows, or a new room when none has it.
+  /// </summary>
   private sealed class ScenarioPrompts : IEditorPrompts
   {
     private readonly AutomapSameDirectionResult _sameDirection;
+    private readonly bool _whichRoomByDescription;
 
-    public ScenarioPrompts(AutomapSameDirectionResult sameDirection)
+    public ScenarioPrompts(AutomapSameDirectionResult sameDirection, bool whichRoomByDescription)
     {
       _sameDirection = sameDirection;
+      _whichRoomByDescription = whichRoomByDescription;
     }
 
     public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
@@ -173,7 +218,13 @@ public class AutomapScenarioTests : IsolatedProjectTests
     public Task<RoomDisambiguation> DisambiguateRoomAsync(
       string transcriptLine, string roomDescription, IReadOnlyList<Trizbort.Domain.Elements.Room> candidates,
       System.Threading.CancellationToken token = default)
-      => NonInteractiveEditorPrompts.Instance.DisambiguateRoomAsync(transcriptLine, roomDescription, candidates, token);
+    {
+      if (!_whichRoomByDescription)
+        return NonInteractiveEditorPrompts.Instance.DisambiguateRoomAsync(transcriptLine, roomDescription, candidates, token);
+      var described = candidates.FirstOrDefault(room =>
+        room.Descriptions.Any(known => Trizbort.Automap.Automap.SameFirstSentence(known, roomDescription)));
+      return Task.FromResult(described != null ? RoomDisambiguation.Choose(described) : RoomDisambiguation.CreateNew());
+    }
 
     public Task<bool> ConfirmAsync(string message, string title, System.Threading.CancellationToken token = default)
       => NonInteractiveEditorPrompts.Instance.ConfirmAsync(message, title, token);

@@ -1,0 +1,216 @@
+current: Maze #2
+
+rooms:
+At "Y2"
+At East End of Long Hall
+At End Of Road (start)
+At Slit In Streambed
+At Top of Small Pit
+At West End of Hall of Mists
+At West End of Long Hall
+At Window on Pit
+Below the Grate
+Dead End, near Vending Machine
+Hall of the Mountain King
+In A Valley
+In Cobble Crawl
+In Debris Room
+In Hall of Mists
+In West Side Chamber
+Inside Building
+Jumble of Rock
+Low N/S Passage
+Maze #1
+Maze #10
+Maze #11
+Maze #2
+Maze #3
+Maze #4
+Maze #5
+Maze #6
+Maze #7
+Maze #8
+Maze #9
+N/S and E/W Crossover
+Orange River Chamber
+Outside Grate
+Sloping E/W Canyon
+West Side of Fissure
+
+connections:
+At "Y2" [east] <-> [west] Jumble of Rock
+At "Y2" [west] <-> [east] At Window on Pit
+At East End of Long Hall [east] <-> [west] At West End of Hall of Mists
+At East End of Long Hall [north] stub
+At East End of Long Hall [northnorthwest] stub
+At East End of Long Hall [west] <-> [east] At West End of Long Hall
+At End Of Road [east "e / in"] <-> [west "w / out"] Inside Building
+At End Of Road [south] <-> [north] In A Valley
+At End Of Road [southsouthwest] stub
+At Slit In Streambed [south] <-> [north] Outside Grate
+At Top of Small Pit [southsouthwest "d"] <-> [northnorthwest "u"] In Hall of Mists
+At Top of Small Pit [west] stub
+At West End of Hall of Mists [east] <-> [west] West Side of Fissure
+At West End of Hall of Mists [north] stub
+At West End of Hall of Mists [south] stub
+At West End of Long Hall [north] stub
+At West End of Long Hall [northnorthwest] stub
+At West End of Long Hall [south] <-> [northnortheast "d"] Maze #1
+At Window on Pit [northnorthwest] stub
+At Window on Pit [southsouthwest] stub
+Below the Grate [west] <-> [east] In Cobble Crawl
+Hall of the Mountain King [east] stub
+Hall of the Mountain King [north] <-> [south] Low N/S Passage
+Hall of the Mountain King [northeast] stub
+Hall of the Mountain King [northwest] stub
+Hall of the Mountain King [south] stub
+Hall of the Mountain King [southeast] stub
+Hall of the Mountain King [southwest] stub
+Hall of the Mountain King [west] <-> [east] In West Side Chamber
+In A Valley [south] <-> [north] At Slit In Streambed
+In Cobble Crawl [west] <-> [east] In Debris Room
+In Debris Room [northnorthwest] stub
+In Debris Room [west] <-> [east] Sloping E/W Canyon
+In Hall of Mists [southsouthwest "d"] <-> [northnortheast "u"] Hall of the Mountain King
+In Hall of Mists [west] stub
+In West Side Chamber [northnorthwest] stub
+In West Side Chamber [west] <-> [east] N/S and E/W Crossover
+Jumble of Rock [southsoutheast "u"] <-> [southsouthwest] In Hall of Mists
+Low N/S Passage [north] <-> [south] At "Y2"
+Low N/S Passage [southsouthwest] stub
+Maze #1 [south] <-> [west] Maze #2
+Maze #1 [southsoutheast "u"] -> [north] Maze #6
+Maze #1 [west] <-> [westnorthwest "d"] Maze #4
+Maze #10 [north] -> [westsouthwest] Maze #5
+Maze #10 [south] <-> [northeast] Maze #9
+Maze #10 [west] <-> [west] Maze #8
+Maze #11 [east] <-> [east] Maze #6
+Maze #11 [north] -> [southwest] Maze #2
+Maze #11 [northnortheast "d"] <-> [northnorthwest "d"] Maze #5
+Maze #11 [south] <-> [northnorthwest "u"] Maze #10
+Maze #11 [southwest] <-> [northeast] Maze #8
+Maze #2 [east] <-> [west] Maze #8
+Maze #2 [north] <-> [east] Maze #4
+Maze #2 [south] <-> [northwest] Maze #3
+Maze #2 [southeast] <-> [northnorthwest "u"] Maze #9
+Maze #2 [westsouthwest "d"] <-> [northeast] Maze #10
+Maze #3 [east] <-> [eastsoutheast "d"] Maze #9
+Maze #3 [north] <-> [west] Maze #11
+Maze #3 [south] <-> [north] Maze #4
+Maze #3 [southeast] <-> [northwest] Maze #5
+Maze #3 [westsouthwest "u"] <-> [east] Maze #10
+Maze #4 [northwest] -> [northwest] Maze #8
+Maze #4 [south] <-> [southeast] Maze #5
+Maze #4 [southeast] <-> [southwest] Maze #10
+Maze #4 [southsoutheast "u"] <-> [southsouthwest] Maze #7
+Maze #4 [west] <-> [eastnortheast "u"] Maze #11
+Maze #5 [east] -> [southeast] Maze #1
+Maze #5 [north] -> [northwest] Maze #8
+Maze #5 [south] <-> [west] Maze #6
+Maze #5 [west] -> [southwest] Maze #2
+Maze #6 [northeast] <-> [southwest] Maze #4
+Maze #6 [northwest] <-> [westnorthwest "d"] Maze #3
+Maze #6 [south] -> [northnortheast] Maze #7
+Maze #6 [southeast] <-> [northeast] Maze #2
+Maze #7 [east] <-> [southwest] Maze #5
+Maze #7 [north] <-> [eastsoutheast "d"] Maze #10
+Maze #7 [northeast] <-> [southwest] Maze #11
+Maze #7 [south] <-> [east] Maze #8
+Maze #7 [southeast] -> [southsoutheast] Maze #3
+Maze #7 [westnorthwest "d"] <-> [northwest] Maze #2
+Maze #7 [westsouthwest "u"] -> [southwest] Maze #1
+Maze #8 [north] <-> [southeast] Maze #9
+Maze #8 [south] <-> [north] Dead End, near Vending Machine
+Maze #8 [southeast] <-> [eastsoutheast "u"] Maze #6
+Maze #8 [westnorthwest "u"] -> [southwest] Maze #3
+Maze #9 [east] -> [westsouthwest] Maze #4
+Maze #9 [north] <-> [west] Maze #7
+Maze #9 [south] <-> [northwest] Maze #11
+Maze #9 [southwest] <-> [westnorthwest "u"] Maze #5
+Maze #9 [west] <-> [westsouthwest "d"] Maze #6
+N/S and E/W Crossover [west] <-> [eastsoutheast "d"] At East End of Long Hall
+Orange River Chamber [west] <-> [east] At Top of Small Pit
+Outside Grate [southsouthwest "d"] <-> [northnorthwest "u"] Below the Grate
+Sloping E/W Canyon [west] <-> [east] Orange River Chamber
+
+natural joins: 28 of 74
+exact joins: 28 of 74
+not natural: At "Y2" -> Jumble of Rock
+not natural: At East End of Long Hall -> At West End of Hall of Mists
+not natural: Hall of the Mountain King -> Low N/S Passage
+not natural: Jumble of Rock -> In Hall of Mists
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+not natural: Maze -> Maze
+
+overlaps:
+At Top of Small Pit is on the join Jumble of Rock - In Hall of Mists
+Maze #10 is on the join Maze #2 - Maze #9
+Maze #10 is on the join Maze #9 - Maze #11
+Maze #10 is on the join Maze #9 - Maze #5
+Maze #2 is on the join Maze #1 - Maze #6
+Maze #3 is on the join Maze #1 - Maze #6
+Maze #3 is on the join Maze #2 - Maze #4
+Maze #3 is on the join Maze #2 - Maze #8
+Maze #3 is on the join Maze #2 - Maze #9
+Maze #4 is on the join Maze #1 - Maze #6
+Maze #4 is on the join Maze #2 - Maze #8
+Maze #4 is on the join Maze #2 - Maze #9
+Maze #4 is on the join Maze #3 - Maze #5
+Maze #4 is on the join Maze #3 - Maze #9
+Maze #4 is on the join Maze #7 - Maze #3
+Maze #5 is on the join Maze #1 - Maze #6
+Maze #5 is on the join Maze #11 - Maze #6
+Maze #5 is on the join Maze #2 - Maze #8
+Maze #5 is on the join Maze #3 - Maze #9
+Maze #5 is on the join Maze #4 - Maze #10
+Maze #5 is on the join Maze #4 - Maze #7
+Maze #5 is on the join Maze #6 - Maze #4
+Maze #6 is on the join Maze #2 - Maze #8
+Maze #6 is on the join Maze #3 - Maze #9
+Maze #6 is on the join Maze #4 - Maze #7
+Maze #6 is on the join Maze #5 - Maze #8
+Maze #6 is on the join Maze #7 - Maze #11
+Maze #6 is on the join Maze #7 - Maze #5
+Maze #7 is on the join Maze #11 - Maze #8
+Maze #7 is on the join Maze #2 - Maze #8
+Maze #9 is on the join Maze #10 - Maze #8

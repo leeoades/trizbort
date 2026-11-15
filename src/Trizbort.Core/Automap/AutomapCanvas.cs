@@ -94,7 +94,7 @@ public class AutomapCanvas : IAutomapCanvas
       return ways.Any(way => way.AtStart && way.IsDirection && way.Seen && way.Direction == cameBy) &&
              !JoinWays.SeenFrom(ways, false);
     });
-    if (join == null) return false;
+    if (join == null || SeenGoing(room, direction, join)) return false;
 
     var from = join.GetSourceRoom();
     if (IsCompass(direction))
@@ -257,7 +257,7 @@ public class AutomapCanvas : IAutomapCanvas
     // to lead somewhere else (north out of the closet: the foyer's south is the front porch)
     var back = CompassPointHelper.GetOpposite(direction);
     if (added && !hereIsGuess && assumeTwoWayConnections && connection.Flow == ConnectionFlow.TwoWay &&
-        !RoomsAlong(far, back).Any(other => other != null && other != here))
+        !RoomsAlong(far, back).Any(other => other != null && other != here) && !SeenGoing(far, back, connection))
       JoinWays.AddDirection(ways, !hereIsStart, back, seen: false);
 
     var hereCompass = JoinWays.FirstCompass(ways, hereIsStart);
@@ -288,6 +288,42 @@ public class AutomapCanvas : IAutomapCanvas
     }
 
     JoinWays.Write(connection, ways, LabelWord);
+    ForgetGuessesElsewhere(connection, here, direction);
+  }
+
+  /// <summary>
+  ///   Whether the player was seen going <paramref name="direction" /> from <paramref name="room" /> along a join
+  ///   other than <paramref name="except" />: that way is known, so it isn't assumed as the way back along another.
+  /// </summary>
+  private bool SeenGoing(Room room, MappableDirection direction, Connection except) =>
+    CurrentProject.Elements.OfType<Connection>().Any(connection =>
+    {
+      if (connection == except) return false;
+      var source = connection.GetSourceRoom();
+      var target = connection.GetTargetRoom();
+      if (source != room && target != room) return false;
+      return JoinWays.Of(connection).Any(way => way.IsDirection && way.Seen && way.Direction == direction &&
+                                                ((way.AtStart && source == room) || (!way.AtStart && target == room)));
+    });
+
+  /// <summary>
+  ///   The player went <paramref name="direction" /> from <paramref name="here" /> along <paramref name="taken" />: a
+  ///   way back assumed along another join from here the same way was wrong, and goes (in a maze, south and back north
+  ///   often leads somewhere else). Ways the player was seen to go stay: a way can lead to two places ("Keep Both").
+  /// </summary>
+  private void ForgetGuessesElsewhere(Connection taken, Room here, MappableDirection direction)
+  {
+    foreach (var connection in CurrentProject.Elements.OfType<Connection>().ToList())
+    {
+      if (connection == taken) continue;
+      var source = connection.GetSourceRoom();
+      var target = connection.GetTargetRoom();
+      if (source == target || (source != here && target != here)) continue;
+      var hereIsStart = source == here;
+      if (JoinWays.Of(connection).Any(way =>
+            way.AtStart == hereIsStart && way.IsDirection && !way.Seen && way.Direction == direction))
+        ForgetWay(here, direction, hereIsStart ? target : source, onlyGuessed: true);
+    }
   }
 
   /// <summary>
@@ -964,7 +1000,13 @@ public class AutomapCanvas : IAutomapCanvas
     return rooms;
   }
 
-  public void ForgetWay(Room from, MappableDirection direction, Room to)
+  public void ForgetWay(Room from, MappableDirection direction, Room to) => ForgetWay(from, direction, to, false);
+
+  /// <summary>
+  ///   No longer has <paramref name="direction" /> lead from <paramref name="from" /> to <paramref name="to" />; with
+  ///   <paramref name="onlyGuessed" />, only where it was assumed, not seen.
+  /// </summary>
+  private void ForgetWay(Room from, MappableDirection direction, Room to, bool onlyGuessed)
   {
     from = ResolveRoom(from);
     to = ResolveRoom(to);
@@ -979,7 +1021,8 @@ public class AutomapCanvas : IAutomapCanvas
       else continue;
 
       var ways = JoinWays.Of(connection);
-      if (ways.RemoveAll(way => way.AtStart == fromIsStart && way.IsDirection && way.Direction == direction) == 0)
+      if (ways.RemoveAll(way => way.AtStart == fromIsStart && way.IsDirection && way.Direction == direction &&
+                                (!onlyGuessed || !way.Seen)) == 0)
         continue;
       if (!ways.Any(way => way.Kind != JoinWayKind.Label))
       {

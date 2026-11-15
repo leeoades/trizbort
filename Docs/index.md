@@ -977,7 +977,7 @@ While you choose, the map behind the dialog shows the room you've picked, select
 
 **Cancel** (or closing the dialog) maps nothing for it: no room, no join. Automap carries on from the next room it can place.
 
-Tick **Don't ask again while automapping: guess** to stop being asked for the rest of the run. Automap then guesses: the room whose description starts the same way; if the game shows a description none of them has, a new room when you moved there, or the room you're in when you didn't. Before any of this, automap goes by the map: a join the way you went, or back the way a one-way join came, says which room it is, and you aren't asked.
+Tick **Don't ask again while automapping: guess** to stop being asked for the rest of the run. Automap then guesses: the room whose description starts the same way; if the game shows a description none of them has, a new room when you moved there, or the room you're in when you didn't. Before any of this, automap goes by the map: a join the way you went, or back the way a one-way join came, says which room it is, and you aren't asked. With a verbose transcript, the description has the last word: if the room at the end of the join has descriptions and the game shows another, automap looks for the room by its description instead, as for any heading.
 
 If you choose `I Don't Care Any More`, Trizbort will make its own choice arbitrarily and not ask you again during this automapping session.
 
@@ -995,7 +995,7 @@ Trizbort recognises room names in the transcript by applying a series of rules w
 
 Trizbort: Recast recognises short grid-reference names such as `Y2` and quoted headings such as `At "Y2"`. It keeps comma qualifiers in names such as `Garden, north` and `Maze of Twisty Little Passages, all different`, while still stripping positional decorations such as `, on the bed`.
 
-In Colossal Cave, the "all different" maze rooms actually share the heading `Maze`; their descriptions differ. To map them separately, use a verbose transcript and choose **<Add a new room>** when a new maze description appears in the disambiguation dialog. On a later visit, a description with the same first sentence (ignoring case) reuses that room. Text after the first sentence can change, such as a door being open, without automap asking again.
+In Colossal Cave, the "all different" maze rooms actually share the heading `Maze`; their descriptions differ. To map them separately, use a verbose transcript and choose **<Add a new room>** when a new maze description appears in the disambiguation dialog. On a later visit, a description with the same first sentence (ignoring case) reuses that room, whichever way you came: in this maze going back the way you came often leads somewhere else, so the description, not the join, says where you are. A way back that automap only assumed (north back after going south) goes as soon as you find that way leads somewhere else. Text after the first sentence can change, such as a door being open, without automap asking again.
 
 Since Trizbort identifies rooms purely by name (and, if possible, description), geography which is intentionally confusing to the player (such as mazes where each room is called "Maze" with the description "A room in a maze") will not be mapped well by Trizbort. Likewise for games which have multiple locations called "Alley", "Cupboard", etc.
 

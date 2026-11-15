@@ -1,0 +1,6 @@
+# Lee answered "which room?" by the description, as a player would
+WhichRoomAnswer = ByDescription
+SameDirectionAnswer = KeepBoth
+# a test of what's joined to what: no tidying as the map grows (slow on a map this size, and laid out differently on
+# each system)
+AutoTidy = false
