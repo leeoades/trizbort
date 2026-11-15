@@ -437,11 +437,13 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         var viewModel = scope.ServiceProvider.GetRequiredService<AutomapSettingsViewModel>();
         var currentSettings = ApplicationSettingsController.AppSettings.Automap;
         viewModel.Initialize(currentSettings);
+        viewModel.ShowGameScreen = ApplicationSettingsController.AppSettings.ShowGameMonitor;
 
         var dialog = new AutomapSettingsDialog { DataContext = viewModel };
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
+            ShowGameScreen(viewModel.ShowGameScreen);
             var settings = viewModel.GetSettings();
             if (!string.IsNullOrWhiteSpace(settings.FileName))
             {
@@ -453,16 +455,25 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         return null;
     }
 
+    /// <summary>The game screen in the automap panel shown or hidden, as Automap Settings say (kept between runs).</summary>
+    private void ShowGameScreen(bool show)
+    {
+        if (_commandService.Session != null) _commandService.Session.ShowGameMonitor = show;
+        else ApplicationSettingsController.AppSettings.ShowGameMonitor = show;
+    }
+
     public async Task<AutomapSettings?> ShowAutomapRunSettingsAsync(Window? owner, AutomapSettings current)
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var viewModel = scope.ServiceProvider.GetRequiredService<AutomapSettingsViewModel>();
         viewModel.Initialize(current);
+        viewModel.ShowGameScreen = ApplicationSettingsController.AppSettings.ShowGameMonitor;
         viewModel.WhileRunning = true;
 
         var dialog = new AutomapSettingsDialog { DataContext = viewModel };
         var result = owner != null && await dialog.ShowDialog<bool>(owner);
         if (!result) return null;
+        ShowGameScreen(viewModel.ShowGameScreen);
 
         // only what can change part way through; the transcript and how the run started stay
         var settings = viewModel.GetSettings();

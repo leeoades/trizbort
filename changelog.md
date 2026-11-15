@@ -19,7 +19,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   runs. Untick it to be asked again. The question says where to find it, and is now **Don't ask again: make a best
   guess**.
 - **Automap Settings while automapping**: the ⚙ on the automap panel opens them. Changes take effect from the next
-  move, and are kept for next time. **Tidy the map as I go** has moved there from the panel, which is less cluttered.
+  move, and are kept for next time. **Tidy the map as I go** and **Show the game screen** have moved there from the panel, which is less
+  cluttered.
 
 ## [0.13.0-beta] - 2026-11-15
 

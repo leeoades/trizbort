@@ -693,6 +693,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var settings = await _dialogService.ShowAutomapRunSettingsAsync(GetActiveWindow(), current);
         if (settings == null) return;
         AutomapEngine.Instance.ChangeSettings(settings.Value);
+        IsGameMonitorShown = _commandService.Session?.ShowGameMonitor ?? IsGameMonitorShown;
         IsAutomapAutoTidy = settings.Value.AutoTidy;
         IsAutomapBestGuess = settings.Value.BestGuessWhichRoom;
         RefreshAutomapPanel();

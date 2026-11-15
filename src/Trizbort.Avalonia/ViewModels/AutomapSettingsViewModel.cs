@@ -62,6 +62,10 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _autoTidy = true;
 
+    /// <summary>Show the little game screen in the automap panel (an app setting, kept between runs).</summary>
+    [ObservableProperty]
+    private bool _showGameScreen = true;
+
     /// <summary>"Which room?": a best guess by the description instead of asking.</summary>
     [ObservableProperty]
     private bool _bestGuessWhichRoom;

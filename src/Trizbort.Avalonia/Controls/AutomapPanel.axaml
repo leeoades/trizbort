@@ -115,9 +115,6 @@
                             <controls:TranscriptMonitor Text="{Binding AutomapScreenText}"
                                                         ShowsCursor="{Binding IsAutomapAwaitingCommand}" />
                         </Viewbox>
-                        <CheckBox Content="Show the game screen" FontSize="12"
-                                  IsChecked="{Binding IsGameMonitorShown, Mode=OneWay}"
-                                  Command="{Binding ToggleGameMonitorCommand}" />
                     </StackPanel>
 
                     <!-- mapping: whether automap changes the map -->
