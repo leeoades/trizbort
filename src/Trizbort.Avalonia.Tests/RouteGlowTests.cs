@@ -84,7 +84,10 @@ public class RouteGlowTests
             System.Runtime.InteropServices.Marshal.FreeHGlobal(buffer);
         }
 
-        // BGRA
-        return global::Avalonia.Media.Color.FromArgb(pixels[3], pixels[2], pixels[1], pixels[0]);
+        // BGRA on Windows and Linux, RGBA on macOS
+        var rgba = bitmap.Format?.Equals(global::Avalonia.Platform.PixelFormats.Rgba8888) == true;
+        return rgba
+            ? global::Avalonia.Media.Color.FromArgb(pixels[3], pixels[0], pixels[1], pixels[2])
+            : global::Avalonia.Media.Color.FromArgb(pixels[3], pixels[2], pixels[1], pixels[0]);
     }
 }
