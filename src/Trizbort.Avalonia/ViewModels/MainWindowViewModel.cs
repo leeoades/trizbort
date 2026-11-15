@@ -70,6 +70,22 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isAutomapAutoTidy = ApplicationSettingsController.AppSettings.Automap.AutoTidy;
 
+    /// <summary>
+    ///     The automap panel's Best guess which room: "which room?" gets a best guess instead of being asked. Ticking
+    ///     "Don't ask again" in the question turns it on; kept in the automap settings, so it stays until turned off.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isAutomapBestGuess = ApplicationSettingsController.AppSettings.Automap.BestGuessWhichRoom;
+
+    partial void OnIsAutomapBestGuessChanged(bool value)
+    {
+        AutomapEngine.Instance.BestGuessWhichRoom = value;
+        var settings = ApplicationSettingsController.AppSettings.Automap;
+        if (settings.BestGuessWhichRoom == value) return;
+        settings.BestGuessWhichRoom = value;
+        ApplicationSettingsController.AppSettings.Automap = settings;
+    }
+
     partial void OnIsAutomapAutoTidyChanged(bool value)
     {
         AutomapEngine.Instance.AutoTidy = value;
@@ -163,6 +179,8 @@ public partial class MainWindowViewModel : ViewModelBase
         AutomapRoomName = room?.Name ?? "Somewhere automap doesn't know";
         IsAutomapMoveByMove = engine.MoveByMove;
         IsAutomapSuspended = engine.Suspended;
+        // "Don't ask again" in the question turns the best guess on
+        IsAutomapBestGuess = engine.BestGuessWhichRoom;
         var (played, total) = engine.MoveCount();
         AutomapMoveCount = total == 0
             ? string.Empty
@@ -820,6 +838,7 @@ public partial class MainWindowViewModel : ViewModelBase
         IsAutomapActive = true;
         IsAutomapMoveByMove = settings.MoveByMove;
         IsAutomapAutoTidy = settings.AutoTidy;
+        IsAutomapBestGuess = settings.BestGuessWhichRoom;
         AutomapStatusText = "Automapping has started.";
         ResetAutomapScreen();
         AutomapEngine.Instance.ScreenChanged += OnAutomapScreenChanged;

@@ -35,6 +35,10 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _autoTidy = true;
 
+    /// <summary>"Which room?": a best guess by the description instead of asking.</summary>
+    [ObservableProperty]
+    private bool _bestGuessWhichRoom;
+
     /// <summary>Label joins "n / u / in" rather than "north / up / in".</summary>
     [ObservableProperty]
     private bool _abbreviateDirections = true;
@@ -70,6 +74,7 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         AssumeTwoWayConnections = settings.AssumeTwoWayConnections;
         GuessExits = settings.GuessExits;
         AutoTidy = settings.AutoTidy;
+        BestGuessWhichRoom = settings.BestGuessWhichRoom;
         AbbreviateDirections = settings.AbbreviateDirections;
         MoveByMove = settings.MoveByMove;
         AddObjectCommand = string.IsNullOrEmpty(settings.AddObjectCommand) ? "tb see" : settings.AddObjectCommand;
@@ -94,6 +99,7 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         settings.VerboseTranscript = VerboseTranscript;
         settings.GuessExits = GuessExits;
         settings.AutoTidy = AutoTidy;
+        settings.BestGuessWhichRoom = BestGuessWhichRoom;
         settings.AbbreviateDirections = AbbreviateDirections;
         settings.MoveByMove = MoveByMove;
         settings.AddObjectCommand = string.IsNullOrEmpty(AddObjectCommand) ? AutomapSettings.Default.AddObjectCommand : AddObjectCommand;

@@ -44,6 +44,10 @@
                         <CheckBox Content="Tidy the map as you go, so _rooms make space for each other."
                                   IsChecked="{Binding AutoTidy}" />
 
+                        <CheckBox Content="Don't ask which of several rooms with the same name: make a best guess."
+                                  IsChecked="{Binding BestGuessWhichRoom}"
+                                  ToolTip.Tip="Automap goes by the room's description; if no room with that name has it, a new room when you moved, the room you're in when you didn't. Off: automap asks, when the map doesn't say which room it is." />
+
                         <CheckBox Content="_Label directions in short: n / u / in rather than north / up / in."
                                   IsChecked="{Binding AbbreviateDirections}" />
 
