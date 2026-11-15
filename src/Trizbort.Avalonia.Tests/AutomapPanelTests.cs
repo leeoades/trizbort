@@ -69,6 +69,9 @@ public class AutomapPanelTests
             play.Content.ShouldBe("Play to the End ⏭");
             global::Avalonia.VisualExtensions.TranslatePoint(play, new global::Avalonia.Point(0, 0), panel)!.Value.Y
                 .ShouldBeGreaterThan(panel.Bounds.Height - 120);
+            // the settings are behind the cog, not on the panel
+            panel.FindControl<Button>("SettingsButton")!.IsEffectivelyVisible.ShouldBeTrue();
+            panel.FindControl<CheckBox>("AutoTidyBox").ShouldBeNull();
             var shots = System.Environment.GetEnvironmentVariable("TRIZBORT_SCREENSHOTS");
             if (!string.IsNullOrEmpty(shots))
             {

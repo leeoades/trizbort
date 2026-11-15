@@ -4,7 +4,7 @@
         x:Class="Trizbort.Avalonia.Views.Dialogs.AutomapSettingsDialog"
         x:DataType="vm:AutomapSettingsViewModel"
         x:Name="DialogWindow"
-        Title="Automapping"
+        Title="{Binding Title}"
         Width="520" Height="640"
         MinWidth="442" MinHeight="240"
         WindowStartupLocation="CenterOwner"
@@ -13,11 +13,10 @@
     <Grid RowDefinitions="*,Auto" Margin="16" Grid.IsSharedSizeScope="True">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="12">
-                <TextBlock Classes="hint"
-                           Text="Trizbort can automatically generate a map from a transcript of a game, even while the game is in progress." />
+                <TextBlock Classes="hint" x:Name="HintText" Text="{Binding Hint}" TextWrapping="Wrap" />
 
-                <!-- Transcript File Selection -->
-                <StackPanel Spacing="4">
+                <!-- Transcript File Selection (not while automap runs) -->
+                <StackPanel Spacing="4" IsVisible="{Binding IsStarting}">
                     <Grid ColumnDefinitions="Auto,12,*,8,Auto">
                         <Label Grid.Column="0" Classes="field-label" Content="_Transcript File:" Target="{Binding #FileNameBox}" />
                         <TextBox Grid.Column="2" x:Name="FileNameBox" Text="{Binding FileName}" Watermark="Path to transcript file..." />
@@ -41,10 +40,11 @@
                         <CheckBox Content="_Guess possible exits from a room by reading its initial description."
                                   IsChecked="{Binding GuessExits}" />
 
-                        <CheckBox Content="Tidy the map as you go, so _rooms make space for each other."
-                                  IsChecked="{Binding AutoTidy}" />
+                        <CheckBox x:Name="AutoTidyCheck" Content="Tidy the map as you go, so _rooms make space for each other."
+                                  IsChecked="{Binding AutoTidy}"
+                                  ToolTip.Tip="Rearrange the rooms near you after each move, making space for new rooms. Off: rooms stay where automap first puts them, and you tidy by hand (Tidy Map...)" />
 
-                        <CheckBox Content="Don't ask which of several rooms with the same name: make a best guess."
+                        <CheckBox x:Name="BestGuessCheck" Content="Don't ask which of several rooms with the same name: make a best guess."
                                   IsChecked="{Binding BestGuessWhichRoom}"
                                   ToolTip.Tip="Automap goes by the room's description; if no room with that name has it, a new room when you moved, the room you're in when you didn't. Off: automap asks, when the map doesn't say which room it is." />
 
@@ -52,9 +52,11 @@
                                   IsChecked="{Binding AbbreviateDirections}" />
 
                         <CheckBox Content="_Start processing from the end of the transcript file."
+                                  IsVisible="{Binding IsStarting}"
                                   IsChecked="{Binding ContinueTranscript}" />
 
                         <CheckBox Content="_Play the transcript a move at a time, starting paused."
+                                  IsVisible="{Binding IsStarting}"
                                   ToolTip.Tip="Use Next move and Play to end on the automap bar to step through a transcript you already have."
                                   IsChecked="{Binding MoveByMove}" />
 
@@ -62,7 +64,7 @@
                                   IsChecked="{Binding AssumeTwoWayConnections}" />
 
                         <CheckBox Content="Single step through the transcript with F11 (debug)."
-                                  IsVisible="{Binding IsDebugEnabled}"
+                                  IsVisible="{Binding ShowSingleStep}"
                                   IsChecked="{Binding SingleStep}" />
                     </StackPanel>
                 </HeaderedContentControl>
@@ -94,7 +96,7 @@
 
         <!-- Start / Cancel Buttons -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
-            <Button Classes="dialog-button" Content="Start Auto_mapping" IsDefault="True" IsEnabled="{Binding CanStart}" Click="OnStartClick" />
+            <Button Classes="dialog-button" x:Name="OkButton" Content="{Binding OkText}" IsDefault="True" IsEnabled="{Binding CanStart}" Click="OnStartClick" />
             <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Click="OnCancelClick" />
         </StackPanel>
     </Grid>

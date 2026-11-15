@@ -85,7 +85,7 @@ public class DisambiguateRoomsViewModel : ViewModelBase
     public string DontAskAgainTip =>
         "From now on automap makes a best guess instead of asking: the room whose description starts the same way; " +
         "if the game shows a description none of them has, a new room when you moved, the room you're in when you " +
-        "didn't. To be asked again, turn off Best guess which room in the automap panel or in Automap Settings.";
+        "didn't. To be asked again, turn it off in Automap Settings (the cog on the automap panel).";
 
     public RelayCommand OkCommand { get; }
 

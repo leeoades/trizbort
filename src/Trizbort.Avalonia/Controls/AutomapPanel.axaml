@@ -37,8 +37,13 @@
         <DockPanel>
             <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="12,10,12,8">
                 <TextBlock Text="Automap" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <Button Grid.Column="1" Content="Stop" Padding="12,3" HorizontalAlignment="Right"
-                        Command="{Binding StopAutomapCommand}" ToolTip.Tip="Stop automapping" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                    <Button x:Name="SettingsButton" Content="⚙" Padding="8,3" HorizontalAlignment="Right"
+                            Command="{Binding ShowAutomapRunSettingsCommand}"
+                            ToolTip.Tip="Automap Settings: tidying as you go, best guess which room, and more" />
+                    <Button Content="Stop" Padding="12,3" HorizontalAlignment="Right"
+                            Command="{Binding StopAutomapCommand}" ToolTip.Tip="Stop automapping" />
+                </StackPanel>
             </Grid>
 
             <!-- playing to the end, at the bottom, away from the step buttons: a slip shouldn't map the whole game -->
@@ -127,12 +132,6 @@
                                          ToolTip.Tip="Follow where you are without changing the map" />
                         </StackPanel>
                         <TextBlock Classes="note" x:Name="MappingNote" Text="{Binding AutomapMappingNote}" />
-                        <CheckBox x:Name="AutoTidyBox" Content="Tidy the map as I go" FontSize="12"
-                                  IsChecked="{Binding IsAutomapAutoTidy}"
-                                  ToolTip.Tip="Rearrange the rooms near you after each move, making space for new rooms. Off: rooms stay where automap first puts them, and you tidy by hand (Tidy Map...)" />
-                        <CheckBox x:Name="BestGuessBox" Content="Best guess which room" FontSize="12"
-                                  IsChecked="{Binding IsAutomapBestGuess}"
-                                  ToolTip.Tip="When several rooms have the same name and the map doesn't say which you're in, go by the description instead of asking. Off: automap asks." />
                         <TextBlock Classes="small"
                                    Text="Tracking only lets you step back and forward through the transcript to check automap follows the rooms you expect. Fix the map if not, then switch back to Mapping." />
                     </StackPanel>

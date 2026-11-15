@@ -15,9 +15,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 ### Added
 
 - **Best guess which room** can be turned off again. Ticking **Don't ask again** when automap asks which room you're
-  in used to last until automap stopped, with no way back. It's now a setting, remembered between runs: **Best guess
-  which room** in the automap panel, and in Automap Settings. Untick it to be asked again. The question says where to
-  find it, and is now **Don't ask again: make a best guess**.
+  in used to last until automap stopped, with no way back. It's now a setting in Automap Settings, remembered between
+  runs. Untick it to be asked again. The question says where to find it, and is now **Don't ask again: make a best
+  guess**.
+- **Automap Settings while automapping**: the ⚙ on the automap panel opens them. Changes take effect from the next
+  move, and are kept for next time. **Tidy the map as I go** has moved there from the panel, which is less cluttered.
 
 ## [0.13.0-beta] - 2026-11-15
 

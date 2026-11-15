@@ -680,6 +680,24 @@ public partial class MainWindowViewModel : ViewModelBase
         await StartAutomapAsync(settings.Value);
     }
 
+    /// <summary>
+    ///     The automap panel's cog: Automap Settings while automap runs. What can change part way through takes effect
+    ///     from the next move, and is kept for next time.
+    /// </summary>
+    [RelayCommand]
+    public async Task ShowAutomapRunSettingsAsync()
+    {
+        var current = ApplicationSettingsController.AppSettings.Automap;
+        current.AutoTidy = AutomapEngine.Instance.AutoTidy;
+        current.BestGuessWhichRoom = AutomapEngine.Instance.BestGuessWhichRoom;
+        var settings = await _dialogService.ShowAutomapRunSettingsAsync(GetActiveWindow(), current);
+        if (settings == null) return;
+        AutomapEngine.Instance.ChangeSettings(settings.Value);
+        IsAutomapAutoTidy = settings.Value.AutoTidy;
+        IsAutomapBestGuess = settings.Value.BestGuessWhichRoom;
+        RefreshAutomapPanel();
+    }
+
     [RelayCommand]
     public void StopAutomap()
     {

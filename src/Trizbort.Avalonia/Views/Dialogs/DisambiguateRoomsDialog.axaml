@@ -43,7 +43,7 @@
                           IsChecked="{Binding DontAskAgain}"
                           ToolTip.Tip="{Binding DontAskAgainTip}" />
                 <TextBlock x:Name="DontAskAgainNote" FontSize="11" Opacity="0.75" TextWrapping="Wrap" Margin="28,0,0,0"
-                           Text="You can turn this back off in Automap Settings, or with Best guess which room in the automap panel." />
+                           Text="You can turn this back off in Automap Settings (the ⚙ on the automap panel)." />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                 <Button Classes="dialog-button" Content="OK" IsDefault="True" Command="{Binding OkCommand}" />

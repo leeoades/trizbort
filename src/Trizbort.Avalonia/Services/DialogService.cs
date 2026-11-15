@@ -452,4 +452,35 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         }
         return null;
     }
+
+    public async Task<AutomapSettings?> ShowAutomapRunSettingsAsync(Window? owner, AutomapSettings current)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<AutomapSettingsViewModel>();
+        viewModel.Initialize(current);
+        viewModel.WhileRunning = true;
+
+        var dialog = new AutomapSettingsDialog { DataContext = viewModel };
+        var result = owner != null && await dialog.ShowDialog<bool>(owner);
+        if (!result) return null;
+
+        // only what can change part way through; the transcript and how the run started stay
+        var settings = viewModel.GetSettings();
+        settings.FileName = current.FileName;
+        settings.ContinueTranscript = current.ContinueTranscript;
+        settings.MoveByMove = current.MoveByMove;
+        settings.SingleStep = current.SingleStep;
+        var saved = ApplicationSettingsController.AppSettings.Automap;
+        saved.VerboseTranscript = settings.VerboseTranscript;
+        saved.GuessExits = settings.GuessExits;
+        saved.AutoTidy = settings.AutoTidy;
+        saved.BestGuessWhichRoom = settings.BestGuessWhichRoom;
+        saved.AbbreviateDirections = settings.AbbreviateDirections;
+        saved.AssumeTwoWayConnections = settings.AssumeTwoWayConnections;
+        saved.AddObjectCommand = settings.AddObjectCommand;
+        saved.AddRegionCommand = settings.AddRegionCommand;
+        ApplicationSettingsController.AppSettings.Automap = saved;
+        ApplicationSettingsController.SaveSettings();
+        return settings;
+    }
 }

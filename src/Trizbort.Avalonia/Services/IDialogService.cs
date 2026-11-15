@@ -35,4 +35,11 @@ public interface IDialogService
     Task<bool> ShowMapThemeAsync(Window? owner);
     Task<bool> ShowAppSettingsAsync(Window? owner);
     Task<AutomapSettings?> ShowAutomapSettingsAsync(Window? owner);
+
+    /// <summary>
+    ///     Automap Settings while automap runs (the automap panel's cog): the options that can change part way through.
+    ///     The settings chosen, or null when cancelled.
+    /// </summary>
+    Task<AutomapSettings?> ShowAutomapRunSettingsAsync(Window? owner, AutomapSettings current) =>
+        Task.FromResult<AutomapSettings?>(null);
 }

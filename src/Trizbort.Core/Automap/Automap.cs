@@ -2479,6 +2479,24 @@ public sealed class Automap : IAutomapController
     set => _settings.BestGuessWhichRoom = value;
   }
 
+  /// <summary>
+  ///   Automap Settings changed while automap runs (the automap panel's settings): the options that can change part
+  ///   way through take effect from the next move. The transcript, and how the run started (from the end, move by
+  ///   move, single step), stay as they are.
+  /// </summary>
+  public void ChangeSettings(AutomapSettings settings)
+  {
+    _settings.VerboseTranscript = settings.VerboseTranscript;
+    _settings.GuessExits = settings.GuessExits;
+    _settings.AssumeTwoWayConnections = settings.AssumeTwoWayConnections;
+    _settings.BestGuessWhichRoom = settings.BestGuessWhichRoom;
+    _settings.AddObjectCommand = settings.AddObjectCommand;
+    _settings.AddRegionCommand = settings.AddRegionCommand;
+    _settings.AbbreviateDirections = settings.AbbreviateDirections;
+    if (_canvas != null) _canvas.AbbreviateDirections = settings.AbbreviateDirections;
+    AutoTidy = settings.AutoTidy;
+  }
+
   /// <summary>The command automap is paused before, while playing move by move; otherwise null.</summary>
   public string NextCommand { get; private set; }
 

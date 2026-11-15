@@ -15,10 +15,37 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsFileNameMissing))]
     private string _fileName = string.Empty;
 
-    public bool CanStart => !string.IsNullOrWhiteSpace(FileName);
+    public bool CanStart => WhileRunning || !string.IsNullOrWhiteSpace(FileName);
 
     /// <summary>True while no transcript file is chosen (Start is disabled); drives the visible reason.</summary>
     public bool IsFileNameMissing => !CanStart;
+
+    /// <summary>
+    ///     Opened from the automap panel while automap runs: only the options that can change part way through show,
+    ///     and OK applies them from the next move.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanStart))]
+    [NotifyPropertyChangedFor(nameof(IsFileNameMissing))]
+    [NotifyPropertyChangedFor(nameof(IsStarting))]
+    [NotifyPropertyChangedFor(nameof(ShowSingleStep))]
+    [NotifyPropertyChangedFor(nameof(OkText))]
+    [NotifyPropertyChangedFor(nameof(Title))]
+    [NotifyPropertyChangedFor(nameof(Hint))]
+    private bool _whileRunning;
+
+    /// <summary>Starting automap: the transcript and how to start show.</summary>
+    public bool IsStarting => !WhileRunning;
+
+    public bool ShowSingleStep => IsDebugEnabled && IsStarting;
+
+    public string OkText => WhileRunning ? "OK" : "Start Auto_mapping";
+
+    public string Title => WhileRunning ? "Automap Settings" : "Automapping";
+
+    public string Hint => WhileRunning
+        ? "Changes take effect from the next move, and are kept for the next time you automap."
+        : "Trizbort can automatically generate a map from a transcript of a game, even while the game is in progress.";
 
     [ObservableProperty]
     private bool _continueTranscript;
