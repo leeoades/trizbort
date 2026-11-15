@@ -50,8 +50,20 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _continueTranscript;
 
+    /// <summary>Descriptions can tell rooms with the same name apart (the transcript shows them).</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NamesOnly))]
     private bool _verboseTranscript = true;
+
+    /// <summary>
+    ///     "Ignore descriptions: a room's name alone says which room it is": the other way round from
+    ///     <see cref="VerboseTranscript" />, as the dialog asks it.
+    /// </summary>
+    public bool NamesOnly
+    {
+        get => !VerboseTranscript;
+        set => VerboseTranscript = !value;
+    }
 
     [ObservableProperty]
     private bool _assumeTwoWayConnections = true;

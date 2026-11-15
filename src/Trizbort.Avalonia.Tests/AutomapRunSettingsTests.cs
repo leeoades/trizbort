@@ -40,6 +40,13 @@ public class AutomapRunSettingsTests
             ok.IsEnabled.ShouldBeTrue();
             dialog.FindControl<CheckBox>("AutoTidyCheck")!.IsEffectivelyVisible.ShouldBeTrue();
             dialog.FindControl<CheckBox>("BestGuessCheck")!.IsEffectivelyVisible.ShouldBeTrue();
+
+            // "ignore descriptions" is the verbose setting the other way round
+            var namesOnly = dialog.FindControl<CheckBox>("NamesOnlyCheck")!;
+            namesOnly.IsChecked.ShouldBe(false);
+            vm.VerboseTranscript.ShouldBeTrue();
+            namesOnly.IsChecked = true;
+            vm.VerboseTranscript.ShouldBeFalse();
         }
         finally
         {

@@ -898,11 +898,12 @@ If you don't have a transcript already, you'll want to start one in your interpr
 
 #### Automapping Options
 
-**Treat transcript as VERBOSE; expect room descriptions.**
+**Rooms with the same name.**
 
-By default, Trizbort assumes you will have verbose mode, or its equivalent, turned on in the interpreter before you start the transcript, so that each time you enter a room its name and description are displayed. Trizbort likes room descriptions because it can use them to differentiate between rooms with the same name, and fill out the [description](#help_rooms_edit_desc) of each room on the map.
+Trizbort likes room descriptions: it fills out the [description](#help_rooms_edit_desc) of each room on the map, and uses them to tell apart rooms with the same name (a maze where every room is "Maze"). It's best to turn on the game's verbose mode (`>VERBOSE`) before you start, so a room's description shows every time you enter it. Automap tells rooms with the same name apart by the map first (where the way you went leads), then by their descriptions, and asks when it can't tell (see [Disambiguating Between Rooms](#help_automap_disambig)).
 
-With a verbose transcript, automap tells rooms with the same name apart by the map first (a join the way you went leads to the room), then by description, and asks when it can't tell (see [Disambiguating Between Rooms](#help_automap_disambig)). If the transcript isn't verbose, it won't be getting room descriptions every time, so it takes a room's name to mean that room.
+- **Don't ask which one you're in: make a best guess.** Automap goes by the description instead of asking. Ticking **Don't ask again** in the question turns this on.
+- **Ignore descriptions: a room's name alone says which room it is.** Rarely needed: for a game whose room descriptions keep changing, or a transcript without them. Rooms with the same name are then always the same room, and automap never asks.
 
 **Guess possible exits from a room by reading its initial description.**
 
@@ -978,7 +979,7 @@ While you choose, the map behind the dialog shows the room you've picked, select
 
 **Cancel** (or closing the dialog) maps nothing for it: no room, no join. Automap carries on from the next room it can place.
 
-Tick **Don't ask again: make a best guess** to stop being asked. Automap then makes a best guess, from then on and in later runs too, until you turn it off again: untick **Don't ask which of several rooms with the same name: make a best guess** in Automap Settings (the ⚙ on the automap panel while it runs). The best guess is: the room whose description starts the same way; if the game shows a description none of them has, a new room when you moved there, or the room you're in when you didn't. Before any of this, automap goes by the map: a join the way you went, or back the way a one-way join came, says which room it is, and you aren't asked. With a verbose transcript, the description has the last word: if the room at the end of the join has descriptions and the game shows another, automap looks for the room by its description instead, as for any heading.
+Tick **Don't ask again: make a best guess** to stop being asked. Automap then makes a best guess, from then on and in later runs too, until you turn it off again: untick **Don't ask which one you're in: make a best guess** (under **Rooms with the same name**) in Automap Settings (the ⚙ on the automap panel while it runs). The best guess is: the room whose description starts the same way; if the game shows a description none of them has, a new room when you moved there, or the room you're in when you didn't. Before any of this, automap goes by the map: a join the way you went, or back the way a one-way join came, says which room it is, and you aren't asked. With a verbose transcript, the description has the last word: if the room at the end of the join has descriptions and the game shows another, automap looks for the room by its description instead, as for any heading.
 
 If you choose `I Don't Care Any More`, Trizbort will make its own choice arbitrarily and not ask you again during this automapping session.
 

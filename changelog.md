@@ -21,6 +21,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Automap Settings while automapping**: the ⚙ on the automap panel opens them. Changes take effect from the next
   move, and are kept for next time. **Tidy the map as I go** and **Show the game screen** have moved there from the panel,
   which is less cluttered.
+- **Rooms with the same name** is a group of its own in Automap Settings: **Don't ask which one you're in: make a
+  best guess**, and **Ignore descriptions: a room's name alone says which room it is**, which replaces "Treat
+  transcript as VERBOSE" (the same setting, the other way round, and rarely needed).
 - **Play to the End shows its progress.** While automap plays through the moves left, a progress bar in the automap
   panel shows how far it's got, so it's clear when it has finished; the map is locked (you can look around it, not
   change it) until then, or until you pause.
