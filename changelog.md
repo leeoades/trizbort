@@ -19,8 +19,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   runs. Untick it to be asked again. The question says where to find it, and is now **Don't ask again: make a best
   guess**.
 - **Automap Settings while automapping**: the ⚙ on the automap panel opens them. Changes take effect from the next
-  move, and are kept for next time. **Tidy the map as I go** and **Show the game screen** have moved there from the panel, which is less
-  cluttered.
+  move, and are kept for next time. **Tidy the map as I go** and **Show the game screen** have moved there from the panel,
+  which is less cluttered.
+- **Play to the End shows its progress.** While automap plays through the moves left, a progress bar in the automap
+  panel shows how far it's got, so it's clear when it has finished; the map is locked (you can look around it, not
+  change it) until then, or until you pause.
 
 ## [0.13.0-beta] - 2026-11-15
 

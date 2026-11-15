@@ -175,6 +175,7 @@ public partial class MainWindowViewModel : ViewModelBase
     internal void RefreshAutomapPanel()
     {
         var engine = AutomapEngine.Instance;
+        FollowPlayToEnd();
         var room = engine.CurrentRoom;
         AutomapRoomName = room?.Name ?? "Somewhere automap doesn't know";
         IsAutomapMoveByMove = engine.MoveByMove;
@@ -704,6 +705,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _currentRunToken = null;
 
+        EndPlayToEndProgress();
         AutomapEngine.Instance.Stop();
         AutomapEngine.Instance.ScreenChanged -= OnAutomapScreenChanged;
         IsAutomapActive = false;
@@ -734,6 +736,8 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         IsAutomapMoveByMove = AutomapEngine.Instance.MoveByMove;
+        // playing many moves: a progress bar, and the map locked until it's done
+        if (!IsAutomapMoveByMove) StartPlayToEndProgress();
     }
 
     /// <summary>Go back a move in the transcript, leaving the map as it is; Next Move plays it again.</summary>

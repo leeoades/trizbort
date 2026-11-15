@@ -46,6 +46,19 @@
                 </StackPanel>
             </Grid>
 
+            <!-- playing to the end: how far it's got; the map is locked until it's done -->
+            <Border DockPanel.Dock="Bottom" x:Name="PlayingToEndBar" BorderThickness="0,1,0,0" Padding="12,8,12,10"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    IsVisible="{Binding IsPlayingToEnd}">
+                <StackPanel Spacing="4">
+                    <TextBlock x:Name="PlayToEndText" Text="{Binding PlayToEndText}" FontSize="12" FontWeight="SemiBold" />
+                    <ProgressBar x:Name="PlayToEndProgressBar" Minimum="0" Maximum="100" Height="8"
+                                 Value="{Binding PlayToEndProgress}" />
+                    <TextBlock Classes="small"
+                               Text="The map is locked until it's done. Pause stops it before the next move." />
+                </StackPanel>
+            </Border>
+
             <!-- playing to the end, at the bottom, away from the step buttons: a slip shouldn't map the whole game -->
             <Border DockPanel.Dock="Bottom" BorderThickness="0,1,0,0" Padding="12,8,12,10"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
