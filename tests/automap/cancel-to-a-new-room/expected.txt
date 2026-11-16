@@ -1,5 +1,5 @@
 not on the map: Room C
-current: Room A
+current: (none)
 
 rooms:
 Room A (start)

@@ -108,6 +108,33 @@ public static partial class LayoutTidy
   }
 
   /// <summary>
+  ///   Gets ready for <see cref="TidyAround" />: takes a copy of the layout now, on the map's thread, and
+  ///   <see cref="TidyPlan.Run" /> works the tidy out on the copy, on any thread, without touching the map. The same
+  ///   tidy as <see cref="TidyAround" />; null when there's nothing to tidy.
+  /// </summary>
+  public static TidyPlan PlanTidyAround(
+    IList<Element> elements, Room centre, int radius = 2, int timeLimitMs = 80, bool onlyIfCluttered = false)
+  {
+    if (elements == null || centre == null) return null;
+    var map = new LayoutMap(elements);
+    if (!map.Contains(centre)) return null;
+    if (onlyIfCluttered && !map.Cluttered(map.Neighbourhood(centre, radius))) return null;
+    // as TidyAround
+    var near = map.Neighbourhood(centre, radius, false);
+    var all = map.Neighbourhood(centre, radius);
+    var free = map.JoinCount(centre) <= 1 ? centre : null;
+    var movable = all.Where(room => !room.PlacedByHand || room == free).ToList();
+    var pushOnly = all.Where(room => room.PlacedByHand && room != free).ToList();
+    if (movable.Count == 0) return null;
+    var inTheWay = movable.Except(near).ToList();
+    return new TidyPlan(map, movable, TidyMethod.Quick, timeLimitMs, token =>
+    {
+      map.Tidy(movable, timeLimitMs, free, inTheWay, StayPut, token, pushOnly);
+      return true;
+    });
+  }
+
+  /// <summary>
   ///   How many joins are naturally placed: the far room lies in the direction the join's ends give (within 22.5
   ///   degrees), as read on the map. Joins without a direction (teleports, exit stubs) aren't counted.
   /// </summary>
