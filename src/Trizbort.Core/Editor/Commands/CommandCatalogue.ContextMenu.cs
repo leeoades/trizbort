@@ -10,6 +10,9 @@ public sealed partial class CommandCatalogue
   private void ArrangeContextMenus()
   {
     // a room
+    // directions (satnav), near the top: where you'd look for them while playing
+    Arrange("directions.to", null, 12, "1b-directions");
+    Arrange("directions.from", null, 13, "1b-directions");
     Arrange("room.toggleDark", "Roo_m", 50, "5-room");
     Arrange("room.setStart", "Roo_m", 51, "5-room");
     Arrange("room.setEnd", "Roo_m", 52, "5-room");

@@ -188,6 +188,7 @@ public sealed partial class CommandCatalogue
     RegisterMoreCommands(catalogue);
     RegisterNavigationCommands(catalogue);
     RegisterDebugCommands(catalogue);
+    RegisterDirectionsCommands(catalogue);
     RegisterMiscCommands(catalogue);
     catalogue.ArrangeContextMenus();
     if (OperatingSystem.IsMacOS()) ApplyMacVariants(catalogue);

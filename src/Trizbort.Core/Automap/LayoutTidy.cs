@@ -108,6 +108,33 @@ public static partial class LayoutTidy
   }
 
   /// <summary>
+  ///   Gets ready for <see cref="TidyAround" />: takes a copy of the layout now, on the map's thread, and
+  ///   <see cref="TidyPlan.Run" /> works the tidy out on the copy, on any thread, without touching the map. The same
+  ///   tidy as <see cref="TidyAround" />; null when there's nothing to tidy.
+  /// </summary>
+  public static TidyPlan PlanTidyAround(
+    IList<Element> elements, Room centre, int radius = 2, int timeLimitMs = 80, bool onlyIfCluttered = false)
+  {
+    if (elements == null || centre == null) return null;
+    var map = new LayoutMap(elements);
+    if (!map.Contains(centre)) return null;
+    if (onlyIfCluttered && !map.Cluttered(map.Neighbourhood(centre, radius))) return null;
+    // as TidyAround
+    var near = map.Neighbourhood(centre, radius, false);
+    var all = map.Neighbourhood(centre, radius);
+    var free = map.JoinCount(centre) <= 1 ? centre : null;
+    var movable = all.Where(room => !room.PlacedByHand || room == free).ToList();
+    var pushOnly = all.Where(room => room.PlacedByHand && room != free).ToList();
+    if (movable.Count == 0) return null;
+    var inTheWay = movable.Except(near).ToList();
+    return new TidyPlan(map, movable, TidyMethod.Quick, timeLimitMs, token =>
+    {
+      map.Tidy(movable, timeLimitMs, free, inTheWay, StayPut, token, pushOnly);
+      return true;
+    });
+  }
+
+  /// <summary>
   ///   How many joins are naturally placed: the far room lies in the direction the join's ends give (within 22.5
   ///   degrees), as read on the map. Joins without a direction (teleports, exit stubs) aren't counted.
   /// </summary>
@@ -356,6 +383,19 @@ public static partial class LayoutTidy
         if (!string.IsNullOrWhiteSpace(connection.EndTravelled)) travelledFrom.Add((end, endPoint));
       }
 
+      // the sides of rooms that split joins leave by: the Foyer's south side is the way to the Front Porch, though the
+      // porch is drawn far off. (A join that's drawn already keeps its side clear: its room is there.)
+      var sides = new Dictionary<(Room, CompassPoint), List<Connection>>();
+      foreach (var connection in elements.OfType<Connection>())
+      {
+        if (!connection.Split) continue;
+        var start = connection.GetSourceRoom(out var startPoint);
+        var end = connection.GetTargetRoom(out var endPoint);
+        if (start == null || end == null || start == end) continue;
+        foreach (var side in new[] { (start, startPoint), (end, endPoint) })
+          (sides.TryGetValue(side, out var list) ? list : sides[side] = new List<Connection>()).Add(connection);
+      }
+
       var pairOf = new Dictionary<(int, int), int>();
       foreach (var connection in elements.OfType<Connection>())
       {
@@ -435,6 +475,8 @@ public static partial class LayoutTidy
 
           join.WantX = Math.Sign(x);
           join.WantY = Math.Sign(y);
+          (join.WantX, join.WantY) = AvoidTakenSides(sides, connection, a, point, b, targetPoint, ia, ib,
+            join.WantX, join.WantY);
           join.Bent = aIsCompass && bIsCompass &&
                       (Math.Sign(fromA.X) != -Math.Sign(fromB.X) || Math.Sign(fromA.Y) != -Math.Sign(fromB.Y));
           join.Straight = aIsCompass && bIsCompass && !join.Bent && (Math.Sign(x) == 0 || Math.Sign(y) == 0);
@@ -1155,6 +1197,58 @@ public static partial class LayoutTidy
       var d3 = Side(ax, ay, bx, by, cx, cy);
       var d4 = Side(ax, ay, bx, by, dx, dy);
       return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+    }
+
+    /// <summary>
+    ///   Where a join wants its far room, (<paramref name="wantX" />, <paramref name="wantY" />) from
+    ///   <paramref name="a" />, unless that puts it on a side of either room a split join already leaves by: the Closet's way north to the Foyer, which also leads "in" from the Foyer, would put the
+    ///   Closet right underneath, but south from the Foyer is the Front Porch. Then the neighbouring direction nearer
+    ///   where the room already is (below and to the right) that's free at both ends.
+    /// </summary>
+    private (double X, double Y) AvoidTakenSides(
+      Dictionary<(Room, CompassPoint), List<Connection>> sides, Connection connection, Room a, CompassPoint aPoint,
+      Room b, CompassPoint bPoint, int ia, int ib, double wantX, double wantY)
+    {
+      bool Taken(Room room, CompassPoint own, double dx, double dy)
+      {
+        var side = MainPointTowards(dx, dy);
+        if (side == null || side == own) return false;
+        return sides.TryGetValue((room, side.Value), out var joins) && joins.Any(other => other != connection);
+      }
+
+      bool Free(double dx, double dy) => !Taken(a, aPoint, dx, dy) && !Taken(b, bPoint, -dx, -dy);
+
+      if (Free(wantX, wantY)) return (wantX, wantY);
+      var compass = _compass;
+      var at = Array.FindIndex(compass, d => d.X == wantX && d.Y == wantY);
+      if (at < 0) return (wantX, wantY);
+      // nearer where the far room is now
+      var nowX = _x[ib] - _x[ia];
+      var nowY = _y[ib] - _y[ia];
+      var choices = new[] { compass[(at + 1) % 8], compass[(at + 7) % 8] }
+        .Where(d => Free(d.X, d.Y))
+        .OrderByDescending(d => (d.X * nowX + d.Y * nowY) / Math.Sqrt(d.X * d.X + d.Y * d.Y))
+        .ToList();
+      return choices.Count > 0 ? (choices[0].X, choices[0].Y) : (wantX, wantY);
+    }
+
+    // the eight compass directions, in steps, round the compass
+    private static readonly (double X, double Y)[] _compass =
+      { (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1) };
+
+    private static CompassPoint? MainPointTowards(double dx, double dy)
+    {
+      foreach (var point in new[]
+               {
+                 CompassPoint.North, CompassPoint.NorthEast, CompassPoint.East, CompassPoint.SouthEast,
+                 CompassPoint.South, CompassPoint.SouthWest, CompassPoint.West, CompassPoint.NorthWest
+               })
+      {
+        var step = CompassPointHelper.GetAutomapDirectionVector(point);
+        if (Math.Sign(step.X) == Math.Sign(dx) && Math.Sign(step.Y) == Math.Sign(dy)) return point;
+      }
+
+      return null;
     }
 
     /// <summary>

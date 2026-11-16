@@ -127,7 +127,7 @@ public sealed class Automap : IAutomapController
     // the map stays as it is; automap carries on from the room it was in then, if it's still there
     _lastKnownRoom = point.Room == null ? null : _canvas.ResolveRoom(point.Room);
     // and the map shows that room as the one you're in again
-    if (_lastKnownRoom != null) _canvas.SelectRoom(_lastKnownRoom);
+    if (_lastKnownRoom != null) _canvas.FollowRoom(_lastKnownRoom);
     _lastMoveDirection = null;
     _lastJourneyCommand = null;
     _pendingStubRemoval = null;
@@ -474,7 +474,7 @@ public sealed class Automap : IAutomapController
     _seenCommand = false;
     var start = _startRoom != null ? _canvas.ResolveRoom(_startRoom) : null;
     _lastKnownRoom = start;
-    if (start != null) _canvas.SelectRoom(start);
+    if (start != null) _canvas.FollowRoom(start);
   }
 
   /// <summary>
@@ -620,6 +620,85 @@ public sealed class Automap : IAutomapController
     _lastMoveDirection = null;
     _lastJourneyCommand = null;
     Trace("{0}: skipped, as the user asked.", FormatTranscriptLineForDisplay(line));
+  }
+
+  /// <summary>
+  ///   The user cancelled "that way led somewhere else before" for a room already on the map: the way isn't joined,
+  ///   but automap knows the player is in <paramref name="room" />, and maps on from there.
+  /// </summary>
+  private void StayInWithoutJoining(Room room, string line)
+  {
+    room = _canvas.ResolveRoom(room);
+    _skipHeading = false;
+    _lastMoveDirection = null;
+    _lastJourneyCommand = null;
+    _pendingStubRemoval = null;
+    if (room == null)
+    {
+      SkipHeading(line);
+      return;
+    }
+
+    NowInRoom(room);
+    Trace("{0}: not joined, as the user asked; in {1}.", FormatTranscriptLineForDisplay(line), room.Name);
+  }
+
+  /// <summary>
+  ///   A room automap knows the player is in, but that isn't on the map: the user cancelled the question about it.
+  ///   <see cref="AddCurrentRoomAsync" /> puts it there.
+  /// </summary>
+  private sealed record UnmappedRoom(string Name, string Description, Room From, MappableDirection? Direction,
+    string Line);
+
+  private UnmappedRoom _notOnMap;
+
+  /// <summary>
+  ///   The user cancelled the question about a new room: nothing is mapped, but automap knows the player is in it.
+  /// </summary>
+  private void NotOnTheMap(string roomName, string roomDescription, string line)
+  {
+    _notOnMap = new UnmappedRoom(roomName, roomDescription, _lastKnownRoom, _lastMoveDirection, line);
+    SkipHeading(line);
+    Trace("{0}: in {1}, which isn't on the map.", FormatTranscriptLineForDisplay(line), roomName);
+  }
+
+  /// <summary>Not moving ("look"), and the heading is the room not on the map that the player is in.</summary>
+  private bool StillNotOnTheMap(string roomName, string roomDescription) =>
+    _notOnMap != null && _lastKnownRoom == null && _lastMoveDirection == null && _lastJourneyCommand == null &&
+    NamedAs(_notOnMap.Name, roomName) &&
+    (string.IsNullOrWhiteSpace(roomDescription) || string.IsNullOrWhiteSpace(_notOnMap.Description) ||
+     SameFirstSentence(_notOnMap.Description, roomDescription));
+
+  /// <summary>The room the player is in when it isn't on the map (the user cancelled the question about it).</summary>
+  public string RoomNotOnMap => CurrentRoom == null ? _notOnMap?.Name : null;
+
+  /// <summary>Whether there's a room the player is in that isn't on the map, for <see cref="AddCurrentRoomAsync" />.</summary>
+  public bool CanAddCurrentRoom => Running && RoomNotOnMap != null;
+
+  /// <summary>
+  ///   Add Current Room: puts the room the player is in, which isn't on the map, beside the room they came from (not
+  ///   joined: the user cancelled the question about the way), and carries on from there. One undo step.
+  /// </summary>
+  public async Task<bool> AddCurrentRoomAsync()
+  {
+    if (!CanAddCurrentRoom) return false;
+    var unmapped = _notOnMap;
+    var from = unmapped.From == null ? null : _canvas.ResolveRoom(unmapped.From);
+    Room room;
+    using (await BeginBatchAsync("Automap: add " + unmapped.Name, CancellationToken.None))
+    {
+      room = from != null && unmapped.Direction != null
+        ? _canvas.CreateRoom(from, unmapped.Direction.Value, unmapped.Name, unmapped.Line)
+        : _canvas.CreateRoom(from, unmapped.Name);
+      room.AddDescription(unmapped.Description);
+      DeduceExitsFromDescription(room, unmapped.Description);
+    }
+
+    _notOnMap = null;
+    _doneHere.Clear();
+    NowInRoom(room);
+    Status = $"Automap: you're in {room.Name}.";
+    return true;
   }
 
   /// <summary>The user was asked which room a heading meant, by <see cref="FindRoomAsync" />.</summary>
@@ -790,8 +869,10 @@ public sealed class Automap : IAutomapController
 
         room.AddDescription(roomDescription);
         NowInRoom(room);
-        if (_settings.AutoTidy) _canvas.TidyAround(room);
       }
+
+      // the tidy is an undo step of its own, after the move's
+      if (_settings.AutoTidy) await _canvas.TidyAroundAsync(room);
 
       _pausedFrom = null;
       Status = "Automapping is processing the transcript.";
@@ -820,6 +901,7 @@ public sealed class Automap : IAutomapController
   {
     if (room == null) return;
     _lastKnownRoom = room;
+    _notOnMap = null;
     _lastMoveDirection = null;
     _lastJourneyCommand = null;
     _pendingStubRemoval = null;
@@ -827,7 +909,7 @@ public sealed class Automap : IAutomapController
     _dark = null;
     _followTo = null;
     _doneHere.Clear();
-    _canvas?.SelectRoom(room);
+    _canvas?.FollowRoom(room);
     Status = $"Automap: you're in {room.Name}.";
   }
 
@@ -921,7 +1003,7 @@ public sealed class Automap : IAutomapController
     // the first room of the run, whether automap made it or found it already on the map
     _startRoom ??= room;
     _lastKnownRoom = room;
-    _canvas.SelectRoom(room);
+    _canvas.FollowRoom(room);
   }
 
   private void DeduceExitsFromDescription(Room room, string description)
@@ -1079,6 +1161,14 @@ public sealed class Automap : IAutomapController
         var arrivedFrom = _lastKnownRoom;
         var arrivedBy = _lastMoveDirection;
         var arrivedByJourney = _lastJourneyCommand;
+        if (StillNotOnTheMap(roomName, roomDescription))
+        {
+          Trace("{0}: still in {1}, which isn't on the map.", FormatTranscriptLineForDisplay(line), roomName);
+          previousLine = line;
+          continue;
+        }
+
+        _notOnMap = null;
         var room = VariantRoom(roomName, roomDescription);
         _skipHeading = false;
         if (room == null)
@@ -1116,7 +1206,8 @@ public sealed class Automap : IAutomapController
           token.ThrowIfCancellationRequested();
           if (decision == AutomapSameDirectionResult.Cancel)
           {
-            SkipHeading(line);
+            // the way isn't mapped, but the player is in that room all the same
+            StayInWithoutJoining(room, line);
             previousLine = line;
             continue;
           }
@@ -1142,8 +1233,9 @@ public sealed class Automap : IAutomapController
             token.ThrowIfCancellationRequested();
             if (decision == AutomapSameDirectionResult.Cancel)
             {
-              // the user cancelled the question: map nothing for this move
-              SkipHeading(line);
+              // the user cancelled the question: map nothing for this move. The player is in a room that isn't on
+              // the map (Add Current Room puts it there)
+              NotOnTheMap(roomName, roomDescription, line);
               previousLine = line;
               continue;
             }
@@ -1158,6 +1250,7 @@ public sealed class Automap : IAutomapController
         }
 
         var waits = 0;
+        var tidy = false;
         using (await BeginBatchAsync("Automap: " + roomName, token))
         {
           // the user may have undone something while automap waited for them to finish a change
@@ -1340,9 +1433,12 @@ public sealed class Automap : IAutomapController
           // add this description if the room doesn't have it already
           if (room != null) room.AddDescription(roomDescription);
 
-          // let the rooms around the player make space for each other, in this move's undo step
-          if (_settings.AutoTidy && _lastKnownRoom != null) _canvas.TidyAround(_lastKnownRoom);
+          tidy = _settings.AutoTidy && _lastKnownRoom != null;
         }
+
+        // let the rooms around the player make space for each other: an undo step of its own, after the move's, so
+        // undoing a tidy that went wrong keeps the new room
+        if (tidy && _lastKnownRoom != null) await _canvas.TidyAroundAsync(_lastKnownRoom);
 
         // single stepping waits outside the batch, so the user can undo while we wait
         for (var wait = 0; wait < waits; wait++) await WaitForStep(token);
@@ -1442,8 +1538,10 @@ public sealed class Automap : IAutomapController
   {
     var here = _lastKnownRoom;
     if (here == null) return null;
+    // not moving ("look"): still here, unless the description is another room's by this name (in a maze, "Maze"
+    // with the description of the room next door)
     if (_lastMoveDirection == null && _lastJourneyCommand == null)
-      return NamedAs(here.Name, roomName) ? here : null;
+      return NamedAs(here.Name, roomName) && !DescribesAnother(here, roomName, roomDescription) ? here : null;
     // a moving room takes the player with it ("pull peg" in the lift): still in it, at whichever stop
     if (_lastMoveDirection == null) return Moving(here) && NamedAs(here.Name, roomName) ? here : null;
     var direction = _lastMoveDirection.Value;
@@ -1479,6 +1577,21 @@ public sealed class Automap : IAutomapController
   private bool Shows(Room room, string roomDescription) =>
     !_settings.VerboseTranscript || string.IsNullOrWhiteSpace(roomDescription) || room.Descriptions.Count == 0 ||
     room.Descriptions.Any(known => SameFirstSentence(known, roomDescription));
+
+  /// <summary>
+  ///   Whether, in a verbose transcript, the description shown is one that <paramref name="here" /> hasn't had but
+  ///   another room with the heading's name has: the player is in that room, not this one. A room with no
+  ///   descriptions yet (a copy the user drew, "Cupboard (-1)") may be the one.
+  /// </summary>
+  private bool DescribesAnother(Room here, string roomName, string roomDescription)
+  {
+    if (!_settings.VerboseTranscript || string.IsNullOrWhiteSpace(roomDescription) || here.Descriptions.Count == 0 ||
+        here.Descriptions.Any(known => SameFirstSentence(known, roomDescription)))
+      return false;
+    return _canvas.FindRooms(roomName, roomDescription, (name, description, other) =>
+      other != here && !other.IsReference && NamedAs(other.Name, name) &&
+      other.Descriptions.Any(known => SameFirstSentence(known, description))).Certain != null;
+  }
 
   /// <summary>The room's name is the heading, or a copy of it ("Cupboard (-1)" for "Cupboard").</summary>
   private static bool NamedAs(string name, string heading) =>
@@ -1961,7 +2074,7 @@ public sealed class Automap : IAutomapController
     _lastKnownRoom = room;
     _doneHere.Clear();
     _pendingStubRemoval = null;
-    _canvas.SelectRoom(room);
+    _canvas.FollowRoom(room);
     Status = $"Automap: you're in {room.Name}, not {here.Name}.";
     return true;
   }
@@ -2407,6 +2520,7 @@ public sealed class Automap : IAutomapController
     _lastCommand = null;
     _pendingStubRemoval = null;
     _lastKnownRoom = null;
+    _notOnMap = null;
     _lastMoveDirection = null;
     _lastJourneyCommand = null;
     _gameName = string.Empty;

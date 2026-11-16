@@ -1,0 +1,29 @@
+>look
+
+Room A
+A plain room called A.
+
+>e
+
+Room B
+A plain room called B.
+
+>w
+
+Room A
+A plain room called A.
+
+>pray
+You feel dizzy for a moment.
+
+>look
+
+Room B
+A plain room called B.
+
+>n
+
+Room E
+A plain room called E.
+
+>
