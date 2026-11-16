@@ -56,22 +56,43 @@ public sealed partial class CommandCatalogue
     {
       Id = "room.toggleMoves",
       ContextOrder = 64, ContextGroup = "5-room",
-      Title = "Room M_oves",
+      Title = "This Room M_oves",
+      // says what choosing it does: a room that moves offers to stop it moving
+      DynamicTitle = s => s.PrimaryRoom != null && (s.PrimaryRoom.Moves || s.PrimaryRoom.IsStop)
+        ? "This Room Doesn't M_ove"
+        : "This Room M_oves",
       MenuPath = "Edit/Rooms",
       Group = "6-automap",
       ContextTargets = ContextTargets.Room,
-      CanExecuteFunc = s => s.Selection.Rooms.Any(room => !room.IsReference),
-      IsCheckedFunc = s => s.PrimaryRoom != null && (s.PrimaryRoom.Moves || s.PrimaryRoom.IsStop),
+      CanExecuteFunc = s => s.Selection.Rooms.Any(room => !room.IsReference || room.IsStop),
       ExecuteAsyncFunc = s => Run(() =>
       {
         var rooms = s.Selection.Rooms.Select(room => room.IsStop ? room.ReferenceRoom : room)
           .Where(room => room != null && !room.IsReference).Distinct().ToList();
         if (rooms.Count == 0) return;
         var on = !rooms[0].Moves;
-        s.Execute(on ? "Room moves" : "Room doesn't move", () =>
+        s.Execute(on ? "This room moves" : "This room doesn't move", () =>
         {
           foreach (var room in rooms) room.Moves = on;
         });
+      })
+    });
+    catalogue.Register(new EditorCommand
+    {
+      Id = "room.addStop",
+      ContextOrder = 65, ContextGroup = "5-room",
+      Title = "Add Another _Stop",
+      MenuPath = "Edit/Rooms",
+      Group = "6-automap",
+      ContextTargets = ContextTargets.Room,
+      CanExecuteFunc = s => s.SelectedRooms.Count == 1 && RoomCopies.CanAddStop(s.SelectedRooms[0]),
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        var room = s.SelectedRooms[0];
+        Room stop = null;
+        s.Execute("Add another stop for " + room.Name, () => stop = RoomCopies.AddStop(s.Project.Elements, room));
+        // selected, ready to drag to where the room goes
+        if (stop != null) s.Selection.Set(new Element[] { stop });
       })
     });
     // copies of rooms: portals and a moving room's stops
