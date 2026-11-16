@@ -14,6 +14,10 @@
             <Setter Property="Opacity" Value="0.7" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
+        <Style Selector="Border.divider">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Background" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+        </Style>
         <Style Selector="Button">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -34,7 +38,11 @@
                         Command="{Binding CloseDirectionsCommand}" ToolTip.Tip="Close the directions" />
             </Grid>
 
-            <StackPanel DockPanel.Dock="Top" Margin="12,0,12,8" Spacing="6">
+            <!-- where you choose the rooms: a box of its own, apart from the directions below -->
+            <Border DockPanel.Dock="Top" x:Name="RouteCard" Margin="8,0,8,0" Padding="10,8,10,10" CornerRadius="6"
+                    Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1">
+            <StackPanel Spacing="6">
                 <TextBlock Classes="section" Text="FROM" />
                 <TextBlock x:Name="FromName" Text="{Binding DirectionsFrom}" FontWeight="SemiBold" TextWrapping="Wrap" />
                 <Button x:Name="WhereYouAreButton" Content="From Where You Are"
@@ -48,10 +56,18 @@
                     <Button Grid.Column="2" x:Name="SwapButton" Content="⇅ Swap" Command="{Binding SwapDirectionsCommand}"
                             ToolTip.Tip="Directions back the other way" />
                 </Grid>
+            </StackPanel>
+            </Border>
+
+            <!-- the directions, under their own heading -->
+            <StackPanel DockPanel.Dock="Top" x:Name="StepsHeading" Margin="12,14,12,4" Spacing="4">
+                <TextBlock Classes="section" Text="STEPS" />
+                <Border Classes="divider" />
                 <TextBlock x:Name="Status" Text="{Binding DirectionsStatus}" FontSize="12" TextWrapping="Wrap" />
             </StackPanel>
 
-            <StackPanel DockPanel.Dock="Bottom" Margin="12,8,12,10" Spacing="4">
+            <StackPanel DockPanel.Dock="Bottom" Margin="12,4,12,10" Spacing="4">
+                <Border Classes="divider" Margin="0,0,0,4" />
                 <Button x:Name="CopyButton" Content="Copy Commands" Click="OnCopy"
                         IsEnabled="{Binding HasDirectionsSteps}"
                         ToolTip.Tip="Copy the commands, one a line, to paste into the game" />
