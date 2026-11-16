@@ -37,9 +37,27 @@
         <DockPanel>
             <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="12,10,12,8">
                 <TextBlock Text="Automap" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <Button Grid.Column="1" Content="Stop" Padding="12,3" HorizontalAlignment="Right"
-                        Command="{Binding StopAutomapCommand}" ToolTip.Tip="Stop automapping" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                    <Button x:Name="SettingsButton" Content="⚙" Padding="8,3" HorizontalAlignment="Right"
+                            Command="{Binding ShowAutomapRunSettingsCommand}"
+                            ToolTip.Tip="Automap Settings: tidying as you go, best guess which room, and more" />
+                    <Button Content="Stop" Padding="12,3" HorizontalAlignment="Right"
+                            Command="{Binding StopAutomapCommand}" ToolTip.Tip="Stop automapping" />
+                </StackPanel>
             </Grid>
+
+            <!-- playing to the end: how far it's got; the map is locked until it's done -->
+            <Border DockPanel.Dock="Bottom" x:Name="PlayingToEndBar" BorderThickness="0,1,0,0" Padding="12,8,12,10"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    IsVisible="{Binding IsPlayingToEnd}">
+                <StackPanel Spacing="4">
+                    <TextBlock x:Name="PlayToEndText" Text="{Binding PlayToEndText}" FontSize="12" FontWeight="SemiBold" />
+                    <ProgressBar x:Name="PlayToEndProgressBar" Minimum="0" Maximum="100" Height="8"
+                                 Value="{Binding PlayToEndProgress}" />
+                    <TextBlock Classes="small"
+                               Text="The map is locked until it's done. Pause stops it before the next move." />
+                </StackPanel>
+            </Border>
 
             <!-- playing to the end, at the bottom, away from the step buttons: a slip shouldn't map the whole game -->
             <Border DockPanel.Dock="Bottom" BorderThickness="0,1,0,0" Padding="12,8,12,10"
@@ -110,9 +128,6 @@
                             <controls:TranscriptMonitor Text="{Binding AutomapScreenText}"
                                                         ShowsCursor="{Binding IsAutomapAwaitingCommand}" />
                         </Viewbox>
-                        <CheckBox Content="Show the game screen" FontSize="12"
-                                  IsChecked="{Binding IsGameMonitorShown, Mode=OneWay}"
-                                  Command="{Binding ToggleGameMonitorCommand}" />
                     </StackPanel>
 
                     <!-- mapping: whether automap changes the map -->
@@ -127,9 +142,6 @@
                                          ToolTip.Tip="Follow where you are without changing the map" />
                         </StackPanel>
                         <TextBlock Classes="note" x:Name="MappingNote" Text="{Binding AutomapMappingNote}" />
-                        <CheckBox x:Name="AutoTidyBox" Content="Tidy the map as I go" FontSize="12"
-                                  IsChecked="{Binding IsAutomapAutoTidy}"
-                                  ToolTip.Tip="Rearrange the rooms near you after each move, making space for new rooms. Off: rooms stay where automap first puts them, and you tidy by hand (Tidy Map...)" />
                         <TextBlock Classes="small"
                                    Text="Tracking only lets you step back and forward through the transcript to check automap follows the rooms you expect. Fix the map if not, then switch back to Mapping." />
                     </StackPanel>

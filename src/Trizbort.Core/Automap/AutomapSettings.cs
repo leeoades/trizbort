@@ -30,6 +30,12 @@ public struct AutomapSettings
   public bool ContinueTranscript;
   public bool AssumeTwoWayConnections;
 
+  /// <summary>
+  ///   When several rooms have the heading's name and the map doesn't say which, make a best guess (by the description)
+  ///   instead of asking. Ticking "Don't ask again" in the question turns it on; it stays on until turned off.
+  /// </summary>
+  public bool BestGuessWhichRoom;
+
   /// <summary>Rooms near the player rearrange themselves after each move so they don't get in each other's way.</summary>
   public bool AutoTidy;
 

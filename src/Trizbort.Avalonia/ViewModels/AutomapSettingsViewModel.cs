@@ -15,16 +15,55 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsFileNameMissing))]
     private string _fileName = string.Empty;
 
-    public bool CanStart => !string.IsNullOrWhiteSpace(FileName);
+    public bool CanStart => WhileRunning || !string.IsNullOrWhiteSpace(FileName);
 
     /// <summary>True while no transcript file is chosen (Start is disabled); drives the visible reason.</summary>
     public bool IsFileNameMissing => !CanStart;
 
+    /// <summary>
+    ///     Opened from the automap panel while automap runs: only the options that can change part way through show,
+    ///     and OK applies them from the next move.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanStart))]
+    [NotifyPropertyChangedFor(nameof(IsFileNameMissing))]
+    [NotifyPropertyChangedFor(nameof(IsStarting))]
+    [NotifyPropertyChangedFor(nameof(ShowSingleStep))]
+    [NotifyPropertyChangedFor(nameof(OkText))]
+    [NotifyPropertyChangedFor(nameof(Title))]
+    [NotifyPropertyChangedFor(nameof(Hint))]
+    private bool _whileRunning;
+
+    /// <summary>Starting automap: the transcript and how to start show.</summary>
+    public bool IsStarting => !WhileRunning;
+
+    public bool ShowSingleStep => IsDebugEnabled && IsStarting;
+
+    public string OkText => WhileRunning ? "OK" : "Start Auto_mapping";
+
+    public string Title => WhileRunning ? "Automap Settings" : "Automapping";
+
+    public string Hint => WhileRunning
+        ? "Changes take effect from the next move, and are kept for the next time you automap."
+        : "Trizbort can automatically generate a map from a transcript of a game, even while the game is in progress.";
+
     [ObservableProperty]
     private bool _continueTranscript;
 
+    /// <summary>Descriptions can tell rooms with the same name apart (the transcript shows them).</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NamesOnly))]
     private bool _verboseTranscript = true;
+
+    /// <summary>
+    ///     "Ignore descriptions: a room's name alone says which room it is": the other way round from
+    ///     <see cref="VerboseTranscript" />, as the dialog asks it.
+    /// </summary>
+    public bool NamesOnly
+    {
+        get => !VerboseTranscript;
+        set => VerboseTranscript = !value;
+    }
 
     [ObservableProperty]
     private bool _assumeTwoWayConnections = true;
@@ -34,6 +73,14 @@ public partial class AutomapSettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _autoTidy = true;
+
+    /// <summary>Show the little game screen in the automap panel (an app setting, kept between runs).</summary>
+    [ObservableProperty]
+    private bool _showGameScreen = true;
+
+    /// <summary>"Which room?": a best guess by the description instead of asking.</summary>
+    [ObservableProperty]
+    private bool _bestGuessWhichRoom;
 
     /// <summary>Label joins "n / u / in" rather than "north / up / in".</summary>
     [ObservableProperty]
@@ -70,6 +117,7 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         AssumeTwoWayConnections = settings.AssumeTwoWayConnections;
         GuessExits = settings.GuessExits;
         AutoTidy = settings.AutoTidy;
+        BestGuessWhichRoom = settings.BestGuessWhichRoom;
         AbbreviateDirections = settings.AbbreviateDirections;
         MoveByMove = settings.MoveByMove;
         AddObjectCommand = string.IsNullOrEmpty(settings.AddObjectCommand) ? "tb see" : settings.AddObjectCommand;
@@ -94,6 +142,7 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         settings.VerboseTranscript = VerboseTranscript;
         settings.GuessExits = GuessExits;
         settings.AutoTidy = AutoTidy;
+        settings.BestGuessWhichRoom = BestGuessWhichRoom;
         settings.AbbreviateDirections = AbbreviateDirections;
         settings.MoveByMove = MoveByMove;
         settings.AddObjectCommand = string.IsNullOrEmpty(AddObjectCommand) ? AutomapSettings.Default.AddObjectCommand : AddObjectCommand;

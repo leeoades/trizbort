@@ -203,6 +203,32 @@ public class AutomapPromptTests : IsolatedProjectTests
   }
 
   [Test]
+  public async Task Disambiguate_AutoChooseRest_TurnsOnTheBestGuess_UntilTurnedOff()
+  {
+    AddHall("Alpha hall.");
+    AddHall("Beta hall.");
+    var prompts = new ScriptedPrompts();
+    prompts.DisambiguationResults.Enqueue(candidates => RoomDisambiguation.ChooseFirstAndStopAsking(candidates[0]));
+    var parser = CreateParser(prompts);
+
+    await parser.StartCl(new AutomapCanvas(), SettingsFor("Example Game\n\nHall\nZulu description.\n"));
+    parser.BestGuessWhichRoom.ShouldBeTrue();
+    prompts.DisambiguationCalls.Count.ShouldBe(1);
+
+    // a later run with the setting on doesn't ask; turned off, it asks again
+    var settings = SettingsFor("Example Game\n\nHall\nYankee description.\n");
+    settings.BestGuessWhichRoom = true;
+    await CreateParser(prompts).StartCl(new AutomapCanvas(), settings);
+    prompts.DisambiguationCalls.Count.ShouldBe(1);
+
+    prompts.DisambiguationResults.Enqueue(candidates => RoomDisambiguation.Choose(candidates[0]));
+    settings = SettingsFor("Example Game\n\nHall\nXray description.\n");
+    settings.BestGuessWhichRoom = false;
+    await CreateParser(prompts).StartCl(new AutomapCanvas(), settings);
+    prompts.DisambiguationCalls.Count.ShouldBe(2);
+  }
+
+  [Test]
   public async Task Disambiguate_Cancel_MapsNothing()
   {
     AddHall("Alpha hall.");
