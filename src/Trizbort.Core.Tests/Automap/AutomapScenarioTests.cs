@@ -70,7 +70,7 @@ public class AutomapScenarioTests : IsolatedProjectTests
       listener.Flush();
       System.Diagnostics.Trace.Listeners.Remove(listener);
     }
-    var actual = AutomapMapSummary.Describe(project);
+    var actual = AutomapMapSummary.Describe(project, result.CurrentRoom);
     if (!result.Succeeded)
     {
       actual = "error: " + result.Error + "\n\n" + actual;

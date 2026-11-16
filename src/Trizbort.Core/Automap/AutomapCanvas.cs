@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Trizbort.Editor;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
@@ -668,39 +669,123 @@ public class AutomapCanvas : IAutomapCanvas
   private string _tidiedMap;
 
   /// <summary>
-  ///   Tidies the map after a move. The step-by-step tidy only clears up rooms sitting on each other or on joins near
-  ///   <paramref name="room" />: making the map neat (lined up, balanced) is the solver's job, which it does when the
-  ///   map has changed (see <see cref="PlanRethink" />), and the step-by-step tidy would undo it. Walking around rooms
-  ///   automap already knows leaves the map alone.
+  ///   Tidies the map after a move, there and then (see <see cref="PlanTidyAround" /> and
+  ///   <see cref="FinishTidyAround" />, which the app uses to work the tidy out away from the window).
   /// </summary>
   public void TidyAround(Room room)
   {
-    room = ResolveRoom(room);
-    if (room == null) return;
-    var unchanged = MapShape() == _tidiedMap;
-    var before = RoomGlide.Positions(CurrentProject.Elements);
-    // only where rooms clash: the step-by-step tidy knows nothing of lining up or balancing
-    var moved = LayoutTidy.TidyAround(CurrentProject.Elements.ToList(), room, onlyIfCluttered: true);
-    if (moved > 0)
+    var tidy = PlanTidyAround(room);
+    if (tidy == null) return;
+    // there's no waiting for the user to finish a change of their own here: if they're part-way through one, the
+    // map stays as it is and the next move tidies
+    FinishTidyAround(tidy, tidy.Run());
+  }
+
+  /// <summary>
+  ///   A tidy after a move (see <see cref="PlanTidyAround" />): the step-by-step tidy, on a copy of the layout, ready
+  ///   to be worked out on any thread with <see cref="Run" /> and put on the map with <see cref="FinishTidyAround" />.
+  /// </summary>
+  public sealed class MoveTidy
+  {
+    internal MoveTidy(Room room, bool unchanged, string shape, LayoutTidy.TidyPlan quick)
     {
-      // the rooms slide to their new places on screen rather than jumping
-      RoomGlide.Start(before);
-      FaceGuessedEnds();
-      // the tidy may have moved the player's room: back to the middle of the view, not just inside its edge
-      _session?.KeepInMiddle(room);
+      Room = room;
+      Unchanged = unchanged;
+      Shape = shape;
+      Quick = quick;
     }
 
-    _tidiedMap = MapShape();
-    if (unchanged) return;
-    var rethink = PlanRethink(room);
-    if (rethink == null) return;
-    if (RethinkElsewhere)
+    /// <summary>The room the player is in.</summary>
+    public Room Room { get; }
+
+    // the map was made of the same rooms and joins at the last tidy: walking around rooms automap already knows
+    internal bool Unchanged { get; }
+
+    // what the map was made of when the tidy was planned
+    internal string Shape { get; }
+
+    // the step-by-step tidy, or null when no rooms near the player clash
+    internal LayoutTidy.TidyPlan Quick { get; }
+
+    /// <summary>Works out the step-by-step tidy on the copy (any thread): where rooms should move, if anywhere.</summary>
+    public IReadOnlyDictionary<Room, Vector> Run(CancellationToken token = default) => Quick?.Run(token);
+  }
+
+  /// <summary>
+  ///   Gets ready to tidy the map after a move (on the map's thread), taking a copy of the layout. The step-by-step
+  ///   tidy only clears up rooms sitting on each other or on joins near <paramref name="room" />: making the map neat
+  ///   (lined up, balanced) is the solver's job, which it does when the map has changed (see
+  ///   <see cref="PlanRethink" />), and the step-by-step tidy would undo it. Walking around rooms automap already
+  ///   knows leaves the map alone.
+  /// </summary>
+  public MoveTidy PlanTidyAround(Room room)
+  {
+    room = ResolveRoom(room);
+    if (room == null) return null;
+    var shape = MapShape();
+    // only where rooms clash: the step-by-step tidy knows nothing of lining up or balancing
+    return new MoveTidy(room, shape == _tidiedMap, shape,
+      LayoutTidy.PlanTidyAround(CurrentProject.Elements.ToList(), room, onlyIfCluttered: true));
+  }
+
+  /// <summary>
+  ///   Puts a tidy after a move on the map (on the map's thread), as an undo step of its own after the move's, so
+  ///   undoing a tidy that went wrong keeps the new room; then plans the solver's rethink, if the map needs one. The
+  ///   tidy is dropped if the map has changed since it was planned (the next move tidies again). Returns how many rooms
+  ///   moved, or -1 if the user is part-way through a change of their own (a drag) and it should be tried again
+  ///   shortly.
+  /// </summary>
+  public int FinishTidyAround(MoveTidy tidy, IReadOnlyDictionary<Room, Vector> moves)
+  {
+    if (tidy == null) return 0;
+    var room = ResolveRoom(tidy.Room);
+    if (room == null || MapShape() != tidy.Shape) return 0;
+    var moved = 0;
+    // one undo step for the tidy, and for a rethink worked out there and then
+    IDisposable batch = null;
+    try
     {
-      _rethink = rethink;
-      _planned = rethink;
-      _plannedShape = _tidiedMap;
+      if (moves != null && moves.Count > 0)
+      {
+        batch = BeginBatch("Tidy the map");
+        if (batch == null) return -1;
+        var present = CurrentProject.Elements.OfType<Room>().ToHashSet();
+        var before = RoomGlide.Positions(CurrentProject.Elements);
+        moved = LayoutTidy.TidyPlan.Apply(moves.Where(move => present.Contains(move.Key))
+          .ToDictionary(move => move.Key, move => move.Value));
+        if (moved > 0)
+        {
+          // the rooms slide to their new places on screen rather than jumping
+          RoomGlide.Start(before);
+          FaceGuessedEnds();
+          // the tidy may have moved the player's room: back to the middle of the view, not just inside its edge
+          _session?.KeepInMiddle(room);
+        }
+      }
+
+      _tidiedMap = MapShape();
+      if (tidy.Unchanged) return moved;
+      var rethink = PlanRethink(room);
+      if (rethink == null) return moved;
+      if (RethinkElsewhere)
+      {
+        // worked out in the background, and put on the map later as an undo step of its own
+        _rethink = rethink;
+        _planned = rethink;
+        _plannedShape = _tidiedMap;
+      }
+      else
+      {
+        batch ??= BeginBatch("Tidy the map") ?? NoBatch.Instance;
+        FinishRethink(rethink, rethink.Run());
+      }
+
+      return moved;
     }
-    else FinishRethink(rethink, rethink.Run());
+    finally
+    {
+      batch?.Dispose();
+    }
   }
 
   /// <summary>
@@ -1108,6 +1193,16 @@ public class AutomapCanvas : IAutomapCanvas
   public void RemoveRoom(Room otherRoom)
   {
     CurrentProject.Elements.Remove(otherRoom);
+  }
+
+  /// <summary>
+  ///   Automap is now in <paramref name="room" />: the view keeps it in the middle. It isn't selected: the blue
+  ///   ring shows where you are, and the selection stays whatever the user chose.
+  /// </summary>
+  public void FollowRoom(Room room)
+  {
+    if (!CurrentProject.Elements.Contains(room)) return;
+    _session?.KeepInMiddle(room);
   }
 
   public void SelectRoom(Room room)

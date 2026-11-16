@@ -127,7 +127,7 @@ public sealed class Automap : IAutomapController
     // the map stays as it is; automap carries on from the room it was in then, if it's still there
     _lastKnownRoom = point.Room == null ? null : _canvas.ResolveRoom(point.Room);
     // and the map shows that room as the one you're in again
-    if (_lastKnownRoom != null) _canvas.SelectRoom(_lastKnownRoom);
+    if (_lastKnownRoom != null) _canvas.FollowRoom(_lastKnownRoom);
     _lastMoveDirection = null;
     _lastJourneyCommand = null;
     _pendingStubRemoval = null;
@@ -474,7 +474,7 @@ public sealed class Automap : IAutomapController
     _seenCommand = false;
     var start = _startRoom != null ? _canvas.ResolveRoom(_startRoom) : null;
     _lastKnownRoom = start;
-    if (start != null) _canvas.SelectRoom(start);
+    if (start != null) _canvas.FollowRoom(start);
   }
 
   /// <summary>
@@ -790,8 +790,10 @@ public sealed class Automap : IAutomapController
 
         room.AddDescription(roomDescription);
         NowInRoom(room);
-        if (_settings.AutoTidy) _canvas.TidyAround(room);
       }
+
+      // the tidy is an undo step of its own, after the move's
+      if (_settings.AutoTidy) await _canvas.TidyAroundAsync(room);
 
       _pausedFrom = null;
       Status = "Automapping is processing the transcript.";
@@ -827,7 +829,7 @@ public sealed class Automap : IAutomapController
     _dark = null;
     _followTo = null;
     _doneHere.Clear();
-    _canvas?.SelectRoom(room);
+    _canvas?.FollowRoom(room);
     Status = $"Automap: you're in {room.Name}.";
   }
 
@@ -921,7 +923,7 @@ public sealed class Automap : IAutomapController
     // the first room of the run, whether automap made it or found it already on the map
     _startRoom ??= room;
     _lastKnownRoom = room;
-    _canvas.SelectRoom(room);
+    _canvas.FollowRoom(room);
   }
 
   private void DeduceExitsFromDescription(Room room, string description)
@@ -1158,6 +1160,7 @@ public sealed class Automap : IAutomapController
         }
 
         var waits = 0;
+        var tidy = false;
         using (await BeginBatchAsync("Automap: " + roomName, token))
         {
           // the user may have undone something while automap waited for them to finish a change
@@ -1340,9 +1343,12 @@ public sealed class Automap : IAutomapController
           // add this description if the room doesn't have it already
           if (room != null) room.AddDescription(roomDescription);
 
-          // let the rooms around the player make space for each other, in this move's undo step
-          if (_settings.AutoTidy && _lastKnownRoom != null) _canvas.TidyAround(_lastKnownRoom);
+          tidy = _settings.AutoTidy && _lastKnownRoom != null;
         }
+
+        // let the rooms around the player make space for each other: an undo step of its own, after the move's, so
+        // undoing a tidy that went wrong keeps the new room
+        if (tidy && _lastKnownRoom != null) await _canvas.TidyAroundAsync(_lastKnownRoom);
 
         // single stepping waits outside the batch, so the user can undo while we wait
         for (var wait = 0; wait < waits; wait++) await WaitForStep(token);
@@ -1961,7 +1967,7 @@ public sealed class Automap : IAutomapController
     _lastKnownRoom = room;
     _doneHere.Clear();
     _pendingStubRemoval = null;
-    _canvas.SelectRoom(room);
+    _canvas.FollowRoom(room);
     Status = $"Automap: you're in {room.Name}, not {here.Name}.";
     return true;
   }

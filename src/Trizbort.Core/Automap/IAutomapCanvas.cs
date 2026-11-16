@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 
@@ -55,11 +56,25 @@ public interface IAutomapCanvas
 
   /// <summary>
   ///   Let the rooms near <paramref name="room" /> rearrange themselves so they don't get in each other's way
-  ///   (<see cref="LayoutTidy" />). Called inside the move's batch, so it is part of the same undo step.
+  ///   (<see cref="LayoutTidy" />). Called after the move's batch: a tidy is an undo step of its own, so undoing one
+  ///   that went wrong keeps the new room.
   /// </summary>
   void TidyAround(Room room);
 
+  /// <summary>
+  ///   <see cref="TidyAround" />, letting the window carry on (drawing the move, answering clicks) while the tidy is
+  ///   worked out. Automap waits for it before the next move.
+  /// </summary>
+  Task TidyAroundAsync(Room room)
+  {
+    TidyAround(room);
+    return Task.CompletedTask;
+  }
+
   void SelectRoom(Room room);
+
+  /// <summary>Automap is now in <paramref name="room" />: the view follows it, without selecting it.</summary>
+  void FollowRoom(Room room) => SelectRoom(room);
   void RemoveRoom(Room otherRoom);
 
   /// <summary>

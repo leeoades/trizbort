@@ -28,8 +28,18 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   panel shows how far it's got, so it's clear when it has finished; the map is locked (you can look around it, not
   change it) until then, or until you pause.
 
+### Changed
+
+- **A tidy after a move is an undo step of its own.** The move goes on the map first, then the tidy ("Tidy the map"),
+  so undoing a tidy that went wrong keeps the new room.
+- **Automap no longer selects the room you're in.** The blue ring shows where you are; the selection stays whatever
+  you chose, so a stray Delete or arrow key no longer acts on your room. **Centre on Current Room** still selects it.
+
 ### Fixed
 
+- **Next Move no longer freezes the window while the map is tidied.** Every few moves, laying the map out again
+  held up the window for a second and a half (automap runs alongside the window, and the solver ran there too). The
+  new room now shows straight away; the tidying is worked out in the background and follows a moment later.
 - **A way between areas set apart with a split join is split too.** With the house drawn away from its grounds and
   a split join to the front porch, finding another way out (onto the patio) no longer draws a long join right across
   the map, and tidying no longer drags the house over towards the gardens.
