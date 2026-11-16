@@ -59,7 +59,7 @@
         </Border>
 
         <!-- Main Content Area / Canvas Container -->
-        <Grid Background="{DynamicResource SystemControlBackgroundAltMediumBrush}" ColumnDefinitions="*,Auto">
+        <Grid Background="{DynamicResource SystemControlBackgroundAltMediumBrush}" ColumnDefinitions="*,Auto,Auto">
             <controls:MapCanvasControl x:Name="CanvasControl"
                                        CommandService="{Binding CommandService}"
                                        HorizontalAlignment="Stretch"
@@ -85,8 +85,11 @@
                        Foreground="Gray"
                        IsHitTestVisible="False" />
 
+            <!-- directions (satnav), beside the map while open -->
+            <controls:DirectionsPanel Grid.Column="1" IsVisible="{Binding IsDirectionsOpen}" />
+
             <!-- automap's controls, docked beside the map while it runs -->
-            <controls:AutomapPanel Grid.Column="1" IsVisible="{Binding IsAutomapActive}" />
+            <controls:AutomapPanel Grid.Column="2" IsVisible="{Binding IsAutomapActive}" />
         </Grid>
     </DockPanel>
 </Window>

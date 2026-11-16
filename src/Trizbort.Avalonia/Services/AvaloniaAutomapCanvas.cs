@@ -98,21 +98,52 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
 
     public void TidyAround(Room room)
     {
-        if (Dispatcher.UIThread.CheckAccess())
-        {
-            _innerCanvas.RethinkElsewhere = false;
-            _innerCanvas.TidyAround(room);
-            return;
-        }
-
-        // the quick tidy on the UI thread; a rethink (the solver, up to a second) is worked out in the background
-        // while automap carries on, then put on the map on the UI thread as its own undo step
-        var plan = Dispatcher.UIThread.Invoke(() =>
+        // the quick tidy there and then; a rethink (the solver, over a second) is always worked out in the
+        // background, even when automap runs on the UI thread, then put on the map as its own undo step
+        var plan = OnUiThread(() =>
         {
             _innerCanvas.RethinkElsewhere = true;
             _innerCanvas.TidyAround(room);
             return _innerCanvas.TakeRethink();
         });
+        StartRethink(plan);
+    }
+
+    /// <summary>
+    ///   Tidies after a move without holding up the window: the move is already on the map (and drawn), the quick
+    ///   tidy is worked out on a copy in the background, then put on the map as its own undo step; a rethink (the
+    ///   solver) carries on in the background after that, while automap goes on to the next move.
+    /// </summary>
+    public async Task TidyAroundAsync(Room room)
+    {
+        var tidy = await OnUiThreadAsync(() =>
+        {
+            _innerCanvas.RethinkElsewhere = true;
+            return _innerCanvas.PlanTidyAround(room);
+        });
+        if (tidy == null) return;
+
+        var moves = await Task.Run(() => tidy.Run());
+        for (var attempt = 0; ; attempt++)
+        {
+            // -1: the user is part-way through a change of their own (a drag); try again when they've finished
+            var moved = await OnUiThreadAsync(() => _innerCanvas.FinishTidyAround(tidy, moves));
+            if (moved >= 0 || attempt >= 100) break;
+            await Task.Delay(100);
+        }
+
+        StartRethink(await OnUiThreadAsync(() => _innerCanvas.TakeRethink()));
+    }
+
+    private static T OnUiThread<T>(Func<T> work) =>
+        Dispatcher.UIThread.CheckAccess() ? work() : Dispatcher.UIThread.Invoke(work);
+
+    private static async Task<T> OnUiThreadAsync<T>(Func<T> work) =>
+        Dispatcher.UIThread.CheckAccess() ? work() : await Dispatcher.UIThread.InvokeAsync(work);
+
+    /// <summary>Works out a rethink in the background, then puts it on the map on the UI thread.</summary>
+    private void StartRethink(LayoutTidy.TidyPlan? plan)
+    {
         if (plan == null) return;
 
         // a newer rethink replaces one still being worked out
@@ -147,6 +178,12 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
                 DispatcherTimer.RunOnce(() => ApplyRethink(plan, moves, token, attempt + 1),
                     TimeSpan.FromMilliseconds(100));
         });
+    }
+
+    public void FollowRoom(Room room)
+    {
+        if (Dispatcher.UIThread.CheckAccess()) _innerCanvas.FollowRoom(room);
+        else Dispatcher.UIThread.Invoke(() => _innerCanvas.FollowRoom(room));
     }
 
     public void SelectRoom(Room room)

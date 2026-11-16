@@ -1,0 +1,12 @@
+not on the map: Room C
+current: (none)
+
+rooms:
+Room A (start)
+Room B
+
+connections:
+Room A [east] <-> [west] Room B
+
+natural joins: 1 of 1
+exact joins: 1 of 1

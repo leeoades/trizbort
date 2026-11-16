@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Trizbort.Domain.Application;
+using Trizbort.Domain.Elements;
 using Trizbort.Editor;
 
 namespace Trizbort.Automap;
@@ -10,6 +11,12 @@ namespace Trizbort.Automap;
 public sealed record HeadlessAutomapResult(string Transcript, string Error, Exception Failure = null)
 {
   public bool Succeeded => Error == null;
+
+  /// <summary>At the end, the room the player is in when it isn't on the map (the question about it was cancelled).</summary>
+  public string RoomNotOnMap { get; init; }
+
+  /// <summary>The room automap thought the player was in at the end (automap doesn't select it).</summary>
+  public Room CurrentRoom { get; init; }
 }
 
 /// <summary>
@@ -65,6 +72,6 @@ public static class HeadlessAutomap
       project.IsDirty = false;
     }
 
-    return new HeadlessAutomapResult(transcriptPath, error, failure);
+    return new HeadlessAutomapResult(transcriptPath, error, failure) { RoomNotOnMap = engine.RoomNotOnMap, CurrentRoom = engine.CurrentRoom };
   }
 }

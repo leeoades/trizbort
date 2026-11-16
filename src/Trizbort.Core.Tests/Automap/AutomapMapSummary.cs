@@ -36,13 +36,13 @@ namespace Trizbort.Core.Tests.Automap;
 /// </remarks>
 public static class AutomapMapSummary
 {
-  public static string Describe(Project project)
+  /// <param name="current">The room automap thinks the player is in (<see cref="HeadlessAutomapResult.CurrentRoom" />).</param>
+  public static string Describe(Project project, Room current)
   {
     var rooms = project.Elements.OfType<Room>().ToList();
     var names = NameRooms(rooms);
 
     var builder = new StringBuilder();
-    var current = project.ActiveSelectedElement as Room;
     builder.Append("current: ").Append(current != null && names.TryGetValue(current, out var currentName) ? currentName : "(none)").Append('\n');
     builder.Append('\n');
 

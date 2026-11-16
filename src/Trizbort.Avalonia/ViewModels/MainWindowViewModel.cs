@@ -145,6 +145,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private bool _canGoBackAutomap;
     private bool _hasNextAutomapMove;
+    private bool _canAddAutomapRoom;
+
+    /// <summary>Add Current Room: the room you're in isn't on the map (the question about it was cancelled).</summary>
+    public bool CanAddAutomapRoom => _canAddAutomapRoom;
 
     /// <summary>Previous Move: there's a move to go back to.</summary>
     public bool CanGoBackAutomap => _canGoBackAutomap;
@@ -177,7 +181,17 @@ public partial class MainWindowViewModel : ViewModelBase
         var engine = AutomapEngine.Instance;
         FollowPlayToEnd();
         var room = engine.CurrentRoom;
-        AutomapRoomName = room?.Name ?? "Somewhere automap doesn't know";
+        var notOnMap = room == null ? engine.RoomNotOnMap : null;
+        AutomapRoomName = room?.Name ??
+                          (notOnMap != null ? $"{notOnMap} (not on the map)" : "Somewhere automap doesn't know");
+        if (engine.CanAddCurrentRoom != _canAddAutomapRoom)
+        {
+            _canAddAutomapRoom = engine.CanAddCurrentRoom;
+            OnPropertyChanged(nameof(CanAddAutomapRoom));
+            AddAutomapRoomCommand.NotifyCanExecuteChanged();
+        }
+        // directions from where you are follow you as you play
+        FollowDirections(room);
         IsAutomapMoveByMove = engine.MoveByMove;
         IsAutomapSuspended = engine.Suspended;
         // "Don't ask again" in the question turns the best guess on
@@ -214,6 +228,11 @@ public partial class MainWindowViewModel : ViewModelBase
         if (engine.Suspended)
         {
             AutomapMappingNote = "Tracking only: following where you are, without changing the map.";
+            AutomapStateBrush = _notMappingBrush;
+        }
+        else if (notOnMap != null)
+        {
+            AutomapMappingNote = $"{notOnMap} isn't on the map: Add Current Room puts it there.";
             AutomapStateBrush = _notMappingBrush;
         }
         else if (engine.InDark)
@@ -311,6 +330,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         IsGameMonitorShown = _commandService.Session?.ShowGameMonitor ?? true;
+        HookDirections();
         UpdateState();
     }
 
@@ -746,6 +766,21 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         AutomapEngine.Instance.GoBack();
         IsAutomapMoveByMove = true;
+    }
+
+    /// <summary>
+    ///     Add Current Room: puts the room the player is in, which isn't on the map, beside the room they came from, and
+    ///     maps on from there.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanAddAutomapRoom))]
+    public async Task AddAutomapRoomAsync()
+    {
+        if (await AutomapEngine.Instance.AddCurrentRoomAsync())
+        {
+            GoToAutomapRoom();
+        }
+
+        RefreshAutomapPanel();
     }
 
     /// <summary>Select the room automap thinks the player is in and centre the map on it.</summary>

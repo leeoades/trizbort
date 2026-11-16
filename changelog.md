@@ -27,9 +27,29 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Play to the End shows its progress.** While automap plays through the moves left, a progress bar in the automap
   panel shows how far it's got, so it's clear when it has finished; the map is locked (you can look around it, not
   change it) until then, or until you pause.
+- **Add Current Room** in the automap panel. When you cancel the question about a way that now leads somewhere new,
+  and the room is new, automap still knows you're there: the panel shows "Room C (not on the map)", and Add Current
+  Room puts it on the map beside the room you came from (not joined) and maps on from there.
+- **Directions**, like a satnav. Right-click a room and choose **Navigate to Here**: while automapping, a Directions
+  panel beside the map lists the commands to type to get there from where you are, following the joins on the map.
+  As you play, each step drops off the top; go another way and it reroutes; and it says when you've arrived, or that
+  the map shows no way there. **Navigate from Here...** chooses where to start instead, so you can get directions
+  without automapping. The route glows blue on the map. Ways automap only assumed are marked, and ways you've been are preferred. **Copy Commands**
+  copies them to paste into the game. While directions are showing, **Go** reads **Stop**: it clears them and keeps
+  From and To. **From Where You Are** shows only while automapping.
+
+### Changed
+
+- **A tidy after a move is an undo step of its own.** The move goes on the map first, then the tidy ("Tidy the map"),
+  so undoing a tidy that went wrong keeps the new room.
+- **Automap no longer selects the room you're in.** The blue ring shows where you are; the selection stays whatever
+  you chose, so a stray Delete or arrow key no longer acts on your room. **Centre on Current Room** still selects it.
 
 ### Fixed
 
+- **Next Move no longer freezes the window while the map is tidied.** Every few moves, laying the map out again
+  held up the window for a second and a half (automap runs alongside the window, and the solver ran there too). The
+  new room now shows straight away; the tidying is worked out in the background and follows a moment later.
 - **A side taken by a split join stays taken.** In Hollywood Hijinx, going north from the Closet back to the Foyer
   pulled the Closet right underneath the Foyer, though south from the Foyer is the Front Porch (drawn far off, with a
   split join). Tidying now keeps rooms off a side a split join leaves by.
@@ -39,6 +59,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **The view keeps your room in the middle while automapping.** When tidying the map moved the room you're in,
   the view only scrolled far enough to bring it back inside the edge, or (after the map was laid out again in the
   background) not at all, so the room could end up stuck at the side. It now follows the room back to the middle.
+- **Cancel no longer loses track of where you are.** Cancelling the question about a way that now leads somewhere
+  else, when you've come to a room already on the map, maps no join but carries on from that room, so the next move
+  is joined to it.
+- **LOOK checks where you are by the description too.** In a maze where every room has the same name, looking about
+  in a room automap had wrong (its description is another room's) now puts automap in that room, before the next
+  move is joined to the wrong one.
 
 ## [0.13.0-beta] - 2026-11-15
 
