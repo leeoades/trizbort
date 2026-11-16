@@ -30,6 +30,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **A side taken by a split join stays taken.** In Hollywood Hijinx, going north from the Closet back to the Foyer
+  pulled the Closet right underneath the Foyer, though south from the Foyer is the Front Porch (drawn far off, with a
+  split join). Tidying now keeps rooms off a side a split join leaves by.
 - **A way between areas set apart with a split join is split too.** With the house drawn away from its grounds and
   a split join to the front porch, finding another way out (onto the patio) no longer draws a long join right across
   the map, and tidying no longer drags the house over towards the gardens.
@@ -134,6 +137,9 @@ This is still a beta: keep backups and [report problems](https://github.com/leeo
 
 ### Fixed
 
+- **A side taken by a split join stays taken.** In Hollywood Hijinx, going north from the Closet back to the Foyer
+  pulled the Closet right underneath the Foyer, though south from the Foyer is the Front Porch (drawn far off, with a
+  split join). Tidying now keeps rooms off a side a split join leaves by.
 - **Mazes whose rooms share a name keep track of where you are.** In Colossal Cave's maze of twisty little
   passages, all different, every room is called "Maze". Automap used to follow a join the map already had, often
   only the assumed way back, to whichever "Maze" was at its end, whatever the game's description said; in a maze the
@@ -257,6 +263,9 @@ is still a beta: keep backups and [report problems](https://github.com/leeoades/
 
 ### Fixed
 
+- **A side taken by a split join stays taken.** In Hollywood Hijinx, going north from the Closet back to the Foyer
+  pulled the Closet right underneath the Foyer, though south from the Foyer is the Front Porch (drawn far off, with a
+  split join). Tidying now keeps rooms off a side a split join leaves by.
 - In the app (not the tests), the new-room preview in Disambiguate Rooms and the single two-way join between a
   moving room's stops did nothing: the app's automap canvas didn't pass them on. They do now.
 - Clearing the label of a join between a moving room's stops (or deleting the join) now makes automap ask what moved
@@ -370,6 +379,9 @@ where you put them. The app is now called **Trizbort: Recast**. This is still a 
 
 ### Fixed
 
+- **A side taken by a split join stays taken.** In Hollywood Hijinx, going north from the Closet back to the Foyer
+  pulled the Closet right underneath the Foyer, though south from the Foyer is the Front Porch (drawn far off, with a
+  split join). Tidying now keeps rooms off a side a split join leaves by.
 - Joins and unexplored-exit stubs no longer touch or run into each other.
 - Trying an exit that goes nowhere removes its stub as soon as the game replies, not when you next type a command.
 - Carrying on from the end of a game that's still running now reads the command you type next, so automap finds the
@@ -402,6 +414,9 @@ and clearer error reports help protect your maps and diagnose problems. This is 
 
 ### Fixed
 
+- **A side taken by a split join stays taken.** In Hollywood Hijinx, going north from the Closet back to the Foyer
+  pulled the Closet right underneath the Foyer, though south from the Foyer is the Front Porch (drawn far off, with a
+  split join). Tidying now keeps rooms off a side a split join leaves by.
 - Automap now maps the first room of a game correctly, including when the first command is `look`.
 - Automap keeps room names with a comma or dash (`Garden, East`, `Hall - Upstairs`) as separate rooms.
 - Each automap move is one undo step, and Undo while automap is running no longer crashes (GitHub #24).
