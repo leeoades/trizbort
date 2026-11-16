@@ -16,7 +16,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 - **Add Another Stop** on a moving room's right-click menu (Room). When automap didn't see the room move (the
   closet went down to the cellar, and you walked out without going back), it adds a copy of the room, a stop of the
-  same room, beside it, for you to drag to where it went and join up.
+  same room, beside it, joined from the room you right-clicked by a dashed one-way join (automap labels it with what
+  moved the room the first time it sees it happen), for you to drag to where it went.
 - **Best guess which room** can be turned off again. Ticking **Don't ask again** when automap asks which room you're
   in used to last until automap stopped, with no way back. It's now a setting in Automap Settings, remembered between
   runs. Untick it to be asked again. The question says where to find it, and is now **Don't ask again: make a best

@@ -45,8 +45,14 @@ public class AddStopTests : IsolatedProjectTests
     stop.IsDark.ShouldBeTrue();
     stop.InnerBounds.IntersectsWith(closet.InnerBounds).ShouldBeFalse();
     stop.InnerBounds.IntersectsWith(foyer.InnerBounds).ShouldBeFalse();
-    // not joined: automap asks what moved it the first time it sees it
-    stop.GetConnections().ShouldBeEmpty();
+    // joined from the room right-clicked, dashed and one way, as automap joins stops; no label until automap asks
+    // what moved it
+    var join = stop.GetConnections().ShouldHaveSingleItem();
+    join.GetSourceRoom().ShouldBe(closet);
+    join.GetTargetRoom().ShouldBe(stop);
+    join.Style.ShouldBe(ConnectionStyle.Dashed);
+    join.Flow.ShouldBe(ConnectionFlow.OneWay);
+    join.StartText.ShouldBeNullOrEmpty();
   }
 
   [Test]
@@ -59,6 +65,8 @@ public class AddStopTests : IsolatedProjectTests
     var second = RoomCopies.AddStop(Project.Current.Elements, first);
 
     second.ReferenceRoom.ShouldBe(closet);
+    // joined from the stop right-clicked
+    second.GetConnections().ShouldHaveSingleItem().GetSourceRoom().ShouldBe(first);
     RoomCopies.Of(Project.Current.Elements, closet).Count().ShouldBe(2);
   }
 

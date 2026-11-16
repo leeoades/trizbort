@@ -49,8 +49,9 @@ public static class RoomCopies
   /// <summary>
   ///   Adds another stop for the moving room <paramref name="room" /> is (or is a stop of): a copy of it, with its
   ///   name, look and descriptions, beside <paramref name="room" /> where there's space, for the user to put where the
-  ///   room goes (the closet down in the cellar) and join up. Not joined to the other stops: the first time automap
-  ///   sees the room move there, it asks what moved it and labels the join. Returns the new stop, or null.
+  ///   room goes (the closet down in the cellar). Joined from <paramref name="room" /> by a dashed one-way join, as
+  ///   automap joins stops; it has no label yet: the first time automap sees the room move there, it asks what moved
+  ///   it and labels this join. Returns the new stop, or null.
   /// </summary>
   public static Room AddStop(IList<Element> elements, Room room)
   {
@@ -61,6 +62,14 @@ public static class RoomCopies
     foreach (var description in root.Descriptions) stop.AddDescription(description);
     stop.Position = FreeSpotBeside(elements, room, stop.Size);
     elements.Add(stop);
+    var join = new Connection(root.Project,
+      new Vertex(room.PortAt(GuessedEnds.FreeFacingPoint(elements, room, stop, null))),
+      new Vertex(stop.PortAt(GuessedEnds.FreeFacingPoint(elements, stop, room, null))))
+    {
+      Style = ConnectionStyle.Dashed,
+      Flow = ConnectionFlow.OneWay
+    };
+    elements.Add(join);
     return stop;
   }
 
