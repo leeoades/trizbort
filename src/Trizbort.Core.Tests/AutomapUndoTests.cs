@@ -138,6 +138,7 @@ public class AutomapUndoTests : IsolatedProjectTests
 
   private static int Stubs() => Project.Current.Elements.OfType<Connection>().Count();
 
+  [Category("InternalOnly")]
   [Test]
   public async Task AMoveDuringADrag_WaitsForTheDrag_AndCancellingTheDragKeepsIt()
   {
@@ -172,6 +173,7 @@ public class AutomapUndoTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task UndoWhileRunning_DoesNotThrow_AndTheNextMoveDoesNotUseTheDeletedRoom()
   {

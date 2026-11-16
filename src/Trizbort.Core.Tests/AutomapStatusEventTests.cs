@@ -60,6 +60,7 @@ public class AutomapStatusEventTests : IsolatedProjectTests
     statuses[statuses.Count - 1].ShouldBe("Automap is not running.");
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task WaitingForMoreText_RaisesStatus()
   {

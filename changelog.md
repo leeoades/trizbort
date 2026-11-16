@@ -12,8 +12,27 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Added
+
+- **Best guess which room** can be turned off again. Ticking **Don't ask again** when automap asks which room you're
+  in used to last until automap stopped, with no way back. It's now a setting in Automap Settings, remembered between
+  runs. Untick it to be asked again. The question says where to find it, and is now **Don't ask again: make a best
+  guess**.
+- **Automap Settings while automapping**: the ⚙ on the automap panel opens them. Changes take effect from the next
+  move, and are kept for next time. **Tidy the map as I go** and **Show the game screen** have moved there from the panel,
+  which is less cluttered.
+- **Rooms with the same name** is a group of its own in Automap Settings: **Don't ask which one you're in: make a
+  best guess**, and **Ignore descriptions: a room's name alone says which room it is**, which replaces "Treat
+  transcript as VERBOSE" (the same setting, the other way round, and rarely needed).
+- **Play to the End shows its progress.** While automap plays through the moves left, a progress bar in the automap
+  panel shows how far it's got, so it's clear when it has finished; the map is locked (you can look around it, not
+  change it) until then, or until you pause.
+
 ### Fixed
 
+- **A way between areas set apart with a split join is split too.** With the house drawn away from its grounds and
+  a split join to the front porch, finding another way out (onto the patio) no longer draws a long join right across
+  the map, and tidying no longer drags the house over towards the gardens.
 - **The view keeps your room in the middle while automapping.** When tidying the map moved the room you're in,
   the view only scrolled far enough to bring it back inside the edge, or (after the map was laid out again in the
   background) not at all, so the room could end up stuck at the side. It now follows the room back to the middle.

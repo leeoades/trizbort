@@ -229,15 +229,17 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
     }
 
     /// <summary>
-    ///     Turns off everything in <paramref name="owner" /> but the map: the menu, the toolbar, the automap panel and
-    ///     the window's shortcuts. Returns how to turn them back on as they were.
+    ///     Turns off everything in <paramref name="owner" /> but the map: the menu, the toolbar, the automap panel
+    ///     (unless <paramref name="keepAutomapPanel" />: while playing to the end, its Pause still works) and the
+    ///     window's shortcuts. Returns how to turn them back on as they were.
     /// </summary>
-    private static Action LockAllButTheMap(Window owner)
+    internal static Action LockAllButTheMap(Window owner, bool keepAutomapPanel = false)
     {
         var controls = new List<Control>();
         if (owner.FindControl<Control>("MainMenu") is { } menu) controls.Add(menu);
         if (owner.FindControl<Control>("Toolbar") is { } toolbar) controls.Add(toolbar);
-        controls.AddRange(global::Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(owner).OfType<AutomapPanel>());
+        if (!keepAutomapPanel)
+            controls.AddRange(global::Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(owner).OfType<AutomapPanel>());
         var wasEnabled = controls.Select(control => control.IsEnabled).ToList();
         foreach (var control in controls) control.IsEnabled = false;
         var keys = owner.KeyBindings.ToList();

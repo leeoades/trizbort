@@ -108,6 +108,7 @@ public class UndoPerformanceTests
     Project.Current.Elements.OfType<Connection>().Count().ShouldBeGreaterThan(1800);
   }
 
+  [Category("InternalOnly")]
   [Test]
   public void RecordStep_WithinBudget()
   {
@@ -125,6 +126,7 @@ public class UndoPerformanceTests
     Median(times).ShouldBeLessThan(RecordTargetMs * SlowMachineAllowance);
   }
 
+  [Category("InternalOnly")]
   [Test]
   public void RestoreStep_WithinBudget()
   {
