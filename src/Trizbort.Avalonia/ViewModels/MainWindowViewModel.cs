@@ -190,7 +190,8 @@ public partial class MainWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(CanAddAutomapRoom));
             AddAutomapRoomCommand.NotifyCanExecuteChanged();
         }
-
+        // directions from where you are follow you as you play
+        FollowDirections(room);
         IsAutomapMoveByMove = engine.MoveByMove;
         IsAutomapSuspended = engine.Suspended;
         // "Don't ask again" in the question turns the best guess on
@@ -329,6 +330,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         IsGameMonitorShown = _commandService.Session?.ShowGameMonitor ?? true;
+        HookDirections();
         UpdateState();
     }
 

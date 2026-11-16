@@ -1089,6 +1089,9 @@ public class MapCanvasControl : Control
 
             var adorners = _interaction?.Adorners ?? AdornerState.Empty;
 
+            // the directions' route, glowing blue under the rooms and lines
+            RouteGlow.Draw(context, _spatialVersion);
+
             // --debug toggles (ticket 108); both are true unless debug is on and the toggle is off
             var debugSession = CommandService?.Session;
             DrawElements(
