@@ -686,7 +686,8 @@ public class AutomapCanvas : IAutomapCanvas
       // the rooms slide to their new places on screen rather than jumping
       RoomGlide.Start(before);
       FaceGuessedEnds();
-      _session?.EnsureVisible(room);
+      // the tidy may have moved the player's room: back to the middle of the view, not just inside its edge
+      _session?.KeepInMiddle(room);
     }
 
     _tidiedMap = MapShape();
@@ -873,6 +874,9 @@ public class AutomapCanvas : IAutomapCanvas
     {
       RoomGlide.Start(before);
       FaceGuessedEnds();
+      // the new layout may have moved the player's room: the view follows it to the middle
+      var here = _automap?.CurrentRoom;
+      if (here != null) _session?.KeepInMiddle(here);
     }
 
     _problems = LayoutTidy.Problems(CurrentProject.Elements.ToList());

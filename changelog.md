@@ -33,6 +33,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **A way between areas set apart with a split join is split too.** With the house drawn away from its grounds and
   a split join to the front porch, finding another way out (onto the patio) no longer draws a long join right across
   the map, and tidying no longer drags the house over towards the gardens.
+- **The view keeps your room in the middle while automapping.** When tidying the map moved the room you're in,
+  the view only scrolled far enough to bring it back inside the edge, or (after the map was laid out again in the
+  background) not at all, so the room could end up stuck at the side. It now follows the room back to the middle.
 
 ## [0.13.0-beta] - 2026-11-15
 
