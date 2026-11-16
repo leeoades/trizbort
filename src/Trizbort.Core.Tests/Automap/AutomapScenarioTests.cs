@@ -71,6 +71,7 @@ public class AutomapScenarioTests : IsolatedProjectTests
       System.Diagnostics.Trace.Listeners.Remove(listener);
     }
     var actual = AutomapMapSummary.Describe(project);
+    if (result.RoomNotOnMap != null) actual = "not on the map: " + result.RoomNotOnMap + "\n" + actual;
     if (!result.Succeeded)
     {
       actual = "error: " + result.Error + "\n\n" + actual;

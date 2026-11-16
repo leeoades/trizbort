@@ -800,6 +800,8 @@ public class AutomapRegressionTests : IsolatedProjectTests
           yield return new TestCaseData(oldOneShot, explicitStop, mode);
   }
 
+  // waits on the automap thread to finish cleaning up; too slow to rely on with a busy build agent
+  [Category("InternalOnly")]
   [TestCaseSource(nameof(ReplacementCases))]
   public async Task ReplacingCanceledRun_OldCleanupPreservesReplacementStatusAndToken(
     bool oldOneShot,

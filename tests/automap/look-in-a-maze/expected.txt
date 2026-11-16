@@ -1,0 +1,15 @@
+current: Room F
+
+rooms:
+Maze #1
+Maze #2
+Room A (start)
+Room F
+
+connections:
+Maze #1 [east] <-> [west] Maze #2
+Maze #1 [south] <-> [north] Room F
+Room A [east] <-> [west] Maze #1
+
+natural joins: 3 of 3
+exact joins: 3 of 3

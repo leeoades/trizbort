@@ -1,0 +1,29 @@
+>look
+
+Room A
+A plain room called A.
+
+>e
+
+Maze
+You are in a maze of twisty passages.
+
+>e
+
+Maze
+You are in a maze of twisting passages.
+
+>pray
+You feel dizzy for a moment.
+
+>look
+
+Maze
+You are in a maze of twisty passages.
+
+>s
+
+Room F
+A plain room called F.
+
+>

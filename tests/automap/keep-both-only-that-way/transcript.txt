@@ -1,0 +1,61 @@
+>look
+
+Room A
+A plain room called A.
+
+>e
+
+Room B
+A plain room called B.
+
+>w
+
+Room A
+A plain room called A.
+
+>u
+
+Room B
+A plain room called B.
+
+>d
+
+Room A
+A plain room called A.
+
+>e
+
+Room C
+A plain room called C.
+
+>w
+
+Room A
+A plain room called A.
+
+>u
+
+Room B
+A plain room called B.
+
+>d
+
+Room A
+A plain room called A.
+
+>e
+
+Room B
+A plain room called B.
+
+>w
+
+Room A
+A plain room called A.
+
+>e
+
+Room C
+A plain room called C.
+
+>
