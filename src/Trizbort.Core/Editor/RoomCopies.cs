@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Trizbort.Automap;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
@@ -50,8 +51,9 @@ public static class RoomCopies
   ///   Adds another stop for the moving room <paramref name="room" /> is (or is a stop of): a copy of it, with its
   ///   name, look and descriptions, beside <paramref name="room" /> where there's space, for the user to put where the
   ///   room goes (the closet down in the cellar). Joined from <paramref name="room" /> by a dashed one-way join, as
-  ///   automap joins stops; it has no label yet: the first time automap sees the room move there, it asks what moved
-  ///   it and labels this join. Returns the new stop, or null.
+  ///   automap joins stops, labelled "?": a way there by a command nobody knows yet (not a direction: it isn't east
+  ///   because the join meets the room's east side). The first time automap sees the room move there, it asks what
+  ///   moved it and that takes the place of "?". Returns the new stop, or null.
   /// </summary>
   public static Room AddStop(IList<Element> elements, Room room)
   {
@@ -69,6 +71,8 @@ public static class RoomCopies
       Style = ConnectionStyle.Dashed,
       Flow = ConnectionFlow.OneWay
     };
+    JoinWays.Write(join, new[] { JoinWay.Typed(true, Trizbort.Automap.Automap.UnmappedWay) },
+      direction => direction.ToString().ToLowerInvariant());
     elements.Add(join);
     return stop;
   }

@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using Shouldly;
+using Trizbort.Automap;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
@@ -45,14 +46,20 @@ public class AddStopTests : IsolatedProjectTests
     stop.IsDark.ShouldBeTrue();
     stop.InnerBounds.IntersectsWith(closet.InnerBounds).ShouldBeFalse();
     stop.InnerBounds.IntersectsWith(foyer.InnerBounds).ShouldBeFalse();
-    // joined from the room right-clicked, dashed and one way, as automap joins stops; no label until automap asks
-    // what moved it
+    // joined from the room right-clicked, dashed and one way, as automap joins stops: by "?", a command nobody knows
+    // yet, not by whichever direction the side it meets happens to be
     var join = stop.GetConnections().ShouldHaveSingleItem();
     join.GetSourceRoom().ShouldBe(closet);
     join.GetTargetRoom().ShouldBe(stop);
     join.Style.ShouldBe(ConnectionStyle.Dashed);
     join.Flow.ShouldBe(ConnectionFlow.OneWay);
-    join.StartText.ShouldBeNullOrEmpty();
+    var ways = JoinWays.Of(join);
+    ways.ShouldAllBe(way => way.IsCommand);
+    JoinWays.Commands(ways).ShouldBe(new[] { Trizbort.Automap.Automap.UnmappedWay });
+
+    // when automap learns what moved it, that takes the place of "?"
+    JoinWays.AddCommand(ways, true, "pull first peg").ShouldBeTrue();
+    JoinWays.Commands(ways).ShouldBe(new[] { "pull first peg" });
   }
 
   [Test]

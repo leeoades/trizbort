@@ -136,6 +136,9 @@ public static class JoinWays
     if (ways.Any(way => way.IsCommand && way.AtStart == atStart &&
                         string.Equals(way.Text, command, StringComparison.OrdinalIgnoreCase)))
       return false;
+    // the command now known takes the place of "?" (a way there, by a command nobody knew yet)
+    if (command != Automap.UnmappedWay)
+      ways.RemoveAll(way => way.IsCommand && way.AtStart == atStart && way.Text == Automap.UnmappedWay);
     ways.Add(JoinWay.Typed(atStart, command));
     return true;
   }
