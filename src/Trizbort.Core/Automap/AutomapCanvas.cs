@@ -138,11 +138,15 @@ public class AutomapCanvas : IAutomapCanvas
     else if (connection == null)
     {
       var targetCompassPoint = CompassPointHelper.GetAutomapOpposite(sourceCompassPoint);
-      TryMoveRoomsForTidyConnection(source, sourceCompassPoint, target, targetCompassPoint);
+      // between areas set apart with a split join (the house drawn away from its grounds), the new join is split
+      // too, and nothing moves to line it up: the areas stay where they are
+      var apart = SetApart(source, target);
+      if (!apart) TryMoveRoomsForTidyConnection(source, sourceCompassPoint, target, targetCompassPoint);
       // a one-way join's far end is only a guess until the way back is found, so it meets the far room on the side
       // facing the room it came from rather than looping round to the opposite side
       if (!assumeTwoWayConnections) targetCompassPoint = FreeFacingPoint(target, source, null);
       connection = AddConnection(source, sourceCompassPoint, target, targetCompassPoint);
+      if (apart) connection.Split = true;
 
       if (_automap != null && _automap.UseDottedConnection)
       {
@@ -593,7 +597,10 @@ public class AutomapCanvas : IAutomapCanvas
     // the nearest free points facing each other, so the dashed line doesn't share a point with another join or an
     // unexplored exit
     var sourcePoint = FreeFacingPoint(source, target, null);
+    var apart = SetApart(source, target);
     var added = AddConnection(source, sourcePoint, target, FreeFacingPoint(target, source, null));
+    // between areas set apart with a split join, split too (see Connect)
+    if (apart) added.Split = true;
     added.Style = ConnectionStyle.Dashed;
     added.Flow = ConnectionFlow.OneWay;
     JoinWays.Write(added, new[] { JoinWay.Typed(true, command) }, LabelWord);
@@ -774,6 +781,27 @@ public class AutomapCanvas : IAutomapCanvas
     return rooms.Count == 0
       ? null
       : LayoutTidy.PlanRethink(elements, rooms, repeatable ? RepeatableRethinkWork : RethinkMs, repeatable);
+  }
+
+  /// <summary>
+  ///   Whether <paramref name="source" /> and <paramref name="target" /> are in areas set apart: not joined (except
+  ///   by split joins), and a split join already leads from one area to the other (the house drawn away from its
+  ///   grounds, joined to the front porch by a split join). Another join between them is split too. Rooms that simply
+  ///   haven't been joined yet aren't set apart.
+  /// </summary>
+  private bool SetApart(Room source, Room target)
+  {
+    var here = AreaOf(source);
+    if (here.Contains(target)) return false;
+    var there = AreaOf(target);
+    return CurrentProject.Elements.OfType<Connection>().Any(connection =>
+    {
+      if (!connection.Split) return false;
+      var a = connection.GetSourceRoom();
+      var b = connection.GetTargetRoom();
+      return a != null && b != null && a != b &&
+             ((here.Contains(a) && there.Contains(b)) || (here.Contains(b) && there.Contains(a)));
+    });
   }
 
   /// <summary>

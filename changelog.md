@@ -28,6 +28,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   panel shows how far it's got, so it's clear when it has finished; the map is locked (you can look around it, not
   change it) until then, or until you pause.
 
+### Fixed
+
+- **A way between areas set apart with a split join is split too.** With the house drawn away from its grounds and
+  a split join to the front porch, finding another way out (onto the patio) no longer draws a long join right across
+  the map, and tidying no longer drags the house over towards the gardens.
+
 ## [0.13.0-beta] - 2026-11-15
 
 This beta is about **neater maps as you play**. Tidying as you go now lays the map out again when it learns it was
