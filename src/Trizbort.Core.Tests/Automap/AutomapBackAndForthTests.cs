@@ -14,6 +14,9 @@ using Trizbort.Editor;
 namespace Trizbort.Core.Tests.Automap;
 
 /// <summary>Live, at the end of the transcript: going back several moves and forward again, as a player would.</summary>
+// InternalOnly: every test here waits a fixed time for automap to settle before checking the map, which on a slow,
+// busy machine can be too short. Run locally; left out on the build server (see .github/workflows/tests.yml).
+[Category("InternalOnly")]
 [TestFixture]
 [Category("Unit")]
 public class AutomapBackAndForthTests : IsolatedProjectTests
