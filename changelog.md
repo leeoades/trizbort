@@ -12,6 +12,15 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+## [0.14.0-beta] - 2026-11-16
+
+This beta is about **finding your way, and playing without waiting**. Directions work like a satnav along the map's
+joins, with the route glowing on the map, and follow you as you play. Next Move no longer freezes the window while
+the map is tidied, and each tidy is an undo step of its own. Automap Settings open from the panel while you play,
+Play to the End shows how far it's got, automap keeps track of you when you cancel or LOOK, and a moving room can be
+given another stop by hand. This is still a beta: keep backups and
+[report problems](https://github.com/leeoades/trizbort/issues).
+
 ### Added
 
 - **Add Another Stop** on a moving room's right-click menu (Room). When automap didn't see the room move (the
@@ -38,9 +47,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   panel beside the map lists the commands to type to get there from where you are, following the joins on the map.
   As you play, each step drops off the top; go another way and it reroutes; and it says when you've arrived, or that
   the map shows no way there. **Navigate from Here...** chooses where to start instead, so you can get directions
-  without automapping. The route glows blue on the map. Ways automap only assumed are marked, and ways you've been are preferred. **Copy Commands**
-  copies them to paste into the game. While directions are showing, **Go** reads **Stop**: it clears them and keeps
-  From and To. **From Where You Are** shows only while automapping.
+  without automapping. The route glows blue on the map. Ways automap only assumed are marked, and ways you've been
+  are preferred. **Copy Commands** copies them to paste into the game. While directions are showing, **Go** reads
+  **Stop**: it clears them and keeps From and To. **From Where You Are** shows only while automapping.
 
 ### Changed
 
