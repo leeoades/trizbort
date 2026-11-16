@@ -48,9 +48,6 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   so undoing a tidy that went wrong keeps the new room.
 - **Automap no longer selects the room you're in.** The blue ring shows where you are; the selection stays whatever
   you chose, so a stray Delete or arrow key no longer acts on your room. **Centre on Current Room** still selects it.
-
-### Changed
-
 - **Room Moves** is now **This Room Moves**, or **This Room Doesn't Move** when it already does.
 
 ### Fixed
