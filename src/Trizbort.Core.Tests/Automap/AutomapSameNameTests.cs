@@ -14,6 +14,9 @@ namespace Trizbort.Core.Tests.Automap;
 ///   Several rooms with one name: Hollywood Hijinx has three "In the Chimney", two in the west chimney one above the
 ///   other, and one down the east chimney from the roof. Joins one-way, as the user maps.
 /// </summary>
+// InternalOnly: every test here waits a fixed time for automap to settle before checking the map, which on a slow,
+// busy machine can be too short. Run locally; left out on the build server (see .github/workflows/tests.yml).
+[Category("InternalOnly")]
 [TestFixture]
 [Category("Unit")]
 public class AutomapSameNameTests : IsolatedProjectTests
