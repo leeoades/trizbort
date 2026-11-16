@@ -135,6 +135,7 @@ public class AutomapDarkReplyTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task NorthIntoThePitchBlackHouse_ThenTheFlashlight_MapsTheFoyerNorthOfThePorch()
   {

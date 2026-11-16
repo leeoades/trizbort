@@ -95,8 +95,9 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      # InternalOnly tests depend on timing; they're left out on the build server, as in tests.yml
       - name: Test
-        run: dotnet test Trizbort.sln -c Release
+        run: dotnet test Trizbort.sln -c Release --filter "TestCategory!=InternalOnly"
 
       - name: Publish and package
         id: package

@@ -19,7 +19,6 @@ namespace Trizbort.Automap;
 
 public sealed class Automap : IAutomapController
 {
-  private bool _dontAskAboutAmbiguities;
   private readonly Action<string, string> _reportError;
   public bool UseDottedConnection { get; set; }
 
@@ -565,7 +564,7 @@ public sealed class Automap : IAutomapController
 
     var maybes = result.Maybes;
     if (maybes == null || maybes.Count == 0) return null;
-    if (_dontAskAboutAmbiguities) return Guess(maybes, roomDescription);
+    if (_settings.BestGuessWhichRoom) return Guess(maybes, roomDescription);
     if (maybes.Count == 1 && (string.IsNullOrEmpty(roomDescription) || maybes[0].PrimaryDescription == null))
       return maybes[0];
 
@@ -577,11 +576,12 @@ public sealed class Automap : IAutomapController
 
   /// <summary>
   ///   The user's answer: the room chosen, or null for a new room, or for nothing (the heading is then skipped).
-  ///   "Don't ask again" makes automap guess from then on (<see cref="Guess" />).
+  ///   "Don't ask again" makes automap make a best guess from then on (<see cref="Guess" />), until the user turns
+  ///   <see cref="BestGuessWhichRoom" /> off again.
   /// </summary>
   private Room Answered(RoomDisambiguation choice)
   {
-    if (choice.AutoChooseRest) _dontAskAboutAmbiguities = true;
+    if (choice.AutoChooseRest) _settings.BestGuessWhichRoom = true;
     if (choice.Skip)
     {
       _skipHeading = true;
@@ -1514,7 +1514,7 @@ public sealed class Automap : IAutomapController
     if (room.Descriptions.Count == 0 || (sameName.Count < 2 && room != here)) return room;
     if (room == here && _lastMoveDirection != null && LoopsBack(room, _lastMoveDirection.Value)) return room;
     if (!sameName.Contains(room)) sameName.Insert(0, room);
-    if (_dontAskAboutAmbiguities) return Guess(sameName, roomDescription);
+    if (_settings.BestGuessWhichRoom) return Guess(sameName, roomDescription);
 
     var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, sameName, token);
     token.ThrowIfCancellationRequested();
@@ -2428,7 +2428,6 @@ public sealed class Automap : IAutomapController
     NextCommand = null;
     lock (_screen) _screen.Clear();
     ScreenChanged?.Invoke();
-    _dontAskAboutAmbiguities = false;
     UseDottedConnection = false;
   }
 
@@ -2468,6 +2467,34 @@ public sealed class Automap : IAutomapController
       _settings.AutoTidy = value;
       if (_canvas != null) _canvas.MakeSpaceForNewRooms = value;
     }
+  }
+
+  /// <summary>
+  ///   Whether "which room?" gets a best guess (by the description) instead of being asked. Turned on by "Don't ask
+  ///   again" in the question; can be switched while automap runs, taking effect from the next heading.
+  /// </summary>
+  public bool BestGuessWhichRoom
+  {
+    get => _settings.BestGuessWhichRoom;
+    set => _settings.BestGuessWhichRoom = value;
+  }
+
+  /// <summary>
+  ///   Automap Settings changed while automap runs (the automap panel's settings): the options that can change part
+  ///   way through take effect from the next move. The transcript, and how the run started (from the end, move by
+  ///   move, single step), stay as they are.
+  /// </summary>
+  public void ChangeSettings(AutomapSettings settings)
+  {
+    _settings.VerboseTranscript = settings.VerboseTranscript;
+    _settings.GuessExits = settings.GuessExits;
+    _settings.AssumeTwoWayConnections = settings.AssumeTwoWayConnections;
+    _settings.BestGuessWhichRoom = settings.BestGuessWhichRoom;
+    _settings.AddObjectCommand = settings.AddObjectCommand;
+    _settings.AddRegionCommand = settings.AddRegionCommand;
+    _settings.AbbreviateDirections = settings.AbbreviateDirections;
+    if (_canvas != null) _canvas.AbbreviateDirections = settings.AbbreviateDirections;
+    AutoTidy = settings.AutoTidy;
   }
 
   /// <summary>The command automap is paused before, while playing move by move; otherwise null.</summary>

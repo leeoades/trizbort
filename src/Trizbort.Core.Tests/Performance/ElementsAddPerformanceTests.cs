@@ -10,6 +10,7 @@ namespace Trizbort.Core.Tests;
 [TestFixture]
 public class ElementsAddPerformanceTests
 {
+  [Category("InternalOnly")]
   [Test]
   [Category("Performance")]
   public void BuildingLargeGridViaElementsAdd_StaysFast()

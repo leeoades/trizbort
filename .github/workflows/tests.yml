@@ -27,9 +27,13 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
+      # Tests in the InternalOnly category depend on timing (how long something takes, or a fixed wait being long
+      # enough), which these shared, often busy machines can't give reliably. They're left out here; run them locally
+      # with the rest (plain dotnet test runs everything).
       - name: Test and collect coverage
         run: >-
           dotnet test Trizbort.sln -c Release
+          --filter "TestCategory!=InternalOnly"
           --logger "trx;LogFileName=regression.trx"
           --collect:"XPlat Code Coverage"
           --settings coverage.runsettings

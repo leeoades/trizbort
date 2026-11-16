@@ -14,7 +14,7 @@ public partial class AutomapSettingsDialog : Window
 
     private void OnStartClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is AutomapSettingsViewModel vm && string.IsNullOrWhiteSpace(vm.FileName))
+        if (DataContext is AutomapSettingsViewModel { WhileRunning: false } vm && string.IsNullOrWhiteSpace(vm.FileName))
         {
             return;
         }

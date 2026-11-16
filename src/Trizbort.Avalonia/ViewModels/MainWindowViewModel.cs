@@ -70,6 +70,22 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isAutomapAutoTidy = ApplicationSettingsController.AppSettings.Automap.AutoTidy;
 
+    /// <summary>
+    ///     The automap panel's Best guess which room: "which room?" gets a best guess instead of being asked. Ticking
+    ///     "Don't ask again" in the question turns it on; kept in the automap settings, so it stays until turned off.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isAutomapBestGuess = ApplicationSettingsController.AppSettings.Automap.BestGuessWhichRoom;
+
+    partial void OnIsAutomapBestGuessChanged(bool value)
+    {
+        AutomapEngine.Instance.BestGuessWhichRoom = value;
+        var settings = ApplicationSettingsController.AppSettings.Automap;
+        if (settings.BestGuessWhichRoom == value) return;
+        settings.BestGuessWhichRoom = value;
+        ApplicationSettingsController.AppSettings.Automap = settings;
+    }
+
     partial void OnIsAutomapAutoTidyChanged(bool value)
     {
         AutomapEngine.Instance.AutoTidy = value;
@@ -159,10 +175,13 @@ public partial class MainWindowViewModel : ViewModelBase
     internal void RefreshAutomapPanel()
     {
         var engine = AutomapEngine.Instance;
+        FollowPlayToEnd();
         var room = engine.CurrentRoom;
         AutomapRoomName = room?.Name ?? "Somewhere automap doesn't know";
         IsAutomapMoveByMove = engine.MoveByMove;
         IsAutomapSuspended = engine.Suspended;
+        // "Don't ask again" in the question turns the best guess on
+        IsAutomapBestGuess = engine.BestGuessWhichRoom;
         var (played, total) = engine.MoveCount();
         AutomapMoveCount = total == 0
             ? string.Empty
@@ -662,11 +681,31 @@ public partial class MainWindowViewModel : ViewModelBase
         await StartAutomapAsync(settings.Value);
     }
 
+    /// <summary>
+    ///     The automap panel's cog: Automap Settings while automap runs. What can change part way through takes effect
+    ///     from the next move, and is kept for next time.
+    /// </summary>
+    [RelayCommand]
+    public async Task ShowAutomapRunSettingsAsync()
+    {
+        var current = ApplicationSettingsController.AppSettings.Automap;
+        current.AutoTidy = AutomapEngine.Instance.AutoTidy;
+        current.BestGuessWhichRoom = AutomapEngine.Instance.BestGuessWhichRoom;
+        var settings = await _dialogService.ShowAutomapRunSettingsAsync(GetActiveWindow(), current);
+        if (settings == null) return;
+        AutomapEngine.Instance.ChangeSettings(settings.Value);
+        IsGameMonitorShown = _commandService.Session?.ShowGameMonitor ?? IsGameMonitorShown;
+        IsAutomapAutoTidy = settings.Value.AutoTidy;
+        IsAutomapBestGuess = settings.Value.BestGuessWhichRoom;
+        RefreshAutomapPanel();
+    }
+
     [RelayCommand]
     public void StopAutomap()
     {
         _currentRunToken = null;
 
+        EndPlayToEndProgress();
         AutomapEngine.Instance.Stop();
         AutomapEngine.Instance.ScreenChanged -= OnAutomapScreenChanged;
         IsAutomapActive = false;
@@ -697,6 +736,8 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         IsAutomapMoveByMove = AutomapEngine.Instance.MoveByMove;
+        // playing many moves: a progress bar, and the map locked until it's done
+        if (!IsAutomapMoveByMove) StartPlayToEndProgress();
     }
 
     /// <summary>Go back a move in the transcript, leaving the map as it is; Next Move plays it again.</summary>
@@ -820,6 +861,7 @@ public partial class MainWindowViewModel : ViewModelBase
         IsAutomapActive = true;
         IsAutomapMoveByMove = settings.MoveByMove;
         IsAutomapAutoTidy = settings.AutoTidy;
+        IsAutomapBestGuess = settings.BestGuessWhichRoom;
         AutomapStatusText = "Automapping has started.";
         ResetAutomapScreen();
         AutomapEngine.Instance.ScreenChanged += OnAutomapScreenChanged;

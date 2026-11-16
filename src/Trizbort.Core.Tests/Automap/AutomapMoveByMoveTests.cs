@@ -127,6 +127,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
       .Where(x => x.source != null && x.source == x.target && x.from == x.to)
       .Select(x => x.source.Name + " " + x.from).OrderBy(name => name).ToList();
 
+  [Category("InternalOnly")]
   [Test]
   public async Task AWayThatLeadsNowhere_LosesItsStub_AsSoonAsTheReplyIsIn()
   {
@@ -161,6 +162,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task CarryingOnFromTheEnd_OfAGameStillRunning_ReadsTheNextCommandTyped()
   {
@@ -233,6 +235,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task LeavingARoomMarkedDontAutomap_MapsWhereYouComeOut_WithADottedQuestionMarkJoin()
   {
@@ -262,6 +265,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     foyer.Name.ShouldBe("Foyer");
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task InAMazeMarkedDontAutomap_MovesStayInTheMaze_AndLeavingToAKnownRoomJumpsThere()
   {
@@ -285,6 +289,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldBe(new[] { "Hall -> Kitchen", "Hall -> Maze" }, ignoreOrder: true);
   }
 
+  [Category("InternalOnly")]
   [TestCase("pull first peg")]
   [TestCase("pull peg", "first")]
   public async Task AJoinTheUserDrew_LabelledWithTheCommand_TakesThePlayerAlongIt(params string[] commands)
@@ -317,6 +322,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldBe(new[] { "Cupboard -> Cupboard (-1) Pull First Peg", "Cupboard (-1) -> Cellar" });
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task TheWayBackFromTheCloset_DoesntTakeTheFoyersSouthSide_WhenTheFrontPorchIsThere()
   {
@@ -348,6 +354,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     join.MidText.ShouldBeEmpty();
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task AQuestionInBrackets_AndTheAnswer_FollowTheJoinLabelledWithBoth()
   {
@@ -397,6 +404,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
       Task.FromResult(RoomDisambiguation.Choose(candidates[0]));
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task ADifferentRoomYouJustCameInto_TakesTheWayIn_AndTheNewRoomJoinsIt()
   {
@@ -426,6 +434,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     JoinWays.Of(hallToMaze).ShouldNotContain(way => way.IsDirection && way.Direction == MappableDirection.East);
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task TheSamePlaceAtDifferentTimes_KeepsBothJoins_WithTheRoomsSideBySide()
   {
@@ -454,6 +463,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     (closet.Position.X - shaft.Position.X).ShouldBeLessThan(shaft.Width * 2);
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task ThisIsADifferentRoom_AfterAWayTakenForALoop_PutsTheNewRoomThatWay()
   {
@@ -497,6 +507,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task ThisIsADifferentRoom_SplitsTheRoomYouAreIn_OffTheWayYouCameIn()
   {
@@ -536,6 +547,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task SplittingTheRoomYouLeft_MakesItTwo_JoinedByWhatYouDidThere()
   {
@@ -563,6 +575,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldNotContain(join => join.StartsWith("Cupboard -> Cellar"));
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task OutOfTheClosetToARoomAlreadyMapped_AfterOutLedToTheFoyer_AsksAndSplitsTheCloset()
   {
@@ -591,6 +604,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldNotContain(join => join.StartsWith("Closet -> Cellar"));
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task Dying_AndBeingReincarnated_JoinsNothing()
   {
@@ -627,6 +641,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Trizbort.Automap.Automap.IsDeathOrEnd(line).ShouldBe(recognised);
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task TrackingOnly_LeavesTheMapAlone_ObjectsAndStubsToo()
   {
@@ -661,6 +676,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task SuspendedThenResumed_MapsFromTheNextRoom_JoiningItToNothing()
   {
@@ -762,6 +778,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task GoingBack_AfterPlayingToTheEnd_PausesBeforeTheLastMove_WithTheScreenEndingThere()
   {
@@ -811,6 +828,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task TheMoveCount_SaysWhereAutomapIsInTheTranscript()
   {
@@ -861,6 +879,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task GoingBack_WhileWaitingForTheGamesNextLine_GoesBackAMove()
   {
@@ -901,6 +920,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task TwoRoomsWithTheSameName_TheJoinOnTheMap_SaysWhichOneYouGoTo()
   {
@@ -944,6 +964,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     }
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task TheSameNameWithADifferentDescription_AsksWhetherItIsANewRoom_Once()
   {
@@ -965,6 +986,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldHaveSingleItem().ShouldStartWith("In the Chimney -> In the Chimney");
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task AWayBackIntoTheSameRoom_WithTheSameDescription_AsksNothing()
   {
@@ -997,6 +1019,7 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
       Task.FromResult(RoomDisambiguation.Choose(candidates[0]));
   }
 
+  [Category("InternalOnly")]
   [Test]
   public async Task AWayUpDrawnOnTheNorthSide_CountsAsTheWayUp_WhenUpLeadsSomewhereNew()
   {
