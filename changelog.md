@@ -50,6 +50,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Next Move no longer freezes the window while the map is tidied.** Every few moves, laying the map out again
   held up the window for a second and a half (automap runs alongside the window, and the solver ran there too). The
   new room now shows straight away; the tidying is worked out in the background and follows a moment later.
+- **A side taken by a split join stays taken.** In Hollywood Hijinx, going north from the Closet back to the Foyer
+  pulled the Closet right underneath the Foyer, though south from the Foyer is the Front Porch (drawn far off, with a
+  split join). Tidying now keeps rooms off a side a split join leaves by.
 - **A way between areas set apart with a split join is split too.** With the house drawn away from its grounds and
   a split join to the front porch, finding another way out (onto the patio) no longer draws a long join right across
   the map, and tidying no longer drags the house over towards the gardens.
