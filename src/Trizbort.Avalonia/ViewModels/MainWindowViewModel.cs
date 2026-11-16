@@ -192,6 +192,8 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         // directions from where you are follow you as you play
         FollowDirections(room);
+        // a way that now leads somewhere new: the note about it
+        RefreshSameWay();
         IsAutomapMoveByMove = engine.MoveByMove;
         IsAutomapSuspended = engine.Suspended;
         // "Don't ask again" in the question turns the best guess on

@@ -14,12 +14,21 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- A note on the automap panel says when a way out now leads somewhere new. **'Hall' Moves** and **A Different
+  'Hall'** undo that move and map it again as a moving room or as another room with its name; **Both Are Right**, or
+  your next move, clears the note.
+- **Add Current Room** shows on the automap panel only when you're somewhere not on the map.
 - Drag a split join's label ("to Debris Room") to move it. The stub runs on to it, drawn as any join is, and it keeps
   its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
   names. Saved with the map.
 
 ### Changed
 
+- Automap no longer asks what to do when a way out you've already mapped leads somewhere new (east from the Hall to
+  the Pantry, and now to the Kitchen). Both are things you saw, so both joins stay; a new room goes beside the one the
+  way led to before, and a room already on the map stays where it is. The question and its dialog are gone.
+- A way automap only assumed (the way back along a join) that turns out to lead somewhere else is put right without
+  a fuss, rather than counted as a way out leading somewhere new.
 - Shift-click adds to the selection and Ctrl-click (Cmd-click on macOS) takes away from it; a marquee does the same.
   Before, Ctrl added and Shift toggled. While you hold Shift the pointer shows a +, and while you hold Ctrl a −.
 - The directions stop when you arrive: the route stops glowing and Stop reads Go again. Asking for directions to

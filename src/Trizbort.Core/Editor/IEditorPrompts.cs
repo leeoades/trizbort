@@ -14,15 +14,23 @@ namespace Trizbort.Editor;
 /// </summary>
 public interface IEditorPrompts
 {
+  /// <summary>
+  ///   A way already seen leading to <paramref name="existing" /> now leads to <paramref name="newRoomName" />. The app
+  ///   doesn't ask: it keeps both, the new room beside the old (<see cref="AutomapSameDirectionResult.SamePlace" />),
+  ///   and the automap panel offers to map the move again if the room left moves or was another room with its name
+  ///   (<see cref="Trizbort.Automap.Automap.CorrectSameWay" />). Tests may answer otherwise.
+  /// </summary>
   Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
     Room existing,
     string newRoomName,
-    CancellationToken token = default);
+    CancellationToken token = default)
+  {
+    return Task.FromResult(AutomapSameDirectionResult.SamePlace);
+  }
 
   /// <summary>
   ///   As <see cref="ChooseSameDirectionAsync(Room, string, CancellationToken)" />, knowing the room the player left
-  ///   (<paramref name="from" />), so the user can also split it into two rooms
-  ///   (<see cref="AutomapSameDirectionResult.Split" />). Default implementation asks without that choice.
+  ///   (<paramref name="from" />).
   /// </summary>
   Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
     Room from,

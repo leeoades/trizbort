@@ -1195,6 +1195,22 @@ public class AutomapCanvas : IAutomapCanvas
     CurrentProject.Elements.Remove(otherRoom);
   }
 
+  // the mark for an undo history with nothing in it yet
+  private static readonly object _noSteps = new();
+
+  public object UndoMark => _session == null ? null : _session.Undo.Mark ?? _noSteps;
+
+  public bool UndoBackTo(object mark)
+  {
+    if (_session == null || mark == null) return false;
+    var since = _session.Undo.TitlesSince(mark == _noSteps ? null : mark);
+    if (since == null) return false;
+    // only automap's own steps: a change of the user's since then stays, and so does the move
+    if (since.Any(title => title == null || !(title.StartsWith("Automap") || title == "Tidy the map"))) return false;
+    foreach (var _ in since) _session.Undo.Undo(_session);
+    return true;
+  }
+
   /// <summary>
   ///   Automap is now in <paramref name="room" />: the view keeps it in the middle. It isn't selected: the blue
   ///   ring shows where you are, and the selection stays whatever the user chose.

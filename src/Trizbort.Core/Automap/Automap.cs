@@ -81,7 +81,8 @@ public sealed class Automap : IAutomapController
   }
 
   /// <summary>Where automap was when it stopped before a command: enough to go back there and play on.</summary>
-  private sealed record MovePoint(int LinesRead, int ScreenLines, Room Room, string Command, bool SeenCommand);
+  private sealed record MovePoint(int LinesRead, int ScreenLines, Room Room, string Command, bool SeenCommand,
+    IReadOnlyList<DoneInRoom> DoneHere, Arrival Arrival);
 
   private readonly List<MovePoint> _movePoints = new();
   private int _movesBack;
@@ -93,7 +94,8 @@ public sealed class Automap : IAutomapController
     if (_movePoints.Count > 0 && _movePoints[^1].LinesRead == _linesRead) return;
     int screen;
     lock (_screen) screen = _screen.Count;
-    _movePoints.Add(new MovePoint(_linesRead, screen, _lastKnownRoom, command, _seenCommand));
+    _movePoints.Add(new MovePoint(_linesRead, screen, _lastKnownRoom, command, _seenCommand, _doneHere.ToList(),
+      _arrival));
   }
 
   /// <summary>
@@ -132,8 +134,21 @@ public sealed class Automap : IAutomapController
     _lastJourneyCommand = null;
     _pendingStubRemoval = null;
     _seenCommand = point.SeenCommand;
+    // what was done in the room before then ("pull first peg"), and how the player came into it, as they were
+    _doneHere.Clear();
+    _doneHere.AddRange(point.DoneHere);
+    _arrival = point.Arrival;
     _moveByMove = true;
     Volatile.Write(ref _movesToPlay, 0);
+    if (_replay is { } moveByMove)
+    {
+      // mapping that move again as the user said (CorrectSameWay): play it at once, then carry on as before, paused
+      // or with the game
+      _replay = null;
+      if (moveByMove) Volatile.Write(ref _movesToPlay, 1);
+      else _moveByMove = false;
+    }
+
     Trace("Automap: went back to before \"{0}\".", point.Command);
     return (point.Command, reader, stream);
   }
@@ -1202,7 +1217,7 @@ public sealed class Automap : IAutomapController
         if (elsewhere != null)
         {
           otherRoom = elsewhere;
-          decision = await Prompts.ChooseSameDirectionAsync(_lastKnownRoom, otherRoom, roomName, token);
+          decision = await AnswerSameWayAsync(otherRoom, roomName, token);
           token.ThrowIfCancellationRequested();
           if (decision == AutomapSameDirectionResult.Cancel)
           {
@@ -1225,11 +1240,14 @@ public sealed class Automap : IAutomapController
           // A one-way connection that only arrives here says nothing about where this exit leads (two-way
           // connections off: going east to here is not a promise that west leads back), so it doesn't count.
           // The join's ways say where it leads, wherever it leaves the room: "n / up" on the north side leads up.
+          // Not a way only assumed, back along a two-way join from a move the other way: that was a guess, and this
+          // move shows it was wrong, so the join forgets it (east from the junction leads to the patio, not back)
           otherRoom = _canvas.RoomsAlong(_lastKnownRoom, _lastMoveDirection.Value).Select(Real)
-                      .FirstOrDefault(room => room != null && room != _lastKnownRoom);
+                      .FirstOrDefault(room => room != null && room != _lastKnownRoom &&
+                                              !OnlyAssumedBack(_lastKnownRoom, _lastMoveDirection.Value, room));
           if (otherRoom != null)
           {
-            decision = await Prompts.ChooseSameDirectionAsync(_lastKnownRoom, otherRoom, roomName, token);
+            decision = await AnswerSameWayAsync(otherRoom, roomName, token);
             token.ThrowIfCancellationRequested();
             if (decision == AutomapSameDirectionResult.Cancel)
             {
@@ -1512,6 +1530,11 @@ public sealed class Automap : IAutomapController
   {
     if (!string.IsNullOrWhiteSpace(command)) _seenCommand = true;
     _lastCommand = command;
+    // a new move: the note about the last one goes, and an answer given for the move mapped again is used up
+    SameWay = null;
+    if (_sameWayArmed) _sameWayArmed = false;
+    else _forcedSameWay = null;
+    _moveMark = _canvas?.UndoMark;
     RefreshLastKnownRoom();
     await FlushPendingStubRemoval(token);
     var title = _lastKnownRoom != null ? "Automap: " + _lastKnownRoom.Name : "Automap";
@@ -1671,6 +1694,35 @@ public sealed class Automap : IAutomapController
   }
 
   /// <summary>
+  ///   Whether <paramref name="direction" /> from <paramref name="here" /> leads to <paramref name="other" /> only as
+  ///   the way back assumed from a move the other way (west to the junction, so east back), never seen itself.
+  /// </summary>
+  private bool OnlyAssumedBack(Room here, MappableDirection direction, Room other)
+  {
+    var back = CompassPointHelper.GetOpposite(direction);
+    var any = false;
+    foreach (var connection in here.GetConnections())
+    {
+      if (AutomapCanvas.IsCommandJoin(connection)) continue;
+      var source = connection.GetSourceRoom();
+      var target = connection.GetTargetRoom();
+      if (source == null || target == null || source == target) continue;
+      var hereIsStart = source == here;
+      if (Real(hereIsStart ? target : source) != other) continue;
+      var ways = JoinWays.Of(connection);
+      var leads = ways.Where(way => way.AtStart == hereIsStart && way.IsDirection && way.Direction == direction)
+        .ToList();
+      if (leads.Count == 0) continue;
+      if (leads.Any(way => way.Seen) ||
+          !ways.Any(way => way.AtStart != hereIsStart && way.IsDirection && way.Seen && way.Direction == back))
+        return false;
+      any = true;
+    }
+
+    return any;
+  }
+
+  /// <summary>
   ///   Joins the room the player left to <paramref name="room" />, already on the map, the way they went; or, when that
   ///   way was seen leading to <paramref name="before" />, as the user decided: it still leads there (no join), it
   ///   leads here instead, it leads to both, or the room left is really two places (split, as for a new room).
@@ -1707,11 +1759,11 @@ public sealed class Automap : IAutomapController
         break;
       }
       case AutomapSameDirectionResult.SamePlace:
+        // both kept; a room already on the map stays where it is (it has its place: the steps up from the junction
+        // to the patio), only a new one goes beside the room the way led to before
         _canvas.Connect(here, direction, Near(here, room), _settings.AssumeTwoWayConnections);
-        // after joining, which may move it to line up with the way in
-        PutBeside(room, before, direction);
-        Trace("{0}: {1} and {2} are one place at different times.", FormatTranscriptLineForDisplay(line), before.Name,
-          room.Name);
+        Trace("{0}: {1} leads to {2} as well as {3}.", FormatTranscriptLineForDisplay(line),
+          direction.ToString().ToLower(), room.Name, before.Name);
         break;
       case AutomapSameDirectionResult.DifferentRoom:
       {
@@ -2546,6 +2598,10 @@ public sealed class Automap : IAutomapController
     _askedAbout = null;
     _followTo = null;
     _doneHere.Clear();
+    SameWay = null;
+    _forcedSameWay = null;
+    _sameWayArmed = false;
+    _replay = null;
     Volatile.Write(ref _movesToPlay, 0);
     Volatile.Write(ref _movesBack, 0);
     _movePoints.Clear();
@@ -2557,6 +2613,88 @@ public sealed class Automap : IAutomapController
   }
 
   public static Automap Instance { get; } = new();
+
+  #region A way that now leads somewhere new
+
+  /// <summary>
+  ///   The last move went a way already seen leading somewhere else: automap kept both joins, and the new room is drawn
+  ///   beside the old one ("east from Hall now leads to Kitchen as well as Pantry"). The automap panel says so until the
+  ///   next move, so the user can say otherwise (<see cref="CorrectSameWay" />).
+  /// </summary>
+  public sealed record SameWayNote(string From, string Way, string Before, string Now)
+  {
+    // where the undo history was before that move: undoing back to it takes the move off the map
+    internal object UndoMark { get; init; }
+  }
+
+  /// <summary>What the last move found (see <see cref="SameWayNote" />), until the next; null for nothing.</summary>
+  public SameWayNote SameWay { get; private set; }
+
+  /// <summary>Whether the last move can be mapped again another way (there's an undo history to take it off with).</summary>
+  public bool CanCorrectSameWay => SameWay?.UndoMark != null;
+
+  /// <summary>The note about the last move goes, and the map stays as it is.</summary>
+  public void DismissSameWay() => SameWay = null;
+
+  /// <summary>
+  ///   The last move went a way that now leads somewhere new, and the user says why: the room they left moves (a
+  ///   lift: <see cref="AutomapSameDirectionResult.Moves" />), or it was another room with its name (a maze:
+  ///   <see cref="AutomapSameDirectionResult.DifferentRoom" />). That move comes off the map (undone, with any tidy
+  ///   after it) and is mapped again that way.
+  /// </summary>
+  public void CorrectSameWay(AutomapSameDirectionResult answer)
+  {
+    var note = SameWay;
+    if (note?.UndoMark == null || _canvas == null) return;
+    SameWay = null;
+    if (!_canvas.UndoBackTo(note.UndoMark))
+    {
+      Status = "The map has changed since that move, so automap can't map it again. Use the room's right-click menu " +
+               "instead (This Room Moves, or Automap: This Is a Different Room).";
+      return;
+    }
+
+    _forcedSameWay = answer;
+    _sameWayArmed = true;
+    _replay = _moveByMove;
+    Interlocked.Increment(ref _movesBack);
+  }
+
+  // the answer for the move being mapped again (CorrectSameWay); armed until that move's command is processed
+  private AutomapSameDirectionResult? _forcedSameWay;
+  private bool _sameWayArmed;
+
+  // going back to map a move again: whether automap was going move by move, to carry on that way after it
+  private bool? _replay;
+
+  // where the undo history was when the current move's command came
+  private object _moveMark;
+
+  /// <summary>
+  ///   The way the player went was seen leading to <paramref name="existing" />, and now leads to
+  ///   <paramref name="roomName" />. Without asking, both are kept, the new room beside the old (one place at different
+  ///   times, or a way that depends on something in the game), and the automap panel says so. When the user has said
+  ///   otherwise for this move (<see cref="CorrectSameWay" />), that.
+  /// </summary>
+  private async Task<AutomapSameDirectionResult> AnswerSameWayAsync(Room existing, string roomName,
+    CancellationToken token)
+  {
+    if (_forcedSameWay is { } forced)
+    {
+      _forcedSameWay = null;
+      return forced;
+    }
+
+    var answer = await Prompts.ChooseSameDirectionAsync(_lastKnownRoom, existing, roomName, token);
+    if (answer == AutomapSameDirectionResult.SamePlace && _lastKnownRoom != null && existing != null)
+      SameWay = new SameWayNote(_lastKnownRoom.Name, WayWord(), existing.Name, roomName) { UndoMark = _moveMark };
+    return answer;
+  }
+
+  private string WayWord() =>
+    _lastMoveDirection?.ToString().ToLowerInvariant() ?? _lastJourneyCommand ?? "that way";
+
+  #endregion
 
   #endregion
 

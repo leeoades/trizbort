@@ -65,75 +65,6 @@ public class AutomapPromptDialogTests
     }
 
     [Test]
-    public void SameDirection_Message_HasBothNamesAndClosingQuote()
-    {
-        var vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry");
-
-        vm.Message.ShouldBe(
-            "Room 'Kitchen' is already defined in the same direction as room 'Pantry'.  What would you like to do?");
-    }
-
-    [Test]
-    public void SameDirection_ButtonLabels_UseRoomNames()
-    {
-        var vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry");
-
-        vm.KeepExistingLabel.ShouldBe("Keep 'Kitchen'");
-        vm.KeepNewLabel.ShouldBe("Keep 'Pantry'");
-        vm.KeepBothLabel.ShouldBe("Keep Both");
-    }
-
-    [Test]
-    public void SameDirection_CloseWithoutChoice_IsCancel_MappingNothing()
-    {
-        var vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry");
-
-        vm.Result.ShouldBe(AutomapSameDirectionResult.Cancel);
-    }
-
-    [Test]
-    public void SameDirection_OptionsOnTheLeft_ExplainedOnTheRight()
-    {
-        var vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry");
-        vm.Options.Select(option => option.Result).ShouldBe(new[]
-        {
-            AutomapSameDirectionResult.KeepRoom1, AutomapSameDirectionResult.KeepRoom2, AutomapSameDirectionResult.KeepBoth,
-            AutomapSameDirectionResult.SamePlace
-        });
-
-        vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" };
-        vm.Options.Select(option => option.Title).ShouldBe(new[]
-        {
-            "Keep 'Kitchen'", "Keep 'Pantry'", "Keep Both", "The same place at different times",
-            "This is a different 'Cupboard'",
-            "'Cupboard' moves (a lift, a vehicle)"
-        });
-        vm.OkCommand.CanExecute(null).ShouldBeFalse();
-        vm.Selected = vm.Options[5];
-        vm.Explanation.ShouldContain("takes you with it");
-        vm.OkCommand.Execute(null);
-        vm.Result.ShouldBe(AutomapSameDirectionResult.Moves);
-
-        vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" };
-        vm.Selected = vm.Options[4];
-        vm.OkCommand.Execute(null);
-        vm.Result.ShouldBe(AutomapSameDirectionResult.DifferentRoom);
-    }
-
-    [Test]
-    public void SameDirection_EachButton_ReturnsMatchingResult()
-    {
-        var vm = new AutomapSameDirectionViewModel("Kitchen", "Pantry");
-
-        vm.KeepNew();
-        vm.Result.ShouldBe(AutomapSameDirectionResult.KeepRoom2);
-        vm.KeepBoth();
-        vm.Result.ShouldBe(AutomapSameDirectionResult.KeepBoth);
-        vm.KeepExisting();
-        vm.Result.ShouldBe(AutomapSameDirectionResult.KeepRoom1);
-    }
-
-    [Test]
     public void Disambiguate_ListsTheRooms_ThenANewRoom_WithTheTranscriptsDescription()
     {
         var vm = CreateDisambiguation(AddRoom("Hall", "One."), AddRoom("Hall", "Two."));
@@ -234,10 +165,11 @@ public class AutomapPromptDialogTests
         var first = AddRoom("Hall", "One.");
         var second = AddRoom("Hall", "Two.");
 
-        var same = await prompts.ChooseSameDirectionAsync(first, "Other");
+        var same = await ((IEditorPrompts)prompts).ChooseSameDirectionAsync(first, "Other");
         var disambiguation = await prompts.DisambiguateRoomAsync("Hall", "x", new[] { first, second });
 
-        same.ShouldBe(AutomapSameDirectionResult.KeepRoom1);
+        // nothing asked: both kept, side by side
+        same.ShouldBe(AutomapSameDirectionResult.SamePlace);
         disambiguation.Chosen.ShouldBeSameAs(first);
         disambiguation.NewRoom.ShouldBeFalse();
     }
@@ -246,25 +178,6 @@ public class AutomapPromptDialogTests
     public void Dialogs_Construct_AndShowTheirButtons()
     {
         EnsureStyles();
-
-        var sameDirection = new AutomapSameDirectionDialog
-        {
-            DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry")
-        };
-        sameDirection.Show();
-        // OK and Cancel; the answers are in the list, the first picked to start with
-        sameDirection.GetVisualDescendants().OfType<Button>()
-            .Count(button => button.IsVisible && (button.Content as string) is "OK" or "Cancel").ShouldBe(2);
-        ((AutomapSameDirectionViewModel)sameDirection.DataContext!).Selected!.Result.ShouldBe(AutomapSameDirectionResult.KeepRoom1);
-        sameDirection.Close();
-
-        sameDirection = new AutomapSameDirectionDialog
-        {
-            DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry") { FromName = "Cupboard" }
-        };
-        sameDirection.Show();
-        sameDirection.GetVisualDescendants().OfType<ListBoxItem>().Count().ShouldBe(6);
-        sameDirection.Close();
 
         var disambiguate = new DisambiguateRoomsDialog
         {
@@ -298,21 +211,7 @@ public class AutomapPromptDialogTests
             CancellationToken token = default)
         {
             SameDirectionCalls++;
-            var vm = new AutomapSameDirectionViewModel(existing, newRoomName);
-            switch (SameDirectionChoice)
-            {
-                case AutomapSameDirectionResult.KeepRoom2:
-                    vm.KeepNew();
-                    break;
-                case AutomapSameDirectionResult.KeepBoth:
-                    vm.KeepBoth();
-                    break;
-                default:
-                    vm.KeepExisting();
-                    break;
-            }
-
-            return Task.FromResult(vm.Result);
+            return Task.FromResult(SameDirectionChoice);
         }
 
         public Task<RoomDisambiguation> DisambiguateRoomAsync(

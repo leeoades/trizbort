@@ -180,6 +180,14 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         });
     }
 
+    public object UndoMark => Dispatcher.UIThread.CheckAccess()
+        ? _innerCanvas.UndoMark
+        : Dispatcher.UIThread.Invoke(() => _innerCanvas.UndoMark);
+
+    public bool UndoBackTo(object mark) => Dispatcher.UIThread.CheckAccess()
+        ? _innerCanvas.UndoBackTo(mark)
+        : Dispatcher.UIThread.Invoke(() => _innerCanvas.UndoBackTo(mark));
+
     public void FollowRoom(Room room)
     {
         if (Dispatcher.UIThread.CheckAccess()) _innerCanvas.FollowRoom(room);

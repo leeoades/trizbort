@@ -1,5 +1,10 @@
 namespace Trizbort.Automap;
 
+/// <summary>
+///   What to do when a way already seen leading to one room now leads to another. Automap doesn't ask: it keeps both,
+///   side by side (<see cref="SamePlace" />), and the automap panel offers <see cref="Moves" /> and
+///   <see cref="DifferentRoom" />, mapping the move again. The others are no longer offered, but tests still answer them.
+/// </summary>
 public enum AutomapSameDirectionResult
 {
   KeepRoom1,

@@ -47,6 +47,20 @@ public sealed class UndoStack
 
   public string UndoTitle => _undo.Count > 0 ? _undo[_undo.Count - 1].Title : null;
 
+  /// <summary>The step on top of the undo history, to undo back to later (<see cref="TitlesSince" />); null for none.</summary>
+  public object Mark => _undo.Count > 0 ? _undo[_undo.Count - 1] : null;
+
+  /// <summary>
+  ///   The titles of the steps made since <paramref name="mark" /> (<see cref="Mark" />), oldest first; null when that
+  ///   step is no longer in the history.
+  /// </summary>
+  public IReadOnlyList<string> TitlesSince(object mark)
+  {
+    var at = mark == null ? -1 : _undo.IndexOf(mark as Step);
+    if (mark != null && at < 0) return null;
+    return _undo.Skip(at + 1).Select(step => step.Title).ToList();
+  }
+
   public string RedoTitle => _redo.Count > 0 ? _redo[_redo.Count - 1].Title : null;
 
   /// <summary>True when the stack position differs from the position at the last <see cref="MarkSaved" />.</summary>
