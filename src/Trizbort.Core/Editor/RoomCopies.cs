@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Trizbort.Domain.Elements;
+using Trizbort.Domain.Misc;
+using Trizbort.Setup;
 
 namespace Trizbort.Editor;
 
@@ -37,6 +39,49 @@ public static class RoomCopies
     foreach (var description in room.Descriptions) copy.AddDescription(description);
     copy.Objects = room.Objects;
     return true;
+  }
+
+  /// <summary>
+  ///   A room that moves (<see cref="Room.Moves" />), or a stop of one: true if another stop can be added for it.
+  /// </summary>
+  public static bool CanAddStop(Room room) => room != null && (room.Moves || room.IsStop);
+
+  /// <summary>
+  ///   Adds another stop for the moving room <paramref name="room" /> is (or is a stop of): a copy of it, with its
+  ///   name, look and descriptions, beside <paramref name="room" /> where there's space, for the user to put where the
+  ///   room goes (the closet down in the cellar) and join up. Not joined to the other stops: the first time automap
+  ///   sees the room move there, it asks what moved it and labels the join. Returns the new stop, or null.
+  /// </summary>
+  public static Room AddStop(IList<Element> elements, Room room)
+  {
+    if (elements == null || !CanAddStop(room) || !elements.Contains(room)) return null;
+    var root = room.IsStop ? room.ReferenceRoom : room;
+    var stop = new Room(root.Project) { Name = root.Name, Size = root.Size, ReferenceRoomId = root.Id };
+    stop.CopyStyleFrom(root);
+    foreach (var description in root.Descriptions) stop.AddDescription(description);
+    stop.Position = FreeSpotBeside(elements, room, stop.Size);
+    elements.Add(stop);
+    return stop;
+  }
+
+  /// <summary>Where a room of <paramref name="size" /> fits beside <paramref name="room" />, clear of other rooms.</summary>
+  private static Vector FreeSpotBeside(IList<Element> elements, Room room, Vector size)
+  {
+    var gap = Settings.PreferredDistanceBetweenRooms;
+    var stepX = room.Size.X + gap;
+    var stepY = room.Size.Y + gap;
+    var others = elements.OfType<Room>().Select(other => other.InnerBounds).ToList();
+    // east, then round the room, then further out
+    var around = new[] { (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1) };
+    for (var distance = 1; distance <= 6; distance++)
+      foreach (var (dx, dy) in around)
+      {
+        var at = Settings.Snap(new Vector(room.Position.X + dx * stepX * distance, room.Position.Y + dy * stepY * distance));
+        var bounds = new Rect(at, size);
+        if (!others.Any(other => other.IntersectsWith(bounds))) return at;
+      }
+
+    return Settings.Snap(new Vector(room.Position.X + stepX, room.Position.Y));
   }
 
   /// <summary>Copies of <paramref name="room" /> on the map.</summary>

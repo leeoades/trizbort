@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Add Another Stop** on a moving room's right-click menu (Room). When automap didn't see the room move (the
+  closet went down to the cellar, and you walked out without going back), it adds a copy of the room, a stop of the
+  same room, beside it, for you to drag to where it went and join up.
 - **Best guess which room** can be turned off again. Ticking **Don't ask again** when automap asks which room you're
   in used to last until automap stopped, with no way back. It's now a setting in Automap Settings, remembered between
   runs. Untick it to be asked again. The question says where to find it, and is now **Don't ask again: make a best
@@ -27,6 +30,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Play to the End shows its progress.** While automap plays through the moves left, a progress bar in the automap
   panel shows how far it's got, so it's clear when it has finished; the map is locked (you can look around it, not
   change it) until then, or until you pause.
+
+### Changed
+
+- **Room Moves** is now **This Room Moves**, or **This Room Doesn't Move** when it already does.
 
 ### Fixed
 
