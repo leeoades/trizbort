@@ -22,6 +22,7 @@ public partial class MainWindowViewModel
     private Directions? Directions => _commandService.Session?.Directions;
     private bool _directionsHooked;
     private bool _canGoDirections;
+    private bool _showingDirections;
     private bool _canNavigateFromWhereYouAre;
 
     /// <summary>The directions panel is showing.</summary>
@@ -47,8 +48,19 @@ public partial class MainWindowViewModel
     /// <summary>The commands to type, in order.</summary>
     public ObservableCollection<DirectionStepItem> DirectionsSteps { get; } = new();
 
-    /// <summary>Go: there's a room to start from and one to go to.</summary>
-    public bool CanGoDirections => _canGoDirections;
+    /// <summary>Go: there's a room to start from and one to go to; Stop: there are directions showing.</summary>
+    public bool CanGoDirections => _canGoDirections || _showingDirections;
+
+    /// <summary>Directions are showing, so the Go button stops them.</summary>
+    public bool IsShowingDirections => _showingDirections;
+
+    /// <summary>"Go", or "Stop" while directions are showing.</summary>
+    public string GoDirectionsText => _showingDirections ? "Stop" : "Go";
+
+    /// <summary>What the Go button does.</summary>
+    public string GoDirectionsTip => _showingDirections
+        ? "Clear the directions; From and To stay, so Go works them out again"
+        : "Work out the directions";
 
     /// <summary>From Where You Are: automap knows which room the player is in.</summary>
     public bool CanNavigateFromWhereYouAre => _canNavigateFromWhereYouAre;
@@ -89,10 +101,14 @@ public partial class MainWindowViewModel
             Trizbort.Avalonia.Drawing.RouteGlow.Route = glow;
             _commandService.InvalidateCanvas();
         }
-        if (_canGoDirections != directions.CanGo)
+        if (_canGoDirections != directions.CanGo || _showingDirections != directions.HasRoute)
         {
             _canGoDirections = directions.CanGo;
+            _showingDirections = directions.HasRoute;
             OnPropertyChanged(nameof(CanGoDirections));
+            OnPropertyChanged(nameof(IsShowingDirections));
+            OnPropertyChanged(nameof(GoDirectionsText));
+            OnPropertyChanged(nameof(GoDirectionsTip));
             GoDirectionsCommand.NotifyCanExecuteChanged();
         }
 
@@ -115,9 +131,14 @@ public partial class MainWindowViewModel
         DirectionsFromWhereYouAreCommand.NotifyCanExecuteChanged();
     }
 
-    /// <summary>Go: works the directions out.</summary>
+    /// <summary>Go: works the directions out. Stop, while they're showing: clears them, keeping From and To.</summary>
     [RelayCommand(CanExecute = nameof(CanGoDirections))]
-    public void GoDirections() => Directions?.Go();
+    public void GoDirections()
+    {
+        if (Directions == null) return;
+        if (Directions.HasRoute) Directions.Stop();
+        else Directions.Go();
+    }
 
     /// <summary>Swap: directions back the other way.</summary>
     [RelayCommand]

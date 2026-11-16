@@ -128,6 +128,18 @@ public sealed class Directions
   /// <summary>Works the directions out.</summary>
   public void Go() => Route(null);
 
+  /// <summary>
+  ///   Stop: the directions go (and the route stops glowing), but From and To stay, so Go works them out again.
+  ///   Following where automap has the player carries on, so From is still where they are.
+  /// </summary>
+  public void Stop()
+  {
+    HasRoute = false;
+    Steps = Array.Empty<RouteStep>();
+    Status = Prompt();
+    Raise();
+  }
+
   /// <summary>Whether there's what's needed to work out directions.</summary>
   public bool CanGo => OnTheMap(From) && OnTheMap(To);
 
@@ -148,6 +160,14 @@ public sealed class Directions
 
     var here = RouteFinder.Place(whereYouAre);
     From = whereYouAre;
+    // stopped: no directions to follow, but From keeps up with where they are, ready for Go
+    if (!HasRoute)
+    {
+      Status = Prompt();
+      Raise();
+      return;
+    }
+
     if (here == RouteFinder.Place(To))
     {
       Steps = Array.Empty<RouteStep>();

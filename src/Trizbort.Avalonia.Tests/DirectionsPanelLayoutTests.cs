@@ -9,6 +9,9 @@ using Trizbort.Avalonia.Controls;
 using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Domain.Application;
+using Trizbort.Domain.Elements;
+using CompassPoint = Trizbort.Domain.Misc.CompassPoint;
+using Vertex = Trizbort.Domain.Misc.Vertex;
 
 namespace Trizbort.Avalonia.Tests;
 
@@ -47,6 +50,57 @@ public class DirectionsPanelLayoutTests
             var stepsTop = steps.TranslatePoint(new Point(0, 0), panel)!.Value.Y;
             cardBottom.ShouldBeLessThan(headingTop);
             headingTop.ShouldBeLessThan(stepsTop);
+        }
+        finally
+        {
+            window.Close();
+            Project.Current = previous;
+        }
+    }
+
+    [AvaloniaTest]
+    public void Go_ReadsStop_WhileDirectionsShow_AndStopKeepsFromAndTo_AndFromWhereYouAreOnlyShowsWhileAutomapping()
+    {
+        var previous = Project.Current;
+        Project.Current = new Project();
+        var hall = new Room(Project.Current) { Name = "Hall", Position = new Trizbort.Domain.Misc.Vector(0, 0) };
+        var kitchen = new Room(Project.Current) { Name = "Kitchen", Position = new Trizbort.Domain.Misc.Vector(200, 0) };
+        Project.Current.Elements.Add(hall);
+        Project.Current.Elements.Add(kitchen);
+        Project.Current.Elements.Add(new Connection(Project.Current, new Vertex(hall.PortAt(CompassPoint.East)),
+            new Vertex(kitchen.PortAt(CompassPoint.West))));
+        var commands = new CommandService();
+        var vm = new MainWindowViewModel(commands, null!, null!, new AvaloniaAutomapCanvas());
+        var window = new Window { DataContext = vm, Width = 260, Height = 600, Content = new DirectionsPanel() };
+        try
+        {
+            window.Show();
+            var panel = (DirectionsPanel)window.Content!;
+            var go = panel.FindControl<Button>("GoButton").ShouldNotBeNull();
+            var directions = commands.Session.Directions;
+
+            directions.NavigateFrom(hall);
+            vm.RefreshDirections();
+            Dispatcher.UIThread.RunJobs();
+            go.Content.ShouldBe("Go");
+
+            directions.NavigateTo(kitchen, null);
+            vm.RefreshDirections();
+            Dispatcher.UIThread.RunJobs();
+            directions.HasRoute.ShouldBeTrue();
+            go.Content.ShouldBe("Stop");
+
+            vm.GoDirectionsCommand.Execute(null);
+            vm.RefreshDirections();
+            Dispatcher.UIThread.RunJobs();
+            directions.HasRoute.ShouldBeFalse();
+            directions.From.ShouldBe(hall);
+            directions.To.ShouldBe(kitchen);
+            go.Content.ShouldBe("Go");
+
+            // automap isn't running: it doesn't know where you are
+            vm.IsAutomapActive.ShouldBeFalse();
+            panel.FindControl<Button>("WhereYouAreButton").ShouldNotBeNull().IsVisible.ShouldBeFalse();
         }
         finally
         {

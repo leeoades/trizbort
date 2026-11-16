@@ -146,4 +146,41 @@ public class DirectionsTests : IsolatedProjectTests
     directions.Follow(Room("Kitchen"));
     directions.Steps.Count.ShouldBe(3);
   }
+
+  [Test]
+  public async Task Stop_ClearsTheDirections_KeepingFromAndTo()
+  {
+    await Map(Game);
+    var directions = new Directions();
+    directions.NavigateFrom(Room("Hall"));
+    directions.NavigateTo(Room("Attic"), null);
+    directions.Steps.Count.ShouldBe(3);
+
+    directions.Stop();
+
+    directions.HasRoute.ShouldBeFalse();
+    directions.Steps.ShouldBeEmpty();
+    directions.From.ShouldBe(Room("Hall"));
+    directions.To.ShouldBe(Room("Attic"));
+    directions.Status.ShouldBe("Press Go for directions.");
+
+    directions.Go();
+    directions.Steps.Select(step => step.Command).ShouldBe(new[] { "east", "north", "up" });
+  }
+
+  [Test]
+  public async Task Stopped_FollowingWhereYouAre_KeepsFromUpToDate_WithoutDirections()
+  {
+    await Map(Game);
+    var directions = new Directions();
+    directions.NavigateTo(Room("Attic"), Room("Hall"));
+    directions.Stop();
+
+    directions.Follow(Room("Kitchen"));
+
+    directions.Steps.ShouldBeEmpty();
+    directions.From.ShouldBe(Room("Kitchen"));
+    directions.Go();
+    directions.Steps.Select(step => step.Command).ShouldBe(new[] { "north", "up" });
+  }
 }

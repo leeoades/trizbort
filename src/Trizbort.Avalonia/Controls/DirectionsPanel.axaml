@@ -45,14 +45,16 @@
             <StackPanel Spacing="6">
                 <TextBlock Classes="section" Text="FROM" />
                 <TextBlock x:Name="FromName" Text="{Binding DirectionsFrom}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <!-- only while automapping: automap is what knows where you are -->
                 <Button x:Name="WhereYouAreButton" Content="From Where You Are"
+                        IsVisible="{Binding IsAutomapActive}"
                         Command="{Binding DirectionsFromWhereYouAreCommand}"
                         ToolTip.Tip="Start from the room automap has you in, and follow you as you play" />
                 <TextBlock Classes="section" Text="TO" Margin="0,4,0,0" />
                 <TextBlock x:Name="ToName" Text="{Binding DirectionsTo}" FontWeight="SemiBold" TextWrapping="Wrap" />
                 <Grid ColumnDefinitions="*,6,*" Margin="0,4,0,0">
-                    <Button x:Name="GoButton" Content="Go" Command="{Binding GoDirectionsCommand}"
-                            ToolTip.Tip="Work out the directions" />
+                    <Button x:Name="GoButton" Content="{Binding GoDirectionsText}" Command="{Binding GoDirectionsCommand}"
+                            ToolTip.Tip="{Binding GoDirectionsTip}" />
                     <Button Grid.Column="2" x:Name="SwapButton" Content="⇅ Swap" Command="{Binding SwapDirectionsCommand}"
                             ToolTip.Tip="Directions back the other way" />
                 </Grid>

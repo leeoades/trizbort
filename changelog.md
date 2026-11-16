@@ -35,7 +35,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   As you play, each step drops off the top; go another way and it reroutes; and it says when you've arrived, or that
   the map shows no way there. **Navigate from Here...** chooses where to start instead, so you can get directions
   without automapping. The route glows blue on the map. Ways automap only assumed are marked, and ways you've been are preferred. **Copy Commands**
-  copies them to paste into the game.
+  copies them to paste into the game. While directions are showing, **Go** reads **Stop**: it clears them and keeps
+  From and To. **From Where You Are** shows only while automapping.
 
 ### Fixed
 
