@@ -12,6 +12,9 @@ public sealed record HeadlessAutomapResult(string Transcript, string Error, Exce
 {
   public bool Succeeded => Error == null;
 
+  /// <summary>At the end, the room the player is in when it isn't on the map (the question about it was cancelled).</summary>
+  public string RoomNotOnMap { get; init; }
+
   /// <summary>The room automap thought the player was in at the end (automap doesn't select it).</summary>
   public Room CurrentRoom { get; init; }
 }
@@ -69,6 +72,6 @@ public static class HeadlessAutomap
       project.IsDirty = false;
     }
 
-    return new HeadlessAutomapResult(transcriptPath, error, failure) { CurrentRoom = engine.CurrentRoom };
+    return new HeadlessAutomapResult(transcriptPath, error, failure) { RoomNotOnMap = engine.RoomNotOnMap, CurrentRoom = engine.CurrentRoom };
   }
 }
