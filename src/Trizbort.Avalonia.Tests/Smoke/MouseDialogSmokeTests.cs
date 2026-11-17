@@ -30,7 +30,7 @@ namespace Trizbort.Avalonia.Tests.Smoke;
 ///
 /// Steps already covered by MapCanvasControlGestureTests (not duplicated here):
 ///  18 marquee -> MarqueeSelection_SelectsIntersectingElements
-///  17 ctrl-click -> ClickWithCtrl_TogglesElementSelection
+///  17 shift/ctrl-click -> ClickWithShift_Adds_ClickWithCtrl_TakesAway
 ///  19 drag + snap -> MoveSelection_WithSnapToGrid_MovesInGridSteps / MoveSelection_DragsMultipleElements
 ///  21 redock end -> Redock_ExistingConnectionEnd_MovesToAnotherRoomPort
 ///  23 waypoint drag -> Connection_CurveWaypointDragging_UpdatesSplineHandle
@@ -204,9 +204,9 @@ public class MouseDialogSmokeTests
         }
     }
 
-    /// <summary>Smoke step 17: Ctrl-click a second room, Shift-click a third; each is added to the selection.</summary>
+    /// <summary>Smoke step 17: Shift-click a second and a third room, each added to the selection; Ctrl-click takes one out.</summary>
     [AvaloniaTest]
-    public void S3_17_CtrlThenShiftClick_AddsRoomsToSelection()
+    public void S3_17_ShiftClick_AddsRooms_CtrlClick_TakesOneOut()
     {
         var (window, canvas, service) = CreateCanvas();
         try
@@ -216,13 +216,17 @@ public class MouseDialogSmokeTests
             var r3 = AddRoom(400, 0);
 
             Click(window, canvas.CanvasToClient(new Vector(48, 32)));
-            Click(window, canvas.CanvasToClient(new Vector(248, 32)), RawInputModifiers.Control);
+            Click(window, canvas.CanvasToClient(new Vector(248, 32)), RawInputModifiers.Shift);
             Click(window, canvas.CanvasToClient(new Vector(448, 32)), RawInputModifiers.Shift);
 
             service.SelectedElements.Count.ShouldBe(3);
             service.SelectedElements.ShouldContain(r1);
             service.SelectedElements.ShouldContain(r2);
             service.SelectedElements.ShouldContain(r3);
+
+            Click(window, canvas.CanvasToClient(new Vector(248, 32)), RawInputModifiers.Control);
+            service.SelectedElements.Count.ShouldBe(2);
+            service.SelectedElements.ShouldNotContain(r2);
         }
         finally
         {
@@ -230,9 +234,9 @@ public class MouseDialogSmokeTests
         }
     }
 
-    /// <summary>Smoke step 18 (known gap G005): reference Ctrl-marquee only adds; it must not deselect an already selected room.</summary>
+    /// <summary>Smoke step 18: a Shift-marquee only adds; it must not deselect an already selected room.</summary>
     [AvaloniaTest]
-    public void S3_18_CtrlMarquee_OverSelectedRoom_KeepsItSelected()
+    public void S3_18_ShiftMarquee_OverSelectedRoom_KeepsItSelected()
     {
         var (window, canvas, service) = CreateCanvas();
         try
@@ -243,9 +247,9 @@ public class MouseDialogSmokeTests
             var start = canvas.CanvasToClient(new Vector(-150, -150));
             var end = canvas.CanvasToClient(new Vector(0, 0));
             window.MouseMove(start);
-            window.MouseDown(start, MouseButton.Left, RawInputModifiers.Control);
+            window.MouseDown(start, MouseButton.Left, RawInputModifiers.Shift);
             window.MouseMove(end);
-            window.MouseUp(end, MouseButton.Left, RawInputModifiers.Control);
+            window.MouseUp(end, MouseButton.Left, RawInputModifiers.Shift);
 
             service.SelectedElements.ShouldContain(r1);
         }

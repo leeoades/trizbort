@@ -44,6 +44,8 @@ public sealed class CanvasInteraction : IDisposable
   private CurveWaypoint? _hoverWaypoint;
   private bool _spaceHeld;
   private bool _referenceJumpHeld;
+  // Shift or Ctrl held: the cursor shows the click adds to (+) or takes from (-) the selection
+  private ModifierKeys _modifiersHeld;
 
   private UndoTransaction _transaction;
   private Project _gestureProject;
@@ -251,13 +253,14 @@ public sealed class CanvasInteraction : IDisposable
     var element = _hit.HitElement(world);
     if (element != null)
     {
-      if (ctrl)
-      {
-        _session.Select(element, true, false);
-      }
-      else if (shift)
+      // Shift adds to the selection, Ctrl takes away from it
+      if (shift)
       {
         _session.Select(element, false, true);
+      }
+      else if (ctrl)
+      {
+        _session.Selection.Remove(element);
       }
       else if (!selection.Contains(element))
       {
@@ -288,6 +291,7 @@ public sealed class CanvasInteraction : IDisposable
     var world = _session.Viewport.ClientToCanvas(input.Client);
     _lastWorld = world;
     _referenceJumpHeld = IsReferenceJumpModifier(input.Modifiers);
+    _modifiersHeld = input.Modifiers;
     if (_mode == CanvasDragMode.None && _pendingPort == null) _tooltipSuppressed = false;
 
     if (_pendingPort != null)
@@ -488,6 +492,18 @@ public sealed class CanvasInteraction : IDisposable
   public void OnKeyUp(KeyInput input)
   {
     if (input.Key == InputKey.Space) SetSpaceHeld(false);
+  }
+
+  /// <summary>
+  ///   The modifier keys now held, as Shift or Ctrl goes down or up without the pointer moving, so the cursor shows
+  ///   what a click would do to the selection.
+  /// </summary>
+  public void SetModifiersHeld(ModifierKeys modifiers)
+  {
+    if (_modifiersHeld == modifiers) return;
+    _modifiersHeld = modifiers;
+    _referenceJumpHeld = IsReferenceJumpModifier(modifiers);
+    Rebuild();
   }
 
   public void SetSpaceHeld(bool held)
@@ -692,7 +708,7 @@ public sealed class CanvasInteraction : IDisposable
     CommitTransaction();
   }
 
-  // Legacy EndDrag marquee: no modifier replaces the selection; Ctrl adds; Shift (with or without Ctrl) toggles.
+  // No modifier replaces the selection; Shift adds to it; Ctrl (without Shift) takes away from it.
   private void ApplyMarquee(Rect rect, ModifierKeys modifiers)
   {
     var hits = _hit.HitRect(rect);
@@ -704,10 +720,8 @@ public sealed class CanvasInteraction : IDisposable
     }
 
     foreach (var element in hits)
-    {
-      if (!_session.Selection.Contains(element)) _session.Selection.Add(element);
-      else if (shift) _session.Selection.Remove(element);
-    }
+      if (shift) _session.Selection.Add(element);
+      else _session.Selection.Remove(element);
   }
 
   private bool IsEmptySpace(Vector world)
@@ -866,6 +880,13 @@ public sealed class CanvasInteraction : IDisposable
         default:
           return CursorKind.Default;
       }
+    }
+
+    // Shift or Ctrl held: a click (or a marquee) adds to or takes from the selection
+    if ((_mode is CanvasDragMode.None or CanvasDragMode.Marquee) && !_spaceHeld)
+    {
+      if (IsShift(_modifiersHeld)) return CursorKind.SelectAdd;
+      if (IsCtrl(_modifiersHeld) && (_modifiersHeld & ModifierKeys.Alt) == 0) return CursorKind.SelectRemove;
     }
 
     if (_hoverElement != null && _session.Selection.Contains(_hoverElement) && _hoverElement is IMoveable)

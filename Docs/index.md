@@ -764,9 +764,9 @@ A simple way to select multiple things at once is by dragging a rectangle (or *m
 
 To do so, left click on a blank area of the canvas and drag out a rectangle around everything you'd like to select. By default this will select just the things which are inside or touching the marquee.
 
-To select everything under the marquee as well as everything already selected, hold the `Control` key whilst dragging out the marquee.
+To add everything under the marquee to what's already selected, hold the `Shift` key whilst dragging out the marquee.
 
-To toggle whether each thing under the marquee is selected, hold the `Shift` key whilst dragging out the marquee. So if you hold Shift and drag the marquee over one selected room and one room which is not selected, the former will be deselected and the latter will be selected.
+To take everything under the marquee out of the selection, hold the `Control` key (`Cmd` on macOS) whilst dragging out the marquee; anything else selected stays selected.
 
 ![Marquee selection.](marquee.png)
 
@@ -776,11 +776,13 @@ To toggle whether each thing under the marquee is selected, hold the `Shift` key
 
 #### Selection Modifiers
 
-Alternatively you can click things to select them as normal, but hold down the `Control` or `Shift` keys whilst doing so.
+Alternatively you can click things to select them as normal, but hold down the `Shift` or `Control` keys whilst doing so.
 
-Holding the `Control` key whilst clicking something will add it to the selection, so it will be selected along with anything else already selected.
+Holding the `Shift` key whilst clicking something adds it to the selection, so it will be selected along with anything else already selected. Clicking something already selected keeps it selected.
 
-Holding the `Shift` key whilst clicking something will toggle whether it is selected, so if it is selected it will be deselected, and if not it will be selected.
+Holding the `Control` key (`Cmd` on macOS) whilst clicking something takes it out of the selection, leaving everything else selected.
+
+While you hold `Shift`, the pointer shows a **+**, and while you hold `Control` it shows a **−**, so you can see what a click or a marquee will do. (Ctrl-click still goes to the room a copy stands for, or along a split join, when that's what's under the pointer.)
 
 <a name="help_select_ops"></a>
 
@@ -968,7 +970,7 @@ Trizbort may say various things during automapping, including:
 
 Trizbort can give you directions from one room to another, like a satnav: the commands to type, following the joins on the map. It only knows what the map shows, so it can't solve puzzles on the way.
 
-- **Navigate to Here** (a room's right-click menu, or **Project > Directions** for the selected room): while automapping, the directions start from where automap has you. The **Directions** panel opens beside the map with the commands to type, in order, and the route glows blue on the map. It follows you as you play. Each step you take drops off the top; go another way and it reroutes from wherever you are; and it says when you've arrived. Without automapping, the directions start from the room you chose with **Navigate from Here...**.
+- **Navigate to Here** (a room's right-click menu, or **Project > Directions** for the selected room): while automapping, the directions start from where automap has you. The **Directions** panel opens beside the map with the commands to type, in order, and the route glows blue on the map. It follows you as you play. Each step you take drops off the top; go another way and it reroutes from wherever you are; and when you arrive it says so and stops: the route stops glowing and **Stop** reads **Go** again. Without automapping, the directions start from the room you chose with **Navigate from Here...**.
 - **Navigate from Here...** chooses where the directions start; then choose **Navigate to Here** on where you want to go. **Go** works the directions out; while they're showing it reads **Stop**, which clears them but keeps From and To, so Go works them out again. **Swap** gives them back the other way, and **From Where You Are** (shown while automapping) starts them from the room automap has you in.
 - Each step says which room it leads to; click it to see that room on the map. A way automap only assumed (the way back along a join, which nobody has gone yet) is marked as assumed, and the directions prefer ways you've been seen to go when there's a choice. **Copy Commands** copies the commands, one a line, to paste into the game.
 - When the map shows no way there (a one-way join, or a part of the map not yet joined to the rest), the panel says so.

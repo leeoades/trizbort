@@ -36,20 +36,22 @@ public class MarqueeAndDoubleClickTests : CanvasGestureTestBase
   }
 
   [Test]
-  public void Marquee_Ctrl_AddsAndNeverRemoves()
+  public void Marquee_Ctrl_RemovesAndNeverAdds()
   {
     var a = AddRoom(0, 0);
+    var b = AddRoom(60, 60);
     var c = AddRoom(500, 500);
     Select(a, c);
 
     Marquee(ModifierKeys.Control);
 
-    Session.Selection.Contains(a).ShouldBeTrue();
+    Session.Selection.Contains(a).ShouldBeFalse();
+    Session.Selection.Contains(b).ShouldBeFalse();
     Session.Selection.Contains(c).ShouldBeTrue();
   }
 
   [Test]
-  public void Marquee_Shift_TogglesElements()
+  public void Marquee_Shift_AddsAndNeverRemoves()
   {
     var a = AddRoom(0, 0);
     var b = AddRoom(60, 60);
@@ -58,7 +60,7 @@ public class MarqueeAndDoubleClickTests : CanvasGestureTestBase
 
     Marquee(ModifierKeys.Shift);
 
-    Session.Selection.Contains(a).ShouldBeFalse();
+    Session.Selection.Contains(a).ShouldBeTrue();
     Session.Selection.Contains(b).ShouldBeTrue();
     Session.Selection.Contains(c).ShouldBeTrue();
   }

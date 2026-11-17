@@ -118,6 +118,25 @@ public class DirectionsTests : IsolatedProjectTests
     directions.Follow(Room("Attic"));
     directions.Steps.ShouldBeEmpty();
     directions.Status.ShouldBe("You've arrived at Attic.");
+    // arrived: the directions stop, as at Stop, so the button says Go again
+    directions.HasRoute.ShouldBeFalse();
+    directions.CanGo.ShouldBeTrue();
+
+    // and moving on from there doesn't start them again
+    directions.Follow(Room("Pantry"));
+    directions.HasRoute.ShouldBeFalse();
+    directions.Steps.ShouldBeEmpty();
+    directions.From.ShouldBe(Room("Pantry"));
+  }
+
+  [Test]
+  public async Task AlreadyThere_NothingToStop()
+  {
+    await Map(Game);
+    var directions = new Directions();
+    directions.NavigateTo(Room("Hall"), Room("Hall"));
+    directions.Status.ShouldBe("You're at Hall.");
+    directions.HasRoute.ShouldBeFalse();
   }
 
   [Test]

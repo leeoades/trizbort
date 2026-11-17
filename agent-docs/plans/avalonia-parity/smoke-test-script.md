@@ -105,11 +105,11 @@ Fixture: `tests/manual/connections.trizbort`
 16. Click one room.
     Expected: room is selected and shows resize handles.
     `[ ] pass  [ ] fail  notes:`
-17. Ctrl-click a second room, then Shift-click a third.
-    Expected: each click adds or removes that room from the selection.
+17. Shift-click a second and a third room, then Ctrl-click the second.
+    Expected: Shift-click adds a room to the selection, Ctrl-click takes it out. While Shift is held the pointer shows a +, and while Ctrl is held a −.
     `[ ] pass  [ ] fail  notes:`
 18. Drag a marquee across three rooms on empty canvas.
-    Expected: all three are selected. Ctrl adds only in reference; Avalonia toggles for both Ctrl and Shift (differs: G005).
+    Expected: all three are selected. With Shift held the rooms are added to the selection; with Ctrl held they're taken out of it (differs from the reference, where Ctrl added and Shift toggled: G005).
     `[ ] pass  [ ] fail  notes:`
 19. Drag one room.
     Expected: room moves and snaps to the grid.

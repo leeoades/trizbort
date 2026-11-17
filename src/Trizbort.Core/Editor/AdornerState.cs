@@ -9,7 +9,7 @@ namespace Trizbort.Editor;
 ///   Cursor shapes the canvas asks for. Mapped by the UI host; the Avalonia mapping (StandardCursorType) is:
 ///   Default = Arrow, Hand = Hand, SizeAll = SizeAll, Pan = Hand, Cross = Cross, ResizeNWSE = TopLeftCorner,
 ///   ResizeNESW = TopRightCorner, ResizeNS = SizeNorthSouth, ResizeEW = SizeWestEast, DrawLine = Cross,
-///   NoMove = No.
+///   NoMove = No, SelectAdd and SelectRemove = Arrow (with a + or - where custom cursors work).
 /// </summary>
 public enum CursorKind
 {
@@ -25,7 +25,11 @@ public enum CursorKind
   DrawLine,
   /// <summary>Over a movable connection end: the reference's "move line" cursor.</summary>
   MoveLine,
-  NoMove
+  NoMove,
+  /// <summary>Shift held: a click adds to the selection (an arrow with a +).</summary>
+  SelectAdd,
+  /// <summary>Ctrl held: a click takes away from the selection (an arrow with a -).</summary>
+  SelectRemove
 }
 
 /// <summary>The kind of element a tooltip describes; hosts colour the tooltip by it (rooms light blue, connections pale yellow).</summary>
