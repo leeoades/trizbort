@@ -12,18 +12,18 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Added
+
+- Drag a split join's label ("to Debris Room") to move it. The stub runs on to it, drawn as any join is, and it keeps
+  its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
+  names. Saved with the map.
+
 ### Changed
 
 - Shift-click adds to the selection and Ctrl-click (Cmd-click on macOS) takes away from it; a marquee does the same.
   Before, Ctrl added and Shift toggled. While you hold Shift the pointer shows a +, and while you hold Ctrl a −.
 - The directions stop when you arrive: the route stops glowing and Stop reads Go again. Asking for directions to
   where you already are says so, with nothing to stop.
-
-### Added
-
-- Drag a split join's label ("to Debris Room") to move it. The stub runs on to it, drawn as any join is, and it keeps
-  its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
-  names. Saved with the map.
 
 ### Fixed
 
