@@ -40,10 +40,23 @@ public class SameWayQuestionTests : IsolatedProjectTests
   private static async Task WaitFor(Func<bool> condition, string what)
   {
     var clock = Stopwatch.StartNew();
-    while (!condition())
+    while (!Holds(condition))
     {
       if (clock.ElapsedMilliseconds > 8000) Assert.Fail("Timed out waiting for " + what);
       await Task.Delay(10);
+    }
+  }
+
+  // automap changes the map on its own thread: a look at it mid-change is tried again
+  private static bool Holds(Func<bool> condition)
+  {
+    try
+    {
+      return condition();
+    }
+    catch (InvalidOperationException)
+    {
+      return false;
     }
   }
 
