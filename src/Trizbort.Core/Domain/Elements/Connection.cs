@@ -264,6 +264,35 @@ public class Connection : Element
   }
 
   /// <summary>
+  ///   Where a split join's stub out of its start (or end) room ends, beside its label: the tip of the stub, or where
+  ///   the label has been dragged to.
+  /// </summary>
+  public Vector GetSplitStubEnd(bool atStart)
+  {
+    GetSplitStub(atStart, out _, out var tip);
+    return tip + GetSplitLabelOffset(atStart);
+  }
+
+  /// <summary>
+  ///   A split join's stub out of its start (or end) room, from the room out: straight out to its tip; or, with its
+  ///   label dragged elsewhere, drawn as any join is, out along the port's stalk and on to the label.
+  /// </summary>
+  public List<LineSegment> GetSplitStubSegments(bool atStart)
+  {
+    GetSplitStub(atStart, out var foot, out var tip);
+    var offset = GetSplitLabelOffset(atStart);
+    if (offset == Vector.Zero) return new List<LineSegment> { new(foot, tip) };
+
+    var end = tip + offset;
+    var vertex = atStart ? VertexList[0] : VertexList[VertexList.Count - 1];
+    var stalk = vertex.Port is { HasStalk: true } ? vertex.Port.StalkPosition : foot;
+    var segments = new List<LineSegment>();
+    if ((stalk - foot).Length > 0.01f) segments.Add(new LineSegment(foot, stalk));
+    segments.Add(new LineSegment(stalk, end));
+    return segments;
+  }
+
+  /// <summary>
   ///   Where each of a split join's labels was last drawn (start, end), so a click on one can go to the room it names.
   ///   Set by the drawing; not saved.
   /// </summary>
@@ -843,9 +872,10 @@ public class Connection : Element
     if (IsDrawnSplit)
     {
       // two stubs: out of the start room, and into the end room
-      GetSplitStub(true, out var startFoot, out var startTip);
-      GetSplitStub(false, out var endFoot, out var endTip);
-      return new List<LineSegment> { new(startFoot, startTip), new(endTip, endFoot) };
+      var stubs = GetSplitStubSegments(true);
+      var back = GetSplitStubSegments(false);
+      for (var index = back.Count - 1; index >= 0; index--) stubs.Add(new LineSegment(back[index].End, back[index].Start));
+      return stubs;
     }
 
     if (HasCurveWaypoints) return GetCurvedSegments(out _);

@@ -14,8 +14,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
-- Drag a split join's label ("to Debris Room") to move it. It keeps its place beside its room as the room moves, with
-  a faint dotted line back to the stub; dragged back to the tip, it snaps home. A click still goes to the room it
+- Drag a split join's label ("to Debris Room") to move it. The stub runs on to it, drawn as any join is, and it keeps
+  its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
   names. Saved with the map.
 
 ## [0.14.0-beta] - 2026-11-16

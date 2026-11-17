@@ -828,8 +828,10 @@ public static class ConnectionDrawingAdapter
         Typeface typeface,
         IBrush brush)
     {
-        connection.GetSplitStub(atStart, out var foot, out var tip);
-        var outward = tip - foot;
+        // the label sits beyond the end of the stub, which runs on to wherever the label has been dragged
+        var stub = connection.GetSplitStubSegments(atStart)[^1];
+        var tip = stub.End;
+        var outward = stub.End - stub.Start;
         if (outward.Length < 0.01f) return;
         outward = CoreVector.Normalize(outward);
         var text = new FormattedText(SplitLabel(connection, atStart), CultureInfo.CurrentCulture,
@@ -851,19 +853,6 @@ public static class ConnectionDrawingAdapter
         {
             x = anchor.X - text.Width / 2;
             y = outward.Y < 0 ? anchor.Y - text.Height : anchor.Y;
-        }
-
-        // dragged somewhere else: kept there beside its room, with a faint line back to the stub if it's moved away
-        var offset = connection.GetSplitLabelOffset(atStart);
-        if (offset != CoreVector.Zero)
-        {
-            x += offset.X;
-            y += offset.Y;
-            var nearest = new AvaloniaPoint(Math.Clamp(tip.X, x, x + text.Width), Math.Clamp(tip.Y, y, y + text.Height));
-            var gap = nearest - new AvaloniaPoint(tip.X, tip.Y);
-            if (Math.Sqrt(gap.X * gap.X + gap.Y * gap.Y) > 6)
-                context.DrawLine(new Pen(brush, 0.6, new DashStyle(new double[] { 2, 3 }, 0)),
-                    new AvaloniaPoint(tip.X, tip.Y), nearest);
         }
 
         context.DrawText(text, new AvaloniaPoint(x, y));

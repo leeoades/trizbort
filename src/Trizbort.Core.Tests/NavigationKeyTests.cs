@@ -584,6 +584,12 @@ public class NavigationKeyTests
 
     join.GetSplitLabelOffset(true).ShouldBe(new Vector(-20, 50));
     join.GetSplitLabelOffset(false).ShouldBe(Vector.Zero);
+    // the stub runs on to the label as any join does: out along the port's stalk, then straight to it
+    var stub = join.GetSplitStubSegments(true);
+    stub[0].Start.ShouldBe(join.VertexList[0].Position);
+    stub[^1].End.ShouldBe(startTip + new Vector(-20, 50));
+    join.GetSplitStubSegments(false).Count.ShouldBe(1);
+    join.GetSegments()[^1].End.ShouldBe(join.VertexList[^1].Position);
     // a drag isn't a click: it doesn't go to the debris room
     _session.Selection.Count.ShouldBe(0);
     _interaction.Mode.ShouldBe(CanvasDragMode.None);
@@ -591,6 +597,8 @@ public class NavigationKeyTests
     // the offset is from the stub's tip, so moving the room takes the label with it
     building.Position += new Vector(500, 500);
     join.GetSplitLabelOffset(true).ShouldBe(new Vector(-20, 50));
+    join.GetSplitStub(true, out _, out var movedTip);
+    join.GetSplitStubEnd(true).ShouldBe(movedTip + new Vector(-20, 50));
 
     // saved, and one undo step
     _session.Undo.Undo(_session);
