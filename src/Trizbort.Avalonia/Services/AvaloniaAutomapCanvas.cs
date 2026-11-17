@@ -96,6 +96,12 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
         set => _innerCanvas.AbbreviateDirections = value;
     }
 
+    public void BeginRun()
+    {
+        if (Dispatcher.UIThread.CheckAccess()) _innerCanvas.BeginRun();
+        else Dispatcher.UIThread.Invoke(_innerCanvas.BeginRun);
+    }
+
     public void TidyAround(Room room)
     {
         // the quick tidy there and then; a rethink (the solver, over a second) is always worked out in the

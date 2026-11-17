@@ -27,6 +27,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- Walking around a map you've laid out yourself no longer tidies it into a mess. Rooms you've placed by hand are left
+  as you placed them against each other, side by side or with a join across one, rather than counting as clutter
+  that the tidy pushed the whole map aside to clear; and automap starts from the map as it is, so the first moves
+  don't lay out a map that was laid out already.
 - A command on a join that the game refused ("The closet door is closed.") no longer moves you along the join. With
   no room name in the reply, automap only moves you inside a room that moves; anywhere else you're still where you
   were, so the next move is mapped from there (not from the closet, making a Top of Closet off it).
