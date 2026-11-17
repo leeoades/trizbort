@@ -522,8 +522,9 @@ public sealed partial class EditorSession
   private bool JumpAlongSplitJoinCore(Connection connection, Vector world)
   {
     if (connection is not { IsDrawnSplit: true }) return false;
-    var segments = connection.GetSegments();
-    var nearStart = world.DistanceFromLineSegment(segments[0]) <= world.DistanceFromLineSegment(segments[^1]);
+    float Nearest(bool atStart) =>
+      connection.GetSplitStubSegments(atStart).Min(segment => world.DistanceFromLineSegment(segment));
+    var nearStart = Nearest(true) <= Nearest(false);
     var far = connection.FarRoom(nearStart);
     if (far == null) return false;
 

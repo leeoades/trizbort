@@ -70,6 +70,12 @@ public sealed class CanvasInteraction : IDisposable
 
   // dragging a room's object list
   private Room _dragObjectsRoom;
+  // a split join's label being dragged (or clicked: it goes to the room it names)
+  private Connection _dragLabelJoin;
+  private bool _dragLabelAtStart;
+  private Vector _dragLabelPressed;
+  private Vector _dragLabelOffset;
+  private bool _dragLabelMoved;
   private Vector _dragObjectsStart;
   private bool _dragObjectsMoved;
   private int _dragObjectsRight;
@@ -149,10 +155,15 @@ public sealed class CanvasInteraction : IDisposable
     var shift = IsShift(input.Modifiers);
     var ctrl = IsCtrl(input.Modifiers);
 
-    // a split join's label ("to Debris Room") goes to the room it names
-    if (!shift && !ctrl && input.ClickCount == 1 && _session.JumpFromSplitLabel(world))
+    // a split join's label ("to Debris Room"): a click goes to the room it names; a drag moves the label
+    if (!shift && !ctrl && input.ClickCount == 1 && _session.SplitLabelAt(world, out var labelAtStart) is { } labelJoin)
     {
-      _gestureButton = PointerButton.None;
+      _mode = CanvasDragMode.MoveSplitLabel;
+      _dragLabelJoin = labelJoin;
+      _dragLabelAtStart = labelAtStart;
+      _dragLabelPressed = world;
+      _dragLabelOffset = labelJoin.GetSplitLabelOffset(labelAtStart);
+      _dragLabelMoved = false;
       Refresh();
       return true;
     }
@@ -335,6 +346,10 @@ public sealed class CanvasInteraction : IDisposable
 
       case CanvasDragMode.MoveObjectList:
         MoveObjectList(world);
+        break;
+
+      case CanvasDragMode.MoveSplitLabel:
+        MoveSplitLabel(world);
         break;
 
       case CanvasDragMode.MovePort:
@@ -611,6 +626,32 @@ public sealed class CanvasInteraction : IDisposable
   ///   Drags the object list: once it moves, it's placed by hand at the spot it was drawn at, nudged by how far it's
   ///   been dragged (any distance, any way).
   /// </summary>
+  /// <summary>
+  ///   Drags a split join's label, once the pointer has moved further than a click. The label keeps its place beside
+  ///   the stub as the room moves; dragged back to where it started from, it snaps home.
+  /// </summary>
+  private void MoveSplitLabel(Vector world)
+  {
+    var join = _dragLabelJoin;
+    if (join == null) return;
+    var moved = world - _dragLabelPressed;
+    if (!_dragLabelMoved)
+    {
+      if (Math.Abs(moved.X) * _session.Viewport.ZoomFactor <= ClickTolerance &&
+          Math.Abs(moved.Y) * _session.Viewport.ZoomFactor <= ClickTolerance)
+        return;
+      _dragLabelMoved = true;
+      BeginTransaction("Move label");
+    }
+
+    var offset = _dragLabelOffset + moved;
+    if (offset.Length * _session.Viewport.ZoomFactor <= SplitLabelSnapHome) offset = Vector.Zero;
+    join.SetSplitLabelOffset(_dragLabelAtStart, offset);
+  }
+
+  /// <summary>How close (in screen pixels) a dragged split join label must come to its usual place to snap back.</summary>
+  private const float SplitLabelSnapHome = 6f;
+
   private void MoveObjectList(Vector world)
   {
     var room = _dragObjectsRoom;
@@ -664,12 +705,19 @@ public sealed class CanvasInteraction : IDisposable
     var panMoved = _panMoved;
     var contextWorld = _contextWorld;
     var marquee = MarqueeRect();
+    var labelClicked = mode == CanvasDragMode.MoveSplitLabel && !_dragLabelMoved;
+    var labelPressed = _dragLabelPressed;
 
     // Reset first so re-entrant events (selection changes, capture lost) see an idle canvas.
     ResetGestureState();
 
     switch (mode)
     {
+      case CanvasDragMode.MoveSplitLabel when labelClicked:
+        // not dragged: a click on the label goes to the room it names
+        _session.JumpFromSplitLabel(labelPressed);
+        break;
+
       case CanvasDragMode.MovePort:
         FinishPortDrag(port, newConnection);
         break;
@@ -769,6 +817,8 @@ public sealed class CanvasInteraction : IDisposable
     _pendingPort = null;
     _panMoved = false;
     _dragObjectsRoom = null;
+    _dragLabelJoin = null;
+    _dragLabelMoved = false;
   }
 
   private void BeginTransaction(string title)
@@ -852,6 +902,7 @@ public sealed class CanvasInteraction : IDisposable
   private CursorKind DetermineCursor()
   {
     if (_mode == CanvasDragMode.Pan || _spaceHeld) return CursorKind.Pan;
+    if (_mode == CanvasDragMode.MoveSplitLabel) return _dragLabelMoved ? CursorKind.SizeAll : CursorKind.Hand;
     if (_mode == CanvasDragMode.None && _session.SplitLabelAt(_lastWorld, out _) != null) return CursorKind.Hand;
     if (_mode == CanvasDragMode.None && _referenceJumpHeld &&
         _hoverElement is Room { IsReference: true } or Connection { IsDrawnSplit: true })

@@ -264,6 +264,35 @@ public class Connection : Element
   }
 
   /// <summary>
+  ///   Where a split join's stub out of its start (or end) room ends, beside its label: the tip of the stub, or where
+  ///   the label has been dragged to.
+  /// </summary>
+  public Vector GetSplitStubEnd(bool atStart)
+  {
+    GetSplitStub(atStart, out _, out var tip);
+    return tip + GetSplitLabelOffset(atStart);
+  }
+
+  /// <summary>
+  ///   A split join's stub out of its start (or end) room, from the room out: straight out to its tip; or, with its
+  ///   label dragged elsewhere, drawn as any join is, out along the port's stalk and on to the label.
+  /// </summary>
+  public List<LineSegment> GetSplitStubSegments(bool atStart)
+  {
+    GetSplitStub(atStart, out var foot, out var tip);
+    var offset = GetSplitLabelOffset(atStart);
+    if (offset == Vector.Zero) return new List<LineSegment> { new(foot, tip) };
+
+    var end = tip + offset;
+    var vertex = atStart ? VertexList[0] : VertexList[VertexList.Count - 1];
+    var stalk = vertex.Port is { HasStalk: true } ? vertex.Port.StalkPosition : foot;
+    var segments = new List<LineSegment>();
+    if ((stalk - foot).Length > 0.01f) segments.Add(new LineSegment(foot, stalk));
+    segments.Add(new LineSegment(stalk, end));
+    return segments;
+  }
+
+  /// <summary>
   ///   Where each of a split join's labels was last drawn (start, end), so a click on one can go to the room it names.
   ///   Set by the drawing; not saved.
   /// </summary>
@@ -277,6 +306,24 @@ public class Connection : Element
     if (SplitLabelBounds[1] is { } end && end.Contains(point)) return false;
     return null;
   }
+
+  /// <summary>
+  ///   How far the split join's label at its start (or end) has been dragged from its usual place at the tip of the
+  ///   stub. It's kept relative to the stub, so the label goes with its room when the room moves. Saved as the optional
+  ///   <c>splitLabelStart</c> and <c>splitLabelEnd</c> attributes ("x,y"); older versions ignore them.
+  /// </summary>
+  public Vector GetSplitLabelOffset(bool atStart) => _splitLabelOffsets[atStart ? 0 : 1];
+
+  /// <summary>Moves the split join's label at its start (or end) <paramref name="offset" /> from its usual place.</summary>
+  public void SetSplitLabelOffset(bool atStart, Vector offset)
+  {
+    var index = atStart ? 0 : 1;
+    if (_splitLabelOffsets[index] == offset) return;
+    _splitLabelOffsets[index] = offset;
+    RaiseChanged();
+  }
+
+  private readonly Vector[] _splitLabelOffsets = new Vector[2];
 
   /// <summary>The room at the other end from the start (or end) of the join.</summary>
   public Room FarRoom(bool fromStart) => fromStart ? GetTargetRoom() : GetSourceRoom();
@@ -632,6 +679,8 @@ public class Connection : Element
     AutomapWays = element.Attribute("automapWays").Text;
     AutomapWaysFor = element.Attribute("automapWaysFor").Text;
     Split = element.Attribute("split").ToBool();
+    _splitLabelOffsets[0] = ParseCurveWaypoint(element.Attribute("splitLabelStart").Text) ?? Vector.Zero;
+    _splitLabelOffsets[1] = ParseCurveWaypoint(element.Attribute("splitLabelEnd").Text) ?? Vector.Zero;
     EndText = element.Attribute("endText").Text != "" ? element.Attribute("endText").Text : element.Attribute("end").Text;
     if (element.Attribute("color").Text != "")
       ConnectionColor = ColorTranslator.FromHtml(element.Attribute("color").Text);
@@ -741,6 +790,10 @@ public class Connection : Element
       scribe.Attribute("automapWaysFor", AutomapWaysFor);
     if (Split)
       scribe.Attribute("split", Split);
+    if (_splitLabelOffsets[0] != Vector.Zero)
+      scribe.Attribute("splitLabelStart", FormatCurveWaypoint(_splitLabelOffsets[0]));
+    if (_splitLabelOffsets[1] != Vector.Zero)
+      scribe.Attribute("splitLabelEnd", FormatCurveWaypoint(_splitLabelOffsets[1]));
     if (!string.IsNullOrEmpty(EndText))
       scribe.Attribute("endText", EndText);
 
@@ -819,9 +872,10 @@ public class Connection : Element
     if (IsDrawnSplit)
     {
       // two stubs: out of the start room, and into the end room
-      GetSplitStub(true, out var startFoot, out var startTip);
-      GetSplitStub(false, out var endFoot, out var endTip);
-      return new List<LineSegment> { new(startFoot, startTip), new(endTip, endFoot) };
+      var stubs = GetSplitStubSegments(true);
+      var back = GetSplitStubSegments(false);
+      for (var index = back.Count - 1; index >= 0; index--) stubs.Add(new LineSegment(back[index].End, back[index].Start));
+      return stubs;
     }
 
     if (HasCurveWaypoints) return GetCurvedSegments(out _);

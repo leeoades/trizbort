@@ -19,6 +19,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - The directions stop when you arrive: the route stops glowing and Stop reads Go again. Asking for directions to
   where you already are says so, with nothing to stop.
 
+### Added
+
+- Drag a split join's label ("to Debris Room") to move it. The stub runs on to it, drawn as any join is, and it keeps
+  its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
+  names. Saved with the map.
+
 ## [0.14.0-beta] - 2026-11-16
 
 This beta is about **finding your way, and playing without waiting**. Directions work like a satnav along the map's

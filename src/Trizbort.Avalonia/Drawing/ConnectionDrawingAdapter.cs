@@ -828,8 +828,10 @@ public static class ConnectionDrawingAdapter
         Typeface typeface,
         IBrush brush)
     {
-        connection.GetSplitStub(atStart, out var foot, out var tip);
-        var outward = tip - foot;
+        // the label sits beyond the end of the stub, which runs on to wherever the label has been dragged
+        var stub = connection.GetSplitStubSegments(atStart)[^1];
+        var tip = stub.End;
+        var outward = stub.End - stub.Start;
         if (outward.Length < 0.01f) return;
         outward = CoreVector.Normalize(outward);
         var text = new FormattedText(SplitLabel(connection, atStart), CultureInfo.CurrentCulture,
@@ -854,7 +856,7 @@ public static class ConnectionDrawingAdapter
         }
 
         context.DrawText(text, new AvaloniaPoint(x, y));
-        // clickable: it goes to the room it names
+        // clickable: it goes to the room it names; draggable: it moves
         var labelBounds = new CoreRect((float)x, (float)y, (float)text.Width, (float)text.Height);
         connection.SplitLabelBounds[atStart ? 0 : 1] = labelBounds;
         LabelDrawn?.Invoke(labelBounds);
