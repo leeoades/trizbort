@@ -853,8 +853,21 @@ public static class ConnectionDrawingAdapter
             y = outward.Y < 0 ? anchor.Y - text.Height : anchor.Y;
         }
 
+        // dragged somewhere else: kept there beside its room, with a faint line back to the stub if it's moved away
+        var offset = connection.GetSplitLabelOffset(atStart);
+        if (offset != CoreVector.Zero)
+        {
+            x += offset.X;
+            y += offset.Y;
+            var nearest = new AvaloniaPoint(Math.Clamp(tip.X, x, x + text.Width), Math.Clamp(tip.Y, y, y + text.Height));
+            var gap = nearest - new AvaloniaPoint(tip.X, tip.Y);
+            if (Math.Sqrt(gap.X * gap.X + gap.Y * gap.Y) > 6)
+                context.DrawLine(new Pen(brush, 0.6, new DashStyle(new double[] { 2, 3 }, 0)),
+                    new AvaloniaPoint(tip.X, tip.Y), nearest);
+        }
+
         context.DrawText(text, new AvaloniaPoint(x, y));
-        // clickable: it goes to the room it names
+        // clickable: it goes to the room it names; draggable: it moves
         var labelBounds = new CoreRect((float)x, (float)y, (float)text.Width, (float)text.Height);
         connection.SplitLabelBounds[atStart ? 0 : 1] = labelBounds;
         LabelDrawn?.Invoke(labelBounds);

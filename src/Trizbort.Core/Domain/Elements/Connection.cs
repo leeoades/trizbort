@@ -278,6 +278,24 @@ public class Connection : Element
     return null;
   }
 
+  /// <summary>
+  ///   How far the split join's label at its start (or end) has been dragged from its usual place at the tip of the
+  ///   stub. It's kept relative to the stub, so the label goes with its room when the room moves. Saved as the optional
+  ///   <c>splitLabelStart</c> and <c>splitLabelEnd</c> attributes ("x,y"); older versions ignore them.
+  /// </summary>
+  public Vector GetSplitLabelOffset(bool atStart) => _splitLabelOffsets[atStart ? 0 : 1];
+
+  /// <summary>Moves the split join's label at its start (or end) <paramref name="offset" /> from its usual place.</summary>
+  public void SetSplitLabelOffset(bool atStart, Vector offset)
+  {
+    var index = atStart ? 0 : 1;
+    if (_splitLabelOffsets[index] == offset) return;
+    _splitLabelOffsets[index] = offset;
+    RaiseChanged();
+  }
+
+  private readonly Vector[] _splitLabelOffsets = new Vector[2];
+
   /// <summary>The room at the other end from the start (or end) of the join.</summary>
   public Room FarRoom(bool fromStart) => fromStart ? GetTargetRoom() : GetSourceRoom();
 
@@ -632,6 +650,8 @@ public class Connection : Element
     AutomapWays = element.Attribute("automapWays").Text;
     AutomapWaysFor = element.Attribute("automapWaysFor").Text;
     Split = element.Attribute("split").ToBool();
+    _splitLabelOffsets[0] = ParseCurveWaypoint(element.Attribute("splitLabelStart").Text) ?? Vector.Zero;
+    _splitLabelOffsets[1] = ParseCurveWaypoint(element.Attribute("splitLabelEnd").Text) ?? Vector.Zero;
     EndText = element.Attribute("endText").Text != "" ? element.Attribute("endText").Text : element.Attribute("end").Text;
     if (element.Attribute("color").Text != "")
       ConnectionColor = ColorTranslator.FromHtml(element.Attribute("color").Text);
@@ -741,6 +761,10 @@ public class Connection : Element
       scribe.Attribute("automapWaysFor", AutomapWaysFor);
     if (Split)
       scribe.Attribute("split", Split);
+    if (_splitLabelOffsets[0] != Vector.Zero)
+      scribe.Attribute("splitLabelStart", FormatCurveWaypoint(_splitLabelOffsets[0]));
+    if (_splitLabelOffsets[1] != Vector.Zero)
+      scribe.Attribute("splitLabelEnd", FormatCurveWaypoint(_splitLabelOffsets[1]));
     if (!string.IsNullOrEmpty(EndText))
       scribe.Attribute("endText", EndText);
 

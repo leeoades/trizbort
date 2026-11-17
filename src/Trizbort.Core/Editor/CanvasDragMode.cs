@@ -10,5 +10,7 @@ public enum CanvasDragMode
   MoveResizeHandle,
   MovePort,
   MoveWaypoint,
-  MoveObjectList
+  MoveObjectList,
+  /// <summary>Dragging a split join's label ("to Debris Room") to a new place beside its room.</summary>
+  MoveSplitLabel
 }
