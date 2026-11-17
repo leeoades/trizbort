@@ -549,6 +549,93 @@ public class NavigationKeyTests
     _session.Selection.Items.ShouldBe(new Element[] { building });
   }
 
+  private Connection SplitJoinWithLabels(out Room building, out Room debris)
+  {
+    building = AddRoomAt(0, 0, "Building");
+    debris = AddRoomAt(3000, 0, "Debris Room");
+    var join = new Connection(_project, new Vertex(building.PortAt(CompassPoint.East)),
+      new Vertex(debris.PortAt(CompassPoint.West))) { Split = true };
+    _project.Elements.Add(join);
+    // where the drawing put the labels
+    join.GetSplitStub(true, out _, out var startTip);
+    join.GetSplitStub(false, out _, out var endTip);
+    join.SplitLabelBounds[0] = new Rect(startTip.X + 3, startTip.Y - 6, 90, 12);
+    join.SplitLabelBounds[1] = new Rect(endTip.X - 93, endTip.Y - 6, 90, 12);
+    return join;
+  }
+
+  private void DragFrom(Vector from, Vector to)
+  {
+    _interaction.OnPointerMoved(new PointerInput(PointerButton.None, ModifierKeys.None, Client(from), 0));
+    _interaction.OnPointerPressed(new PointerInput(PointerButton.Left, ModifierKeys.None, Client(from), 1));
+    _interaction.OnPointerMoved(new PointerInput(PointerButton.Left, ModifierKeys.None, Client((from + to) * 0.5f), 0));
+    _interaction.OnPointerMoved(new PointerInput(PointerButton.Left, ModifierKeys.None, Client(to), 0));
+    _interaction.OnPointerReleased(new PointerInput(PointerButton.Left, ModifierKeys.None, Client(to), 0));
+  }
+
+  [Test]
+  public void DraggingASplitJoinsLabel_MovesIt_AndItGoesWithItsRoom()
+  {
+    var join = SplitJoinWithLabels(out var building, out _);
+    join.GetSplitStub(true, out _, out var startTip);
+    var on = new Vector(startTip.X + 40, startTip.Y);
+
+    DragFrom(on, on + new Vector(-20, 50));
+
+    join.GetSplitLabelOffset(true).ShouldBe(new Vector(-20, 50));
+    join.GetSplitLabelOffset(false).ShouldBe(Vector.Zero);
+    // the stub runs on to the label as any join does: out along the port's stalk, then straight to it
+    var stub = join.GetSplitStubSegments(true);
+    stub[0].Start.ShouldBe(join.VertexList[0].Position);
+    stub[^1].End.ShouldBe(startTip + new Vector(-20, 50));
+    join.GetSplitStubSegments(false).Count.ShouldBe(1);
+    join.GetSegments()[^1].End.ShouldBe(join.VertexList[^1].Position);
+    // a drag isn't a click: it doesn't go to the debris room
+    _session.Selection.Count.ShouldBe(0);
+    _interaction.Mode.ShouldBe(CanvasDragMode.None);
+
+    // the offset is from the stub's tip, so moving the room takes the label with it
+    building.Position += new Vector(500, 500);
+    join.GetSplitLabelOffset(true).ShouldBe(new Vector(-20, 50));
+    join.GetSplitStub(true, out _, out var movedTip);
+    join.GetSplitStubEnd(true).ShouldBe(movedTip + new Vector(-20, 50));
+
+    // saved, and one undo step
+    _session.Undo.Undo(_session);
+    _session.Project.Elements.OfType<Connection>().Single().GetSplitLabelOffset(true).ShouldBe(Vector.Zero);
+  }
+
+  [Test]
+  public void ASplitJoinsLabel_DraggedBackHome_SnapsBack()
+  {
+    var join = SplitJoinWithLabels(out _, out _);
+    join.GetSplitStub(false, out _, out var endTip);
+    var on = new Vector(endTip.X - 40, endTip.Y);
+    DragFrom(on, on + new Vector(30, 30));
+    join.GetSplitLabelOffset(false).ShouldBe(new Vector(30, 30));
+    // where the drawing would put it now
+    join.SplitLabelBounds[1] = new Rect(endTip.X - 93 + 30, endTip.Y - 6 + 30, 90, 12);
+
+    var moved = on + new Vector(30, 30);
+    DragFrom(moved, moved - new Vector(28, 31));
+
+    join.GetSplitLabelOffset(false).ShouldBe(Vector.Zero);
+  }
+
+  [Test]
+  public void ASplitJoinsLabelOffset_IsSavedAndLoaded()
+  {
+    var join = SplitJoinWithLabels(out _, out _);
+    using (_session.BeginTransaction("Move label")) join.SetSplitLabelOffset(false, new Vector(12.5f, -8));
+    using (_session.BeginTransaction("Something else")) AddRoomAt(-500, -500, "Elsewhere");
+
+    _session.Undo.Undo(_session);
+
+    var loaded = _session.Project.Elements.OfType<Connection>().Single();
+    loaded.GetSplitLabelOffset(false).ShouldBe(new Vector(12.5f, -8));
+    loaded.GetSplitLabelOffset(true).ShouldBe(Vector.Zero);
+  }
+
   [Test]
   public void Click_WithoutCtrlDoesNotJump()
   {
