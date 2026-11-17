@@ -138,6 +138,8 @@ public sealed class Automap : IAutomapController
     _doneHere.Clear();
     _doneHere.AddRange(point.DoneHere);
     _arrival = point.Arrival;
+    // the note about the move gone back over goes too: playing it again finds it again
+    SameWay = null;
     _moveByMove = true;
     Volatile.Write(ref _movesToPlay, 0);
     if (_replay is { } moveByMove)
@@ -2627,13 +2629,44 @@ public sealed class Automap : IAutomapController
     internal object UndoMark { get; init; }
   }
 
-  /// <summary>What the last move found (see <see cref="SameWayNote" />), until the next; null for nothing.</summary>
+  /// <summary>What the last move found (see <see cref="SameWayNote" />), until the user answers; null for nothing.</summary>
   public SameWayNote SameWay { get; private set; }
+
+  /// <summary>
+  ///   Automap is waiting for the user to answer the note about the last move (<see cref="SameWay" />) before it maps
+  ///   anything more: Next Move does nothing until then, and playing to the end or live stops there.
+  /// </summary>
+  public bool WaitingForSameWay { get; private set; }
+
+  /// <summary>
+  ///   Waits, with the move mapped and the note showing, until the user answers it (<see cref="DismissSameWay" /> or
+  ///   <see cref="CorrectSameWay" />) or goes back. Only when the user is there to answer
+  ///   (<see cref="IEditorPrompts.AnswersInTheAutomapPanel" />), and the move can be mapped again.
+  /// </summary>
+  private async Task WaitForSameWayAnswerAsync(CancellationToken token)
+  {
+    if (!CanCorrectSameWay || !Prompts.AnswersInTheAutomapPanel) return;
+    var note = SameWay;
+    WaitingForSameWay = true;
+    Status = $"Automap is waiting: {note.Way} from {note.From} now leads to {note.Now} as well as {note.Before}. " +
+             "Say which it is in the automap panel to carry on.";
+    try
+    {
+      while (ReferenceEquals(SameWay, note) && Volatile.Read(ref _movesBack) == 0) await Task.Delay(50, token);
+    }
+    finally
+    {
+      WaitingForSameWay = false;
+    }
+
+    token.ThrowIfCancellationRequested();
+    Status = "Automapping is processing the transcript.";
+  }
 
   /// <summary>Whether the last move can be mapped again another way (there's an undo history to take it off with).</summary>
   public bool CanCorrectSameWay => SameWay?.UndoMark != null;
 
-  /// <summary>The note about the last move goes, and the map stays as it is.</summary>
+  /// <summary>Both rooms are right: the note goes, the map stays as it is, and automap carries on.</summary>
   public void DismissSameWay() => SameWay = null;
 
   /// <summary>
@@ -2772,9 +2805,10 @@ public sealed class Automap : IAutomapController
   /// <summary>Automap waited at the end of the transcript for the game to go on (since the last move it paused before).</summary>
   private volatile bool _waitedForGame;
 
-  /// <summary>Play the next move of the transcript, then pause again.</summary>
+  /// <summary>Play the next move of the transcript, then pause again. Not while automap waits for an answer.</summary>
   public void PlayNextMove()
   {
+    if (WaitingForSameWay) return;
     _moveByMove = true;
     Interlocked.Increment(ref _movesToPlay);
   }
@@ -3265,6 +3299,10 @@ public sealed class Automap : IAutomapController
           }
 
           //                  var nextParagraph = getTextToNextPrompt(reader);
+
+          // the last move went a way that now leads somewhere new: wait for the user to say which it is before
+          // mapping anything more, since a wrong answer leads to more mistakes (choosing to map it again goes back)
+          await WaitForSameWayAnswerAsync(tokenSource.Token);
 
           // playing move by move: wait here, with the game's reply to the last move mapped; going back reads the
           // transcript again from an earlier move and waits there

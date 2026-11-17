@@ -29,6 +29,13 @@ public interface IEditorPrompts
   }
 
   /// <summary>
+  ///   Whether the user is there to answer the automap panel's note when a way now leads somewhere new: if so,
+  ///   automap waits for the answer before mapping anything more. False (the default) for tests and headless runs,
+  ///   which carry on.
+  /// </summary>
+  bool AnswersInTheAutomapPanel => false;
+
+  /// <summary>
   ///   As <see cref="ChooseSameDirectionAsync(Room, string, CancellationToken)" />, knowing the room the player left
   ///   (<paramref name="from" />).
   /// </summary>

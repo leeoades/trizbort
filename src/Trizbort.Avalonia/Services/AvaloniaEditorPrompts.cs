@@ -19,6 +19,9 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
     private readonly Func<Window?> _getOwner = getOwner;
     private readonly IDialogService? _dialogService = dialogService;
 
+    /// <summary>The user is there: automap waits for an answer to the automap panel's note before mapping on.</summary>
+    public bool AnswersInTheAutomapPanel => true;
+
     /// <summary>Opens the properties dialog for the element (room, label or connection). Returns true when accepted.</summary>
     public Task<bool> EditElementAsync(Element element, CancellationToken token = default)
     {

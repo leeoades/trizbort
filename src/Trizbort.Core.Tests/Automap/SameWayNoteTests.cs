@@ -16,8 +16,9 @@ namespace Trizbort.Core.Tests.Automap;
 
 /// <summary>
 ///   Lee, 16 Nov 2026: a way already seen leading to one room, now leading to another, keeps both, without asking:
-///   both are real. The new room goes beside the old one, and the automap panel says so until the next move, offering
-///   to map that move again if the room left moves (a lift) or was another room with its name (a maze).
+///   both are real. The new room goes beside the old one, and the automap panel says so, offering to map that move
+///   again if the room left moves (a lift) or was another room with its name (a maze). Lee, 17 Nov: with the user
+///   there, automap waits for the answer before mapping on (a wrong answer leads to more mistakes).
 /// </summary>
 [TestFixture]
 [Category("Unit")]
@@ -160,6 +161,80 @@ public class SameWayNoteTests : IsolatedProjectTests
       JoinedTo(other).Select(room => room.Name).OrderBy(name => name).ShouldBe(new[] { "Kitchen", "Pantry" });
       engine.CurrentRoom.Name.ShouldBe("Kitchen");
     }
+  }
+
+  /// <summary>The app's prompts: the user is there to answer the automap panel's note, so automap waits for it.</summary>
+  private sealed class UserThere : IEditorPrompts
+  {
+    public bool AnswersInTheAutomapPanel => true;
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription,
+      IReadOnlyList<Room> candidates, System.Threading.CancellationToken token = default) =>
+      NonInteractiveEditorPrompts.Instance.DisambiguateRoomAsync(transcriptLine, roomDescription, candidates, token);
+
+    public Task<bool> ConfirmAsync(string message, string title, System.Threading.CancellationToken token = default) =>
+      NonInteractiveEditorPrompts.Instance.ConfirmAsync(message, title, token);
+  }
+
+  /// <summary>Plays the whole game without pausing (as Play to the End, or live), the user there to answer.</summary>
+  private async Task<Played> PlayToTheEndWithTheUserThere()
+  {
+    var path = Files.File("game.txt");
+    File.WriteAllLines(path, _game);
+    var session = new EditorSession();
+    var engine = new AutomapEngine((_, _) => { }, new UserThere());
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    settings.MoveByMove = false;
+    settings.GuessExits = false;
+    settings.AutoTidy = false;
+    var played = new Played
+    {
+      Engine = engine, Session = session, Run = engine.Start(new AutomapCanvas(null, engine, session), settings)
+    };
+    await WaitFor(() => engine.WaitingForSameWay, "automap to wait for the answer");
+    return played;
+  }
+
+  [Test]
+  public async Task WithTheUserThere_AutomapWaitsForTheAnswer_EvenPlayingToTheEnd_AndNextMoveCantSkipIt()
+  {
+    await using var played = await PlayToTheEndWithTheUserThere();
+    var engine = played.Engine;
+
+    // the move is mapped, both kept, and the note says so; the look after it isn't played
+    Rooms("Kitchen").Count.ShouldBe(1);
+    engine.SameWay.ShouldNotBeNull();
+    var waitingAt = engine.MoveCount().Played;
+    engine.Status.ShouldContain("waiting");
+    engine.PlayNextMove();
+    await Task.Delay(300);
+    engine.WaitingForSameWay.ShouldBeTrue();
+    engine.MoveCount().Played.ShouldBe(waitingAt);
+
+    // both are right: automap carries on to the end
+    engine.DismissSameWay();
+    await WaitFor(() => !engine.WaitingForSameWay && engine.MoveCount().Played == engine.MoveCount().Total,
+      "the rest of the game");
+    engine.MoveByMove.ShouldBeFalse();
+    Rooms("Hall").Count.ShouldBe(1);
+  }
+
+  [Test]
+  public async Task WithTheUserThere_ItMoves_MapsThatMoveAgain_ThenCarriesOnToTheEnd()
+  {
+    await using var played = await PlayToTheEndWithTheUserThere();
+    var engine = played.Engine;
+
+    engine.CorrectSameWay(AutomapSameDirectionResult.Moves);
+    await WaitFor(() => Rooms("Hall").Count == 2 && !engine.WaitingForSameWay &&
+                        engine.MoveCount().Played == engine.MoveCount().Total, "the move mapped again, and the rest");
+
+    Rooms("Hall").Single(room => room.IsStop).ShouldNotBeNull();
+    engine.CurrentRoom.Name.ShouldBe("Kitchen");
+    engine.MoveByMove.ShouldBeFalse();
+    // the move mapped the way the user said doesn't ask again
+    engine.SameWay.ShouldBeNull();
   }
 
   [Test]

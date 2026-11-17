@@ -15,8 +15,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 ### Added
 
 - A note on the automap panel says when a way out now leads somewhere new. **'Hall' Moves** and **A Different
-  'Hall'** undo that move and map it again as a moving room or as another room with its name; **Both Are Right**, or
-  your next move, clears the note.
+  'Hall'** undo that move and map it again as a moving room or as another room with its name; **Both Are Right** keeps
+  both. Automap waits for the answer before mapping on (Next Move does nothing until then, and playing to the end or
+  live stops at the note), then carries on with the moves waiting behind it.
 - **Add Current Room** shows on the automap panel only when you're somewhere not on the map.
 - Drag a split join's label ("to Debris Room") to move it. The stub runs on to it, drawn as any join is, and it keeps
   its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
