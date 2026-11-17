@@ -122,15 +122,17 @@ public class CanvasInteractionTests
   }
 
   [Test]
-  public void CtrlClick_TogglesSelection()
+  public void CtrlClick_RemovesFromSelection()
   {
     var a = AddRoom(0, 0);
     var b = AddRoom(200, 0);
     Select(a);
+    Click(new Vector(232, 32), ModifierKeys.Shift);
 
-    Click(new Vector(232, 32), ModifierKeys.Control);
-    _session.Selection.Items.ShouldBe(new Element[] { a, b }, true);
+    Click(new Vector(32, 32), ModifierKeys.Control);
+    _session.Selection.Items.ShouldBe(new Element[] { b });
 
+    // Ctrl never adds: clicking a room that isn't selected leaves it unselected
     Click(new Vector(32, 32), ModifierKeys.Control);
     _session.Selection.Items.ShouldBe(new Element[] { b });
   }
@@ -210,6 +212,52 @@ public class CanvasInteractionTests
     _session.Selection.Count.ShouldBe(2);
     _session.Selection.Contains(a).ShouldBeTrue();
     _session.Selection.Contains(c).ShouldBeTrue();
+
+    // again: still selected (Shift never takes away)
+    Move(new Vector(-50, -50), ModifierKeys.Shift);
+    Press(new Vector(-50, -50), PointerButton.Left, ModifierKeys.Shift);
+    Move(new Vector(100, 100), ModifierKeys.Shift);
+    Release(new Vector(100, 100), PointerButton.Left, ModifierKeys.Shift);
+    _session.Selection.Count.ShouldBe(2);
+  }
+
+  [Test]
+  public void Marquee_CtrlRemoves()
+  {
+    var a = AddRoom(0, 0);
+    var b = AddRoom(200, 0);
+    var c = AddRoom(500, 500);
+    _session.Selection.Set(new Element[] { a, b, c });
+
+    Move(new Vector(-50, -50), ModifierKeys.Control);
+    Press(new Vector(-50, -50), PointerButton.Left, ModifierKeys.Control);
+    Move(new Vector(300, 100), ModifierKeys.Control);
+    _interaction.Adorners.Cursor.ShouldBe(CursorKind.SelectRemove);
+    Release(new Vector(300, 100), PointerButton.Left, ModifierKeys.Control);
+
+    _session.Selection.Items.ShouldBe(new Element[] { c });
+  }
+
+  [Test]
+  public void ShiftOrCtrlHeld_ShowsAPlusOrMinusCursor()
+  {
+    var a = AddRoom(0, 0);
+    Select(a);
+
+    Move(new Vector(500, 500), ModifierKeys.Shift);
+    _interaction.Adorners.Cursor.ShouldBe(CursorKind.SelectAdd);
+    Move(new Vector(32, 32), ModifierKeys.Control);
+    _interaction.Adorners.Cursor.ShouldBe(CursorKind.SelectRemove);
+
+    // the key goes up without the mouse moving
+    _interaction.SetModifiersHeld(ModifierKeys.None);
+    _interaction.Adorners.Cursor.ShouldBe(CursorKind.SizeAll);
+    _interaction.SetModifiersHeld(ModifierKeys.Shift);
+    _interaction.Adorners.Cursor.ShouldBe(CursorKind.SelectAdd);
+
+    // a handle keeps its own cursor
+    Move(a.InnerBounds.GetCorner(CompassPoint.SouthEast), ModifierKeys.Shift);
+    _interaction.Adorners.Cursor.ShouldBe(CursorKind.ResizeNWSE);
   }
 
   // ---- move / resize -----------------------------------------------------------------------

@@ -38,6 +38,9 @@ jobs:
           --collect:"XPlat Code Coverage"
           --settings coverage.runsettings
           --results-directory TestResults
+          --blame-hang --blame-hang-timeout 5m --blame-hang-dump-type none
+      # (a test that hangs fails after 5 minutes, named in the log, rather than the job being cancelled at 15 with no
+      # log at all)
       - name: Upload results and coverage
         if: always()
         uses: actions/upload-artifact@v6

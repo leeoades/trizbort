@@ -924,7 +924,7 @@ public class MapCanvasControlGestureTests
     // ---- Selection modifiers -----------------------------------------------------------------
 
     [AvaloniaTest]
-    public void MarqueeSelection_CtrlOverSelectedAndUnselected_OnlyAdds()
+    public void MarqueeSelection_ShiftOverSelectedAndUnselected_OnlyAdds()
     {
         var (window, canvas, service) = CreateTestHarness();
         try
@@ -938,11 +938,11 @@ public class MapCanvasControlGestureTests
             var start = canvas.CanvasToClient(new Vector(-150, -150));
             var end = canvas.CanvasToClient(new Vector(200, 200));
             window.MouseMove(start);
-            window.MouseDown(start, MouseButton.Left, RawInputModifiers.Control);
+            window.MouseDown(start, MouseButton.Left, RawInputModifiers.Shift);
             window.MouseMove(end);
-            window.MouseUp(end, MouseButton.Left, RawInputModifiers.Control);
+            window.MouseUp(end, MouseButton.Left, RawInputModifiers.Shift);
 
-            // Legacy: Ctrl only adds; an already selected element stays selected (Shift toggles).
+            // Shift only adds; an already selected element stays selected (Ctrl takes away).
             service.SelectedElements.ShouldContain(room1);
             service.SelectedElements.ShouldContain(room2);
         }
@@ -953,7 +953,7 @@ public class MapCanvasControlGestureTests
     }
 
     [AvaloniaTest]
-    public void MarqueeSelection_ShiftOverAlreadySelected_TogglesItOff()
+    public void MarqueeSelection_CtrlOverAlreadySelected_TakesItOut()
     {
         var (window, canvas, service) = CreateTestHarness();
         try
@@ -967,9 +967,9 @@ public class MapCanvasControlGestureTests
             var start = canvas.CanvasToClient(new Vector(-150, -150));
             var end = canvas.CanvasToClient(new Vector(0, 0));
             window.MouseMove(start);
-            window.MouseDown(start, MouseButton.Left, RawInputModifiers.Shift);
+            window.MouseDown(start, MouseButton.Left, RawInputModifiers.Control);
             window.MouseMove(end);
-            window.MouseUp(end, MouseButton.Left, RawInputModifiers.Shift);
+            window.MouseUp(end, MouseButton.Left, RawInputModifiers.Control);
 
             service.SelectedElements.ShouldNotContain(room1);
             service.SelectedElements.ShouldContain(room2);
@@ -981,7 +981,7 @@ public class MapCanvasControlGestureTests
     }
 
     [AvaloniaTest]
-    public void ClickWithCtrl_TogglesElementSelection()
+    public void ClickWithShift_Adds_ClickWithCtrl_TakesAway()
     {
         var (window, canvas, service) = CreateTestHarness();
         try
@@ -994,8 +994,8 @@ public class MapCanvasControlGestureTests
 
             var c2 = canvas.CanvasToClient(new Vector(240, 25));
             window.MouseMove(c2);
-            window.MouseDown(c2, MouseButton.Left, RawInputModifiers.Control);
-            window.MouseUp(c2, MouseButton.Left, RawInputModifiers.Control);
+            window.MouseDown(c2, MouseButton.Left, RawInputModifiers.Shift);
+            window.MouseUp(c2, MouseButton.Left, RawInputModifiers.Shift);
             service.SelectedElements.Count.ShouldBe(2);
 
             var c1 = canvas.CanvasToClient(new Vector(40, 25));

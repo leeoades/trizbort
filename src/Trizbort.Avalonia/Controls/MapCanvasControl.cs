@@ -815,6 +815,13 @@ public class MapCanvasControl : Control
         var interaction = Interaction;
         var keyInput = AvaloniaKeyMapper.ToKeyInput(e.Key, e.KeyModifiers, AvaloniaKeyMapper.IsMacOS);
 
+        // Shift or Ctrl down: the cursor shows a click adds to or takes from the selection, before the mouse moves
+        if (IsModifierKey(e.Key))
+        {
+            interaction.SetModifiersHeld(InputMapper.ToModifiers(e.KeyModifiers | ModifierOf(e.Key)));
+            AfterInteraction();
+        }
+
         if (e.Key == Key.Space || e.Key == Key.Escape)
         {
             interaction.OnKey(keyInput);
@@ -868,6 +875,7 @@ public class MapCanvasControl : Control
         if (_interaction != null)
         {
             _interaction.SetSpaceHeld(false);
+            _interaction.SetModifiersHeld(CoreModifierKeys.None);
             AfterInteraction();
         }
     }
@@ -876,6 +884,12 @@ public class MapCanvasControl : Control
     {
         base.OnKeyUp(e);
 
+        if (IsModifierKey(e.Key) && _interaction != null)
+        {
+            _interaction.SetModifiersHeld(InputMapper.ToModifiers(e.KeyModifiers & ~ModifierOf(e.Key)));
+            AfterInteraction();
+        }
+
         if (e.Key == Key.Space)
         {
             Interaction.OnKeyUp(AvaloniaKeyMapper.ToKeyInput(e.Key, e.KeyModifiers, AvaloniaKeyMapper.IsMacOS));
@@ -883,6 +897,21 @@ public class MapCanvasControl : Control
             e.Handled = true;
         }
     }
+
+    private static bool IsModifierKey(Key key) => ModifierOf(key) != KeyModifiers.None;
+
+    /// <summary>
+    ///   The modifier a key is (Cmd, as Meta, on macOS): its own key event may not count it yet, going down, or still,
+    ///   coming up.
+    /// </summary>
+    private static KeyModifiers ModifierOf(Key key) => key switch
+    {
+        Key.LeftShift or Key.RightShift => KeyModifiers.Shift,
+        Key.LeftCtrl or Key.RightCtrl => KeyModifiers.Control,
+        Key.LWin or Key.RWin when AvaloniaKeyMapper.IsMacOS => KeyModifiers.Meta,
+        Key.LeftAlt or Key.RightAlt => KeyModifiers.Alt,
+        _ => KeyModifiers.None
+    };
 
     private void ShowContextMenuAt(CoreVector worldPos)
     {

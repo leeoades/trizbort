@@ -18,6 +18,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
   names. Saved with the map.
 
+### Changed
+
+- Shift-click adds to the selection and Ctrl-click (Cmd-click on macOS) takes away from it; a marquee does the same.
+  Before, Ctrl added and Shift toggled. While you hold Shift the pointer shows a +, and while you hold Ctrl a −.
+- The directions stop when you arrive: the route stops glowing and Stop reads Go again. Asking for directions to
+  where you already are says so, with nothing to stop.
+
 ### Fixed
 
 - A command on a join that the game refused ("The closet door is closed.") no longer moves you along the join. With

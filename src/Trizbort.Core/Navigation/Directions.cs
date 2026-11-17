@@ -145,7 +145,8 @@ public sealed class Directions
 
   /// <summary>
   ///   Automap has the player in <paramref name="whereYouAre" /> now: steps taken drop off the top; somewhere off the
-  ///   route, the directions start again from there ("rerouting"); at the end, they've arrived.
+  ///   route, the directions start again from there ("rerouting"); at the end, they've arrived, and the directions
+  ///   stop.
   /// </summary>
   public void Follow(Room whereYouAre)
   {
@@ -170,8 +171,9 @@ public sealed class Directions
 
     if (here == RouteFinder.Place(To))
     {
+      // arrived: the directions stop (the route stops glowing, Stop goes back to Go), as they would at Stop
       Steps = Array.Empty<RouteStep>();
-      HasRoute = true;
+      HasRoute = false;
       Status = $"You've arrived at {To.Name}.";
       Raise();
       return;
@@ -202,7 +204,8 @@ public sealed class Directions
     }
 
     var route = RouteFinder.Find(Elements, From, To);
-    HasRoute = true;
+    // already there: nothing to follow, so nothing to stop
+    HasRoute = route is not { Count: 0 };
     Steps = route ?? Array.Empty<RouteStep>();
     Status = (reason ?? string.Empty) + (route == null
       ? $"The map doesn't show a way from {From.Name} to {To.Name}."
