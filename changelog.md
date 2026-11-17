@@ -14,10 +14,6 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
-- A note on the automap panel says when a way out now leads somewhere new. **'Hall' Moves** and **A Different
-  'Hall'** undo that move and map it again as a moving room or as another room with its name; **Both Are Right** keeps
-  both. Automap waits for the answer before mapping on (Next Move does nothing until then, and playing to the end or
-  live stops at the note), then carries on with the moves waiting behind it.
 - **Add Current Room** shows on the automap panel only when you're somewhere not on the map.
 - Drag a split join's label ("to Debris Room") to move it. The stub runs on to it, drawn as any join is, and it keeps
   its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
@@ -25,9 +21,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
-- Automap no longer asks what to do when a way out you've already mapped leads somewhere new (east from the Hall to
-  the Pantry, and now to the Kitchen). Both are things you saw, so both joins stay; a new room goes beside the one the
-  way led to before, and a room already on the map stays where it is. The question and its dialog are gone.
+- When a way out you've already mapped leads somewhere new (east from the Hall to the Pantry, and now to the Kitchen),
+  automap asks a simpler question: **Both Are Right** (both joins stay, a new room beside the one the way led to
+  before, a room already on the map staying where it is), **'Hall' Moves**, or **A Different 'Hall'**. Keep Room 1,
+  Keep Room 2, Keep Both and Cancel are gone: both rooms are things you saw. Automap waits for the answer before mapping
+  on, playing to the end or live too.
 - A way automap only assumed (the way back along a join) that turns out to lead somewhere else is put right without
   a fuss, rather than counted as a way out leading somewhere new.
 - Shift-click adds to the selection and Ctrl-click (Cmd-click on macOS) takes away from it; a marquee does the same.

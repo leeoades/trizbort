@@ -138,18 +138,8 @@ public sealed class Automap : IAutomapController
     _doneHere.Clear();
     _doneHere.AddRange(point.DoneHere);
     _arrival = point.Arrival;
-    // the note about the move gone back over goes too: playing it again finds it again
-    SameWay = null;
     _moveByMove = true;
     Volatile.Write(ref _movesToPlay, 0);
-    if (_replay is { } moveByMove)
-    {
-      // mapping that move again as the user said (CorrectSameWay): play it at once, then carry on as before, paused
-      // or with the game
-      _replay = null;
-      if (moveByMove) Volatile.Write(ref _movesToPlay, 1);
-      else _moveByMove = false;
-    }
 
     Trace("Automap: went back to before \"{0}\".", point.Command);
     return (point.Command, reader, stream);
@@ -1532,11 +1522,6 @@ public sealed class Automap : IAutomapController
   {
     if (!string.IsNullOrWhiteSpace(command)) _seenCommand = true;
     _lastCommand = command;
-    // a new move: the note about the last one goes, and an answer given for the move mapped again is used up
-    SameWay = null;
-    if (_sameWayArmed) _sameWayArmed = false;
-    else _forcedSameWay = null;
-    _moveMark = _canvas?.UndoMark;
     RefreshLastKnownRoom();
     await FlushPendingStubRemoval(token);
     var title = _lastKnownRoom != null ? "Automap: " + _lastKnownRoom.Name : "Automap";
@@ -2600,10 +2585,6 @@ public sealed class Automap : IAutomapController
     _askedAbout = null;
     _followTo = null;
     _doneHere.Clear();
-    SameWay = null;
-    _forcedSameWay = null;
-    _sameWayArmed = false;
-    _replay = null;
     Volatile.Write(ref _movesToPlay, 0);
     Volatile.Write(ref _movesBack, 0);
     _movePoints.Clear();
@@ -2619,109 +2600,14 @@ public sealed class Automap : IAutomapController
   #region A way that now leads somewhere new
 
   /// <summary>
-  ///   The last move went a way already seen leading somewhere else: automap kept both joins, and the new room is drawn
-  ///   beside the old one ("east from Hall now leads to Kitchen as well as Pantry"). The automap panel says so until the
-  ///   next move, so the user can say otherwise (<see cref="CorrectSameWay" />).
-  /// </summary>
-  public sealed record SameWayNote(string From, string Way, string Before, string Now)
-  {
-    // where the undo history was before that move: undoing back to it takes the move off the map
-    internal object UndoMark { get; init; }
-  }
-
-  /// <summary>What the last move found (see <see cref="SameWayNote" />), until the user answers; null for nothing.</summary>
-  public SameWayNote SameWay { get; private set; }
-
-  /// <summary>
-  ///   Automap is waiting for the user to answer the note about the last move (<see cref="SameWay" />) before it maps
-  ///   anything more: Next Move does nothing until then, and playing to the end or live stops there.
-  /// </summary>
-  public bool WaitingForSameWay { get; private set; }
-
-  /// <summary>
-  ///   Waits, with the move mapped and the note showing, until the user answers it (<see cref="DismissSameWay" /> or
-  ///   <see cref="CorrectSameWay" />) or goes back. Only when the user is there to answer
-  ///   (<see cref="IEditorPrompts.AnswersInTheAutomapPanel" />), and the move can be mapped again.
-  /// </summary>
-  private async Task WaitForSameWayAnswerAsync(CancellationToken token)
-  {
-    if (!CanCorrectSameWay || !Prompts.AnswersInTheAutomapPanel) return;
-    var note = SameWay;
-    WaitingForSameWay = true;
-    Status = $"Automap is waiting: {note.Way} from {note.From} now leads to {note.Now} as well as {note.Before}. " +
-             "Say which it is in the automap panel to carry on.";
-    try
-    {
-      while (ReferenceEquals(SameWay, note) && Volatile.Read(ref _movesBack) == 0) await Task.Delay(50, token);
-    }
-    finally
-    {
-      WaitingForSameWay = false;
-    }
-
-    token.ThrowIfCancellationRequested();
-    Status = "Automapping is processing the transcript.";
-  }
-
-  /// <summary>Whether the last move can be mapped again another way (there's an undo history to take it off with).</summary>
-  public bool CanCorrectSameWay => SameWay?.UndoMark != null;
-
-  /// <summary>Both rooms are right: the note goes, the map stays as it is, and automap carries on.</summary>
-  public void DismissSameWay() => SameWay = null;
-
-  /// <summary>
-  ///   The last move went a way that now leads somewhere new, and the user says why: the room they left moves (a
-  ///   lift: <see cref="AutomapSameDirectionResult.Moves" />), or it was another room with its name (a maze:
-  ///   <see cref="AutomapSameDirectionResult.DifferentRoom" />). That move comes off the map (undone, with any tidy
-  ///   after it) and is mapped again that way.
-  /// </summary>
-  public void CorrectSameWay(AutomapSameDirectionResult answer)
-  {
-    var note = SameWay;
-    if (note?.UndoMark == null || _canvas == null) return;
-    SameWay = null;
-    if (!_canvas.UndoBackTo(note.UndoMark))
-    {
-      Status = "The map has changed since that move, so automap can't map it again. Use the room's right-click menu " +
-               "instead (This Room Moves, or Automap: This Is a Different Room).";
-      return;
-    }
-
-    _forcedSameWay = answer;
-    _sameWayArmed = true;
-    _replay = _moveByMove;
-    Interlocked.Increment(ref _movesBack);
-  }
-
-  // the answer for the move being mapped again (CorrectSameWay); armed until that move's command is processed
-  private AutomapSameDirectionResult? _forcedSameWay;
-  private bool _sameWayArmed;
-
-  // going back to map a move again: whether automap was going move by move, to carry on that way after it
-  private bool? _replay;
-
-  // where the undo history was when the current move's command came
-  private object _moveMark;
-
-  /// <summary>
   ///   The way the player went was seen leading to <paramref name="existing" />, and now leads to
-  ///   <paramref name="roomName" />. Without asking, both are kept, the new room beside the old (one place at different
-  ///   times, or a way that depends on something in the game), and the automap panel says so. When the user has said
-  ///   otherwise for this move (<see cref="CorrectSameWay" />), that.
+  ///   <paramref name="roomName" />. Both are real, so both are kept, unless the user says the room they left moves (a
+  ///   lift) or was another room with its name (a maze). The app asks (the move waits for the answer); tests and
+  ///   headless runs keep both.
   /// </summary>
-  private async Task<AutomapSameDirectionResult> AnswerSameWayAsync(Room existing, string roomName,
-    CancellationToken token)
+  private Task<AutomapSameDirectionResult> AnswerSameWayAsync(Room existing, string roomName, CancellationToken token)
   {
-    if (_forcedSameWay is { } forced)
-    {
-      _forcedSameWay = null;
-      return forced;
-    }
-
-    var answer = await Prompts.ChooseSameDirectionAsync(_lastKnownRoom, existing, roomName, token);
-    if (answer == AutomapSameDirectionResult.SamePlace && _lastKnownRoom != null && existing != null)
-      SameWay = new SameWayNote(_lastKnownRoom.Name, WayWord(), existing.Name, roomName) { UndoMark = _moveMark };
-    return answer;
+    return Prompts.ChooseSameWayAsync(_lastKnownRoom, WayWord(), existing, roomName, token);
   }
 
   private string WayWord() =>
@@ -2805,10 +2691,9 @@ public sealed class Automap : IAutomapController
   /// <summary>Automap waited at the end of the transcript for the game to go on (since the last move it paused before).</summary>
   private volatile bool _waitedForGame;
 
-  /// <summary>Play the next move of the transcript, then pause again. Not while automap waits for an answer.</summary>
+  /// <summary>Play the next move of the transcript, then pause again.</summary>
   public void PlayNextMove()
   {
-    if (WaitingForSameWay) return;
     _moveByMove = true;
     Interlocked.Increment(ref _movesToPlay);
   }
@@ -3299,10 +3184,6 @@ public sealed class Automap : IAutomapController
           }
 
           //                  var nextParagraph = getTextToNextPrompt(reader);
-
-          // the last move went a way that now leads somewhere new: wait for the user to say which it is before
-          // mapping anything more, since a wrong answer leads to more mistakes (choosing to map it again goes back)
-          await WaitForSameWayAnswerAsync(tokenSource.Token);
 
           // playing move by move: wait here, with the game's reply to the last move mapped; going back reads the
           // transcript again from an earlier move and waits there

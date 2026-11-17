@@ -75,26 +75,6 @@
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="12,0,12,12" Spacing="18">
 
-                    <!-- the last move went a way already seen leading somewhere else: both kept, side by side -->
-                    <Border x:Name="SameWayNote" IsVisible="{Binding HasSameWay}" CornerRadius="4"
-                            Padding="10,8" Background="#33FFA000" BorderBrush="#FFA000" BorderThickness="1">
-                        <StackPanel Spacing="6">
-                            <TextBlock x:Name="SameWayText" TextWrapping="Wrap" FontWeight="SemiBold"
-                                       Text="{Binding SameWayText}" />
-                            <TextBlock Classes="small" TextWrapping="Wrap"
-                                       Text="Automap waits for your answer before mapping on. If the room you left moves (a lift), or you weren't in it but another with its name (a maze), say so, and automap maps that move again." />
-                            <Button x:Name="SameWayMovesButton" Content="{Binding SameWayMovesText}"
-                                    Command="{Binding SameWayMovesCommand}"
-                                    ToolTip.Tip="It moves: map that move again with a stop of it where it went (automap asks what moved it)" />
-                            <Button x:Name="SameWayDifferentButton" Content="{Binding SameWayDifferentText}"
-                                    Command="{Binding SameWayDifferentRoomCommand}"
-                                    ToolTip.Tip="You were in another room with its name: map that move again from a new room" />
-                            <Button x:Name="SameWayOkButton" Content="Both Are Right"
-                                    Command="{Binding DismissSameWayCommand}"
-                                    ToolTip.Tip="Keep both rooms as they are" />
-                        </StackPanel>
-                    </Border>
-
                     <!-- where you are -->
                     <StackPanel Spacing="6">
                         <TextBlock Classes="section" Text="WHERE YOU ARE" />

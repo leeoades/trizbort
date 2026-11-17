@@ -15,10 +15,11 @@ namespace Trizbort.Editor;
 public interface IEditorPrompts
 {
   /// <summary>
-  ///   A way already seen leading to <paramref name="existing" /> now leads to <paramref name="newRoomName" />. The app
-  ///   doesn't ask: it keeps both, the new room beside the old (<see cref="AutomapSameDirectionResult.SamePlace" />),
-  ///   and the automap panel offers to map the move again if the room left moves or was another room with its name
-  ///   (<see cref="Trizbort.Automap.Automap.CorrectSameWay" />). Tests may answer otherwise.
+  ///   A way already seen leading to <paramref name="existing" /> now leads to <paramref name="newRoomName" />. Both are
+  ///   real, so the default keeps both, the new room beside the old (<see cref="AutomapSameDirectionResult.SamePlace" />).
+  ///   The app asks (<see cref="ChooseSameWayAsync" />): both are right, the room left moves
+  ///   (<see cref="AutomapSameDirectionResult.Moves" />), or it was another room with its name
+  ///   (<see cref="AutomapSameDirectionResult.DifferentRoom" />). Tests may answer otherwise.
   /// </summary>
   Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
     Room existing,
@@ -27,13 +28,6 @@ public interface IEditorPrompts
   {
     return Task.FromResult(AutomapSameDirectionResult.SamePlace);
   }
-
-  /// <summary>
-  ///   Whether the user is there to answer the automap panel's note when a way now leads somewhere new: if so,
-  ///   automap waits for the answer before mapping anything more. False (the default) for tests and headless runs,
-  ///   which carry on.
-  /// </summary>
-  bool AnswersInTheAutomapPanel => false;
 
   /// <summary>
   ///   As <see cref="ChooseSameDirectionAsync(Room, string, CancellationToken)" />, knowing the room the player left
@@ -46,6 +40,20 @@ public interface IEditorPrompts
     CancellationToken token = default)
   {
     return ChooseSameDirectionAsync(existing, newRoomName, token);
+  }
+
+  /// <summary>
+  ///   As <see cref="ChooseSameDirectionAsync(Room, Room, string, CancellationToken)" />, knowing the way the player went
+  ///   (<paramref name="way" />: "east", or a command such as "enter closet") as well: what automap asks.
+  /// </summary>
+  Task<AutomapSameDirectionResult> ChooseSameWayAsync(
+    Room from,
+    string way,
+    Room existing,
+    string newRoomName,
+    CancellationToken token = default)
+  {
+    return ChooseSameDirectionAsync(from, existing, newRoomName, token);
   }
 
   Task<RoomDisambiguation> DisambiguateRoomAsync(

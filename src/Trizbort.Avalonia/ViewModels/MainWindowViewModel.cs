@@ -192,8 +192,6 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         // directions from where you are follow you as you play
         FollowDirections(room);
-        // a way that now leads somewhere new: the note about it
-        RefreshSameWay();
         IsAutomapMoveByMove = engine.MoveByMove;
         IsAutomapSuspended = engine.Suspended;
         // "Don't ask again" in the question turns the best guess on
@@ -203,8 +201,7 @@ public partial class MainWindowViewModel : ViewModelBase
             ? string.Empty
             : string.Format(System.Globalization.CultureInfo.CurrentCulture, "Move {0:N0} of {1:N0}", played, total);
         var canGoBack = engine.CanGoBack;
-        // not while automap waits for an answer to the note about the last move
-        var hasNext = played < total && !engine.WaitingForSameWay;
+        var hasNext = played < total;
         if (canGoBack != _canGoBackAutomap || hasNext != _hasNextAutomapMove)
         {
             _canGoBackAutomap = canGoBack;

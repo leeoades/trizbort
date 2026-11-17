@@ -73,15 +73,6 @@ public interface IAutomapCanvas
 
   void SelectRoom(Room room);
 
-  /// <summary>Where the undo history is now, to undo back to (<see cref="UndoBackTo" />); null without one.</summary>
-  object UndoMark => null;
-
-  /// <summary>
-  ///   Undoes automap's own steps back to <paramref name="mark" /> (<see cref="UndoMark" />): a move, and any tidy after
-  ///   it. False, undoing nothing, when the user has changed the map since, or the history doesn't go back that far.
-  /// </summary>
-  bool UndoBackTo(object mark) => false;
-
   /// <summary>Automap is now in <paramref name="room" />: the view follows it, without selecting it.</summary>
   void FollowRoom(Room room) => SelectRoom(room);
   void RemoveRoom(Room otherRoom);
