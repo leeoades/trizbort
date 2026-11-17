@@ -130,7 +130,10 @@ public class SameWayNoteTests : IsolatedProjectTests
     var engine = played.Engine;
     {
       engine.CorrectSameWay(AutomapSameDirectionResult.Moves);
-      await WaitFor(() => Rooms("Hall").Count == 2 && engine.NextCommand == "look", "the move mapped again");
+      // (NextCommand still says "look" from before going back, so wait for the move itself: the Kitchen joined again)
+      await WaitFor(() => Rooms("Hall").Count == 2 && Rooms("Kitchen").Count == 1 &&
+                          JoinedTo(Rooms("Kitchen")[0]).Any() && engine.CurrentRoom?.Name == "Kitchen" &&
+                          engine.NextCommand == "look", "the move mapped again");
 
       var hall = Rooms("Hall").Single(room => !room.IsStop);
       var stop = Rooms("Hall").Single(room => room.IsStop);
@@ -153,7 +156,10 @@ public class SameWayNoteTests : IsolatedProjectTests
     var engine = played.Engine;
     {
       engine.CorrectSameWay(AutomapSameDirectionResult.DifferentRoom);
-      await WaitFor(() => Rooms("Hall (2)").Count == 1 && engine.NextCommand == "look", "the move mapped again");
+      // (NextCommand still says "look" from before going back, so wait for the move itself: the Kitchen joined again)
+      await WaitFor(() => Rooms("Hall (2)").Count == 1 && Rooms("Kitchen").Count == 1 &&
+                          JoinedTo(Rooms("Kitchen")[0]).Any() && engine.CurrentRoom?.Name == "Kitchen" &&
+                          engine.NextCommand == "look", "the move mapped again");
 
       var hall = Rooms("Hall").Single();
       var other = Rooms("Hall (2)").Single();
