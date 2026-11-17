@@ -392,7 +392,7 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
   }
 
   [Test]
-  public async Task OneCommand_LeadingToTwoRooms_WithNoHeading_JoinsNothingUntilAHeadingSays()
+  public async Task OneCommand_LeadingToTwoRooms_WithNoHeading_LeavesThePlayerWhereTheyWere()
   {
     var cellar = Add("Cellar", 0, 0, "A dank cellar.");
     var shaft = Add("Shaft", -200, -200, "A dark shaft under the closet.");
@@ -410,9 +410,12 @@ public class AutomapMovingRoomTests : IsolatedProjectTests
 
     await RunToEnd(engine, lines);
 
+    // no heading: the command didn't take the player along either join (going into a room, the game says so), so
+    // they went north from the cellar
     var rack = AllRooms().Single(room => room.Name == "Coat Rack");
-    rack.GetConnections().ShouldBeEmpty();
-    rack.IsStartRoom.ShouldBeFalse();
+    Joined(cellar, rack).ShouldBeTrue();
+    Joined(shaft, rack).ShouldBeFalse();
+    Joined(closet, rack).ShouldBeFalse();
   }
 
   [Test]
