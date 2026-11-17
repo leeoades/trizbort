@@ -1470,11 +1470,22 @@ public sealed class Automap : IAutomapController
     }
 
     // no room heading in the reply: the labelled join took the player along it ("The cupboard lurches downwards.")
-    // (only when it leads one place: with several, the reply doesn't say which)
+    // (only when it leads one place: with several, the reply doesn't say which). Only a room that moves takes the
+    // player along without a heading: to another of its stops, or a copy of it by the same name the user drew
+    // ("Cupboard (-1)"). Going anywhere else, the game says where the player is now, so with no heading the command
+    // didn't work ("The closet door is closed.") and they're still here
     if (_followTo != null)
     {
-      var ends = _followTo.Select(_canvas.ResolveRoom).Where(other => other != null).Distinct().ToList();
+      RefreshLastKnownRoom();
+      var here = _lastKnownRoom;
+      var movingHere = here == null ? null : MovingRootOrNull(here);
+      var all = _followTo.Select(_canvas.ResolveRoom).Where(other => other != null).Distinct().ToList();
+      var ends = all.Where(end => here != null &&
+                                  (movingHere != null && MovingRootOrNull(end) == movingHere ||
+                                   NamedAs(end.Name, here.Name) || NamedAs(here.Name, end.Name))).ToList();
       _followTo = null;
+      if (all.Count > 0 && ends.Count == 0)
+        Trace("\"{0}\": no heading in the reply, so still in {1}.", _lastCommand, _lastKnownRoom?.Name);
       if (ends.Count == 1) await FollowAsync(ends[0], token);
       else if (ends.Count > 1)
       {

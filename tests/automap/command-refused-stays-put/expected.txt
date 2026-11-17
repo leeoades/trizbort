@@ -1,0 +1,14 @@
+current: Foyer
+
+rooms:
+Closet
+Foyer (start)
+Hallway
+
+connections:
+Foyer [east] <-> [west] Hallway
+Foyer [west "enter closet"] <-> [north] Closet
+Hallway [east] stub
+
+natural joins: 2 of 2
+exact joins: 2 of 2
