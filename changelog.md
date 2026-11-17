@@ -25,6 +25,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
   names. Saved with the map.
 
+### Fixed
+
+- A command on a join that the game refused ("The closet door is closed.") no longer moves you along the join. With
+  no room name in the reply, automap only moves you inside a room that moves; anywhere else you're still where you
+  were, so the next move is mapped from there (not from the closet, making a Top of Closet off it).
+
 ## [0.14.0-beta] - 2026-11-16
 
 This beta is about **finding your way, and playing without waiting**. Directions work like a satnav along the map's

@@ -1,0 +1,25 @@
+>look
+Foyer
+An elegant foyer. There is a coat closet here.
+
+>enter closet
+Closet
+You're in a small closet. The door to the north is open.
+
+>n
+Foyer
+
+>close closet
+The closet door is now closed.
+
+>enter closet
+The closet door is closed.
+
+>e
+Hallway
+A long hall stretching east and west.
+
+>w
+Foyer
+
+>
