@@ -322,6 +322,9 @@ public static partial class LayoutTidy
     private double[] _startY;
     private readonly double[] _halfW;
     private readonly double[] _halfH;
+
+    // rooms the user placed by hand: how they left them against each other is how they want them
+    private readonly bool[] _byHand;
     private readonly double _stepX;
     private readonly double _stepY;
     private readonly double _gap;
@@ -351,6 +354,7 @@ public static partial class LayoutTidy
       _originY = new double[n];
       _halfW = new double[n];
       _halfH = new double[n];
+      _byHand = new bool[n];
       _joinsOf = new List<int>[n];
       for (var i = 0; i < n; i++)
       {
@@ -359,6 +363,7 @@ public static partial class LayoutTidy
         _y[i] = _startY[i] = _originY[i] = bounds.Center.Y;
         _halfW[i] = bounds.Width / 2;
         _halfH[i] = bounds.Height / 2;
+        _byHand[i] = _rooms[i].PlacedByHand;
         _joinsOf[i] = new List<int>();
       }
 
@@ -573,7 +578,7 @@ public static partial class LayoutTidy
       var set = rooms.Select(room => _index[room]).ToHashSet();
       foreach (var a in set)
         for (var b = 0; b < _rooms.Count; b++)
-          if (b != a && Overlaps(a, b))
+          if (b != a && Overlaps(a, b) && !AsLeft(a, b))
             return true;
 
       for (var j = 0; j < _joins.Count; j++)
@@ -582,7 +587,7 @@ public static partial class LayoutTidy
         var touches = set.Contains(join.A) || set.Contains(join.B);
         for (var room = 0; room < _rooms.Count; room++)
           if (room != join.A && room != join.B && (touches || set.Contains(room)) &&
-              SegmentHitsRoom(join, room))
+              SegmentHitsRoom(join, room) && !AsLeft(join, room))
             return true;
       }
 
@@ -996,6 +1001,19 @@ public static partial class LayoutTidy
       return score;
     }
 
+    /// <summary>
+    ///   Whether rooms <paramref name="a" /> and <paramref name="b" /> were both placed by hand and still sit as the
+    ///   user left them against each other: a pair drawn touching, or a join drawn across a room, is what they chose,
+    ///   so it isn't clutter to tidy away (moving the whole map to part them).
+    /// </summary>
+    private bool AsLeft(int a, int b) =>
+      _byHand[a] && _byHand[b] &&
+      Math.Abs(_x[a] - _x[b] - (_originX[a] - _originX[b])) < 0.5 &&
+      Math.Abs(_y[a] - _y[b] - (_originY[a] - _originY[b])) < 0.5;
+
+    /// <summary>A join running across a room, all three placed by hand and as the user left them (see above).</summary>
+    private bool AsLeft(Join join, int room) => AsLeft(join.A, room) && AsLeft(join.B, room);
+
     private bool Overlaps(int a, int b) =>
       Math.Abs(_x[a] - _x[b]) < _halfW[a] + _halfW[b] + _gap / 4 &&
       Math.Abs(_y[a] - _y[b]) < _halfH[a] + _halfH[b] + _gap / 4;
@@ -1008,7 +1026,7 @@ public static partial class LayoutTidy
       // rooms keep clear of each other
       foreach (var a in movable)
         for (var b = 0; b < _rooms.Count; b++)
-          if (b != a && (!movable.Contains(b) || b > a) && Overlaps(a, b))
+          if (b != a && (!movable.Contains(b) || b > a) && Overlaps(a, b) && !AsLeft(a, b))
             score += OverlapCost;
 
       // the joins touching a movable room
@@ -1027,7 +1045,7 @@ public static partial class LayoutTidy
 
         // no room sits on a join that isn't its own
         for (var room = 0; room < _rooms.Count; room++)
-          if (room != join.A && room != join.B && SegmentHitsRoom(join, room))
+          if (room != join.A && room != join.B && SegmentHitsRoom(join, room) && !AsLeft(join, room))
             score += RoomOnJoinCost;
       }
 
@@ -1049,7 +1067,7 @@ public static partial class LayoutTidy
         {
           var join = _joins[j];
           if (join.A == room || join.B == room || movable.Contains(join.A) || movable.Contains(join.B)) continue;
-          if (SegmentHitsRoom(join, room)) score += RoomOnJoinCost;
+          if (SegmentHitsRoom(join, room) && !AsLeft(join, room)) score += RoomOnJoinCost;
         }
 
       // joins don't cross
@@ -1328,10 +1346,11 @@ public static partial class LayoutTidy
     /// </summary>
     public int ProblemCount()
     {
-      var problems = DirectedJoins.Count(join => !IsNatural(join));
+      // the way the user laid out rooms by hand isn't a problem: it's how they want it
+      var problems = DirectedJoins.Count(join => !IsNatural(join) && !AsLeft(join.A, join.B));
       foreach (var join in _joins)
         for (var room = 0; room < _rooms.Count; room++)
-          if (room != join.A && room != join.B && SegmentHitsRoom(join, room))
+          if (room != join.A && room != join.B && SegmentHitsRoom(join, room) && !AsLeft(join, room))
             problems++;
       return problems;
     }
