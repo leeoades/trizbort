@@ -4,11 +4,12 @@ using Trizbort.Avalonia.ViewModels;
 
 namespace Trizbort.Avalonia.Views.Dialogs;
 
-public partial class AutomapSameDirectionDialog : Window
+/// <summary>Asks, when a way already seen leading to one room now leads to another, which it is.</summary>
+public partial class AutomapSameWayDialog : Window
 {
-    private AutomapSameDirectionViewModel? _viewModel;
+    private AutomapSameWayViewModel? _viewModel;
 
-    public AutomapSameDirectionDialog()
+    public AutomapSameWayDialog()
     {
         InitializeComponent();
         DialogFocus.Prepare(this);
@@ -22,7 +23,7 @@ public partial class AutomapSameDirectionDialog : Window
             _viewModel.CloseRequested -= OnCloseRequested;
         }
 
-        _viewModel = DataContext as AutomapSameDirectionViewModel;
+        _viewModel = DataContext as AutomapSameWayViewModel;
         if (_viewModel != null)
         {
             _viewModel.CloseRequested += OnCloseRequested;
@@ -32,12 +33,7 @@ public partial class AutomapSameDirectionDialog : Window
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
-        if (_viewModel != null && _viewModel.Selected == null && _viewModel.Options.Count > 0)
-        {
-            _viewModel.Selected = _viewModel.Options[0];
-        }
-
-        OptionList.Focus();
+        BothRightButton.Focus();
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
@@ -45,7 +41,7 @@ public partial class AutomapSameDirectionDialog : Window
         base.OnKeyDown(e);
         if (e.Key == Key.Escape && !e.Handled)
         {
-            // the same as Cancel, or closing the window: the view model's result maps nothing for this move
+            // as closing the window: both are kept
             e.Handled = true;
             Close();
         }

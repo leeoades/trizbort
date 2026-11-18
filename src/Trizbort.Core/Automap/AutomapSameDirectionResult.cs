@@ -1,5 +1,10 @@
 namespace Trizbort.Automap;
 
+/// <summary>
+///   What to do when a way already seen leading to one room now leads to another. The app asks: both are right, kept
+///   side by side (<see cref="SamePlace" />), the room left moves (<see cref="Moves" />), or it was another room with
+///   its name (<see cref="DifferentRoom" />). The others are no longer offered, but tests still answer them.
+/// </summary>
 public enum AutomapSameDirectionResult
 {
   KeepRoom1,

@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.AutomapSameWayDialog"
+        x:DataType="vm:AutomapSameWayViewModel"
+        Title="Automapping: A Way Leads Somewhere New"
+        Width="560" SizeToContent="Height"
+        MinWidth="440"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="16" Spacing="10">
+        <TextBlock x:Name="MessageText" Text="{Binding Message}" TextWrapping="Wrap" FontWeight="SemiBold" />
+        <TextBlock Text="Which is it? Automap waits for your answer, since a wrong one leads to more mistakes."
+                   TextWrapping="Wrap" Opacity="0.75" />
+
+        <!-- the answers, each saying what it does -->
+        <Button x:Name="BothRightButton" Command="{Binding BothRightCommand}" IsDefault="True"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10,8">
+            <StackPanel Spacing="2">
+                <TextBlock Text="{Binding BothRightTitle}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding BothRightText}" TextWrapping="Wrap" FontSize="12" />
+            </StackPanel>
+        </Button>
+        <Button x:Name="MovesButton" Command="{Binding MovesCommand}" IsVisible="{Binding CanSayWhichRoom}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10,8">
+            <StackPanel Spacing="2">
+                <TextBlock Text="{Binding MovesTitle}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding MovesText}" TextWrapping="Wrap" FontSize="12" />
+            </StackPanel>
+        </Button>
+        <Button x:Name="DifferentButton" Command="{Binding DifferentRoomCommand}" IsVisible="{Binding CanSayWhichRoom}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10,8">
+            <StackPanel Spacing="2">
+                <TextBlock Text="{Binding DifferentTitle}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding DifferentText}" TextWrapping="Wrap" FontSize="12" />
+            </StackPanel>
+        </Button>
+    </StackPanel>
+</Window>

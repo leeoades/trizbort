@@ -19,6 +19,41 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
     private readonly Func<Window?> _getOwner = getOwner;
     private readonly IDialogService? _dialogService = dialogService;
 
+    /// <summary>
+    ///     A way already seen leading to one room now leads to another: asks which it is (both are right, the room left
+    ///     moves, or it was another room with its name). Automap waits for the answer. Without an owner window, both
+    ///     are kept.
+    /// </summary>
+    public Task<AutomapSameDirectionResult> ChooseSameWayAsync(
+        Room from,
+        string way,
+        Room existing,
+        string newRoomName,
+        CancellationToken token = default)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            return ShowSameWayAsync(from, way, existing, newRoomName);
+        }
+
+        return Dispatcher.UIThread.InvokeAsync(() => ShowSameWayAsync(from, way, existing, newRoomName));
+    }
+
+    private async Task<AutomapSameDirectionResult> ShowSameWayAsync(Room? from, string way, Room? existing,
+        string newRoomName)
+    {
+        var owner = _getOwner();
+        if (owner == null)
+        {
+            return AutomapSameDirectionResult.SamePlace;
+        }
+
+        var viewModel = new AutomapSameWayViewModel(from?.Name, way, existing?.Name, newRoomName);
+        var dialog = new AutomapSameWayDialog { DataContext = viewModel };
+        await dialog.ShowDialog(owner);
+        return viewModel.Result;
+    }
+
     /// <summary>Opens the properties dialog for the element (room, label or connection). Returns true when accepted.</summary>
     public Task<bool> EditElementAsync(Element element, CancellationToken token = default)
     {
@@ -64,33 +99,6 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         await service.ShowMessageAsync(_getOwner(), title, message);
     }
 
-    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
-        Room existing,
-        string newRoomName,
-        CancellationToken token = default)
-    {
-        if (Dispatcher.UIThread.CheckAccess())
-        {
-            return ShowSameDirectionAsync(existing, newRoomName);
-        }
-
-        return Dispatcher.UIThread.InvokeAsync(() => ShowSameDirectionAsync(existing, newRoomName));
-    }
-
-    public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
-        Room from,
-        Room existing,
-        string newRoomName,
-        CancellationToken token = default)
-    {
-        if (Dispatcher.UIThread.CheckAccess())
-        {
-            return ShowSameDirectionAsync(existing, newRoomName, from);
-        }
-
-        return Dispatcher.UIThread.InvokeAsync(() => ShowSameDirectionAsync(existing, newRoomName, from));
-    }
-
     public Task<RoomDisambiguation> DisambiguateRoomAsync(
         string transcriptLine,
         string roomDescription,
@@ -104,20 +112,6 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
 
         return Dispatcher.UIThread.InvokeAsync(
             () => ShowDisambiguationAsync(transcriptLine, roomDescription, candidates));
-    }
-
-    private async Task<AutomapSameDirectionResult> ShowSameDirectionAsync(Room existing, string newRoomName, Room? from = null)
-    {
-        var owner = _getOwner();
-        if (owner == null)
-        {
-            return await NonInteractiveEditorPrompts.Instance.ChooseSameDirectionAsync(existing, newRoomName);
-        }
-
-        var viewModel = new AutomapSameDirectionViewModel(existing, newRoomName) { FromName = from?.Name ?? string.Empty };
-        var dialog = new AutomapSameDirectionDialog { DataContext = viewModel };
-        await dialog.ShowDialog(owner);
-        return viewModel.Result;
     }
 
     private async Task<RoomDisambiguation> ShowDisambiguationAsync(
