@@ -26,6 +26,9 @@
                         <StackPanel Orientation="Horizontal" Spacing="24">
                             <CheckBox Content="_Dotted" IsChecked="{Binding IsDotted}" />
                             <CheckBox Content="One Wa_y Arrow" IsChecked="{Binding IsDirectional}" />
+                            <TextBlock x:Name="OneWayNote" Text="{Binding OneWayNote}" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="320" Opacity="0.75"
+                                       IsVisible="{Binding IsDirectional}" />
                         </StackPanel>
                         <Grid ColumnDefinitions="Auto,12,*">
                             <Label Grid.Column="0" Classes="field-label" Content="_Color:" Target="{Binding #LineColorButton}" />
@@ -38,13 +41,20 @@
                 <!-- Text -->
                 <HeaderedContentControl Grid.Row="2" Classes="group" Header="Text">
                     <StackPanel Spacing="8">
-                        <Grid ColumnDefinitions="*,12,*,12,*" RowDefinitions="Auto,Auto" RowSpacing="2">
+                        <!-- Start is always the room on the left (or the upper one), whichever end the join was drawn from -->
+                        <Grid ColumnDefinitions="*,12,*,12,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="2">
                             <Label Grid.Row="0" Grid.Column="0" Content="_Start:" Target="{Binding #StartBox}" />
-                            <TextBox Grid.Row="1" Grid.Column="0" x:Name="StartBox" Text="{Binding StartText}" ToolTip.Tip="Text shown near the start of the connection line." />
+                            <TextBlock Grid.Row="1" Grid.Column="0" x:Name="StartRoomText" Text="{Binding StartRoomName}"
+                                       FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="{Binding StartRoomName}" />
+                            <TextBox Grid.Row="2" Grid.Column="0" x:Name="StartBox" Text="{Binding StartText}" ToolTip.Tip="Text shown near this room's end of the connection line." />
                             <Label Grid.Row="0" Grid.Column="2" Content="Midd_le:" Target="{Binding #MidBox}" />
-                            <TextBox Grid.Row="1" Grid.Column="2" x:Name="MidBox" Text="{Binding MidText}" ToolTip.Tip="Text shown at the middle of the connection line." />
+                            <TextBox Grid.Row="2" Grid.Column="2" x:Name="MidBox" Text="{Binding MidText}" ToolTip.Tip="Text shown at the middle of the connection line." />
                             <Label Grid.Row="0" Grid.Column="4" Content="_End:" Target="{Binding #EndBox}" />
-                            <TextBox Grid.Row="1" Grid.Column="4" x:Name="EndBox" Text="{Binding EndText}" ToolTip.Tip="Text shown near the end of the connection line." />
+                            <TextBlock Grid.Row="1" Grid.Column="4" x:Name="EndRoomText" Text="{Binding EndRoomName}"
+                                       FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                       ToolTip.Tip="{Binding EndRoomName}" />
+                            <TextBox Grid.Row="2" Grid.Column="4" x:Name="EndBox" Text="{Binding EndText}" ToolTip.Tip="Text shown near this room's end of the connection line." />
                         </Grid>
 
                         <!-- Presets: radios track the Start/Middle/End text -->

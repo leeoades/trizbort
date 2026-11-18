@@ -24,6 +24,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- Join Properties name the room above each end's box, and Start is always the room on the left (or the upper one,
+  when they're more one above the other), whichever end the join was drawn from. With One Way Arrow ticked, it says
+  which way the arrow points ("from Garden to Hall").
 - When a way out you've already mapped leads somewhere new (east from the Hall to the Pantry, and now to the Kitchen),
   automap asks a simpler question: **Both Are Right** (both joins stay, a new room beside the one the way led to
   before, a room already on the map staying where it is), **'Hall' Moves**, or **A Different 'Hall'**. Keep Room 1,
