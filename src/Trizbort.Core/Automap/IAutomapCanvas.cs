@@ -107,6 +107,12 @@ public interface IAutomapCanvas
   IReadOnlyList<Room> RoomsAlong(Room room, MappableDirection direction);
 
   /// <summary>
+  ///   The rooms the map shows <paramref name="command" /> ("enter closet") leading to from <paramref name="room" />:
+  ///   joins with that command among their ways out of the room.
+  /// </summary>
+  IReadOnlyList<Room> RoomsByCommand(Room room, string command) => System.Array.Empty<Room>();
+
+  /// <summary>
   ///   <paramref name="direction" /> from <paramref name="from" /> doesn't lead to <paramref name="to" /> after all: it
   ///   comes off the join between them (and the join goes if nothing else leads along it).
   /// </summary>

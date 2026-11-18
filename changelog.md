@@ -14,6 +14,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- The automap panel shows the transcript it's reading under its title (the full path on hover), with **Open Folder**
+  and **Copy Full Path** buttons.
 - Joins that go the same way out of the same side of a room to different rooms ("enter closet" from the Foyer, to the
   Closet and to the Top of Closet) are drawn as one join out of that room, with one label, forking near the rooms
   they lead to. They're still separate joins: only the drawing changes.
@@ -41,6 +43,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- A command typed in a room before that leads somewhere new (`enter closet` from the Foyer led to the Top of Closet,
+  and now to the Closet) asks, as a direction does, instead of quietly making a new room.
+- A join's end label with no room beside its line goes in a corner beside where the join meets the room, rather than
+  across another join ("enter closet / in" out of the Foyer's corner, not across the join out of its south side).
 - Walking around a map you've laid out yourself no longer tidies it into a mess. Rooms you've placed by hand are left
   as you placed them against each other, side by side or with a join across one, rather than counting as clutter
   that the tidy pushed the whole map aside to clear; and automap starts from the map as it is, so the first moves

@@ -175,11 +175,24 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private DispatcherTimer? _automapPanelTimer;
 
+    /// <summary>The transcript automap is reading, in full, for the automap panel's Open Folder and Copy Path.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AutomapTranscriptName))]
+    [NotifyPropertyChangedFor(nameof(HasAutomapTranscript))]
+    private string _automapTranscriptPath = string.Empty;
+
+    /// <summary>The transcript's file name, under the automap panel's title.</summary>
+    public string AutomapTranscriptName =>
+        string.IsNullOrEmpty(AutomapTranscriptPath) ? string.Empty : System.IO.Path.GetFileName(AutomapTranscriptPath);
+
+    public bool HasAutomapTranscript => !string.IsNullOrEmpty(AutomapTranscriptPath);
+
     /// <summary>Brings the automap panel up to date with the engine: where you are, the transcript and mapping.</summary>
     internal void RefreshAutomapPanel()
     {
         var engine = AutomapEngine.Instance;
         FollowPlayToEnd();
+        AutomapTranscriptPath = engine.TranscriptPath;
         var room = engine.CurrentRoom;
         var notOnMap = room == null ? engine.RoomNotOnMap : null;
         AutomapRoomName = room?.Name ??
