@@ -36,8 +36,10 @@ South Junction [east] <-> [south] Southeast Junction
 South Junction [north] <-> [south] Front Porch
 South Junction [west] <-> [south] Southwest Junction
 Southeast Junction [southeast] stub
+Southeast Junction [west] <-> [east] Patio
+Southwest Junction [east] <-> [west] Patio
 Southwest Junction [north] <-> [south] Northwest Junction
 Top Landing [southsouthwest "d"] <-> [northnorthwest "u"] Middle of Beach Stairs
 
-natural joins: 18 of 18
-exact joins: 11 of 18
+natural joins: 20 of 20
+exact joins: 15 of 20

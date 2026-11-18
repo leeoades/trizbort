@@ -14,15 +14,24 @@ namespace Trizbort.Editor;
 /// </summary>
 public interface IEditorPrompts
 {
+  /// <summary>
+  ///   A way already seen leading to <paramref name="existing" /> now leads to <paramref name="newRoomName" />. Both are
+  ///   real, so the default keeps both, the new room beside the old (<see cref="AutomapSameDirectionResult.SamePlace" />).
+  ///   The app asks (<see cref="ChooseSameWayAsync" />): both are right, the room left moves
+  ///   (<see cref="AutomapSameDirectionResult.Moves" />), or it was another room with its name
+  ///   (<see cref="AutomapSameDirectionResult.DifferentRoom" />). Tests may answer otherwise.
+  /// </summary>
   Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
     Room existing,
     string newRoomName,
-    CancellationToken token = default);
+    CancellationToken token = default)
+  {
+    return Task.FromResult(AutomapSameDirectionResult.SamePlace);
+  }
 
   /// <summary>
   ///   As <see cref="ChooseSameDirectionAsync(Room, string, CancellationToken)" />, knowing the room the player left
-  ///   (<paramref name="from" />), so the user can also split it into two rooms
-  ///   (<see cref="AutomapSameDirectionResult.Split" />). Default implementation asks without that choice.
+  ///   (<paramref name="from" />).
   /// </summary>
   Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(
     Room from,
@@ -31,6 +40,20 @@ public interface IEditorPrompts
     CancellationToken token = default)
   {
     return ChooseSameDirectionAsync(existing, newRoomName, token);
+  }
+
+  /// <summary>
+  ///   As <see cref="ChooseSameDirectionAsync(Room, Room, string, CancellationToken)" />, knowing the way the player went
+  ///   (<paramref name="way" />: "east", or a command such as "enter closet") as well: what automap asks.
+  /// </summary>
+  Task<AutomapSameDirectionResult> ChooseSameWayAsync(
+    Room from,
+    string way,
+    Room existing,
+    string newRoomName,
+    CancellationToken token = default)
+  {
+    return ChooseSameDirectionAsync(from, existing, newRoomName, token);
   }
 
   Task<RoomDisambiguation> DisambiguateRoomAsync(
