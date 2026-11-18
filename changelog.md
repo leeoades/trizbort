@@ -43,6 +43,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- In a maze of rooms all alike (every room "Maze", with the same description), **Tracking only** follows the map,
+  as mapping does: the way you went from the room you're in says which room you're in now. Before, it stayed in the
+  first of them.
+- Going a way the map doesn't show into one of a maze of rooms all alike asks which room it is (or, making a best
+  guess, makes a new room), instead of joining the way to the first of them.
 - A command typed in a room before that leads somewhere new (`enter closet` from the Foyer led to the Top of Closet,
   and now to the Closet) asks, as a direction does, instead of quietly making a new room.
 - A join's end label with no room beside its line goes in a corner beside where the join meets the room, rather than

@@ -567,9 +567,19 @@ public sealed class Automap : IAutomapController
   {
     // copies of rooms (portals, a moving room's stops) are found by the map, not by name
     var result = _canvas.FindRooms(roomName, roomDescription, (n, d, r) => r.IsReference ? false : Match(r, n, d));
-    if (result.Certain != null) return result.Certain;
+    IReadOnlyList<Room> maybes = result.Maybes;
+    if (result.Certain != null)
+    {
+      // a maze of rooms all alike ("Maze", "You are in a maze of twisty little passages, all alike."): the name and
+      // description fit them all, so they don't say which. The map would have (VariantRoom); it doesn't, so it's
+      // one of them, or a new one
+      var alike = AllAlike(roomName, roomDescription);
+      if (alike.Count < 2) return result.Certain;
+      maybes = alike;
+      Trace("{0}: {1} rooms are all alike; the map doesn't say which this is.", FormatTranscriptLineForDisplay(line),
+        alike.Count);
+    }
 
-    var maybes = result.Maybes;
     if (maybes == null || maybes.Count == 0) return null;
     if (_settings.BestGuessWhichRoom) return Guess(maybes, roomDescription);
     if (maybes.Count == 1 && (string.IsNullOrEmpty(roomDescription) || maybes[0].PrimaryDescription == null))
@@ -579,6 +589,22 @@ public sealed class Automap : IAutomapController
     var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, maybes, token);
     token.ThrowIfCancellationRequested();
     return Answered(choice);
+  }
+
+  /// <summary>
+  ///   The rooms the heading and the game's description both fit, in a verbose transcript: more than one is a maze of
+  ///   rooms all alike.
+  /// </summary>
+  private List<Room> AllAlike(string roomName, string roomDescription)
+  {
+    var alike = new List<Room>();
+    if (!_settings.VerboseTranscript || string.IsNullOrWhiteSpace(roomDescription)) return alike;
+    _canvas.FindRooms(roomName, roomDescription, (name, description, room) =>
+    {
+      if (!room.IsReference && Match(room, name, description) == true) alike.Add(room);
+      return false;
+    });
+    return alike;
   }
 
   /// <summary>
@@ -608,9 +634,11 @@ public sealed class Automap : IAutomapController
     if (candidates == null || candidates.Count == 0) return null;
     var here = _lastKnownRoom;
     if (_lastMoveDirection == null) return here != null && candidates.Contains(here) ? here : candidates[0];
-    var described = candidates.FirstOrDefault(room =>
-      room.Descriptions.Any(known => SameFirstSentence(known, roomDescription)));
-    if (described != null) return described;
+    var described = candidates.Where(room =>
+      room.Descriptions.Any(known => SameFirstSentence(known, roomDescription))).Take(2).ToList();
+    // one of a maze of rooms all alike, by a way not on the map: a new room, not the first of them
+    if (described.Count > 1) return null;
+    if (described.Count == 1) return described[0];
     return string.IsNullOrWhiteSpace(roomDescription) ? candidates[0] : null;
   }
 
@@ -832,7 +860,9 @@ public sealed class Automap : IAutomapController
         return;
       }
 
-      var room = await FindRoomAsync(roomName, roomDescription, line, token);
+      // the map first, as when mapping: the way the player went from the room automap has them in says where they
+      // are, so automap follows them round a maze of rooms all alike; only then the name and description
+      var room = VariantRoom(roomName, roomDescription) ?? await FindRoomAsync(roomName, roomDescription, line, token);
       token.ThrowIfCancellationRequested();
       RefreshLastKnownRoom();
       if (room != null) room = _canvas.ResolveRoom(room);
