@@ -25,7 +25,12 @@
                      SelectedItem="{Binding Selected}">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:DisambiguationChoice">
-                        <TextBlock Text="{Binding Name}" FontStyle="{Binding IsNewRoom, Converter={x:Static vm:DisambiguationChoiceStyle.Italic}}" />
+                        <!-- the name, and what tells the room apart from the others with it (its objects, its ways) -->
+                        <StackPanel Spacing="1">
+                            <TextBlock Text="{Binding Name}" FontStyle="{Binding IsNewRoom, Converter={x:Static vm:DisambiguationChoiceStyle.Italic}}" />
+                            <TextBlock Text="{Binding Detail}" IsVisible="{Binding HasDetail}" FontSize="11" Opacity="0.75"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

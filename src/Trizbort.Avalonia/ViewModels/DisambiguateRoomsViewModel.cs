@@ -8,9 +8,12 @@ namespace Trizbort.Avalonia.ViewModels;
 ///     One line in the "which room?" list: a room on the map, or the new room the transcript may be showing
 ///     (<see cref="Room" /> null), with the description to compare.
 /// </summary>
-public sealed record DisambiguationChoice(string Name, string Description, Room? Room)
+public sealed record DisambiguationChoice(string Name, string Description, Room? Room, string Detail = "")
 {
     public bool IsNewRoom => Room == null;
+
+    /// <summary>Whether there's anything telling this room apart from the others with its name.</summary>
+    public bool HasDetail => !string.IsNullOrEmpty(Detail);
 }
 
 /// <summary>
@@ -30,8 +33,11 @@ public class DisambiguateRoomsViewModel : ViewModelBase
         Candidates = candidates;
         ContextText = BuildContext(transcriptLine, roomDescription);
         var description = Normalise(roomDescription).Trim();
+        // rooms with one name (a maze of rooms all alike): each with what tells it apart from the others
+        var tells = Trizbort.Automap.RoomTells.Apart(candidates);
         Choices = candidates
-            .Select(room => new DisambiguationChoice(room.Name, room.PrimaryDescription ?? string.Empty, room))
+            .Select(room => new DisambiguationChoice(room.Name, room.PrimaryDescription ?? string.Empty, room,
+                tells.TryGetValue(room, out var tell) ? tell : string.Empty))
             .Append(new DisambiguationChoice(NewRoomName,
                 description.Length == 0 ? "(The transcript doesn't describe it.)" : description, null))
             .ToList();
@@ -66,6 +72,18 @@ public class DisambiguateRoomsViewModel : ViewModelBase
                 Preview?.Invoke(value?.Room);
             }
         }
+    }
+
+    /// <summary>
+    ///     The user picked a room on the map behind the dialog: if it's one of the rooms asked about, it's picked in the
+    ///     list too. Returns whether it was.
+    /// </summary>
+    public bool PickFromMap(Room room)
+    {
+        var choice = Choices.FirstOrDefault(item => item.Room == room);
+        if (choice == null) return false;
+        Selected = choice;
+        return true;
     }
 
     /// <summary>

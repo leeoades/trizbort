@@ -14,6 +14,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Which room does it mean?** shows, under each room's name, what tells it apart from the others with that name: its
+  subtitle, its description, the objects in it, or the ways out of it and where they lead. In a maze of rooms all alike
+  the list no longer reads "Maze", "Maze", "Maze".
+- Clicking one of the rooms asked about on the map, while **Which room does it mean?** is open, picks it in the list.
 - The automap panel shows the transcript it's reading under its title (the full path on hover), with **Open Folder**
   and **Copy Full Path** buttons.
 - Joins that go the same way out of the same side of a room to different rooms ("enter closet" from the Foyer, to the
@@ -46,6 +50,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - In a maze of rooms all alike (every room "Maze", with the same description), **Tracking only** follows the map,
   as mapping does: the way you went from the room you're in says which room you're in now. Before, it stayed in the
   first of them.
+- Answering **Which room does it mean?** with a room keeps the view on it, where automap now has you, instead of
+  going back to where it was.
 - Going a way the map doesn't show into one of a maze of rooms all alike asks which room it is (or, making a best
   guess, makes a new room), instead of joining the way to the first of them.
 - A command typed in a room before that leads somewhere new (`enter closet` from the Foyer led to the Top of Closet,
