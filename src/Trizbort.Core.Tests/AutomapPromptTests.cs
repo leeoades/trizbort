@@ -317,7 +317,7 @@ public class AutomapPromptTests : IsolatedProjectTests
   }
 
   [Test]
-  public async Task NonInteractive_KeepsLegacyDefaults()
+  public async Task NonInteractive_AnswersAsTheAppDoes()
   {
     AddSameDirectionRooms(out _);
     AddHall("Alpha hall.");
@@ -325,7 +325,9 @@ public class AutomapPromptTests : IsolatedProjectTests
     var parser = CreateParser(NonInteractiveEditorPrompts.Instance);
 
     await parser.StartCl(new AutomapCanvas(), SettingsFor(SameDirectionTranscript));
-    RoomNames().ShouldNotContain("Replacement Room");
+    // a way that now leads somewhere new keeps both, as the app does without asking
+    RoomNames().ShouldContain("Replacement Room");
+    RoomNames().ShouldContain("Original Room");
 
     await parser.StartCl(
       new AutomapCanvas(),

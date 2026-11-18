@@ -22,7 +22,8 @@ public sealed class NonInteractiveEditorPrompts : IEditorPrompts
     string newRoomName,
     CancellationToken token = default)
   {
-    return Task.FromResult(AutomapSameDirectionResult.KeepRoom1);
+    // as the app does: keep both, without asking
+    return Task.FromResult(AutomapSameDirectionResult.SamePlace);
   }
 
   public Task<RoomDisambiguation> DisambiguateRoomAsync(

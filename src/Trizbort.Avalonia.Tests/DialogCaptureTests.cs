@@ -139,11 +139,6 @@ public class DialogCaptureTests
             automapVm.Initialize(ApplicationSettingsController.AppSettings.Automap);
             CaptureDialog(output, files, "AutomapSettings", new AutomapSettingsDialog { DataContext = automapVm });
 
-            CaptureDialog(output, files, "AutomapSameDirection", new AutomapSameDirectionDialog
-            {
-                DataContext = new AutomapSameDirectionViewModel("Kitchen", "Pantry")
-            });
-
             var hallOne = new Room(project) { Name = "Hall" };
             hallOne.AddDescription("A long hall with portraits.");
             var hallTwo = new Room(project) { Name = "Hall" };
