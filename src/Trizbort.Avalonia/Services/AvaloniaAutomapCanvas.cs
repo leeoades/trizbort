@@ -255,6 +255,13 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
             : Dispatcher.UIThread.Invoke(() => _innerCanvas.RoomsAlong(room, direction));
     }
 
+    public IReadOnlyList<Room> RoomsByCommand(Room room, string command)
+    {
+        return Dispatcher.UIThread.CheckAccess()
+            ? _innerCanvas.RoomsByCommand(room, command)
+            : Dispatcher.UIThread.Invoke(() => _innerCanvas.RoomsByCommand(room, command));
+    }
+
     public void ForgetWay(Room from, MappableDirection direction, Room to)
     {
         if (Dispatcher.UIThread.CheckAccess()) _innerCanvas.ForgetWay(from, direction, to);

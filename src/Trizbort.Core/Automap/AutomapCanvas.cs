@@ -1130,6 +1130,30 @@ public class AutomapCanvas : IAutomapCanvas
     return rooms;
   }
 
+  public IReadOnlyList<Room> RoomsByCommand(Room room, string command)
+  {
+    var rooms = new List<Room>();
+    if (room == null || string.IsNullOrWhiteSpace(command)) return rooms;
+    var typed = command.Trim();
+    foreach (var connection in CurrentProject.Elements.OfType<Connection>())
+    {
+      var source = connection.GetSourceRoom();
+      var target = connection.GetTargetRoom();
+      if (source == null || target == null || source == target) continue;
+      if (source != room && target != room) continue;
+      var ways = JoinWays.Of(connection);
+      bool From(bool atStart) => ways.Any(way => way.AtStart == atStart && way.IsCommand &&
+                                                 string.Equals(way.Text?.Trim(), typed, StringComparison.OrdinalIgnoreCase));
+      // a join made only by the command ("xyzzy") goes from its start
+      var commandJoin = IsCommandJoin(connection) && connection.AutomapCommand.Split(" / ")
+        .Any(part => string.Equals(part.Trim(), typed, StringComparison.OrdinalIgnoreCase));
+      if (source == room && (From(true) || commandJoin)) rooms.Add(target);
+      else if (target == room && From(false)) rooms.Add(source);
+    }
+
+    return rooms;
+  }
+
   public void ForgetWay(Room from, MappableDirection direction, Room to) => ForgetWay(from, direction, to, false);
 
   /// <summary>

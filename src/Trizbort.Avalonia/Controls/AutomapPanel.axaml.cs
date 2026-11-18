@@ -1,6 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
+using Trizbort.Avalonia.Services;
+using Trizbort.Avalonia.ViewModels;
 
 namespace Trizbort.Avalonia.Controls;
 
@@ -34,6 +37,21 @@ public partial class AutomapPanel : UserControl
             ApplyWidth(UsualWidth);
             e.Handled = true;
         };
+    }
+
+    /// <summary>Open Folder: the transcript shown in its folder (selected, where the system can).</summary>
+    private void OnOpenTranscriptFolder(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel { HasAutomapTranscript: true } vm)
+            FileReveal.Reveal(vm.AutomapTranscriptPath);
+    }
+
+    /// <summary>Copy Full Path: the transcript's full path on the clipboard.</summary>
+    private async void OnCopyTranscriptPath(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel { HasAutomapTranscript: true } vm) return;
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard != null) await clipboard.SetTextAsync(vm.AutomapTranscriptPath);
     }
 
     /// <summary>The panel this wide (between the usual width and <see cref="WidestWidth" />), the game screen with it.</summary>

@@ -933,10 +933,12 @@ public static class ConnectionDrawingAdapter
 
     /// <summary>
     ///     An end label out of the way: where it always goes, else on the other side of its line, else slid along the
-    ///     line away from the room (a little at a time, both sides), whichever first clashes with nothing; failing that,
-    ///     the one clashing least. Returns the top-left to draw it at.
+    ///     line away from the room (a little at a time, both sides), else tucked into a corner beside where the join
+    ///     meets the room, clear of its own line ("enter closet" out of the Foyer's corner goes to the right of the
+    ///     corner, not across the join out of the south side), whichever first clashes with nothing; failing that, the
+    ///     one clashing least. Returns the top-left to draw it at.
     /// </summary>
-    private static (double X, double Y) OutOfTheWay(Connection connection, CoreLineSegment segment, bool isStart,
+    internal static (double X, double Y) OutOfTheWay(Connection connection, CoreLineSegment segment, bool isStart,
         double x, double y, double width, double height)
     {
         if (LabelClashes == null) return (x, y);
@@ -967,6 +969,23 @@ public static class ConnectionDrawingAdapter
                     bestClashes = clashes;
                     best = (bounds.Left, bounds.Top);
                 }
+            }
+        }
+
+        // the corners round where the join meets the room: beside the room, then below or above it
+        var offset = Settings.TextOffsetFromConnection;
+        foreach (var (across, down) in new[] { (1, -1), (-1, -1), (1, 1), (-1, 1) })
+        {
+            var left = across > 0 ? anchor.X + offset : anchor.X - offset - width;
+            var top = down > 0 ? anchor.Y + offset : anchor.Y - offset - height;
+            var bounds = new CoreRect((float)left, (float)top, (float)width, (float)height);
+            if (segment.IntersectsWith(bounds)) continue;
+            var clashes = LabelClashes(connection, bounds);
+            if (clashes == 0) return (bounds.Left, bounds.Top);
+            if (clashes < bestClashes)
+            {
+                bestClashes = clashes;
+                best = (bounds.Left, bounds.Top);
             }
         }
 

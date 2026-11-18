@@ -1224,7 +1224,8 @@ public sealed class Automap : IAutomapController
           RefreshLastKnownRoom();
           otherRoom = _canvas.ResolveRoom(otherRoom);
         }
-        else if (room == null && _lastKnownRoom != null && _lastMoveDirection != null)
+        else if (room == null && _lastKnownRoom != null &&
+                 (_lastMoveDirection != null || !string.IsNullOrWhiteSpace(_lastJourneyCommand)))
         {
           // is there already a connection in that direction?
           // The room at the other end of a connection already leaving this way. (The reference took the
@@ -1234,9 +1235,14 @@ public sealed class Automap : IAutomapController
           // The join's ways say where it leads, wherever it leaves the room: "n / up" on the north side leads up.
           // Not a way only assumed, back along a two-way join from a move the other way: that was a guess, and this
           // move shows it was wrong, so the join forgets it (east from the junction leads to the patio, not back)
-          otherRoom = _canvas.RoomsAlong(_lastKnownRoom, _lastMoveDirection.Value).Select(Real)
-                      .FirstOrDefault(room => room != null && room != _lastKnownRoom &&
-                                              !OnlyAssumedBack(_lastKnownRoom, _lastMoveDirection.Value, room));
+          // A command the player has typed here before ("enter closet") asks the same way: it led to the Top of
+          // Closet, and now to the Closet
+          otherRoom = _lastMoveDirection != null
+            ? _canvas.RoomsAlong(_lastKnownRoom, _lastMoveDirection.Value).Select(Real)
+              .FirstOrDefault(room => room != null && room != _lastKnownRoom &&
+                                      !OnlyAssumedBack(_lastKnownRoom, _lastMoveDirection.Value, room))
+            : _canvas.RoomsByCommand(_lastKnownRoom, _lastJourneyCommand).Select(Real)
+              .FirstOrDefault(room => room != null && room != _lastKnownRoom);
           if (otherRoom != null)
           {
             decision = await AnswerSameWayAsync(otherRoom, roomName, token);
@@ -1347,6 +1353,13 @@ public sealed class Automap : IAutomapController
                   _lastMoveDirection.Value.ToString().ToLower(),
                   _lastKnownRoom.Name);
               }
+            }
+            else if (_lastKnownRoom != null && !string.IsNullOrWhiteSpace(_lastJourneyCommand) && otherRoom != null &&
+                     decision.HasValue)
+            {
+              // a command typed here before, now leading somewhere new: as the user said
+              room = NewRoomByCommand(roomName, otherRoom, decision.Value, movedBy, line);
+              waits++;
             }
             else
             {
@@ -2014,6 +2027,58 @@ public sealed class Automap : IAutomapController
     anchor.PlacedByHand = true;
   }
 
+  /// <summary>
+  ///   A new room reached by a command typed in this room before, that led to <paramref name="before" /> then
+  ///   ("enter closet": the Top of Closet, now the Closet): made as the user answered the same-way question.
+  /// </summary>
+  private Room NewRoomByCommand(string roomName, Room before, AutomapSameDirectionResult decision, string movedBy,
+    string line)
+  {
+    var here = _lastKnownRoom;
+    var command = _lastJourneyCommand;
+    Room from;
+    switch (decision)
+    {
+      case AutomapSameDirectionResult.KeepRoom1:
+        return before;
+      case AutomapSameDirectionResult.Moves:
+        from = NewStop(here, movedBy);
+        break;
+      case AutomapSameDirectionResult.DifferentRoom:
+        from = SplitOffArrival(here) ?? SplitRoom(here, WhatMovedIt());
+        break;
+      case AutomapSameDirectionResult.Split:
+        from = SplitRoom(here, movedBy);
+        break;
+      default:
+        from = here;
+        break;
+    }
+
+    var room = _canvas.CreateRoom(from, roomName);
+    _canvas.ConnectByCommand(from, room, command);
+    switch (decision)
+    {
+      case AutomapSameDirectionResult.KeepRoom2:
+        _canvas.RemoveRoom(before);
+        break;
+      case AutomapSameDirectionResult.SamePlace:
+      case AutomapSameDirectionResult.KeepBoth:
+      {
+        // beside the room the command led to before, on the side away from here
+        var across = Math.Abs(before.InnerBounds.Center.X - here.InnerBounds.Center.X) >=
+                     Math.Abs(before.InnerBounds.Center.Y - here.InnerBounds.Center.Y);
+        PutBeside(room, before, across ? MappableDirection.East : MappableDirection.South);
+        Trace("{0}: {1} and {2} are one place at different times.", FormatTranscriptLineForDisplay(line),
+          before.Name, roomName);
+        break;
+      }
+    }
+
+    Trace("{0}: {1} reached from {2} by \"{3}\".", FormatTranscriptLineForDisplay(line), roomName, from.Name, command);
+    return room;
+  }
+
   /// <summary>How the player last came into a room: from where, which way, and what the game showed.</summary>
   private sealed record Arrival(Room From, MappableDirection? Direction, string Journey, Room To, string Description);
 
@@ -2624,6 +2689,9 @@ public sealed class Automap : IAutomapController
   {
     _stepNow = true;
   }
+
+  /// <summary>The transcript automap is reading (the full path), or empty when it isn't running.</summary>
+  public string TranscriptPath => Running ? _settings.FileName ?? string.Empty : string.Empty;
 
   public void RunToCompletion()
   {
