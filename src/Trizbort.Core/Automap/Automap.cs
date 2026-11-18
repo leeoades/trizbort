@@ -2563,6 +2563,7 @@ public sealed class Automap : IAutomapController
   {
     _canvas = canvas;
     _settings = settings;
+    _canvas.BeginRun();
     _canvas.MakeSpaceForNewRooms = settings.AutoTidy;
     _canvas.AbbreviateDirections = settings.AbbreviateDirections;
     _seenCommand = false;

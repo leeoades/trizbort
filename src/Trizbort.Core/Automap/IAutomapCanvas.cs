@@ -62,6 +62,14 @@ public interface IAutomapCanvas
   void TidyAround(Room room);
 
   /// <summary>
+  ///   Automap is starting on the map as it is now (perhaps a map laid out already): the tidy after each move compares
+  ///   the layout with this one, rather than with an empty map, so walking around it leaves it alone.
+  /// </summary>
+  void BeginRun()
+  {
+  }
+
+  /// <summary>
   ///   <see cref="TidyAround" />, letting the window carry on (drawing the move, answering clicks) while the tidy is
   ///   worked out. Automap waits for it before the next move.
   /// </summary>

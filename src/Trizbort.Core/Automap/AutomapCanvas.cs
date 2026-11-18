@@ -669,6 +669,19 @@ public class AutomapCanvas : IAutomapCanvas
   private string _tidiedMap;
 
   /// <summary>
+  ///   Takes the map as it is when automap starts as the layout to compare with: a map laid out already (by hand, or by
+  ///   an earlier run) isn't "worse" than an empty one, nor has it just grown, so the first moves don't lay it out
+  ///   again, and walking around rooms automap knows leaves it as it is.
+  /// </summary>
+  public void BeginRun()
+  {
+    var elements = CurrentProject.Elements.ToList();
+    _problems = LayoutTidy.Problems(elements);
+    _sizeAtRethink = elements.Count(element => element is Room || element is Connection);
+    _tidiedMap = elements.Count == 0 ? null : MapShape();
+  }
+
+  /// <summary>
   ///   Tidies the map after a move, there and then (see <see cref="PlanTidyAround" /> and
   ///   <see cref="FinishTidyAround" />, which the app uses to work the tidy out away from the window).
   /// </summary>
