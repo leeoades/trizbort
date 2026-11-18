@@ -1111,7 +1111,7 @@ If parts of the map are joined to the rest only through the rooms you're moving 
 
 **Dark rooms.** A heading that says it's too dark to see ("Darkness", "It is pitch black") isn't mapped as a room. When you light the lamp, the room you then see is mapped as reached the way you came in, and marked Dark.
 
-**Merging rooms.** If a place has ended up on the map twice, select both rooms, the one to keep last, and choose `Edit->Rooms->Merge Rooms`. The other room's joins, descriptions and objects move onto the one you keep. To tidy a whole map, or just the rooms you've selected, choose `Edit->Rooms->Tidy Map...`: **step by step** keeps the map familiar, and the **solver** lays everything out again. The rooms slide to their new places. Tidy Map can be undone in one step.
+**Merging rooms.** If a place has ended up on the map twice, select both rooms, the one to keep last, and choose `Edit->Rooms->Merge Rooms`. The other room's joins, descriptions and objects move onto the one you keep. If each room had one half of a way there and back (`enter fireplace` from the Living Room into one Fireplace, east out of the other back into the Living Room), the two become one join, with each way at its own end. To tidy a whole map, or just the rooms you've selected, choose `Edit->Rooms->Tidy Map...`: **step by step** keeps the map familiar, and the **solver** lays everything out again. The rooms slide to their new places. Tidy Map can be undone in one step.
 
 <a name="help_automap_tips_rearranging"></a>
 
