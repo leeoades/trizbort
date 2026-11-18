@@ -20,6 +20,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- Join Properties name the room above each end's box, and Start is always the room on the left (or the upper one,
+  when they're more one above the other), whichever end the join was drawn from. With One Way Arrow ticked, it says
+  which way the arrow points ("from Garden to Hall").
 - Shift-click adds to the selection and Ctrl-click (Cmd-click on macOS) takes away from it; a marquee does the same.
   Before, Ctrl added and Shift toggled. While you hold Shift the pointer shows a +, and while you hold Ctrl a −.
 - The directions stop when you arrive: the route stops glowing and Stop reads Go again. Asking for directions to

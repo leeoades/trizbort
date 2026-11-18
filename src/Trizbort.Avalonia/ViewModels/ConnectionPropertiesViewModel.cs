@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Trizbort.Domain.Elements;
@@ -38,7 +39,29 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     private bool _updatingPreset;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(OneWayNote))]
     private bool _isDirectional;
+
+    /// <summary>The room above the Start box: the one on the left, or the upper one when they're one above the other.</summary>
+    [ObservableProperty]
+    private string _startRoomName = string.Empty;
+
+    /// <summary>The room above the End box.</summary>
+    [ObservableProperty]
+    private string _endRoomName = string.Empty;
+
+    private string _fromRoom = string.Empty;
+    private string _toRoom = string.Empty;
+
+    /// <summary>Which way the arrow points, beside One Way Arrow while it's ticked.</summary>
+    public string OneWayNote =>
+        IsDirectional && (_fromRoom.Length > 0 || _toRoom.Length > 0) ? $"from {_fromRoom} to {_toRoom}" : string.Empty;
+
+    /// <summary>
+    ///   Whether the boxes show the join the other way round from how it's stored: Start is always the room on the
+    ///   left (or above), whichever end the join was drawn from.
+    /// </summary>
+    public bool ShownTheOtherWay { get; private set; }
 
     [ObservableProperty]
     private bool _isDotted;
@@ -65,13 +88,22 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     {
         ConnectionName = connection.Name ?? string.Empty;
         ConnectionDescription = connection.Description ?? string.Empty;
+        var startRoom = connection.GetSourceRoom();
+        var endRoom = connection.GetTargetRoom();
+        ShownTheOtherWay = IsTheOtherWay(startRoom, endRoom);
+        _fromRoom = NameOf(startRoom);
+        _toRoom = NameOf(endRoom);
+        StartRoomName = ShownTheOtherWay ? _toRoom : _fromRoom;
+        EndRoomName = ShownTheOtherWay ? _fromRoom : _toRoom;
         // an end with no label shows the direction its side gives it ("east" on the right of a room), so it can be
         // seen, and changed; left as it is, it stays hidden on the map
-        _startSide = ConnectionEndLabels.SideDirection(connection, true);
-        _endSide = ConnectionEndLabels.SideDirection(connection, false);
-        StartText = Shown(connection.StartText, _startSide);
+        var startSide = ConnectionEndLabels.SideDirection(connection, true);
+        var endSide = ConnectionEndLabels.SideDirection(connection, false);
+        _startSide = ShownTheOtherWay ? endSide : startSide;
+        _endSide = ShownTheOtherWay ? startSide : endSide;
+        StartText = Shown(ShownTheOtherWay ? connection.EndText : connection.StartText, _startSide);
         MidText = connection.MidText ?? string.Empty;
-        EndText = Shown(connection.EndText, _endSide);
+        EndText = Shown(ShownTheOtherWay ? connection.StartText : connection.EndText, _endSide);
         SelectedPreset = MatchPreset();
         IsDirectional = connection.Flow == ConnectionFlow.OneWay;
         IsDotted = connection.Style == ConnectionStyle.Dashed;
@@ -99,9 +131,11 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     {
         connection.Name = ConnectionName;
         connection.Description = ConnectionDescription;
-        connection.StartText = Stored(StartText, _startSide);
+        var left = Stored(StartText, _startSide);
+        var right = Stored(EndText, _endSide);
+        connection.StartText = ShownTheOtherWay ? right : left;
         connection.MidText = MidText;
-        connection.EndText = Stored(EndText, _endSide);
+        connection.EndText = ShownTheOtherWay ? left : right;
 
         connection.Flow = IsDirectional ? ConnectionFlow.OneWay : ConnectionFlow.TwoWay;
         connection.Style = IsDotted ? ConnectionStyle.Dashed : ConnectionStyle.Solid;
@@ -126,6 +160,20 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
 
     private MappableDirection? _startSide;
     private MappableDirection? _endSide;
+
+    private static string NameOf(Room? room) => room == null ? string.Empty : room.Name ?? string.Empty;
+
+    /// <summary>
+    ///   Whether the join's end room is to the left of its start room, or above it when the two are more one above
+    ///   the other than side by side.
+    /// </summary>
+    private static bool IsTheOtherWay(Room? start, Room? end)
+    {
+        if (start == null || end == null || start == end) return false;
+        var dx = end.InnerBounds.Center.X - start.InnerBounds.Center.X;
+        var dy = end.InnerBounds.Center.Y - start.InnerBounds.Center.Y;
+        return Math.Abs(dx) >= Math.Abs(dy) ? dx < 0 : dy < 0;
+    }
 
     private static string Shown(string label, MappableDirection? side) =>
         string.IsNullOrEmpty(label) && side != null ? DirectionWords.Word(side.Value) : label ?? string.Empty;
