@@ -89,8 +89,9 @@
                             <Button x:Name="CentreButton" Content="Centre on Current Room"
                                     Command="{Binding GoToAutomapRoomCommand}"
                                     ToolTip.Tip="Select the room automap thinks you're in, and glide the map to it" />
-                            <!-- the room you're in isn't on the map (you cancelled the question about it) -->
+                            <!-- the room you're in isn't on the map: only then -->
                             <Button x:Name="AddRoomButton" Content="Add Current Room"
+                                    IsVisible="{Binding CanAddAutomapRoom}"
                                     Command="{Binding AddAutomapRoomCommand}"
                                     ToolTip.Tip="Put the room you're in on the map, beside the room you came from, and map on from there" />
                         </StackPanel>

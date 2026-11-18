@@ -331,9 +331,6 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
     /// <summary>Routes the confirmation prompt of a dialog to a modal yes/no box owned by that dialog.</summary>
     private sealed class DialogConfirmPrompts(IDialogService dialogService, Window dialog) : Trizbort.Editor.IEditorPrompts
     {
-        public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, CancellationToken token = default)
-            => Trizbort.Editor.NonInteractiveEditorPrompts.Instance.ChooseSameDirectionAsync(existing, newRoomName, token);
-
         public Task<Trizbort.Editor.RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, CancellationToken token = default)
             => Trizbort.Editor.NonInteractiveEditorPrompts.Instance.DisambiguateRoomAsync(transcriptLine, roomDescription, candidates, token);
 

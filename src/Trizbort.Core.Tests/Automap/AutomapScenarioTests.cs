@@ -160,7 +160,8 @@ public class AutomapScenarioTests : IsolatedProjectTests
   private static AutomapSettings LoadSettings(
     string folder, out AutomapSameDirectionResult sameDirectionAnswer, out bool whichRoomByDescription)
   {
-    sameDirectionAnswer = AutomapSameDirectionResult.KeepRoom1;
+    // as the app does: keep both, side by side, without asking
+    sameDirectionAnswer = AutomapSameDirectionResult.SamePlace;
     whichRoomByDescription = false;
     object settings = AutomapSettings.Default;
     var path = Path.Combine(folder, SettingsFile);
