@@ -1809,13 +1809,13 @@ room|id=18|z=0|name=Rounded|subtitle=|pos=480,64|size=416,64|shape=RoundedCorner
 room|id=20|z=0|name=Darkness and Shape Test|subtitle=|pos=-160,-480|size=1056,96|shape=SquareCorners|corners=15,15,15,15|borderStyle=Solid|region=NoRegion|flags=|fill=#00FFFFFF|second=#00FFFFFF@Bottom|border=#00FFFFFF|nameColor=#00FFFFFF|subtitleColor=#00FFFFFF|objectColor=#00FFFFFF|objectsPos=WestSouthWest|objectsCustom=no:0:0|descriptions=|objects=This document tests darkness inside shapes. The upper right tab should be visible in all of them.
 connection|id=3|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=1:e:-64,-288>2:w:0,-288|curve=-64,-288>-32,-288;-32,-288>-32,-288;-32,-288>0,-288
 connection|id=5|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=2:e:96,-288>4:w:160,-288|curve=96,-288>128,-288;128,-288>128,-288;128,-288>160,-288
-connection|id=7|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=4:e:256,-288>6:w:320,-288|curve=256,-288>288,-288;288,-288>288,-288;288,-288>320,-288
+connection|id=7|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=4:e:256,-288>6:w:320,-288|curve=256,-288>288,-288;288,-288>336,-288;336,-288>288,-288;288,-288>320,-288
 connection|id=12|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=1:s:-112,-256>8:n:-112,-192|curve=-112,-256>-112,-224;-112,-224>-112,-224;-112,-224>-112,-192
 connection|id=13|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=8:e:-64,-32>9:w:0,-32|curve=-64,-32>-32,-32;-32,-32>-32,-32;-32,-32>0,-32
 connection|id=14|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=9:e:96,-32>10:w:160,-32|curve=96,-32>128,-32;128,-32>128,-32;128,-32>160,-32
 connection|id=19|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=15:s:688,-256>16:n:688,-192|curve=688,-256>688,-224;688,-224>688,-224;688,-224>688,-192
 connection|id=21|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=10:e:256,-32>11:w:320,-32|curve=256,-32>288,-32;288,-32>288,-32;288,-32>320,-32
-connection|id=22|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=15:w:480,-288>4:e:256,-288|curve=480,-288>448,-288;448,-288>288,-288;288,-288>256,-288
+connection|id=22|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=15:w:480,-288>4:e:256,-288|curve=480,-288>448,-288;448,-288>336,-288;336,-288>288,-288;288,-288>256,-288
 connection|id=23|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=6:s:368,-256>11:n:368,-192|curve=368,-256>368,-224;368,-224>368,-224;368,-224>368,-192
 connection|id=25|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=16:s:688,-128>17:n:688,-64|curve=688,-128>688,-96;688,-96>688,-96;688,-96>688,-64
 connection|id=26|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=17:s:688,0>18:n:688,64|curve=688,0>688,32;688,32>688,32;688,32>688,64
@@ -2702,7 +2702,7 @@ room|id=19|z=0|name=Rounded Wide|subtitle=|pos=-608,-224|size=384,64|shape=Round
 room|id=21|z=0|name=Plain Wide|subtitle=|pos=-608,-96|size=384,64|shape=SquareCorners|corners=15,15,15,15|borderStyle=Solid|region=NoRegion|flags=|fill=#00FFFFFF|second=#00FFFFFF@Bottom|border=#00FFFFFF|nameColor=#00FFFFFF|subtitleColor=#00FFFFFF|objectColor=#00FFFFFF|objectsPos=South|objectsCustom=no:0:0|descriptions=|objects=
 room|id=29|z=0|name=Cave|subtitle=|pos=-512,-640|size=832,96|shape=SquareCorners|corners=15,15,15,15|borderStyle=Solid|region=NoRegion|flags=|fill=#00FFFFFF|second=#00FFFFFF@Bottom|border=#00FFFFFF|nameColor=#00FFFFFF|subtitleColor=#00FFFFFF|objectColor=#00FFFFFF|objectsPos=WestSouthWest|objectsCustom=no:0:0|descriptions=|objects=Start at Octagonal Wide and control-arrow your way around. Be sure the squares in the corners look reasonable. Then highlight the canvas and hover over each\r\nShape. Be sure the connector ports are well spaced.
 connection|id=3|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=1:n:-112,-96>2:s:-112,-160|curve=-112,-96>-112,-128;-112,-128>-112,-128;-112,-128>-112,-160
-connection|id=5|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=1:e:-64,-64>4:w:0,-64|curve=-64,-64>-32,-64;-32,-64>-32,-64;-32,-64>0,-64
+connection|id=5|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=1:e:-64,-64>4:w:0,-64|curve=-64,-64>-32,-64;-32,-64>-80,-64;-80,-64>-32,-64;-32,-64>0,-64
 connection|id=7|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=4:n:48,-96>6:s:48,-160|curve=48,-96>48,-128;48,-128>48,-128;48,-128>48,-160
 connection|id=9|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=4:e:96,-64>8:w:160,-64|curve=96,-64>128,-64;128,-64>128,-64;128,-64>160,-64
 connection|id=11|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=8:n:208,-96>10:s:208,-160|curve=208,-96>208,-128;208,-128>208,-128;208,-128>208,-160
@@ -2711,11 +2711,11 @@ connection|id=15|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door
 connection|id=18|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=16:s:-416,-416>17:n:-416,-352|curve=-416,-416>-416,-384;-416,-384>-416,-384;-416,-384>-416,-352
 connection|id=20|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=17:s:-416,-288>19:n:-416,-224|curve=-416,-288>-416,-256;-416,-256>-416,-256;-416,-256>-416,-224
 connection|id=22|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=19:s:-416,-160>21:n:-416,-96|curve=-416,-160>-416,-128;-416,-128>-416,-128;-416,-128>-416,-96
-connection|id=23|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=21:e:-224,-64>4:w:0,-64|curve=-224,-64>-192,-64;-192,-64>-32,-64;-32,-64>0,-64
+connection|id=23|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=21:e:-224,-64>4:w:0,-64|curve=-224,-64>-192,-64;-192,-64>-144,-64;-144,-64>-32,-64;-32,-64>0,-64
 connection|id=24|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=10:w:160,-320>6:e:96,-320|curve=160,-320>128,-320;128,-320>128,-320;128,-320>96,-320
 connection|id=25|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=10:e:256,-320>14:w:320,-320|curve=256,-320>288,-320;288,-320>288,-320;288,-320>320,-320
 connection|id=26|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=6:w:0,-320>2:e:-64,-320|curve=0,-320>-32,-320;-32,-320>-32,-320;-32,-320>-64,-320
-connection|id=27|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=1:w:-160,-64>21:e:-224,-64|curve=-160,-64>-192,-64;-192,-64>-192,-64;-192,-64>-224,-64
+connection|id=27|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=1:w:-160,-64>21:e:-224,-64|curve=-160,-64>-192,-64;-192,-64>-144,-64;-144,-64>-192,-64;-192,-64>-224,-64
 connection|id=28|z=0|name=|style=Solid|flow=TwoWay|color=#00FFFFFF|texts=,,|door=none|vertices=2:w:-160,-320>17:e:-224,-320|curve=-160,-320>-192,-320;-192,-320>-192,-320;-192,-320>-224,-320
 
 ## manual-room-swap.trizbort

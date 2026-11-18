@@ -205,12 +205,9 @@ Maze #5 is on the join Maze #3 - Maze #9
 Maze #5 is on the join Maze #4 - Maze #10
 Maze #5 is on the join Maze #4 - Maze #7
 Maze #5 is on the join Maze #6 - Maze #4
-Maze #6 is on the join Maze #2 - Maze #8
+Maze #6 is on the join Maze #11 - Maze #8
 Maze #6 is on the join Maze #3 - Maze #9
 Maze #6 is on the join Maze #4 - Maze #7
-Maze #6 is on the join Maze #5 - Maze #8
 Maze #6 is on the join Maze #7 - Maze #11
 Maze #6 is on the join Maze #7 - Maze #5
 Maze #7 is on the join Maze #11 - Maze #8
-Maze #7 is on the join Maze #2 - Maze #8
-Maze #9 is on the join Maze #10 - Maze #8

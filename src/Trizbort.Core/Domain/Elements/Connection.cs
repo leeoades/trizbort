@@ -880,6 +880,10 @@ public class Connection : Element
 
     if (HasCurveWaypoints) return GetCurvedSegments(out _);
 
+    // one of several joins the same way out of the same side of a room: drawn as one, forking near the rooms
+    var fork = ForkedJoins.Find(this);
+    if (fork != null) return ForkedJoins.Segments(this, fork);
+
     var list = new List<LineSegment>();
     for (var index = 0; index < VertexList.Count - 1; ++index)
     {
