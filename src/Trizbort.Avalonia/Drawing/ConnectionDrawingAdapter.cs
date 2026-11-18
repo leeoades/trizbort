@@ -139,8 +139,16 @@ public static class ConnectionDrawingAdapter
                 var segsHash = ComputeSegmentsHash(segments);
                 if (!conn.HasCurveWaypoints || conn.IsDrawnSplit)
                 {
+                    var fork = OthersTrunk(conn);
                     foreach (var seg in segments)
                     {
+                        // the shared part of a fork, drawn by another join: kept whole, and not a line to cross
+                        if (fork != null && ForkedJoins.OnTrunk(fork, seg))
+                        {
+                            cache.SmartSegments.Add(seg);
+                            continue;
+                        }
+
                         var split = SplitSegment(seg, spatialIndex);
                         cache.SmartSegments.AddRange(split);
                         foreach (var s in split)
@@ -159,6 +167,13 @@ public static class ConnectionDrawingAdapter
                 cache.LinesDrawnVersion = spatialVersion;
             }
         }
+    }
+
+    /// <summary>The fork a join is part of, when another join in it draws the shared part (and its label).</summary>
+    private static ForkedJoins.Fork? OthersTrunk(Connection connection)
+    {
+        var fork = ForkedJoins.Find(connection);
+        return fork is { DrawsTrunk: false } ? fork : null;
     }
 
     internal static IReadOnlyList<CoreLineSegment> GetCachedSmartSegments(Connection connection, int spatialVersion)
@@ -307,8 +322,15 @@ public static class ConnectionDrawingAdapter
                         }
                         else
                         {
+                            var fork = OthersTrunk(connection);
                             foreach (var seg in segments)
                             {
+                                if (fork != null && ForkedJoins.OnTrunk(fork, seg))
+                                {
+                                    activeSegments.Add(seg);
+                                    continue;
+                                }
+
                                 var splitSegs = SplitSegment(seg, spatialIndex);
                                 activeSegments.AddRange(splitSegs);
                             }
@@ -326,8 +348,24 @@ public static class ConnectionDrawingAdapter
                 }
             }
 
+            // in a fork, one join draws the shared part out of the room; the others draw only from where they part
+            // (and its highlight, when selected)
+            var othersTrunk = OthersTrunk(connection);
             foreach (var seg in activeSegments)
             {
+                if (othersTrunk != null && ForkedJoins.OnTrunk(othersTrunk, seg))
+                {
+                    if (isSelected || isHover)
+                    {
+                        var highlight = isSelected
+                            ? HighlightPen(CoreColors.SelectedLine, 1.5, connection.Style)
+                            : HighlightPen(CoreColors.HoverLine, 1.0, connection.Style);
+                        context.DrawLine(highlight, seg.Start.ToAvaloniaPoint(), seg.End.ToAvaloniaPoint());
+                    }
+
+                    continue;
+                }
+
                 if (handDrawn)
                 {
                     var stroke = Sketch.Line(seg.Start, seg.End, Sketch.Seeded(seed));
@@ -745,8 +783,10 @@ public static class ConnectionDrawingAdapter
             cache.CachedEndText = null;
         }
 
-        // an end with no label of its own may show its direction ("ne"), as the map settings say
-        var startText = ConnectionEndLabels.Text(connection, true);
+        // an end with no label of its own may show its direction ("ne"), as the map settings say; the shared end
+        // of a fork is labelled once, by the join that draws the shared part
+        var othersTrunk = OthersTrunk(connection);
+        var startText = othersTrunk is { AtStart: true } ? null : ConnectionEndLabels.Text(connection, true);
         if (!string.IsNullOrEmpty(startText))
         {
             if (cache.LastStartText != startText || cache.CachedStartText == null)
@@ -758,7 +798,7 @@ public static class ConnectionDrawingAdapter
             DrawSingleAnnotation(context, startText, segments[0], font, typeface, brush, true, startVertex, ref cache.CachedStartText, connection);
         }
 
-        var endText = ConnectionEndLabels.Text(connection, false);
+        var endText = othersTrunk is { AtStart: false } ? null : ConnectionEndLabels.Text(connection, false);
         if (!string.IsNullOrEmpty(endText))
         {
             if (cache.LastEndText != endText || cache.CachedEndText == null)

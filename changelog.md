@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- Joins that go the same way out of the same side of a room to different rooms ("enter closet" from the Foyer, to the
+  Closet and to the Top of Closet) are drawn as one join out of that room, with one label, forking near the rooms
+  they lead to. They're still separate joins: only the drawing changes.
 - **Add Current Room** shows on the automap panel only when you're somewhere not on the map.
 - Drag a split join's label ("to Debris Room") to move it. The stub runs on to it, drawn as any join is, and it keeps
   its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
