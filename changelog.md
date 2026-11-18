@@ -39,6 +39,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   as you placed them against each other, side by side or with a join across one, rather than counting as clutter
   that the tidy pushed the whole map aside to clear; and automap starts from the map as it is, so the first moves
   don't lay out a map that was laid out already.
+- Merge Rooms joins a way there and a way back that each of the merged rooms had one of: `enter fireplace` from the
+  Living Room into one Fireplace, and east out of the other back into the Living Room, become one join, with
+  `enter fireplace` at the Living Room end and east at the Fireplace end, instead of two one-way joins.
 - A command on a join that the game refused ("The closet door is closed.") no longer moves you along the join. With
   no room name in the reply, automap only moves you inside a room that moves; anywhere else you're still where you
   were, so the next move is mapped from there (not from the closet, making a Top of Closet off it).
