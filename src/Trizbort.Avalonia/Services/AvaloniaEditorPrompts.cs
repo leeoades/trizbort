@@ -126,7 +126,8 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
                 transcriptLine, roomDescription, candidates);
         }
 
-        var viewModel = new DisambiguateRoomsViewModel(transcriptLine, roomDescription, candidates);
+        var trackingOnly = global::Trizbort.Automap.Automap.Instance.Suspended;
+        var viewModel = new DisambiguateRoomsViewModel(transcriptLine, roomDescription, candidates, trackingOnly);
         var pickedOnMap = false;
         Action<Room>? onMapPick = null;
         // the room picked is shown on the map behind the dialog, with the rooms around it; the view and selection
@@ -166,11 +167,12 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
                 Trizbort.Domain.Misc.Vector centre;
                 if (room == null)
                 {
-                    // a new room: shown faintly where automap would put it (else the room the player came from)
+                    // a new room: shown faintly where automap would put it (else the room the player came from).
+                    // Tracking only, nothing is added, so there's no outline
                     Trizbort.Domain.Misc.Rect? where = null;
                     try
                     {
-                        where = global::Trizbort.Automap.Automap.Instance.NewRoomPreview();
+                        if (!trackingOnly) where = global::Trizbort.Automap.Automap.Instance.NewRoomPreview();
                     }
                     catch (Exception)
                     {
@@ -201,7 +203,8 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
                 session.Viewport.GlideTo(new Trizbort.Domain.Misc.Vector(centre.X + visible.Width / 5, centre.Y));
                 session.Invalidate(EditorChange.Adorners);
             };
-            viewModel.Preview(viewModel.Selected?.Room);
+            // nothing picked yet (several rooms): nothing shown until one is
+            if (viewModel.Selected != null) viewModel.Preview(viewModel.Selected.Room);
         }
 
         var dialog = new DisambiguateRoomsDialog { DataContext = viewModel };
@@ -240,6 +243,8 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
             if (onMapPick != null) MapCanvasControl.RoomPicked -= onMapPick;
             MapCanvasControl.ViewOnly = false;
             MapCanvasControl.GhostRoom = null;
+            // the outline of a new room goes as the dialog does, not at the next click on the map
+            session?.Invalidate(EditorChange.Adorners);
             if (session != null && origin != null)
             {
                 session.Selection.Set(selection!.Where(element => session.Project.Elements.Contains(element)).ToList());

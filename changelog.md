@@ -50,6 +50,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 - The room dialog's tick boxes under **Reference** wrap onto a second line in a narrow window,
   instead of cutting off **Don't automap from here**.
+- **Which room does it mean?** shows nothing on the map until a room is picked: before, it showed the outline of a new room with none picked. The outline goes when the question is answered, not at the next click on the map.
+- While automap is **Tracking only**, **Which room does it mean?** offers **<Somewhere not on the map>** instead of **<Add a new room>**, with no outline, and says to switch to **Mapping** to add a room. Before, it offered a new room that tracking only never added.
 - Without the game's descriptions (not a verbose transcript), going a way the map doesn't show into one of several rooms with the same name (a maze of rooms all alike) asks which room it is. Before, automap took the first room with that name on the map without asking, and joined the room you left to it.
 - In a maze of rooms all alike (every room "Maze", with the same description), **Tracking only** follows the map,
   as mapping does: the way you went from the room you're in says which room you're in now. Before, it stayed in the

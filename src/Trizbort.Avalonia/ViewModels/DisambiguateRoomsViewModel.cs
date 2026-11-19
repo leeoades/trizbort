@@ -25,11 +25,16 @@ public class DisambiguateRoomsViewModel : ViewModelBase
 {
     public const string NewRoomName = "<Add a new room>";
 
+    /// <summary>The new-room line while tracking only: nothing is added to the map.</summary>
+    public const string NotOnTheMapName = "<Somewhere not on the map>";
+
     private DisambiguationChoice? _selected;
     private bool _dontAskAgain;
 
-    public DisambiguateRoomsViewModel(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates)
+    public DisambiguateRoomsViewModel(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates,
+        bool trackingOnly = false)
     {
+        TrackingOnly = trackingOnly;
         Candidates = candidates;
         ContextText = BuildContext(transcriptLine, roomDescription);
         var description = Normalise(roomDescription).Trim();
@@ -38,7 +43,7 @@ public class DisambiguateRoomsViewModel : ViewModelBase
         Choices = candidates
             .Select(room => new DisambiguationChoice(room.Name, room.PrimaryDescription ?? string.Empty, room,
                 tells.TryGetValue(room, out var tell) ? tell : string.Empty))
-            .Append(new DisambiguationChoice(NewRoomName,
+            .Append(new DisambiguationChoice(trackingOnly ? NotOnTheMapName : NewRoomName,
                 description.Length == 0 ? "(The transcript doesn't describe it.)" : description, null))
             .ToList();
         OkCommand = new RelayCommand(ChooseSelected, () => _selected != null);
@@ -49,9 +54,15 @@ public class DisambiguateRoomsViewModel : ViewModelBase
         }
     }
 
-    public string IntroText =>
-        "Trizbort isn't sure which room the transcript means. Several rooms have this name, or the room's " +
-        "description has changed during play. Pick the room it is, or add a new room.";
+    public string IntroText => TrackingOnly
+        ? "Trizbort isn't sure which room the transcript means. Several rooms have this name, or the room's " +
+          "description has changed during play. Pick the room it is. Automap is tracking only, so it adds nothing " +
+          "to the map: to add a room, switch to Mapping on the automap panel first."
+        : "Trizbort isn't sure which room the transcript means. Several rooms have this name, or the room's " +
+          "description has changed during play. Pick the room it is, or add a new room.";
+
+    /// <summary>Automap is tracking only (not mapping): a room not on the map isn't added.</summary>
+    public bool TrackingOnly { get; }
 
     public IReadOnlyList<Room> Candidates { get; }
 
