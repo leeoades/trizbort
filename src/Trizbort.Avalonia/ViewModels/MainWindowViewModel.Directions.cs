@@ -10,11 +10,19 @@ using AutomapEngine = Trizbort.Automap.Automap;
 namespace Trizbort.Avalonia.ViewModels;
 
 /// <summary>One step in the directions panel: "3. north", and where it leads.</summary>
-public sealed record DirectionStepItem(int Number, string Command, Room To, bool Assumed)
+public sealed record DirectionStepItem(int Number, string Command, Room To, bool Assumed, RouteStep? Step = null)
 {
     public string Text => $"{Number}. {Command}";
 
     public string Where => "to " + To.Name + (Assumed ? " (assumed: nobody has gone this way yet)" : string.Empty);
+}
+
+/// <summary>A way the directions avoid: "plover", from the Plover Room, with Allow to take it again.</summary>
+public sealed record AvoidedWayItem(RouteStep Step)
+{
+    public string Text => Step.Command;
+
+    public string Where => $"from {Step.From.Name} to {Step.To.Name}";
 }
 
 public partial class MainWindowViewModel
@@ -47,6 +55,13 @@ public partial class MainWindowViewModel
 
     /// <summary>The commands to type, in order.</summary>
     public ObservableCollection<DirectionStepItem> DirectionsSteps { get; } = new();
+
+    /// <summary>The ways the directions go round (Avoid This Route on a step).</summary>
+    public ObservableCollection<AvoidedWayItem> DirectionsAvoiding { get; } = new();
+
+    /// <summary>There are ways being avoided.</summary>
+    [ObservableProperty]
+    private bool _isAvoidingWays;
 
     /// <summary>Go: there's a room to start from and one to go to; Stop: there are directions showing.</summary>
     public bool CanGoDirections => _canGoDirections || _showingDirections;
@@ -92,8 +107,11 @@ public partial class MainWindowViewModel
         DirectionsSteps.Clear();
         var number = 1;
         foreach (var step in directions.Steps)
-            DirectionsSteps.Add(new DirectionStepItem(number++, step.Command, step.To, step.Assumed));
+            DirectionsSteps.Add(new DirectionStepItem(number++, step.Command, step.To, step.Assumed, step));
         HasDirectionsSteps = DirectionsSteps.Count > 0;
+        DirectionsAvoiding.Clear();
+        foreach (var avoided in directions.Avoiding) DirectionsAvoiding.Add(new AvoidedWayItem(avoided));
+        IsAvoidingWays = DirectionsAvoiding.Count > 0;
         // the route glows blue on the map while the directions are open
         var glow = directions.IsOpen && directions.Steps.Count > 0 ? directions.Steps : null;
         if (!ReferenceEquals(glow, Trizbort.Avalonia.Drawing.RouteGlow.Route))
@@ -151,6 +169,15 @@ public partial class MainWindowViewModel
     /// <summary>From Where You Are: start from the room automap has the player in, and follow them.</summary>
     [RelayCommand(CanExecute = nameof(CanNavigateFromWhereYouAre))]
     public void DirectionsFromWhereYouAre() => Directions?.FromHere(AutomapEngine.Instance.CurrentRoom);
+
+    /// <summary>Avoid This Route (a step's right-click menu): the directions go round it.</summary>
+    public void AvoidDirectionStep(DirectionStepItem step)
+    {
+        if (step.Step != null) Directions?.Avoid(step.Step);
+    }
+
+    /// <summary>Allow a way avoided again.</summary>
+    public void AllowAvoidedWay(AvoidedWayItem way) => Directions?.Allow(way.Step);
 
     /// <summary>Clicking a step: select the room it leads to, and glide the map there.</summary>
     public void ShowDirectionStep(DirectionStepItem step)
