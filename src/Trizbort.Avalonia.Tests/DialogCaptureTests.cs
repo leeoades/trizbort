@@ -139,14 +139,17 @@ public class DialogCaptureTests
             automapVm.Initialize(ApplicationSettingsController.AppSettings.Automap);
             CaptureDialog(output, files, "AutomapSettings", new AutomapSettingsDialog { DataContext = automapVm });
 
-            var hallOne = new Room(project) { Name = "Hall" };
-            hallOne.AddDescription("A long hall with portraits.");
-            var hallTwo = new Room(project) { Name = "Hall" };
-            hallTwo.AddDescription("A hall with a spiral staircase.");
-            CaptureDialog(output, files, "DisambiguateRooms", new DisambiguateRoomsDialog
-            {
-                DataContext = new DisambiguateRoomsViewModel("Hall", "A hall with a staircase.", new[] { hallOne, hallTwo })
-            });
+            // a maze of rooms all alike: the subtitle and the objects tell them apart, the description is beside the list
+            const string alike = "You are in a maze of twisty little passages, all alike.";
+            var mazeOne = new Room(project) { Name = "Maze", Objects = "black rod" };
+            mazeOne.AddDescription(alike);
+            var mazeTwo = new Room(project) { Name = "Maze", SubTitle = "by the pit", Objects = "bird\ncage" };
+            mazeTwo.AddDescription(alike);
+            var mazeThree = new Room(project) { Name = "Maze" };
+            mazeThree.AddDescription(alike);
+            var mazeVm = new DisambiguateRoomsViewModel("Maze", alike, new[] { mazeOne, mazeTwo, mazeThree });
+            mazeVm.Selected = mazeVm.Choices[1];
+            CaptureDialog(output, files, "DisambiguateRooms", new DisambiguateRoomsDialog { DataContext = mazeVm });
         }
 
         CaptureDialog(output, files, "About", new AboutDialog());

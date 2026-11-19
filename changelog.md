@@ -14,8 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
-- **Which room does it mean?** shows, under each room's name, what tells it apart from the others with that name: its
-  subtitle, its description, the objects in it, or the ways out of it and where they lead. In a maze of rooms all alike
+- **Which room does it mean?** shows, under each room's name, its subtitle and, after a small box, the objects in it;
+  when those don't tell it apart from another with that name, the ways out of it and where they lead. The description
+  is shown beside the list, not in it. In a maze of rooms all alike
   the list no longer reads "Maze", "Maze", "Maze".
 - **Which room does it mean?** lists the objects in the room picked under its description.
 - Clicking one of the rooms asked about on the map, while **Which room does it mean?** is open, picks it in the list.

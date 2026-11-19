@@ -6,14 +6,26 @@ namespace Trizbort.Avalonia.ViewModels;
 
 /// <summary>
 ///     One line in the "which room?" list: a room on the map, or the new room the transcript may be showing
-///     (<see cref="Room" /> null), with the description to compare.
+///     (<see cref="Room" /> null), with the description to compare (shown beside the list, not in it). Under the name:
+///     the room's subtitle, the objects in it, and, when those don't tell it from another room with its name, the
+///     ways out of it (<see cref="Detail" />).
 /// </summary>
-public sealed record DisambiguationChoice(string Name, string Description, Room? Room, string Detail = "")
+public sealed record DisambiguationChoice(
+    string Name,
+    string Description,
+    Room? Room,
+    string Detail = "",
+    string Subtitle = "",
+    string Objects = "")
 {
     public bool IsNewRoom => Room == null;
 
-    /// <summary>Whether there's anything telling this room apart from the others with its name.</summary>
+    /// <summary>Whether the ways out tell this room apart from another with its name, its subtitle and objects.</summary>
     public bool HasDetail => !string.IsNullOrEmpty(Detail);
+
+    public bool HasSubtitle => !string.IsNullOrEmpty(Subtitle);
+
+    public bool HasObjects => !string.IsNullOrEmpty(Objects);
 }
 
 /// <summary>
@@ -38,11 +50,13 @@ public class DisambiguateRoomsViewModel : ViewModelBase
         Candidates = candidates;
         ContextText = BuildContext(transcriptLine, roomDescription);
         var description = Normalise(roomDescription).Trim();
-        // rooms with one name (a maze of rooms all alike): each with what tells it apart from the others
-        var tells = Trizbort.Automap.RoomTells.Apart(candidates);
+        // rooms with one name (a maze of rooms all alike): each with its subtitle and objects, and the ways out when
+        // those don't tell it apart from the others
+        var ways = Trizbort.Automap.RoomTells.WaysApart(candidates);
         Choices = candidates
             .Select(room => new DisambiguationChoice(room.Name, room.PrimaryDescription ?? string.Empty, room,
-                tells.TryGetValue(room, out var tell) ? tell : string.Empty))
+                ways.TryGetValue(room, out var way) ? way : string.Empty,
+                room.SubTitle?.Trim() ?? string.Empty, Trizbort.Automap.RoomTells.ObjectList(room)))
             .Append(new DisambiguationChoice(trackingOnly ? NotOnTheMapName : NewRoomName,
                 description.Length == 0 ? "(The transcript doesn't describe it.)" : description, null))
             .ToList();

@@ -25,9 +25,21 @@
                      SelectedItem="{Binding Selected}">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:DisambiguationChoice">
-                        <!-- the name, and what tells the room apart from the others with it (its objects, its ways) -->
+                        <!-- the name, its subtitle, the objects in it (after a box), and the ways out when those
+                             don't tell it apart; the description is beside the list, not in it -->
                         <StackPanel Spacing="1">
                             <TextBlock Text="{Binding Name}" FontStyle="{Binding IsNewRoom, Converter={x:Static vm:DisambiguationChoiceStyle.Italic}}" />
+                            <TextBlock Text="{Binding Subtitle}" IsVisible="{Binding HasSubtitle}" FontSize="11" Opacity="0.75"
+                                       TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding HasObjects}"
+                                        ToolTip.Tip="Objects in the room">
+                                <Path Width="11" Height="11" Stretch="Uniform" VerticalAlignment="Center"
+                                      Stroke="{Binding $parent[ListBoxItem].Foreground}" StrokeThickness="1.2" Opacity="0.75"
+                                      StrokeLineCap="Round" StrokeJoin="Round"
+                                      Data="M 1,4 L 7,1 L 13,4 L 13,11 L 7,14 L 1,11 Z M 1,4 L 7,7 L 13,4 M 7,7 L 7,14" />
+                                <TextBlock Text="{Binding Objects}" FontSize="11" Opacity="0.75" TextWrapping="Wrap"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
                             <TextBlock Text="{Binding Detail}" IsVisible="{Binding HasDetail}" FontSize="11" Opacity="0.75"
                                        TextWrapping="Wrap" />
                         </StackPanel>

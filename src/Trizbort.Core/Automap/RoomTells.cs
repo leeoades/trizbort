@@ -48,6 +48,31 @@ public static class RoomTells
     return parts.ToDictionary(pair => pair.Key, pair => string.Join(" · ", pair.Value));
   }
 
+  /// <summary>
+  ///   For each room whose subtitle and objects some other room shares, the ways out of it and where they lead ("ways: e
+  ///   to Maze, s to Dead End"), or "no ways out"; empty for a room its subtitle and objects already tell apart. For "which
+  ///   room does it mean?", which shows the subtitle and the objects on lines of their own, and the description beside
+  ///   the list rather than in it.
+  /// </summary>
+  public static IReadOnlyDictionary<Room, string> WaysApart(IReadOnlyList<Room> rooms)
+  {
+    var all = rooms.Distinct().ToList();
+    string Shown(Room room) => (room.SubTitle ?? string.Empty).Trim() + "\n" + Objects(room);
+    return all.ToDictionary(room => room, room =>
+    {
+      var alike = all.Where(other => other != room &&
+                                     string.Equals(Shown(other), Shown(room), StringComparison.OrdinalIgnoreCase)).ToList();
+      if (alike.Count == 0) return string.Empty;
+      var ways = Ways(room);
+      // ways the others share too say nothing
+      if (alike.All(other => string.Equals(Ways(other), ways, StringComparison.OrdinalIgnoreCase))) return string.Empty;
+      return ways.Length > 0 ? "ways: " + ways : "no ways out";
+    });
+  }
+
+  /// <summary>The objects in the room, listed ("black rod, bird"); empty when there are none.</summary>
+  public static string ObjectList(Room room) => Objects(room);
+
   /// <summary>The first sentence of the room's description that the other rooms' descriptions don't have.</summary>
   private static string Description(Room room, IReadOnlyList<Room> rooms)
   {
