@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- Directions: right-click a step and choose **Avoid This Route** to get there another way (without the PLOVER
+  spell, say). The ways avoided are listed in the panel, each with **Allow** to take it again.
+- The join properties have a **Split** tick box, as **Split Join** on the join's right-click menu.
 - The automap panel shows the transcript it's reading under its title (the full path on hover), with **Open Folder**
   and **Copy Full Path** buttons.
 - Joins that go the same way out of the same side of a room to different rooms ("enter closet" from the Foyer, to the
@@ -43,6 +46,7 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **Quick Find** (Ctrl+F) opens with the caret in its text box, ready to type.
 - A command typed in a room before that leads somewhere new (`enter closet` from the Foyer led to the Top of Closet,
   and now to the Closet) asks, as a direction does, instead of quietly making a new room.
 - A join's end label with no room beside its line goes in a corner beside where the join meets the room, rather than

@@ -66,6 +66,10 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isDotted;
 
+    /// <summary>Drawn as two short stubs, one out of each room, each labelled with the room at the other end.</summary>
+    [ObservableProperty]
+    private bool _isSplit;
+
     [ObservableProperty]
     private Color _connectionColor = Color.Transparent;
 
@@ -107,6 +111,7 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         SelectedPreset = MatchPreset();
         IsDirectional = connection.Flow == ConnectionFlow.OneWay;
         IsDotted = connection.Style == ConnectionStyle.Dashed;
+        IsSplit = connection.Split;
         ConnectionColor = connection.ConnectionColor;
 
         if (connection.Door != null)
@@ -139,6 +144,7 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
 
         connection.Flow = IsDirectional ? ConnectionFlow.OneWay : ConnectionFlow.TwoWay;
         connection.Style = IsDotted ? ConnectionStyle.Dashed : ConnectionStyle.Solid;
+        connection.Split = IsSplit;
 
         connection.ConnectionColor = ConnectionColor;
 
