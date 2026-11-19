@@ -143,7 +143,7 @@ public class DialogCaptureTests
             const string alike = "You are in a maze of twisty little passages, all alike.";
             var mazeOne = new Room(project) { Name = "Maze", Objects = "black rod" };
             mazeOne.AddDescription(alike);
-            var mazeTwo = new Room(project) { Name = "Maze", SubTitle = "by the pit", Objects = "bird\ncage" };
+            var mazeTwo = new Room(project) { Name = "Maze", SubTitle = "by the pit", Objects = "bird\ncage\nred wax statuette\ngreen wax statuette\nblue wax statuette\nyellow wax statuette\nhuge stuffed gorilla\nlarge brass-framed mirror\npiece of yellowed parchment\nsteel key" };
             mazeTwo.AddDescription(alike);
             var mazeThree = new Room(project) { Name = "Maze" };
             mazeThree.AddDescription(alike);

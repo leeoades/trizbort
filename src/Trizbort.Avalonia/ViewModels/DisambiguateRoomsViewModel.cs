@@ -93,6 +93,8 @@ public class DisambiguateRoomsViewModel : ViewModelBase
             if (SetProperty(ref _selected, value))
             {
                 OnPropertyChanged(nameof(SelectedDescription));
+                OnPropertyChanged(nameof(SelectedObjects));
+                OnPropertyChanged(nameof(HasSelectedObjects));
                 OkCommand.NotifyCanExecuteChanged();
                 Preview?.Invoke(value?.Room);
             }
@@ -117,21 +119,13 @@ public class DisambiguateRoomsViewModel : ViewModelBase
     public Action<Room?>? Preview { get; set; }
 
     /// <summary>The room picked: its description, then the objects in it (one a line), as the map has them.</summary>
-    public string SelectedDescription
-    {
-        get
-        {
-            if (_selected == null) return string.Empty;
-            var objects = (_selected.Room?.Objects ?? string.Empty)
-                .Split(new[] { '\n', '\r', '|' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(item => item.Trim())
-                .Where(item => item.Length > 0)
-                .ToList();
-            if (objects.Count == 0) return _selected.Description;
-            var listed = "Objects:\n" + string.Join("\n", objects.Select(item => "  " + item));
-            return _selected.Description.Length == 0 ? listed : _selected.Description + "\n\n" + listed;
-        }
-    }
+    public string SelectedDescription => _selected?.Description ?? string.Empty;
+
+    /// <summary>The objects in the room picked, for the Objects box beside the list (shown as pills).</summary>
+    public IReadOnlyList<string> SelectedObjects =>
+        _selected?.Room is { } room ? Trizbort.Automap.RoomTells.ObjectItems(room) : Array.Empty<string>();
+
+    public bool HasSelectedObjects => SelectedObjects.Count > 0;
 
     /// <summary>Don't ask again: make a best guess instead, from now on (Automap Settings turns it off again).</summary>
     public bool DontAskAgain

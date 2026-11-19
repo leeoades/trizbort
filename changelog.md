@@ -18,7 +18,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   when those don't tell it apart from another with that name, the ways out of it and where they lead. The description
   is shown beside the list, not in it. In a maze of rooms all alike
   the list no longer reads "Maze", "Maze", "Maze".
-- **Which room does it mean?** lists the objects in the room picked under its description.
+- **Which room does it mean?** shows the objects in the room picked in an **Objects** box beside the list, side by side
+  as pills, so many long ones take only a few lines.
 - Clicking one of the rooms asked about on the map, while **Which room does it mean?** is open, picks it in the list.
 - The automap panel shows the transcript it's reading under its title (the full path on hover), with **Open Folder**
   and **Copy Full Path** buttons.

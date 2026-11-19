@@ -64,8 +64,10 @@ public class DisambiguateRoomsTellsTests
 
         vm.PickFromMap(bird).ShouldBeTrue();
         vm.Selected!.Room.ShouldBe(bird);
-        // the panel on the right: the description, then the objects in the room
-        vm.SelectedDescription.ShouldBe(Alike + "\n\nObjects:\n  bird");
+        // on the right: the description, and the objects in a box of their own
+        vm.SelectedDescription.ShouldBe(Alike);
+        vm.SelectedObjects.ShouldBe(new[] { "bird" });
+        vm.HasSelectedObjects.ShouldBeTrue();
         vm.PickFromMap(other).ShouldBeFalse();
         vm.Selected!.Room.ShouldBe(bird);
     }

@@ -73,6 +73,12 @@ public static class RoomTells
   /// <summary>The objects in the room, listed ("black rod, bird"); empty when there are none.</summary>
   public static string ObjectList(Room room) => Objects(room);
 
+  /// <summary>The objects in the room, one by one.</summary>
+  public static IReadOnlyList<string> ObjectItems(Room room) =>
+    (room.Objects ?? string.Empty)
+    .Split(new[] { '\n', '\r', '|' }, StringSplitOptions.RemoveEmptyEntries)
+    .Select(item => item.Trim().TrimStart('-').Trim()).Where(item => item.Length > 0).ToList();
+
   /// <summary>The first sentence of the room's description that the other rooms' descriptions don't have.</summary>
   private static string Description(Room room, IReadOnlyList<Room> rooms)
   {
@@ -101,10 +107,7 @@ public static class RoomTells
     return sentences;
   }
 
-  private static string Objects(Room room) =>
-    string.Join(", ", (room.Objects ?? string.Empty)
-      .Split(new[] { '\n', '\r', '|' }, StringSplitOptions.RemoveEmptyEntries)
-      .Select(item => item.Trim().TrimStart('-').Trim()).Where(item => item.Length > 0));
+  private static string Objects(Room room) => string.Join(", ", ObjectItems(room));
 
   /// <summary>The ways out of the room and where they lead ("e to Maze, s to Dead End"), as the map shows them.</summary>
   private static string Ways(Room room)
