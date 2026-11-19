@@ -14,6 +14,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Which room does it mean?** shows, under each room's name, its subtitle and, after a small box, the objects in it;
+  when those don't tell it apart from another with that name, the ways out of it and where they lead. The description
+  is shown beside the list, not in it. In a maze of rooms all alike
+  the list no longer reads "Maze", "Maze", "Maze".
+- **Which room does it mean?** shows the objects in the room picked in an **Objects** box beside the list, side by side
+  as pills, so many long ones take only a few lines.
+- Clicking one of the rooms asked about on the map, while **Which room does it mean?** is open, picks it in the list.
 - The automap panel shows the transcript it's reading under its title (the full path on hover), with **Open Folder**
   and **Copy Full Path** buttons.
 - Joins that go the same way out of the same side of a room to different rooms ("enter closet" from the Foyer, to the
@@ -43,6 +50,28 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- The room dialog's tick boxes under **Reference** wrap onto a second line in a narrow window,
+  instead of cutting off **Don't automap from here**.
+- A way out that leads to different rooms at random (north from Bedquilt, in Colossal Cave) is asked about once:
+  once the map shows it leading to both, automap no longer asks whether to keep both each time you go that way.
+- Words you write in the middle of a join ("random chance") stay in the middle when you go through it and back.
+  Before, automap moved them onto an end label ("n / random chance").
+- Marking some joins as a door closed the app ("Automap direction vector should not be zero"): the door icons went
+  by the middle piece of the line, which can have no length. They now go by its longest piece.
+- Back in a room in brief mode, where the game shows only what's lying about ("There is an enormous clam here"),
+  automap no longer takes that for a new description and asks which room it is: it isn't a description.
+- Going the way a loop shows ("s" drawn from a maze room back into it) keeps you in that room. Before, in a maze of rooms with the same name, it asked which room it was every time.
+- A dotted **?** join (a way through automap didn't map) that you've labelled with directions ("east") now leads that way. Before, going east still asked which room it was, and choosing the room at its end added a second join east and took "east" off your label.
+- **Which room does it mean?** shows nothing on the map until a room is picked: before, it showed the outline of a new room with none picked. The outline goes when the question is answered, not at the next click on the map.
+- While automap is **Tracking only**, **Which room does it mean?** offers **<Somewhere not on the map>** instead of **<Add a new room>**, with no outline, and says to switch to **Mapping** to add a room. Before, it offered a new room that tracking only never added.
+- Without the game's descriptions (not a verbose transcript), going a way the map doesn't show into one of several rooms with the same name (a maze of rooms all alike) asks which room it is. Before, automap took the first room with that name on the map without asking, and joined the room you left to it.
+- In a maze of rooms all alike (every room "Maze", with the same description), **Tracking only** follows the map,
+  as mapping does: the way you went from the room you're in says which room you're in now. Before, it stayed in the
+  first of them.
+- Answering **Which room does it mean?** with a room keeps the view on it, where automap now has you, instead of
+  going back to where it was.
+- Going a way the map doesn't show into one of a maze of rooms all alike asks which room it is (or, making a best
+  guess, makes a new room), instead of joining the way to the first of them.
 - A command typed in a room before that leads somewhere new (`enter closet` from the Foyer led to the Top of Closet,
   and now to the Closet) asks, as a direction does, instead of quietly making a new room.
 - A join's end label with no room beside its line goes in a corner beside where the join meets the room, rather than

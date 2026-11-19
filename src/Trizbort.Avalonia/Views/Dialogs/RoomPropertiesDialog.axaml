@@ -30,7 +30,13 @@
             <ComboBox Grid.Row="3" Grid.Column="2" x:Name="ReferenceCombo" ItemsSource="{Binding AvailableReferenceRooms}"
                       SelectedItem="{Binding SelectedReferenceRoom}" HorizontalAlignment="Stretch" />
 
-            <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="16" IsVisible="{Binding IsNotReferenceRoom}">
+            <!-- wraps, so the last box isn't cut off in a narrow window -->
+            <WrapPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" IsVisible="{Binding IsNotReferenceRoom}">
+                <WrapPanel.Styles>
+                    <Style Selector="CheckBox">
+                        <Setter Property="Margin" Value="0,0,16,4" />
+                    </Style>
+                </WrapPanel.Styles>
                 <CheckBox Content="_Start Room" IsChecked="{Binding IsStartRoom}" />
                 <CheckBox Content="_End Room" IsChecked="{Binding IsEndRoom}" />
                 <CheckBox Content="_Dark" IsChecked="{Binding IsDark}" />
@@ -38,7 +44,7 @@
                           ToolTip.Tip="A lift, a car, a train: the room takes you with it. Automap shows it at each stop as a copy with its name, and works out which stop you're at from the way you go out" />
                 <CheckBox Content="Don't _automap from here" IsChecked="{Binding AutomapPause}"
                           ToolTip.Tip="For a maze, or a room that moves (a lift): automap stops mapping while you're in it, and carries on from wherever you come out, with a dotted ? join for the way through" />
-            </StackPanel>
+            </WrapPanel>
         </Grid>
 
         <TextBlock Grid.Row="1" Text="{Binding ReferenceNote}" TextWrapping="Wrap" VerticalAlignment="Top"

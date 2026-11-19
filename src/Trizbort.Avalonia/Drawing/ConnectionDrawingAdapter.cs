@@ -455,8 +455,10 @@ public static class ConnectionDrawingAdapter
         // 3. Draw Door / Lock Icons
         if (connection.Door != null && activeSegments.Count > 0)
         {
-            var midSegment = activeSegments[activeSegments.Count / 2];
-            DrawDoorIcons(context, connection.Door, midSegment);
+            // on the longest piece of the line: the middle piece can be a point (where the line bends, or a split
+            // join's stub meets its label)
+            var doorSegment = activeSegments.MaxBy(segment => segment.Length)!;
+            DrawDoorIcons(context, connection.Door, doorSegment);
         }
 
         // 4. Draw Annotations (StartText, MidText, EndText)
@@ -654,9 +656,18 @@ public static class ConnectionDrawingAdapter
         return SplitSegment(lineSegment, spatialIndex);
     }
 
+    /// <summary>
+    ///     Which way the line the door icons go beside runs. A line of no length has no direction (asking would assert):
+    ///     the icons go above it, as on a line across.
+    /// </summary>
+    internal static CompassPoint DoorDirection(CoreLineSegment lineSegment) =>
+        lineSegment.Length < 0.001f
+            ? CompassPoint.East
+            : CompassPointHelper.GetCompassPointFromDirectionVector(lineSegment.Delta);
+
     private static void DrawDoorIcons(AvaloniaDrawingContext context, Door door, CoreLineSegment lineSegment)
     {
-        var dir = CompassPointHelper.GetCompassPointFromDirectionVector(lineSegment.Delta);
+        var dir = DoorDirection(lineSegment);
         var basePos = lineSegment.Mid;
 
         var offset1 = GetDoorIconOffset(dir, 0);
