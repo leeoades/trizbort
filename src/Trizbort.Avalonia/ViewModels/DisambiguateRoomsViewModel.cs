@@ -6,11 +6,26 @@ namespace Trizbort.Avalonia.ViewModels;
 
 /// <summary>
 ///     One line in the "which room?" list: a room on the map, or the new room the transcript may be showing
-///     (<see cref="Room" /> null), with the description to compare.
+///     (<see cref="Room" /> null), with the description to compare (shown beside the list, not in it). Under the name:
+///     the room's subtitle, the objects in it, and, when those don't tell it from another room with its name, the
+///     ways out of it (<see cref="Detail" />).
 /// </summary>
-public sealed record DisambiguationChoice(string Name, string Description, Room? Room)
+public sealed record DisambiguationChoice(
+    string Name,
+    string Description,
+    Room? Room,
+    string Detail = "",
+    string Subtitle = "",
+    string Objects = "")
 {
     public bool IsNewRoom => Room == null;
+
+    /// <summary>Whether the ways out tell this room apart from another with its name, its subtitle and objects.</summary>
+    public bool HasDetail => !string.IsNullOrEmpty(Detail);
+
+    public bool HasSubtitle => !string.IsNullOrEmpty(Subtitle);
+
+    public bool HasObjects => !string.IsNullOrEmpty(Objects);
 }
 
 /// <summary>
@@ -22,17 +37,27 @@ public class DisambiguateRoomsViewModel : ViewModelBase
 {
     public const string NewRoomName = "<Add a new room>";
 
+    /// <summary>The new-room line while tracking only: nothing is added to the map.</summary>
+    public const string NotOnTheMapName = "<Somewhere not on the map>";
+
     private DisambiguationChoice? _selected;
     private bool _dontAskAgain;
 
-    public DisambiguateRoomsViewModel(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates)
+    public DisambiguateRoomsViewModel(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates,
+        bool trackingOnly = false)
     {
+        TrackingOnly = trackingOnly;
         Candidates = candidates;
         ContextText = BuildContext(transcriptLine, roomDescription);
         var description = Normalise(roomDescription).Trim();
+        // rooms with one name (a maze of rooms all alike): each with its subtitle and objects, and the ways out when
+        // those don't tell it apart from the others
+        var ways = Trizbort.Automap.RoomTells.WaysApart(candidates);
         Choices = candidates
-            .Select(room => new DisambiguationChoice(room.Name, room.PrimaryDescription ?? string.Empty, room))
-            .Append(new DisambiguationChoice(NewRoomName,
+            .Select(room => new DisambiguationChoice(room.Name, room.PrimaryDescription ?? string.Empty, room,
+                ways.TryGetValue(room, out var way) ? way : string.Empty,
+                room.SubTitle?.Trim() ?? string.Empty, Trizbort.Automap.RoomTells.ObjectList(room)))
+            .Append(new DisambiguationChoice(trackingOnly ? NotOnTheMapName : NewRoomName,
                 description.Length == 0 ? "(The transcript doesn't describe it.)" : description, null))
             .ToList();
         OkCommand = new RelayCommand(ChooseSelected, () => _selected != null);
@@ -43,9 +68,15 @@ public class DisambiguateRoomsViewModel : ViewModelBase
         }
     }
 
-    public string IntroText =>
-        "Trizbort isn't sure which room the transcript means. Several rooms have this name, or the room's " +
-        "description has changed during play. Pick the room it is, or add a new room.";
+    public string IntroText => TrackingOnly
+        ? "Trizbort isn't sure which room the transcript means. Several rooms have this name, or the room's " +
+          "description has changed during play. Pick the room it is. Automap is tracking only, so it adds nothing " +
+          "to the map: to add a room, switch to Mapping on the automap panel first."
+        : "Trizbort isn't sure which room the transcript means. Several rooms have this name, or the room's " +
+          "description has changed during play. Pick the room it is, or add a new room.";
+
+    /// <summary>Automap is tracking only (not mapping): a room not on the map isn't added.</summary>
+    public bool TrackingOnly { get; }
 
     public IReadOnlyList<Room> Candidates { get; }
 
@@ -62,6 +93,8 @@ public class DisambiguateRoomsViewModel : ViewModelBase
             if (SetProperty(ref _selected, value))
             {
                 OnPropertyChanged(nameof(SelectedDescription));
+                OnPropertyChanged(nameof(SelectedObjects));
+                OnPropertyChanged(nameof(HasSelectedObjects));
                 OkCommand.NotifyCanExecuteChanged();
                 Preview?.Invoke(value?.Room);
             }
@@ -69,11 +102,30 @@ public class DisambiguateRoomsViewModel : ViewModelBase
     }
 
     /// <summary>
+    ///     The user picked a room on the map behind the dialog: if it's one of the rooms asked about, it's picked in the
+    ///     list too. Returns whether it was.
+    /// </summary>
+    public bool PickFromMap(Room room)
+    {
+        var choice = Choices.FirstOrDefault(item => item.Room == room);
+        if (choice == null) return false;
+        Selected = choice;
+        return true;
+    }
+
+    /// <summary>
     ///     Shows the room picked on the map, with the rooms around it (null for a new room), while the dialog is open.
     /// </summary>
     public Action<Room?>? Preview { get; set; }
 
+    /// <summary>The room picked: its description, then the objects in it (one a line), as the map has them.</summary>
     public string SelectedDescription => _selected?.Description ?? string.Empty;
+
+    /// <summary>The objects in the room picked, for the Objects box beside the list (shown as pills).</summary>
+    public IReadOnlyList<string> SelectedObjects =>
+        _selected?.Room is { } room ? Trizbort.Automap.RoomTells.ObjectItems(room) : Array.Empty<string>();
+
+    public bool HasSelectedObjects => SelectedObjects.Count > 0;
 
     /// <summary>Don't ask again: make a best guess instead, from now on (Automap Settings turns it off again).</summary>
     public bool DontAskAgain

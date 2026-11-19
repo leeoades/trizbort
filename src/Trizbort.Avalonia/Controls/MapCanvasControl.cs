@@ -643,7 +643,9 @@ public class MapCanvasControl : Control
         var button = point.Properties.IsMiddleButtonPressed ? PointerButton.Middle
             : point.Properties.IsRightButtonPressed ? PointerButton.Right
             : PointerButton.Left;
-        // looking only: every button drags the map about, as the middle one does
+        // looking only: every button drags the map about, as the middle one does; a left click that doesn't drag
+        // picks the room under it (RoomPicked)
+        _viewOnlyClick = ViewOnly && button == PointerButton.Left ? point.Position : null;
         if (ViewOnly) button = PointerButton.Middle;
 
         var interaction = Interaction;
@@ -741,6 +743,15 @@ public class MapCanvasControl : Control
         }
 
         var wasActive = interaction.IsGestureActive;
+        if (ViewOnly && _viewOnlyClick is { } pressedAt)
+        {
+            _viewOnlyClick = null;
+            var at = e.GetPosition(this);
+            if (Math.Abs(at.X - pressedAt.X) <= ClickSlop && Math.Abs(at.Y - pressedAt.Y) <= ClickSlop &&
+                CommandService?.Session != null && Hit.HitElement(ClientToCanvas(at)) is Room picked)
+                RoomPicked?.Invoke(picked);
+        }
+
         interaction.OnPointerReleased(ToPointerInput(releasedButton, e.KeyModifiers, e.GetPosition(this), 0));
         e.Pointer.Capture(null);
         _isSecondaryButtonRelease = false;
@@ -1040,6 +1051,17 @@ public class MapCanvasControl : Control
     ///     asks which room the transcript means, with the map behind the question. Set from the UI thread.
     /// </summary>
     public static bool ViewOnly { get; set; }
+
+    /// <summary>
+    ///     A room clicked (not dragged) while the map is <see cref="ViewOnly" />: "which room does it mean?" picks it in
+    ///     its list. Raised on the UI thread.
+    /// </summary>
+    public static event Action<Room>? RoomPicked;
+
+    /// <summary>How far, in pixels, a click may wander and still be a click rather than a drag.</summary>
+    private const double ClickSlop = 4;
+
+    private Point? _viewOnlyClick;
 
     private static readonly IBrush _ghostFill = new SolidColorBrush(AvaloniaColor.FromArgb(60, 0x1E, 0x88, 0xE5));
     private static readonly IPen _ghostPen =

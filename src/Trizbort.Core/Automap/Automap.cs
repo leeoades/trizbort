@@ -567,9 +567,24 @@ public sealed class Automap : IAutomapController
   {
     // copies of rooms (portals, a moving room's stops) are found by the map, not by name
     var result = _canvas.FindRooms(roomName, roomDescription, (n, d, r) => r.IsReference ? false : Match(r, n, d));
-    if (result.Certain != null) return result.Certain;
+    IReadOnlyList<Room> maybes = result.Maybes;
+    if (result.Certain != null)
+    {
+      // a maze of rooms all alike ("Maze", "You are in a maze of twisty little passages, all alike."): the name and
+      // description fit them all, so they don't say which. The map would have (VariantRoom); it doesn't, so it's
+      // one of them, or a new one
+      // Not verbose, a heading alone fits every room with its name: several of them (a maze, or two rooms the game
+      // calls the same) aren't one room, so automap asks, unless the player hasn't moved
+      var alike = _settings.VerboseTranscript ? AllAlike(roomName, roomDescription) : Named(roomName);
+      if (alike.Count < 2) return result.Certain;
+      if (_lastMoveDirection == null && _lastJourneyCommand == null && _lastKnownRoom != null &&
+          alike.Contains(_lastKnownRoom))
+        return _lastKnownRoom;
+      maybes = alike;
+      Trace("{0}: {1} rooms are all alike; the map doesn't say which this is.", FormatTranscriptLineForDisplay(line),
+        alike.Count);
+    }
 
-    var maybes = result.Maybes;
     if (maybes == null || maybes.Count == 0) return null;
     if (_settings.BestGuessWhichRoom) return Guess(maybes, roomDescription);
     if (maybes.Count == 1 && (string.IsNullOrEmpty(roomDescription) || maybes[0].PrimaryDescription == null))
@@ -579,6 +594,34 @@ public sealed class Automap : IAutomapController
     var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, maybes, token);
     token.ThrowIfCancellationRequested();
     return Answered(choice);
+  }
+
+  /// <summary>The rooms with the heading's name (not copies).</summary>
+  private List<Room> Named(string roomName)
+  {
+    var named = new List<Room>();
+    _canvas.FindRooms(roomName, null, (name, _, room) =>
+    {
+      if (!room.IsReference && room.Name == name) named.Add(room);
+      return false;
+    });
+    return named;
+  }
+
+  /// <summary>
+  ///   The rooms the heading and the game's description both fit, in a verbose transcript: more than one is a maze of
+  ///   rooms all alike.
+  /// </summary>
+  private List<Room> AllAlike(string roomName, string roomDescription)
+  {
+    var alike = new List<Room>();
+    if (!_settings.VerboseTranscript || string.IsNullOrWhiteSpace(roomDescription)) return alike;
+    _canvas.FindRooms(roomName, roomDescription, (name, description, room) =>
+    {
+      if (!room.IsReference && Match(room, name, description) == true) alike.Add(room);
+      return false;
+    });
+    return alike;
   }
 
   /// <summary>
@@ -608,9 +651,11 @@ public sealed class Automap : IAutomapController
     if (candidates == null || candidates.Count == 0) return null;
     var here = _lastKnownRoom;
     if (_lastMoveDirection == null) return here != null && candidates.Contains(here) ? here : candidates[0];
-    var described = candidates.FirstOrDefault(room =>
-      room.Descriptions.Any(known => SameFirstSentence(known, roomDescription)));
-    if (described != null) return described;
+    var described = candidates.Where(room =>
+      room.Descriptions.Any(known => SameFirstSentence(known, roomDescription))).Take(2).ToList();
+    // one of a maze of rooms all alike, by a way not on the map: a new room, not the first of them
+    if (described.Count > 1) return null;
+    if (described.Count == 1) return described[0];
     return string.IsNullOrWhiteSpace(roomDescription) ? candidates[0] : null;
   }
 
@@ -737,6 +782,30 @@ public sealed class Automap : IAutomapController
     return null;
   }
 
+  // what the game says is lying about, after a room's description or alone in brief mode: "There is an enormous clam
+  // here with its shell tightly closed.", "You can see a lamp here.", "There is a shiny brass lamp nearby.", "A three foot
+  // black rod with a rusty star on an end lies nearby."
+  private static readonly Regex _lyingAbout = new(
+    @"^(?:(?:There\s+(?:is|are)\b.*\b(?:here|nearby)\b)|(?:There\s+(?:is|are)\s+(?:a|an|some)\s+.*\bin\s+the\s+\w+)|" +
+    @"(?:You\s+(?:can\s+)?(?:also\s+)?see\b)|(?:You\s+notice\b.*\b(?:here|nearby)\b)|" +
+    @"(?:.*\b(?:is|are|lies|lie|sits|rests)\s+(?:\w+\s+)?(?:here|nearby)\b)|" +
+    @"(?:(?:Lying|Sitting|Resting)\s+(?:here|nearby|on\s+the\s+(?:ground|floor))\b))",
+    RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+  /// <summary>
+  ///   Whether every sentence of <paramref name="text" /> only says what's lying about: in brief mode a room visited
+  ///   before shows its heading and its objects, no description. Not a description, so it says nothing about which
+  ///   room this is.
+  /// </summary>
+  internal static bool OnlyWhatsLyingAbout(string text)
+  {
+    if (string.IsNullOrWhiteSpace(text)) return false;
+    var flat = Regex.Replace(text.Trim(), @"\s+", " ");
+    var sentences = Regex.Split(flat, @"(?<=[.!?][""'\u201D\u2019)\]]*)\s+")
+      .Select(sentence => sentence.Trim()).Where(sentence => sentence.Length > 0).ToList();
+    return sentences.Count > 0 && sentences.All(sentence => _lyingAbout.IsMatch(sentence));
+  }
+
   /// <summary>Whether two room descriptions have the same first sentence, ignoring case and spacing.</summary>
   internal static bool SameFirstSentence(string one, string two) =>
     string.Equals(FirstSentence(one), FirstSentence(two), StringComparison.OrdinalIgnoreCase);
@@ -832,7 +901,9 @@ public sealed class Automap : IAutomapController
         return;
       }
 
-      var room = await FindRoomAsync(roomName, roomDescription, line, token);
+      // the map first, as when mapping: the way the player went from the room automap has them in says where they
+      // are, so automap follows them round a maze of rooms all alike; only then the name and description
+      var room = VariantRoom(roomName, roomDescription) ?? await FindRoomAsync(roomName, roomDescription, line, token);
       token.ThrowIfCancellationRequested();
       RefreshLastKnownRoom();
       if (room != null) room = _canvas.ResolveRoom(room);
@@ -1095,6 +1166,13 @@ public sealed class Automap : IAutomapController
       {
         string roomDescription;
         ExtractParagraph(lines, index + 1, out roomDescription);
+        // a revisit in brief mode: no description, only what's lying about ("There is an enormous clam here.")
+        if (OnlyWhatsLyingAbout(roomDescription))
+        {
+          Trace("{0}: \"{1}\" is only what's lying about, not a description.", FormatTranscriptLineForDisplay(line),
+            FirstSentence(roomDescription));
+          roomDescription = string.Empty;
+        }
 
         // the command was the label of a join the user drew ("pull first peg"): a heading naming the room at its
         // other end (or the room it was made from, "Cupboard" for "Cupboard (-1)") is that room, not a journey;
@@ -1580,6 +1658,9 @@ public sealed class Automap : IAutomapController
     if (_lastMoveDirection == null) return Moving(here) && NamedAs(here.Name, roomName) ? here : null;
     var direction = _lastMoveDirection.Value;
 
+    // a way that loops straight back ("s" in a maze room, drawn as a loop): still here
+    if (LoopsBack(here, direction) && NamedAs(here.Name, roomName) && Shows(here, roomDescription)) return here;
+
     // through a portal ("To Front Porch") to the room it stands for
     // the way can lead to more than one room ("Keep Both"): the heading, then the description, says which
     var along = OneOf(_canvas.RoomsAlong(here, direction).Select(Real)
@@ -1602,6 +1683,21 @@ public sealed class Automap : IAutomapController
       }).From;
     return back == null || !Shows(back, roomDescription) ? null : _canvas.ResolveRoom(back);
   }
+
+  /// <summary>
+  ///   Whether the map has <paramref name="direction" /> leading from <paramref name="room" /> straight back in: a loop
+  ///   listing it from its start, or from either end of a two-way loop.
+  /// </summary>
+  private static bool LoopsBack(Room room, MappableDirection direction) =>
+    room.GetConnections().Any(connection =>
+    {
+      // (a stub, an exit not yet explored, leaves and comes back on the same side)
+      if (connection.GetSourceRoom(out var from) != room || connection.GetTargetRoom(out var to) != room || from == to)
+        return false;
+      var ways = JoinWays.Of(connection);
+      return JoinWays.Lists(ways, true, direction) ||
+             (connection.Flow == ConnectionFlow.TwoWay && JoinWays.Lists(ways, false, direction));
+    });
 
   /// <summary>
   ///   Whether the game's description fits a room the map says the player went to: in a verbose transcript, a room
@@ -1675,22 +1771,34 @@ public sealed class Automap : IAutomapController
   /// </summary>
   private Room SeenLeadingElsewhere(Room here, MappableDirection direction, Room room)
   {
+    var seen = SeenLeading(here, direction);
+    // the map already shows the way leading to this room too (a random exit, as north from Bedquilt): both are
+    // known, so there's nothing to ask
+    if (seen.Contains(room)) return null;
+    var other = seen.FirstOrDefault(other => other != here);
+    return other == null ? null : _canvas.ResolveRoom(other);
+  }
+
+  /// <summary>The rooms the player was seen going <paramref name="direction" /> to from <paramref name="here" />.</summary>
+  private List<Room> SeenLeading(Room here, MappableDirection direction)
+  {
+    var rooms = new List<Room>();
     foreach (var connection in here.GetConnections())
     {
-      if (AutomapCanvas.IsCommandJoin(connection)) continue;
+      if (AutomapCanvas.OnlyByCommand(connection)) continue;
       var source = connection.GetSourceRoom();
       var target = connection.GetTargetRoom();
       if (source == null || target == null || source == target) continue;
       var hereIsStart = source == here;
       if (!hereIsStart && connection.Flow == ConnectionFlow.OneWay) continue;
       var other = Real(hereIsStart ? target : source);
-      if (other == room || other == here) continue;
+      if (other == null || rooms.Contains(other)) continue;
       if (JoinWays.Of(connection).Any(way => way.AtStart == hereIsStart && way.IsDirection && way.Seen &&
                                             way.Direction == direction))
-        return _canvas.ResolveRoom(other);
+        rooms.Add(other);
     }
 
-    return null;
+    return rooms;
   }
 
   /// <summary>
@@ -1703,7 +1811,7 @@ public sealed class Automap : IAutomapController
     var any = false;
     foreach (var connection in here.GetConnections())
     {
-      if (AutomapCanvas.IsCommandJoin(connection)) continue;
+      if (AutomapCanvas.OnlyByCommand(connection)) continue;
       var source = connection.GetSourceRoom();
       var target = connection.GetTargetRoom();
       if (source == null || target == null || source == target) continue;
@@ -1890,12 +1998,6 @@ public sealed class Automap : IAutomapController
     Trace("{0} is at another stop.", root.Name);
     _lastKnownRoom = stop;
   }
-
-  /// <summary>Whether the map has <paramref name="direction" /> leading from <paramref name="room" /> straight back in.</summary>
-  private static bool LoopsBack(Room room, MappableDirection direction) =>
-    room.GetConnections().Any(connection =>
-      connection.GetSourceRoom(out var from) == room && connection.GetTargetRoom(out var to) == room && from != to &&
-      JoinWays.Lists(JoinWays.Of(connection), true, direction));
 
   /// <summary>"Cupboard (-1)" or "Cupboard 2" for "Cupboard": the name, then something more after a space or bracket.</summary>
   private static bool IsVariantOf(string name, string heading)
