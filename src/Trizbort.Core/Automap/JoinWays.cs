@@ -72,7 +72,7 @@ public static class JoinWays
       .ToList();
     var start = EndLabel(connection, list, true, word);
     var end = EndLabel(connection, list, false, word);
-    var middle = string.Join(" / ", Distinct(list.Where(way => way.IsCommand && !OnEndLabel(list, way.AtStart))
+    var middle = string.Join(" / ", Distinct(list.Where(way => way.IsCommand && (!way.Seen || !OnEndLabel(list, way.AtStart)))
       .Select(way => way.Text)));
     if (connection.StartText != start) connection.StartText = start;
     if (connection.EndText != end) connection.EndText = end;
@@ -167,7 +167,8 @@ public static class JoinWays
         .Concat(mine.Where(way => !(way.IsDirection && DirectionWords.IsCompass(way.Direction))));
     foreach (var way in ordered)
     {
-      if (way.IsCommand && !commandsHere) continue;
+      // (a command nobody was seen typing, written in the middle by the user, stays there)
+      if (way.IsCommand && (!commandsHere || !way.Seen)) continue;
       var text = way.IsDirection ? way.Text ?? word(way.Direction) : way.Text;
       if (string.IsNullOrWhiteSpace(text)) continue;
       if (parts.Any(part => SameWay(part.Way, way) || string.Equals(part.Text, text, StringComparison.OrdinalIgnoreCase)))
@@ -258,14 +259,17 @@ public static class JoinWays
     // while its label still says it: the user clearing the label (or changing it) is the user saying it's not so
     var labels = new[] { connection.MidText, connection.StartText, connection.EndText }
       .SelectMany(DirectionWords.SplitLabel).ToList();
-    var commands = commandJoin
+    var typed = commandJoin
       ? DirectionWords.SplitLabel(connection.AutomapCommand)
-        .Where(command => labels.Contains(command, StringComparer.OrdinalIgnoreCase))
-        .Concat(DirectionWords.SplitLabel(connection.MidText))
-      : DirectionWords.SplitLabel(connection.MidText);
-    foreach (var command in commands)
+        .Where(command => labels.Contains(command, StringComparer.OrdinalIgnoreCase)).ToList()
+      : new List<string>();
+    foreach (var command in typed.Concat(DirectionWords.SplitLabel(connection.MidText)))
       if (!ways.Any(way => way.IsCommand && string.Equals(way.Text, command, StringComparison.OrdinalIgnoreCase)))
-        ways.Add(JoinWay.Typed(true, command));
+        // words the user wrote in the middle ("random chance", "pull first peg") are followed as commands, but nobody
+        // was seen typing them, so they stay in the middle
+        ways.Add(typed.Contains(command, StringComparer.OrdinalIgnoreCase)
+          ? JoinWay.Typed(true, command)
+          : new JoinWay(true, JoinWayKind.Command, MappableDirection.None, command, false));
     return ways;
   }
 

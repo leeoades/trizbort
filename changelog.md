@@ -52,6 +52,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 - The room dialog's tick boxes under **Reference** wrap onto a second line in a narrow window,
   instead of cutting off **Don't automap from here**.
+- Words you write in the middle of a join ("random chance") stay in the middle when you go through it and back.
+  Before, automap moved them onto an end label ("n / random chance").
 - Marking some joins as a door closed the app ("Automap direction vector should not be zero"): the door icons went
   by the middle piece of the line, which can have no length. They now go by its longest piece.
 - Back in a room in brief mode, where the game shows only what's lying about ("There is an enormous clam here"),
