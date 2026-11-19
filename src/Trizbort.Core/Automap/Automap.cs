@@ -1627,6 +1627,9 @@ public sealed class Automap : IAutomapController
     if (_lastMoveDirection == null) return Moving(here) && NamedAs(here.Name, roomName) ? here : null;
     var direction = _lastMoveDirection.Value;
 
+    // a way that loops straight back ("s" in a maze room, drawn as a loop): still here
+    if (LoopsBack(here, direction) && NamedAs(here.Name, roomName) && Shows(here, roomDescription)) return here;
+
     // through a portal ("To Front Porch") to the room it stands for
     // the way can lead to more than one room ("Keep Both"): the heading, then the description, says which
     var along = OneOf(_canvas.RoomsAlong(here, direction).Select(Real)
@@ -1649,6 +1652,21 @@ public sealed class Automap : IAutomapController
       }).From;
     return back == null || !Shows(back, roomDescription) ? null : _canvas.ResolveRoom(back);
   }
+
+  /// <summary>
+  ///   Whether the map has <paramref name="direction" /> leading from <paramref name="room" /> straight back in: a loop
+  ///   listing it from its start, or from either end of a two-way loop.
+  /// </summary>
+  private static bool LoopsBack(Room room, MappableDirection direction) =>
+    room.GetConnections().Any(connection =>
+    {
+      // (a stub, an exit not yet explored, leaves and comes back on the same side)
+      if (connection.GetSourceRoom(out var from) != room || connection.GetTargetRoom(out var to) != room || from == to)
+        return false;
+      var ways = JoinWays.Of(connection);
+      return JoinWays.Lists(ways, true, direction) ||
+             (connection.Flow == ConnectionFlow.TwoWay && JoinWays.Lists(ways, false, direction));
+    });
 
   /// <summary>
   ///   Whether the game's description fits a room the map says the player went to: in a verbose transcript, a room
@@ -1937,12 +1955,6 @@ public sealed class Automap : IAutomapController
     Trace("{0} is at another stop.", root.Name);
     _lastKnownRoom = stop;
   }
-
-  /// <summary>Whether the map has <paramref name="direction" /> leading from <paramref name="room" /> straight back in.</summary>
-  private static bool LoopsBack(Room room, MappableDirection direction) =>
-    room.GetConnections().Any(connection =>
-      connection.GetSourceRoom(out var from) == room && connection.GetTargetRoom(out var to) == room && from != to &&
-      JoinWays.Lists(JoinWays.Of(connection), true, direction));
 
   /// <summary>"Cupboard (-1)" or "Cupboard 2" for "Cupboard": the name, then something more after a space or bracket.</summary>
   private static bool IsVariantOf(string name, string heading)
