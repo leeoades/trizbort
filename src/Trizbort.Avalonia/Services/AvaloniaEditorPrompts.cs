@@ -128,7 +128,7 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
 
         var viewModel = new DisambiguateRoomsViewModel(transcriptLine, roomDescription, candidates);
         var pickedOnMap = false;
-        EventHandler? onMapPick = null;
+        Action<Room>? onMapPick = null;
         // the room picked is shown on the map behind the dialog, with the rooms around it; the view and selection
         // go back as they were afterwards
         var session = App.Services?.GetService<ICommandService>()?.Session;
@@ -137,10 +137,10 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         if (session != null)
         {
             var newRoomName = candidates.FirstOrDefault()?.Name ?? transcriptLine;
-            // a room picked on the map behind the dialog is picked in the list too
-            onMapPick = (_, _) =>
+            // a room clicked on the map behind the dialog is picked in the list too (the map is only for looking at,
+            // so the click doesn't select it there itself)
+            onMapPick = picked =>
             {
-                if (session.Selection.Count != 1 || session.Selection.Primary is not Room picked) return;
                 if (viewModel.Selected?.Room == picked) return;
                 pickedOnMap = true;
                 try
@@ -154,10 +154,12 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
             };
             viewModel.Preview = room =>
             {
-                // picked on the map: it's in view already, and selected
+                // picked on the map: it's in view already; it's selected, as one picked in the list is
                 if (pickedOnMap)
                 {
                     MapCanvasControl.GhostRoom = null;
+                    if (room != null && session.Project.Elements.Contains(room))
+                        session.Selection.Set(new List<Element> { room });
                     session.Invalidate(EditorChange.Adorners);
                     return;
                 }
@@ -221,7 +223,7 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
                 // toolbar, automap panel and shortcuts are off until the question is answered
                 MapCanvasControl.ViewOnly = true;
                 unlock = LockAllButTheMap(owner);
-                if (onMapPick != null) session.Selection.Changed += onMapPick;
+                if (onMapPick != null) MapCanvasControl.RoomPicked += onMapPick;
                 var closed = new TaskCompletionSource();
                 dialog.Closed += (_, _) => closed.TrySetResult();
                 dialog.Show(owner);
@@ -235,7 +237,7 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         finally
         {
             unlock?.Invoke();
-            if (session != null && onMapPick != null) session.Selection.Changed -= onMapPick;
+            if (onMapPick != null) MapCanvasControl.RoomPicked -= onMapPick;
             MapCanvasControl.ViewOnly = false;
             MapCanvasControl.GhostRoom = null;
             if (session != null && origin != null)

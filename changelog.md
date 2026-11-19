@@ -48,6 +48,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- The room dialog's tick boxes under **Reference** wrap onto a second line in a narrow window,
+  instead of cutting off **Don't automap from here**.
 - In a maze of rooms all alike (every room "Maze", with the same description), **Tracking only** follows the map,
   as mapping does: the way you went from the room you're in says which room you're in now. Before, it stayed in the
   first of them.
