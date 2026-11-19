@@ -52,6 +52,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 - The room dialog's tick boxes under **Reference** wrap onto a second line in a narrow window,
   instead of cutting off **Don't automap from here**.
+- A way out that leads to different rooms at random (north from Bedquilt, in Colossal Cave) is asked about once:
+  once the map shows it leading to both, automap no longer asks whether to keep both each time you go that way.
 - Words you write in the middle of a join ("random chance") stay in the middle when you go through it and back.
   Before, automap moved them onto an end label ("n / random chance").
 - Marking some joins as a door closed the app ("Automap direction vector should not be zero"): the door icons went

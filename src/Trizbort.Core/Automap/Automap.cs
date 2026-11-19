@@ -1771,6 +1771,18 @@ public sealed class Automap : IAutomapController
   /// </summary>
   private Room SeenLeadingElsewhere(Room here, MappableDirection direction, Room room)
   {
+    var seen = SeenLeading(here, direction);
+    // the map already shows the way leading to this room too (a random exit, as north from Bedquilt): both are
+    // known, so there's nothing to ask
+    if (seen.Contains(room)) return null;
+    var other = seen.FirstOrDefault(other => other != here);
+    return other == null ? null : _canvas.ResolveRoom(other);
+  }
+
+  /// <summary>The rooms the player was seen going <paramref name="direction" /> to from <paramref name="here" />.</summary>
+  private List<Room> SeenLeading(Room here, MappableDirection direction)
+  {
+    var rooms = new List<Room>();
     foreach (var connection in here.GetConnections())
     {
       if (AutomapCanvas.OnlyByCommand(connection)) continue;
@@ -1780,13 +1792,13 @@ public sealed class Automap : IAutomapController
       var hereIsStart = source == here;
       if (!hereIsStart && connection.Flow == ConnectionFlow.OneWay) continue;
       var other = Real(hereIsStart ? target : source);
-      if (other == room || other == here) continue;
+      if (other == null || rooms.Contains(other)) continue;
       if (JoinWays.Of(connection).Any(way => way.AtStart == hereIsStart && way.IsDirection && way.Seen &&
                                             way.Direction == direction))
-        return _canvas.ResolveRoom(other);
+        rooms.Add(other);
     }
 
-    return null;
+    return rooms;
   }
 
   /// <summary>
