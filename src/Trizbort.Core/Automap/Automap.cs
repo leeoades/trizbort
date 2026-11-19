@@ -573,8 +573,13 @@ public sealed class Automap : IAutomapController
       // a maze of rooms all alike ("Maze", "You are in a maze of twisty little passages, all alike."): the name and
       // description fit them all, so they don't say which. The map would have (VariantRoom); it doesn't, so it's
       // one of them, or a new one
-      var alike = AllAlike(roomName, roomDescription);
+      // Not verbose, a heading alone fits every room with its name: several of them (a maze, or two rooms the game
+      // calls the same) aren't one room, so automap asks, unless the player hasn't moved
+      var alike = _settings.VerboseTranscript ? AllAlike(roomName, roomDescription) : Named(roomName);
       if (alike.Count < 2) return result.Certain;
+      if (_lastMoveDirection == null && _lastJourneyCommand == null && _lastKnownRoom != null &&
+          alike.Contains(_lastKnownRoom))
+        return _lastKnownRoom;
       maybes = alike;
       Trace("{0}: {1} rooms are all alike; the map doesn't say which this is.", FormatTranscriptLineForDisplay(line),
         alike.Count);
@@ -589,6 +594,18 @@ public sealed class Automap : IAutomapController
     var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, maybes, token);
     token.ThrowIfCancellationRequested();
     return Answered(choice);
+  }
+
+  /// <summary>The rooms with the heading's name (not copies).</summary>
+  private List<Room> Named(string roomName)
+  {
+    var named = new List<Room>();
+    _canvas.FindRooms(roomName, null, (name, _, room) =>
+    {
+      if (!room.IsReference && room.Name == name) named.Add(room);
+      return false;
+    });
+    return named;
   }
 
   /// <summary>

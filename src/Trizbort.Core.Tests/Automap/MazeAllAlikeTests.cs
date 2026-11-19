@@ -135,6 +135,36 @@ public class MazeAllAlikeTests : IsolatedProjectTests
     joined.ShouldBe(new[] { second });
   }
 
+  /// <summary>
+  ///   Lee, 19 Nov 2026: with the game's room descriptions off (not verbose), "w" out of the Maze with the gold into
+  ///   the one with the jewelry joined the gold to the first Maze on the map, without asking. A heading alone fits
+  ///   every room with its name, so it says nothing about which of them this is: automap asks.
+  /// </summary>
+  [Test]
+  public async Task NotVerbose_AWayTheMapDoesntShow_IntoOneOfTheMaze_Asks_AndJoinsTheRoomChosen()
+  {
+    var first = AddRoom("Maze", 0, 160, Alike);
+    var second = AddRoom("Maze", 160, 160, Alike);
+    Join(first, CompassPoint.East, second, CompassPoint.West);
+    var deadEnd = AddRoom("Dead End", 320, 160, "You have reached a dead end.");
+    var asked = new Asked { Choose = candidates => candidates.Contains(second) ? second : null };
+    var path = Path.GetTempFileName();
+    // brief: a heading and what's lying about, no description; then a look round where the player is
+    File.WriteAllText(path, ">look\n\nDead End\n\n>w\n\nMaze\n\nYou can see some precious jewelry here.\n\n" +
+                            ">look\n\nMaze\n\nYou can see some precious jewelry here.\n\n>");
+    var settings = AutomapSettings.Default;
+    settings.VerboseTranscript = false;
+    settings.GuessExits = false;
+    settings.AutoTidy = false;
+
+    await HeadlessAutomap.RunAsync(Project.Current, path, settings, asked);
+
+    // once: looking round where the player is doesn't ask again
+    asked.Questions.ShouldHaveSingleItem().ShouldBe(new[] { first, second }, ignoreOrder: true);
+    var joined = deadEnd.GetConnections().Select(join => join.GetSourceRoom() == deadEnd ? join.GetTargetRoom() : join.GetSourceRoom());
+    joined.ShouldBe(new[] { second });
+  }
+
   [Test]
   public async Task MakingABestGuess_AWayTheMapDoesntShow_IntoOneOfTheMaze_IsANewRoom()
   {
