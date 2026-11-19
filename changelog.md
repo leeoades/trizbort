@@ -52,6 +52,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 - The room dialog's tick boxes under **Reference** wrap onto a second line in a narrow window,
   instead of cutting off **Don't automap from here**.
+- Marking some joins as a door closed the app ("Automap direction vector should not be zero"): the door icons went
+  by the middle piece of the line, which can have no length. They now go by its longest piece.
 - Back in a room in brief mode, where the game shows only what's lying about ("There is an enormous clam here"),
   automap no longer takes that for a new description and asks which room it is: it isn't a description.
 - Going the way a loop shows ("s" drawn from a maze room back into it) keeps you in that room. Before, in a maze of rooms with the same name, it asked which room it was every time.
