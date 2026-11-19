@@ -782,6 +782,30 @@ public sealed class Automap : IAutomapController
     return null;
   }
 
+  // what the game says is lying about, after a room's description or alone in brief mode: "There is an enormous clam
+  // here with its shell tightly closed.", "You can see a lamp here.", "There is a shiny brass lamp nearby.", "A three foot
+  // black rod with a rusty star on an end lies nearby."
+  private static readonly Regex _lyingAbout = new(
+    @"^(?:(?:There\s+(?:is|are)\b.*\b(?:here|nearby)\b)|(?:There\s+(?:is|are)\s+(?:a|an|some)\s+.*\bin\s+the\s+\w+)|" +
+    @"(?:You\s+(?:can\s+)?(?:also\s+)?see\b)|(?:You\s+notice\b.*\b(?:here|nearby)\b)|" +
+    @"(?:.*\b(?:is|are|lies|lie|sits|rests)\s+(?:\w+\s+)?(?:here|nearby)\b)|" +
+    @"(?:(?:Lying|Sitting|Resting)\s+(?:here|nearby|on\s+the\s+(?:ground|floor))\b))",
+    RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+  /// <summary>
+  ///   Whether every sentence of <paramref name="text" /> only says what's lying about: in brief mode a room visited
+  ///   before shows its heading and its objects, no description. Not a description, so it says nothing about which
+  ///   room this is.
+  /// </summary>
+  internal static bool OnlyWhatsLyingAbout(string text)
+  {
+    if (string.IsNullOrWhiteSpace(text)) return false;
+    var flat = Regex.Replace(text.Trim(), @"\s+", " ");
+    var sentences = Regex.Split(flat, @"(?<=[.!?][""'\u201D\u2019)\]]*)\s+")
+      .Select(sentence => sentence.Trim()).Where(sentence => sentence.Length > 0).ToList();
+    return sentences.Count > 0 && sentences.All(sentence => _lyingAbout.IsMatch(sentence));
+  }
+
   /// <summary>Whether two room descriptions have the same first sentence, ignoring case and spacing.</summary>
   internal static bool SameFirstSentence(string one, string two) =>
     string.Equals(FirstSentence(one), FirstSentence(two), StringComparison.OrdinalIgnoreCase);
@@ -1142,6 +1166,13 @@ public sealed class Automap : IAutomapController
       {
         string roomDescription;
         ExtractParagraph(lines, index + 1, out roomDescription);
+        // a revisit in brief mode: no description, only what's lying about ("There is an enormous clam here.")
+        if (OnlyWhatsLyingAbout(roomDescription))
+        {
+          Trace("{0}: \"{1}\" is only what's lying about, not a description.", FormatTranscriptLineForDisplay(line),
+            FirstSentence(roomDescription));
+          roomDescription = string.Empty;
+        }
 
         // the command was the label of a join the user drew ("pull first peg"): a heading naming the room at its
         // other end (or the room it was made from, "Cupboard" for "Cupboard (-1)") is that room, not a journey;

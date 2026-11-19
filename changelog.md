@@ -52,6 +52,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 - The room dialog's tick boxes under **Reference** wrap onto a second line in a narrow window,
   instead of cutting off **Don't automap from here**.
+- Back in a room in brief mode, where the game shows only what's lying about ("There is an enormous clam here"),
+  automap no longer takes that for a new description and asks which room it is: it isn't a description.
 - Going the way a loop shows ("s" drawn from a maze room back into it) keeps you in that room. Before, in a maze of rooms with the same name, it asked which room it was every time.
 - A dotted **?** join (a way through automap didn't map) that you've labelled with directions ("east") now leads that way. Before, going east still asked which room it was, and choosing the room at its end added a second join east and took "east" off your label.
 - **Which room does it mean?** shows nothing on the map until a room is picked: before, it showed the outline of a new room with none picked. The outline goes when the question is answered, not at the next click on the map.
