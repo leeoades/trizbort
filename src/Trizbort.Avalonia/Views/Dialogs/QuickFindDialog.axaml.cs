@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 namespace Trizbort.Avalonia.Views.Dialogs;
 
@@ -36,13 +38,36 @@ public partial class QuickFindDialog : Window
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
-        FindBox.Focus();
+        FocusFindBox();
     }
 
     private void OnWindowActivated(object? sender, EventArgs e)
     {
         _wasActive = true;
-        FindBox.Focus();
+        FocusFindBox();
+    }
+
+    /// <summary>
+    ///     The caret in the text box, ready to type: focusing the find box itself (an AutoCompleteBox) doesn't put it in
+    ///     the text box inside it. Once the box is laid out, so its text box is there.
+    /// </summary>
+    private void FocusFindBox()
+    {
+        FocusTextBox();
+        Dispatcher.UIThread.Post(FocusTextBox, DispatcherPriority.Loaded);
+    }
+
+    private void FocusTextBox()
+    {
+        var text = FindBox.GetVisualDescendants().OfType<TextBox>().FirstOrDefault();
+        if (text == null)
+        {
+            FindBox.Focus();
+            return;
+        }
+
+        text.Focus();
+        text.SelectAll();
     }
 
     private void OnWindowDeactivated(object? sender, EventArgs e)

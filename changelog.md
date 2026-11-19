@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- Directions: right-click a step and choose **Avoid This Route** to get there another way (without the PLOVER
+  spell, say). The ways avoided are listed in the panel, each with **Allow** to take it again.
+- The join properties have a **Split** tick box, as **Split Join** on the join's right-click menu.
 - **Which room does it mean?** shows, under each room's name, its subtitle and, after a small box, the objects in it;
   when those don't tell it apart from another with that name, the ways out of it and where they lead. The description
   is shown beside the list, not in it. In a maze of rooms all alike
@@ -50,6 +53,7 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **Quick Find** (Ctrl+F) opens with the caret in its text box, ready to type.
 - The room dialog's tick boxes under **Reference** wrap onto a second line in a narrow window,
   instead of cutting off **Don't automap from here**.
 - A way out that leads to different rooms at random (north from Bedquilt, in Colossal Cave) is asked about once:

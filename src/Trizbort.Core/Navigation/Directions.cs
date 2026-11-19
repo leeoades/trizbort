@@ -36,6 +36,35 @@ public sealed class Directions
   /// <summary>What the panel says: how many moves, arrived, rerouted, or that no way is known.</summary>
   public string Status { get; private set; } = string.Empty;
 
+  /// <summary>
+  ///   Ways the user has said to avoid ("plover" from the Plover Room, to get back without the spell): routes go round
+  ///   them, until they're allowed again. They stay when the rooms change, until allowed.
+  /// </summary>
+  public IReadOnlyList<RouteStep> Avoiding => _avoiding;
+
+  private readonly List<RouteStep> _avoiding = new();
+
+  /// <summary>Avoid this route: the directions go round <paramref name="step" />, worked out again from where they start.</summary>
+  public void Avoid(RouteStep step)
+  {
+    if (step == null || _avoiding.Any(avoided => RouteFinder.SameWay(step, avoided))) return;
+    _avoiding.Add(step);
+    if (HasRoute) Route($"Avoiding {step.Command} from {step.From.Name}. ");
+    else Raise();
+  }
+
+  /// <summary>Allow a way avoided again; the directions are worked out again if they're showing.</summary>
+  public void Allow(RouteStep step)
+  {
+    if (_avoiding.RemoveAll(avoided => RouteFinder.SameWay(step, avoided)) == 0) return;
+    // showing directions, or that there's no way without it: worked out again
+    var noWay = Status.StartsWith(NoWayStart, StringComparison.Ordinal);
+    if (HasRoute || noWay) Route(null);
+    else Raise();
+  }
+
+  private const string NoWayStart = "The map doesn't show a way";
+
   /// <summary>Anything above changed.</summary>
   public event Action Changed;
 
@@ -203,12 +232,13 @@ public sealed class Directions
       return;
     }
 
-    var route = RouteFinder.Find(Elements, From, To);
+    var route = RouteFinder.Find(Elements, From, To,
+      _avoiding.Count == 0 ? null : step => _avoiding.Any(avoided => RouteFinder.SameWay(step, avoided)));
     // already there: nothing to follow, so nothing to stop
     HasRoute = route is not { Count: 0 };
     Steps = route ?? Array.Empty<RouteStep>();
     Status = (reason ?? string.Empty) + (route == null
-      ? $"The map doesn't show a way from {From.Name} to {To.Name}."
+      ? $"{NoWayStart} from {From.Name} to {To.Name}" + (_avoiding.Count == 0 ? "." : " without the ways avoided.")
       : route.Count == 0
         ? $"You're at {To.Name}."
         : Summary());
@@ -222,7 +252,10 @@ public sealed class Directions
     var note = assumed == 0 ? string.Empty
       : assumed == 1 ? " One way is only assumed: nobody has gone it yet."
       : $" {assumed} ways are only assumed: nobody has gone them yet.";
-    return $"{moves} to {To.Name}.{note}";
+    var avoiding = _avoiding.Count == 0 ? string.Empty
+      : _avoiding.Count == 1 ? " Avoiding 1 way."
+      : $" Avoiding {_avoiding.Count} ways.";
+    return $"{moves} to {To.Name}.{note}{avoiding}";
   }
 
   private string Prompt()

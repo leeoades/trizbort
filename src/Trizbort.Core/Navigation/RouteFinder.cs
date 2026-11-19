@@ -39,9 +39,11 @@ public static class RouteFinder
 
   /// <summary>
   ///   The steps from <paramref name="from" /> to <paramref name="to" />: none when they're the same place, null when
-  ///   the map shows no way.
+  ///   the map shows no way. Steps <paramref name="avoid" /> says to avoid ("plover", to get round without the spell)
+  ///   aren't taken.
   /// </summary>
-  public static IReadOnlyList<RouteStep> Find(IEnumerable<Element> elements, Room from, Room to)
+  public static IReadOnlyList<RouteStep> Find(IEnumerable<Element> elements, Room from, Room to,
+    Func<RouteStep, bool> avoid = null)
   {
     from = Place(from);
     to = Place(to);
@@ -61,6 +63,7 @@ public static class RouteFinder
       if (!ways.TryGetValue(room, out var leaving)) continue;
       foreach (var (step, stepCost) in leaving)
       {
+        if (avoid != null && avoid(step)) continue;
         var next = sofar + stepCost;
         if (cost.TryGetValue(step.To, out var known) && known <= next) continue;
         cost[step.To] = next;
@@ -106,6 +109,14 @@ public static class RouteFinder
 
     return ways;
   }
+
+  /// <summary>
+  ///   Whether <paramref name="step" /> is the way <paramref name="avoided" /> is: the same command from the same place
+  ///   along the same join (wherever the route it was in was going).
+  /// </summary>
+  public static bool SameWay(RouteStep step, RouteStep avoided) =>
+    step.Join == avoided.Join && Place(step.From) == Place(avoided.From) &&
+    string.Equals(step.Command, avoided.Command, StringComparison.OrdinalIgnoreCase);
 
   /// <summary>What to type for a way: the direction's word ("north", "up", "in"), or the command or label as written.</summary>
   private static string Command(JoinWay way)

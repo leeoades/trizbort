@@ -22,6 +22,18 @@ public partial class DirectionsPanel : UserControl
         if (clipboard != null) await clipboard.SetTextAsync(vm.DirectionsText);
     }
 
+    private void OnAvoidStep(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm && sender is MenuItem { DataContext: DirectionStepItem step })
+            vm.AvoidDirectionStep(step);
+    }
+
+    private void OnAllowWay(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm && sender is Button { DataContext: AvoidedWayItem way })
+            vm.AllowAvoidedWay(way);
+    }
+
     private void OnStepSelected(object? sender, SelectionChangedEventArgs e)
     {
         if (DataContext is MainWindowViewModel vm && Steps.SelectedItem is DirectionStepItem step) vm.ShowDirectionStep(step);

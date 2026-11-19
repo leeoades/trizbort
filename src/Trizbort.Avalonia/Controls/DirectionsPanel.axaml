@@ -69,19 +69,44 @@
             </StackPanel>
 
             <StackPanel DockPanel.Dock="Bottom" Margin="12,4,12,10" Spacing="4">
+                <!-- the ways the directions go round, each with Allow to take it again -->
+                <StackPanel x:Name="AvoidingPanel" Spacing="4" IsVisible="{Binding IsAvoidingWays}">
+                    <TextBlock Classes="section" Text="AVOIDING" />
+                    <ItemsControl ItemsSource="{Binding DirectionsAvoiding}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AvoidedWayItem">
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                                    <StackPanel Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Text}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Where}" FontSize="11" Opacity="0.75" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Allow" Padding="8,2" HorizontalAlignment="Right"
+                                            VerticalAlignment="Center" Click="OnAllowWay"
+                                            ToolTip.Tip="Let the directions take this way again" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
                 <Border Classes="divider" Margin="0,0,0,4" />
                 <Button x:Name="CopyButton" Content="Copy Commands" Click="OnCopy"
                         IsEnabled="{Binding HasDirectionsSteps}"
                         ToolTip.Tip="Copy the commands, one a line, to paste into the game" />
                 <TextBlock Classes="small"
-                           Text="Follows the joins on the map: it can't solve puzzles. Click a step to see where it goes." />
+                           Text="Follows the joins on the map: it can't solve puzzles. Click a step to see where it goes; right-click it to avoid it." />
             </StackPanel>
 
             <ListBox x:Name="Steps" Margin="8,0" ItemsSource="{Binding DirectionsSteps}"
                      SelectionChanged="OnStepSelected" Background="Transparent">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:DirectionStepItem">
-                        <StackPanel Spacing="1">
+                        <StackPanel Spacing="1" Background="Transparent">
+                            <StackPanel.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Avoid This Route" Click="OnAvoidStep"
+                                              ToolTip.Tip="Find a way round this step (to get there without a spell, say)" />
+                                </ContextMenu>
+                            </StackPanel.ContextMenu>
                             <TextBlock Text="{Binding Text}" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding Where}" FontSize="11" Opacity="0.75" TextWrapping="Wrap" />
                         </StackPanel>
