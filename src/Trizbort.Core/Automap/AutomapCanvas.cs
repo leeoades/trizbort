@@ -66,7 +66,7 @@ public class AutomapCanvas : IAutomapCanvas
   {
     foreach (var connection in CurrentProject.Elements.OfType<Connection>())
     {
-      if (IsCommandJoin(connection)) continue;
+      if (OnlyByCommand(connection)) continue;
       var source = connection.GetSourceRoom();
       var target = connection.GetTargetRoom();
       if (source != room && target != room) continue;
@@ -388,6 +388,13 @@ public class AutomapCanvas : IAutomapCanvas
   ///   not by its look: the user can give any connection a dotted line and a middle label.
   /// </summary>
   internal static bool IsCommandJoin(Connection connection) => !string.IsNullOrEmpty(connection.AutomapCommand);
+
+  /// <summary>
+  ///   A join made by a command only, with no direction among its ways. A "?" join (a way through automap didn't map)
+  ///   that the user has labelled with directions ("east") leads that way.
+  /// </summary>
+  internal static bool OnlyByCommand(Connection connection) =>
+    IsCommandJoin(connection) && !JoinWays.Of(connection).Any(way => way.IsDirection);
 
   private static CompassPoint EndPoint(Connection connection, bool atStart)
   {
@@ -1114,16 +1121,18 @@ public class AutomapCanvas : IAutomapCanvas
     var point = CompassPointHelper.GetCompassDirection(direction);
     foreach (var connection in CurrentProject.Elements.OfType<Connection>())
     {
-      if (IsCommandJoin(connection)) continue;
+      if (OnlyByCommand(connection)) continue;
       var source = connection.GetSourceRoom(out var sourcePoint);
       var target = connection.GetTargetRoom(out var targetPoint);
       if (source == null || target == null || source == target) continue;
       if (source != room && target != room) continue;
       var ways = JoinWays.Of(connection);
-      if (source == room && (sourcePoint == point || JoinWays.Lists(ways, true, direction)))
+      // the side a command join leaves from says nothing; its label does
+      var bySide = !IsCommandJoin(connection);
+      if (source == room && ((bySide && sourcePoint == point) || JoinWays.Lists(ways, true, direction)))
         rooms.Add(target);
       else if (target == room && connection.Flow == ConnectionFlow.TwoWay &&
-               (targetPoint == point || JoinWays.Lists(ways, false, direction)))
+               ((bySide && targetPoint == point) || JoinWays.Lists(ways, false, direction)))
         rooms.Add(source);
     }
 
@@ -1313,7 +1322,8 @@ public class AutomapCanvas : IAutomapCanvas
     out bool wrongWay)
   {
     foreach (var element in CurrentProject.Elements)
-      if (element is Connection connection && !IsCommandJoin(connection))
+      // (a "?" way through labelled with directions by the user is the join: the direction is recorded on it)
+      if (element is Connection connection && !OnlyByCommand(connection))
       {
         var fromRoom = connection.GetSourceRoom(out var fromDirection);
         var toRoom = connection.GetTargetRoom(out var toDirection);

@@ -1724,7 +1724,7 @@ public sealed class Automap : IAutomapController
   {
     foreach (var connection in here.GetConnections())
     {
-      if (AutomapCanvas.IsCommandJoin(connection)) continue;
+      if (AutomapCanvas.OnlyByCommand(connection)) continue;
       var source = connection.GetSourceRoom();
       var target = connection.GetTargetRoom();
       if (source == null || target == null || source == target) continue;
@@ -1750,7 +1750,7 @@ public sealed class Automap : IAutomapController
     var any = false;
     foreach (var connection in here.GetConnections())
     {
-      if (AutomapCanvas.IsCommandJoin(connection)) continue;
+      if (AutomapCanvas.OnlyByCommand(connection)) continue;
       var source = connection.GetSourceRoom();
       var target = connection.GetTargetRoom();
       if (source == null || target == null || source == target) continue;
