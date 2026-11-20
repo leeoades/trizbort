@@ -11,6 +11,7 @@ using Trizbort.Domain.Misc;
 using Trizbort.Setup;
 using CoreColors = Trizbort.Domain.Misc.Colors;
 using DrawingContext = Avalonia.Media.DrawingContext;
+using Rect = Avalonia.Rect;
 
 namespace Trizbort.Avalonia.Controls;
 

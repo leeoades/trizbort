@@ -87,16 +87,17 @@ public class DirectionPickerButton : UserControl
             }
         };
 
+        var flyout = new Flyout { Content = panel, Placement = PlacementMode.BottomEdgeAlignedRight };
+        flyout.Opening += (_, _) => Read();
         _button = new Button
         {
             Name = "CompassButton",
             Padding = new Thickness(4, 2),
             VerticalAlignment = VerticalAlignment.Stretch,
             Content = new PathIcon { Data = Compass, Width = 16, Height = 16 },
-            Flyout = new Flyout { Content = panel, Placement = PlacementMode.BottomEdgeAlignedRight }
+            Flyout = flyout
         };
         ToolTip.SetTip(_button, "Pick the directions, or type a custom command");
-        _button.Flyout!.Opening += (_, _) => Read();
         Content = _button;
     }
 
