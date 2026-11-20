@@ -41,6 +41,7 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **Centre on Current Room** only moves the map: it no longer selects the room you're in.
 - Ctrl + mouse wheel zooms a full step a notch, as the wheel alone does, instead of 1%. **View > Zoom In 1%** and
   **Zoom Out 1%** still zoom finely.
 - The join properties no longer say which way a one-way arrow points beside **One Way Arrow**: the rooms are named
