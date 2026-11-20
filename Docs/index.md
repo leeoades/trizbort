@@ -550,7 +550,7 @@ You can also use the `Up`, `Down`, `Left` and `Right` cursor keys to scroll the 
 
 #### Zooming
 
-If your mouse has a mouse wheel, you can scroll the mouse wheel forwards and backwards to zoom in and out. This scales the map on-screen making it bigger or smaller. `Tools->Application Settings` allows you to flip the mouse wheel's scroll in/out behavior. For more granular zooms, you can hit the `TAB` key and type the precise zoom percentage you want. Anything from 10% to 1000% is valid.
+If your mouse has a mouse wheel, you can scroll the mouse wheel forwards and backwards to zoom in and out. This scales the map on-screen making it bigger or smaller. `Tools->Application Settings` allows you to flip the mouse wheel's scroll in/out behavior. Holding `Ctrl` while you turn the wheel zooms too (useful when the wheel is set to pan), the same step a notch. For more granular zooms, you can hit the `TAB` key and type the precise zoom percentage you want. Anything from 10% to 1000% is valid.
 
 You can also use the `+` or `=` key to zoom in, or the `-` key to zoom out. The zoom in/out factor is a power of 80%.
 

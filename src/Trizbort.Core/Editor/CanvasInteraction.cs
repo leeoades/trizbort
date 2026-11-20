@@ -437,8 +437,10 @@ public sealed class CanvasInteraction : IDisposable
     }
     else
     {
+      // a mouse wheel notch zooms a step, with Ctrl or without (Ctrl once zoomed 1% a notch, far slower than Ctrl on
+      // a trackpad); the View menu's +1% and -1% zoom finely
       var direction = input.DeltaY > 0 ? 1 : input.DeltaY < 0 ? -1 : 0;
-      _session.Viewport.ZoomWheel(direction, input.Client, ctrl, settings.InvertMouseWheel);
+      _session.Viewport.ZoomWheel(direction, input.Client, false, settings.InvertMouseWheel);
     }
 
     _tooltipSuppressed = true;
