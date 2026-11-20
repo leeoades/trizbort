@@ -57,7 +57,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   Pit no longer leaves from the top left (facing the far room) with its line crossing the room to the label.
 - A room the game describes differently as play goes on (the Twopit Room as the beanstalk grows) is asked about once:
   picking it in **Which room does it mean?** keeps its new description with it, now while **Tracking only** too, and
-  the question says so.
+  the question says so. The other descriptions are saved with the map (as `otherDescription` elements; older versions
+  keep only the first), so you aren't asked again after opening it again, and editing the room's description in its
+  properties keeps them.
 - While the map follows you (tracking round a maze), join end labels no longer jump from one side of a room to the
   other as the view moves: they keep clear of everything on the map, not only of what's in view.
 - **Quick Find** (Ctrl+F) opens with the caret in its text box, ready to type.

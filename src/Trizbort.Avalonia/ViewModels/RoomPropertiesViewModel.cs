@@ -361,11 +361,8 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     {
         room.Name = Name;
         room.SubTitle = SubTitle;
-        room.ClearDescriptions();
-        if (!string.IsNullOrEmpty(Description))
-        {
-            room.AddDescription(Description);
-        }
+        // the box edits the room's description; the other ways the game has described it are kept
+        room.SetPrimaryDescription(Description);
         room.Objects = Objects;
         room.ObjectsPosition = ObjectsPosition;
         room.ObjectsCustomPosition = UseCustomPosition;

@@ -13,6 +13,7 @@ using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
 using Trizbort.Editor;
+using Trizbort.Setup;
 
 namespace Trizbort.Core.Tests.Automap;
 
@@ -88,6 +89,50 @@ public class DescribedDifferentlyTests : IsolatedProjectTests
     prompts.Asked.ShouldBe(1);
     pit.Descriptions.ShouldContain(After);
     Project.Current.Elements.OfType<Room>().Count().ShouldBe(2);
+  }
+
+  /// <summary>Lee: it didn't ask again until the map was saved and opened again; only the first description was saved.</summary>
+  [Test]
+  public async Task TheNewDescription_IsSaved_SoItIsntAskedAgainAfterTheMapIsOpenedAgain()
+  {
+    var (_, pit) = Map();
+    var path = Files.File("game.txt");
+    File.WriteAllText(path,
+      ">look\n\nHall\nA grand hall.\n\n" +
+      $">e\n\nIn West Pit\n{After}\n\n>");
+    var settings = AutomapSettings.Default;
+    settings.AutoTidy = false;
+    settings.GuessExits = false;
+    var prompts = new PickTheRoom();
+    (await HeadlessAutomap.RunAsync(Project.Current, path, settings, prompts)).Succeeded.ShouldBeTrue();
+    prompts.Asked.ShouldBe(1);
+
+    new LegacyMapFileEngine(Project.Current).Save(Files.File("map.trizbort")).ShouldBeTrue();
+    using var reopened = new Project();
+    PersistenceRegressionTests.Load(reopened, Files.File("map.trizbort"));
+    var reopenedPit = reopened.Elements.OfType<Room>().Single(room => room.Name == "In West Pit");
+    reopenedPit.Descriptions.ShouldBe(new[] { Before, After });
+    // and saved again, as it was
+    new LegacyMapFileEngine(reopened).Save(Files.File("again.trizbort")).ShouldBeTrue();
+    File.ReadAllText(Files.File("again.trizbort")).ShouldBe(File.ReadAllText(Files.File("map.trizbort")));
+
+    var again = new PickTheRoom();
+    (await HeadlessAutomap.RunAsync(reopened, path, settings, again)).Succeeded.ShouldBeTrue();
+    again.Asked.ShouldBe(0);
+    pit.ShouldNotBeNull();
+  }
+
+  [Test]
+  public void TheRoomDialog_EditsTheFirstDescription_AndKeepsTheOthers()
+  {
+    var (_, pit) = Map();
+    pit.AddDescription(After);
+
+    pit.SetPrimaryDescription("You are at the bottom of the western pit.");
+
+    pit.Descriptions.ShouldBe(new[] { "You are at the bottom of the western pit.", After });
+    pit.SetPrimaryDescription(string.Empty);
+    pit.Descriptions.ShouldBe(new[] { After });
   }
 
   [Test]
