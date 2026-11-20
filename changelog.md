@@ -33,9 +33,16 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - Drag a split join's label ("to Debris Room") to move it. The stub runs on to it, drawn as any join is, and it keeps
   its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
   names. Saved with the map.
+- Map Settings, Lines & Grid, has a **Join labels** section: always label N, E, S, W; always label NE, SE, SW, NW;
+  always label Up, Down; and **Direction words**, to draw the directions in every join label as written, abbreviated
+  (n, u) or in full (north, up), so a map with a mix of "u" and "up" reads one way. A sample room shows the result.
+- The join properties have a compass button beside the Start and End text: press the directions (and Up or Down) to
+  pick them, with a Custom box for anything else, and the label is written for you ("n / up / xyzzy").
 
 ### Changed
 
+- The join properties no longer say which way a one-way arrow points beside **One Way Arrow**: the rooms are named
+  above the Start and End boxes.
 - In a room automap made, the room dialog shows the name and description read-only, with a padlock beside each:
   automap knows the room again by them. Clicking a padlock asks, then lets you edit them.
 - Join Properties name the room above each end's box, and Start is always the room on the left (or the upper one,

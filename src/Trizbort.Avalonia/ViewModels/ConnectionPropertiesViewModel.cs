@@ -39,7 +39,6 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     private bool _updatingPreset;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(OneWayNote))]
     private bool _isDirectional;
 
     /// <summary>The room above the Start box: the one on the left, or the upper one when they're one above the other.</summary>
@@ -52,10 +51,6 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
 
     private string _fromRoom = string.Empty;
     private string _toRoom = string.Empty;
-
-    /// <summary>Which way the arrow points, beside One Way Arrow while it's ticked.</summary>
-    public string OneWayNote =>
-        IsDirectional && (_fromRoom.Length > 0 || _toRoom.Length > 0) ? $"from {_fromRoom} to {_toRoom}" : string.Empty;
 
     /// <summary>
     ///   Whether the boxes show the join the other way round from how it's stored: Start is always the room on the

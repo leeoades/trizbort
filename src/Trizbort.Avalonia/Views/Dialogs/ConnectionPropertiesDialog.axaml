@@ -28,9 +28,6 @@
                             <CheckBox x:Name="SplitBox" Content="Split" IsChecked="{Binding IsSplit}"
                                       ToolTip.Tip="Draw the join as two short stubs, one out of each room, each labelled with the room at the other end: for a long join, or one into another part of the map" />
                             <CheckBox Content="One Wa_y Arrow" IsChecked="{Binding IsDirectional}" />
-                            <TextBlock x:Name="OneWayNote" Text="{Binding OneWayNote}" VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis" MaxWidth="320" Opacity="0.75"
-                                       IsVisible="{Binding IsDirectional}" />
                         </StackPanel>
                         <Grid ColumnDefinitions="Auto,12,*">
                             <Label Grid.Column="0" Classes="field-label" Content="_Color:" Target="{Binding #LineColorButton}" />
@@ -49,14 +46,24 @@
                             <TextBlock Grid.Row="1" Grid.Column="0" x:Name="StartRoomText" Text="{Binding StartRoomName}"
                                        FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
                                        ToolTip.Tip="{Binding StartRoomName}" />
-                            <TextBox Grid.Row="2" Grid.Column="0" x:Name="StartBox" Text="{Binding StartText}" ToolTip.Tip="Text shown near this room's end of the connection line." />
+                            <DockPanel Grid.Row="2" Grid.Column="0">
+                                <controls:DirectionPickerButton DockPanel.Dock="Right" x:Name="StartDirections" Margin="4,0,0,0"
+                                                                Text="{Binding StartText, Mode=TwoWay}"
+                                                                AutomationProperties.Name="Start directions" />
+                                <TextBox x:Name="StartBox" Text="{Binding StartText}" ToolTip.Tip="Text shown near this room's end of the connection line." />
+                            </DockPanel>
                             <Label Grid.Row="0" Grid.Column="2" Content="Midd_le:" Target="{Binding #MidBox}" />
                             <TextBox Grid.Row="2" Grid.Column="2" x:Name="MidBox" Text="{Binding MidText}" ToolTip.Tip="Text shown at the middle of the connection line." />
                             <Label Grid.Row="0" Grid.Column="4" Content="_End:" Target="{Binding #EndBox}" />
                             <TextBlock Grid.Row="1" Grid.Column="4" x:Name="EndRoomText" Text="{Binding EndRoomName}"
                                        FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
                                        ToolTip.Tip="{Binding EndRoomName}" />
-                            <TextBox Grid.Row="2" Grid.Column="4" x:Name="EndBox" Text="{Binding EndText}" ToolTip.Tip="Text shown near this room's end of the connection line." />
+                            <DockPanel Grid.Row="2" Grid.Column="4">
+                                <controls:DirectionPickerButton DockPanel.Dock="Right" x:Name="EndDirections" Margin="4,0,0,0"
+                                                                Text="{Binding EndText, Mode=TwoWay}"
+                                                                AutomationProperties.Name="End directions" />
+                                <TextBox x:Name="EndBox" Text="{Binding EndText}" ToolTip.Tip="Text shown near this room's end of the connection line." />
+                            </DockPanel>
                         </Grid>
 
                         <!-- Presets: radios track the Start/Middle/End text -->

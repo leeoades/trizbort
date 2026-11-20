@@ -47,7 +47,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="12" Margin="8" Grid.IsSharedSizeScope="True">
                         <HeaderedContentControl Classes="group" Header="Lines">
-                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="L" />
                                 <ColumnDefinition Width="12" />
@@ -64,14 +64,36 @@
                             <NumericUpDown Grid.Row="4" Grid.Column="2" x:Name="TextOffsetBox" Value="{Binding TextOffsetFromConnection}" Minimum="0" Maximum="64" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
                             <Label Grid.Row="5" Grid.Column="0" Classes="field-label" Content="_Preferred Distance Between Rooms:" Target="{Binding #PreferredDistanceBox}" />
                             <NumericUpDown Grid.Row="5" Grid.Column="2" x:Name="PreferredDistanceBox" Value="{Binding PreferredDistanceBetweenRooms}" Minimum="16" Maximum="512" FormatString="0" Increment="1" HorizontalAlignment="Left" Width="120" />
-                            <CheckBox Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3"
-                                      Content="Always label _diagonal exits (ne, nw, se, sw)"
-                                      ToolTip.Tip="Write the direction at each end of a join that leaves a room from a corner, unless the end has a label already"
-                                      IsChecked="{Binding LabelDiagonalExits}" />
-                            <CheckBox Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3"
-                                      Content="Always label straight exit_s (n, e, s, w)"
-                                      ToolTip.Tip="Write the direction at each end of a join that leaves a room from its north, east, south or west side, unless the end has a label already"
-                                      IsChecked="{Binding LabelCompassExits}" />
+                        </Grid>
+                        </HeaderedContentControl>
+                        <HeaderedContentControl Classes="group" Header="Join labels">
+                        <Grid ColumnDefinitions="*,12,Auto">
+                            <StackPanel Grid.Column="0" Spacing="8">
+                                <CheckBox x:Name="LabelCompassBox"
+                                          Content="Always _label N, E, S, W"
+                                          ToolTip.Tip="Write the direction at each end of a join that leaves a room from its north, east, south or west side, unless the end has a label already"
+                                          IsChecked="{Binding LabelCompassExits}" />
+                                <CheckBox x:Name="LabelDiagonalBox"
+                                          Content="Always label N_E, SE, SW, NW"
+                                          ToolTip.Tip="Write the direction at each end of a join that leaves a room from a corner, unless the end has a label already"
+                                          IsChecked="{Binding LabelDiagonalExits}" />
+                                <CheckBox x:Name="LabelUpDownBox"
+                                          Content="Always label _Up, Down"
+                                          ToolTip.Tip="Show up and down in join labels. The side of a room can't show them, so automap writes them on the join; untick to leave them off the map"
+                                          IsChecked="{Binding LabelUpDownExits}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Label Classes="field-label" Content="Direction wor_ds:" Target="{Binding #DirectionWordsBox}" VerticalAlignment="Center" />
+                                    <ComboBox x:Name="DirectionWordsBox" SelectedIndex="{Binding DirectionWordsIndex}" MinWidth="170"
+                                              ToolTip.Tip="How directions are written in join labels. Only the drawing changes: the labels themselves are kept as they were written">
+                                        <ComboBoxItem Content="As written" />
+                                        <ComboBoxItem Content="Abbreviated (n, u)" />
+                                        <ComboBoxItem Content="Full words (north, up)" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                            <Border Grid.Column="2" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" VerticalAlignment="Top">
+                                <controls:JoinLabelsPreview x:Name="JoinLabelsPreview" AutomationProperties.Name="Join labels preview" />
+                            </Border>
                         </Grid>
                         </HeaderedContentControl>
                         <HeaderedContentControl Classes="group" Header="Grid">

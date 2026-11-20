@@ -127,20 +127,4 @@ public class ConnectionPropertiesRoomsTests
         join.StartText.ShouldBeEmpty();
         join.EndText.ShouldBeEmpty();
     }
-
-    [Test]
-    public void OneWay_SaysWhichWayTheArrowPoints()
-    {
-        var hall = AddRoom("Hall", 0, 0);
-        var garden = AddRoom("Garden", 300, 0);
-        var join = Join(garden, CompassPoint.West, hall, CompassPoint.East);
-        join.Flow = ConnectionFlow.OneWay;
-        var vm = new ConnectionPropertiesViewModel();
-
-        vm.Initialize(join);
-
-        vm.OneWayNote.ShouldBe("from Garden to Hall");
-        vm.IsDirectional = false;
-        vm.OneWayNote.ShouldBeEmpty();
-    }
 }
