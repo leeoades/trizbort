@@ -62,6 +62,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **Tidy Map** tidies maps automap made: rooms touching, or a join running across a room, were left as they were
+  when the rooms counted as placed by hand, which every automapped room does, so often nothing moved.
 - The join properties show a one-way join the way its arrow points: Start is the room it leaves, End the room it
   goes to (Bedquilt to the Large Low Room showed the Large Low Room first).
 - A split join's stub leaves its room on the side its label is on: "d" with its label below and right of the Brink of

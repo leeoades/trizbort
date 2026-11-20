@@ -188,6 +188,9 @@ public static partial class LayoutTidy
   {
     var map = new LayoutMap(elements ?? new List<Element>());
     var movable = (rooms ?? Enumerable.Empty<Room>()).Where(map.Contains).ToList();
+    // asked to tidy them: rooms touching, or a join across a room, are clutter now, even where the user put them so
+    // (otherwise a map placed by hand, as automap places every room it makes, has nothing to tidy)
+    map.NotAsLeft(movable);
     return method == TidyMethod.Thorough
       ? new TidyPlan(map, movable, method, SolverPlanMs, token =>
       {
@@ -340,6 +343,17 @@ public static partial class LayoutTidy
     public double HalfWidth(int room) => _halfW[room];
     public double HalfHeight(int room) => _halfH[room];
     public int IndexOf(Room room) => _index.TryGetValue(room, out var i) ? i : -1;
+
+    /// <summary>
+    ///   Treats <paramref name="rooms" /> as not placed by hand, so where they touch another room, or a join runs
+    ///   across them, counts as clutter (see AsLeft): for Tidy Map, which the user asked for.
+    /// </summary>
+    public void NotAsLeft(IEnumerable<Room> rooms)
+    {
+      foreach (var room in rooms)
+        if (_index.TryGetValue(room, out var i))
+          _byHand[i] = false;
+    }
 
     public LayoutMap(IList<Element> elements)
     {

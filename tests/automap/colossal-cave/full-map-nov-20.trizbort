@@ -1,0 +1,1005 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<trizbort version="1.0.0.0">
+	<info />
+	<map>
+		<room id="1" stableId="ecaedcd5-3620-477e-b62e-835950d09914" name="At End Of Road" subtitle="" x="800" y="672" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" isStartRoom="yes" description="You are standing at the end of a road before a small brick building. Around you is a forest. A small stream flows out of the building and down a gully." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="3" stableId="e107f78c-25b0-40c0-888e-321ed6fb0182" name="Inside Building" subtitle="" x="960" y="672" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are inside a building, a well house for a large spring." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="4" name="" description="" startText="e / in" automapStartTravelled="in east" automapEndTravelled="out west" automapWays="s,d,in,1,in;e,d,out,1,out;s,d,east,1,e;e,d,west,1,w" automapWaysFor="e / in||w / out||" endText="w / out" ZOrder="0">
+			<dock index="0" id="1" port="e" />
+			<dock index="1" id="3" port="w" />
+		</line>
+		<room id="5" stableId="2e6158f7-035c-4a3e-88f6-a223b52b8ce0" name="In A Valley" subtitle="" x="800" y="800" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a valley in the forest beside a stream tumbling along a rocky bed." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="6" name="" description="" startText="s / d" automapStartTravelled="south down" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n;s,d,down,1,d" automapWaysFor="s / d||||North" ZOrder="0">
+			<dock index="0" id="1" port="s" />
+			<dock index="1" id="5" port="n" />
+		</line>
+		<room id="7" stableId="4dacb92e-0f61-4607-ae20-6941c5239554" name="At Slit In Streambed" subtitle="" x="800" y="928" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="At your feet all the water of the stream splashes into a 2-inch slit in the rock. Downstream the streambed is bare rock." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="8" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="5" port="s" />
+			<dock index="1" id="7" port="n" />
+		</line>
+		<room id="9" stableId="b52e8295-4941-4214-8896-24926257f82b" name="Outside Grate" subtitle="" x="800" y="1056" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="You are in a 20-foot depression floored with bare dirt. Set into the dirt is a strong steel grate mounted in concrete. A dry streambed leads into the depression." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="10" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="7" port="s" />
+			<dock index="1" id="9" port="n" />
+		</line>
+		<room id="11" stableId="6c6815d8-e080-4bd8-8940-63a83129b537" name="Below the Grate" subtitle="" x="704" y="1216" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a small chamber beneath a 3x3 steel grate to the surface. A low crawl over cobbles leads inward to the west." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="12" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="up" automapWays="s,d,down,1,d;e,d,up,1,u" automapWaysFor="d||u||" endText="u" ZOrder="0">
+			<dock index="0" id="9" port="ssw" />
+			<dock index="1" id="11" port="nne" />
+		</line>
+		<room id="13" stableId="c77512ea-9d70-4fcc-9458-14ccbc46475e" name="In Cobble Crawl" subtitle="" x="544" y="1216" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are crawling over cobbles in a low passage. There is a dim light at the east end of the passage." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="14" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="11" port="w" />
+			<dock index="1" id="13" port="e" />
+		</line>
+		<room id="15" stableId="a48bd526-7d92-4c4a-bad1-ebdea0e90ed6" name="In Debris Room" subtitle="" x="384" y="1216" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" isDark="yes" placedByHand="yes" description="You are in a debris room filled with stuff washed in from the surface. A low wide passage with cobbles becomes plugged with mud and debris here, but an awkward canyon leads upward and west." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="16" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="13" port="w" />
+			<dock index="1" id="15" port="e" />
+		</line>
+		<room id="17" stableId="3aee24c4-7f85-46f9-90cf-bf37b7e86ea4" name="Sloping E/W Canyon" subtitle="" x="224" y="1216" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" isDark="yes" placedByHand="yes" description="You are in an awkward sloping east/west canyon." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="19" name="" description="" startText="w / u" automapStartTravelled="west up" automapEndTravelled="east down" automapWays="s,d,west,1,w;e,d,east,1,e;s,d,up,1,u;e,d,down,1,d" automapWaysFor="w / u||e / d||" endText="e / d" ZOrder="0">
+			<dock index="0" id="15" port="w" />
+			<dock index="1" id="17" port="e" />
+		</line>
+		<room id="20" stableId="89cc602f-fe34-43a2-8699-908d154d0a32" name="Orange River Chamber" subtitle="" x="64" y="1216" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a splendid chamber thirty feet high. The walls are frozen rivers of orange stone. An awkward canyon and a good passage exit from east and west sides of the chamber." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="21" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="17" port="w" />
+			<dock index="1" id="20" port="e" />
+		</line>
+		<room id="22" stableId="1d548dee-bbab-45a2-bd05-1b9959271b0b" name="At Top of Small Pit" subtitle="" x="-96" y="1216" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="At your feet is a small pit breathing traces of white mist. A west passage ends here except for a small crack leading on." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="23" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="20" port="w" />
+			<dock index="1" id="22" port="e" />
+		</line>
+		<room id="25" stableId="3132e88a-3291-4f15-afd3-0badf9f1a69b" name="In Hall of Mists" subtitle="" x="64" y="1408" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at one end of a vast hall stretching forward out of sight to the west. There are openings to either side. Nearby, a wide stone staircase leads downward. The hall is filled with wisps of white mist swaying to and fro almost as if alive. A cold wind blows up the staircase. There is a passage at the top of a dome behind you." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="26" name="" description="" startText="d" midText="don't carry the gold down!" automapStartTravelled="down command" automapEndTravelled="up" automapWays="s,d,down,1,d;e,d,up,1,u;s,c,,0,don%27t%20carry%20the%20gold%20down%21" automapWaysFor="d|don't carry the gold down!|u||" endText="u" ZOrder="0">
+			<dock index="0" id="22" port="sse" />
+			<dock index="1" id="25" port="n" />
+		</line>
+		<room id="28" stableId="0c2e494d-bf66-43e5-bc84-3396b75d3364" name="Hall of the Mountain King" subtitle="" x="-320" y="1824" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in the hall of the mountain king, with passages off in all directions." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="29" name="" description="" startText="n / d" automapStartTravelled="down north" automapEndTravelled="up east" automapWays="s,d,down,1,d;e,d,up,1,u;e,d,east,1,e;s,d,north,1,n" automapWaysFor="n / d||e / u||" endText="e / u" ZOrder="0">
+			<dock index="0" id="25" port="ssw" />
+			<dock index="1" id="28" port="nne" />
+		</line>
+		<room id="37" stableId="a2e43971-cda6-4081-94ed-7e34fc0d9c59" name="Low N/S Passage" subtitle="" x="-320" y="1696" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a low N/S passage at a hole in the floor. The hole goes down to an E/W passage." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>bars of silver</objects>
+		</room>
+		<line id="38" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="28" port="n" />
+			<dock index="1" id="37" port="s" />
+		</line>
+		<room id="40" stableId="c317e2e3-cbac-4b4a-a39e-7ba043235e05" name="At &quot;Y2&quot;" subtitle="" x="-288" y="1536" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a large room, with a passage to the south, a passage to the west, and a wall of broken rock to the east. There is a large &quot;Y2&quot; on a rock in the room's center." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="41" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="37" port="n" />
+			<dock index="1" id="40" port="s" />
+		</line>
+		<room id="43" stableId="5193568e-cba8-4317-baf8-a0a7a81a1c0b" name="At Window on Pit" subtitle="" x="-448" y="1536" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're at a low window overlooking a huge pit, which extends up out of sight. A floor is indistinctly visible over 50 feet below. Traces of white mist cover the floor of the pit, becoming thicker to the right. Marks in the dust around the window would seem to indicate that someone has been here recently. Directly across the pit from you and 25 feet away there is a similar window looking into a lighted room. A shadowy figure can be seen there peering back at you." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="44" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="40" port="w" />
+			<dock index="1" id="43" port="e" />
+		</line>
+		<room id="42" stableId="e6162255-2eb0-49e4-8b1d-56f00ce9655e" name="Jumble of Rock" subtitle="" x="-128" y="1536" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a jumble of rock, with cracks everywhere." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="47" name="" description="" automapStartTravelled="east" automapEndTravelled="down" automapWays="s,d,east,1,e;e,d,down,1,d" automapWaysFor="||d|East|" endText="d" ZOrder="0">
+			<dock index="0" id="40" port="e" />
+			<dock index="1" id="42" port="ssw" />
+		</line>
+		<line id="48" name="" description="" flow="oneWay" startText="u" automapStartTravelled="up" automapWays="s,d,up,1,u" automapWaysFor="u||||" ZOrder="0">
+			<dock index="0" id="42" port="nne" />
+			<dock index="1" id="25" port="wsw" />
+		</line>
+		<room id="32" stableId="40e97df2-4ae9-42f2-b9b8-ebf686cd05f6" name="In West Side Chamber" subtitle="" x="-928" y="1824" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in the west side chamber of the hall of the mountain king. A passage continues west and up here." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="49" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="28" port="w" />
+			<dock index="1" id="32" port="e" />
+		</line>
+		<room id="50" stableId="358758ff-03c1-4ea9-acde-018570735c29" name="N/S and E/W Crossover" subtitle="" x="-1088" y="1824.0001" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at a crossover of a high N/S passage and a low E/W one." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="52" name="" description="" startText="w / u" automapStartTravelled="west up" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e;s,d,up,1,u" automapWaysFor="w / u||||East" ZOrder="0">
+			<dock index="0" id="32" port="w" />
+			<dock index="1" id="50" port="e" />
+		</line>
+		<room id="53" stableId="29fca8a2-d652-46ce-b23b-ae5ee30622ea" name="At East End of Long Hall" subtitle="" x="-1184" y="1952" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at the east end of a very long hall apparently without side chambers. To the east a low wide crawl slants up. To the north a round two foot hole slants down." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="54" name="" description="" automapStartTravelled="west" automapEndTravelled="down north" automapWays="s,d,west,1,w;e,d,down,1,d;e,d,north,1,n" automapWaysFor="||n / d|West|" endText="n / d" ZOrder="0">
+			<dock index="0" id="50" port="w" />
+			<dock index="1" id="53" port="n" />
+		</line>
+		<room id="58" stableId="7eaf29b5-343a-4989-8305-ae426d11e5c1" name="At West End of Long Hall" subtitle="" x="-1376" y="1952" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at the west end of a very long featureless hall. The hall joins up with a narrow north/south passage." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="59" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="53" port="w" />
+			<dock index="1" id="58" port="e" />
+		</line>
+		<room id="62" stableId="d50985fb-79fe-446a-95dd-27b27e7c8ef9" name="At West End of Hall of Mists" subtitle="" x="-992" y="1952" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at the west end of the hall of mists. A low wide crawl continues west and another goes north. To the south is a little passage 6 feet off the floor." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="64" name="" description="" startText="e / u" automapStartTravelled="east up" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w;s,d,up,1,u" automapWaysFor="e / u||||West" ZOrder="0">
+			<dock index="0" id="53" port="e" />
+			<dock index="1" id="62" port="w" />
+		</line>
+		<room id="67" stableId="26607dbc-6087-4b91-9ba3-d9616548b5bc" name="West Side of Fissure" subtitle="" x="-832" y="1952" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are on the west side of the fissure in the hall of mists." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="68" name="" description="" startText="e / n" automapStartTravelled="east north" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w;s,d,north,1,n" automapWaysFor="e / n||||West" ZOrder="0">
+			<dock index="0" id="62" port="e" />
+			<dock index="1" id="67" port="w" />
+		</line>
+		<room id="31" stableId="65556e0e-a18e-40c4-990a-66344889a225" name="Maze" subtitle="" x="-2464" y="3776" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="57" name="" description="" automapStartTravelled="south" automapEndTravelled="down" automapWays="s,d,south,1,s;e,d,down,1,d" automapWaysFor="||d|South|" split="yes" endText="d" ZOrder="0">
+			<dock index="0" id="58" port="s" />
+			<dock index="1" id="31" port="nne" />
+		</line>
+		<room id="61" stableId="37ccf854-e950-416f-bbe1-709dc63c381a" name="Maze" subtitle="" x="-2080" y="4192" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisting little passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="69" name="" description="" automapStartTravelled="south" automapEndTravelled="west" automapWays="s,d,south,1,s;e,d,west,1,w" automapWaysFor="|||South|West" ZOrder="0">
+			<dock index="0" id="31" port="s" />
+			<dock index="1" id="61" port="w" />
+		</line>
+		<room id="70" stableId="79e317cd-1de7-4f88-8e0a-b17f24b9f04c" name="Maze" subtitle="" x="-2144" y="3968" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of little twisty passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="71" name="" description="" automapStartTravelled="south" automapEndTravelled="northwest" automapWays="s,d,south,1,s;e,d,northwest,1,nw" automapWaysFor="|||South|NorthWest" ZOrder="0">
+			<dock index="0" id="61" port="s" />
+			<dock index="1" id="70" port="nw" />
+		</line>
+		<room id="72" stableId="7685150a-27ad-4324-9ed2-411ee0794c86" name="Maze" subtitle="" x="-2848" y="4096" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of little twisting passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="73" name="" description="" automapStartTravelled="south" automapEndTravelled="southwest" automapWays="s,d,south,1,s;e,d,southwest,1,sw" automapWaysFor="|||South|SouthWest" ZOrder="0">
+			<dock index="0" id="70" port="s" />
+			<dock index="1" id="72" port="sw" />
+		</line>
+		<room id="74" stableId="fb7a6c22-6fcb-417a-a73b-8cfe7276ab48" name="Maze" subtitle="" x="-2880" y="4288" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a twisty maze of little passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="75" name="" description="" automapStartTravelled="south" automapEndTravelled="southeast" automapWays="s,d,south,1,s;e,d,southeast,1,se" automapWaysFor="|||South|SouthEast" ZOrder="0">
+			<dock index="0" id="72" port="s" />
+			<dock index="1" id="74" port="se" />
+		</line>
+		<room id="76" stableId="060e9185-6669-444c-ad15-564741f5b358" name="Maze" subtitle="" x="-2048" y="4448" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a twisty little maze of passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="77" name="" description="" automapStartTravelled="south" automapEndTravelled="west" automapWays="s,d,south,1,s;e,d,west,1,w" automapWaysFor="|||South|West" ZOrder="0">
+			<dock index="0" id="74" port="s" />
+			<dock index="1" id="76" port="w" />
+		</line>
+		<room id="78" stableId="c2abda13-0f0b-48a6-ab9f-c6e7885da1fd" name="Maze" subtitle="" x="-2176" y="4608" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a twisting maze of little passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="79" name="" description="" automapStartTravelled="south" automapEndTravelled="southwest" automapWays="s,d,south,1,s;e,d,southwest,1,sw" automapWaysFor="|||South|SouthWest" ZOrder="0">
+			<dock index="0" id="76" port="s" />
+			<dock index="1" id="78" port="sw" />
+		</line>
+		<room id="80" stableId="14003df1-ec88-447d-b6c7-4bbe169ac657" name="Maze" subtitle="" x="-2400" y="4736" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a little maze of twisting passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="81" name="" description="" automapStartTravelled="south" automapEndTravelled="east" automapWays="s,d,south,1,s;e,d,east,1,e" automapWaysFor="|||South|East" ZOrder="0">
+			<dock index="0" id="78" port="s" />
+			<dock index="1" id="80" port="e" />
+		</line>
+		<room id="82" stableId="088a8ec5-28df-43d7-80a4-586311b9f0da" name="Dead End, near Vending Machine" subtitle="" x="-2400" y="4896" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You have reached a dead end. There is a massive vending machine here." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>vending machine|batteries</objects>
+		</room>
+		<line id="83" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="80" port="s" />
+			<dock index="1" id="82" port="n" />
+		</line>
+		<room id="84" stableId="15153443-a9f6-4c4e-bb7b-11553ec30781" name="Maze" subtitle="" x="-2624" y="4608" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a little maze of twisty passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="85" name="" description="" flow="oneWay" automapStartTravelled="north" automapWays="s,d,north,1,n" automapWaysFor="|||North|" ZOrder="0">
+			<dock index="0" id="80" port="n" />
+			<dock index="1" id="84" port="ese" />
+		</line>
+		<line id="86" name="" description="" automapStartTravelled="north" automapEndTravelled="west" automapWays="s,d,north,1,n;e,d,west,1,w" automapWaysFor="|||North|West" ZOrder="0">
+			<dock index="0" id="84" port="n" />
+			<dock index="1" id="78" port="w" />
+		</line>
+		<room id="87" stableId="2ee9adeb-9c2b-4f3e-abbe-f6915c3fb542" name="Maze" subtitle="" x="-2784" y="4448" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a little twisty maze of passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="88" name="" description="" flow="oneWay" automapStartTravelled="north" automapWays="s,d,north,1,n" automapWaysFor="|||North|" ZOrder="0">
+			<dock index="0" id="78" port="n" />
+			<dock index="1" id="87" port="ese" />
+		</line>
+		<line id="89" name="" description="" automapStartTravelled="north" automapEndTravelled="northwest" automapWays="s,d,north,1,n;e,d,northwest,1,nw" automapWaysFor="|||North|NorthWest" ZOrder="0">
+			<dock index="0" id="87" port="n" />
+			<dock index="1" id="74" port="nw" />
+		</line>
+		<line id="90" name="" description="" automapStartTravelled="north" automapEndTravelled="northeast" automapWays="s,d,north,1,n;e,d,northeast,1,ne" automapWaysFor="|||North|NorthEast" ZOrder="0">
+			<dock index="0" id="74" port="n" />
+			<dock index="1" id="80" port="ne" />
+		</line>
+		<line id="91" name="" description="" automapStartTravelled="east" automapEndTravelled="southwest" automapWays="s,d,east,1,e;e,d,southwest,1,sw" automapWaysFor="|||East|SouthWest" ZOrder="0">
+			<dock index="0" id="78" port="e" />
+			<dock index="1" id="74" port="sw" />
+		</line>
+		<line id="92" name="" description="" automapStartTravelled="east" automapEndTravelled="northwest" automapWays="s,d,east,1,e;e,d,northwest,1,nw" automapWaysFor="|||East|NorthWest" ZOrder="0">
+			<dock index="0" id="74" port="e" />
+			<dock index="1" id="31" port="nw" />
+		</line>
+		<line id="93" name="" description="" automapStartTravelled="east" automapEndTravelled="southeast" automapWays="s,d,east,1,e;e,d,southeast,1,se" automapWaysFor="|||East|SouthEast" ZOrder="0">
+			<dock index="0" id="31" port="e" />
+			<dock index="1" id="87" port="se" />
+		</line>
+		<line id="94" name="" description="" flow="oneWay" automapStartTravelled="east" automapWays="s,d,east,1,e" automapWaysFor="|||East|" ZOrder="0">
+			<dock index="0" id="87" port="e" />
+			<dock index="1" id="70" port="wsw" />
+		</line>
+		<line id="95" name="" description="" flow="oneWay" automapStartTravelled="east" automapWays="s,d,east,1,e;e,d,northeast,0,ne" automapWaysFor="|||East|NorthEast" ZOrder="0">
+			<dock index="0" id="70" port="e" />
+			<dock index="1" id="84" port="nne" />
+		</line>
+		<line id="96" name="" description="" automapStartTravelled="east" automapEndTravelled="northeast" automapWays="s,d,east,1,e;e,d,northeast,1,ne" automapWaysFor="|||East|NorthEast" ZOrder="0">
+			<dock index="0" id="84" port="e" />
+			<dock index="1" id="72" port="ne" />
+		</line>
+		<line id="97" name="" description="" automapStartTravelled="east" automapEndTravelled="north" automapWays="s,d,east,1,e;e,d,north,1,n" automapWaysFor="|||East|North" ZOrder="0">
+			<dock index="0" id="72" port="e" />
+			<dock index="1" id="61" port="n" />
+		</line>
+		<line id="98" name="" description="" automapStartTravelled="east" automapEndTravelled="southwest" automapWays="s,d,east,1,e;e,d,southwest,1,sw" automapWaysFor="|||East|SouthWest" ZOrder="0">
+			<dock index="0" id="61" port="e" />
+			<dock index="1" id="80" port="sw" />
+		</line>
+		<line id="99" name="" description="" automapStartTravelled="west" automapEndTravelled="up" automapWays="s,d,west,1,w;e,d,up,1,u" automapWaysFor="||u|West|" endText="u" ZOrder="0">
+			<dock index="0" id="74" port="w" />
+			<dock index="1" id="61" port="wsw" />
+		</line>
+		<line id="100" name="" description="" flow="oneWay" automapStartTravelled="west" automapWays="s,d,west,1,w" automapWaysFor="|||West|" ZOrder="0">
+			<dock index="0" id="31" port="w" />
+			<dock index="1" id="72" port="ene" />
+		</line>
+		<room id="101" stableId="a2a8299d-6df2-4ea4-a235-f727bddbd7bb" name="Maze" subtitle="" x="-2720" y="3904" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a twisting little maze of passages, all different." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="102" name="" description="" automapStartTravelled="west" automapEndTravelled="up" automapWays="s,d,west,1,w;e,d,up,1,u" automapWaysFor="||u|West|" endText="u" ZOrder="0">
+			<dock index="0" id="72" port="w" />
+			<dock index="1" id="101" port="wnw" />
+		</line>
+		<line id="103" name="" description="" automapStartTravelled="west" automapEndTravelled="north" automapWays="s,d,west,1,w;e,d,north,1,n" automapWaysFor="|||West|North" ZOrder="0">
+			<dock index="0" id="101" port="w" />
+			<dock index="1" id="70" port="n" />
+		</line>
+		<line id="104" name="" description="" automapStartTravelled="west" automapEndTravelled="southeast" automapWays="s,d,west,1,w;e,d,southeast,1,se" automapWaysFor="|||West|SouthEast" ZOrder="0">
+			<dock index="0" id="70" port="w" />
+			<dock index="1" id="78" port="se" />
+		</line>
+		<line id="105" name="" description="" flow="oneWay" automapStartTravelled="west" automapWays="s,d,west,1,w" automapWaysFor="|||West|" ZOrder="0">
+			<dock index="0" id="84" port="w" />
+			<dock index="1" id="76" port="ssw" />
+		</line>
+		<line id="106" name="" description="" automapStartTravelled="north" automapEndTravelled="northeast" automapWays="s,d,north,1,n;e,d,northeast,1,ne" automapWaysFor="|||North|NorthEast" ZOrder="0">
+			<dock index="0" id="72" port="n" />
+			<dock index="1" id="76" port="ne" />
+		</line>
+		<line id="107" name="" description="" flow="oneWay" automapStartTravelled="north" automapWays="s,d,north,1,n" automapWaysFor="|||North|" ZOrder="0">
+			<dock index="0" id="76" port="n" />
+			<dock index="1" id="31" port="ese" />
+		</line>
+		<line id="108" name="" description="" automapStartTravelled="north" automapEndTravelled="southwest" automapWays="s,d,north,1,n;e,d,southwest,1,sw" automapWaysFor="|||North|SouthWest" ZOrder="0">
+			<dock index="0" id="31" port="n" />
+			<dock index="1" id="70" port="sw" />
+		</line>
+		<line id="109" name="" description="" automapStartTravelled="north" automapEndTravelled="southwest" automapWays="s,d,north,1,n;e,d,southwest,1,sw" automapWaysFor="|||North|SouthWest" ZOrder="0">
+			<dock index="0" id="101" port="n" />
+			<dock index="1" id="61" port="sw" />
+		</line>
+		<line id="110" name="" description="" automapStartTravelled="southeast" automapEndTravelled="southwest" automapWays="s,d,southeast,1,se;e,d,southwest,1,sw" automapWaysFor="|||SouthEast|SouthWest" ZOrder="0">
+			<dock index="0" id="72" port="se" />
+			<dock index="1" id="87" port="sw" />
+		</line>
+		<line id="111" name="" description="" automapStartTravelled="southeast" automapEndTravelled="northeast" automapWays="s,d,southeast,1,se;e,d,northeast,1,ne" automapWaysFor="|||SouthEast|NorthEast" ZOrder="0">
+			<dock index="0" id="31" port="se" />
+			<dock index="1" id="101" port="ne" />
+		</line>
+		<line id="112" name="" description="" automapStartTravelled="southeast" automapEndTravelled="northeast" automapWays="s,d,southeast,1,se;e,d,northeast,1,ne" automapWaysFor="|||SouthEast|NorthEast" ZOrder="0">
+			<dock index="0" id="101" port="se" />
+			<dock index="1" id="78" port="ne" />
+		</line>
+		<line id="113" name="" description="" automapStartTravelled="southeast" automapEndTravelled="northeast" automapWays="s,d,southeast,1,se;e,d,northeast,1,ne" automapWaysFor="|||SouthEast|NorthEast" ZOrder="0">
+			<dock index="0" id="70" port="se" />
+			<dock index="1" id="74" port="ne" />
+		</line>
+		<line id="114" name="" description="" automapStartTravelled="southwest" automapEndTravelled="northwest" automapWays="s,d,southwest,1,sw;e,d,northwest,1,nw" automapWaysFor="|||SouthWest|NorthWest" ZOrder="0">
+			<dock index="0" id="31" port="sw" />
+			<dock index="1" id="84" port="nw" />
+		</line>
+		<line id="115" name="" description="" automapStartTravelled="southwest" automapEndTravelled="up" automapWays="s,d,southwest,1,sw;e,d,up,1,u" automapWaysFor="||u|SouthWest|" endText="u" ZOrder="0">
+			<dock index="0" id="84" port="sw" />
+			<dock index="1" id="74" port="wsw" />
+		</line>
+		<line id="116" name="" description="" automapStartTravelled="southwest" automapEndTravelled="northwest" automapWays="s,d,southwest,1,sw;e,d,northwest,1,nw" automapWaysFor="|||SouthWest|NorthWest" ZOrder="0">
+			<dock index="0" id="76" port="sw" />
+			<dock index="1" id="87" port="nw" />
+		</line>
+		<line id="117" name="" description="" flow="oneWay" automapStartTravelled="northeast" automapWays="s,d,northeast,1,ne" automapWaysFor="|||NorthEast|" ZOrder="0">
+			<dock index="0" id="31" port="ne" />
+			<dock index="1" id="78" port="nnw" />
+		</line>
+		<line id="118" name="" description="" flow="oneWay" automapStartTravelled="northwest" automapWays="s,d,northwest,1,nw" automapWaysFor="|||NorthWest|" ZOrder="0">
+			<dock index="0" id="76" port="nw" />
+			<dock index="1" id="70" port="sse" />
+		</line>
+		<line id="119" name="" description="" flow="oneWay" automapStartTravelled="northwest" automapWays="s,d,northwest,1,nw" automapWaysFor="|||NorthWest|" ZOrder="0">
+			<dock index="0" id="61" port="nw" />
+			<dock index="1" id="78" port="ene" />
+		</line>
+		<line id="120" name="" description="" flow="oneWay" automapStartTravelled="northwest" automapWays="s,d,northwest,1,nw" automapWaysFor="|||NorthWest|" ZOrder="0">
+			<dock index="0" id="78" port="nw" />
+			<dock index="1" id="72" port="ese" />
+		</line>
+		<line id="121" name="" description="" automapStartTravelled="northwest" automapEndTravelled="down" automapWays="s,d,northwest,1,nw;e,d,down,1,d" automapWaysFor="||d|NorthWest|" endText="d" ZOrder="0">
+			<dock index="0" id="72" port="nw" />
+			<dock index="1" id="80" port="wnw" />
+		</line>
+		<line id="122" name="" description="" automapStartTravelled="northwest" automapEndTravelled="southwest" automapWays="s,d,northwest,1,nw;e,d,southwest,1,sw" automapWaysFor="|||NorthWest|SouthWest" ZOrder="0">
+			<dock index="0" id="80" port="nw" />
+			<dock index="1" id="101" port="sw" />
+		</line>
+		<line id="123" name="" description="" automapStartTravelled="northwest" automapEndTravelled="south" automapWays="s,d,northwest,1,nw;e,d,south,1,s" automapWaysFor="|||NorthWest|South" ZOrder="0">
+			<dock index="0" id="101" port="nw" />
+			<dock index="1" id="84" port="s" />
+		</line>
+		<line id="124" name="" description="" flow="oneWay" startText="u" automapStartTravelled="up" automapWays="e,d,southwest,0,sw;s,d,up,1,u" automapWaysFor="u||||SouthWest" ZOrder="0">
+			<dock index="0" id="84" port="ene" />
+			<dock index="1" id="61" port="ssw" />
+		</line>
+		<line id="125" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="down" automapWays="s,d,down,1,d;e,d,down,1,d" automapWaysFor="d||d||" endText="d" ZOrder="0">
+			<dock index="0" id="74" port="nnw" />
+			<dock index="1" id="101" port="wsw" />
+		</line>
+		<line id="126" name="" description="" flow="oneWay" automapStartTravelled="northeast" automapWays="s,d,northeast,1,ne;e,d,northeast,0,ne" automapWaysFor="|||NorthEast|NorthEast" ZOrder="0">
+			<dock index="0" id="61" port="ne" />
+			<dock index="1" id="76" port="nne" />
+		</line>
+		<line id="127" name="" description="" automapStartTravelled="northeast" automapEndTravelled="south" automapWays="s,d,northeast,1,ne;e,d,south,1,s" automapWaysFor="|||NorthEast|South" ZOrder="0">
+			<dock index="0" id="84" port="ne" />
+			<dock index="1" id="87" port="s" />
+		</line>
+		<line id="128" name="" description="" flow="oneWay" automapStartTravelled="northeast" automapWays="s,d,northeast,1,ne" automapWaysFor="|||NorthEast|" ZOrder="0">
+			<dock index="0" id="87" port="ne" />
+			<dock index="1" id="61" port="ssw" />
+		</line>
+		<line id="129" name="" description="" flow="oneWay" automapStartTravelled="south" automapWays="s,d,south,1,s" automapWaysFor="|||South|" ZOrder="0">
+			<dock index="0" id="101" port="s" />
+			<dock index="1" id="87" port="nne" />
+		</line>
+		<line id="130" name="" description="" flow="oneWay" automapStartTravelled="west" automapWays="s,d,west,1,w;e,d,west,0,w" automapWaysFor="|||West|West" ZOrder="0">
+			<dock index="0" id="87" port="w" />
+			<dock index="1" id="80" port="w" />
+		</line>
+		<line id="131" name="" description="" flow="oneWay" automapStartTravelled="southeast" automapWays="s,d,southeast,1,se" automapWaysFor="|||SouthEast|" ZOrder="0">
+			<dock index="0" id="80" port="se" />
+			<dock index="1" id="76" port="ssw" />
+		</line>
+		<line id="132" name="" description="" flow="oneWay" startText="u" automapStartTravelled="up" automapWays="s,d,up,1,u" automapWaysFor="u||||" ZOrder="0">
+			<dock index="0" id="80" port="ene" />
+			<dock index="1" id="70" port="sse" />
+		</line>
+		<room id="65" stableId="c5047f2b-fcff-437e-adc6-4e0e422fec0c" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-1056" y="3968" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="66" name="" description="" automapStartTravelled="south" automapEndTravelled="up" automapWays="s,d,south,1,s;e,d,up,1,u" automapWaysFor="||u|South|" split="yes" splitLabelEnd="-25.004028,-93.14038" endText="u" ZOrder="0">
+			<dock index="0" id="62" port="s" />
+			<dock index="1" id="65" port="nnw" />
+		</line>
+		<room id="24" stableId="546e0e87-6946-40e9-b6b1-95ab990099ac" name="On East Bank of Fissure" subtitle="" x="-256" y="1408" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="You are on the east bank of a fissure slicing clear across the hall. The mist is quite thick here, and the fissure is too wide to jump." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="27" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="25" port="w" />
+			<dock index="1" id="24" port="e" />
+		</line>
+		<room id="133" stableId="f4e89cc6-7495-4f32-9d77-67b4ae1b8dca" name="Low Room" subtitle="" x="64" y="1536" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="This is a low room with a crude note on the wall:" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>gold</objects>
+		</room>
+		<line id="134" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="25" port="s" />
+			<dock index="1" id="133" port="n" />
+		</line>
+		<room id="30" stableId="f2992c70-bfe7-465f-bd3d-31e3c376664e" name="In South Side Chamber" subtitle="" x="-320" y="2144" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="You are in the south side chamber." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>jewelry</objects>
+		</room>
+		<line id="135" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="28" port="s" />
+			<dock index="1" id="30" port="n" />
+		</line>
+		<room id="36" stableId="29760805-3046-46c8-923d-3f014e2e0823" name="Secret E/W Canyon Above Tight Canyon" subtitle="" x="-800" y="2816" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a secret canyon which here runs E/W. It crosses over a very tight canyon 15 feet below. If you go down you may not be able to get back up." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="136" name="" description="" automapStartTravelled="southwest" automapEndTravelled="east" automapWays="s,d,southwest,1,sw;e,d,east,1,e" automapWaysFor="|||SouthWest|East" ZOrder="0">
+			<dock index="0" id="28" port="sw" />
+			<dock index="1" id="36" port="e" />
+		</line>
+		<room id="137" stableId="2755f7d3-05af-437a-b322-b22a6b5a2164" name="N/S Canyon" subtitle="" x="-960" y="3392" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at a wide place in a very tight N/S canyon." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="138" name="" description="" flow="oneWay" startText="d" automapStartTravelled="down" automapWays="s,d,down,1,d" automapWaysFor="d||||" ZOrder="0">
+			<dock index="0" id="36" port="ssw" />
+			<dock index="1" id="137" port="ne" />
+		</line>
+		<room id="139" stableId="a00751ac-35ad-420d-9d91-e9a502fbffe6" name="Canyon Dead End" subtitle="" x="-960" y="3488" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="The canyon here becomes too tight to go further south." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="140" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="137" port="s" />
+			<dock index="1" id="139" port="n" />
+		</line>
+		<room id="141" stableId="e486f328-3188-4704-9e71-e71706894364" name="In Tall E/W Canyon" subtitle="" x="-1088" y="3264" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a tall E/W canyon. A low tight crawl goes 3 feet north and seems to open up." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="142" name="" description="" automapStartTravelled="north" automapEndTravelled="east" automapWays="s,d,north,1,n;e,d,east,1,e" automapWaysFor="|||North|East" ZOrder="0">
+			<dock index="0" id="137" port="n" />
+			<dock index="1" id="141" port="e" />
+		</line>
+		<room id="143" stableId="ad3b98ae-e35d-44d1-80cb-daa000d3aed1" name="In Swiss Cheese Room" subtitle="" x="-1120" y="2944" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a room whose walls resemble swiss cheese. Obvious passages go west, east, ne, and nw. Part of the room is occupied by a large bedrock block." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="145" name="" description="" style="dashed" startText="n" midText=" random chance" automapStartTravelled="north command" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s;s,c,,1,random%20chance" automapWaysFor="n / random chance||||South" ZOrder="0">
+			<dock index="0" id="141" port="n" />
+			<dock index="1" id="143" port="s" />
+		</line>
+		<room id="148" stableId="1ec0972d-3007-4f90-a4e4-eaff21bd78cc" name="Dead End" subtitle="" x="-1280" y="3200" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="The canyon runs into a mass of boulders -- dead end." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="149" name="" description="" automapStartTravelled="west" automapEndTravelled="south" automapWays="s,d,west,1,w;e,d,south,1,s" automapWaysFor="|||West|South" ZOrder="0">
+			<dock index="0" id="141" port="w" />
+			<dock index="1" id="148" port="s" />
+		</line>
+		<room id="144" stableId="af388142-8cc7-4dcc-96c4-d6122170f5f2" name="In Soft Room" subtitle="" x="-960" y="2944" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in the soft room. The walls are covered with heavy curtains, the floor with a thick pile carpet. Moss covers the ceiling." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>small velvet pillow</objects>
+		</room>
+		<line id="146" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="143" port="e" />
+			<dock index="1" id="144" port="w" />
+		</line>
+		<room id="147" stableId="ef1dd2f3-024c-4c3f-875b-31d8648def8a" name="At East End of Twopit Room" subtitle="" x="-1280" y="2944" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at the east end of the twopit room. The floor here is littered with thin rock slabs, which make it easy to descend the pits. There is a path here bypassing the pits to connect passages from east and west. There are holes all over, but the only big one is on the wall directly over the west pit where you can't get to it." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="150" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="143" port="w" />
+			<dock index="1" id="147" port="e" />
+		</line>
+		<room id="151" stableId="a7ec5fbb-1580-4378-be3c-ad3e42f07f55" name="At West End of Twopit Room" subtitle="" x="-1440" y="2944" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at the west end of the twopit room. There is a large hole in the wall above the pit at this end of the room." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="153" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="147" port="w" />
+			<dock index="1" id="151" port="e" />
+		</line>
+		<room id="154" stableId="01202a38-6906-4ed5-a660-36891528b7ec" name="Slab Room" subtitle="" x="-1792" y="2912" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a large low circular chamber whose floor is an immense slab fallen from the ceiling (slab room). East and west there once were large passages, but they are now filled with boulders. Low small passages go north and south, and the south one quickly bends west around the boulders." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="156" name="" description="" automapStartTravelled="west" automapEndTravelled="south" automapWays="s,d,west,1,w;e,d,south,1,s" automapWaysFor="|||West|South" ZOrder="0">
+			<dock index="0" id="151" port="w" />
+			<dock index="1" id="154" port="s" />
+		</line>
+		<room id="157" stableId="8b1b1bbb-239a-4662-b83b-a6897e3c6360" name="Bedquilt" subtitle="" x="-1792" y="2496" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in bedquilt, a long east/west passage with holes everywhere. To explore at random select north, south, up, or down." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="159" name="" description="" style="dashed" midText="random chance" automapStartTravelled="north command" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s;s,c,,0,random%20chance" automapWaysFor="|random chance||North|South" ZOrder="0">
+			<dock index="0" id="154" port="n" />
+			<dock index="1" id="157" port="s" />
+		</line>
+		<line id="160" name="" description="" flow="oneWay" automapStartTravelled="west" automapWays="s,d,west,1,w;e,d,northwest,0,nw" automapWaysFor="|||West|NorthWest" curveMiddle="-1536,2720" ZOrder="0">
+			<dock index="0" id="157" port="w" />
+			<dock index="1" id="143" port="nw" />
+		</line>
+		<room id="158" stableId="13d1668f-8669-4086-af3c-f63e0097d12b" name="At Complex Junction" subtitle="" x="-1440" y="2496" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at a complex junction. A low hands and knees passage from the north joins a higher crawl from the east to make a walking passage going west. There is also a large room above. The air is damp here." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="161" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="157" port="e" />
+			<dock index="1" id="158" port="w" />
+		</line>
+		<room id="152" stableId="3048cf0d-dee5-418a-aaff-e38c213ba651" name="In East Pit" subtitle="" x="-1280" y="3072" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at the bottom of the eastern pit in the twopit room. There is a small pool of oil in one corner of the pit." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>oil</objects>
+		</room>
+		<line id="165" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="up" automapWays="s,d,down,1,d;e,d,up,1,u" automapWaysFor="d||u||" endText="u" ZOrder="0">
+			<dock index="0" id="147" port="ssw" />
+			<dock index="1" id="152" port="nnw" />
+		</line>
+		<room id="155" stableId="ec58541c-bd2e-47a6-994a-0c027ee84f67" name="Large Low Room" subtitle="" x="-2016" y="2272" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a large low room. Crawls lead north, se, and sw." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="166" name="" description="" flow="oneWay" automapStartTravelled="north" automapWays="s,d,north,1,n;e,d,south,0,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="157" port="n" />
+			<dock index="1" id="155" port="s" />
+		</line>
+		<room id="167" stableId="661a1a9f-4655-485a-b146-4730098611ab" name="Dead End Crawl" subtitle="" x="-2016" y="2144" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is a dead end crawl." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="168" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="155" port="n" />
+			<dock index="1" id="167" port="s" />
+		</line>
+		<room id="169" stableId="4dbaecc9-acea-4a4c-8ae0-892cf71ad119" name="Oriental Room" subtitle="" x="-1664" y="2400" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is the oriental room. Ancient oriental cave drawings cover the walls. A gently sloping passage leads upward to the north, another passage leads se, and a hands and knees crawl leads west." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>ming vase</objects>
+		</room>
+		<line id="170" name="" description="" automapStartTravelled="southeast" automapEndTravelled="west" automapWays="s,d,southeast,1,se;e,d,west,1,w" automapWaysFor="|||SouthEast|West" ZOrder="0">
+			<dock index="0" id="155" port="se" />
+			<dock index="1" id="169" port="w" />
+		</line>
+		<room id="172" stableId="3874eeda-922f-4851-9a2a-0d4cb1798d4d" name="Misty Cavern" subtitle="" x="-1664" y="1824" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are following a wide path around the outer edge of a large cavern. Far below, through a heavy white mist, strange splashing noises can be heard. The mist rises up through a fissure in the ceiling. The path exits to the south and west." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="173" name="" description="" startText="n / u" automapStartTravelled="up north" automapEndTravelled="south" automapWays="s,d,up,1,u;s,d,north,1,n;e,d,south,1,s" automapWaysFor="n / u||||South" ZOrder="0">
+			<dock index="0" id="169" port="n" />
+			<dock index="1" id="172" port="s" />
+		</line>
+		<line id="176" name="" description="" style="dashed" midText="plugh" automapCommand="plugh" automapWays="s,c,,1,plugh" automapWaysFor="|plugh|||" split="yes" ZOrder="0">
+			<dock index="0" id="40" port="ne" />
+			<dock index="1" id="3" port="sw" />
+		</line>
+		<line id="177" name="" description="" style="dashed" midText="xyzzy" automapCommand="xyzzy" automapWays="s,c,,1,xyzzy" automapWaysFor="|xyzzy|||" split="yes" ZOrder="0">
+			<dock index="0" id="15" port="ne" />
+			<dock index="1" id="3" port="s" />
+		</line>
+		<room id="18" stableId="bb82c3a2-f4e7-4bd5-bbe9-df6b45738e49" name="Secret Canyon" subtitle="" x="-960" y="2816" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a secret canyon which exits to the north and east." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>dragon|rug</objects>
+		</room>
+		<line id="33" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="36" port="w" />
+			<dock index="1" id="18" port="e" />
+		</line>
+		<room id="34" stableId="758333b6-e2ec-4b21-b383-c3d6182ce304" name="Secret N/S Canyon" subtitle="" x="-960" y="2688" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a secret N/S canyon above a large room." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="35" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="18" port="n" />
+			<dock index="1" id="34" port="s" />
+		</line>
+		<room id="178" stableId="9e743c77-50dd-4052-b919-6417b91fc32f" name="In Mirror Canyon" subtitle="" x="-960" y="2592" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a north/south canyon about 25 feet across. The floor is covered by white mist seeping in from the north. The walls extend upward for well over 100 feet. Suspended from some unseen point far above you, an enormous two-sided mirror is hanging parallel to and midway between the canyon walls." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="179" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="34" port="n" />
+			<dock index="1" id="178" port="s" />
+		</line>
+		<room id="180" stableId="28cc0f63-2008-4a97-86bf-38f50a4e9d7e" name="At Reservoir" subtitle="" x="-960" y="2464" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at the edge of a large underground reservoir. An opaque cloud of white mist fills the room and rises rapidly upward. The lake is fed by a stream, which tumbles out of a hole in the wall about 10 feet overhead and splashes noisily into the water somewhere within the mist. The only passage goes back toward the south." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="182" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="178" port="n" />
+			<dock index="1" id="180" port="s" />
+		</line>
+		<line id="51" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="up" automapWays="s,d,down,1,d;e,d,up,1,u" automapWaysFor="d||u||" endText="u" ZOrder="0">
+			<dock index="0" id="34" port="ssw" />
+			<dock index="1" id="154" port="ene" />
+		</line>
+		<room id="164" stableId="02cff7e4-46ba-48ce-a476-e3f9e24bc123" name="In Dusty Rock Room" subtitle="" x="-1248" y="2336" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a large room full of dusty rocks. There is a big hole in the floor. There are cracks everywhere, and a passage leading east." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="181" name="" description="" startText="u" automapStartTravelled="up" automapEndTravelled="down" automapWays="s,d,up,1,u;e,d,down,1,d" automapWaysFor="u||d||" endText="d" ZOrder="0">
+			<dock index="0" id="158" port="nne" />
+			<dock index="1" id="164" port="ssw" />
+		</line>
+		<room id="183" stableId="dff6d505-7211-4c6a-8e54-4915c1e2fccd" name="Dirty Passage" subtitle="" x="-1120" y="2336" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a dirty broken passage. To the east is a crawl. To the west is a large passage. Above you is a hole to another passage." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="184" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="164" port="e" />
+			<dock index="1" id="183" port="w" />
+		</line>
+		<room id="185" stableId="78d9f9cc-83d9-498d-99bf-c656fb4354f1" name="Brink of Pit" subtitle="" x="-800" y="2336" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are on the brink of a small clean climbable pit. A crawl leads west." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="187" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="183" port="e" />
+			<dock index="1" id="185" port="w" />
+		</line>
+		<line id="186" name="" description="" startText="u" automapStartTravelled="up" automapEndTravelled="down" automapWays="s,d,up,1,u;e,d,down,1,d" automapWaysFor="u||d||" endText="d" ZOrder="0">
+			<dock index="0" id="183" port="ene" />
+			<dock index="1" id="37" port="ssw" />
+		</line>
+		<room id="39" stableId="5a635991-278e-45a8-86ff-c9a3a02717c2" name="Shell Room" subtitle="" x="-1440" y="2112" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're in a large room carved out of sedimentary rock. The floor and walls are littered with bits of shells imbedded in the stone. A shallow passage proceeds downward, and a somewhat steeper one leads up. A low hands and knees passage enters from the south." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>enormous clam</objects>
+		</room>
+		<line id="162" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="158" port="n" />
+			<dock index="1" id="39" port="s" />
+		</line>
+		<room id="188" stableId="9bc0bad2-d84f-47c6-8cd7-0437ba8ca62b" name="Arched Hall" subtitle="" x="-1536" y="1984" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in an arched hall. A coral passage once continued up and east from here, but is now blocked by debris. The air smells of sea water." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="190" name="" description="" startText="u" automapStartTravelled="up" automapEndTravelled="down" automapWays="s,d,up,1,u;e,d,down,1,d" automapWaysFor="u||d||" endText="d" ZOrder="0">
+			<dock index="0" id="39" port="nnw" />
+			<dock index="1" id="188" port="sse" />
+		</line>
+		<room id="189" stableId="46306d41-38f9-4c9d-88e6-bdb6818a803b" name="Ragged Corridor" subtitle="" x="-1536" y="2240" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a long sloping corridor with ragged sharp walls." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="191" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="up" automapWays="s,d,down,1,d;e,d,up,1,u" automapWaysFor="d||u||" endText="u" ZOrder="0">
+			<dock index="0" id="39" port="ssw" />
+			<dock index="1" id="189" port="nne" />
+		</line>
+		<room id="163" stableId="6bca7276-89e2-4ad2-8306-faa5ccb133af" name="In Anteroom" subtitle="" x="-1312" y="2592" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in an anteroom leading to a large passage to the east. Small passages go west and up. The remnants of recent digging are evident." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>magazine</objects>
+		</room>
+		<line id="192" name="" description="" automapStartTravelled="east" automapEndTravelled="up" automapWays="s,d,east,1,e;e,d,up,1,u" automapWaysFor="||u|East|" endText="u" ZOrder="0">
+			<dock index="0" id="158" port="e" />
+			<dock index="1" id="163" port="nnw" />
+		</line>
+		<line id="195" name="" description="" automapStartTravelled="west" automapEndTravelled="down" automapWays="s,d,west,1,w;e,d,down,1,d" automapWaysFor="||d|West|" endText="d" ZOrder="0">
+			<dock index="0" id="163" port="w" />
+			<dock index="1" id="157" port="se" />
+		</line>
+		<room id="193" stableId="46eda7a0-f3af-4e86-b7a7-f1ceab4e02da" name="At Witt's End" subtitle="" x="-1152" y="2592" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at Witt's End. Passages lead off in *all* directions." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="194" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="163" port="e" />
+			<dock index="1" id="193" port="w" />
+		</line>
+		<line id="60" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="58" port="n" />
+			<dock index="1" id="50" port="s" />
+		</line>
+		<room id="55" stableId="88650114-358f-462e-8879-f3094da81aec" name="Alcove" subtitle="" x="-1984" y="2048" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" isDark="yes" placedByHand="yes" description="You are in an alcove. A small northwest path seems to widen after a short distance. An extremely tight tunnel leads east. It looks like a very tight squeeze. An eerie light can be seen at the other end." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="56" name="" description="" automapStartTravelled="west" automapEndTravelled="northwest" automapWays="s,d,west,1,w;e,d,northwest,1,nw" automapWaysFor="|||West|NorthWest" ZOrder="0">
+			<dock index="0" id="172" port="w" />
+			<dock index="1" id="55" port="nw" />
+		</line>
+		<line id="63" name="" description="" flow="oneWay" automapStartTravelled="southeast" automapWays="s,d,southeast,1,se" automapWaysFor="|||SouthEast|" ZOrder="0">
+			<dock index="0" id="169" port="se" />
+			<dock index="1" id="143" port="nnw" />
+		</line>
+		<room id="171" stableId="70fc1ee4-9fc3-4629-86a2-8d0c37440713" name="In Forest" subtitle="" x="512" y="896" w="96" h="192" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in open forest, with a deep valley to one side." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="174" name="" description="" automapStartTravelled="west" automapEndTravelled="east down" automapWays="s,d,west,1,w;e,d,east,1,e;e,d,down,1,d" automapWaysFor="||e / d|West|" endText="e / d" ZOrder="0">
+			<dock index="0" id="5" port="w" />
+			<dock index="1" id="171" port="e" />
+		</line>
+		<line id="175" name="" description="" flow="oneWay" startText="s / e" automapStartTravelled="south east" automapWays="s,d,south,1,s;s,d,east,1,e;e,d,southeast,0,se" automapWaysFor="s / e||||SouthEast" ZOrder="0">
+			<dock index="0" id="9" port="s" />
+			<dock index="1" id="171" port="se" />
+		</line>
+		<line id="196" name="" description="" flow="oneWay" startText="w / e" automapStartTravelled="west east" automapWays="s,d,west,1,w;e,d,southeast,0,se;s,d,east,1,e" automapWaysFor="w / e||||SouthEast" ZOrder="0">
+			<dock index="0" id="7" port="w" />
+			<dock index="1" id="171" port="ese" />
+		</line>
+		<line id="197" name="" description="" flow="oneWay" startText="s" automapStartTravelled="south" automapWays="s,d,south,1,s" automapWaysFor="s||||" ZOrder="0">
+			<dock index="0" id="171" port="s" />
+			<dock index="1" id="171" port="sw" />
+		</line>
+		<room id="198" stableId="e0a65bfa-ab74-41e3-aa88-1e8967990753" name="At Hill In Road" subtitle="" x="512" y="736" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You have walked up a hill, still in the forest. The road slopes back down the other side of the hill. There is a building in the distance." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="199" name="" description="" automapStartTravelled="west" automapEndTravelled="north down" automapWays="s,d,west,1,w;e,d,north,1,n;e,d,down,1,d" automapWaysFor="||n / d|West|" endText="n / d" ZOrder="0">
+			<dock index="0" id="1" port="w" />
+			<dock index="1" id="198" port="n" />
+		</line>
+		<line id="202" name="" description="" flow="oneWay" automapStartTravelled="south" automapWays="s,d,south,1,s;e,d,northeast,0,ne" automapWaysFor="|||South|NorthEast" ZOrder="0">
+			<dock index="0" id="198" port="s" />
+			<dock index="1" id="171" port="nnw" />
+		</line>
+		<room id="2" stableId="446b17c7-28c2-408d-a6c4-f7b6c99d803e" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-864" y="3968" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="200" name="" description="" automapStartTravelled="east" automapWays="s,d,east,1,east;e,d,west,0,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="65" port="e" />
+			<dock index="1" id="2" port="w" />
+		</line>
+		<room id="201" stableId="790179ba-26c1-46e4-b22b-351b2439bc4b" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-704" y="4032" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="203" name="" description="" automapStartTravelled="east" automapEndTravelled="north" automapWays="s,d,east,1,e;e,d,north,1,n" automapWaysFor="|||East|North" ZOrder="0">
+			<dock index="0" id="2" port="e" />
+			<dock index="1" id="201" port="n" />
+		</line>
+		<room id="204" stableId="4d1b7cdf-d109-4de0-a21d-853ce83dc239" name="Dead End" subtitle="" x="-480" y="4032" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You have reached a dead end." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="206" name="" description="" automapStartTravelled="west" automapWays="s,d,west,1,w;e,d,south,0,s" automapWaysFor="|||West|South" ZOrder="0">
+			<dock index="0" id="201" port="w" />
+			<dock index="1" id="65" port="s" />
+		</line>
+		<room id="207" stableId="67018119-fde7-442d-beb8-463e4c618d66" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-1376" y="4256" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="209" stableId="8de6fc35-afef-440c-8531-91bd2768cdaa" name="Dead End" subtitle="" x="-1216" y="4256" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You have reached a dead end." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="210" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="207" port="e" />
+			<dock index="1" id="209" port="w" />
+		</line>
+		<line id="211" name="" description="" startText="n" automapStartTravelled="west north" automapWays="s,d,west,1,w;s,d,north,1,n" automapWaysFor="w / n||||" ZOrder="0">
+			<dock index="0" id="65" port="n" />
+			<dock index="1" id="65" port="nne" />
+		</line>
+		<room id="212" stableId="662812f5-35ba-4d4a-b838-301c2baa70da" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-960" y="4288" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="213" name="" description="" automapStartTravelled="south" automapEndTravelled="east" automapWays="s,d,south,1,s;e,d,east,1,e" automapWaysFor="|||South|East" ZOrder="0">
+			<dock index="0" id="2" port="s" />
+			<dock index="1" id="212" port="e" />
+		</line>
+		<room id="214" stableId="8ad34fab-2a44-4b3e-9dec-9c640dd4b3e2" name="Dead End" subtitle="Pirate's Dead End" x="-448" y="4384" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="This is the pirate's dead end." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>Treasure Chest</objects>
+		</room>
+		<line id="215" name="" description="" flow="oneWay" automapStartTravelled="north" automapWays="s,d,north,1,n" automapWaysFor="|||North|" ZOrder="0">
+			<dock index="0" id="212" port="n" />
+			<dock index="1" id="214" port="wsw" />
+		</line>
+		<line id="216" name="" description="" automapStartTravelled="southeast" automapEndTravelled="northwest" automapWays="s,d,southeast,1,se;e,d,northwest,1,nw" automapWaysFor="|||SouthEast|NorthWest" ZOrder="0">
+			<dock index="0" id="214" port="se" />
+			<dock index="1" id="217" port="nw" />
+		</line>
+		<room id="217" stableId="e4766c3e-e9ec-4c9d-b4e8-612f50c86837" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-288" y="4512" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<room id="218" stableId="fc8416f7-7a50-4b52-8e32-8618cc7fc675" name="At Brink of Pit" subtitle="" x="-448" y="4640" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are on the brink of a thirty foot pit with a massive orange column down one wall. You could climb down here but you could not get back up. The maze continues at this level." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="221" name="" description="" automapStartTravelled="north" automapEndTravelled="east" automapWays="s,d,north,1,n;e,d,east,1,e" automapWaysFor="|||North|East" curveMiddle="-128,4544" ZOrder="0">
+			<dock index="0" id="217" port="n" />
+			<dock index="1" id="218" port="e" />
+		</line>
+		<room id="219" stableId="86104ffe-e067-4d38-8824-d39a08fdd093" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-448" y="4512" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="220" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="217" port="w" />
+			<dock index="1" id="219" port="e" />
+		</line>
+		<room id="222" stableId="f9e47230-c6c4-4c8d-b768-f477264e5973" name="Dead End" subtitle="" x="-576" y="4512" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You have reached a dead end." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="223" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="219" port="w" />
+			<dock index="1" id="222" port="e" />
+		</line>
+		<line id="225" name="" description="" flow="oneWay" startText="d" automapStartTravelled="down" automapWays="e,d,southeast,0,se;s,d,down,1,d" automapWaysFor="d||||SouthEast" split="yes" splitLabelStart="98.03088,119.08765" ZOrder="0">
+			<dock index="0" id="218" port="se" />
+			<dock index="1" id="20" port="se" />
+		</line>
+		<line id="228" name="" description="" automapStartTravelled="north" automapEndTravelled="west" automapWays="s,d,north,1,n;e,d,west,1,w" automapWaysFor="|||North|West" ZOrder="0">
+			<dock index="0" id="207" port="n" />
+			<dock index="1" id="65" port="w" />
+		</line>
+		<line id="229" name="" description="" automapStartTravelled="south" automapEndTravelled="east" automapWays="s,d,south,1,s;e,d,east,1,e" automapWaysFor="|||South|East" ZOrder="0">
+			<dock index="0" id="212" port="s" />
+			<dock index="1" id="230" port="e" />
+		</line>
+		<room id="230" stableId="0b66e1dd-c746-4830-b178-ef85ddeec669" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-1312" y="4448" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects placed="yes" custom="yes" customRight="-219" customDown="114" />
+		</room>
+		<room id="231" stableId="d1ed8661-3869-4008-9914-fd3b9eea59d2" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-1120" y="4576" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="232" name="" description="" flow="oneWay" automapStartTravelled="south" automapWays="s,d,south,1,s" automapWaysFor="|||South|" ZOrder="0">
+			<dock index="0" id="230" port="s" />
+			<dock index="1" id="231" port="wnw" />
+		</line>
+		<room id="233" stableId="55214327-6730-4cbc-8ec2-2ed4bcd636c2" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-960" y="4480" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="234" name="" description="" flow="oneWay" automapStartTravelled="north" automapWays="s,d,north,1,n" automapWaysFor="|||North|" ZOrder="0">
+			<dock index="0" id="231" port="n" />
+			<dock index="1" id="233" port="sw" />
+		</line>
+		<line id="235" name="" description="" flow="oneWay" ZOrder="0">
+			<dock index="0" id="233" port="n" />
+			<dock index="1" id="233" port="nne" />
+		</line>
+		<line id="236" name="" description="" flow="oneWay" automapStartTravelled="east" automapWays="s,d,east,1,e;e,d,southwest,0,sw" automapWaysFor="|||East|SouthWest" ZOrder="0">
+			<dock index="0" id="233" port="e" />
+			<dock index="1" id="218" port="nw" />
+		</line>
+		<room id="237" stableId="9f8ddca6-e438-4180-82e5-858da0ce56a9" name="Dead End" subtitle="" x="-1120" y="4128" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You have reached a dead end." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="238" name="" description="" flow="oneWay" automapStartTravelled="northeast" automapWays="s,d,northeast,1,ne;e,d,southwest,0,sw" automapWaysFor="|||NorthEast|SouthWest" ZOrder="0">
+			<dock index="0" id="207" port="ne" />
+			<dock index="1" id="237" port="sw" />
+		</line>
+		<line id="239" name="" description="" flow="oneWay" automapStartTravelled="south" automapWays="s,d,south,1,s" automapWaysFor="|||South|" ZOrder="0">
+			<dock index="0" id="237" port="s" />
+			<dock index="1" id="212" port="wnw" />
+		</line>
+		<room id="240" stableId="ba92774e-0458-4fdc-beda-867b800ac114" name="Maze" subtitle="" x="-1472" y="4448" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="241" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="230" port="w" />
+			<dock index="1" id="240" port="e" />
+		</line>
+		<room id="242" stableId="5b0a4aeb-220f-456e-8410-044100cb504d" name="Maze" subtitle="" x="-1312" y="4864" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="243" name="" description="" automapStartTravelled="west" automapEndTravelled="west" automapWays="s,d,west,1,w;e,d,west,1,w" automapWaysFor="|||West|West" ZOrder="0">
+			<dock index="0" id="240" port="w" />
+			<dock index="1" id="242" port="w" />
+		</line>
+		<room id="244" stableId="02365cd1-3b61-4617-9ffc-fe582dab9689" name="Maze" subtitle="A maze of twisty little passages, all alike." x="-1312" y="4704" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects placed="yes" custom="yes" customRight="26" customDown="4" />
+		</room>
+		<line id="245" name="" description="" automapStartTravelled="east" automapEndTravelled="east" automapWays="s,d,east,1,e;e,d,east,1,e" automapWaysFor="|||East|East" ZOrder="0">
+			<dock index="0" id="242" port="e" />
+			<dock index="1" id="244" port="e" />
+		</line>
+		<line id="246" name="" description="" flow="oneWay" automapStartTravelled="west" automapWays="s,d,west,1,w" automapWaysFor="|||West|" ZOrder="0">
+			<dock index="0" id="244" port="w" />
+			<dock index="1" id="230" port="sw" />
+		</line>
+		<room id="247" stableId="f0d1eae1-acc8-451e-a92b-0550c271b51a" name="Maze" subtitle="" x="-1216" y="4928" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="248" name="" description="" automapStartTravelled="south" automapEndTravelled="west" automapWays="s,d,south,1,s;e,d,west,1,w" automapWaysFor="|||South|West" ZOrder="0">
+			<dock index="0" id="242" port="s" />
+			<dock index="1" id="247" port="w" />
+		</line>
+		<room id="249" stableId="dd29fbd6-f559-4b7f-a401-85357d3a7147" name="Dead End" subtitle="" x="-1120" y="4992" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You have reached a dead end." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="250" name="" description="" automapStartTravelled="south" automapWays="s,d,south,1,s;e,d,north,0,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="247" port="s" />
+			<dock index="1" id="249" port="w" />
+		</line>
+		<line id="254" name="" description="" flow="oneWay" automapStartTravelled="north" automapWays="s,d,north,1,n" automapWaysFor="|||North|" ZOrder="0">
+			<dock index="0" id="244" port="n" />
+			<dock index="1" id="255" port="wsw" />
+		</line>
+		<room id="255" stableId="d58adff6-226c-4896-9976-aadecbdc530c" name="Maze" subtitle="" x="-576" y="4640" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a maze of twisty little passages, all alike." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="256" name="" description="" flow="oneWay" ZOrder="0">
+			<dock index="0" id="244" port="s" />
+			<dock index="1" id="244" port="ssw" />
+		</line>
+		<line id="251" name="" description="" flow="oneWay" curveMiddle="-1120,4832" ZOrder="0">
+			<dock index="0" id="247" port="n" />
+			<dock index="1" id="244" port="ene" />
+		</line>
+		<line id="252" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="255" port="e" />
+			<dock index="1" id="218" port="w" />
+		</line>
+		<line id="224" name="" description="" ZOrder="0">
+			<dock index="0" id="218" port="n" />
+			<dock index="1" id="219" port="s" />
+		</line>
+		<line id="226" name="" description="" style="dashed" flow="oneWay" ZOrder="0">
+			<dock index="0" id="255" port="n" />
+			<dock index="1" id="255" port="nne" />
+		</line>
+		<room id="253" stableId="ba8573e4-13ae-4edc-bd3c-99ecf28c49d8" name="Dead End" subtitle="" x="-576" y="4768" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You have reached a dead end." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="257" name="" description="" startText="down" automapStartTravelled="down" automapEndTravelled="up" automapWays="s,d,down,1,down;e,d,up,1,up" automapWaysFor="down||up||" endText="up" ZOrder="0">
+			<dock index="0" id="255" port="ssw" />
+			<dock index="1" id="253" port="nnw" />
+		</line>
+		<line id="205" name="" description="" automapStartTravelled="west" automapEndTravelled="east" automapWays="s,d,west,1,w;e,d,east,1,e" automapWaysFor="|||West|East" ZOrder="0">
+			<dock index="0" id="204" port="w" />
+			<dock index="1" id="201" port="e" />
+		</line>
+		<room id="258" stableId="da81a7cd-cb8f-4222-bee7-6cb44d1ea8c9" name="Dead End" subtitle="" x="-800" y="4416" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You have reached a dead end." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="259" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="up" automapWays="s,d,down,1,d;e,d,up,1,u" automapWaysFor="d||u||" endText="u" ZOrder="0">
+			<dock index="0" id="212" port="sse" />
+			<dock index="1" id="258" port="nnw" />
+		</line>
+		<line id="45" name="" description="" startText="s" ZOrder="0">
+			<dock index="0" id="207" port="s" />
+			<dock index="1" id="207" port="ssw" />
+		</line>
+		<room id="46" stableId="feb546ca-d37c-4162-9b55-cd382fa5bf4a" name="Plover Room" subtitle="" x="-1824" y="2048" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're in a small chamber lit by an eerie green light. An extremely narrow tunnel exits to the west. A dark corridor leads northeast." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects at="sw" placed="yes" custom="yes" customRight="128" customDown="11">emerald (plovers egg)</objects>
+		</room>
+		<line id="208" name="" description="" style="dashed" startText="e / no inventory" automapStartTravelled="east command" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w;s,c,,1,no%20inventory" automapWaysFor="e / no inventory||||West" ZOrder="0">
+			<dock index="0" id="55" port="e" />
+			<dock index="1" id="46" port="w" />
+		</line>
+		<line id="260" name="" description="" style="dashed" midText="plover" automapCommand="plover" automapWays="s,c,,1,plover" automapWaysFor="|plover|||" split="yes" ZOrder="0">
+			<dock index="0" id="40" port="sw" />
+			<dock index="1" id="46" port="e" />
+		</line>
+		<room id="227" stableId="44f47765-e475-45f0-96b5-35e062e90d1b" name="The Dark Room" subtitle="" x="-1728" y="1920" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're in the dark-room. A corridor leading south is the only exit." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>platinum pyramid</objects>
+		</room>
+		<line id="261" name="" description="" automapStartTravelled="northeast" automapEndTravelled="south" automapWays="s,d,northeast,1,ne;e,d,south,1,s" automapWaysFor="|||NorthEast|South" ZOrder="0">
+			<dock index="0" id="46" port="ne" />
+			<dock index="1" id="227" port="s" />
+		</line>
+		<room id="262" stableId="76d17e33-5be0-4e6c-a7e2-73ed2b66cabe" name="In West Pit" subtitle="" x="-1440" y="3072" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at the bottom of the western pit in the twopit room. There is a large hole in the wall about 25 feet above you." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>beanstalk</objects>
+		</room>
+		<line id="263" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="up" automapWays="s,d,down,1,d;e,d,up,1,u" automapWaysFor="d||u||" endText="u" ZOrder="0">
+			<dock index="0" id="151" port="ssw" />
+			<dock index="1" id="262" port="nnw" />
+		</line>
+		<line id="264" name="" description="" style="dashed" midText="wave rod" automapStartTravelled="east command" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w;s,c,,0,wave%20rod" automapWaysFor="|wave rod||East|West" split="yes" ZOrder="0">
+			<dock index="0" id="67" port="e" />
+			<dock index="1" id="24" port="w" />
+		</line>
+		<room id="265" stableId="a2d9c330-aa19-49ee-919c-605a751bd2bf" name="In Pit" subtitle="" x="-800" y="2464" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="You are in the bottom of a small pit with a little stream, which enters and exits through tiny slits." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>water</objects>
+		</room>
+		<line id="266" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="up" automapWays="s,d,down,1,d;e,d,up,1,u" automapWaysFor="d||u||" endText="u" ZOrder="0">
+			<dock index="0" id="185" port="ssw" />
+			<dock index="1" id="265" port="nnw" />
+		</line>
+		<room id="267" stableId="0d869c65-6771-40f1-8e24-0ae72d40f176" name="In Narrow Corridor" subtitle="" x="-1632" y="3072" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a long, narrow corridor stretching out of sight to the west. At the eastern end is a hole through which you can see a profusion of leaves." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="268" name="" description="" startText="climb beanstalk / climb" automapStartTravelled="command" automapEndTravelled="east" automapWays="s,c,,1,climb%20beanstalk;e,d,east,1,e;s,c,,1,climb" automapWaysFor="climb beanstalk / climb||||East" ZOrder="0">
+			<dock index="0" id="262" port="w" />
+			<dock index="1" id="267" port="e" />
+		</line>
+		<room id="269" stableId="5ede2bb5-23c3-4b76-af86-58c2682b6b9c" name="Giant Room" subtitle="Fee fie foe foo" x="-1952" y="3008" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in the giant room. The ceiling here is too high up for your lamp to show it. Cavernous passages lead east, north, and south. On the west wall is scrawled the inscription, &quot;Fee fie foe foo&quot; [sic]." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>golden eggs</objects>
+		</room>
+		<line id="270" name="" description="" automapStartTravelled="west" automapEndTravelled="south" automapWays="s,d,west,1,w;e,d,south,1,s" automapWaysFor="|||West|South" ZOrder="0">
+			<dock index="0" id="267" port="w" />
+			<dock index="1" id="269" port="s" />
+		</line>
+		<room id="271" stableId="d0446f0f-e898-48ed-bff5-ee9d953cb10d" name="Immense N/S Passage" subtitle="" x="-1952" y="2880" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at one end of an immense north/south passage." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>rusty iron door</objects>
+		</room>
+		<line id="274" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="269" port="n" />
+			<dock index="1" id="271" port="s" />
+		</line>
+		<room id="272" stableId="0cc02c2b-fa68-4fbc-a41f-58a4e994640e" name="In Cavern With Waterfall" subtitle="" x="-1952" y="2752" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" description="You are in a magnificent cavern with a rushing stream, which cascades over a sparkling waterfall into a roaring whirlpool which disappears through a hole in the floor. Passages exit to the south and west." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>trident</objects>
+		</room>
+		<line id="273" name="" description="Needs oil" door="yes" lockable="no" locked="yes" open="no" openable="no" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="271" port="n" />
+			<dock index="1" id="272" port="s" />
+		</line>
+		<room id="275" stableId="42b6f401-c973-4d5a-8635-dc56387d6571" name="Steep Incline Above Large Room" subtitle="" x="-2112" y="2816" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are at the top of a steep incline above a large room. You could climb down here, but you would not be able to climb up. There is a passage leading back to the north." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="276" name="" description="" automapStartTravelled="west" automapEndTravelled="north" automapWays="s,d,west,1,w;e,d,north,1,n" automapWaysFor="|||West|North" ZOrder="0">
+			<dock index="0" id="272" port="w" />
+			<dock index="1" id="275" port="n" />
+		</line>
+		<line id="277" name="" description="" flow="oneWay" startText="d" automapStartTravelled="down" automapWays="s,d,down,1,d" automapWaysFor="d||||" curveMiddle="-2016,2528" ZOrder="0">
+			<dock index="0" id="275" port="nnw" />
+			<dock index="1" id="155" port="s" />
+		</line>
+		<room id="279" stableId="eabe9165-cf3b-4da6-ba74-1e2bc1b5ba1d" name="Cul-de-Sac" subtitle="" x="-1536" y="2368" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a cul-de-sac about eight feet across." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>pearl</objects>
+		</room>
+		<line id="280" name="" description="" startText="d" automapStartTravelled="down" automapEndTravelled="up" automapWays="s,d,down,1,d;e,d,up,1,u" automapWaysFor="d||u||" endText="u" ZOrder="0">
+			<dock index="0" id="189" port="ssw" />
+			<dock index="1" id="279" port="nnw" />
+		</line>
+		<room id="278" stableId="5316547c-9186-4e01-b739-069619df22ea" name="Secret N/S Canyon" subtitle="" x="-2848" y="2560" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a secret N/S canyon above a sizable passage." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="281" name="" description="" flow="oneWay" startText="u" automapStartTravelled="up" automapWays="s,d,up,1,u;e,d,east,0,e" automapWaysFor="u||||East" ZOrder="0">
+			<dock index="0" id="157" port="wnw" />
+			<dock index="1" id="278" port="e" />
+		</line>
+		<room id="283" stableId="815a9c6f-72b4-42bb-90cd-d9b452cdfc03" name="Junction of Three Secret Canyons" subtitle="" x="-3008" y="2240" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a secret canyon at a junction of three canyons, bearing north, south, and se. The north one is as tall as the other two combined." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="284" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="278" port="n" />
+			<dock index="1" id="283" port="s" />
+		</line>
+		<room id="286" stableId="84b8d3e7-a345-4a0e-a4ea-2f789da50040" name="Atop Stalactite" subtitle="" x="-2848" y="2688" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="A large stalactite extends from the roof and almost reaches the floor below. You could climb down it, and jump from it to the floor, but having done so you would be unable to reach it to climb back up." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="287" name="" description="" automapStartTravelled="south" automapEndTravelled="north" automapWays="s,d,south,1,s;e,d,north,1,n" automapWaysFor="|||South|North" ZOrder="0">
+			<dock index="0" id="278" port="s" />
+			<dock index="1" id="286" port="n" />
+		</line>
+		<line id="282" name="" description="" automapStartTravelled="north" automapEndTravelled="west" automapWays="s,d,north,1,n;e,d,west,1,w" automapWaysFor="|||North|West" ZOrder="0">
+			<dock index="0" id="283" port="n" />
+			<dock index="1" id="285" port="w" />
+		</line>
+		<room id="285" stableId="253a2ae1-74de-48c6-89b2-14cc00dff94e" name="At Window on Pit" subtitle="" x="-2880" y="2112" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're at a low window overlooking a huge pit, which extends up out of sight. A floor is indistinctly visible over 50 feet below. Traces of white mist cover the floor of the pit, becoming thicker to the right. Marks in the dust around the window would seem to indicate that someone has been here recently. Directly across the pit from you and 25 feet away there is a similar window looking into a lighted room. A shadowy figure can be seen there peering back at you." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="290" name="" description="" automapStartTravelled="southeast" automapEndTravelled="north" automapWays="s,d,southeast,1,se;e,d,north,1,n" automapWaysFor="|||SouthEast|North" ZOrder="0">
+			<dock index="0" id="283" port="se" />
+			<dock index="1" id="157" port="n" />
+		</line>
+		<line id="291" name="" description="" flow="oneWay" startText="u" automapStartTravelled="up" automapWays="s,d,up,1,u" automapWaysFor="u||||" ZOrder="0">
+			<dock index="0" id="157" port="ene" />
+			<dock index="1" id="164" port="wsw" />
+		</line>
+		<line id="289" name="" description="" flow="oneWay" split="yes" ZOrder="0">
+			<dock index="0" id="286" port="ssw" />
+			<dock index="1" id="230" port="n" />
+		</line>
+		<room id="292" stableId="8cd0fc55-decf-4408-8a99-84d3ed6e9b42" name="Sloping Corridor" subtitle="" x="-2208" y="2176" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a long winding corridor sloping out of sight in both directions." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="293" name="" description="" automapStartTravelled="southwest" automapEndTravelled="down" automapWays="s,d,southwest,1,sw;e,d,down,1,d" automapWaysFor="||d|SouthWest|" endText="d" ZOrder="0">
+			<dock index="0" id="155" port="sw" />
+			<dock index="1" id="292" port="ese" />
+		</line>
+		<room id="288" stableId="48547c26-ce57-467e-90c7-6f3190c7edbc" name="On SW Side of Chasm" subtitle="" x="-2720" y="1760" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are on one side of a large, deep chasm. A heavy white mist rising up from below obscures all view of the far side. A southwest path leads away from the chasm into a winding corridor." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="294" name="" description="" startText="u" automapStartTravelled="up" automapEndTravelled="southwest" automapWays="s,d,up,1,u;e,d,southwest,1,sw" automapWaysFor="u||||SouthWest" ZOrder="0">
+			<dock index="0" id="292" port="nnw" />
+			<dock index="1" id="288" port="sw" />
+		</line>
+		<room id="295" stableId="8023b021-3657-448b-a0f5-8a0b4370b752" name="On NE Side of Chasm" subtitle="" x="-2624" y="1600" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are on the far side of the chasm. A northeast path leads away from the chasm on this side." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="296" name="" description="" style="dashed" midText="cross bridge" automapCommand="cross bridge" automapWays="s,c,,1,cross%20bridge" automapWaysFor="|cross bridge|||" ZOrder="0">
+			<dock index="0" id="288" port="n" />
+			<dock index="1" id="295" port="s" />
+		</line>
+		<room id="297" stableId="8a6b9d24-893e-4bed-aed1-cf42d7f99f77" name="In Corridor" subtitle="" x="-2464" y="1536" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You're in a long east/west corridor. A faint rumbling noise can be heard in the distance." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="298" name="" description="" automapStartTravelled="northeast" automapEndTravelled="west" automapWays="s,d,northeast,1,ne;e,d,west,1,w" automapWaysFor="|||NorthEast|West" ZOrder="0">
+			<dock index="0" id="295" port="ne" />
+			<dock index="1" id="297" port="w" />
+		</line>
+		<room id="299" stableId="2a6a05a6-98c4-479a-b6e6-ae086ab62e14" name="At Fork in Path" subtitle="" x="-2336" y="1536" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="The path forks here. The left fork leads northeast. A dull rumbling seems to get louder in that direction. The right fork leads southeast down a gentle slope. The main corridor enters from the west." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="300" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="297" port="e" />
+			<dock index="1" id="299" port="w" />
+		</line>
+		<room id="301" stableId="82beda67-a70e-4438-9487-4875a1274639" name="At Junction With Warm Walls" subtitle="" x="-2240" y="1376" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="The walls are quite warm here. From the north can be heard a steady roar, so loud that the entire cave seems to be trembling. Another passage leads south, and a low crawl goes east." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="304" name="" description="" automapStartTravelled="northeast" automapEndTravelled="south" automapWays="s,d,northeast,1,ne;e,d,south,1,s" automapWaysFor="|||NorthEast|South" ZOrder="0">
+			<dock index="0" id="299" port="ne" />
+			<dock index="1" id="301" port="s" />
+		</line>
+		<room id="305" stableId="334dbbc0-05c6-4b79-aecc-23ef1ec755a2" name="At Breath-Taking View" subtitle="" x="-2240" y="1248" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are on the edge of a breath-taking view. Far below you is an active volcano, from which great gouts of molten lava come surging  out, cascading back down into the depths. The glowing rock fills the farthest reaches of the cavern with a blood-red glare, giving everything an eerie, macabre appearance. The air is filled with flickering sparks of ash and a heavy smell of brimstone. The walls are hot to the touch, and the thundering of the volcano drowns out all other sounds. Embedded in the jagged roof far overhead are myriad twisted formations composed of pure white alabaster, which scatter the murky light into sinister apparitions upon the walls. To one side is a deep gorge, filled with a bizarre chaos of tortured rock which seems to have been crafted by the devil himself. An immense river of fire crashes out from the depths of the volcano, burns its way through the gorge, and plummets into a bottomless pit far off to your left. To the right, an immense geyser of blistering steam erupts continuously from a barren island in the center of a sulfurous lake, which bubbles ominously. The far right wall is aflame with an incandescence of its own, which lends an additional infernal splendor to the already hellish scene. A dark, forboding passage exits to the south." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="308" name="" description="" automapStartTravelled="north" automapEndTravelled="south" automapWays="s,d,north,1,n;e,d,south,1,s" automapWaysFor="|||North|South" ZOrder="0">
+			<dock index="0" id="301" port="n" />
+			<dock index="1" id="305" port="s" />
+		</line>
+		<room id="307" stableId="1efb5375-2797-4237-9934-ccd98feb9723" name="In Chamber of Boulders" subtitle="" x="-2112" y="1376" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are in a small chamber filled with large boulders. The walls are very warm, causing the air in the room to be almost stifling from the heat. The only exit is a crawl heading west, through which is coming a low rumbling." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>spices</objects>
+		</room>
+		<line id="309" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="301" port="e" />
+			<dock index="1" id="307" port="w" />
+		</line>
+		<room id="302" stableId="96c582fb-06f0-444d-b539-6a336937484b" name="In Limestone Passage" subtitle="" x="-2240" y="1696" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are walking along a gently sloping north/south passage lined with oddly shaped limestone formations." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="306" name="" description="" startText="se / d" automapStartTravelled="southeast down" automapEndTravelled="north up" automapWays="s,d,southeast,1,se;e,d,north,1,n;s,d,down,1,d;e,d,up,1,u" automapWaysFor="se / d||n / u||" endText="n / u" ZOrder="0">
+			<dock index="0" id="299" port="se" />
+			<dock index="1" id="302" port="n" />
+		</line>
+		<room id="311" stableId="2cf4c091-4d8c-4bdb-b99b-b4978085ef72" name="In Front of Barren Room" subtitle="" x="-2240" y="1824" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are standing at the entrance to a large, barren room. A sign posted above the entrance reads: &quot;Caution! Bear in room!&quot;" roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0" />
+		<line id="312" name="" description="" automapStartTravelled="south" automapEndTravelled="up" automapWays="s,d,south,1,s;e,d,up,1,u" automapWaysFor="||u|South|" endText="u" ZOrder="0">
+			<dock index="0" id="302" port="s" />
+			<dock index="1" id="311" port="nnw" />
+		</line>
+		<room id="314" stableId="dea5878a-9f8d-4bc0-8132-c6b38ac033a4" name="In Barren Room" subtitle="" x="-2080" y="1824" w="96" h="64" region="NoRegion" handDrawn="no" handDrawnStyle="MapDefault" allcornersequal="yes" ellipse="no" roundedCorners="no" octagonal="yes" cornerTopLeft="15" cornerTopRight="15" cornerBottomLeft="15" cornerBottomRight="15" borderstyle="Solid" placedByHand="yes" description="You are inside a barren room. The center of the room is completely empty except for some dust. Marks in the dust lead away toward the far end of the room. The only exit is the way you came in." roomFill="" secondFill="" secondFillLocation="Bottom" roomBorder="" roomLargeText="" roomSubtitleColor="" roomSmallText="" ZOrder="0">
+			<objects>bear|gold chain</objects>
+		</room>
+		<line id="315" name="" description="" automapStartTravelled="east" automapEndTravelled="west" automapWays="s,d,east,1,e;e,d,west,1,w" automapWaysFor="|||East|West" ZOrder="0">
+			<dock index="0" id="311" port="e" />
+			<dock index="1" id="314" port="w" />
+		</line>
+	</map>
+	<settings>
+		<colors>
+			<canvas>White</canvas>
+			<border>MidnightBlue</border>
+			<line>MidnightBlue</line>
+			<selectedLine>Gold</selectedLine>
+			<hoverLine>DarkOrange</hoverLine>
+			<subTitle>MidnightBlue</subTitle>
+			<smallText>MidnightBlue</smallText>
+			<lineText>MidnightBlue</lineText>
+			<grid>#E7E7E7</grid>
+			<startRoom>GreenYellow</startRoom>
+			<endRoom>Red</endRoom>
+		</colors>
+		<regions>
+			<NoRegion Name="NoRegion" TextColor="Blue">White</NoRegion>
+		</regions>
+		<fonts>
+			<room size="13">Arial</room>
+			<object size="11">Arial</object>
+			<subTitle size="9">Arial</subTitle>
+			<line size="9">Arial</line>
+		</fonts>
+		<grid>
+			<snapTo>yes</snapTo>
+			<visible>yes</visible>
+			<showOrigin>yes</showOrigin>
+			<size>32</size>
+		</grid>
+		<lines>
+			<width>2</width>
+			<arrowSize>12</arrowSize>
+			<textOffset>4</textOffset>
+			<handDrawn>no</handDrawn>
+			<labelDiagonalExits>yes</labelDiagonalExits>
+			<labelCompassExits>no</labelCompassExits>
+		</lines>
+		<rooms>
+			<darknessStripeSize>24</darknessStripeSize>
+			<objectListOffset>4</objectListOffset>
+			<defaultObjectsAt>s</defaultObjectsAt>
+			<defaultObjectsInside>no</defaultObjectsInside>
+			<connectionStalkLength>32</connectionStalkLength>
+			<preferredDistanceBetweenRooms>64</preferredDistanceBetweenRooms>
+			<defaultRoomName>Cave</defaultRoomName>
+			<defaultRoomShape>3</defaultRoomShape>
+		</rooms>
+		<ui>
+			<handleSize>12</handleSize>
+			<snapToElementSize>16</snapToElementSize>
+		</ui>
+		<margins>
+			<documentSpecific>no</documentSpecific>
+			<horizontal>0</horizontal>
+			<vertical>0</vertical>
+			<wrapDashes>no</wrapDashes>
+		</margins>
+		<keypadNavigation>
+			<creationModifier>control</creationModifier>
+			<unexploredModifier>alt</unexploredModifier>
+		</keypadNavigation>
+	</settings>
+</trizbort>
