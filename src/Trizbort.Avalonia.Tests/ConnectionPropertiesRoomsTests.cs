@@ -127,4 +127,23 @@ public class ConnectionPropertiesRoomsTests
         join.StartText.ShouldBeEmpty();
         join.EndText.ShouldBeEmpty();
     }
+
+    [Test]
+    public void AOneWayJoin_ReadsTheWayItsArrowPoints()
+    {
+        // Lee, 20 Nov 2026: Bedquilt to the Large Low Room, one way, showed the Large Low Room (above) at the start
+        var low = AddRoom("Large Low Room", 0, 0);
+        var bedquilt = AddRoom("Bedquilt", 300, 200);
+        var join = Join(bedquilt, CompassPoint.North, low, CompassPoint.SouthEast);
+        join.Flow = ConnectionFlow.OneWay;
+        var vm = new ConnectionPropertiesViewModel();
+
+        vm.Initialize(join);
+
+        vm.ShownTheOtherWay.ShouldBeFalse();
+        vm.StartRoomName.ShouldBe("Bedquilt");
+        vm.EndRoomName.ShouldBe("Large Low Room");
+        vm.StartText.ShouldBe("from text");
+        vm.EndText.ShouldBe("to text");
+    }
 }

@@ -62,6 +62,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- The join properties show a one-way join the way its arrow points: Start is the room it leaves, End the room it
+  goes to (Bedquilt to the Large Low Room showed the Large Low Room first).
 - A split join's stub leaves its room on the side its label is on: "d" with its label below and right of the Brink of
   Pit no longer leaves from the top left (facing the far room) with its line crossing the room to the label.
 - A room the game describes differently as play goes on (the Twopit Room as the beanstalk grows) is asked about once:

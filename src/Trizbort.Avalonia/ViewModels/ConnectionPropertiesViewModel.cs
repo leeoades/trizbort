@@ -89,7 +89,8 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         ConnectionDescription = connection.Description ?? string.Empty;
         var startRoom = connection.GetSourceRoom();
         var endRoom = connection.GetTargetRoom();
-        ShownTheOtherWay = IsTheOtherWay(startRoom, endRoom);
+        // a one-way join reads the way its arrow points: Start is the room it leaves, End the room it goes to
+        ShownTheOtherWay = connection.Flow != ConnectionFlow.OneWay && IsTheOtherWay(startRoom, endRoom);
         _fromRoom = NameOf(startRoom);
         _toRoom = NameOf(endRoom);
         StartRoomName = ShownTheOtherWay ? _toRoom : _fromRoom;
