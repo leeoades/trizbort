@@ -70,7 +70,11 @@ public class DirectionPickerButton : UserControl
 
         _custom = new TextBox { Name = "CustomBox", Watermark = "a spell, \"climb tree\"...", MinWidth = 200 };
         AutomationProperties.SetName(_custom, "Custom");
-        _custom.TextChanged += (_, _) => Write();
+        // as the text changes, typed or set (TextChanged waits for the box to be shown)
+        _custom.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.TextProperty) Write();
+        };
 
         var panel = new StackPanel
         {
