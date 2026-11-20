@@ -65,6 +65,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **Previous Move** (F9) goes back through a transcript automap started at the end of, as it does after playing
+  one through. The transcript so far shows in the automap panel, and automap works out which room you were in from
+  the room names in it.
 - **Tidy Map** tidies maps automap made: rooms touching, or a join running across a room, were left as they were
   when the rooms counted as placed by hand, which every automapped room does, so often nothing moved.
 - The join properties show a one-way join the way its arrow points: Start is the room it leaves, End the room it

@@ -179,13 +179,13 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     try
     {
       run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
-      // the prompt is on the game monitor: automap waits for the command
-      await WaitFor(() => engine.ScreenLines().Count == 1);
+      // the transcript so far, and its prompt, are on the game monitor: automap waits for the command
+      await WaitFor(() => engine.ScreenLines().Count == 5);
       await Task.Delay(100);
 
       // the player types look, then goes north
       File.AppendAllText(path, "look\nHall\nA grand hall. A door leads north.\n\n>north\nKitchen\nA small kitchen.\n\n>");
-      await WaitFor(() => engine.ScreenLines().Count == 10);
+      await WaitFor(() => engine.ScreenLines().Count == 14);
       await Task.Delay(100);
       Rooms().ShouldBe(new[] { "Hall", "Kitchen" });
       var join = Project.Current.Elements.OfType<Connection>().Single(connection => connection.GetSourceRoom() != connection.GetTargetRoom());

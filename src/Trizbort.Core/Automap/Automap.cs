@@ -127,7 +127,7 @@ public sealed class Automap : IAutomapController
     ScreenChanged?.Invoke();
 
     // the map stays as it is; automap carries on from the room it was in then, if it's still there
-    _lastKnownRoom = point.Room == null ? null : _canvas.ResolveRoom(point.Room);
+    _lastKnownRoom = point.Room == null ? RoomOnScreenBefore(point.ScreenLines) : _canvas.ResolveRoom(point.Room);
     // and the map shows that room as the one you're in again
     if (_lastKnownRoom != null) _canvas.FollowRoom(_lastKnownRoom);
     _lastMoveDirection = null;
@@ -143,6 +143,24 @@ public sealed class Automap : IAutomapController
 
     Trace("Automap: went back to before \"{0}\".", point.Command);
     return (point.Command, reader, stream);
+  }
+
+  /// <summary>
+  ///   The room the transcript last named before the screen line <paramref name="count" />, when only one room on the
+  ///   map has that name: where the player was at a move automap skipped past, carrying on from the end.
+  /// </summary>
+  private Room RoomOnScreenBefore(int count)
+  {
+    lock (_screen)
+      for (var i = Math.Min(count, _screen.Count) - 1; i >= 0; i--)
+      {
+        var line = _screen[i];
+        if (IsPrompt(line, out _) || string.IsNullOrWhiteSpace(line)) continue;
+        var room = _canvas.OnlyRoomNamed(line);
+        if (room != null) return room;
+      }
+
+    return null;
   }
 
   private bool TakeMove()
@@ -3282,12 +3300,22 @@ public sealed class Automap : IAutomapController
 
       if (_settings.ContinueTranscript)
       {
+        // carrying on from the end: the moves before it are noted on the way, so Previous Move (F9) can go back into
+        // them, and shown on the transcript monitor (all but the last line, which is read below)
         string next;
+        var skipped = new List<string>();
         while ((next = await reader.ReadLineAsync(tokenSource.Token)) != null)
         {
+          if (_linesRead > 0) skipped.Add(lastline);
           lastline = next;
           _linesRead++;
+          if (IsPrompt(next, out var typed) && !string.IsNullOrWhiteSpace(typed))
+            // the room isn't known yet: found from the transcript if automap goes back here
+            _movePoints.Add(new MovePoint(_linesRead, _linesRead, null, typed, true, Array.Empty<DoneInRoom>(), null));
         }
+
+        lock (_screen) _screen.AddRange(skipped);
+        ScreenChanged?.Invoke();
       }
 
       // keep track of lines we read between here and the next prompt
