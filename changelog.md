@@ -41,6 +41,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- The Windows and Linux downloads keep the app's graphics libraries as files beside it, instead of unpacking them
+  to a temporary folder each time it starts, which some antivirus tools took for malware. Keep the files from the
+  download together.
 - **Centre on Current Room** only moves the map: it no longer selects the room you're in.
 - Ctrl + mouse wheel zooms a full step a notch, as the wheel alone does, instead of 1%. **View > Zoom In 1%** and
   **Zoom Out 1%** still zoom finely.
