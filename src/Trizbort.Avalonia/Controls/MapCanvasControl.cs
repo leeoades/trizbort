@@ -1115,8 +1115,9 @@ public class MapCanvasControl : Control
                 DrawGrid(context, visibleWorld);
             }
 
-            // 4. Frustum Culling
-            const float margin = 100.0f;
+            // 4. Frustum Culling. Wide enough that the joins whose end labels could sit beside one in view are drawn
+            // too, so labels keep clear of the same ones wherever the view is
+            const float margin = 256.0f;
             var culledWorld = new CoreRect(
                 visibleWorld.Left - margin,
                 visibleWorld.Top - margin,
@@ -1153,7 +1154,8 @@ public class MapCanvasControl : Control
                 _spatialLines,
                 _spatialVersion,
                 debugSession?.ElementRenderingEnabled ?? true,
-                debugSession?.LineRenderingEnabled ?? true);
+                debugSession?.LineRenderingEnabled ?? true,
+                Project.Current.Elements);
 
             // 6. Render Active Ports
             if (adorners.Ports.Count > 0)
@@ -1356,7 +1358,8 @@ public class MapCanvasControl : Control
         SpatialLineIndex? spatialLines = null,
         int spatialVersion = 1,
         bool drawRoomsAndLabels = true,
-        bool drawConnections = true)
+        bool drawConnections = true,
+        IReadOnlyList<Element>? surroundings = null)
     {
         if (spatialLines == null)
         {
@@ -1365,14 +1368,17 @@ public class MapCanvasControl : Control
         }
 
         // automatic object lists keep clear of the joins, rooms and other lists around them; join end labels keep
-        // clear of those and of each other
+        // clear of those and of each other. Of everything on the map, not just what's in view: what's drawn depends on
+        // where the view is, and a label that kept clear only of that jumped about as the view moved (following the
+        // player round the maze, a split join's label flipped from one corner of the Brink of Pit to the other)
+        var around = surroundings ?? elements;
         var previousObstacles = RoomDrawingAdapter.ObjectListObstacles;
         var previousClashes = ConnectionDrawingAdapter.LabelClashes;
         var previousDrawn = ConnectionDrawingAdapter.LabelDrawn;
-        if (drawRoomsAndLabels) RoomDrawingAdapter.ObjectListObstacles = ObjectListObstaclesFor(elements);
+        if (drawRoomsAndLabels) RoomDrawingAdapter.ObjectListObstacles = ObjectListObstaclesFor(around);
         if (drawConnections)
         {
-            var (clashes, drawn) = LabelClashesFor(elements);
+            var (clashes, drawn) = LabelClashesFor(around);
             ConnectionDrawingAdapter.LabelClashes = clashes;
             ConnectionDrawingAdapter.LabelDrawn = drawn;
         }

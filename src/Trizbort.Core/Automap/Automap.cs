@@ -903,6 +903,7 @@ public sealed class Automap : IAutomapController
 
       // the map first, as when mapping: the way the player went from the room automap has them in says where they
       // are, so automap follows them round a maze of rooms all alike; only then the name and description
+      _askedWhichRoom = false;
       var room = VariantRoom(roomName, roomDescription) ?? await FindRoomAsync(roomName, roomDescription, line, token);
       token.ThrowIfCancellationRequested();
       RefreshLastKnownRoom();
@@ -913,6 +914,21 @@ public sealed class Automap : IAutomapController
         // follow the player, mapping nothing; somewhere new leaves automap not knowing where they are
         if (room != null)
         {
+          // except what the user has just said: this is that room, described differently now (the beanstalk has
+          // grown). The description is kept with it, so it's known next time, whichever mode automap is in
+          if (_askedWhichRoom && !string.IsNullOrWhiteSpace(roomDescription) &&
+              !room.Descriptions.Any(known => SameFirstSentence(known, roomDescription)))
+          {
+            using (await BeginBatchAsync("Automap: " + roomName, token))
+            {
+              room = _canvas.ResolveRoom(room);
+              room?.AddDescription(roomDescription);
+            }
+
+            Trace("{0}: {1}, described differently now; the description is kept with it.",
+              FormatTranscriptLineForDisplay(line), roomName);
+          }
+
           NowInRoom(room);
           _pausedFrom = room;
         }

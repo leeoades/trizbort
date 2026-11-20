@@ -53,6 +53,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- A room the game describes differently as play goes on (the Twopit Room as the beanstalk grows) is asked about once:
+  picking it in **Which room does it mean?** keeps its new description with it, now while **Tracking only** too, and
+  the question says so.
+- While the map follows you (tracking round a maze), join end labels no longer jump from one side of a room to the
+  other as the view moves: they keep clear of everything on the map, not only of what's in view.
 - **Quick Find** (Ctrl+F) opens with the caret in its text box, ready to type.
 - The room dialog's tick boxes under **Reference** wrap onto a second line in a narrow window,
   instead of cutting off **Don't automap from here**.
