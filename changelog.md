@@ -53,6 +53,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- A split join's stub leaves its room on the side its label is on: "d" with its label below and right of the Brink of
+  Pit no longer leaves from the top left (facing the far room) with its line crossing the room to the label.
 - A room the game describes differently as play goes on (the Twopit Room as the beanstalk grows) is asked about once:
   picking it in **Which room does it mean?** keeps its new description with it, now while **Tracking only** too, and
   the question says so.
