@@ -16,6 +16,9 @@ public interface IAutomapCanvas
   /// </summary>
   RoomSearchResult FindRooms(string roomName, string roomDescription, RoomMatcher matcher);
 
+  /// <summary>The one room on the map with this name; null if there's none, or more than one (a maze).</summary>
+  Room OnlyRoomNamed(string name) => null;
+
   Room CreateRoom(Room existing, string name);
 
   Room CreateRoom(Room existing, MappableDirection directionFromExisting, string roomName, string line);
