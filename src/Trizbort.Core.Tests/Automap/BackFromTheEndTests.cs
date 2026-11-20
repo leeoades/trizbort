@@ -20,12 +20,16 @@ namespace Trizbort.Core.Tests.Automap;
 [Category("Unit")]
 public class BackFromTheEndTests : IsolatedProjectTests
 {
-  private static async Task WaitFor(Func<bool> condition, string what)
+  private Trizbort.Automap.Automap _engine;
+
+  private async Task WaitFor(Func<bool> condition, string what)
   {
     var clock = Stopwatch.StartNew();
     while (!condition())
     {
-      if (clock.ElapsedMilliseconds > 10000) Assert.Fail("Timed out waiting for automap: " + what);
+      if (clock.ElapsedMilliseconds > 10000) Assert.Fail("Timed out waiting for automap: " + what + "; status " + _engine?.Status + "; next " +
+                                                    _engine?.NextCommand + "; screen " +
+                                                    string.Join(" | ", _engine?.ScreenLines() ?? Array.Empty<string>()));
       await Task.Delay(10);
     }
   }
@@ -44,7 +48,7 @@ public class BackFromTheEndTests : IsolatedProjectTests
     });
     foreach (var name in new[] { "Hall", "Kitchen", "Pantry" })
       Project.Current.Elements.Add(new Room(Project.Current) { Name = name });
-    var engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var engine = _engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
     var settings = AutomapSettings.Default;
     settings.FileName = path;
     settings.ContinueTranscript = true;
