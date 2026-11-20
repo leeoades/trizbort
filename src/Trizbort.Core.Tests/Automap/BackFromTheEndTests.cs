@@ -53,7 +53,11 @@ public class BackFromTheEndTests : IsolatedProjectTests
     {
       run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
       // the transcript so far is on the game monitor
-      await WaitFor(() => engine.ScreenLines().Count == 15, "the transcript so far");
+      await WaitFor(() => engine.ScreenLines().Count == 15 || run.IsCompleted, "the transcript so far");
+      TestContext.Out.WriteLine(engine.Status);
+      TestContext.Out.WriteLine(string.Join(" | ", engine.ScreenLines()));
+      run.IsCompleted.ShouldBeFalse(engine.Status);
+      engine.ScreenLines().Count.ShouldBe(15, string.Join(" | ", engine.ScreenLines()));
       engine.CanGoBack.ShouldBeTrue();
 
       engine.GoBack();
