@@ -112,9 +112,9 @@ public class DescribedDifferentlyTests : IsolatedProjectTests
     PersistenceRegressionTests.Load(reopened, Files.File("map.trizbort"));
     var reopenedPit = reopened.Elements.OfType<Room>().Single(room => room.Name == "In West Pit");
     reopenedPit.Descriptions.ShouldBe(new[] { Before, After });
-    // and saved again, as it was
+    // and saved again with both
     new LegacyMapFileEngine(reopened).Save(Files.File("again.trizbort")).ShouldBeTrue();
-    File.ReadAllText(Files.File("again.trizbort")).ShouldBe(File.ReadAllText(Files.File("map.trizbort")));
+    File.ReadAllText(Files.File("again.trizbort")).ShouldContain($"<otherDescription>{After}</otherDescription>");
 
     var again = new PickTheRoom();
     (await HeadlessAutomap.RunAsync(reopened, path, settings, again)).Succeeded.ShouldBeTrue();

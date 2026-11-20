@@ -25,6 +25,36 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private string _description = string.Empty;
 
+    /// <summary>
+    ///     An automapped room's name and description are how automap knows the room when the game shows it again, so
+    ///     they're read-only until the user unlocks them (the padlock beside them).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsUnlocked))]
+    private bool _isAutomapLocked;
+
+    public bool IsUnlocked => !IsAutomapLocked;
+
+    public const string LockTip =
+        "This room was automapped: automap knows it again by its name and description. Changing them could stop " +
+        "it recognising the room. Click to unlock.";
+
+    public const string UnlockQuestion =
+        "This room was automapped. Automap recognises it again by its name and description, so changing them could " +
+        "stop it knowing the room when you come back. Unlock them for editing?";
+
+    /// <summary>The user has said they want to change the name and description anyway.</summary>
+    public void Unlock() => IsAutomapLocked = false;
+
+    /// <summary>
+    ///     Whether automap made the room: it has a description from the game, or a join automap has seen the player
+    ///     go along.
+    /// </summary>
+    public static bool WasAutomapped(Room room) =>
+        room.Descriptions.Count > 0 ||
+        room.GetConnections().Any(join =>
+            !string.IsNullOrWhiteSpace(join.StartTravelled) || !string.IsNullOrWhiteSpace(join.EndTravelled));
+
     [ObservableProperty]
     private string _objects = string.Empty;
 
@@ -304,6 +334,7 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         Name = room.Name ?? string.Empty;
         SubTitle = room.SubTitle ?? string.Empty;
         Description = room.PrimaryDescription ?? string.Empty;
+        IsAutomapLocked = WasAutomapped(room);
         Objects = room.Objects ?? string.Empty;
         ObjectsPosition = room.ObjectsPosition;
         UseCustomPosition = room.ObjectsCustomPosition;

@@ -262,6 +262,8 @@ You can change more detailed characteristics of a room from its *Properties dial
 
 The opening screen for a room's properties will show the following information:
 
+(In a room automap made, the name and description are read-only, with a small padlock beside each: automap knows the room again by them, so changing them could stop it recognising the room. Click a padlock, and say yes, to edit them.)
+
 - The name
 - A subtitle
 - Whether the room is dark

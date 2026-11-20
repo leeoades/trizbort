@@ -36,6 +36,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- In a room automap made, the room dialog shows the name and description read-only, with a padlock beside each:
+  automap knows the room again by them. Clicking a padlock asks, then lets you edit them.
 - Join Properties name the room above each end's box, and Start is always the room on the left (or the upper one,
   when they're more one above the other), whichever end the join was drawn from. With One Way Arrow ticked, it says
   which way the arrow points ("from Garden to Hall").
