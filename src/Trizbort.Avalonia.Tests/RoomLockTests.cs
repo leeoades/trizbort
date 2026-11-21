@@ -85,7 +85,7 @@ public class RoomLockTests
     private const string Before = "You are at the west end of the twopit room.";
     private const string After = "The top of a 12-foot-tall beanstalk is poking out of the west pit.";
 
-    [Test]
+    [AvaloniaTest]
     public void TheOtherDescriptions_AreListed_AndRemovableOnlyOnceUnlocked()
     {
         // Lee, 21 Nov 2026: see the room's other descriptions in its properties
@@ -111,7 +111,7 @@ public class RoomLockTests
         room.Descriptions.ShouldBe(new[] { Before });
     }
 
-    [Test]
+    [AvaloniaTest]
     public void ApplyingTheDialog_KeepsTheOtherDescriptions()
     {
         var room = new Room(Project.Current) { Name = "At West End of Twopit Room" };
