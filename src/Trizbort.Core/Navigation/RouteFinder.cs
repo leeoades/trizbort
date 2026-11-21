@@ -115,9 +115,9 @@ public static class RouteFinder
     // a command that leads from one place to different rooms doesn't always lead to any one of them
     foreach (var leaving in ways.Values)
     {
-      var chancy = leaving.GroupBy(way => way.Step.Command, StringComparer.OrdinalIgnoreCase)
-        .Where(same => same.Select(way => way.Step.To).Distinct().Count() > 1)
-        .SelectMany(same => same.Select(way => way.Step))
+      var chancy = leaving.GroupBy(way => way.Item1.Command, StringComparer.OrdinalIgnoreCase)
+        .Where(same => same.Select(way => way.Item1.To).Distinct().Count() > 1)
+        .SelectMany(same => same.Select(way => way.Item1))
         .ToHashSet();
       for (var i = 0; i < leaving.Count; i++)
       {
