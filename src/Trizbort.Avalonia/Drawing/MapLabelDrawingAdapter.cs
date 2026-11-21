@@ -29,7 +29,18 @@ public static class MapLabelDrawingAdapter
         public CoreRect LastTextBounds;
         public FormattedText? CachedText;
         public double CachedStartY;
+
+        /// <summary>A Markdown label laid out, and what it was laid out for.</summary>
+        public MarkdownLabelRenderer? Markdown;
+        public string? MarkdownKey;
     }
+
+    /// <summary>The link drawn at <paramref name="point" /> (map coordinates) in a Markdown label, or null.</summary>
+    public static string? LinkAt(MapLabel label, global::Avalonia.Point point) =>
+        label.Markdown && _labelCaches.TryGetValue(label, out var cache) ? cache.Markdown?.LinkAt(point) : null;
+
+    /// <summary>The colour of links in a Markdown label.</summary>
+    private static readonly IBrush _linkBrush = new SolidColorBrush(global::Avalonia.Media.Color.FromRgb(0x1A, 0x5F, 0xB4));
 
     private static readonly ConditionalWeakTable<MapLabel, LabelCache> _labelCaches = new();
 
@@ -100,7 +111,11 @@ public static class MapLabelDrawingAdapter
             else
                 textBounds.Inflate(-5, -5);
 
-            if (textBounds.Width > 0 && textBounds.Height > 0)
+            if (label.Markdown && textBounds.Width > 0 && textBounds.Height > 0)
+            {
+                DrawMarkdown(label, context, cache, textBounds);
+            }
+            else if (textBounds.Width > 0 && textBounds.Height > 0)
             {
                 var font = Settings.RoomFontMetadata;
                 var textColor = label.TextColor != CoreColor.Transparent
@@ -145,5 +160,27 @@ public static class MapLabelDrawingAdapter
                 if (TextRenderingGate.IsEnabled) context.DrawText(cache.CachedText, new AvaloniaPoint(textBounds.Left, cache.CachedStartY));
             }
         }
+    }
+
+    /// <summary>
+    ///     A Markdown label: laid out left-aligned from the top of the label (it may run past the bottom; make the label
+    ///     bigger), and drawn; laid out again only when the text, size, font or colour change.
+    /// </summary>
+    private static void DrawMarkdown(MapLabel label, AvaloniaDrawingContext context, LabelCache cache, CoreRect textBounds)
+    {
+        var font = Settings.RoomFontMetadata;
+        var textColor = label.TextColor != CoreColor.Transparent ? label.TextColor : Settings.Color[CoreColors.SmallText];
+        var key = string.Join("\u0001", label.Text, font.Name, (int)font.Style, font.Size, textColor.ToArgb(),
+            textBounds.Left, textBounds.Top, textBounds.Width, textBounds.Height);
+        if (cache.Markdown == null || cache.MarkdownKey != key)
+        {
+            var rule = Settings.Color[CoreColors.Border];
+            cache.Markdown = MarkdownLabelRenderer.Lay(label.Text,
+                new global::Avalonia.Rect(textBounds.Left, textBounds.Top, textBounds.Width, textBounds.Height),
+                font.ToTypeface(), font.Size, textColor.ToBrush(), _linkBrush, rule.ToPen(1));
+            cache.MarkdownKey = key;
+        }
+
+        cache.Markdown.Draw(context);
     }
 }

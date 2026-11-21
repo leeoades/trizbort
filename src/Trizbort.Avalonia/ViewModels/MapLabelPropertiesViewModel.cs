@@ -13,6 +13,10 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private Color _textColor = Color.Transparent;
 
+    /// <summary>The text is Markdown: headings, bold, lists, tables, and links to rooms.</summary>
+    [ObservableProperty]
+    private bool _markdown;
+
     [ObservableProperty]
     private bool _hasOutline;
 
@@ -63,6 +67,7 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     {
         Text = label.Text ?? string.Empty;
         TextColor = label.TextColor;
+        Markdown = label.Markdown;
         HasOutline = label.BorderStyle != BorderDashStyle.None;
         Shape = label.Shape == RoomShape.NotARoom ? RoomShape.SquareCorners : label.Shape;
         BorderStyle = HasOutline ? label.BorderStyle : BorderDashStyle.Solid;
@@ -75,6 +80,7 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     {
         label.Text = Text;
         label.TextColor = TextColor;
+        label.Markdown = Markdown;
         label.Shape = Shape;
         label.BorderStyle = HasOutline ? BorderStyle : BorderDashStyle.None;
         label.BorderColor = BorderColor;

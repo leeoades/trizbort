@@ -16,7 +16,11 @@
           Grid.IsSharedSizeScope="True">
 
         <!-- Text (no group box, as in the reference dialog) -->
-        <Label Grid.Row="0" Classes="field-label" Content="_Text:" Target="{Binding #LabelText}" />
+        <DockPanel Grid.Row="0">
+            <CheckBox DockPanel.Dock="Right" x:Name="MarkdownBox" Content="_Markdown" IsChecked="{Binding Markdown}"
+                      ToolTip.Tip="Format the text with Markdown: # Heading, **bold**, *italic*, - lists, --- rules, tables (| Treasure | Room |, then |---|---|, then a row per line), and links: [[Room Name]] goes to a room when clicked on the map ([[Room Name|other text]] to show other words, [[Maze#42]] for a room that shares its name), [text](https://...) opens a web page." />
+            <Label Classes="field-label" Content="_Text:" Target="{Binding #LabelText}" />
+        </DockPanel>
         <TextBox Grid.Row="1" x:Name="LabelText" Text="{Binding Text}"
                  AcceptsReturn="True" TextWrapping="Wrap" MinHeight="36"
                  ScrollViewer.VerticalScrollBarVisibility="Auto" />

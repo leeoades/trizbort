@@ -14,6 +14,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Markdown labels**: tick **Markdown** in a label's properties to format its text: headings, **bold** and
+  *italic*, lists, rules, tables, and links. `[[Room Name]]` links to a room: click it on the map to select the room
+  and glide to it (`[[Room Name|other words]]` to show other words, `[[Maze#42]]` for one of several rooms with a
+  name; **Copy Room Link** on a room's right-click menu copies its link). `[text](https://...)` opens a web page.
 - **Unreliable joins**: a join that doesn't always lead where it's drawn, because the game picks at random
   (Bedquilt in Colossal Cave) or it depends on what you've done (a closet left on another floor). Directions take it
   only when there's no other way, and say so. Mark one with **Unreliable** in the join's properties, **Unreliable
