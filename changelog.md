@@ -14,6 +14,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- Room properties list the other ways the game has described a room, under **Also described as** below its
+  description (the Twopit Room once the beanstalk has grown). Unlock the room to remove one.
 - Directions: right-click a step and choose **Avoid This Route** to get there another way (without the PLOVER
   spell, say). The ways avoided are listed in the panel, each with **Allow** to take it again.
 - The join properties have a **Split** tick box, as **Split Join** on the join's right-click menu.

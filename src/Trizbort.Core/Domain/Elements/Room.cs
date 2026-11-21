@@ -756,6 +756,24 @@ public class Room : Element, ISizeable
     RaiseChanged();
   }
 
+  /// <summary>
+  ///   Replaces the other ways the game has described the room (after the first, the room's description) with
+  ///   <paramref name="others" />, in order, leaving out repeats.
+  /// </summary>
+  public void SetOtherDescriptions(IEnumerable<string> others)
+  {
+    var wanted = new List<string>();
+    if (PrimaryDescription != null) wanted.Add(PrimaryDescription);
+    foreach (var other in others)
+      if (!string.IsNullOrEmpty(other) &&
+          !wanted.Any(existing => string.Compare(existing, other, StringComparison.OrdinalIgnoreCase) == 0))
+        wanted.Add(other);
+    if (wanted.SequenceEqual(_descriptions, StringComparer.Ordinal)) return;
+    _descriptions.Clear();
+    _descriptions.AddRange(wanted);
+    RaiseChanged();
+  }
+
   public void AddDescription(string description)
   {
     if (string.IsNullOrEmpty(description)) return;

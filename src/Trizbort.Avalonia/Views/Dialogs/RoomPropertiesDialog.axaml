@@ -77,8 +77,32 @@
                                 </Button>
                             </StackPanel>
                         </HeaderedContentControl.Header>
-                        <TextBox x:Name="DescriptionBox" Text="{Binding Description}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90"
-                                 IsReadOnly="{Binding IsAutomapLocked}" AutomationProperties.Name="Description" />
+                        <StackPanel Spacing="6">
+                            <TextBox x:Name="DescriptionBox" Text="{Binding Description}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90"
+                                     IsReadOnly="{Binding IsAutomapLocked}" AutomationProperties.Name="Description" />
+                            <!-- the other ways the game has described the room, which automap knows it by too -->
+                            <StackPanel x:Name="OtherDescriptionsPanel" Spacing="4" IsVisible="{Binding HasOtherDescriptions}">
+                                <TextBlock Text="Also described as:" Opacity="0.8"
+                                           ToolTip.Tip="The game described this room differently at other times (after something changed in it). Automap recognises the room by these too." />
+                                <ItemsControl x:Name="OtherDescriptionsList" ItemsSource="{Binding OtherDescriptions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:OtherDescription">
+                                            <Border BorderThickness="1" CornerRadius="3" Padding="6,4" Margin="0,0,0,4"
+                                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                                <DockPanel>
+                                                    <Button DockPanel.Dock="Right" Content="Remove" Padding="6,1" Margin="6,0,0,0"
+                                                            VerticalAlignment="Top" Command="{Binding RemoveCommand}"
+                                                            IsVisible="{Binding CanRemove}"
+                                                            ToolTip.Tip="Forget this description: automap won't know the room by it any more"
+                                                            AutomationProperties.Name="Remove description" />
+                                                    <SelectableTextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </StackPanel>
                     </HeaderedContentControl>
 
                     <HeaderedContentControl Grid.Row="1" Classes="group" Header="Objects">

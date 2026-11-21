@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
 using NUnit.Framework;
 using Shouldly;
@@ -74,6 +75,72 @@ public class RoomLockTests
             dialog.NameBox.IsReadOnly.ShouldBeFalse();
             dialog.DescriptionBox.IsReadOnly.ShouldBeFalse();
             dialog.NameLock.IsVisible.ShouldBeFalse();
+        }
+        finally
+        {
+            dialog.Close();
+        }
+    }
+
+    private const string Before = "You are at the west end of the twopit room.";
+    private const string After = "The top of a 12-foot-tall beanstalk is poking out of the west pit.";
+
+    [Test]
+    public void TheOtherDescriptions_AreListed_AndRemovableOnlyOnceUnlocked()
+    {
+        // Lee, 21 Nov 2026: see the room's other descriptions in its properties
+        var room = new Room(Project.Current) { Name = "At West End of Twopit Room" };
+        room.AddDescription(Before);
+        room.AddDescription(After);
+        var vm = new RoomPropertiesViewModel();
+        vm.Initialize(room);
+
+        vm.Description.ShouldBe(Before);
+        vm.HasOtherDescriptions.ShouldBeTrue();
+        vm.OtherDescriptions.Select(other => other.Text).ShouldBe(new[] { After });
+        vm.OtherDescriptions[0].CanRemove.ShouldBeFalse();
+        vm.OtherDescriptions[0].RemoveCommand.Execute(null);
+        vm.OtherDescriptions.Count.ShouldBe(1);
+
+        vm.Unlock();
+        vm.OtherDescriptions[0].CanRemove.ShouldBeTrue();
+        vm.OtherDescriptions[0].RemoveCommand.Execute(null);
+        vm.HasOtherDescriptions.ShouldBeFalse();
+        vm.ApplyTo(room);
+
+        room.Descriptions.ShouldBe(new[] { Before });
+    }
+
+    [Test]
+    public void ApplyingTheDialog_KeepsTheOtherDescriptions()
+    {
+        var room = new Room(Project.Current) { Name = "At West End of Twopit Room" };
+        room.AddDescription(Before);
+        room.AddDescription(After);
+        var vm = new RoomPropertiesViewModel();
+        vm.Initialize(room);
+        vm.Unlock();
+        vm.Description = "Changed.";
+
+        vm.ApplyTo(room);
+
+        room.Descriptions.ShouldBe(new[] { "Changed.", After });
+    }
+
+    [AvaloniaTest]
+    public void TheDialog_ShowsTheOtherDescriptions()
+    {
+        var room = new Room(Project.Current) { Name = "At West End of Twopit Room" };
+        room.AddDescription(Before);
+        room.AddDescription(After);
+        var vm = new RoomPropertiesViewModel();
+        vm.Initialize(room);
+        var dialog = new RoomPropertiesDialog { DataContext = vm };
+        dialog.Show();
+        try
+        {
+            dialog.FindControl<StackPanel>("OtherDescriptionsPanel")!.IsVisible.ShouldBeTrue();
+            dialog.FindControl<ItemsControl>("OtherDescriptionsList")!.ItemCount.ShouldBe(1);
         }
         finally
         {

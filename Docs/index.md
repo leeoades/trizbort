@@ -264,6 +264,8 @@ The opening screen for a room's properties will show the following information:
 
 (In a room automap made, the name and description are read-only, with a small padlock beside each: automap knows the room again by them, so changing them could stop it recognising the room. Click a padlock, and say yes, to edit them.)
 
+When the game has described a room more than one way (the Twopit Room once the beanstalk has grown), the other descriptions are listed under **Also described as**, below the description. Automap knows the room by those too. Once the room is unlocked, **Remove** forgets one.
+
 - The name
 - A subtitle
 - Whether the room is dark
