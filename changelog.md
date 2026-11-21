@@ -81,7 +81,7 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
-- Going into a room whose name several rooms share, each described its own way (Colossal Cave's maze of passages
+- Going into a room whose name three or more rooms share, each described its own way (Colossal Cave's maze of passages
   all different), with a description none of them has (the maze all alike), adds a new room instead of asking which.
 - Dialogs spell directions in full ("east to Maze", not "e to Maze"); only the map abbreviates them.
 - The other room made by Split Room, or by automap, has the room's description, not an empty one.

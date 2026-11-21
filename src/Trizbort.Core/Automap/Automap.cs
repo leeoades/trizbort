@@ -625,13 +625,13 @@ public sealed class Automap : IAutomapController
 
   /// <summary>
   ///   Whether the game tells <paramref name="candidates" /> apart by their descriptions, and
-  ///   <paramref name="roomDescription" /> is none of them: two or more rooms with one name, each described, each
-  ///   differently, and none the way the game describes this one. (One room described differently, the Twopit Room
-  ///   once the beanstalk grows, is still asked about: it may be the same room at another time.)
+  ///   <paramref name="roomDescription" /> is none of them: three or more rooms with one name, each described, each
+  ///   differently, and none the way the game describes this one. (One or two, the Twopit Room once the beanstalk
+  ///   grows, are still asked about: it may be one of them at another time.)
   /// </summary>
   private static bool ToldApartByDescription(IReadOnlyList<Room> candidates, string roomDescription)
   {
-    if (candidates.Count < 2 || string.IsNullOrWhiteSpace(roomDescription)) return false;
+    if (candidates.Count < 3 || string.IsNullOrWhiteSpace(roomDescription)) return false;
     var known = candidates.Select(room => room.PrimaryDescription).ToList();
     if (known.Any(string.IsNullOrWhiteSpace)) return false;
     if (known.Distinct(StringComparer.OrdinalIgnoreCase).Count() != known.Count) return false;
