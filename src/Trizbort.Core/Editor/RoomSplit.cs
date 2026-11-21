@@ -159,7 +159,7 @@ public static class RoomSplit
   }
 
   /// <summary>A room's name, with its objects when other rooms share the name ("Maze (rod)").</summary>
-  private static string Called(Project project, Room room)
+  public static string Called(Project project, Room room)
   {
     if (room == null) return "nowhere";
     var shared = project != null && project.Elements.OfType<Room>().Count(other => other.Name == room.Name) > 1;

@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Not This Room…** in the automap panel: when automap takes the room you came into for one already on the map
+  (back to the gold maze room, say), it says so under Where You Are. If it's wrong, press the button and pick the
+  room it really is, of the others with its name and description, or a new one: the way you came in moves there.
 - **Unreliable joins**: a join that doesn't always lead where it's drawn, because the game picks at random
   (Bedquilt in Colossal Cave) or it depends on what you've done (a closet left on another floor). Directions take it
   only when there's no other way, and say so. Mark one with **Unreliable** in the join's properties, **Unreliable

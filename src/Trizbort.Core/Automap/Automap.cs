@@ -1325,6 +1325,9 @@ public sealed class Automap : IAutomapController
           if (!_askedWhichRoom) room = await WhichOfTheSameNameAsync(room, roomName, roomDescription, line, token);
         }
 
+        // a room already on the map, taken for this one without asking: an assumption the user can put right
+        var assumedRoom = room != null && !_askedWhichRoom;
+
         if (_skipHeading)
         {
           SkipHeading(line);
@@ -1610,7 +1613,8 @@ public sealed class Automap : IAutomapController
         // (a move that came back to the same room counts: up "In the Chimney" to what automap took for the same one)
         if (_lastKnownRoom != null && (_lastKnownRoom != arrivedFrom || arrivedBy != null || arrivedByJourney != null))
           _arrival = arrivedFrom != null && (arrivedBy != null || arrivedByJourney != null) && !_suspended
-            ? new Arrival(arrivedFrom, arrivedBy, arrivedByJourney, _lastKnownRoom, roomDescription)
+            ? new Arrival(arrivedFrom, arrivedBy, arrivedByJourney, _lastKnownRoom, roomDescription,
+              assumedRoom && _lastKnownRoom == room)
             : null;
         _lastMoveDirection = null;
         _lastJourneyCommand = null;
@@ -2240,7 +2244,8 @@ public sealed class Automap : IAutomapController
   }
 
   /// <summary>How the player last came into a room: from where, which way, and what the game showed.</summary>
-  private sealed record Arrival(Room From, MappableDirection? Direction, string Journey, Room To, string Description);
+  private sealed record Arrival(Room From, MappableDirection? Direction, string Journey, Room To, string Description,
+    bool Assumed = false);
 
   private Arrival _arrival;
 
@@ -2292,7 +2297,7 @@ public sealed class Automap : IAutomapController
       _canvas.ConnectByCommand(from, room, arrival.Journey);
     }
 
-    _arrival = arrival with { To = room };
+    _arrival = arrival with { To = room, Assumed = false };
     return room;
 
     static bool Matches(string one, string two) =>
@@ -2351,6 +2356,68 @@ public sealed class Automap : IAutomapController
     _pendingStubRemoval = null;
     _canvas.FollowRoom(room);
     Status = $"Automap: you're in {room.Name}, not {here.Name}.";
+    return true;
+  }
+
+  /// <summary>
+  ///   Whether automap took the room the player came into to be one already on the map, without asking: back in the
+  ///   gold maze room, say, when it was another maze room. <see cref="CorrectArrivalAsync" /> puts it right. Lee,
+  ///   21 Nov 2026: a button for "the last assumption was wrong".
+  /// </summary>
+  public bool CanCorrectArrival => CanSplitCurrentRoom && _arrival.Assumed;
+
+  /// <summary>What automap assumed, to show beside the button: "You came back to Maze (gold)".</summary>
+  public string ArrivalAssumption =>
+    CanCorrectArrival
+      ? (_canvas.ResolveRoom(_arrival.From) == CurrentRoom ? "That way led back to " : "You came to ") +
+        Trizbort.Editor.RoomSplit.Called(Trizbort.Domain.Application.Project.Current, CurrentRoom) + ", already on the map."
+      : null;
+
+  /// <summary>
+  ///   The room the player came into isn't the one automap took it for: asks which it is, of the other rooms with its
+  ///   name and description, or a new one, and moves the way in there. One undo step. False when cancelled.
+  /// </summary>
+  public async Task<bool> CorrectArrivalAsync(CancellationToken token = default)
+  {
+    if (!CanCorrectArrival) return false;
+    var here = CurrentRoom;
+    var arrival = _arrival;
+    var others = Named(here.Name).Where(room => room != here &&
+      (string.IsNullOrWhiteSpace(arrival.Description) || room.Descriptions.Count == 0 ||
+       room.Descriptions.Any(description => SameFirstSentence(description, arrival.Description)))).ToList();
+    var choice = await Prompts.DisambiguateRoomAsync(here.Name, arrival.Description, others, token);
+    token.ThrowIfCancellationRequested();
+    if (choice.Skip) return false;
+    if (choice.NewRoom || choice.Chosen == null) return await SplitCurrentRoomAsync();
+
+    var to = _canvas.ResolveRoom(choice.Chosen);
+    here = _canvas.ResolveRoom(here);
+    var from = _canvas.ResolveRoom(arrival.From);
+    if (to == null || here == null || from == null || to == here) return false;
+    using (await BeginBatchAsync("Automap: you're in " + to.Name, CancellationToken.None))
+    {
+      if (arrival.Direction is { } direction)
+      {
+        _canvas.ForgetWay(from, direction, here);
+        DropJoinIfNothingSeen(from, here);
+        _canvas.Connect(from, direction, to, _settings.AssumeTwoWayConnections);
+      }
+      else
+      {
+        foreach (var join in JoinsBetween(from, here))
+          if (JoinWays.Of(join).All(way => !way.Seen || (way.IsCommand && string.Equals(way.Text?.Trim(),
+                arrival.Journey?.Trim(), StringComparison.OrdinalIgnoreCase))))
+            Trizbort.Domain.Application.Project.Current.Elements.Remove(join);
+        _canvas.ConnectByCommand(from, to, arrival.Journey);
+      }
+    }
+
+    _arrival = arrival with { To = to, Assumed = false };
+    _lastKnownRoom = to;
+    _doneHere.Clear();
+    _pendingStubRemoval = null;
+    _canvas.FollowRoom(to);
+    Status = $"Automap: you're in {to.Name}, not the room automap took it for.";
     return true;
   }
 
