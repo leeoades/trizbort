@@ -431,7 +431,8 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     var east = toPit.GetSourceRoom();
     east.Name.ShouldBe("Maze");
     Project.Current.Elements.OfType<Connection>().ShouldNotContain(c =>
-      c.GetSourceRoom()?.Name == "Maze" && c.GetTargetRoom()?.Name == "Maze");
+      c.GetSourceRoom() != null && c.GetTargetRoom() != null && c.GetSourceRoom().Name == "Maze" &&
+      c.GetTargetRoom().Name == "Maze");
     var hallToMaze = Project.Current.Elements.OfType<Connection>().Single(c =>
       c.GetSourceRoom()?.Name == "Hall" && c.GetTargetRoom()?.Name == "Maze" && c.GetTargetRoom() != east);
     JoinWays.Of(hallToMaze).ShouldNotContain(way => way.IsDirection && way.Direction == MappableDirection.East);
@@ -579,9 +580,11 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldContain("Cupboard -> Cupboard pull peg, first");
     var lowered = Project.Current.Elements.OfType<Connection>().Single(c => c.MidText == "pull peg, first").GetTargetRoom();
     Project.Current.Elements.OfType<Connection>().ShouldContain(c => c.GetSourceRoom() == lowered &&
-                                                                     c.GetTargetRoom()?.Name == "Cellar");
+                                                                     c.GetTargetRoom() != null &&
+                                                                     c.GetTargetRoom().Name == "Cellar");
     Project.Current.Elements.OfType<Connection>().ShouldNotContain(c =>
-      c.GetSourceRoom()?.Name == "Cupboard" && c.GetSourceRoom() != lowered && c.GetTargetRoom()?.Name == "Cellar");
+      c.GetSourceRoom() != null && c.GetTargetRoom() != null && c.GetSourceRoom().Name == "Cupboard" &&
+      c.GetSourceRoom() != lowered && c.GetTargetRoom().Name == "Cellar");
   }
 
   [Category("InternalOnly")]
@@ -611,9 +614,11 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     Joins().ShouldContain("Closet -> Closet pull peg");
     var sunk = Project.Current.Elements.OfType<Connection>().Single(c => c.MidText == "pull peg").GetTargetRoom();
     Project.Current.Elements.OfType<Connection>().ShouldContain(c => c.GetSourceRoom() == sunk &&
-                                                                     c.GetTargetRoom()?.Name == "Cellar");
+                                                                     c.GetTargetRoom() != null &&
+                                                                     c.GetTargetRoom().Name == "Cellar");
     Project.Current.Elements.OfType<Connection>().ShouldNotContain(c =>
-      c.GetSourceRoom()?.Name == "Closet" && c.GetSourceRoom() != sunk && c.GetTargetRoom()?.Name == "Cellar");
+      c.GetSourceRoom() != null && c.GetTargetRoom() != null && c.GetSourceRoom().Name == "Closet" &&
+      c.GetSourceRoom() != sunk && c.GetTargetRoom().Name == "Cellar");
   }
 
   [Category("InternalOnly")]
