@@ -136,6 +136,32 @@ public static class ConnectionStyleCommands
       })
     });
 
+    catalogue.Register(new EditorCommand
+    {
+      Id = "connection.toggleUnreliable",
+      Title = "Unreliable Join",
+      MenuPath = "Edit",
+      Group = "3-connection",
+      Scope = CommandScope.Canvas,
+      ContextTargets = ContextTargets.Connection,
+      ContextOrder = 55, ContextGroup = "5-connection",
+      CanExecuteFunc = s => s.Selection.Connections.Any(),
+      IsCheckedFunc = s => s.Selection.Connections.FirstOrDefault() is { Unreliable: true },
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        // it doesn't always lead where it's drawn (at random, or by the state of the game): directions take it only
+        // when there's no other way
+        var joins = s.Selection.Connections.ToList();
+        if (joins.Count == 0) return;
+        var on = !joins[0].Unreliable;
+        s.Execute(on ? "Mark join unreliable" : "Mark join reliable", () =>
+        {
+          foreach (var join in joins) join.Unreliable = on;
+        });
+        if (s.Directions.HasRoute) s.Directions.Go();
+      })
+    });
+
     // a split join: bring the room at one end across to the other, and join them whole again
     RegisterBring(catalogue, "connection.bringEnd", true);
     RegisterBring(catalogue, "connection.bringStart", false);

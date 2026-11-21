@@ -83,6 +83,15 @@ public partial class RoomPropertiesDialog : Window
     /// <summary>Used for the "already the start room" question; defaults to answering no.</summary>
     public IEditorPrompts Prompts { get; set; } = NonInteractiveEditorPrompts.Instance;
 
+    /// <summary>The padlock by the name or description: asks, then lets both be edited.</summary>
+    private async void OnUnlockClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not RoomPropertiesViewModel vm || !vm.IsAutomapLocked) return;
+        if (!await Prompts.ConfirmAsync(RoomPropertiesViewModel.UnlockQuestion, "Unlock automapped room")) return;
+        vm.Unlock();
+        (ReferenceEquals(sender, DescriptionLock) ? (Control)DescriptionBox : NameBox).Focus();
+    }
+
     private async void OnOkClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not RoomPropertiesViewModel vm)

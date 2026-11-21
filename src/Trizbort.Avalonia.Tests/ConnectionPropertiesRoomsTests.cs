@@ -129,18 +129,21 @@ public class ConnectionPropertiesRoomsTests
     }
 
     [Test]
-    public void OneWay_SaysWhichWayTheArrowPoints()
+    public void AOneWayJoin_ReadsTheWayItsArrowPoints()
     {
-        var hall = AddRoom("Hall", 0, 0);
-        var garden = AddRoom("Garden", 300, 0);
-        var join = Join(garden, CompassPoint.West, hall, CompassPoint.East);
+        // Lee, 20 Nov 2026: Bedquilt to the Large Low Room, one way, showed the Large Low Room (above) at the start
+        var low = AddRoom("Large Low Room", 0, 0);
+        var bedquilt = AddRoom("Bedquilt", 300, 200);
+        var join = Join(bedquilt, CompassPoint.North, low, CompassPoint.SouthEast);
         join.Flow = ConnectionFlow.OneWay;
         var vm = new ConnectionPropertiesViewModel();
 
         vm.Initialize(join);
 
-        vm.OneWayNote.ShouldBe("from Garden to Hall");
-        vm.IsDirectional = false;
-        vm.OneWayNote.ShouldBeEmpty();
+        vm.ShownTheOtherWay.ShouldBeFalse();
+        vm.StartRoomName.ShouldBe("Bedquilt");
+        vm.EndRoomName.ShouldBe("Large Low Room");
+        vm.StartText.ShouldBe("from text");
+        vm.EndText.ShouldBe("to text");
     }
 }

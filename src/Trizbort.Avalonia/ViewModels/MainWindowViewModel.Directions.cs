@@ -14,7 +14,15 @@ public sealed record DirectionStepItem(int Number, string Command, Room To, bool
 {
     public string Text => $"{Number}. {Command}";
 
-    public string Where => "to " + To.Name + (Assumed ? " (assumed: nobody has gone this way yet)" : string.Empty);
+    public string Where => "to " + To.Name +
+                           (Unreliable ? " (unreliable: it may not lead there every time)" :
+                               Assumed ? " (assumed: nobody has gone this way yet)" : string.Empty);
+
+    /// <summary>It may not lead there every time: marked so, or the map shows the command leading elsewhere too.</summary>
+    public bool Unreliable => Step?.Unreliable == true;
+
+    /// <summary>The step's menu item: mark its join unreliable, or reliable again.</summary>
+    public string UnreliableMenuText => Step?.Join is { Unreliable: true } ? "Mark Join Reliable" : "Mark Join Unreliable";
 }
 
 /// <summary>A way the directions avoid: "plover", from the Plover Room, with Allow to take it again.</summary>
@@ -174,6 +182,20 @@ public partial class MainWindowViewModel
     public void AvoidDirectionStep(DirectionStepItem step)
     {
         if (step.Step != null) Directions?.Avoid(step.Step);
+    }
+
+    /// <summary>
+    ///     Mark the step's join unreliable (it doesn't always lead there), or reliable again: the directions take an
+    ///     unreliable join only when there's no other way. Saved with the map, and undoable.
+    /// </summary>
+    public void ToggleDirectionStepUnreliable(DirectionStepItem step)
+    {
+        var session = _commandService.Session;
+        var join = step.Step?.Join;
+        if (session == null || join == null) return;
+        var on = !join.Unreliable;
+        session.Execute(on ? "Mark join unreliable" : "Mark join reliable", () => join.Unreliable = on);
+        if (session.Directions.HasRoute) session.Directions.Go();
     }
 
     /// <summary>Allow a way avoided again.</summary>

@@ -28,6 +28,12 @@ public partial class DirectionsPanel : UserControl
             vm.AvoidDirectionStep(step);
     }
 
+    private void OnToggleUnreliable(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm && sender is MenuItem { DataContext: DirectionStepItem step })
+            vm.ToggleDirectionStepUnreliable(step);
+    }
+
     private void OnAllowWay(object? sender, RoutedEventArgs e)
     {
         if (DataContext is MainWindowViewModel vm && sender is Button { DataContext: AvoidedWayItem way })

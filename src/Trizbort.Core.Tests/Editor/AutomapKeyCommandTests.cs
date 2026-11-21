@@ -207,7 +207,7 @@ public class AutomapKeyCommandTests
   }
 
   [Test]
-  public void GoToCurrentRoom_SelectsTheRoomAutomapIsIn_AndCentresOnIt()
+  public void GoToCurrentRoom_CentresOnTheRoomAutomapIsIn_WithoutSelectingIt()
   {
     var command = _catalogue.Find("automap.currentRoom");
     var far = new Room(_project) { Name = "Far Away", Position = new Vector(5000, 4000) };
@@ -220,7 +220,7 @@ public class AutomapKeyCommandTests
     command.CanExecute(_session).ShouldBeTrue();
     command.ExecuteAsync(_session).Wait();
 
-    _session.Selection.Items.ShouldBe(new Element[] { far });
+    _session.Selection.Items.ShouldBeEmpty();
     _session.Viewport.VisibleWorldBounds.Contains(far.InnerBounds.Center).ShouldBeTrue();
   }
 

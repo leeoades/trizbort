@@ -286,6 +286,22 @@ public partial class MapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _labelCompassExits;
 
+    /// <summary>Show up and down in join labels (automap writes them: "up", "west / down").</summary>
+    [ObservableProperty]
+    private bool _labelUpDownExits = true;
+
+    /// <summary>How directions in join labels are drawn: as written, short ("n", "u") or in full ("north", "up").</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DirectionWordsIndex))]
+    private DirectionWordStyle _labelDirectionWords;
+
+    /// <summary><see cref="LabelDirectionWords" /> for the dialog's list: as written, short, full.</summary>
+    public int DirectionWordsIndex
+    {
+        get => (int)LabelDirectionWords;
+        set => LabelDirectionWords = value is >= 0 and <= 2 ? (DirectionWordStyle)value : DirectionWordStyle.AsWritten;
+    }
+
     [ObservableProperty]
     private bool _wrapTextAtDashes;
 
@@ -388,6 +404,8 @@ public partial class MapSettingsViewModel : ViewModelBase
         HandDrawn = Settings.HandDrawn;
         LabelDiagonalExits = Settings.LabelDiagonalExits;
         LabelCompassExits = Settings.LabelCompassExits;
+        LabelUpDownExits = Settings.LabelUpDownExits;
+        LabelDirectionWords = Settings.LabelDirectionWords;
         WrapTextAtDashes = Settings.WrapTextAtDashes;
         DocumentSpecificMargins = Settings.DocumentSpecificMargins;
         DocHorizontalMargin = Settings.DocHorizontalMargin;
@@ -446,6 +464,8 @@ public partial class MapSettingsViewModel : ViewModelBase
         Settings.HandDrawn = HandDrawn;
         Settings.LabelDiagonalExits = LabelDiagonalExits;
         Settings.LabelCompassExits = LabelCompassExits;
+        Settings.LabelUpDownExits = LabelUpDownExits;
+        Settings.LabelDirectionWords = LabelDirectionWords;
         Settings.WrapTextAtDashes = WrapTextAtDashes;
         Settings.DocumentSpecificMargins = DocumentSpecificMargins;
         Settings.DocHorizontalMargin = DocHorizontalMargin;

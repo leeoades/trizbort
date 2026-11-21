@@ -8,7 +8,7 @@ using Trizbort.Editor;
 
 namespace Trizbort.Core.Tests;
 
-/// <summary>Ticket 051: wheel zoom, InvertMouseWheel and Ctrl micro-steps.</summary>
+/// <summary>Ticket 051: wheel zoom, InvertMouseWheel and Ctrl.</summary>
 [TestFixture]
 [NonParallelizable]
 [Category("Unit")]
@@ -64,10 +64,11 @@ public class WheelZoomTests
   }
 
   [Test]
-  public void CtrlWheel_UsesMicroStep()
+  public void CtrlWheel_ZoomsAsFastAsTheWheelAlone()
   {
+    // Lee, 20 Nov 2026: Ctrl + mouse wheel zoomed 1% a notch, far slower than Ctrl + two fingers on a trackpad
     _interaction.OnWheel(new WheelInput(1, ModifierKeys.Control, new Vector(400, 300)));
-    _session.Viewport.ZoomFactor.ShouldBe(1.01f, 0.0005f);
+    _session.Viewport.ZoomFactor.ShouldBe(1.25f, 0.0005f);
 
     _interaction.OnWheel(new WheelInput(-1, ModifierKeys.Primary, new Vector(400, 300)));
     _session.Viewport.ZoomFactor.ShouldBe(1.0f, 0.0005f);

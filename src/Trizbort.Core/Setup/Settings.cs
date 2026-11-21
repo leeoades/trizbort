@@ -35,6 +35,8 @@ public static class Settings
   private static bool _handDrawn;
   private static bool _labelDiagonalExits = true;
   private static bool _labelCompassExits;
+  private static bool _labelUpDownExits = true;
+  private static DirectionWordStyle _directionWords;
   private static bool _snapToGrid;
   private static bool _isGridVisible;
   private static bool _showOrigin;
@@ -208,6 +210,36 @@ public static class Settings
       if (_labelCompassExits != value)
       {
         _labelCompassExits = value;
+        RaiseChanged();
+      }
+    }
+  }
+
+  /// <summary>
+  ///   Write up or down at each end of a join automap has seen the player go up or down, when the end has no label of
+  ///   its own (the side of the room doesn't say). On by default.
+  /// </summary>
+  public static bool LabelUpDownExits {
+    get { return _labelUpDownExits; }
+    set {
+      if (_labelUpDownExits != value)
+      {
+        _labelUpDownExits = value;
+        RaiseChanged();
+      }
+    }
+  }
+
+  /// <summary>
+  ///   How the directions in join labels are drawn: as written (the default), all short ("n", "u") or all in full
+  ///   ("north", "up"), whichever way they were written. Only the drawing changes.
+  /// </summary>
+  public static DirectionWordStyle LabelDirectionWords {
+    get { return _directionWords; }
+    set {
+      if (_directionWords != value)
+      {
+        _directionWords = value;
         RaiseChanged();
       }
     }
@@ -477,6 +509,13 @@ public static class Settings
     HandDrawn = element["lines"]["handDrawn"].ToBool(false);
     LabelDiagonalExits = element["lines"]["labelDiagonalExits"].ToBool(true);
     LabelCompassExits = element["lines"]["labelCompassExits"].ToBool(false);
+    LabelUpDownExits = element["lines"]["labelUpDownExits"].ToBool(true);
+    LabelDirectionWords = element["lines"]["directionWords"].Text switch
+    {
+      "short" => DirectionWordStyle.Short,
+      "full" => DirectionWordStyle.Full,
+      _ => DirectionWordStyle.AsWritten
+    };
 
     DarknessStripeSize = element["rooms"]["darknessStripeSize"].ToFloat(_darknessStripeSize);
     ObjectListOffsetFromRoom = element["rooms"]["objectListOffset"].ToFloat(_objectListOffsetFromRoom);
@@ -554,6 +593,8 @@ public static class Settings
     HandDrawn = false;
     LabelDiagonalExits = true;
     LabelCompassExits = false;
+    LabelUpDownExits = true;
+    LabelDirectionWords = DirectionWordStyle.AsWritten;
 
     SnapToGrid = true;
     IsGridVisible = true;
@@ -624,6 +665,10 @@ public static class Settings
     scribe.Element("handDrawn", _handDrawn);
     scribe.Element("labelDiagonalExits", _labelDiagonalExits);
     scribe.Element("labelCompassExits", _labelCompassExits);
+    // newer settings, written only when not the default, so older maps save as they were
+    if (!_labelUpDownExits) scribe.Element("labelUpDownExits", _labelUpDownExits);
+    if (_directionWords != DirectionWordStyle.AsWritten)
+      scribe.Element("directionWords", _directionWords == DirectionWordStyle.Full ? "full" : "short");
     scribe.EndElement();
 
     scribe.StartElement("rooms");

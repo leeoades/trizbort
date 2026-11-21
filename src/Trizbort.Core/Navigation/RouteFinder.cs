@@ -11,20 +11,25 @@ namespace Trizbort.Navigation;
 /// <summary>
 ///   One step of a route: <see cref="Command" /> typed in <see cref="From" /> leads to <see cref="To" />, along
 ///   <see cref="Join" />. <see cref="Assumed" /> when automap only assumed the way (the way back of a join), and nobody
-///   has gone it.
+///   has gone it. <see cref="Unreliable" /> when it may not lead there every time (see <see cref="RouteFinder" />).
 /// </summary>
-public sealed record RouteStep(Room From, Room To, string Command, bool Assumed, Connection Join = null);
+public sealed record RouteStep(Room From, Room To, string Command, bool Assumed, Connection Join = null,
+  bool Unreliable = false);
 
 /// <summary>
 ///   Satnav for the map: the shortest list of commands that leads from one room to another along the map's joins
 ///   (their directions, and the commands written on them), as automap recorded them or the user drew them. It can only
 ///   follow the map: it knows nothing of the game's puzzles. Ways automap only assumed cost a little more than ways the
-///   player has been seen to go, so a known route is preferred when there's a choice.
+///   player has been seen to go, so a known route is preferred when there's a choice. Unreliable ways cost far more,
+///   so they're taken only when there's no reliable way, or the reliable way is very long: a join marked Unreliable,
+///   and a command that the map shows leading from one place to more than one room (Bedquilt's "north", which goes
+///   somewhere different at random).
 /// </summary>
 public static class RouteFinder
 {
   private const double SeenCost = 1.0;
   private const double AssumedCost = 1.5;
+  private const double UnreliableCost = 25;
 
   // words written on a label that aren't commands: automap's "?" for a way it couldn't map, and a moving room that
   // moves by itself
@@ -104,6 +109,21 @@ public static class RouteFinder
                        way.Kind switch { JoinWayKind.Direction => 0, JoinWayKind.Command => 0.01, _ => 0.02 };
         if (!ways.TryGetValue(from, out var leaving)) ways[from] = leaving = new List<(RouteStep, double)>();
         leaving.Add((new RouteStep(from, to, command, assumed, connection), stepCost));
+      }
+    }
+
+    // a command that leads from one place to different rooms doesn't always lead to any one of them
+    foreach (var leaving in ways.Values)
+    {
+      var chancy = leaving.GroupBy(way => way.Item1.Command, StringComparer.OrdinalIgnoreCase)
+        .Where(same => same.Select(way => way.Item1.To).Distinct().Count() > 1)
+        .SelectMany(same => same.Select(way => way.Item1))
+        .ToHashSet();
+      for (var i = 0; i < leaving.Count; i++)
+      {
+        var (step, stepCost) = leaving[i];
+        if (!chancy.Contains(step) && step.Join is not { Unreliable: true }) continue;
+        leaving[i] = (step with { Unreliable = true }, stepCost + UnreliableCost);
       }
     }
 

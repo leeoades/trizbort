@@ -18,8 +18,18 @@
         <Grid RowDefinitions="Auto,*" MinHeight="640">
         <!-- Persistent header: visible on every tab, as in the reference dialog -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8" Margin="0,0,0,12">
-            <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Name:" Target="{Binding #NameBox}" />
-            <TextBox Grid.Row="0" Grid.Column="2" x:Name="NameBox" Text="{Binding Name}" />
+            <!-- an automapped room's name is locked: the padlock unlocks it -->
+            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="2">
+                <Label Classes="field-label" Content="_Name:" Target="{Binding #NameBox}" />
+                <Button x:Name="NameLock" Click="OnUnlockClick" IsVisible="{Binding IsAutomapLocked}"
+                        ToolTip.Tip="{x:Static vm:RoomPropertiesViewModel.LockTip}" Padding="2" Background="Transparent"
+                        BorderThickness="0" VerticalAlignment="Center" AutomationProperties.Name="Unlock name">
+                    <Path Width="10" Height="12" Stretch="Uniform" StrokeThickness="1.4"
+                          Stroke="{Binding $parent[Button].Foreground}"
+                          Data="M 3,7 L 3,4.5 C 3,1.5 9,1.5 9,4.5 L 9,7 M 1,7 L 11,7 L 11,14 L 1,14 Z" />
+                </Button>
+            </StackPanel>
+            <TextBox Grid.Row="0" Grid.Column="2" x:Name="NameBox" Text="{Binding Name}" IsReadOnly="{Binding IsAutomapLocked}" />
             <TextBlock Grid.Row="1" Grid.Column="2" Classes="error" Text="{Binding NameError}"
                        IsVisible="{Binding NameError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
@@ -53,9 +63,46 @@
             <!-- Description & Objects -->
             <TabItem Header="Description &amp; Objects">
                 <Grid RowDefinitions="*,*,Auto" Margin="8" RowSpacing="12">
-                    <HeaderedContentControl Grid.Row="0" Classes="group" Header="Description">
-                        <TextBox Text="{Binding Description}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90"
-                                 AutomationProperties.Name="Description" />
+                    <HeaderedContentControl Grid.Row="0" Classes="group">
+                        <HeaderedContentControl.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="Description" VerticalAlignment="Center" />
+                                <Button x:Name="DescriptionLock" Click="OnUnlockClick" IsVisible="{Binding IsAutomapLocked}"
+                                        ToolTip.Tip="{x:Static vm:RoomPropertiesViewModel.LockTip}" Padding="2"
+                                        Background="Transparent" BorderThickness="0" VerticalAlignment="Center"
+                                        AutomationProperties.Name="Unlock description">
+                                    <Path Width="10" Height="12" Stretch="Uniform" StrokeThickness="1.4"
+                                          Stroke="{Binding $parent[Button].Foreground}"
+                                          Data="M 3,7 L 3,4.5 C 3,1.5 9,1.5 9,4.5 L 9,7 M 1,7 L 11,7 L 11,14 L 1,14 Z" />
+                                </Button>
+                            </StackPanel>
+                        </HeaderedContentControl.Header>
+                        <StackPanel Spacing="6">
+                            <TextBox x:Name="DescriptionBox" Text="{Binding Description}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90"
+                                     IsReadOnly="{Binding IsAutomapLocked}" AutomationProperties.Name="Description" />
+                            <!-- the other ways the game has described the room, which automap knows it by too -->
+                            <StackPanel x:Name="OtherDescriptionsPanel" Spacing="4" IsVisible="{Binding HasOtherDescriptions}">
+                                <TextBlock Text="Also described as:" Opacity="0.8"
+                                           ToolTip.Tip="The game described this room differently at other times (after something changed in it). Automap recognises the room by these too." />
+                                <ItemsControl x:Name="OtherDescriptionsList" ItemsSource="{Binding OtherDescriptions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:OtherDescription">
+                                            <Border BorderThickness="1" CornerRadius="3" Padding="6,4" Margin="0,0,0,4"
+                                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                                <DockPanel>
+                                                    <Button DockPanel.Dock="Right" Content="Remove" Padding="6,1" Margin="6,0,0,0"
+                                                            VerticalAlignment="Top" Command="{Binding RemoveCommand}"
+                                                            IsVisible="{Binding CanRemove}"
+                                                            ToolTip.Tip="Forget this description: automap won't know the room by it any more"
+                                                            AutomationProperties.Name="Remove description" />
+                                                    <SelectableTextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </StackPanel>
                     </HeaderedContentControl>
 
                     <HeaderedContentControl Grid.Row="1" Classes="group" Header="Objects">

@@ -29,6 +29,13 @@ public class AvaloniaAutomapCanvas : IAutomapCanvas
             : Dispatcher.UIThread.Invoke(() => _innerCanvas.FindRooms(roomName, roomDescription, matcher));
     }
 
+    public Room OnlyRoomNamed(string name)
+    {
+        return Dispatcher.UIThread.CheckAccess()
+            ? _innerCanvas.OnlyRoomNamed(name)
+            : Dispatcher.UIThread.Invoke(() => _innerCanvas.OnlyRoomNamed(name));
+    }
+
     public Room CreateRoom(Room existing, string name)
     {
         return Dispatcher.UIThread.CheckAccess()

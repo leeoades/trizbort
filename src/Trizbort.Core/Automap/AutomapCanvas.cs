@@ -1208,6 +1208,22 @@ public class AutomapCanvas : IAutomapCanvas
     }
   }
 
+  /// <summary>The one room on the map with this name; null if there's none, or more than one (a maze).</summary>
+  public Room OnlyRoomNamed(string name)
+  {
+    if (string.IsNullOrWhiteSpace(name)) return null;
+    name = name.Trim();
+    Room found = null;
+    foreach (var element in CurrentProject.Elements)
+      if (element is Room room && string.Equals(room.Name, name, StringComparison.OrdinalIgnoreCase))
+      {
+        if (found != null) return null;
+        found = room;
+      }
+
+    return found;
+  }
+
   public RoomSearchResult FindRooms(string roomName, string roomDescription, RoomMatcher matcher)
   {
     var list = new List<Room>();

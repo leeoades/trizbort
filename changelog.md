@@ -14,6 +14,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Unreliable joins**: a join that doesn't always lead where it's drawn, because the game picks at random
+  (Bedquilt in Colossal Cave) or it depends on what you've done (a closet left on another floor). Directions take it
+  only when there's no other way, and say so. Mark one with **Unreliable** in the join's properties, **Unreliable
+  Join** on its right-click menu, or **Mark Join Unreliable** on a step in the directions. A command the map shows
+  leading from one room to more than one place counts as unreliable without marking.
+- Room properties list the other ways the game has described a room, under **Also described as** below its
+  description (the Twopit Room once the beanstalk has grown). Unlock the room to remove one.
 - Directions: right-click a step and choose **Avoid This Route** to get there another way (without the PLOVER
   spell, say). The ways avoided are listed in the panel, each with **Allow** to take it again.
 - The join properties have a **Split** tick box, as **Split Join** on the join's right-click menu.
@@ -33,9 +40,24 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - Drag a split join's label ("to Debris Room") to move it. The stub runs on to it, drawn as any join is, and it keeps
   its place beside its room as the room moves; dragged back to the tip, it snaps home. A click still goes to the room it
   names. Saved with the map.
+- Map Settings, Lines & Grid, has a **Join labels** section: always label N, E, S, W; always label NE, SE, SW, NW;
+  always label Up, Down; and **Direction words**, to draw the directions in every join label as written, abbreviated
+  (n, u) or in full (north, up), so a map with a mix of "u" and "up" reads one way. A sample room shows the result.
+- The join properties have a compass button beside the Start and End text: press the directions (and Up or Down) to
+  pick them, with a Custom box for anything else, and the label is written for you ("n / up / xyzzy").
 
 ### Changed
 
+- The Windows and Linux downloads keep the app's graphics libraries as files beside it, instead of unpacking them
+  to a temporary folder each time it starts, which some antivirus tools took for malware. Keep the files from the
+  download together.
+- **Centre on Current Room** only moves the map: it no longer selects the room you're in.
+- Ctrl + mouse wheel zooms a full step a notch, as the wheel alone does, instead of 1%. **View > Zoom In 1%** and
+  **Zoom Out 1%** still zoom finely.
+- The join properties no longer say which way a one-way arrow points beside **One Way Arrow**: the rooms are named
+  above the Start and End boxes.
+- In a room automap made, the room dialog shows the name and description read-only, with a padlock beside each:
+  automap knows the room again by them. Clicking a padlock asks, then lets you edit them.
 - Join Properties name the room above each end's box, and Start is always the room on the left (or the upper one,
   when they're more one above the other), whichever end the join was drawn from. With One Way Arrow ticked, it says
   which way the arrow points ("from Garden to Hall").
@@ -53,6 +75,27 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- Starting automap at the end of a transcript, it knows where you are straight away: the last room the transcript
+  names, when only one room on the map has that name.
+- After playing a game live, **Previous Move** goes back to the right place in the transcript, and **Next Move** plays
+  on from there. Each move played live put automap a line further on than it was, so going back could land past the
+  end of the transcript ("Move 75 of 75" at a move in the middle) and Next Move did nothing.
+- **Previous Move** (F9) goes back through a transcript automap started at the end of, as it does after playing
+  one through. The transcript so far shows in the automap panel, and automap works out which room you were in from
+  the room names in it.
+- **Tidy Map** tidies maps automap made: rooms touching, or a join running across a room, were left as they were
+  when the rooms counted as placed by hand, which every automapped room does, so often nothing moved.
+- The join properties show a one-way join the way its arrow points: Start is the room it leaves, End the room it
+  goes to (Bedquilt to the Large Low Room showed the Large Low Room first).
+- A split join's stub leaves its room on the side its label is on: "d" with its label below and right of the Brink of
+  Pit no longer leaves from the top left (facing the far room) with its line crossing the room to the label.
+- A room the game describes differently as play goes on (the Twopit Room as the beanstalk grows) is asked about once:
+  picking it in **Which room does it mean?** keeps its new description with it, now while **Tracking only** too, and
+  the question says so. The other descriptions are saved with the map (as `otherDescription` elements; older versions
+  keep only the first), so you aren't asked again after opening it again, and editing the room's description in its
+  properties keeps them.
+- While the map follows you (tracking round a maze), join end labels no longer jump from one side of a room to the
+  other as the view moves: they keep clear of everything on the map, not only of what's in view.
 - **Quick Find** (Ctrl+F) opens with the caret in its text box, ready to type.
 - The room dialog's tick boxes under **Reference** wrap onto a second line in a narrow window,
   instead of cutting off **Don't automap from here**.

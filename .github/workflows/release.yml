@@ -110,7 +110,7 @@ jobs:
           foreach ($rid in 'win-x64', 'linux-x64') {
             $out = "publish/$rid"
             dotnet publish src/Trizbort.Avalonia/Trizbort.Avalonia.csproj -c Release -r $rid -o $out `
-              --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+              --self-contained true -p:PublishSingleFile=true `
               -p:DebugType=none -p:Version=$env:RELEASE_VERSION -p:InformationalVersion=$env:RELEASE_INFO
             if ($LASTEXITCODE -ne 0) { throw "Publish failed for $rid." }
             Copy-Item LICENSE.txt, PdfSharp.License.txt -Destination $out

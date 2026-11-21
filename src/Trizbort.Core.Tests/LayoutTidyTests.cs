@@ -550,4 +550,28 @@ public class LayoutTidyTests : IsolatedProjectTests
     LayoutTidy.NaturalJoins(Project.Current.Elements.ToList()).Natural.ShouldBe(20);
     Overlaps().ShouldBe(0);
   }
+
+  [Test]
+  public void LeesFullMap_TidyMap_MovesTheAllDifferentMaze()
+  {
+    // Lee, 20 Nov 2026: tidying the rooms of the maze of twisty little passages, all different, or the whole map,
+    // moved nothing. Every room automap makes is placed by hand, and rooms placed by hand were left touching, with
+    // joins across them, as the user had them: so a map automap made had nothing to tidy.
+    var path = RepositoryFile("tests", "automap", "colossal-cave", "full-map-nov-20.trizbort");
+    new MapLoader(Project.Current).LoadMap(path).ShouldBeTrue();
+    var elements = Project.Current.Elements.ToList();
+    var maze = elements.OfType<Room>().Where(room => room.Descriptions.Any(text => text.Contains("all different")))
+      .ToList();
+    maze.Count.ShouldBeGreaterThan(5);
+    TestContext.Out.WriteLine($"problems before: {LayoutTidy.Problems(elements)}");
+
+    var plan = LayoutTidy.PlanTidy(elements, maze, TidyMethod.Quick);
+    var moves = plan.Run();
+    TestContext.Out.WriteLine($"maze rooms moved: {moves.Count}");
+    moves.Count.ShouldBeGreaterThan(0);
+
+    var whole = LayoutTidy.PlanTidy(elements, elements.OfType<Room>().ToList(), TidyMethod.Quick).Run();
+    TestContext.Out.WriteLine($"whole map rooms moved: {whole.Count}");
+    whole.Count.ShouldBeGreaterThan(0);
+  }
 }
