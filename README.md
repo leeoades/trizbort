@@ -94,5 +94,8 @@ the legacy app accepts `-beta.N`.
 ## License
 [MIT](LICENSE.txt)
 
+## Privacy
+Trizbort collects no information about you. See the [privacy policy](PRIVACY.md).
+
 ## Special notes
 This software uses PDFsharp, copyright (c) 2005-2007 empira Software GmbH, Cologne (Germany). See PdfSharp.License.txt.
