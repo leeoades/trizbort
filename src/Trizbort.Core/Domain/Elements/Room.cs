@@ -739,6 +739,41 @@ public class Room : Element, ISizeable
 
   public float Y => Position.Y;
 
+  /// <summary>
+  ///   Puts <paramref name="description" /> first, as the room's description, keeping the other ways the game has
+  ///   described it (the room dialog edits only the first). Empty removes the first.
+  /// </summary>
+  public void SetPrimaryDescription(string description)
+  {
+    var others = _descriptions.Skip(1).ToList();
+    var first = string.IsNullOrEmpty(description) ? null : description;
+    if (string.Equals(PrimaryDescription, first, StringComparison.Ordinal)) return;
+    _descriptions.Clear();
+    if (first != null) _descriptions.Add(first);
+    foreach (var other in others)
+      if (!_descriptions.Any(existing => string.Compare(existing, other, StringComparison.OrdinalIgnoreCase) == 0))
+        _descriptions.Add(other);
+    RaiseChanged();
+  }
+
+  /// <summary>
+  ///   Replaces the other ways the game has described the room (after the first, the room's description) with
+  ///   <paramref name="others" />, in order, leaving out repeats.
+  /// </summary>
+  public void SetOtherDescriptions(IEnumerable<string> others)
+  {
+    var wanted = new List<string>();
+    if (PrimaryDescription != null) wanted.Add(PrimaryDescription);
+    foreach (var other in others)
+      if (!string.IsNullOrEmpty(other) &&
+          !wanted.Any(existing => string.Compare(existing, other, StringComparison.OrdinalIgnoreCase) == 0))
+        wanted.Add(other);
+    if (wanted.SequenceEqual(_descriptions, StringComparer.Ordinal)) return;
+    _descriptions.Clear();
+    _descriptions.AddRange(wanted);
+    RaiseChanged();
+  }
+
   public void AddDescription(string description)
   {
     if (string.IsNullOrEmpty(description)) return;
@@ -962,6 +997,9 @@ public class Room : Element, ISizeable
     SubTitle = element.Attribute("subtitle").Text;
     ClearDescriptions();
     AddDescription(element.Attribute("description").Text);
+    // the other ways the game has described it (the Twopit Room once the beanstalk has grown)
+    foreach (var other in element.Children.Where(child => child.HasName("otherDescription")))
+      AddDescription(other.Text);
     Position = new Vector(element.Attribute("x").ToFloat(), element.Attribute("y").ToFloat());
     Size = new Vector(element.Attribute("w").ToFloat(), element.Attribute("h").ToFloat());
     Region = element.Attribute("region").Text;
@@ -1200,6 +1238,15 @@ public class Room : Element, ISizeable
 
       if (!string.IsNullOrEmpty(Objects))
         scribe.Value(Objects.Replace("\r", string.Empty).Replace("|", "\\|").Replace("\n", "|"));
+      scribe.EndElement();
+    }
+
+    // the other ways the game has described the room (picked as this room in "which room does it mean?"), so they're
+    // known next time the map is opened. Optional elements: older versions keep only the first description
+    foreach (var other in _descriptions.Skip(1))
+    {
+      scribe.StartElement("otherDescription");
+      scribe.Value(other);
       scribe.EndElement();
     }
   }

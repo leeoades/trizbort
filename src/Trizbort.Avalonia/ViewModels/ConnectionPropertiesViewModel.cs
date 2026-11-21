@@ -39,7 +39,6 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     private bool _updatingPreset;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(OneWayNote))]
     private bool _isDirectional;
 
     /// <summary>The room above the Start box: the one on the left, or the upper one when they're one above the other.</summary>
@@ -53,10 +52,6 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     private string _fromRoom = string.Empty;
     private string _toRoom = string.Empty;
 
-    /// <summary>Which way the arrow points, beside One Way Arrow while it's ticked.</summary>
-    public string OneWayNote =>
-        IsDirectional && (_fromRoom.Length > 0 || _toRoom.Length > 0) ? $"from {_fromRoom} to {_toRoom}" : string.Empty;
-
     /// <summary>
     ///   Whether the boxes show the join the other way round from how it's stored: Start is always the room on the
     ///   left (or above), whichever end the join was drawn from.
@@ -69,6 +64,10 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     /// <summary>Drawn as two short stubs, one out of each room, each labelled with the room at the other end.</summary>
     [ObservableProperty]
     private bool _isSplit;
+
+    /// <summary>It doesn't always lead where it's drawn: directions take it only when there's no other way.</summary>
+    [ObservableProperty]
+    private bool _isUnreliable;
 
     [ObservableProperty]
     private Color _connectionColor = Color.Transparent;
@@ -94,7 +93,8 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         ConnectionDescription = connection.Description ?? string.Empty;
         var startRoom = connection.GetSourceRoom();
         var endRoom = connection.GetTargetRoom();
-        ShownTheOtherWay = IsTheOtherWay(startRoom, endRoom);
+        // a one-way join reads the way its arrow points: Start is the room it leaves, End the room it goes to
+        ShownTheOtherWay = connection.Flow != ConnectionFlow.OneWay && IsTheOtherWay(startRoom, endRoom);
         _fromRoom = NameOf(startRoom);
         _toRoom = NameOf(endRoom);
         StartRoomName = ShownTheOtherWay ? _toRoom : _fromRoom;
@@ -112,6 +112,7 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         IsDirectional = connection.Flow == ConnectionFlow.OneWay;
         IsDotted = connection.Style == ConnectionStyle.Dashed;
         IsSplit = connection.Split;
+        IsUnreliable = connection.Unreliable;
         ConnectionColor = connection.ConnectionColor;
 
         if (connection.Door != null)
@@ -145,6 +146,7 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         connection.Flow = IsDirectional ? ConnectionFlow.OneWay : ConnectionFlow.TwoWay;
         connection.Style = IsDotted ? ConnectionStyle.Dashed : ConnectionStyle.Solid;
         connection.Split = IsSplit;
+        connection.Unreliable = IsUnreliable;
 
         connection.ConnectionColor = ConnectionColor;
 

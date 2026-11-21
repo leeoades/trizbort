@@ -108,7 +108,7 @@
                         <StackPanel Spacing="6">
                             <Button x:Name="CentreButton" Content="Centre on Current Room"
                                     Command="{Binding GoToAutomapRoomCommand}"
-                                    ToolTip.Tip="Select the room automap thinks you're in, and glide the map to it" />
+                                    ToolTip.Tip="Glide the map to the room automap thinks you're in" />
                             <!-- the room you're in isn't on the map: only then -->
                             <Button x:Name="AddRoomButton" Content="Add Current Room"
                                     IsVisible="{Binding CanAddAutomapRoom}"

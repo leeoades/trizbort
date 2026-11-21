@@ -57,19 +57,11 @@ public static class RoomDrawingAdapter
         public double CachedSubtitleX;
 
         public string? LastObjectsText;
-        public CompassPoint LastObjectsPos;
-        public bool LastObjectsCustom;
-        public double LastCustomRight;
-        public double LastCustomDown;
         public string? LastObjFontName;
         public int LastObjFontStyle;
         public float LastObjectFontSize;
         public uint LastObjectColor;
-        public float LastObjectOffset;
-        public CoreRect LastObjectBounds;
         public FormattedText? CachedObjects;
-        public double CachedObjectsDrawX;
-        public double CachedObjectsDrawY;
     }
 
     private static readonly ConditionalWeakTable<Room, RoomTextCache> _textCaches = new();

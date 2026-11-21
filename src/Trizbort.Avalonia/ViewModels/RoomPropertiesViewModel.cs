@@ -25,6 +25,64 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private string _description = string.Empty;
 
+    /// <summary>
+    ///     An automapped room's name and description are how automap knows the room when the game shows it again, so
+    ///     they're read-only until the user unlocks them (the padlock beside them).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsUnlocked))]
+    private bool _isAutomapLocked;
+
+    public bool IsUnlocked => !IsAutomapLocked;
+
+    public const string LockTip =
+        "This room was automapped: automap knows it again by its name and description. Changing them could stop " +
+        "it recognising the room. Click to unlock.";
+
+    public const string UnlockQuestion =
+        "This room was automapped. Automap recognises it again by its name and description, so changing them could " +
+        "stop it knowing the room when you come back. Unlock them for editing?";
+
+    /// <summary>The user has said they want to change the name and description anyway.</summary>
+    public void Unlock() => IsAutomapLocked = false;
+
+    partial void OnIsAutomapLockedChanged(bool value)
+    {
+        foreach (var other in OtherDescriptions) other.CanRemove = !value;
+    }
+
+    /// <summary>
+    ///     The other ways the game has described the room (the Twopit Room once the beanstalk has grown), that automap
+    ///     knows it by too. Shown below the description; removable once the room is unlocked.
+    /// </summary>
+    public ObservableCollection<OtherDescription> OtherDescriptions { get; } = new();
+
+    public bool HasOtherDescriptions => OtherDescriptions.Count > 0;
+
+    private void LoadOtherDescriptions(Room room)
+    {
+        OtherDescriptions.Clear();
+        foreach (var text in room.Descriptions.Skip(1))
+            OtherDescriptions.Add(new OtherDescription(text, Remove) { CanRemove = !IsAutomapLocked });
+        OnPropertyChanged(nameof(HasOtherDescriptions));
+    }
+
+    private void Remove(OtherDescription other)
+    {
+        if (IsAutomapLocked) return;
+        OtherDescriptions.Remove(other);
+        OnPropertyChanged(nameof(HasOtherDescriptions));
+    }
+
+    /// <summary>
+    ///     Whether automap made the room: it has a description from the game, or a join automap has seen the player
+    ///     go along.
+    /// </summary>
+    public static bool WasAutomapped(Room room) =>
+        room.Descriptions.Count > 0 ||
+        room.GetConnections().Any(join =>
+            !string.IsNullOrWhiteSpace(join.StartTravelled) || !string.IsNullOrWhiteSpace(join.EndTravelled));
+
     [ObservableProperty]
     private string _objects = string.Empty;
 
@@ -304,6 +362,8 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         Name = room.Name ?? string.Empty;
         SubTitle = room.SubTitle ?? string.Empty;
         Description = room.PrimaryDescription ?? string.Empty;
+        IsAutomapLocked = WasAutomapped(room);
+        LoadOtherDescriptions(room);
         Objects = room.Objects ?? string.Empty;
         ObjectsPosition = room.ObjectsPosition;
         UseCustomPosition = room.ObjectsCustomPosition;
@@ -361,11 +421,9 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     {
         room.Name = Name;
         room.SubTitle = SubTitle;
-        room.ClearDescriptions();
-        if (!string.IsNullOrEmpty(Description))
-        {
-            room.AddDescription(Description);
-        }
+        // the box edits the room's description; the other ways the game has described it are kept
+        room.SetPrimaryDescription(Description);
+        room.SetOtherDescriptions(OtherDescriptions.Select(other => other.Text));
         room.Objects = Objects;
         room.ObjectsPosition = ObjectsPosition;
         room.ObjectsCustomPosition = UseCustomPosition;
@@ -410,4 +468,25 @@ public partial class RoomPropertiesViewModel : ViewModelBase
             room.ReferenceRoomId = -1;
         }
     }
+}
+
+/// <summary>Another way the game has described a room, as the room dialog lists it.</summary>
+public sealed partial class OtherDescription : ObservableObject
+{
+    private readonly Action<OtherDescription> _remove;
+
+    public OtherDescription(string text, Action<OtherDescription> remove)
+    {
+        Text = text;
+        _remove = remove;
+    }
+
+    public string Text { get; }
+
+    /// <summary>Only once the room is unlocked: automap knows the room by it.</summary>
+    [ObservableProperty]
+    private bool _canRemove;
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void Remove() => _remove(this);
 }

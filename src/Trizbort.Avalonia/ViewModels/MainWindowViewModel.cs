@@ -796,7 +796,7 @@ public partial class MainWindowViewModel : ViewModelBase
         RefreshAutomapPanel();
     }
 
-    /// <summary>Select the room automap thinks the player is in and centre the map on it.</summary>
+    /// <summary>Centre the map on the room automap thinks the player is in (without selecting it).</summary>
     [RelayCommand]
     public void GoToAutomapRoom()
     {

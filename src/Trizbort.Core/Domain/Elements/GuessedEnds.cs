@@ -37,6 +37,18 @@ public static class GuessedEnds
     {
       var source0 = connection.GetSourceRoom();
       var target0 = connection.GetTargetRoom();
+      // a split join's stubs point at their labels, not at the rooms at the far ends (which may be anywhere)
+      if (connection.IsDrawnSplit)
+      {
+        if (rooms == null || rooms.Contains(source0) || rooms.Contains(target0))
+        {
+          if (FaceSplitLabel(list, connection, true)) moved++;
+          if (FaceSplitLabel(list, connection, false)) moved++;
+        }
+
+        continue;
+      }
+
       if (rooms == null || rooms.Contains(source0) || rooms.Contains(target0))
       {
         if (FaceListedSide(list, connection, true)) moved++;
@@ -177,6 +189,52 @@ public static class GuessedEnds
     }
 
     return choice ?? (CompassPoint)best;
+  }
+
+  /// <summary>
+  ///   A split join's stub whose label has been dragged off to one side of its room ("d" below and right of the Brink
+  ///   of Pit) leaves the room on that side, so its line never crosses the room to reach its label. It moves to the
+  ///   free point that best faces the label, and the label stays where it is. A stub on the label's side already, or
+  ///   with its label at its tip, is left alone. Returns true if it moved.
+  /// </summary>
+  internal static bool FaceSplitLabel(IList<Element> elements, Connection connection, bool atStart)
+  {
+    if (!connection.IsDrawnSplit || connection.GetSplitLabelOffset(atStart) == Vector.Zero) return false;
+    CompassPoint current;
+    var here = atStart ? connection.GetSourceRoom(out current) : connection.GetTargetRoom(out current);
+    if (here == null) return false;
+    var label = connection.GetSplitStubEnd(atStart);
+    var centre = here.InnerBounds.Center;
+    var towards = label - centre;
+    if (towards.Length < 0.01f) return false;
+    towards = Vector.Normalize(towards);
+
+    double Facing(CompassPoint point)
+    {
+      var outward = here.PortAt(point).Position - centre;
+      return outward.Length < 0.01f ? 0 : Vector.Dot(Vector.Normalize(outward), towards);
+    }
+
+    if (Facing(current) > 0) return false;
+
+    var taken = new HashSet<CompassPoint>();
+    foreach (var other in elements.OfType<Connection>())
+    {
+      if (other == connection) continue;
+      if (other.GetSourceRoom(out var start) == here) taken.Add(start);
+      if (other.GetTargetRoom(out var end) == here) taken.Add(end);
+    }
+
+    var free = Enumerable.Range(0, 16).Select(i => (CompassPoint)i).Where(point => !taken.Contains(point)).ToList();
+    if (free.Count == 0) return false;
+    var best = free.OrderByDescending(Facing).First();
+    if (Facing(best) <= 0) return false;
+    var vertex = atStart ? connection.VertexList[0] : connection.VertexList[connection.VertexList.Count - 1];
+    vertex.Port = here.PortAt(best);
+    // the label stays put: its offset is from the stub's new tip
+    connection.GetSplitStub(atStart, out _, out var tip);
+    connection.SetSplitLabelOffset(atStart, label - tip);
+    return true;
   }
 
   /// <summary>

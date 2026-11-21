@@ -191,7 +191,7 @@ public sealed partial class CommandCatalogue
   {
     var room = session.Automap.CurrentRoom;
     if (room == null || !session.Project.Elements.Contains(room)) return;
-    session.Selection.Set(new List<Element> { room });
+    // only the view moves: what's selected stays selected (Lee, 20 Nov 2026)
     session.CenterOnElement(room);
   }
 

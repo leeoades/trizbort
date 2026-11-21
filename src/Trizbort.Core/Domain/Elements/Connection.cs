@@ -241,6 +241,22 @@ public class Connection : Element
 
   private bool _split;
 
+  /// <summary>
+  ///   The join doesn't always lead where it's drawn: the game picks at random (Bedquilt's passages), or where it leads
+  ///   depends on the state of the game (a closet that's on whichever floor it was left at). Directions take it only
+  ///   when there's no other way. Saved as the optional <c>unreliable</c> attribute.
+  /// </summary>
+  public bool Unreliable {
+    get { return _unreliable; }
+    set {
+      if (_unreliable == value) return;
+      _unreliable = value;
+      RaiseChanged();
+    }
+  }
+
+  private bool _unreliable;
+
   /// <summary>Whether the join is drawn split: <see cref="Split" />, between two different rooms.</summary>
   public bool IsDrawnSplit =>
     Split && VertexList.Count >= 2 && VertexList[0].Port?.Owner is Room start &&
@@ -679,6 +695,7 @@ public class Connection : Element
     AutomapWays = element.Attribute("automapWays").Text;
     AutomapWaysFor = element.Attribute("automapWaysFor").Text;
     Split = element.Attribute("split").ToBool();
+    Unreliable = element.Attribute("unreliable").ToBool();
     _splitLabelOffsets[0] = ParseCurveWaypoint(element.Attribute("splitLabelStart").Text) ?? Vector.Zero;
     _splitLabelOffsets[1] = ParseCurveWaypoint(element.Attribute("splitLabelEnd").Text) ?? Vector.Zero;
     EndText = element.Attribute("endText").Text != "" ? element.Attribute("endText").Text : element.Attribute("end").Text;
@@ -790,6 +807,8 @@ public class Connection : Element
       scribe.Attribute("automapWaysFor", AutomapWaysFor);
     if (Split)
       scribe.Attribute("split", Split);
+    if (Unreliable)
+      scribe.Attribute("unreliable", Unreliable);
     if (_splitLabelOffsets[0] != Vector.Zero)
       scribe.Attribute("splitLabelStart", FormatCurveWaypoint(_splitLabelOffsets[0]));
     if (_splitLabelOffsets[1] != Vector.Zero)

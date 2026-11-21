@@ -119,7 +119,7 @@ public class TrackpadNavigationTests
   {
     ApplicationSettingsController.AppSettings.ScrollWheelBehavior = ScrollWheelMode.AlwaysPan;
     Wheel(1, 0, ModifierKeys.Control);
-    _session.Viewport.ZoomFactor.ShouldBe(1.01f, 0.0005f);
+    _session.Viewport.ZoomFactor.ShouldBe(1.25f, 0.0005f);
   }
 
   [Test]

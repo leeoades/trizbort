@@ -46,22 +46,45 @@ public static class ConnectionEndLabels
 
   public static string Text(Connection connection, bool atStart)
   {
+    var style = Settings.LabelDirectionWords;
+    var full = style == DirectionWordStyle.Full;
     var text = atStart ? connection.StartText : connection.EndText;
-    if (!string.IsNullOrEmpty(text)) return text;
+    // the directions in it written one way, short or in full, if the map settings say so ("u" and "up" alike), and
+    // up and down left off if the map settings say so
+    if (!string.IsNullOrEmpty(text)) return Shaped(text, style, Settings.LabelUpDownExits);
 
     // only where the side is the way out (SideDirection): not the far end of a one-way join, and not a command's
     // join ("enter closet" leaving the foyer's corner isn't south-east)
-    return SideDirection(connection, atStart) switch
-    {
-      MappableDirection.North when Settings.LabelCompassExits => "n",
-      MappableDirection.East when Settings.LabelCompassExits => "e",
-      MappableDirection.South when Settings.LabelCompassExits => "s",
-      MappableDirection.West when Settings.LabelCompassExits => "w",
-      MappableDirection.NorthEast when Settings.LabelDiagonalExits => "ne",
-      MappableDirection.NorthWest when Settings.LabelDiagonalExits => "nw",
-      MappableDirection.SouthEast when Settings.LabelDiagonalExits => "se",
-      MappableDirection.SouthWest when Settings.LabelDiagonalExits => "sw",
-      _ => text
-    };
+    var side = SideDirection(connection, atStart);
+    if (side is { } direction && Labelled(direction)) return DirectionWords.Styled(direction, full);
+    return text;
   }
+
+  /// <summary>
+  ///   <paramref name="label" /> drawn with the map's direction words: as written, all short or all in full; with up
+  ///   and down left off unless <paramref name="upDown" />. Anything that isn't a direction ("climb beanstalk") stays.
+  /// </summary>
+  public static string Shaped(string label, DirectionWordStyle style, bool upDown)
+  {
+    if (string.IsNullOrEmpty(label)) return label;
+    if (!upDown)
+    {
+      var parts = DirectionWords.SplitLabel(label);
+      var kept = parts.Where(part => !(DirectionWords.TryParse(part, out var way) &&
+                                       way is MappableDirection.Up or MappableDirection.Down)).ToList();
+      if (kept.Count != parts.Count) label = string.Join(" / ", kept);
+    }
+    return style == DirectionWordStyle.AsWritten ? label : DirectionWords.Restyle(label, style == DirectionWordStyle.Full);
+  }
+
+  /// <summary>Whether the map settings ask for exits that leave a room in <paramref name="direction" /> to be labelled.</summary>
+  public static bool Labelled(MappableDirection direction) => direction switch
+  {
+    MappableDirection.North or MappableDirection.East or MappableDirection.South or MappableDirection.West =>
+      Settings.LabelCompassExits,
+    MappableDirection.NorthEast or MappableDirection.NorthWest or MappableDirection.SouthEast
+      or MappableDirection.SouthWest => Settings.LabelDiagonalExits,
+    MappableDirection.Up or MappableDirection.Down => Settings.LabelUpDownExits,
+    _ => false
+  };
 }

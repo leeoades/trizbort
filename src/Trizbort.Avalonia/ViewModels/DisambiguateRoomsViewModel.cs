@@ -70,10 +70,12 @@ public class DisambiguateRoomsViewModel : ViewModelBase
 
     public string IntroText => TrackingOnly
         ? "Trizbort isn't sure which room the transcript means. Several rooms have this name, or the room's " +
-          "description has changed during play. Pick the room it is. Automap is tracking only, so it adds nothing " +
-          "to the map: to add a room, switch to Mapping on the automap panel first."
+          "description has changed during play. Pick the room it is: if it's the same room described differently " +
+          "now, its new description is kept with it, so you won't be asked again. Automap is tracking only, so it " +
+          "adds no rooms: to add one, switch to Mapping on the automap panel first."
         : "Trizbort isn't sure which room the transcript means. Several rooms have this name, or the room's " +
-          "description has changed during play. Pick the room it is, or add a new room.";
+          "description has changed during play. Pick the room it is: if it's the same room described differently " +
+          "now, its new description is kept with it, so you won't be asked again. Or add a new room.";
 
     /// <summary>Automap is tracking only (not mapping): a room not on the map isn't added.</summary>
     public bool TrackingOnly { get; }
