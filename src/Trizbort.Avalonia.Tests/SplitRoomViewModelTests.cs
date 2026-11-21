@@ -66,4 +66,40 @@ public class SplitRoomViewModelTests
         cancelled.CancelCommand.Execute(null);
         cancelled.Result.ShouldBeNull();
     }
+
+    [Test]
+    public void BothRoomsAreShown_AndClickingAWayMovesItAcross_AtItsSide()
+    {
+        // Lee, 21 Nov 2026: depict both rooms, the original on the left, and click the exits across
+        var hall = new Room(Project.Current) { Name = "Hall", Position = new Vector(0, 0) };
+        var maze = new Room(Project.Current) { Name = "Maze", Position = new Vector(0, -300) };
+        var pit = new Room(Project.Current) { Name = "Pit", Position = new Vector(300, -300) };
+        maze.AddDescription("You are in a maze of twisty little passages, all alike.");
+        maze.Objects = "food";
+        Project.Current.Elements.Add(hall);
+        Project.Current.Elements.Add(maze);
+        Project.Current.Elements.Add(pit);
+        var canvas = new AutomapCanvas(Project.Current);
+        canvas.Connect(hall, MappableDirection.North, maze, true);
+        canvas.Connect(maze, MappableDirection.East, pit, true);
+        var joins = RoomSplit.JoinsOf(maze);
+
+        var vm = new SplitRoomViewModel(maze, "Maze", joins, Array.Empty<Connection>(), RoomSplitWhere.New);
+        vm.NewName.ShouldBe("Maze");
+        vm.Description.ShouldStartWith("You are in a maze");
+        vm.Objects.ShouldBe("food");
+        var east = vm.Joins.Single(join => join.Text.StartsWith("east"));
+        // east: the middle row, right-hand column
+        vm.OriginalCells[5].Joins.ShouldContain(east);
+        vm.NewCells[5].Joins.ShouldBeEmpty();
+
+        east.ToggleCommand.Execute(null);
+        east.Moves.ShouldBeTrue();
+        vm.OriginalCells[5].Joins.ShouldBeEmpty();
+        vm.NewCells[5].Joins.ShouldContain(east);
+
+        vm.OkCommand.Execute(null);
+        vm.Result!.Moving.ShouldBe(new[] { east.Join });
+        vm.Result.Where.ShouldBe(RoomSplitWhere.New);
+    }
 }

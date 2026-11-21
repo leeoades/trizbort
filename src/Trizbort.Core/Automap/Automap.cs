@@ -2330,17 +2330,11 @@ public sealed class Automap : IAutomapController
     return true;
   }
 
-  private string SplitName(string name)
-  {
-    var names = new HashSet<string>(
-      Trizbort.Domain.Application.Project.Current.Elements.OfType<Room>().Select(room => room.Name),
-      StringComparer.OrdinalIgnoreCase);
-    for (var number = 2; ; number++)
-    {
-      var candidate = $"{name} ({number})";
-      if (!names.Contains(candidate)) return candidate;
-    }
-  }
+  /// <summary>
+  ///   The name for the other of two places with one name: the same name, as the game calls it ("Maze"), so automap
+  ///   knows it by its name when the player comes back. Lee, 21 Nov 2026: "Maze (2)" isn't the name of the location.
+  /// </summary>
+  private static string SplitName(string name) => name;
 
   /// <summary>
   ///   The room at the other end of a join labelled with the last command: the player is there once the game has

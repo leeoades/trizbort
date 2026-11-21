@@ -48,6 +48,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **Split Room** shows both places side by side, the room on the map on the left and the other on the right, with
+  each way out drawn at its side of the room: click a way to move it across. Ways read from the room ("in from Hall"
+  for a one-way way in, "east, back here" for a loop), and a loop moved across becomes a one-way join into the
+  other room.
+- The other of two rooms with one name, from Split Room or automap, has the same name and description ("Maze", not
+  "Maze (2)"), so automap recognises it when you come back.
 - The Windows and Linux downloads keep the app's graphics libraries as files beside it, instead of unpacking them
   to a temporary folder each time it starts, which some antivirus tools took for malware. Keep the files from the
   download together.

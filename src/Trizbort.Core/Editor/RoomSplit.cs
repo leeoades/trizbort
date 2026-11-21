@@ -10,8 +10,9 @@ using Trizbort.Setup;
 namespace Trizbort.Editor;
 
 /// <summary>
-///   Split Room: a room on the map turns out to be two places with one name (its exits went elsewhere). A new room
-///   ("Maze (2)") is added beside it, and the joins picked move over to it, each at the same side.
+///   Split Room: a room on the map turns out to be two places with one name (its exits went elsewhere). A new room,
+///   with the same name and description (the game calls them both "Maze"), is added beside it, and the joins picked
+///   move over to it, each at the same side.
 /// </summary>
 public static class RoomSplit
 {
@@ -47,16 +48,61 @@ public static class RoomSplit
     return text;
   }
 
-  /// <summary>A name for the second room: "Maze (2)", or the next number free.</summary>
-  public static string SplitName(Project project, string name)
+  /// <summary>
+  ///   The name for the second room: the same name, as the game calls it, so automap knows it by its name. (It was
+  ///   "Maze (2)", which isn't the name of the location.)
+  /// </summary>
+  public static string SplitName(Project project, string name) => name;
+
+  /// <summary>
+  ///   The side of <paramref name="room" /> a join leaves it from (a loop: the side it leaves from, not the side it
+  ///   comes back to).
+  /// </summary>
+  public static CompassPoint SideOf(Connection join, Room room)
   {
-    var names = new HashSet<string>(project.Elements.OfType<Room>().Select(room => room.Name),
-      StringComparer.OrdinalIgnoreCase);
-    for (var number = 2;; number++)
+    var source = join.GetSourceRoom(out var start);
+    var target = join.GetTargetRoom(out var end);
+    return source == room ? start : target == room ? end : start;
+  }
+
+  /// <summary>Whether a join leaves <paramref name="room" /> and comes back into it.</summary>
+  public static bool IsLoop(Connection join, Room room) =>
+    join.GetSourceRoom() == room && join.GetTargetRoom() == room;
+
+  /// <summary>
+  ///   How a join reads in Split Room, from <paramref name="room" />: "east to Pit", "east, back here" (a loop),
+  ///   "in from Hall (its south)" (one way into the room), "north to Pit, one way".
+  /// </summary>
+  public static string Exit(Connection join, Room room)
+  {
+    var source = join.GetSourceRoom();
+    var target = join.GetTargetRoom();
+    var atStart = source == room;
+    var other = atStart ? target : source;
+    var ways = JoinWays.Of(join);
+    string Words(bool fromStart) => string.Join(" / ", ways.Where(way => way.AtStart == fromStart)
+      .Select(way => way.IsDirection ? way.Text ?? DirectionWords.Word(way.Direction) : way.Text)
+      .Where(text => !string.IsNullOrWhiteSpace(text)).Distinct(StringComparer.OrdinalIgnoreCase));
+    var otherName = other?.Name ?? "nowhere";
+    if (IsLoop(join, room))
     {
-      var candidate = $"{name} ({number})";
-      if (!names.Contains(candidate)) return candidate;
+      var round = Words(true);
+      return (string.IsNullOrEmpty(round) ? "a way" : round) + ", back here";
     }
+
+    var oneWay = join.Flow == ConnectionFlow.OneWay;
+    // one way into this room: only the way in from the other room is known
+    if (oneWay && !atStart)
+    {
+      var theirs = Words(true);
+      return "in from " + otherName + (string.IsNullOrEmpty(theirs) ? string.Empty : $" (its {theirs})");
+    }
+
+    var outward = Words(atStart);
+    var text = (string.IsNullOrEmpty(outward) ? "to " : outward + " to ") + otherName;
+    if (oneWay) return text + ", one way";
+    var back = Words(!atStart);
+    return string.IsNullOrEmpty(back) ? text : $"{text} ({back} back)";
   }
 
   /// <summary>
@@ -71,6 +117,9 @@ public static class RoomSplit
     var second = new Room(project) { Name = SplitName(project, room.Name) };
     second.CopyStyleFrom(room);
     second.Size = room.Size;
+    second.IsDark = room.IsDark;
+    // the same place to look at: the game describes them alike. (Not the objects: they mark the room they're in.)
+    foreach (var known in room.Descriptions) second.AddDescription(known);
     second.Position = Settings.Snap(new Vector(room.Position.X + room.Width + Settings.PreferredDistanceBetweenRooms,
       room.Position.Y));
     if (!string.IsNullOrWhiteSpace(description)) second.AddDescription(description);
@@ -81,8 +130,16 @@ public static class RoomSplit
       if (join.VertexList.Count == 0) continue;
       var source = join.GetSourceRoom(out var start);
       var target = join.GetTargetRoom(out var end);
-      // a way round back into the room (up "In the Chimney" taken for the same chimney): it arrives in the new one
-      if (source == room && target != room) join.VertexList[0].Port = second.PortAt(start);
+      // a way round back into the room (east, taken for the same maze room): it arrives in the new one, one way, as
+      // nothing yet says the way back
+      if (source == room && target == room)
+      {
+        join.VertexList[join.VertexList.Count - 1].Port = second.PortAt(end);
+        join.Flow = ConnectionFlow.OneWay;
+        continue;
+      }
+
+      if (source == room) join.VertexList[0].Port = second.PortAt(start);
       if (target == room) join.VertexList[join.VertexList.Count - 1].Port = second.PortAt(end);
     }
 

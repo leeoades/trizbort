@@ -424,13 +424,16 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     await RunToEnd(engine, lines, lines.Length);
 
     prompts.AskedAbout.ShouldBe("Maze");
-    Rooms().ShouldBe(new[] { "Hall", "Maze", "Maze (2)", "Pit" });
-    Joins().ShouldContain("Hall -> Maze");
-    Joins().ShouldContain("Hall -> Maze (2)");
-    Joins().ShouldContain("Maze (2) -> Pit");
-    Joins().ShouldNotContain(join => join.StartsWith("Maze -> Pit") || join.StartsWith("Maze -> Maze (2)"));
+    // both are "Maze", as the game calls them: the one east of the hall leads to the pit, not the one north of it
+    Rooms().ShouldBe(new[] { "Hall", "Maze", "Maze", "Pit" });
+    Joins().Count(join => join == "Hall -> Maze").ShouldBe(2);
+    var toPit = Project.Current.Elements.OfType<Connection>().Single(c => c.GetTargetRoom()?.Name == "Pit");
+    var east = toPit.GetSourceRoom();
+    east.Name.ShouldBe("Maze");
+    Project.Current.Elements.OfType<Connection>().ShouldNotContain(c =>
+      c.GetSourceRoom()?.Name == "Maze" && c.GetTargetRoom()?.Name == "Maze");
     var hallToMaze = Project.Current.Elements.OfType<Connection>().Single(c =>
-      c.GetSourceRoom()?.Name == "Hall" && c.GetTargetRoom()?.Name == "Maze");
+      c.GetSourceRoom()?.Name == "Hall" && c.GetTargetRoom()?.Name == "Maze" && c.GetTargetRoom() != east);
     JoinWays.Of(hallToMaze).ShouldNotContain(way => way.IsDirection && way.Direction == MappableDirection.East);
   }
 
@@ -493,9 +496,11 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
       (await engine.SplitCurrentRoomAsync()).ShouldBeTrue();
 
       var upper = engine.CurrentRoom;
-      upper.Name.ShouldBe("In the Chimney (2)");
+      upper.Name.ShouldBe("In the Chimney");
+      upper.ShouldNotBe(chimney);
       upper.Position.Y.ShouldBeLessThan(chimney.Position.Y); // up, above it
-      Joins().ShouldContain("In the Chimney -> In the Chimney (2)");
+      Project.Current.Elements.OfType<Connection>()
+        .ShouldContain(c => c.GetSourceRoom() == chimney && c.GetTargetRoom() == upper);
       Project.Current.Elements.OfType<Connection>()
         .ShouldNotContain(c => c.GetSourceRoom() == chimney && c.GetTargetRoom() == chimney);
     }
@@ -534,10 +539,9 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
 
       (await engine.SplitCurrentRoomAsync()).ShouldBeTrue();
 
-      engine.CurrentRoom.Name.ShouldBe("Maze (2)");
-      Rooms().ShouldBe(new[] { "Hall", "Maze", "Maze (2)" });
-      Joins().ShouldContain("Hall -> Maze");
-      Joins().ShouldContain("Hall -> Maze (2)");
+      engine.CurrentRoom.Name.ShouldBe("Maze");
+      Rooms().ShouldBe(new[] { "Hall", "Maze", "Maze" });
+      Joins().Count(join => join == "Hall -> Maze").ShouldBe(2);
     }
     finally
     {
@@ -569,10 +573,15 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     await RunToEnd(engine, lines, lines.Length);
 
     prompts.AskedAbout.ShouldBe("Cupboard");
-    Rooms().ShouldBe(new[] { "Cellar", "Cupboard", "Cupboard (2)", "Foyer" });
-    Joins().ShouldContain("Cupboard -> Cupboard (2) pull peg, first");
-    Joins().ShouldContain("Cupboard (2) -> Cellar");
-    Joins().ShouldNotContain(join => join.StartsWith("Cupboard -> Cellar"));
+    // the cupboard's two stops, both "Cupboard" as the game calls them: the one the peg takes you to leads out to the
+    // cellar
+    Rooms().ShouldBe(new[] { "Cellar", "Cupboard", "Cupboard", "Foyer" });
+    Joins().ShouldContain("Cupboard -> Cupboard pull peg, first");
+    var lowered = Project.Current.Elements.OfType<Connection>().Single(c => c.MidText == "pull peg, first").GetTargetRoom();
+    Project.Current.Elements.OfType<Connection>().ShouldContain(c => c.GetSourceRoom() == lowered &&
+                                                                     c.GetTargetRoom()?.Name == "Cellar");
+    Project.Current.Elements.OfType<Connection>().ShouldNotContain(c =>
+      c.GetSourceRoom()?.Name == "Cupboard" && c.GetSourceRoom() != lowered && c.GetTargetRoom()?.Name == "Cellar");
   }
 
   [Category("InternalOnly")]
@@ -598,10 +607,13 @@ public class AutomapMoveByMoveTests : IsolatedProjectTests
     await RunToEnd(engine, lines, lines.Length);
 
     prompts.AskedAbout.ShouldBe("Closet");
-    Rooms().ShouldBe(new[] { "Cellar", "Closet", "Closet (2)", "Foyer" });
-    Joins().ShouldContain("Closet -> Closet (2) pull peg");
-    Joins().ShouldContain("Closet (2) -> Cellar");
-    Joins().ShouldNotContain(join => join.StartsWith("Closet -> Cellar"));
+    Rooms().ShouldBe(new[] { "Cellar", "Closet", "Closet", "Foyer" });
+    Joins().ShouldContain("Closet -> Closet pull peg");
+    var sunk = Project.Current.Elements.OfType<Connection>().Single(c => c.MidText == "pull peg").GetTargetRoom();
+    Project.Current.Elements.OfType<Connection>().ShouldContain(c => c.GetSourceRoom() == sunk &&
+                                                                     c.GetTargetRoom()?.Name == "Cellar");
+    Project.Current.Elements.OfType<Connection>().ShouldNotContain(c =>
+      c.GetSourceRoom()?.Name == "Closet" && c.GetSourceRoom() != sunk && c.GetTargetRoom()?.Name == "Cellar");
   }
 
   [Category("InternalOnly")]
