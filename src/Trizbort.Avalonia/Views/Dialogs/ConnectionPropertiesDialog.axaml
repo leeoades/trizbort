@@ -6,7 +6,7 @@
         x:Class="Trizbort.Avalonia.Views.Dialogs.ConnectionPropertiesDialog"
         x:DataType="vm:ConnectionPropertiesViewModel"
         Title="Connection Properties"
-        Width="520" Height="700"
+        Width="520" Height="732"
         MinWidth="442" MinHeight="240"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">

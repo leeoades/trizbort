@@ -45,11 +45,12 @@ public class UnreliableJoinTests : IsolatedProjectTests
     var hall = Add("Hall", 0, 400);
     var landing = Add("Landing", 200, 200);
     var attic = Add("Attic", 0, 0);
-    var closet = Join(hall, CompassPoint.North, attic, CompassPoint.South, "enter closet");
+    // drawn by hand: the way out of the hall's north side is "north"
+    var closet = Join(hall, CompassPoint.North, attic, CompassPoint.South);
     Join(hall, CompassPoint.East, landing, CompassPoint.South);
     Join(landing, CompassPoint.North, attic, CompassPoint.East);
 
-    Commands(hall, attic).ShouldBe(new[] { "enter closet" });
+    Commands(hall, attic).ShouldBe(new[] { "north" });
 
     closet.Unreliable = true;
     Commands(hall, attic).ShouldBe(new[] { "east", "north" });
@@ -57,7 +58,7 @@ public class UnreliableJoinTests : IsolatedProjectTests
     // no other way: it's taken, and said to be unreliable
     Project.Current.Elements.Remove(Project.Current.Elements.OfType<Connection>().Last());
     var route = RouteFinder.Find(Project.Current.Elements, hall, attic);
-    route.ShouldHaveSingleItem().Command.ShouldBe("enter closet");
+    route.ShouldHaveSingleItem().Command.ShouldBe("north");
     route[0].Unreliable.ShouldBeTrue();
   }
 
