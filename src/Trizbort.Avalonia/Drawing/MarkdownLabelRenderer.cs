@@ -3,6 +3,8 @@ using Avalonia;
 using Avalonia.Media;
 using Trizbort.Domain.Misc;
 using AvaloniaDrawingContext = Avalonia.Media.DrawingContext;
+using Rect = Avalonia.Rect;
+using Point = Avalonia.Point;
 
 namespace Trizbort.Avalonia.Drawing;
 
