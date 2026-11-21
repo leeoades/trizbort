@@ -65,6 +65,10 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isSplit;
 
+    /// <summary>It doesn't always lead where it's drawn: directions take it only when there's no other way.</summary>
+    [ObservableProperty]
+    private bool _isUnreliable;
+
     [ObservableProperty]
     private Color _connectionColor = Color.Transparent;
 
@@ -108,6 +112,7 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         IsDirectional = connection.Flow == ConnectionFlow.OneWay;
         IsDotted = connection.Style == ConnectionStyle.Dashed;
         IsSplit = connection.Split;
+        IsUnreliable = connection.Unreliable;
         ConnectionColor = connection.ConnectionColor;
 
         if (connection.Door != null)
@@ -141,6 +146,7 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         connection.Flow = IsDirectional ? ConnectionFlow.OneWay : ConnectionFlow.TwoWay;
         connection.Style = IsDotted ? ConnectionStyle.Dashed : ConnectionStyle.Solid;
         connection.Split = IsSplit;
+        connection.Unreliable = IsUnreliable;
 
         connection.ConnectionColor = ConnectionColor;
 

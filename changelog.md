@@ -14,6 +14,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Unreliable joins**: a join that doesn't always lead where it's drawn, because the game picks at random
+  (Bedquilt in Colossal Cave) or it depends on what you've done (a closet left on another floor). Directions take it
+  only when there's no other way, and say so. Mark one with **Unreliable** in the join's properties, **Unreliable
+  Join** on its right-click menu, or **Mark Join Unreliable** on a step in the directions. A command the map shows
+  leading from one room to more than one place counts as unreliable without marking.
 - Room properties list the other ways the game has described a room, under **Also described as** below its
   description (the Twopit Room once the beanstalk has grown). Unlock the room to remove one.
 - Directions: right-click a step and choose **Avoid This Route** to get there another way (without the PLOVER

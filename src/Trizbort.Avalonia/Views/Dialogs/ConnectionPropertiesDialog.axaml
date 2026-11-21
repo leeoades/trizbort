@@ -29,6 +29,9 @@
                                       ToolTip.Tip="Draw the join as two short stubs, one out of each room, each labelled with the room at the other end: for a long join, or one into another part of the map" />
                             <CheckBox Content="One Wa_y Arrow" IsChecked="{Binding IsDirectional}" />
                         </StackPanel>
+                        <CheckBox x:Name="UnreliableBox" Content="Unreliable: directions take it only when there's no other way"
+                                  IsChecked="{Binding IsUnreliable}"
+                                  ToolTip.Tip="It doesn't always lead where it's drawn: the game picks at random (Bedquilt in Colossal Cave), or it depends on what you've done (a closet that stays on the floor it was left at)" />
                         <Grid ColumnDefinitions="Auto,12,*">
                             <Label Grid.Column="0" Classes="field-label" Content="_Color:" Target="{Binding #LineColorButton}" />
                             <controls:ColorPickerButton Grid.Column="2" x:Name="LineColorButton"

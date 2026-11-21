@@ -105,6 +105,8 @@
                                 <ContextMenu>
                                     <MenuItem Header="Avoid This Route" Click="OnAvoidStep"
                                               ToolTip.Tip="Find a way round this step (to get there without a spell, say)" />
+                                    <MenuItem Header="{Binding UnreliableMenuText}" Click="OnToggleUnreliable"
+                                              ToolTip.Tip="An unreliable join doesn't always lead where it's drawn (the game picks at random, or it depends on what you've done). Directions take it only when there's no other way. Saved with the map." />
                                 </ContextMenu>
                             </StackPanel.ContextMenu>
                             <TextBlock Text="{Binding Text}" FontWeight="SemiBold" />
