@@ -28,6 +28,9 @@
                             <CheckBox x:Name="SplitBox" Content="Split" IsChecked="{Binding IsSplit}"
                                       ToolTip.Tip="Draw the join as two short stubs, one out of each room, each labelled with the room at the other end: for a long join, or one into another part of the map" />
                             <CheckBox Content="One Wa_y Arrow" IsChecked="{Binding IsDirectional}" />
+                            <Button x:Name="FlipButton" Content="Flip" Padding="8,2" VerticalAlignment="Center"
+                                    Command="{Binding FlipCommand}" IsVisible="{Binding IsDirectional}"
+                                    ToolTip.Tip="Turn the arrow round: it points from the Start room to the End room, and Flip swaps them" />
                         </StackPanel>
                         <CheckBox x:Name="UnreliableBox" Content="Unreliable: directions take it only when there's no other way"
                                   IsChecked="{Binding IsUnreliable}"

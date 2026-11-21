@@ -15,14 +15,18 @@ public sealed partial class SplitRoomJoin : ObservableObject
 {
     private readonly Action<SplitRoomJoin> _toggle;
 
-    public SplitRoomJoin(Connection join, string text, CompassPoint side, bool moves, Action<SplitRoomJoin> toggle)
+    public SplitRoomJoin(SplitExit exit, bool moves, Action<SplitRoomJoin> toggle)
     {
-        Join = join;
-        Text = text;
-        Side = side;
+        Exit = exit;
+        Join = exit.Join;
+        Text = exit.Text;
+        Side = exit.Side;
         _moves = moves;
         _toggle = toggle;
     }
+
+    /// <summary>The way in or out it is: half of a two-way join, or a whole one-way join or loop.</summary>
+    public SplitExit Exit { get; }
 
     public Connection Join { get; }
 
@@ -80,8 +84,10 @@ public sealed partial class SplitRoomViewModel : ViewModelBase
         NewName = newName;
         Description = room.PrimaryDescription ?? string.Empty;
         Objects = (room.Objects ?? string.Empty).Replace("\r", string.Empty).Replace("\n", ", ").Trim(' ', ',');
-        Joins = joins.Select(join => new SplitRoomJoin(join, RoomSplit.Exit(join, room), RoomSplit.SideOf(join, room),
-            ticked.Contains(join), Toggle)).ToList();
+        // each way in and out on its own (a two-way join is two), the way the player just came in ticked
+        var exits = RoomSplit.ExitsOf(room).Where(exit => joins.Contains(exit.Join)).ToList();
+        var suggested = ticked.Count > 0 ? RoomSplit.SuggestedExit(exits.Where(exit => ticked.Contains(exit.Join)).ToList()) : null;
+        Joins = exits.Select(exit => new SplitRoomJoin(exit, exit == suggested, Toggle)).ToList();
         foreach (var join in Joins) Place(join);
         AsksWhere = where != null;
         _inNew = where == RoomSplitWhere.New;
@@ -106,12 +112,12 @@ public sealed partial class SplitRoomViewModel : ViewModelBase
     public bool HasObjects => Objects.Length > 0;
 
     public string IntroText =>
-        $"'{RoomName}' is two places with one name. The one on the map is on the left; the other is on the right. " +
-        "Click the ways out that belong to the other one to move them across.";
+        $"'{RoomName}' is two places with the same name and description. Click the ways in and out that belong to " +
+        "the new one to move them across.";
 
-    public string OriginalHeading => $"{RoomName}: the one on the map";
+    public string OriginalHeading => "Original: the one on the map";
 
-    public string NewHeading => $"{NewName}: the other one";
+    public string NewHeading => "New";
 
     public IReadOnlyList<SplitRoomJoin> Joins { get; }
 
@@ -124,9 +130,9 @@ public sealed partial class SplitRoomViewModel : ViewModelBase
     /// <summary>While automapping: asks which room the player is in.</summary>
     public bool AsksWhere { get; }
 
-    public string InOriginalText => "In the one on the map (left)";
+    public string InOriginalText => "In the original (left)";
 
-    public string InNewText => "In the other one (right)";
+    public string InNewText => "In the new one (right)";
 
     [ObservableProperty]
     private bool _inOriginal;
@@ -187,7 +193,9 @@ public sealed partial class SplitRoomViewModel : ViewModelBase
     private void Ok()
     {
         var where = !AsksWhere || InNeither ? RoomSplitWhere.Neither : InNew ? RoomSplitWhere.New : RoomSplitWhere.Original;
-        Complete(new RoomSplitChoice(Joins.Where(join => join.Moves).Select(join => join.Join).ToList(), where));
+        var moving = Joins.Where(join => join.Moves).ToList();
+        Complete(new RoomSplitChoice(moving.Select(join => join.Join).Distinct().ToList(), where,
+            moving.Select(join => join.Exit).ToList()));
     }
 
     private void Complete(RoomSplitChoice? result)

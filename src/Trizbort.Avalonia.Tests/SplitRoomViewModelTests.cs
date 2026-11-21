@@ -49,16 +49,20 @@ public class SplitRoomViewModelTests
         var vm = new SplitRoomViewModel(maze, "Maze (2)", joins, new[] { joins[0] }, RoomSplitWhere.New);
         vm.AsksWhere.ShouldBeTrue();
         vm.InNew.ShouldBeTrue();
-        vm.Joins.Count.ShouldBe(2);
-        vm.Joins[0].Moves.ShouldBeTrue();
-        vm.Joins[1].Moves.ShouldBeFalse();
-        vm.Joins[1].Moves = true;
+        // each join both ways: out, and back in
+        vm.Joins.Count.ShouldBe(4);
+        // the way in by the newest join is ticked: the way the player just came
+        var ticked = vm.Joins.Single(join => join.Moves);
+        ticked.Join.ShouldBe(joins[0]);
+        ticked.Exit.Inward.ShouldBeTrue();
+        vm.Joins.Single(join => join.Join == joins[1] && !join.Exit.Inward).ToggleCommand.Execute(null);
         vm.InNew = false;
         vm.InOriginal = true;
         vm.OkCommand.Execute(null);
 
         vm.Result.ShouldNotBeNull();
         vm.Result!.Moving.Count.ShouldBe(2);
+        vm.Result.Exits!.Count.ShouldBe(2);
         vm.Result.Where.ShouldBe(RoomSplitWhere.Original);
 
         var cancelled = new SplitRoomViewModel(maze, "Maze (2)", joins, new[] { joins[0] }, null);
@@ -89,13 +93,14 @@ public class SplitRoomViewModelTests
         vm.Description.ShouldStartWith("You are in a maze");
         vm.Objects.ShouldBe("food");
         var east = vm.Joins.Single(join => join.Text.StartsWith("east"));
+        east.Text.ShouldBe("east → Pit");
         // east: the middle row, right-hand column
         vm.OriginalCells[5].Joins.ShouldContain(east);
         vm.NewCells[5].Joins.ShouldBeEmpty();
 
         east.ToggleCommand.Execute(null);
         east.Moves.ShouldBeTrue();
-        vm.OriginalCells[5].Joins.ShouldBeEmpty();
+        vm.OriginalCells[5].Joins.ShouldNotContain(east);
         vm.NewCells[5].Joins.ShouldContain(east);
 
         vm.OkCommand.Execute(null);

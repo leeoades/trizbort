@@ -58,6 +58,52 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
     /// </summary>
     public bool ShownTheOtherWay { get; private set; }
 
+    /// <summary>OK reverses the join, so its arrow points from the Start room to the End room.</summary>
+    private bool _reverse;
+
+    /// <summary>Whether the Start box is the join's start end once OK has reversed it, or not.</summary>
+    private bool _leftIsStart;
+
+    /// <summary>The arrow was turned round to point Start to End when One Way Arrow was ticked (and back if unticked).</summary>
+    private bool _reversedForArrow;
+
+    /// <summary>
+    ///     A one-way join points from the Start room to the End room. Ticking One Way Arrow makes it so, whichever end
+    ///     the join was drawn from (Lee, 21 Nov 2026: it pointed back to the room he'd just come from).
+    /// </summary>
+    partial void OnIsDirectionalChanged(bool value)
+    {
+        if (_initializing) return;
+        if (value && !_leftIsStart)
+        {
+            _reverse = !_reverse;
+            _leftIsStart = true;
+            _reversedForArrow = true;
+        }
+        else if (!value && _reversedForArrow)
+        {
+            _reverse = !_reverse;
+            _leftIsStart = false;
+            _reversedForArrow = false;
+        }
+    }
+
+    /// <summary>
+    ///     Flip: the one-way arrow points the other way, from the End room to the Start room; the boxes swap round so
+    ///     Start is still the room it leaves.
+    /// </summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void Flip()
+    {
+        _reverse = !_reverse;
+        _reversedForArrow = false;
+        (StartRoomName, EndRoomName) = (EndRoomName, StartRoomName);
+        (StartText, EndText) = (EndText, StartText);
+        (_startSide, _endSide) = (_endSide, _startSide);
+    }
+
+    private bool _initializing;
+
     [ObservableProperty]
     private bool _isDotted;
 
@@ -89,6 +135,7 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
 
     public void Initialize(Connection connection)
     {
+        _initializing = true;
         ConnectionName = connection.Name ?? string.Empty;
         ConnectionDescription = connection.Description ?? string.Empty;
         var startRoom = connection.GetSourceRoom();
@@ -110,6 +157,10 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         EndText = Shown(ShownTheOtherWay ? connection.StartText : connection.EndText, _endSide);
         SelectedPreset = MatchPreset();
         IsDirectional = connection.Flow == ConnectionFlow.OneWay;
+        _reverse = false;
+        _reversedForArrow = false;
+        _leftIsStart = !ShownTheOtherWay;
+        _initializing = false;
         IsDotted = connection.Style == ConnectionStyle.Dashed;
         IsSplit = connection.Split;
         IsUnreliable = connection.Unreliable;
@@ -139,9 +190,10 @@ public partial class ConnectionPropertiesViewModel : ViewModelBase
         connection.Description = ConnectionDescription;
         var left = Stored(StartText, _startSide);
         var right = Stored(EndText, _endSide);
-        connection.StartText = ShownTheOtherWay ? right : left;
+        if (_reverse) connection.Reverse();
+        connection.StartText = _leftIsStart ? left : right;
         connection.MidText = MidText;
-        connection.EndText = ShownTheOtherWay ? left : right;
+        connection.EndText = _leftIsStart ? right : left;
 
         connection.Flow = IsDirectional ? ConnectionFlow.OneWay : ConnectionFlow.TwoWay;
         connection.Style = IsDotted ? ConnectionStyle.Dashed : ConnectionStyle.Solid;

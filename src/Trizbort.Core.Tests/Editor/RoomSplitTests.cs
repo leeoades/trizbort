@@ -104,4 +104,36 @@ public class RoomSplitTests : IsolatedProjectTests
     RoomSplit.Exit(east, maze).ShouldBe("east to Pit (west back)");
     RoomSplit.SideOf(east, maze).ShouldBe(CompassPoint.East);
   }
+
+  [Test]
+  public void MovingTheWayBackIn_LeavesTheWayOut_AndJoinsTheOtherRoomOneWay()
+  {
+    // Lee, 21 Nov 2026: west from the gold room to the rod room, then east from the rod room into what automap took
+    // for the gold room, but was another maze room. The way out (west) stays; east from the rod room goes to the new
+    // room, one way: nothing says the way back
+    var gold = Add("Maze", 0, 0);
+    gold.Objects = "gold";
+    var rod = Add("Maze", -300, 0);
+    rod.Objects = "rod";
+    var canvas = new AutomapCanvas(Project.Current);
+    canvas.Connect(gold, MappableDirection.West, rod, true);
+    var join = Project.Current.Elements.OfType<Connection>().Single();
+
+    var exits = RoomSplit.ExitsOf(gold);
+    exits.Select(exit => exit.Text).ShouldBe(new[] { "west → Maze (rod)", "from Maze (rod), going east" });
+    var wayIn = RoomSplit.SuggestedExit(exits);
+    wayIn.Inward.ShouldBeTrue();
+
+    var other = RoomSplit.Split(Project.Current, gold, new[] { wayIn });
+
+    other.Name.ShouldBe("Maze");
+    join.Flow.ShouldBe(ConnectionFlow.OneWay);
+    join.GetSourceRoom().ShouldBe(gold);
+    join.GetTargetRoom().ShouldBe(rod);
+    var east = Project.Current.Elements.OfType<Connection>().Single(c => c != join);
+    east.Flow.ShouldBe(ConnectionFlow.OneWay);
+    east.GetSourceRoom(out var side).ShouldBe(rod);
+    side.ShouldBe(CompassPoint.East);
+    east.GetTargetRoom().ShouldBe(other);
+  }
 }

@@ -48,6 +48,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- In Split Room, a join that goes both ways is two ways, out and back in, as each can belong to a different room;
+  the way you just came in is chosen to start with. Moving one half splits the join into two one-way joins (west from
+  the gold room to the rod room stays; east from the rod room goes, one way, into the new room). Rooms that share a
+  name are told apart by their objects ("west → Maze (rod)"), and the rooms are headed Original and New.
+- In a join's properties, ticking **One Way Arrow** points the arrow from the Start room to the End room, and
+  **Flip** beside it turns it round.
 - **Split Room** shows both places side by side, the room on the map on the left and the other on the right, with
   each way out drawn at its side of the room: click a way to move it across. Ways read from the room ("in from Hall"
   for a one-way way in, "east, back here" for a loop), and a loop moved across becomes a one-way join into the
