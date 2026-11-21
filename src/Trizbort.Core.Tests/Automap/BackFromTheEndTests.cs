@@ -80,4 +80,50 @@ public class BackFromTheEndTests : IsolatedProjectTests
       File.Delete(path);
     }
   }
+
+  [Test]
+  public async Task PlayedLive_GoingBack_FindsTheRightPlaceInTheTranscript()
+  {
+    // Lee, 21 Nov 2026: playing live, then Previous Move twice and Next Move, automap said "Move 75 of 75" at the
+    // Slab Room and wouldn't go on. The game writes its prompt (">") and then, when the player types it, the command:
+    // one line of the transcript that automap read as two, so each move live put it a line further on.
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, ">look\nHall\n>");
+    var engine = _engine = new Trizbort.Automap.Automap((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(Project.Current, engine), settings);
+      await WaitFor(() => engine.ScreenLines().Count == 3, "the first prompt");
+      File.AppendAllText(path, "north\nKitchen\n>");
+      await WaitFor(() => engine.ScreenLines().Count == 6, "north");
+      File.AppendAllText(path, "east\nPantry\n>");
+      await WaitFor(() => engine.ScreenLines().Count == 9, "east");
+      File.AppendAllText(path, "west\nKitchen\n>");
+      await WaitFor(() => engine.ScreenLines().Count == 12, "west");
+      engine.MoveCount().ShouldBe((4, 4));
+
+      engine.GoBack();
+      await WaitFor(() => engine.NextCommand == "west", "back to west");
+      engine.GoBack();
+      await WaitFor(() => engine.NextCommand == "east", "back to east");
+
+      // two moves played (look, north), paused before east, four in the transcript
+      engine.MoveCount().ShouldBe((2, 4));
+      engine.HasNextMove.ShouldBeTrue();
+      engine.MovesAhead().ShouldBe(2);
+
+      engine.PlayNextMove();
+      await WaitFor(() => engine.NextCommand == "west", "on to west");
+      engine.MoveCount().ShouldBe((3, 4));
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
 }

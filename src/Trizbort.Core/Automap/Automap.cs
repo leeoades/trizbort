@@ -3042,6 +3042,13 @@ public sealed class Automap : IAutomapController
     return _moveLines;
   }
 
+  /// <summary>Whether line <paramref name="index" /> of the transcript (from 0) is a prompt with a command on it.</summary>
+  private bool PromptHoldsCommand(int index)
+  {
+    var fileName = _settings.FileName;
+    return index >= 0 && !string.IsNullOrEmpty(fileName) && TranscriptMoveLines(fileName).BinarySearch(index) >= 0;
+  }
+
   /// <summary>Pause before the next move.</summary>
   public void Pause()
   {
@@ -3395,6 +3402,10 @@ public sealed class Automap : IAutomapController
             {
               AddScreenLine(typed);
               command = typed.Trim();
+              // the game wrote the prompt and, when the player typed it, the command: one line of the transcript
+              // (">north"), read in two halves. Count it once, so going back a move finds the right place in the
+              // transcript and the move count matches it.
+              if (PromptHoldsCommand(_linesRead - 2)) _linesRead--;
             }
           }
 

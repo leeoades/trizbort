@@ -68,6 +68,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- After playing a game live, **Previous Move** goes back to the right place in the transcript, and **Next Move** plays
+  on from there. Each move played live put automap a line further on than it was, so going back could land past the
+  end of the transcript ("Move 75 of 75" at a move in the middle) and Next Move did nothing.
 - **Previous Move** (F9) goes back through a transcript automap started at the end of, as it does after playing
   one through. The transcript so far shows in the automap panel, and automap works out which room you were in from
   the room names in it.
