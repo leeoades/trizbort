@@ -84,7 +84,7 @@ public class DisambiguateRoomsTellsTests
 
         var vm = new DisambiguateRoomsViewModel("Maze", "A twisty maze.", new[] { first, second });
 
-        vm.Choices[0].Detail.ShouldBe("ways: e to Dead End");
+        vm.Choices[0].Detail.ShouldBe("ways: east to Dead End");
         vm.Choices[1].Detail.ShouldBe("no ways out");
         vm.Choices.ShouldAllBe(choice => !choice.Detail.Contains("damp") && !choice.Detail.Contains("draught"));
     }

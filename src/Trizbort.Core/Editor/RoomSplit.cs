@@ -37,7 +37,7 @@ public static class RoomSplit
     var other = atStart ? target : source;
     var ways = JoinWays.Of(join);
     string Words(bool fromStart) => string.Join(" / ", ways.Where(way => way.AtStart == fromStart)
-      .Select(way => way.IsDirection ? way.Text ?? DirectionWords.Word(way.Direction) : way.Text)
+      .Select(way => way.IsDirection ? DirectionWords.Word(way.Direction) : way.Text)
       .Where(text => !string.IsNullOrWhiteSpace(text)).Distinct(StringComparer.OrdinalIgnoreCase));
     var outward = Words(atStart);
     var back = Words(!atStart);
@@ -81,7 +81,7 @@ public static class RoomSplit
     var other = atStart ? target : source;
     var ways = JoinWays.Of(join);
     string Words(bool fromStart) => string.Join(" / ", ways.Where(way => way.AtStart == fromStart)
-      .Select(way => way.IsDirection ? way.Text ?? DirectionWords.Word(way.Direction) : way.Text)
+      .Select(way => way.IsDirection ? DirectionWords.Word(way.Direction) : way.Text)
       .Where(text => !string.IsNullOrWhiteSpace(text)).Distinct(StringComparer.OrdinalIgnoreCase));
     var otherName = other?.Name ?? "nowhere";
     if (IsLoop(join, room))

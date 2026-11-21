@@ -604,6 +604,15 @@ public sealed class Automap : IAutomapController
     }
 
     if (maybes == null || maybes.Count == 0) return null;
+    // the game tells the rooms with this name apart by their descriptions (the maze of passages all different, each
+    // described its own way): a description none of them has is another of them, not one described differently
+    if (result.Certain == null && ToldApartByDescription(maybes, roomDescription))
+    {
+      Trace("{0}: {1} rooms with this name are each described their own way, and none like this: a new room.",
+        FormatTranscriptLineForDisplay(line), maybes.Count);
+      return null;
+    }
+
     if (_settings.BestGuessWhichRoom) return Guess(maybes, roomDescription);
     if (maybes.Count == 1 && (string.IsNullOrEmpty(roomDescription) || maybes[0].PrimaryDescription == null))
       return maybes[0];
@@ -612,6 +621,21 @@ public sealed class Automap : IAutomapController
     var choice = await Prompts.DisambiguateRoomAsync(line, roomDescription, maybes, token);
     token.ThrowIfCancellationRequested();
     return Answered(choice);
+  }
+
+  /// <summary>
+  ///   Whether the game tells <paramref name="candidates" /> apart by their descriptions, and
+  ///   <paramref name="roomDescription" /> is none of them: two or more rooms with one name, each described, each
+  ///   differently, and none the way the game describes this one. (One room described differently, the Twopit Room
+  ///   once the beanstalk grows, is still asked about: it may be the same room at another time.)
+  /// </summary>
+  private static bool ToldApartByDescription(IReadOnlyList<Room> candidates, string roomDescription)
+  {
+    if (candidates.Count < 2 || string.IsNullOrWhiteSpace(roomDescription)) return false;
+    var known = candidates.Select(room => room.PrimaryDescription).ToList();
+    if (known.Any(string.IsNullOrWhiteSpace)) return false;
+    if (known.Distinct(StringComparer.OrdinalIgnoreCase).Count() != known.Count) return false;
+    return !candidates.Any(room => room.Descriptions.Any(description => SameFirstSentence(description, roomDescription)));
   }
 
   /// <summary>The rooms with the heading's name (not copies).</summary>

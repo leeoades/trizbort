@@ -109,7 +109,10 @@ public static class RoomTells
 
   private static string Objects(Room room) => string.Join(", ", ObjectItems(room));
 
-  /// <summary>The ways out of the room and where they lead ("e to Maze, s to Dead End"), as the map shows them.</summary>
+  /// <summary>
+  ///   The ways out of the room and where they lead ("east to Maze, south to Dead End"), directions in full words as a
+  ///   dialog shows them (the map may abbreviate them; a dialog has room to spell them out).
+  /// </summary>
   private static string Ways(Room room)
   {
     var ways = new List<(string Way, string To)>();
@@ -134,7 +137,10 @@ public static class RoomTells
       .Select(way => $"{way.Way} to {way.To}"));
   }
 
-  private static readonly string[] _compass = { "n", "ne", "e", "se", "s", "sw", "w", "nw", "u", "d", "in", "out" };
+  private static readonly string[] _compass =
+  {
+    "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down", "in", "out"
+  };
 
   private static int Order(string way)
   {
@@ -142,33 +148,18 @@ public static class RoomTells
     return index < 0 ? _compass.Length : index;
   }
 
-  private static string Short(MappableDirection direction) => direction switch
-  {
-    MappableDirection.North => "n",
-    MappableDirection.NorthEast => "ne",
-    MappableDirection.East => "e",
-    MappableDirection.SouthEast => "se",
-    MappableDirection.South => "s",
-    MappableDirection.SouthWest => "sw",
-    MappableDirection.West => "w",
-    MappableDirection.NorthWest => "nw",
-    MappableDirection.Up => "u",
-    MappableDirection.Down => "d",
-    MappableDirection.In => "in",
-    MappableDirection.Out => "out",
-    _ => string.Empty
-  };
+  private static string Short(MappableDirection direction) => DirectionWords.Word(direction);
 
   private static string Short(CompassPoint point) => point switch
   {
-    CompassPoint.North => "n",
-    CompassPoint.NorthEast => "ne",
-    CompassPoint.East => "e",
-    CompassPoint.SouthEast => "se",
-    CompassPoint.South => "s",
-    CompassPoint.SouthWest => "sw",
-    CompassPoint.West => "w",
-    CompassPoint.NorthWest => "nw",
+    CompassPoint.North => "north",
+    CompassPoint.NorthEast => "northeast",
+    CompassPoint.East => "east",
+    CompassPoint.SouthEast => "southeast",
+    CompassPoint.South => "south",
+    CompassPoint.SouthWest => "southwest",
+    CompassPoint.West => "west",
+    CompassPoint.NorthWest => "northwest",
     _ => string.Empty
   };
 }

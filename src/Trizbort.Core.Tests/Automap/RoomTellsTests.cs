@@ -54,8 +54,8 @@ public class RoomTellsTests : IsolatedProjectTests
 
     var tells = RoomTells.Apart(new[] { a, b });
 
-    tells[a].ShouldBe("ways: e to Maze");
-    tells[b].ShouldBe("ways: s to Dead End, w to Maze");
+    tells[a].ShouldBe("ways: east to Maze");
+    tells[b].ShouldBe("ways: south to Dead End, west to Maze");
   }
 
   [Test]

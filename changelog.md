@@ -81,6 +81,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- Going into a room whose name several rooms share, each described its own way (Colossal Cave's maze of passages
+  all different), with a description none of them has (the maze all alike), adds a new room instead of asking which.
+- Dialogs spell directions in full ("east to Maze", not "e to Maze"); only the map abbreviates them.
+- The other room made by Split Room, or by automap, has the room's description, not an empty one.
 - Starting automap at the end of a transcript, it knows where you are straight away: the last room the transcript
   names, when only one room on the map has that name.
 - After playing a game live, **Previous Move** goes back to the right place in the transcript, and **Next Move** plays
