@@ -3323,6 +3323,13 @@ public sealed class Automap : IAutomapController
 
         lock (_screen) _screen.AddRange(skipped);
         ScreenChanged?.Invoke();
+
+        // the player is where the transcript last named a room, when only one room on the map has that name
+        if (_lastKnownRoom == null)
+        {
+          _lastKnownRoom = RoomOnScreenBefore(int.MaxValue);
+          if (_lastKnownRoom != null) _canvas.FollowRoom(_lastKnownRoom);
+        }
       }
 
       // keep track of lines we read between here and the next prompt

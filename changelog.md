@@ -70,6 +70,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- Starting automap at the end of a transcript, it knows where you are straight away: the last room the transcript
+  names, when only one room on the map has that name.
 - After playing a game live, **Previous Move** goes back to the right place in the transcript, and **Next Move** plays
   on from there. Each move played live put automap a line further on than it was, so going back could land past the
   end of the transcript ("Move 75 of 75" at a move in the middle) and Next Move did nothing.

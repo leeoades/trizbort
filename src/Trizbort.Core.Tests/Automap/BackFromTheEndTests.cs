@@ -63,6 +63,8 @@ public class BackFromTheEndTests : IsolatedProjectTests
       run.IsCompleted.ShouldBeFalse(engine.Status);
       engine.ScreenLines().Count.ShouldBe(16, string.Join(" | ", engine.ScreenLines()));
       engine.CanGoBack.ShouldBeTrue();
+      // Lee, 21 Nov 2026: starting at the end, automap knows where you are from the last room the transcript named
+      engine.CurrentRoom?.Name.ShouldBe("Kitchen");
 
       engine.GoBack();
       await WaitFor(() => engine.NextCommand == "west", "back to west");
