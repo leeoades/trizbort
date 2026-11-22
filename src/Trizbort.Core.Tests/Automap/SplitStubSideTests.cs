@@ -69,4 +69,42 @@ public class SplitStubSideTests : IsolatedProjectTests
     join.GetSplitLabelOffset(true).ShouldBe(new Vector(98, 119));
     brink.ShouldNotBeNull();
   }
+
+  [Test]
+  public void AGuessedStubEnd_GivesWayToALoopOnItsSide()
+  {
+    // Lee, 22 Nov 2026: south from the west end of the Hall of Mists into the maze; automap took north to lead back,
+    // but north looped back into the maze room. The split join, now one way into the maze room, still met it on the
+    // north side, on top of the loop
+    var project = Project.Current;
+    var hall = new Room(project) { Name = "At West End of Hall of Mists", Position = new Vector(0, -2000) };
+    var maze = new Room(project) { Name = "Maze", Position = new Vector(0, 0) };
+    project.Elements.Add(hall);
+    project.Elements.Add(maze);
+    var join = new Connection(project, new Vertex(hall.PortAt(CompassPoint.South)), new Vertex(maze.PortAt(CompassPoint.North)))
+    {
+      Flow = ConnectionFlow.OneWay,
+      StartText = "s",
+      StartTravelled = "south",
+      Split = true
+    };
+    var loop = new Connection(project, new Vertex(maze.PortAt(CompassPoint.North)), new Vertex(maze.PortAt(CompassPoint.North)))
+    {
+      StartText = "n",
+      StartTravelled = "north"
+    };
+    project.Elements.Add(join);
+    project.Elements.Add(loop);
+
+    GuessedEnds.Face(project.Elements.ToList());
+
+    join.GetTargetRoom(out var side);
+    side.ShouldNotBe(CompassPoint.North);
+    // still coming in from above, but clear of the loop's point and those either side of it
+    side.ShouldBeOneOf(CompassPoint.NorthEast, CompassPoint.NorthWest);
+    join.GetSplitLabelOffset(false).ShouldBe(Vector.Zero);
+    // the way seen, south out of the hall, stays where it is
+    join.GetSourceRoom(out var start);
+    start.ShouldBe(CompassPoint.South);
+  }
 }

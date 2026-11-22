@@ -117,6 +117,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- A join automap took to go both ways, whose way back turned out to lead elsewhere (north from the maze room looping
+  back into it), no longer comes into the room on top of the new way: drawn split, its end in the room was only a
+  guess, so it moves to a free side facing where it comes from.
 - Going into a room whose name three or more rooms share, each described its own way (Colossal Cave's maze of passages
   all different), with a description none of them has (the maze all alike), adds a new room instead of asking which.
 - Dialogs spell directions in full ("east to Maze", not "e to Maze"); only the map abbreviates them.
