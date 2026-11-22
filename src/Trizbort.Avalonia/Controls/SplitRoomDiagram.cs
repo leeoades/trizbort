@@ -31,7 +31,10 @@ public sealed class SplitRoomDiagram : Control
     private const double LineLength = 70;
     private const double Spacing = 12;
 
-    private readonly List<(Point From, Point To, SplitRoomJoin Join)> _lines = new();
+    private const double LoopWidth = 44;
+
+    /// <summary>Each way drawn: the points along its line, the way, and the room named at its far end.</summary>
+    private readonly List<(IReadOnlyList<Point> Points, SplitRoomJoin Join, string Other)> _lines = new();
     private SplitRoomViewModel? _viewModel;
     private SplitRoomJoin? _hover;
 
@@ -64,16 +67,29 @@ public sealed class SplitRoomDiagram : Control
 
     /// <summary>The ways drawn on this room: those that stay, or those moved here.</summary>
     internal IReadOnlyList<SplitRoomJoin> Shown =>
-        _viewModel?.Joins.Where(join => join.Moves == ShowsNew).ToList() ?? new List<SplitRoomJoin>();
+        _viewModel?.Joins.Where(join => join.Moves == ShowsNew || (join.Exit.Loop && join.Moves)).ToList()
+        ?? new List<SplitRoomJoin>();
+
+    /// <summary>
+    ///   A loop that stays is drawn as a loop; moved, it leaves the original into the new room, one way, so it is
+    ///   drawn on both: out of the original, and into the new one.
+    /// </summary>
+    private bool DrawnAsLoop(SplitRoomJoin join) => join.Exit.Loop && !join.Moves;
+
+    private bool GoesIn(SplitRoomJoin join) => join.Exit.Loop ? join.Moves && ShowsNew : join.Exit.Inward;
+
+    private string OtherOf(SplitRoomJoin join) =>
+        !join.Exit.Loop ? join.Exit.Other : join.Moves ? ShowsNew ? "the original" : "the new one" : string.Empty;
 
     /// <summary>The way whose line is at <paramref name="point" />, or null.</summary>
     internal SplitRoomJoin? JoinAt(Point point)
     {
         SplitRoomJoin? nearest = null;
         var best = 8.0;
-        foreach (var (from, to, join) in _lines)
+        foreach (var (points, join, _) in _lines)
         {
-            var distance = Distance(point, from, to);
+            var distance = double.MaxValue;
+            for (var i = 1; i < points.Count; i++) distance = Math.Min(distance, Distance(point, points[i - 1], points[i]));
             if (distance < best)
             {
                 best = distance;
@@ -135,37 +151,73 @@ public sealed class SplitRoomDiagram : Control
             // side by side across the line's direction
             var (px, py) = (-uy, ux);
             var anchor = Edge(room, side.Key);
+            // side by side: a line takes a little room, a loop more
+            var widths = ways.Select(join => DrawnAsLoop(join) ? LoopWidth : Spacing).ToList();
+            var place = -widths.Sum() / 2;
             for (var i = 0; i < ways.Count; i++)
             {
                 var join = ways[i];
-                var offset = (i - (ways.Count - 1) / 2.0) * Spacing;
+                var offset = place + widths[i] / 2;
+                place += widths[i];
                 var from = new Point(anchor.X + px * offset, anchor.Y + py * offset);
-                var to = new Point(from.X + ux * LineLength, from.Y + uy * LineLength);
-                _lines.Add((from, to, join));
                 var pen = join == _hover ? hoverPen : linePen;
+                var way = join.Exit.Way;
+                var wayText = string.IsNullOrWhiteSpace(way) ? null : Text(way, typeface, 10, textBrush, FontStyle.Normal);
+
+                if (DrawnAsLoop(join))
+                {
+                    // out of the side, round, and back in at the same side: the way leads back here
+                    var half = LoopWidth / 2 - 6;
+                    var start = new Point(from.X - px * half, from.Y - py * half);
+                    var end = new Point(from.X + px * half, from.Y + py * half);
+                    var c1 = new Point(start.X + ux * LineLength * 1.1 - px * 10, start.Y + uy * LineLength * 1.1 - py * 10);
+                    var c2 = new Point(end.X + ux * LineLength * 1.1 + px * 10, end.Y + uy * LineLength * 1.1 + py * 10);
+                    var points = Enumerable.Range(0, 25).Select(n => Bezier(start, c1, c2, end, n / 24.0)).ToList();
+                    _lines.Add((points, join, string.Empty));
+                    var curve = new StreamGeometry();
+                    using (var g = curve.Open())
+                    {
+                        g.BeginFigure(start, false);
+                        g.CubicBezierTo(c1, c2, end);
+                        g.EndFigure(false);
+                    }
+
+                    context.DrawGeometry(null, pen, curve);
+                    // the arrow at the top of the loop, going round from the way out to the way back
+                    Arrow(context, lineBrush, points[11], points[13], 0.5);
+                    Arrow(context, lineBrush, points[22], points[24], 0.5);
+                    if (wayText != null)
+                    {
+                        var at = points[4];
+                        context.DrawText(wayText, Beside(at, px, py, wayText, -1));
+                    }
+
+                    continue;
+                }
+
+                var to = new Point(from.X + ux * LineLength, from.Y + uy * LineLength);
+                _lines.Add((new[] { from, to }, join, OtherOf(join)));
                 context.DrawLine(pen, from, to);
                 // the arrow the way it goes: out of the room, or in
-                if (join.Exit.Inward && !join.Exit.Loop) Arrow(context, lineBrush, to, from);
+                var goesIn = GoesIn(join);
+                if (goesIn) Arrow(context, lineBrush, to, from);
                 else Arrow(context, lineBrush, from, to);
 
                 // the way at the end it leaves from, and the room at the other end, as the map labels them
-                var way = join.Exit.Way;
-                if (!string.IsNullOrWhiteSpace(way))
+                if (wayText != null)
                 {
-                    var wayText = Text(way, typeface, 10, textBrush, FontStyle.Normal);
-                    var at = join.Exit.Inward && !join.Exit.Loop ? 0.8 : 0.25;
+                    var at = goesIn ? 0.8 : 0.25;
                     var mid = new Point(from.X + (to.X - from.X) * at, from.Y + (to.Y - from.Y) * at);
-                    context.DrawText(wayText, Beside(mid, px, py, wayText, i - (ways.Count - 1) / 2.0));
+                    context.DrawText(wayText, Beside(mid, px, py, wayText, offset));
                 }
-
             }
 
             // the room at the other end, once for the ways to the same room (a way there and its way back)
-            var ends = _lines.Where(line => ways.Contains(line.Join)).ToList();
-            foreach (var room2 in ends.GroupBy(line => line.Join.Exit.Other))
+            var ends = _lines.Where(line => ways.Contains(line.Join) && line.Points.Count == 2).ToList();
+            foreach (var room2 in ends.GroupBy(line => line.Other))
             {
                 if (string.IsNullOrWhiteSpace(room2.Key)) continue;
-                var at = new Point(room2.Average(line => line.To.X), room2.Average(line => line.To.Y));
+                var at = new Point(room2.Average(line => line.Points[1].X), room2.Average(line => line.Points[1].Y));
                 var other = Text(room2.Key, typeface, 11, textBrush, FontStyle.Italic);
                 context.DrawText(other, End(at, ux, uy, other));
             }
@@ -216,7 +268,16 @@ public sealed class SplitRoomDiagram : Control
     private static Point End(Point to, double ux, double uy, FormattedText text) =>
         new(to.X + ux * (text.Width / 2 + 4) - text.Width / 2, to.Y + uy * (text.Height / 2 + 4) - text.Height / 2);
 
-    private static void Arrow(DrawingContext context, IBrush brush, Point from, Point to)
+    private static Point Bezier(Point a, Point b, Point c, Point d, double t)
+    {
+        var u = 1 - t;
+        return new Point(
+            u * u * u * a.X + 3 * u * u * t * b.X + 3 * u * t * t * c.X + t * t * t * d.X,
+            u * u * u * a.Y + 3 * u * u * t * b.Y + 3 * u * t * t * c.Y + t * t * t * d.Y);
+    }
+
+    /// <summary>An arrowhead along from <paramref name="from" /> to <paramref name="to" />, <paramref name="along" /> the way.</summary>
+    private static void Arrow(DrawingContext context, IBrush brush, Point from, Point to, double along = 0.6)
     {
         var dx = to.X - from.X;
         var dy = to.Y - from.Y;
@@ -224,7 +285,7 @@ public sealed class SplitRoomDiagram : Control
         if (length < 1) return;
         var (ux, uy) = (dx / length, dy / length);
         // half way along, pointing the way it goes
-        var tip = new Point(from.X + dx * 0.6, from.Y + dy * 0.6);
+        var tip = new Point(from.X + dx * along, from.Y + dy * along);
         var back = new Point(tip.X - ux * 9, tip.Y - uy * 9);
         var geometry = new StreamGeometry();
         using (var g = geometry.Open())

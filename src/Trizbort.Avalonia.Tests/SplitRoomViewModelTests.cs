@@ -34,7 +34,7 @@ public class SplitRoomViewModelTests
     }
 
     [Test]
-    public void OkGivesTheTickedJoins_AndWhereYouAre_CancelGivesNothing()
+    public void OkGivesTheTickedJoins_YouAreInTheNewOne_CancelGivesNothing()
     {
         var hall = new Room(Project.Current) { Name = "Hall", Position = new Vector(0, 0) };
         var maze = new Room(Project.Current) { Name = "Maze", Position = new Vector(0, -300) };
@@ -48,8 +48,7 @@ public class SplitRoomViewModelTests
         var joins = RoomSplit.JoinsOf(maze);
 
         var vm = new SplitRoomViewModel(maze, "Maze (2)", joins, new[] { joins[0] }, RoomSplitWhere.New);
-        vm.AsksWhere.ShouldBeTrue();
-        vm.InNew.ShouldBeTrue();
+        vm.NewHeading.ShouldBe("New: you are here");
         // each join both ways: out, and back in
         vm.Joins.Count.ShouldBe(4);
         // the way in by the newest join is ticked: the way the player just came
@@ -57,17 +56,15 @@ public class SplitRoomViewModelTests
         ticked.Join.ShouldBe(joins[0]);
         ticked.Exit.Inward.ShouldBeTrue();
         vm.Joins.Single(join => join.Join == joins[1] && !join.Exit.Inward).ToggleCommand.Execute(null);
-        vm.InNew = false;
-        vm.InOriginal = true;
         vm.OkCommand.Execute(null);
 
         vm.Result.ShouldNotBeNull();
         vm.Result!.Moving.Count.ShouldBe(2);
         vm.Result.Exits!.Count.ShouldBe(2);
-        vm.Result.Where.ShouldBe(RoomSplitWhere.Original);
+        vm.Result.Where.ShouldBe(RoomSplitWhere.New);
 
         var cancelled = new SplitRoomViewModel(maze, "Maze (2)", joins, new[] { joins[0] }, null);
-        cancelled.AsksWhere.ShouldBeFalse();
+        cancelled.NewHeading.ShouldBe("New");
         cancelled.CancelCommand.Execute(null);
         cancelled.Result.ShouldBeNull();
     }

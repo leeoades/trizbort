@@ -169,6 +169,8 @@ public class DialogCaptureTests
             CaptureDialog(output, files, "SplitRoom", new SplitRoomDialog { DataContext = splitVm });
             splitVm.Joins.FirstOrDefault(join => join.Exit.Other.StartsWith("Maze") && join.Exit.Inward && !join.Exit.Loop)?.ToggleCommand.Execute(null);
             CaptureDialog(output, files, "SplitRoom__moved", new SplitRoomDialog { DataContext = splitVm });
+            splitVm.Joins.FirstOrDefault(join => join.Exit.Loop)?.ToggleCommand.Execute(null);
+            CaptureDialog(output, files, "SplitRoom__loop-moved", new SplitRoomDialog { DataContext = splitVm });
         }
 
         CaptureDialog(output, files, "About", new AboutDialog());

@@ -26,13 +26,6 @@
             </StackPanel>
         </Grid>
 
-        <StackPanel Spacing="4" IsVisible="{Binding AsksWhere}">
-            <TextBlock Text="Where are you now?" />
-            <RadioButton GroupName="SplitWhere" Content="{Binding InNewText}" IsChecked="{Binding InNew}" />
-            <RadioButton GroupName="SplitWhere" Content="{Binding InOriginalText}" IsChecked="{Binding InOriginal}" />
-            <RadioButton GroupName="SplitWhere" Content="Somewhere else" IsChecked="{Binding InNeither}" />
-        </StackPanel>
-
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
             <Button Classes="dialog-button" Content="OK" IsDefault="True" Command="{Binding OkCommand}" />
             <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Command="{Binding CancelCommand}" />

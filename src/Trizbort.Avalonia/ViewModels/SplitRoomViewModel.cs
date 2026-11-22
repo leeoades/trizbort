@@ -89,10 +89,7 @@ public sealed partial class SplitRoomViewModel : ViewModelBase
         var suggested = ticked.Count > 0 ? RoomSplit.SuggestedExit(exits.Where(exit => ticked.Contains(exit.Join)).ToList()) : null;
         Joins = exits.Select(exit => new SplitRoomJoin(exit, exit == suggested, Toggle)).ToList();
         foreach (var join in Joins) Place(join);
-        AsksWhere = where != null;
-        _inNew = where == RoomSplitWhere.New;
-        _inOriginal = where == RoomSplitWhere.Original;
-        _inNeither = where is null or RoomSplitWhere.Neither;
+        _where = where ?? RoomSplitWhere.Neither;
         OkCommand = new RelayCommand(Ok);
         CancelCommand = new RelayCommand(() => Complete(null));
     }
@@ -117,7 +114,8 @@ public sealed partial class SplitRoomViewModel : ViewModelBase
 
     public string OriginalHeading => "Original: the one on the map";
 
-    public string NewHeading => "New";
+    // Lee, 22 Nov 2026: splitting while you're in the room, you're in the new one; else move your token on the map
+    public string NewHeading => _where == RoomSplitWhere.New ? "New: you are here" : "New";
 
     public IReadOnlyList<SplitRoomJoin> Joins { get; }
 
@@ -127,21 +125,8 @@ public sealed partial class SplitRoomViewModel : ViewModelBase
     /// <summary>The nine places around the new room, with the ways moved across.</summary>
     public IReadOnlyList<SplitRoomCell> NewCells => _new;
 
-    /// <summary>While automapping: asks which room the player is in.</summary>
-    public bool AsksWhere { get; }
-
-    public string InOriginalText => "In the original (left)";
-
-    public string InNewText => "In the new one (right)";
-
-    [ObservableProperty]
-    private bool _inOriginal;
-
-    [ObservableProperty]
-    private bool _inNew;
-
-    [ObservableProperty]
-    private bool _inNeither;
+    /// <summary>Where the player will be: in the new room when automap has them in the room being split.</summary>
+    private readonly RoomSplitWhere _where;
 
     public RelayCommand OkCommand { get; }
 
@@ -192,9 +177,8 @@ public sealed partial class SplitRoomViewModel : ViewModelBase
 
     private void Ok()
     {
-        var where = !AsksWhere || InNeither ? RoomSplitWhere.Neither : InNew ? RoomSplitWhere.New : RoomSplitWhere.Original;
         var moving = Joins.Where(join => join.Moves).ToList();
-        Complete(new RoomSplitChoice(moving.Select(join => join.Join).Distinct().ToList(), where,
+        Complete(new RoomSplitChoice(moving.Select(join => join.Join).Distinct().ToList(), _where,
             moving.Select(join => join.Exit).ToList()));
     }
 
