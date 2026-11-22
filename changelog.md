@@ -15,7 +15,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 ### Added
 
 - **Where you are** is a token on the room automap has you in, like a playing piece on a board:
-  a wooden disc with a hurricane lantern burnt into it, a brass coin, a "You are here" sign, a standing wooden pawn, or your own
+  a wooden disc with a hurricane lantern burnt into it, a brass coin, a wooden pawn, a "You are here" sign, painted
+  and pewter figures (an adventurer, a detective, a valkyrie, a wizard), or your own
   picture (a transparent PNG, or an SVG). It slides to the next room as you move, stays big enough to find however
   far you zoom out, and you can drag it onto the room you're really in. Choose it in **App Settings**, **Map**, under
   **Where you are**, where the tokens are shown side by side, with **Load Your Own…**.

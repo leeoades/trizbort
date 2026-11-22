@@ -128,6 +128,7 @@
 
             <!-- Map -->
             <TabItem Header="Map">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="12" Margin="8">
                     <HeaderedContentControl Classes="group" Header="Preferences">
                         <StackPanel Spacing="8">
@@ -189,6 +190,7 @@
                         </StackPanel>
                     </HeaderedContentControl>
                 </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
 

@@ -847,7 +847,7 @@ The **Preferences** group on the **Map** tab of the App Settings dialog contains
 
 The **Where you are** group, below it, sets how the map shows the room automap has you in:
 
-- **Token on the room** - the playing piece on the room, chosen from the tokens shown side by side: **Wooden disc** (the default), **Brass coin**, **You are here**, **Wooden pawn (standing)** or **Your own**. Untick it to hide the token; the one you chose stays chosen for when you tick it again. For your own, choose **Load Your Own…** (or click the **Your own** tile) and pick a PNG with a transparent background, or an SVG; its tile then shows it. A picture taller than it is wide stands on the corner like the pawn; anything else lies flat, like the disc. Each has a shadow.
+- **Token on the room** - the playing piece on the room, chosen from the tokens shown side by side: lying flat, **Wooden disc** (the default) and **Brass coin**; standing, **Wooden pawn**, a **You are here** sign, a painted **Adventurer**, **Detective** or **Valkyrie**, and pewter figures (an adventurer, a detective, a valkyrie and a wizard); or **Your own**. Untick it to hide the token; the one you chose stays chosen for when you tick it again. For your own, choose **Load Your Own…** (or click the **Your own** tile) and pick a PNG with a transparent background, or an SVG; its tile then shows it. A picture taller than it is wide stands on the corner like the pawn; anything else lies flat, like the disc. Each has a shadow.
 - **Glow round the room** - a soft glow round the room, in the colour beside it (teal to start with).
 
 Double-clicking an empty part of the canvas always creates a room there; it is not an App Settings option. Double-clicking a room, label or connection still opens its properties.

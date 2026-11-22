@@ -16,24 +16,34 @@ namespace Trizbort.Avalonia.Drawing;
 /// <summary>
 ///   Where you are on the map: a token on the room automap has you in, like a playing piece on a board, seen from
 ///   above as the map is, with its shadow falling down and to the right. Lee, 22 Nov 2026: the dotted ring didn't stand
-///   out beside the yellow selection; a wooden disc with a hurricane lantern burnt into it, a brass coin, a "You are here" sign, or
-///   your own picture (a transparent PNG, or an SVG).
+///   out beside the yellow selection; a wooden disc with a hurricane lantern burnt into it, a brass coin, a pawn, a "You are here" sign,
+///   painted and pewter figures, or your own picture (a transparent PNG, or an SVG).
 /// </summary>
 internal static class HereToken
 {
     public const string WoodenDisc = "wooden-disc";
     public const string BrassCoin = "brass-coin";
-    public const string YouAreHere = "you-are-here";
     public const string WoodenPawn = "wooden-pawn";
+    public const string YouAreHere = "you-are-here";
     public const string Own = "own";
 
-    /// <summary>The tokens to choose from, in order, with their names.</summary>
+    /// <summary>
+    ///   The tokens to choose from, in order, with their names: lying flat, then standing (painted, then pewter), then
+    ///   your own. Each is Assets/Tokens/&lt;key&gt;.svg.
+    /// </summary>
     public static readonly IReadOnlyList<(string Key, string Name)> Choices = new[]
     {
         (WoodenDisc, "Wooden disc"),
         (BrassCoin, "Brass coin"),
+        (WoodenPawn, "Wooden pawn"),
         (YouAreHere, "You are here"),
-        (WoodenPawn, "Wooden pawn (standing)"),
+        ("adventurer", "Adventurer"),
+        ("detective", "Detective"),
+        ("valkyrie", "Valkyrie"),
+        ("pewter-adventurer", "Pewter adventurer"),
+        ("pewter-detective", "Pewter detective"),
+        ("pewter-valkyrie", "Pewter valkyrie"),
+        ("pewter-wizard", "Pewter wizard"),
         (Own, "Your own")
     };
 
