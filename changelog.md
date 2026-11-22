@@ -61,9 +61,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - In a join's properties, ticking **One Way Arrow** points the arrow from the Start room to the End room, and
   **Flip** beside it turns it round.
 - **Split Room** draws both places as the map does, the original on the left and the new one on the right, each
-  way in and out a line from its side with an arrow and labels: click a line to move it across. Ways read from the room ("in from Hall"
-  for a one-way way in, "east, back here" for a loop), and a loop moved across becomes a one-way join into the
-  other room.
+  way in and out a line from its side with an arrow and labels: click a line to move it across. A loop back into
+  the room is drawn as a loop; moved across, it becomes a one-way join from the original into the new room. Split
+  Room no longer asks where you are: while automap has you in the room, you're in the new one ("New: you are
+  here").
 - The other of two rooms with one name, from Split Room or automap, has the same name and description ("Maze", not
   "Maze (2)"), so automap recognises it when you come back.
 - The Windows and Linux downloads keep the app's graphics libraries as files beside it, instead of unpacking them
