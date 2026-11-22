@@ -198,7 +198,7 @@ Here's the same view, but with each part labelled. We'll use these terms later o
 
 ### Map Labels (Trizbort 2)
 
-Labels are annotations rather than rooms. Press `L` to add a label at the mouse cursor, choose `Edit->Add Label` to add one in the centre of the canvas, or use `Add Label` in the right-click menu. Enter the text and choose a rectangular, rounded, elliptical or octagonal shape. You can set text, outline and background colours independently. The *Outline* group contains its Enabled checkbox, shape, line style and colour. Uncheck Enabled to hide the outline. The *Background* group contains its own Enabled checkbox and colour; uncheck it for a transparent label. The shape applies to both outline and background, and remains editable when either is enabled.
+Labels are annotations rather than rooms. Press `L` to add a label at the mouse cursor, choose `Edit->Add Label` to add one in the centre of the canvas, or use `Add Label` in the right-click menu. Enter the text on the **Text** tab; on the **Style** tab, choose its text colour and a rectangular, rounded, elliptical or octagonal shape. You can set text, outline and background colours independently. The *Outline* group contains its Enabled checkbox, shape, line style and colour. Uncheck Enabled to hide the outline. The *Background* group contains its own Enabled checkbox and colour; uncheck it for a transparent label. The shape applies to both outline and background, and remains editable when either is enabled.
 
 Tick **Markdown** beside the text to format it. The text is then drawn from the top left of the label, not centred, and the label shows:
 
@@ -209,6 +209,13 @@ Tick **Markdown** beside the text to format it. The text is then drawn from the 
 - tables: a row per line, cells between `|`s, and `|---|---|` under the first row to make it the header
 - room links: `[[Giant Room]]`. Click a room link on the map to select the room and glide to it. `[[Giant Room|the giant's room]]` shows other words; for one of several rooms with the same name ("Maze"), the link carries its id: `[[Maze#42]]`. To get a room's link, right-click the room and choose **Copy Room Link**, then paste it into the label
 - web links: `[the walkthrough](https://...)`, which open in your browser
+
+You don't need to remember the marks: the toolbar above the text puts them in for you, and ticks **Markdown**.
+
+- Select some words and press **B** (`Ctrl+B`) for bold, **I** (`Ctrl+I`) for italic, or **<>** for code. Press it again to take it off. With nothing selected, it puts in a pair of marks to type between.
+- **H** makes the lines selected (or the one the caret is on) headings; the list buttons make them a bulleted or numbered list; **—** puts in a rule. Press a list button again to make them plain lines again.
+- **Insert Table** puts in a table with two headings and a few rows, selected, to type over.
+- **Add Link…** (`Ctrl+K`) opens a panel beside the text listing the map's **Rooms** or **Objects**, alphabetically. Type in its search to narrow the list (each word you type must appear, in the name or, for an object, the room it's in), choose one with the arrow keys or the mouse, and press `Enter`, **Insert Link** or double-click it to put its link where the caret is. An object's link goes to the room it's in, showing the object's name. With words selected in the text, a room's link shows those words. Click a room on the map while the panel is open to choose it in the list: the label's properties are shown beside the map, not in front of it, so the map can still be clicked. The panel stays open for the next link.
 
 For example, a table of treasures and where to find them:
 

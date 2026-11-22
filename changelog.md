@@ -18,6 +18,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   *italic*, lists, rules, tables, and links. `[[Room Name]]` links to a room: click it on the map to select the room
   and glide to it (`[[Room Name|other words]]` to show other words, `[[Maze#42]]` for one of several rooms with a
   name; **Copy Room Link** on a room's right-click menu copies its link). `[text](https://...)` opens a web page.
+- The label properties have a bigger text box, with a toolbar: select some words and press **B** (Ctrl+B) for bold
+  or **I** (Ctrl+I) for italic (again to take it off), make lines a heading or a list, **Insert Table** for a table
+  to fill in, and **Add Link…** (Ctrl+K) for a panel listing the map's rooms or objects alphabetically, narrowed as you
+  type in its search; click a room on the map to choose it there. The outline, background, shape and text colour are
+  on a **Style** tab.
 - **Unreliable joins**: a join that doesn't always lead where it's drawn, because the game picks at random
   (Bedquilt in Colossal Cave) or it depends on what you've done (a closet left on another floor). Directions take it
   only when there's no other way, and say so. Mark one with **Unreliable** in the join's properties, **Unreliable

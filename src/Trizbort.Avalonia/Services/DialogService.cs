@@ -18,6 +18,9 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
     private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
     private readonly ICommandService _commandService = commandService;
 
+    /// <summary>The label dialogs open, by label: they're shown beside the map, so one could be opened twice.</summary>
+    private readonly Dictionary<MapLabel, MapLabelPropertiesDialog> _openLabelDialogs = new();
+
     public async Task ShowAboutDialogAsync(Window? owner)
     {
         var dialog = new AboutDialog();
@@ -359,9 +362,42 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         var viewModel = scope.ServiceProvider.GetRequiredService<MapLabelPropertiesViewModel>();
         viewModel.Initialize(label);
 
+        // already open for this label: brought to the front, rather than a second one
+        if (_openLabelDialogs.TryGetValue(label, out var open))
+        {
+            open.Activate();
+            return false;
+        }
+
+        if (owner == null) return false;
         var dialog = new MapLabelPropertiesDialog { DataContext = viewModel };
-        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
-        if (result)
+
+        // Shown beside the map rather than over it, so a room clicked on the map can be chosen for a link (Lee,
+        // 22 Nov 2026); it stays in front of the main window, as its owner.
+        void OnSelectionChanged(object? sender, EventArgs e)
+        {
+            if (_commandService.SelectedElements.Count == 1 && _commandService.SelectedElements.First() is Room room)
+                viewModel.ChooseRoomOnMap(room);
+        }
+
+        var closed = new TaskCompletionSource<bool>();
+        dialog.Closed += (_, _) => closed.TrySetResult(dialog.Accepted);
+        _openLabelDialogs[label] = dialog;
+        _commandService.SelectionChanged += OnSelectionChanged;
+        bool result;
+        try
+        {
+            dialog.Show(owner);
+            result = await closed.Task;
+        }
+        finally
+        {
+            _commandService.SelectionChanged -= OnSelectionChanged;
+            _openLabelDialogs.Remove(label);
+        }
+
+        // the label taken off the map while its dialog was open: nothing to change
+        if (result && Project.Current.Elements.Contains(label))
         {
             _commandService.Session.Apply("Edit label properties", label, () => viewModel.ApplyTo(label));
         }
