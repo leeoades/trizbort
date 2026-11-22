@@ -227,7 +227,7 @@ For example, a table of treasures and where to find them:
 | Pearl | [[In Shell Room]] |
 ```
 
-A Markdown label grows to fit its text as you type: taller for each line, and wider for a table (up to a limit, past which its cells wrap), while a paragraph wraps at the label's width. Delete text and it shrinks back, but never smaller than it was when you opened its properties, so a label you've made bigger stays big. The label on the map shows what you type while its properties are open; **Cancel** puts it back as it was. Older versions of Trizbort show a Markdown label's text as written.
+A label grows to fit its text as you type: taller for each line, and wider for a long line of plain text or a Markdown table (up to a limit, past which the text wraps), while a Markdown paragraph wraps at the label's width. Delete text and it shrinks back, but never smaller than it was when you opened its properties, so a label you've made bigger stays big. The label on the map shows what you type while its properties are open; **Cancel** puts it back as it was. Older versions of Trizbort show a Markdown label's text as written.
 
 Select, move, resize, copy and delete labels just as you would rooms. Even a label with no outline or background has resize handles when selected. Double-click it or press `Enter` to edit its properties. Deselect a label and drag from one of its ports to connect it to a room. Labels appear in image and PDF exports, but are not exported as rooms or exits in generated game source.
 

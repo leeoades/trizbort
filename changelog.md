@@ -23,8 +23,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   to fill in, and **Add Link…** (Ctrl+K) for a panel listing the map's rooms or objects alphabetically, narrowed as you
   type in its search; click a room on the map to choose it there. The outline, background, shape and text colour are
   on a **Style** tab.
-- A Markdown label grows to fit its text as you type: taller for more lines, and wider for a table, so its cells
-  don't wrap. Delete text and it shrinks back, but no smaller than it was. The label on the map shows what you type
+- A label grows to fit its text as you type: taller for more lines, and wider for a long line of plain text or a
+  Markdown table (a Markdown paragraph wraps at the label's width). Delete text and it shrinks back, but no smaller than it was. The label on the map shows what you type
   while its properties are open; **Cancel** puts it back as it was.
 - **Unreliable joins**: a join that doesn't always lead where it's drawn, because the game picks at random
   (Bedquilt in Colossal Cave) or it depends on what you've done (a closet left on another floor). Directions take it

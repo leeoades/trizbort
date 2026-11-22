@@ -35,15 +35,15 @@ public class MarkdownLabelTests
 
     /// <summary>Lee, 22 Nov 2026: the label grows as its text does.</summary>
     [AvaloniaTest]
-    public void AMarkdownLabel_GrowsToFitItsText_AndItsTables_ButNoSmallerThanItWas()
+    public void ALabel_GrowsToFitItsText_AndItsTables_ButNoSmallerThanItWas()
     {
         var small = new Trizbort.Domain.Misc.Vector(120, 40);
         var label = new MapLabel(Project.Current) { Markdown = true, Text = "## Treasures" };
         // fits already: as it was
-        MapLabelDrawingAdapter.FitMarkdown(label, small).ShouldBe(small);
+        MapLabelDrawingAdapter.FitText(label, small).ShouldBe(small);
 
         label.Text = "## Treasures\n" + Trizbort.Domain.Misc.MarkdownEditing.SampleTable;
-        var fitted = MapLabelDrawingAdapter.FitMarkdown(label, small);
+        var fitted = MapLabelDrawingAdapter.FitText(label, small);
         // wider for the table, so its cells don't wrap, and taller for its rows
         fitted.X.ShouldBeGreaterThan(small.X);
         fitted.X.ShouldBeLessThanOrEqualTo(MapLabelDrawingAdapter.WidestFitted);
@@ -51,13 +51,20 @@ public class MarkdownLabelTests
 
         // a long paragraph wraps at the label's width, which stays
         label.Text = string.Join(" ", Enumerable.Repeat("The lamp is getting dim.", 12));
-        var wrapped = MapLabelDrawingAdapter.FitMarkdown(label, small);
+        var wrapped = MapLabelDrawingAdapter.FitText(label, small);
         wrapped.X.ShouldBe(small.X);
         wrapped.Y.ShouldBeGreaterThan(small.Y);
 
-        // plain text: as it was
+        // plain text, centred: short, as it was; a long line, wider; more lines, taller
         label.Markdown = false;
-        MapLabelDrawingAdapter.FitMarkdown(label, small).ShouldBe(small);
+        label.Text = "Lamp";
+        MapLabelDrawingAdapter.FitText(label, small).ShouldBe(small);
+        label.Text = "Where the brass lantern was found";
+        var line = MapLabelDrawingAdapter.FitText(label, small);
+        line.X.ShouldBeGreaterThan(small.X);
+        line.Y.ShouldBe(small.Y);
+        label.Text = "Lamp\nRod\nBird\nCage";
+        MapLabelDrawingAdapter.FitText(label, small).Y.ShouldBeGreaterThan(small.Y);
     }
 
     [AvaloniaTest]

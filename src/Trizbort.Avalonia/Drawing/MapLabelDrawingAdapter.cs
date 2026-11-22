@@ -163,42 +163,51 @@ public static class MapLabelDrawingAdapter
         }
     }
 
-    /// <summary>
-    ///     A Markdown label: laid out left-aligned from the top of the label (it may run past the bottom; make the label
-    ///     bigger), and drawn; laid out again only when the text, size, font or colour change.
-    /// </summary>
-    /// <summary>The widest a label grows to fit a table; wider than that, the table's cells wrap.</summary>
+    /// <summary>The widest a label grows to fit its text; past that, it wraps.</summary>
     public const float WidestFitted = 640;
 
     /// <summary>
-    ///   The size <paramref name="label" />'s Markdown needs: as tall as its text, and wide enough for its tables (up
-    ///   to <see cref="WidestFitted" />), never smaller than <paramref name="atLeast" />. Lee, 22 Nov 2026: the label
-    ///   grows as its text does.
+    ///   The size <paramref name="label" />'s text needs, never smaller than <paramref name="atLeast" />. Lee, 22 Nov
+    ///   2026: a label grows as its text does. Markdown: as tall as its text, wide enough for its tables (paragraphs
+    ///   wrap at the label's width). Plain text, centred: wide enough for its longest line, as tall as its lines.
+    ///   Either way no wider than <see cref="WidestFitted" />, past which the text wraps.
     /// </summary>
-    public static CoreVector FitMarkdown(MapLabel label, CoreVector atLeast)
+    public static CoreVector FitText(MapLabel label, CoreVector atLeast)
     {
-        if (!label.Markdown || string.IsNullOrEmpty(label.Text)) return atLeast;
+        if (string.IsNullOrEmpty(label.Text)) return atLeast;
         var font = Settings.RoomFontMetadata;
         // the text's inset, as drawn: more for an ellipse
         var inset = label.Shape == RoomShape.Ellipse ? 11.5f : 5f;
-        var rule = Settings.Color[CoreColors.Border];
-
-        MarkdownLabelRenderer Lay(float width) => MarkdownLabelRenderer.Lay(label.Text,
-            new global::Avalonia.Rect(0, 0, Math.Max(1, width - inset * 2), 100000), font.ToTypeface(), font.Size,
-            Brushes.Black, _linkBrush, rule.ToPen(1));
-
         var width = atLeast.X;
-        var laid = Lay(width);
-        if (laid.NaturalWidth + inset * 2 > width && width < WidestFitted)
+        double natural;
+        Func<float, double> heightAt;
+
+        if (label.Markdown)
         {
-            width = (float)Math.Min(WidestFitted, Math.Ceiling(laid.NaturalWidth + inset * 2));
-            laid = Lay(width);
+            var rule = Settings.Color[CoreColors.Border].ToPen(1);
+            MarkdownLabelRenderer Lay(float across) => MarkdownLabelRenderer.Lay(label.Text,
+                new global::Avalonia.Rect(0, 0, Math.Max(1, across - inset * 2), 100000), font.ToTypeface(), font.Size,
+                Brushes.Black, _linkBrush, rule);
+            natural = Lay(width).NaturalWidth;
+            heightAt = across => Lay(across).Height;
+        }
+        else
+        {
+            FormattedText Lay(double across) => new(label.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                font.ToTypeface(), font.Size, Brushes.Black) { TextAlignment = TextAlignment.Center, MaxTextWidth = across };
+            natural = Lay(double.PositiveInfinity).WidthIncludingTrailingWhitespace;
+            heightAt = across => Lay(Math.Max(1, across - inset * 2)).Height;
         }
 
-        var height = (float)Math.Ceiling(laid.Height + inset * 2);
+        if (natural + inset * 2 > width && width < WidestFitted)
+            width = (float)Math.Min(WidestFitted, Math.Ceiling(natural + inset * 2));
+        var height = (float)Math.Ceiling(heightAt(width) + inset * 2);
         return new CoreVector(width, Math.Max(atLeast.Y, height));
     }
 
+    /// <summary>
+    ///     A Markdown label: laid out left-aligned from the top of the label (it grows to fit as you type: FitText), and drawn; laid out again only when the text, size, font or colour change.
+    /// </summary>
     private static void DrawMarkdown(MapLabel label, AvaloniaDrawingContext context, LabelCache cache, CoreRect textBounds)
     {
         var font = Settings.RoomFontMetadata;

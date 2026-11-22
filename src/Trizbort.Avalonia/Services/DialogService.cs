@@ -390,7 +390,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         {
             label.Text = viewModel.Text ?? string.Empty;
             label.Markdown = viewModel.Markdown;
-            label.Size = MapLabelDrawingAdapter.FitMarkdown(label, wasSize);
+            label.Size = MapLabelDrawingAdapter.FitText(label, wasSize);
             _commandService.InvalidateCanvas();
         }
 
@@ -426,7 +426,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
             _commandService.Session.Apply("Edit label properties", label, () =>
             {
                 viewModel.ApplyTo(label);
-                label.Size = MapLabelDrawingAdapter.FitMarkdown(label, wasSize);
+                label.Size = MapLabelDrawingAdapter.FitText(label, wasSize);
             });
         }
         return result;
