@@ -35,7 +35,6 @@ public sealed partial class CommandCatalogue
     Arrange("map.tidy", "Room_s", 67, "6-rooms");
     Arrange("room.toggleAutomapPause", "_Automap", 68, "6-rooms");
     Arrange("automap.imHere", "_Automap", 69, "6-rooms", plainTitle: true);
-    Arrange("automap.differentRoom", "_Automap", 70, "6-rooms", plainTitle: true);
     // only on a copy of a room, so they stay where they're seen
     Arrange("room.copy.goTo", null, 71, "7-copy");
     Arrange("room.copy.moveJoins", null, 72, "7-copy");

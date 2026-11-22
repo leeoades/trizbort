@@ -1325,8 +1325,10 @@ public sealed class Automap : IAutomapController
           if (!_askedWhichRoom) room = await WhichOfTheSameNameAsync(room, roomName, roomDescription, line, token);
         }
 
-        // a room already on the map, taken for this one without asking: an assumption the user can put right
-        var assumedRoom = room != null && !_askedWhichRoom;
+        // a room already on the map taken for this one, or a new room made for it, without asking: an assumption
+        // the user can put right (Not This Room)
+        var foundRoom = room;
+        var unasked = !_askedWhichRoom;
 
         if (_skipHeading)
         {
@@ -1614,7 +1616,7 @@ public sealed class Automap : IAutomapController
         if (_lastKnownRoom != null && (_lastKnownRoom != arrivedFrom || arrivedBy != null || arrivedByJourney != null))
           _arrival = arrivedFrom != null && (arrivedBy != null || arrivedByJourney != null) && !_suspended
             ? new Arrival(arrivedFrom, arrivedBy, arrivedByJourney, _lastKnownRoom, roomDescription,
-              assumedRoom && _lastKnownRoom == room)
+              unasked && !decision.HasValue && (foundRoom == null || _lastKnownRoom == foundRoom), foundRoom == null)
             : null;
         _lastMoveDirection = null;
         _lastJourneyCommand = null;
@@ -2245,7 +2247,7 @@ public sealed class Automap : IAutomapController
 
   /// <summary>How the player last came into a room: from where, which way, and what the game showed.</summary>
   private sealed record Arrival(Room From, MappableDirection? Direction, string Journey, Room To, string Description,
-    bool Assumed = false);
+    bool Assumed = false, bool New = false);
 
   private Arrival _arrival;
 
@@ -2364,14 +2366,21 @@ public sealed class Automap : IAutomapController
   ///   gold maze room, say, when it was another maze room. <see cref="CorrectArrivalAsync" /> puts it right. Lee,
   ///   21 Nov 2026: a button for "the last assumption was wrong".
   /// </summary>
-  public bool CanCorrectArrival => CanSplitCurrentRoom && _arrival.Assumed;
+  public bool CanCorrectArrival =>
+    CanSplitCurrentRoom && _arrival.Assumed && (!_arrival.New || Named(CurrentRoom.Name).Count > 1);
 
-  /// <summary>What automap assumed, to show beside the button: "You came back to Maze (gold)".</summary>
+  /// <summary>
+  ///   What automap assumed, to show beside the button: "You came to Maze (gold), already on the map.", or, a new room
+  ///   made where others have its name (the same room described differently, perhaps), "You came to a new room, ...".
+  /// </summary>
   public string ArrivalAssumption =>
-    CanCorrectArrival
-      ? (_canvas.ResolveRoom(_arrival.From) == CurrentRoom ? "That way led back to " : "You came to ") +
-        Trizbort.Editor.RoomSplit.Called(Trizbort.Domain.Application.Project.Current, CurrentRoom) + ", already on the map."
-      : null;
+    !CanCorrectArrival
+      ? null
+      : _arrival.New
+        ? "You came to a new room, " + CurrentRoom.Name + "."
+        : (_canvas.ResolveRoom(_arrival.From) == CurrentRoom ? "That way led back to " : "You came to ") +
+          Trizbort.Editor.RoomSplit.Called(Trizbort.Domain.Application.Project.Current, CurrentRoom) +
+          ", already on the map.";
 
   /// <summary>
   ///   The room the player came into isn't the one automap took it for: asks which it is, of the other rooms with its
@@ -2382,12 +2391,15 @@ public sealed class Automap : IAutomapController
     if (!CanCorrectArrival) return false;
     var here = CurrentRoom;
     var arrival = _arrival;
-    var others = Named(here.Name).Where(room => room != here &&
-      (string.IsNullOrWhiteSpace(arrival.Description) || room.Descriptions.Count == 0 ||
-       room.Descriptions.Any(description => SameFirstSentence(description, arrival.Description)))).ToList();
+    // a new room: any other with its name may be it, described differently now; one on the map: the others alike
+    var others = Named(here.Name).Where(room => room != here && (arrival.New ||
+      string.IsNullOrWhiteSpace(arrival.Description) || room.Descriptions.Count == 0 ||
+      room.Descriptions.Any(description => SameFirstSentence(description, arrival.Description)))).ToList();
     var choice = await Prompts.DisambiguateRoomAsync(here.Name, arrival.Description, others, token);
     token.ThrowIfCancellationRequested();
     if (choice.Skip) return false;
+    // a new room it is: as automap had it
+    if (arrival.New && (choice.NewRoom || choice.Chosen == null)) return false;
     if (choice.NewRoom || choice.Chosen == null) return await SplitCurrentRoomAsync();
 
     var to = _canvas.ResolveRoom(choice.Chosen);
@@ -2396,7 +2408,17 @@ public sealed class Automap : IAutomapController
     if (to == null || here == null || from == null || to == here) return false;
     using (await BeginBatchAsync("Automap: you're in " + to.Name, CancellationToken.None))
     {
-      if (arrival.Direction is { } direction)
+      if (arrival.New)
+      {
+        // the room made for it goes: it's the room picked, described differently now
+        var project = Trizbort.Domain.Application.Project.Current;
+        foreach (var join in here.GetConnections().Distinct().ToList()) project.Elements.Remove(join);
+        _canvas.RemoveRoom(here);
+        if (!string.IsNullOrWhiteSpace(arrival.Description)) to.AddDescription(arrival.Description);
+        if (arrival.Direction is { } way) _canvas.Connect(from, way, to, _settings.AssumeTwoWayConnections);
+        else _canvas.ConnectByCommand(from, to, arrival.Journey);
+      }
+      else if (arrival.Direction is { } direction)
       {
         _canvas.ForgetWay(from, direction, here);
         DropJoinIfNothingSeen(from, here);

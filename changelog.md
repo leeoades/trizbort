@@ -14,9 +14,10 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
-- **Not This Room…** in the automap panel: when automap takes the room you came into for one already on the map
-  (back to the gold maze room, say), it says so under Where You Are. If it's wrong, press the button and pick the
-  room it really is, of the others with its name and description, or a new one: the way you came in moves there.
+- **Not This Room…** in the automap panel: when automap decides which room you came into without asking, it says so
+  under Where You Are, and the button puts it right. Taken for a room already on the map (back to the gold maze room,
+  say): pick the room it really is, or a new one. A new room made where others have its name (with Don't Ask Again
+  on): pick the room it was, described differently now. Either way, the way you came in moves there.
 - **Unreliable joins**: a join that doesn't always lead where it's drawn, because the game picks at random
   (Bedquilt in Colossal Cave) or it depends on what you've done (a closet left on another floor). Directions take it
   only when there's no other way, and say so. Mark one with **Unreliable** in the join's properties, **Unreliable
@@ -51,6 +52,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **Automap: This Is a Different Room** is no longer on a room's right-click menu: **Not This Room…** in the automap
+  panel does it.
 - In Split Room, a join that goes both ways is two ways, out and back in, as each can belong to a different room;
   the way you just came in is chosen to start with. Moving one half splits the join into two one-way joins (west from
   the gold room to the rod room stays; east from the rod room goes, one way, into the new room). Rooms that share a

@@ -97,4 +97,55 @@ public class CorrectArrivalTests : IsolatedProjectTests
       File.Delete(path);
     }
   }
+
+  [Test]
+  public async Task NotThisRoom_ANewRoomThatWasTheSameRoomDescribedDifferently()
+  {
+    // Lee, 22 Nov 2026: automap made a new room, not asking (best guess), but it was the room on the map described
+    // differently now; Not This Room asks again
+    const string Before = "You are at the bottom of the western pit. A tiny plant murmurs for water.";
+    const string After = "A twelve-foot beanstalk rises out of the western pit.";
+    var project = Project.Current;
+    var hall = new Room(project) { Name = "Hall", Position = new Vector(0, 0) };
+    hall.AddDescription("A grand hall.");
+    var pit = new Room(project) { Name = "In West Pit", Position = new Vector(0, 300) };
+    pit.AddDescription(Before);
+    project.Elements.Add(hall);
+    project.Elements.Add(pit);
+
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, $">look\n\nHall\nA grand hall.\n\n>down\n\nIn West Pit\n{After}\n\n>");
+    var answers = new Answers();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, answers);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    settings.AutoTidy = false;
+    settings.BestGuessWhichRoom = true;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(project, engine), settings);
+      await WaitFor(() => engine.CurrentRoom != null && engine.CurrentRoom.Name == "In West Pit", "in the pit");
+      var made = engine.CurrentRoom;
+      made.ShouldNotBe(pit);
+      engine.CanCorrectArrival.ShouldBeTrue();
+      engine.ArrivalAssumption.ShouldBe("You came to a new room, In West Pit.");
+      answers.Answer = RoomDisambiguation.Choose(pit);
+
+      (await engine.CorrectArrivalAsync()).ShouldBeTrue();
+
+      answers.Offered.ShouldBe(new[] { pit });
+      engine.CurrentRoom.ShouldBe(pit);
+      project.Elements.ShouldNotContain(made);
+      pit.Descriptions.ShouldContain(After);
+      project.Elements.OfType<Connection>().ShouldContain(join =>
+        join.GetSourceRoom() == hall && join.GetTargetRoom() == pit);
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
 }
