@@ -204,7 +204,10 @@ public partial class AppSettingsViewModel : ViewModelBase
         settings.HereToken = HereTokenKey;
         settings.HereTokenFile = HereTokenFile ?? string.Empty;
         settings.HereGlow = HereGlow;
-        settings.HereGlowColor = $"#{HereGlowColor.R:X2}{HereGlowColor.G:X2}{HereGlowColor.B:X2}";
+        // the colour cleared (×): back to teal, rather than a black glow
+        settings.HereGlowColor = HereGlowColor.A == 0
+            ? "#14B8A6"
+            : $"#{HereGlowColor.R:X2}{HereGlowColor.G:X2}{HereGlowColor.B:X2}";
         settings.InvertMouseWheel = InvertMouseWheel;
         settings.ScrollWheelBehavior = Enum.IsDefined(typeof(ScrollWheelMode), ScrollWheelBehavior)
             ? (ScrollWheelMode)ScrollWheelBehavior
