@@ -98,6 +98,15 @@ public sealed partial class EditorSession
   {
     if (!HasPropertiesDialog(element)) return false;
 
+    // A label's dialog is shown beside the map, not over it, so a room can be clicked for a link (Lee, 22 Nov 2026):
+    // no step held open while it is, or what's done on the map meanwhile would join it. Its OK is a step of its own.
+    if (element is MapLabel)
+    {
+      var ok = await Prompts.EditElementAsync(element);
+      RaiseChanged(EditorChange.Model);
+      return ok;
+    }
+
     var transaction = BeginTransaction("Properties", new[] { element });
     bool accepted;
     try

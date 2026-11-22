@@ -123,6 +123,14 @@ public class DialogCaptureTests
             labelVm.Initialize(label);
             CaptureDialog(output, files, "MapLabelProperties", new MapLabelPropertiesDialog { DataContext = labelVm });
 
+            // the Markdown toolbar, with a table and the Add Link panel open
+            var markdownVm = sp.GetRequiredService<MapLabelPropertiesViewModel>();
+            markdownVm.Initialize(label);
+            markdownVm.Markdown = true;
+            markdownVm.Text = "## Treasures\n" + Trizbort.Domain.Misc.MarkdownEditing.SampleTable;
+            markdownVm.LinkPanelOpen = true;
+            CaptureDialog(output, files, "MapLabelProperties__links", new MapLabelPropertiesDialog { DataContext = markdownVm });
+
             var mapSettingsVm = sp.GetRequiredService<MapSettingsViewModel>();
             mapSettingsVm.Initialize();
             CaptureDialog(output, files, "MapSettings", new MapSettingsDialog { DataContext = mapSettingsVm });

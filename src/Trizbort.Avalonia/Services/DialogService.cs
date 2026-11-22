@@ -4,6 +4,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Automap;
+using Trizbort.Avalonia.Drawing;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Avalonia.Views;
 using Trizbort.Avalonia.Views.Dialogs;
@@ -17,6 +18,9 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
 {
     private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
     private readonly ICommandService _commandService = commandService;
+
+    /// <summary>The label dialogs open, by label: they're shown beside the map, so one could be opened twice.</summary>
+    private readonly Dictionary<MapLabel, MapLabelPropertiesDialog> _openLabelDialogs = new();
 
     public async Task ShowAboutDialogAsync(Window? owner)
     {
@@ -359,11 +363,71 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         var viewModel = scope.ServiceProvider.GetRequiredService<MapLabelPropertiesViewModel>();
         viewModel.Initialize(label);
 
-        var dialog = new MapLabelPropertiesDialog { DataContext = viewModel };
-        var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
-        if (result)
+        // already open for this label: brought to the front, rather than a second one
+        if (_openLabelDialogs.TryGetValue(label, out var open))
         {
-            _commandService.Session.Apply("Edit label properties", label, () => viewModel.ApplyTo(label));
+            open.Activate();
+            return false;
+        }
+
+        if (owner == null) return false;
+        var dialog = new MapLabelPropertiesDialog { DataContext = viewModel };
+
+        // Shown beside the map rather than over it, so a room clicked on the map can be chosen for a link (Lee,
+        // 22 Nov 2026); it stays in front of the main window, as its owner.
+        void OnSelectionChanged(object? sender, EventArgs e)
+        {
+            if (_commandService.SelectedElements.Count == 1 && _commandService.SelectedElements.First() is Room room)
+                viewModel.ChooseRoomOnMap(room);
+        }
+
+        // The label on the map shows the text as it's typed, and a Markdown label grows (or shrinks back, as far as the
+        // size it had) to fit it (Lee, 22 Nov 2026); put back as it was before OK applies it as one undo step, or on
+        // Cancel.
+        var (wasText, wasMarkdown, wasSize) = (label.Text, label.Markdown, label.Size);
+
+        void ShowAsTyped()
+        {
+            label.Text = viewModel.Text ?? string.Empty;
+            label.Markdown = viewModel.Markdown;
+            label.Size = MapLabelDrawingAdapter.FitText(label, wasSize);
+            _commandService.InvalidateCanvas();
+        }
+
+        void OnTyped(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(MapLabelPropertiesViewModel.Text) or nameof(MapLabelPropertiesViewModel.Markdown))
+                ShowAsTyped();
+        }
+
+        var closed = new TaskCompletionSource<bool>();
+        dialog.Closed += (_, _) => closed.TrySetResult(dialog.Accepted);
+        _openLabelDialogs[label] = dialog;
+        _commandService.SelectionChanged += OnSelectionChanged;
+        viewModel.PropertyChanged += OnTyped;
+        bool result;
+        try
+        {
+            dialog.Show(owner);
+            result = await closed.Task;
+        }
+        finally
+        {
+            _commandService.SelectionChanged -= OnSelectionChanged;
+            viewModel.PropertyChanged -= OnTyped;
+            _openLabelDialogs.Remove(label);
+            (label.Text, label.Markdown, label.Size) = (wasText, wasMarkdown, wasSize);
+            _commandService.InvalidateCanvas();
+        }
+
+        // the label taken off the map while its dialog was open: nothing to change
+        if (result && Project.Current.Elements.Contains(label))
+        {
+            _commandService.Session.Apply("Edit label properties", label, () =>
+            {
+                viewModel.ApplyTo(label);
+                label.Size = MapLabelDrawingAdapter.FitText(label, wasSize);
+            });
         }
         return result;
     }

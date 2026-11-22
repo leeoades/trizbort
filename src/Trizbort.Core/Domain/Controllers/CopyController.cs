@@ -91,7 +91,7 @@ public class CopyController
             OldId = label.Id, Text = label.Text, Position = label.Position, Size = label.Size,
             Shape = label.Shape, BorderStyle = label.BorderStyle, HasBackground = label.HasBackground,
             TextColor = label.TextColor, BorderColor = label.BorderColor, BackgroundColor = label.BackgroundColor,
-            ZOrder = label.ZOrder
+            ZOrder = label.ZOrder, Markdown = label.Markdown
           });
       }
       else if (element is Connection)
@@ -114,6 +114,7 @@ public class CopyController
     label.BorderColor = copy.BorderColor;
     label.BackgroundColor = copy.BackgroundColor;
     label.ZOrder = copy.ZOrder;
+    label.Markdown = copy.Markdown;
   }
 
   public ICopyObj PasteElements()
@@ -343,6 +344,7 @@ public class CopyController
     public Color BorderColor { get; set; }
     public Color BackgroundColor { get; set; }
     public int ZOrder { get; set; }
+    public bool Markdown { get; set; }
   }
 
   public class CopyConnectionObj
