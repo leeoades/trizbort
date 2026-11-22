@@ -3,92 +3,189 @@
         xmlns:sys="using:System"
         xmlns:vm="using:Trizbort.Avalonia.ViewModels"
         xmlns:controls="using:Trizbort.Avalonia.Controls"
+        xmlns:misc="using:Trizbort.Domain.Misc"
         x:Class="Trizbort.Avalonia.Views.Dialogs.MapLabelPropertiesDialog"
         x:DataType="vm:MapLabelPropertiesViewModel"
         Title="Label Properties"
-        Width="440" Height="560"
-        MinWidth="374" MinHeight="520"
+        Width="760" Height="600"
+        MinWidth="520" MinHeight="460"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
-    <!-- No ScrollViewer: every group fits at the default size; only the Text box grows. -->
-    <Grid x:Name="RootGrid" RowDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" Margin="16"
-          Grid.IsSharedSizeScope="True">
+    <!-- Text, with a Markdown toolbar and an Add Link panel beside it; outline, background and shape on Style. Lee, 22 Nov 2026. -->
+    <Grid x:Name="RootGrid" RowDefinitions="*,Auto" RowSpacing="8" Margin="16" Grid.IsSharedSizeScope="True">
+        <TabControl Grid.Row="0" x:Name="Tabs">
+            <TabItem Header="Text">
+                <DockPanel Margin="0,8,0,0">
+                    <!-- the toolbar: what's selected made bold or italic, lines made headings or lists, a table, a link -->
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                        <CheckBox DockPanel.Dock="Right" x:Name="MarkdownBox" Content="_Markdown" IsChecked="{Binding Markdown}"
+                                  ToolTip.Tip="Format the text with Markdown: # Heading, **bold**, *italic*, - lists, --- rules, tables (| Treasure | Room |, then |---|---|, then a row per line), and links: [[Room Name]] goes to a room when clicked on the map ([[Room Name|other text]] to show other words, [[Maze#42]] for a room that shares its name), [text](https://...) opens a web page." />
+                        <StackPanel x:Name="Toolbar" Orientation="Horizontal" Spacing="2">
+                            <StackPanel.Styles>
+                                <Style Selector="Button.tool">
+                                    <Setter Property="Focusable" Value="False" />
+                                    <Setter Property="MinWidth" Value="30" />
+                                    <Setter Property="Height" Value="28" />
+                                    <Setter Property="Padding" Value="6,0" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                                </Style>
+                            </StackPanel.Styles>
+                            <Button Classes="tool" x:Name="BoldButton" Click="OnBoldClick" ToolTip.Tip="Bold (Ctrl+B)"
+                                    AutomationProperties.Name="Bold">
+                                <TextBlock Text="B" FontWeight="Bold" />
+                            </Button>
+                            <Button Classes="tool" x:Name="ItalicButton" Click="OnItalicClick" ToolTip.Tip="Italic (Ctrl+I)"
+                                    AutomationProperties.Name="Italic">
+                                <TextBlock Text="I" FontStyle="Italic" FontFamily="Georgia,Times New Roman,serif" />
+                            </Button>
+                            <Button Classes="tool" x:Name="CodeButton" Click="OnCodeClick" ToolTip.Tip="Code: fixed-width text"
+                                    AutomationProperties.Name="Code">
+                                <TextBlock Text="&lt;&gt;" FontFamily="Consolas,Menlo,monospace" />
+                            </Button>
+                            <Border Width="1" Margin="4,4" Background="#CCC" />
+                            <Button Classes="tool" x:Name="HeadingButton" Click="OnHeadingClick" ToolTip.Tip="Heading"
+                                    AutomationProperties.Name="Heading">
+                                <TextBlock Text="H" FontWeight="Bold" />
+                            </Button>
+                            <Button Classes="tool" x:Name="BulletButton" Click="OnBulletClick" ToolTip.Tip="Bulleted list"
+                                    AutomationProperties.Name="Bulleted list">
+                                <TextBlock Text="• ≡" />
+                            </Button>
+                            <Button Classes="tool" x:Name="NumberedButton" Click="OnNumberedClick" ToolTip.Tip="Numbered list"
+                                    AutomationProperties.Name="Numbered list">
+                                <TextBlock Text="1. ≡" />
+                            </Button>
+                            <Button Classes="tool" x:Name="RuleButton" Click="OnRuleClick" ToolTip.Tip="A line across"
+                                    AutomationProperties.Name="Horizontal rule">
+                                <TextBlock Text="—" />
+                            </Button>
+                            <Border Width="1" Margin="4,4" Background="#CCC" />
+                            <Button Classes="tool" x:Name="TableButton" Click="OnTableClick" Content="Insert Table"
+                                    ToolTip.Tip="A table with two headings and a few rows to start from" />
+                            <Button Classes="tool" x:Name="LinkButton" Click="OnLinkClick" Content="Add Link…"
+                                    ToolTip.Tip="A link to a room, or an object's room, chosen from a list (Ctrl+K)" />
+                        </StackPanel>
+                    </DockPanel>
 
-        <!-- Text (no group box, as in the reference dialog) -->
-        <Label Grid.Row="0" Classes="field-label" Content="_Text:" Target="{Binding #LabelText}" />
-        <TextBox Grid.Row="1" x:Name="LabelText" Text="{Binding Text}"
-                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="36"
-                 ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0" x:Name="LabelText" Text="{Binding Text}"
+                                 AcceptsReturn="True" AcceptsTab="False" TextWrapping="Wrap" MinHeight="120"
+                                 VerticalContentAlignment="Top"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 AutomationProperties.Name="Text" />
 
-        <Grid Grid.Row="2" ColumnDefinitions="Auto,12,*">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Label Grid.Column="0" Classes="field-label" Content="Text Colo_ur:" Target="{Binding #TextColorButton}" />
-            <controls:ColorPickerButton Grid.Column="2" x:Name="TextColorButton"
-                                        SelectedColor="{Binding TextColor}" HorizontalAlignment="Left" />
-        </Grid>
+                        <!-- Add Link: rooms or objects, alphabetically, narrowed as you type; or click a room on the map -->
+                        <Border Grid.Column="1" x:Name="LinkPanel" IsVisible="{Binding LinkPanelOpen}" Width="260" Margin="8,0,0,0"
+                                BorderBrush="#CCC" BorderThickness="1" CornerRadius="4" Padding="8">
+                            <DockPanel>
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                                    <Button DockPanel.Dock="Right" x:Name="CloseLinkButton" Content="✕" Padding="6,0" Height="24"
+                                            Click="OnCloseLinkClick" ToolTip.Tip="Close" AutomationProperties.Name="Close the link panel" />
+                                    <TextBlock Text="Add a Link" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </DockPanel>
+                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12" Margin="0,0,0,6">
+                                    <RadioButton GroupName="LinkTo" Content="_Rooms" IsChecked="{Binding LinkToRooms}" />
+                                    <RadioButton GroupName="LinkTo" Content="O_bjects" IsChecked="{Binding LinkToObjects}" />
+                                </StackPanel>
+                                <TextBox DockPanel.Dock="Top" x:Name="LinkSearchBox" Text="{Binding LinkSearch}" Watermark="Search"
+                                         Margin="0,0,0,6" AutomationProperties.Name="Search" />
+                                <TextBlock DockPanel.Dock="Bottom" Classes="hint" TextWrapping="Wrap" Margin="0,6,0,0"
+                                           Text="Or click a room on the map." />
+                                <Button DockPanel.Dock="Bottom" x:Name="InsertLinkButton" Content="_Insert Link" HorizontalAlignment="Right"
+                                        Margin="0,6,0,0" IsEnabled="{Binding HasLinkChoice}" Click="OnInsertLinkClick" />
+                                <ListBox x:Name="LinkList" ItemsSource="{Binding LinkChoices}" SelectedItem="{Binding SelectedLinkChoice}"
+                                         DoubleTapped="OnLinkListDoubleTapped" AutomationProperties.Name="Rooms and objects">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="misc:MarkdownLinkChoice">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Where}" Classes="hint" FontSize="11" TextTrimming="CharacterEllipsis"
+                                                           IsVisible="{Binding Where, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+                </DockPanel>
+            </TabItem>
 
-        <!-- Outline -->
-        <HeaderedContentControl Grid.Row="3" Classes="group" Header="Outline">
-            <StackPanel Spacing="8">
-                <CheckBox Content="_Enabled" IsChecked="{Binding HasOutline}" />
-                <Grid RowDefinitions="Auto,Auto" RowSpacing="8" Margin="16,0,0,0" IsEnabled="{Binding HasOutline}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Line st_yle:" Target="{Binding #LineStyleCombo}" />
-                    <ComboBox Grid.Row="0" Grid.Column="2" x:Name="LineStyleCombo" ItemsSource="{Binding AvailableBorderStyles}"
-                              SelectedItem="{Binding BorderStyle}" HorizontalAlignment="Stretch" />
+            <TabItem Header="Style">
+                <StackPanel Spacing="8" Margin="0,8,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Classes="field-label" Content="Text Colo_ur:" Target="{Binding #TextColorButton}" />
+                <controls:ColorPickerButton Grid.Column="2" x:Name="TextColorButton"
+                                            SelectedColor="{Binding TextColor}" HorizontalAlignment="Left" />
+            </Grid>
 
-                    <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Co_lour:" Target="{Binding #BorderColorButton}" />
-                    <controls:ColorPickerButton Grid.Row="1" Grid.Column="2" x:Name="BorderColorButton"
-                                                SelectedColor="{Binding BorderColor}" HorizontalAlignment="Left" />
-                </Grid>
-            </StackPanel>
-        </HeaderedContentControl>
+            <!-- Outline -->
+            <HeaderedContentControl Classes="group" Header="Outline">
+                <StackPanel Spacing="8">
+                    <CheckBox Content="_Enabled" IsChecked="{Binding HasOutline}" />
+                    <Grid RowDefinitions="Auto,Auto" RowSpacing="8" Margin="16,0,0,0" IsEnabled="{Binding HasOutline}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Line st_yle:" Target="{Binding #LineStyleCombo}" />
+                        <ComboBox Grid.Row="0" Grid.Column="2" x:Name="LineStyleCombo" ItemsSource="{Binding AvailableBorderStyles}"
+                                  SelectedItem="{Binding BorderStyle}" HorizontalAlignment="Left" Width="280" />
 
-        <!-- Background -->
-        <HeaderedContentControl Grid.Row="4" Classes="group" Header="Background">
-            <StackPanel Spacing="8">
-                <CheckBox Content="E_nabled" IsChecked="{Binding HasBackground}" />
-                <Grid ColumnDefinitions="Auto,12,*" Margin="16,0,0,0" IsEnabled="{Binding HasBackground}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Label Grid.Column="0" Classes="field-label" Content="Colou_r:" Target="{Binding #FillColorButton}" />
-                    <controls:ColorPickerButton Grid.Column="2" x:Name="FillColorButton"
-                                                SelectedColor="{Binding BackgroundColor}" HorizontalAlignment="Left" />
-                </Grid>
-            </StackPanel>
-        </HeaderedContentControl>
+                        <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Co_lour:" Target="{Binding #BorderColorButton}" />
+                        <controls:ColorPickerButton Grid.Row="1" Grid.Column="2" x:Name="BorderColorButton"
+                                                    SelectedColor="{Binding BorderColor}" HorizontalAlignment="Left" />
+                    </Grid>
+                </StackPanel>
+            </HeaderedContentControl>
 
-        <!-- Shape: applies to the outline and the fill, so it is enabled when either is on. -->
-        <Grid Grid.Row="5" ColumnDefinitions="Auto,12,*" IsEnabled="{Binding ShapeEnabled}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Label Grid.Column="0" Classes="field-label" Content="_Shape:" Target="{Binding #ShapeCombo}" />
-            <ComboBox Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding AvailableShapes}"
-                      SelectedItem="{Binding Shape}" HorizontalAlignment="Stretch">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-        </Grid>
-        <TextBlock Grid.Row="6" Classes="hint" Text="Shape applies to outline and background." />
+            <!-- Background -->
+            <HeaderedContentControl Classes="group" Header="Background">
+                <StackPanel Spacing="8">
+                    <CheckBox Content="E_nabled" IsChecked="{Binding HasBackground}" />
+                    <Grid ColumnDefinitions="Auto,12,*" Margin="16,0,0,0" IsEnabled="{Binding HasBackground}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Classes="field-label" Content="Colou_r:" Target="{Binding #FillColorButton}" />
+                        <controls:ColorPickerButton Grid.Column="2" x:Name="FillColorButton"
+                                                    SelectedColor="{Binding BackgroundColor}" HorizontalAlignment="Left" />
+                    </Grid>
+                </StackPanel>
+            </HeaderedContentControl>
+
+            <!-- Shape: applies to the outline and the fill, so it is enabled when either is on. -->
+            <Grid ColumnDefinitions="Auto,12,*" IsEnabled="{Binding ShapeEnabled}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Classes="field-label" Content="_Shape:" Target="{Binding #ShapeCombo}" />
+                <ComboBox Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding AvailableShapes}"
+                          SelectedItem="{Binding Shape}" HorizontalAlignment="Left" Width="280">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+            <TextBlock Classes="hint" Text="Shape applies to outline and background." />
+                </StackPanel>
+            </TabItem>
+        </TabControl>
 
         <!-- OK / Cancel Buttons -->
-        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
             <Button Classes="dialog-button" Content="_OK" IsDefault="True" Click="OnOkClick" />
             <Button Classes="dialog-button" Content="_Cancel" IsCancel="True" Click="OnCancelClick" />
         </StackPanel>
