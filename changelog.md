@@ -18,7 +18,7 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   a wooden disc with a hurricane lantern burnt into it, a brass coin, a "You are here" sign, a standing wooden pawn, or your own
   picture (a transparent PNG, or an SVG). It slides to the next room as you move, stays big enough to find however
   far you zoom out, and you can drag it onto the room you're really in. Choose it in **App Settings**, **Map**, under
-  **Where you are**.
+  **Where you are**, where the tokens are shown side by side, with **Load Your Own…**.
 - **Unreliable joins**: a join that doesn't always lead where it's drawn, because the game picks at random
   (Bedquilt in Colossal Cave) or it depends on what you've done (a closet left on another floor). Directions take it
   only when there's no other way, and say so. Mark one with **Unreliable** in the join's properties, **Unreliable

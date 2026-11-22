@@ -143,6 +143,7 @@
                             <TextBlock Classes="hint" TextWrapping="Wrap"
                                        Text="The token on the room automap has you in. Drag it onto another room if you're really there." />
                             <ListBox x:Name="HereTokenTiles" ItemsSource="{Binding HereTokenTiles}" SelectedItem="{Binding SelectedHereToken}"
+                                     SelectionChanged="OnHereTokenChosen"
                                      Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                      AutomationProperties.Name="Token">
                                 <ListBox.ItemsPanel>
