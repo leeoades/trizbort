@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 2 60 64" width="60" height="64">
+<!-- Trizbort: Recast, where you are on the map, seen from above. -->
+<defs><radialGradient id="bc" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#e2bc5a"/><stop offset="1" stop-color="#8a6420"/></radialGradient></defs>
+<circle cx="32" cy="34" r="28" fill="#6b4a12" stroke="#2b2b3a" stroke-width="1.4" stroke-linejoin="round"/><circle cx="32" cy="32" r="28" fill="url(#bc)" stroke="#2b2b3a" stroke-width="1.4" stroke-linejoin="round"/><circle cx="32" cy="32" r="23" fill="none" stroke="#7a5a1a" stroke-width="1.2"/>
+<g fill="none" stroke="#5c4110" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,-15)">
+<circle cx="32" cy="27" r="2.4"/><path d="M27,35 Q32,27.5 37,35"/><path d="M25,35 L39,35"/>
+<path d="M26.5,35 L26.5,57 M37.5,35 L37.5,57"/><path d="M30.5,52 Q28.5,46 32,40 Q35.5,46 33.5,52 Q32,53.5 30.5,52 Z"/>
+<path d="M23,60 L41,60 L39,57 L25,57 Z"/><path d="M37.5,40 Q45,46 37.5,52"/></g>
+</svg>

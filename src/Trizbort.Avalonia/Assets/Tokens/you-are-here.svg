@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 2 60 64" width="60" height="64">
+<!-- Trizbort: Recast, where you are on the map, seen from above. -->
+<circle cx="32" cy="34" r="28" fill="#a82020" stroke="#2b2b3a" stroke-width="1.4" stroke-linejoin="round"/><circle cx="32" cy="32" r="28" fill="#e53935" stroke="#2b2b3a" stroke-width="1.4" stroke-linejoin="round"/>
+<circle cx="32" cy="32" r="24.5" fill="none" stroke="#fff" stroke-width="1.6"/>
+<text x="32" y="30.5" font-family="Arial, Helvetica, DejaVu Sans, sans-serif" font-weight="bold" font-size="8" fill="#fff" text-anchor="middle">YOU ARE</text>
+<text x="32" y="41" font-family="Arial, Helvetica, DejaVu Sans, sans-serif" font-weight="bold" font-size="8" fill="#fff" text-anchor="middle">HERE</text>
+</svg>

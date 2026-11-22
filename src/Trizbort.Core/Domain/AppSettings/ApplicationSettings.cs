@@ -79,6 +79,21 @@ public class ApplicationSettings
   public bool SpecifyWrapping { get; set; }
   public bool ShowFullPathInTitleBar { get; set; }
 
+  /// <summary>
+  ///   The token on the room automap has you in, like a playing piece on a board: "wooden-disc", "brass-coin",
+  ///   "you-are-here", "red-counter", "own" (<see cref="HereTokenFile" />), or "none". Lee, 22 Nov 2026.
+  /// </summary>
+  public string HereToken { get; set; } = "wooden-disc";
+
+  /// <summary>Your own token: a transparent PNG, or an SVG.</summary>
+  public string HereTokenFile { get; set; } = string.Empty;
+
+  /// <summary>A glow round the room automap has you in.</summary>
+  public bool HereGlow { get; set; } = true;
+
+  /// <summary>The glow's colour, as #RRGGBB: teal, unlike the yellow of the selection.</summary>
+  public string HereGlowColor { get; set; } = "#14B8A6";
+
   /// <summary>Keep a recovery copy of unsaved changes in the config folder (ticket 135).</summary>
   public bool KeepRecoveryCopy { get; set; } = true;
 

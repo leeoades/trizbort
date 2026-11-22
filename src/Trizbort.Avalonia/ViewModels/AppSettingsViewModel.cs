@@ -1,5 +1,7 @@
 using System;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Trizbort.Avalonia.Drawing;
 using Trizbort.Avalonia.Services;
 using Trizbort.Domain.AppSettings;
 
@@ -7,6 +9,44 @@ namespace Trizbort.Avalonia.ViewModels;
 
 public partial class AppSettingsViewModel : ViewModelBase
 {
+    // Where you are, while automapping: a token on your room, and a glow round it (HereToken). Lee, 22 Nov 2026.
+
+    /// <summary>The tokens to choose from, by name.</summary>
+    public IReadOnlyList<string> HereTokenNames { get; } = HereToken.Choices.Select(choice => choice.Name).ToList();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UsesOwnToken))]
+    [NotifyPropertyChangedFor(nameof(HereTokenPreview))]
+    private int _hereTokenIndex;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HereTokenPreview))]
+    private string _hereTokenFile = string.Empty;
+
+    [ObservableProperty]
+    private bool _hereGlow = true;
+
+    [ObservableProperty]
+    private System.Drawing.Color _hereGlowColor = System.Drawing.Color.FromArgb(0x14, 0xB8, 0xA6);
+
+    /// <summary>Your own picture is chosen: the file box and Browse are shown.</summary>
+    public bool UsesOwnToken => HereTokenKey == HereToken.Own;
+
+    private string HereTokenKey =>
+        HereTokenIndex >= 0 && HereTokenIndex < HereToken.Choices.Count ? HereToken.Choices[HereTokenIndex].Key : HereToken.WoodenDisc;
+
+    /// <summary>The chosen token, as it will look, or null for none (or a file that isn't a picture).</summary>
+    public Bitmap? HereTokenPreview
+    {
+        get
+        {
+            var key = HereTokenKey;
+            if (key == HereToken.None) return null;
+            if (key == HereToken.Own) return string.IsNullOrWhiteSpace(HereTokenFile) ? null : HereToken.Image(HereTokenFile, 128);
+            return HereToken.Image(key, 128);
+        }
+    }
+
     [ObservableProperty]
     private bool _invertMouseWheel;
 
@@ -122,6 +162,14 @@ public partial class AppSettingsViewModel : ViewModelBase
     public void Initialize()
     {
         var settings = ApplicationSettingsController.AppSettings;
+        var token = HereToken.Choices.Select((choice, index) => (choice.Key, index))
+            .FirstOrDefault(choice => choice.Key == settings.HereToken);
+        HereTokenIndex = token.Key == null ? 0 : token.index;
+        HereTokenFile = settings.HereTokenFile ?? string.Empty;
+        HereGlow = settings.HereGlow;
+        HereGlowColor = global::Avalonia.Media.Color.TryParse(settings.HereGlowColor, out var glow)
+            ? System.Drawing.Color.FromArgb(glow.R, glow.G, glow.B)
+            : System.Drawing.Color.FromArgb(0x14, 0xB8, 0xA6);
         InvertMouseWheel = settings.InvertMouseWheel;
         ScrollWheelBehavior = (int)settings.ScrollWheelBehavior;
         ShowFullPathInTitleBar = settings.ShowFullPathInTitleBar;
@@ -153,6 +201,10 @@ public partial class AppSettingsViewModel : ViewModelBase
     public void ApplyToSettings()
     {
         var settings = ApplicationSettingsController.AppSettings;
+        settings.HereToken = HereTokenKey;
+        settings.HereTokenFile = HereTokenFile ?? string.Empty;
+        settings.HereGlow = HereGlow;
+        settings.HereGlowColor = $"#{HereGlowColor.R:X2}{HereGlowColor.G:X2}{HereGlowColor.B:X2}";
         settings.InvertMouseWheel = InvertMouseWheel;
         settings.ScrollWheelBehavior = Enum.IsDefined(typeof(ScrollWheelMode), ScrollWheelBehavior)
             ? (ScrollWheelMode)ScrollWheelBehavior
