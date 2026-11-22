@@ -1241,7 +1241,7 @@ Highlighting more than two rooms will do nothing, because it isn't necessarily c
 
 ### Right Clicking
 
-Trizbort also allows right-clicking for general editing. The menu keeps Properties, Rename, Cut, Copy, Paste and Delete at the top, and groups the rest: for a room, **Navigate to Here** and **Navigate from Here...** (directions), **Room** (dark, start and end room, this room moves, add another stop), **Shape**, **Swap**, **Rooms** (join, merge, split, move to a new area, region, tidy), **Automap** (I'm here, this is a different room, disable or enable automap on this room), **Add** and **Arrange**; for a join, **Line** (plain, dotted, one way, reverse) and **Label** (up, down, in, out), with Split Join and Bring at the top.
+Trizbort also allows right-clicking for general editing. The menu keeps Properties, Rename, Cut, Copy, Paste and Delete at the top (with **Copy Room Link** for a room, to put in a Markdown label), and groups the rest: for a room, **Navigate to Here** and **Navigate from Here...** (directions), **Room** (dark, start and end room, this room moves, add another stop, reset the object list), **Shape**, **Swap**, **Rooms** (join, merge, split, move to a new area, region, tidy), **Automap** (I'm here, disable or enable automap on this room), **Add** and **Arrange**; for a join, **Line** (plain, dotted, one way, reverse), **Label** (up, down, in, out) and **Unreliable Join**, with Split Join and Bring at the top.
 
 - ADD ROOM with `R` will add a room.
 - LINE STYLES mimics the possibilities found in

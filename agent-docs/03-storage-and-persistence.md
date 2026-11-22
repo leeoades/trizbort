@@ -49,11 +49,15 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
 - A connection label listing several directions separated by `/` (`"north / down"`, written by automap
   when several ways lead along one connection) is exported as one exit per direction
   (`DirectionWords.ListedDirections`); a single word such as `"up"` keeps its usual meaning.
+- A `<line>` automap or the user marked unreliable (the same command doesn't always lead the same
+  way) carries `unreliable="yes"`; directions avoid it (`RouteFinder.UnreliableCost`). Older
+  versions ignore it.
 - `<settings>` holds per-map drawing/document settings (fonts, colors, grid, validation rules)
   — separate again from the two settings systems below.
 - Labels use `<label id="..." text="..." x="..." y="..." w="..." h="..." shape="..."
   borderstyle="..." background="..." textColor="..." borderColor="..." backgroundColor="..."
-  ZOrder="..." />`. Connections with any endpoint docked to a label use `<labelLine>` with the
+  ZOrder="..." />`, plus `markdown="yes"` when the text is Markdown (`LabelMarkdown`; older
+  versions ignore it and show the text as written). Connections with any endpoint docked to a label use `<labelLine>` with the
   same contents as `<line>` and the same two-pass docking resolution. Older readers only
   recognize `<room>` and `<line>`, so they ignore both labels and their lines without leaving
   dangling connectors. Saving through an older version **discards** these unrecognized elements.
@@ -137,7 +141,7 @@ alone, and duplicate entries apply in order.
 |---|---|---|---|
 | **Map `<settings>`** | Inside the `.trizbort` file itself | Per-document | Per-map drawing settings (fonts/colors/grid/validation rules), via `Settings.Load`/`Settings.Save(scribe)` |
 | **`Properties.Settings`** (`Properties\Settings.settings` / `.Designer.cs`) | `.NET` user-scoped `user.config` (standard `ApplicationSettingsBase` mechanism), registered in `app.config` under `<userSettings>` | Per-Windows-user | Currently **only one setting**: `SettingsLastTabIndex` (long) — just remembers the last-selected tab in `SettingsDialog`. Read/written via `Properties.Settings.Default.SettingsLastTabIndex` in `UI\SettingsDialog.cs`. |
-| **`ApplicationSettings`** (`Domain\AppSettings\ApplicationSettings.cs` + `ApplicationSettingsController.cs`) | JSON file `.\appsettings.json` (relative to working directory!), via Newtonsoft.Json | App-wide, not per-document | Automap defaults, canvas size, debug flags, default fonts/images, export filenames, last-project filename, load-last-project flag, recent-projects list, save-to-image/PDF options, tooltip options, margins/wrapping, Map preferences (apply-style-to-new-rooms, double-click-to-add-room). |
+| **`ApplicationSettings`** (`Domain\AppSettings\ApplicationSettings.cs` + `ApplicationSettingsController.cs`) | JSON file `.\appsettings.json` (relative to working directory!), via Newtonsoft.Json | App-wide, not per-document | Automap defaults, canvas size, debug flags, default fonts/images, export filenames, last-project filename, load-last-project flag, recent-projects list, save-to-image/PDF options, tooltip options, margins/wrapping, Map preferences (apply-style-to-new-rooms, double-click-to-add-room), and where you are while automapping (`HereToken`, `HereTokenFile`, `HereTokenShown`, `HereGlow`, `HereGlowColor`: the token drawn by `Avalonia/Drawing/HereToken.cs` from `Assets/Tokens/*.svg` via Svg.Skia, or the user's own PNG or SVG). |
 
 In Trizbort: Recast, `DoubleClickToAddRoom` is no longer a stored preference: double-clicking
 empty canvas always creates a room. Old JSON values are ignored and omitted on the next save.

@@ -78,7 +78,12 @@ for the overall layering.
 `Domain\Elements\MapLabel.cs` is an annotation, not a `Room`. It has multiline `Text`
 (`Name` aliases it), rectangular geometry, the existing four room shapes, text/border/background
 colours, `BorderStyle` (including `None`) and an independent `HasBackground` flag. New labels
-default to text only. Selection/hover outlines and resize handles remain available regardless
+default to text only. With `Markdown` on, the text is Markdown (`Domain\Misc\LabelMarkdown.cs`:
+headings, emphasis, lists, rules, tables, `[[Room]]` links), drawn left-aligned by
+`Avalonia\Drawing\MarkdownLabelRenderer.cs`; the label grows to fit its text as it's edited
+(`MapLabelDrawingAdapter.FitText`), and its dialog is shown modeless, beside the map, so a room
+clicked there can be linked (`MarkdownEditing` has the toolbar's text edits and the link list).
+Selection/hover outlines and resize handles remain available regardless
 of those visibility settings. Labels use the same compass-port IDs as rooms, so normal
 `Connection` vertices can dock to them and follow movement/resizing.
 
