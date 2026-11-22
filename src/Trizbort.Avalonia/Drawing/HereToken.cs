@@ -16,7 +16,7 @@ namespace Trizbort.Avalonia.Drawing;
 /// <summary>
 ///   Where you are on the map: a token on the room automap has you in, like a playing piece on a board, seen from
 ///   above as the map is, with its shadow falling down and to the right. Lee, 22 Nov 2026: the dotted ring didn't stand
-///   out beside the yellow selection; a wooden disc with a caving lamp burnt into it, a brass coin, a "You are here" sign, or
+///   out beside the yellow selection; a wooden disc with a hurricane lantern burnt into it, a brass coin, a "You are here" sign, or
 ///   your own picture (a transparent PNG, or an SVG).
 /// </summary>
 internal static class HereToken
