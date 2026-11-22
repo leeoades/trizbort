@@ -370,6 +370,8 @@ public class MapCanvasControl : Control
         return _transform.CanvasToClient(world).ToAvaloniaPoint();
     }
 
+    private static Point ToPoint(CoreVector vector) => new(vector.X, vector.Y);
+
     public CoreVector ClientToCanvas(Point screen)
     {
         _transform.Origin = Origin;
@@ -640,6 +642,16 @@ public class MapCanvasControl : Control
             }
         }
 
+        // pick up the token, to put it on the room you're really in
+        if (point.Properties.IsLeftButtonPressed && HereRoom != null && OnToken(point.Position))
+        {
+            _tokenDrag = ToPoint(ClientToCanvas(point.Position));
+            e.Pointer.Capture(this);
+            InvalidateVisual();
+            e.Handled = true;
+            return;
+        }
+
         var button = point.Properties.IsMiddleButtonPressed ? PointerButton.Middle
             : point.Properties.IsRightButtonPressed ? PointerButton.Right
             : PointerButton.Left;
@@ -685,6 +697,14 @@ public class MapCanvasControl : Control
                 e.Handled = true;
                 return;
             }
+        }
+
+        if (_tokenDrag != null)
+        {
+            _tokenDrag = ToPoint(ClientToCanvas(clientPos));
+            InvalidateVisual();
+            e.Handled = true;
+            return;
         }
 
         var interaction = Interaction;
@@ -769,6 +789,26 @@ public class MapCanvasControl : Control
                 e.Handled = true;
                 return;
             }
+        }
+
+        if (_tokenDrag is { } dropped)
+        {
+            // put down on a room: you're there (Automap: I'm Here); anywhere else, it goes back
+            _tokenDrag = null;
+            e.Pointer.Capture(null);
+            var onto = Hit.HitElement(ClientToCanvas(e.GetPosition(this))) as Room;
+            _tokenFrom = dropped;
+            _tokenSlideStart = DateTime.UtcNow;
+            var automap = global::Trizbort.Automap.Automap.Instance;
+            if (onto != null && onto != HereRoom && automap.IsRunning)
+            {
+                automap.SetCurrentRoom(onto);
+                _tokenRoom = onto;
+            }
+
+            InvalidateVisual();
+            e.Handled = true;
+            return;
         }
 
         var interaction = Interaction;
@@ -1126,6 +1166,65 @@ public class MapCanvasControl : Control
         new Pen(new SolidColorBrush(AvaloniaColor.FromRgb(0x1E, 0x88, 0xE5)), 2, new DashStyle(new double[] { 3, 2 }, 0));
     private static readonly IBrush _ghostText = new SolidColorBrush(AvaloniaColor.FromRgb(0x1E, 0x55, 0x9A));
 
+    // the token on the room automap has you in (HereToken): the room it's on, where it slides from when you move,
+    // and where it is while you drag it to another room
+    private Room? _tokenRoom;
+    private Point _tokenFrom;
+    private DateTime _tokenSlideStart;
+    private Point? _tokenDrag;
+    private Point? _tokenDrawnAt;
+    private static readonly TimeSpan TokenSlide = TimeSpan.FromMilliseconds(320);
+
+    /// <summary>The room automap has you in, while it runs: for showing the token without automap (captures).</summary>
+    internal static Room? HereRoomOverride { get; set; }
+
+    private static Room? HereRoom
+    {
+        get
+        {
+            if (HereRoomOverride != null) return HereRoomOverride;
+            var automap = global::Trizbort.Automap.Automap.Instance;
+            return automap.IsRunning ? automap.CurrentRoom : null;
+        }
+    }
+
+    /// <summary>Where the token is drawn now: being dragged, sliding to the room you moved to, or on its corner.</summary>
+    private Point? TokenPlace(Room? here)
+    {
+        if (here != _tokenRoom)
+        {
+            // you moved: slide from where it was to the room you're in now
+            if (_tokenRoom != null && here != null && _tokenDrawnAt is { } was)
+            {
+                _tokenFrom = was;
+                _tokenSlideStart = DateTime.UtcNow;
+            }
+            else
+            {
+                _tokenSlideStart = DateTime.MinValue;
+            }
+
+            _tokenRoom = here;
+        }
+
+        if (here == null || HereToken.Chosen == null) return null;
+        if (_tokenDrag is { } dragged) return dragged;
+        var target = HereToken.PlaceOn(here, ZoomFactor);
+        var t = (DateTime.UtcNow - _tokenSlideStart).TotalMilliseconds / TokenSlide.TotalMilliseconds;
+        if (t is < 0 or >= 1) return target;
+        TopLevel.GetTopLevel(this)?.RequestAnimationFrame(_ => InvalidateVisual());
+        var eased = 1 - Math.Pow(1 - t, 3);
+        return new Point(_tokenFrom.X + (target.X - _tokenFrom.X) * eased, _tokenFrom.Y + (target.Y - _tokenFrom.Y) * eased);
+    }
+
+    /// <summary>Whether <paramref name="client" /> is on the token, to pick it up.</summary>
+    private bool OnToken(Point client)
+    {
+        if (_tokenDrawnAt is not { } at || HereToken.Chosen is not { } token) return false;
+        var world = ClientToCanvas(client);
+        return HereToken.Area(token, at, ZoomFactor).Contains(new Point(world.X, world.Y));
+    }
+
     public override void Render(AvaloniaDrawingContext context)
     {
         base.Render(context);
@@ -1136,9 +1235,9 @@ public class MapCanvasControl : Control
             return;
         }
 
-        // where automap thinks the player is, ringed whatever is selected
-        var automap = global::Trizbort.Automap.Automap.Instance;
-        RoomDrawingAdapter.AutomapRoom = automap.IsRunning ? automap.CurrentRoom : null;
+        // where automap thinks the player is: a glow round the room and a token on it, whatever is selected
+        var here = HereRoom;
+        RoomDrawingAdapter.AutomapRoom = here;
 
         _transform.Origin = Origin;
         _transform.ZoomFactor = ZoomFactor;
@@ -1214,6 +1313,11 @@ public class MapCanvasControl : Control
                 debugSession?.ElementRenderingEnabled ?? true,
                 debugSession?.LineRenderingEnabled ?? true,
                 Project.Current.Elements);
+
+            // where you are: the token on your room's corner, over the rooms and joins round it
+            _tokenDrawnAt = TokenPlace(here);
+            if (_tokenDrawnAt is { } tokenAt && HereToken.Chosen is { } token)
+                HereToken.Draw(context, token, tokenAt, ZoomFactor, VisualRoot?.RenderScaling ?? 1, _tokenDrag != null);
 
             // 6. Render Active Ports
             if (adorners.Ports.Count > 0)

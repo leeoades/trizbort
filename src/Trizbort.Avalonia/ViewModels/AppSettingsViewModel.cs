@@ -1,5 +1,7 @@
 using System;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Trizbort.Avalonia.Drawing;
 using Trizbort.Avalonia.Services;
 using Trizbort.Domain.AppSettings;
 
@@ -7,6 +9,67 @@ namespace Trizbort.Avalonia.ViewModels;
 
 public partial class AppSettingsViewModel : ViewModelBase
 {
+    // Where you are, while automapping: a token on your room, and a glow round it (HereToken). Lee, 22 Nov 2026.
+
+    /// <summary>The tokens to choose from, each shown with its picture; the last is your own.</summary>
+    public IReadOnlyList<HereTokenTile> HereTokenTiles { get; } = HereToken.Choices
+        .Select(choice => new HereTokenTile(choice.Key, choice.Name,
+            choice.Key == HereToken.Own ? null : HereToken.Image(choice.Key, 128)))
+        .ToList();
+
+    /// <summary>The token is shown; unticked, the one chosen stays chosen for when it's ticked again.</summary>
+    [ObservableProperty]
+    private bool _hereTokenShown = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UsesOwnToken))]
+    [NotifyPropertyChangedFor(nameof(SelectedHereToken))]
+    private int _hereTokenIndex;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HereTokenFileName))]
+    private string _hereTokenFile = string.Empty;
+
+    /// <summary>The tile chosen.</summary>
+    public HereTokenTile? SelectedHereToken
+    {
+        get => HereTokenIndex >= 0 && HereTokenIndex < HereTokenTiles.Count ? HereTokenTiles[HereTokenIndex] : null;
+        set
+        {
+            if (value != null) HereTokenIndex = HereTokenTiles.ToList().IndexOf(value);
+        }
+    }
+
+    /// <summary>Your own picture is chosen.</summary>
+    public bool UsesOwnToken => HereTokenKey == HereToken.Own;
+
+    /// <summary>The file your own token is drawn from, by name, or a hint when there's none.</summary>
+    public string HereTokenFileName =>
+        string.IsNullOrWhiteSpace(HereTokenFile) ? "No picture chosen yet" : System.IO.Path.GetFileName(HereTokenFile);
+
+    private string HereTokenKey =>
+        HereTokenIndex >= 0 && HereTokenIndex < HereToken.Choices.Count ? HereToken.Choices[HereTokenIndex].Key : HereToken.WoodenDisc;
+
+    /// <summary>A picture loaded for your own token: shown on its tile, and chosen.</summary>
+    partial void OnHereTokenFileChanged(string value)
+    {
+        var own = HereTokenTiles.FirstOrDefault(tile => tile.Key == HereToken.Own);
+        if (own != null) own.Image = string.IsNullOrWhiteSpace(value) ? null : HereToken.Image(value, 128);
+    }
+
+    /// <summary>Your own picture, loaded: shown on its tile, and chosen.</summary>
+    public void UseOwnToken(string file)
+    {
+        HereTokenFile = file;
+        HereTokenIndex = HereToken.Choices.ToList().FindIndex(choice => choice.Key == HereToken.Own);
+    }
+
+    [ObservableProperty]
+    private bool _hereGlow = true;
+
+    [ObservableProperty]
+    private System.Drawing.Color _hereGlowColor = System.Drawing.Color.FromArgb(0x14, 0xB8, 0xA6);
+
     [ObservableProperty]
     private bool _invertMouseWheel;
 
@@ -122,6 +185,15 @@ public partial class AppSettingsViewModel : ViewModelBase
     public void Initialize()
     {
         var settings = ApplicationSettingsController.AppSettings;
+        var token = HereToken.Choices.Select((choice, index) => (choice.Key, index))
+            .FirstOrDefault(choice => choice.Key == settings.HereToken);
+        HereTokenIndex = token.Key == null ? 0 : token.index;
+        HereTokenFile = settings.HereTokenFile ?? string.Empty;
+        HereTokenShown = settings.HereTokenShown;
+        HereGlow = settings.HereGlow;
+        HereGlowColor = global::Avalonia.Media.Color.TryParse(settings.HereGlowColor, out var glow)
+            ? System.Drawing.Color.FromArgb(glow.R, glow.G, glow.B)
+            : System.Drawing.Color.FromArgb(0x14, 0xB8, 0xA6);
         InvertMouseWheel = settings.InvertMouseWheel;
         ScrollWheelBehavior = (int)settings.ScrollWheelBehavior;
         ShowFullPathInTitleBar = settings.ShowFullPathInTitleBar;
@@ -153,6 +225,14 @@ public partial class AppSettingsViewModel : ViewModelBase
     public void ApplyToSettings()
     {
         var settings = ApplicationSettingsController.AppSettings;
+        settings.HereToken = HereTokenKey;
+        settings.HereTokenFile = HereTokenFile ?? string.Empty;
+        settings.HereTokenShown = HereTokenShown;
+        settings.HereGlow = HereGlow;
+        // the colour cleared (×): back to teal, rather than a black glow
+        settings.HereGlowColor = HereGlowColor.A == 0
+            ? "#14B8A6"
+            : $"#{HereGlowColor.R:X2}{HereGlowColor.G:X2}{HereGlowColor.B:X2}";
         settings.InvertMouseWheel = InvertMouseWheel;
         settings.ScrollWheelBehavior = Enum.IsDefined(typeof(ScrollWheelMode), ScrollWheelBehavior)
             ? (ScrollWheelMode)ScrollWheelBehavior
@@ -195,4 +275,29 @@ public partial class AppSettingsViewModel : ViewModelBase
 
         ApplicationSettingsController.SaveSettings();
     }
+}
+
+/// <summary>A token in App Settings' panel of them: its picture, and its name.</summary>
+public partial class HereTokenTile : ObservableObject
+{
+    public HereTokenTile(string key, string name, Bitmap? image)
+    {
+        Key = key;
+        Name = name;
+        _image = image;
+    }
+
+    public string Key { get; }
+
+    public string Name { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNoImage))]
+    private Bitmap? _image;
+
+    /// <summary>No picture: your own, before you've loaded one.</summary>
+    public bool HasNoImage => Image == null;
+
+    /// <summary>What shows instead of a picture.</summary>
+    public string Placeholder => "+";
 }

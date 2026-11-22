@@ -18,6 +18,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   under Where You Are, and the button puts it right. Taken for a room already on the map (back to the gold maze room,
   say): pick the room it really is, or a new one. A new room made where others have its name (with Don't Ask Again
   on): pick the room it was, described differently now. Either way, the way you came in moves there.
+- **Where you are** is a token on the room automap has you in, like a playing piece on a board:
+  a wooden disc with a hurricane lantern burnt into it, a brass coin, a wooden pawn, a "You are here" sign, painted
+  and pewter figures (an adventurer, a detective, a valkyrie, a wizard), or your own
+  picture (a transparent PNG, or an SVG). It slides to the next room as you move, stays big enough to find however
+  far you zoom out, and you can drag it onto the room you're really in. Choose it in **App Settings**, **Map**, under
+  **Where you are**, where the tokens are shown side by side, with **Load Your Own…**.
 - **Markdown labels**: tick **Markdown** in a label's properties to format its text: headings, **bold** and
   *italic*, lists, rules, tables, and links. `[[Room Name]]` links to a room: click it on the map to select the room
   and glide to it (`[[Room Name|other words]]` to show other words, `[[Maze#42]]` for one of several rooms with a
@@ -79,6 +85,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   here").
 - The other of two rooms with one name, from Split Room or automap, has the same name and description ("Maze", not
   "Maze (2)"), so automap recognises it when you come back.
+- The room automap has you in glows (teal, unlike the yellow of the selection) instead of having a dotted blue ring.
+  Change the colour, or turn the glow off, in **App Settings**, **Map**.
 - The Windows and Linux downloads keep the app's graphics libraries as files beside it, instead of unpacking them
   to a temporary folder each time it starts, which some antivirus tools took for malware. Keep the files from the
   download together.
