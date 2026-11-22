@@ -81,9 +81,12 @@ public class ApplicationSettings
 
   /// <summary>
   ///   The token on the room automap has you in, like a playing piece on a board: "wooden-disc", "brass-coin",
-  ///   "you-are-here", "wooden-pawn", "own" (<see cref="HereTokenFile" />), or "none". Lee, 22 Nov 2026.
+  ///   "you-are-here", "wooden-pawn", or "own" (<see cref="HereTokenFile" />). Lee, 22 Nov 2026.
   /// </summary>
   public string HereToken { get; set; } = "wooden-disc";
+
+  /// <summary>Whether the token is shown; turned off, the token chosen is kept for when it's turned on again.</summary>
+  public bool HereTokenShown { get; set; } = true;
 
   /// <summary>Your own token: a transparent PNG, or an SVG.</summary>
   public string HereTokenFile { get; set; } = string.Empty;

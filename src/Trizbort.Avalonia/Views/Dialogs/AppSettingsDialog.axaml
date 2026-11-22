@@ -140,9 +140,12 @@
                     <!-- where you are, while automapping: a token on your room, and a glow round it; the tokens shown side by side -->
                     <HeaderedContentControl Classes="group" Header="Where you are">
                         <StackPanel Spacing="10">
-                            <TextBlock Classes="hint" TextWrapping="Wrap"
-                                       Text="The token on the room automap has you in. Drag it onto another room if you're really there." />
-                            <ListBox x:Name="HereTokenTiles" ItemsSource="{Binding HereTokenTiles}" SelectedItem="{Binding SelectedHereToken}"
+                            <StackPanel Spacing="2">
+                                <CheckBox Content="_Token on the room" IsChecked="{Binding HereTokenShown}" />
+                                <TextBlock Classes="hint" TextWrapping="Wrap" Margin="28,0,0,0"
+                                           Text="On the room automap has you in. Drag it onto another room if you're really there." />
+                            </StackPanel>
+                            <ListBox x:Name="HereTokenTiles" IsEnabled="{Binding HereTokenShown}" ItemsSource="{Binding HereTokenTiles}" SelectedItem="{Binding SelectedHereToken}"
                                      SelectionChanged="OnHereTokenChosen"
                                      Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                      AutomationProperties.Name="Token">
@@ -173,7 +176,7 @@
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8" IsEnabled="{Binding HereTokenShown}">
                                 <Button x:Name="HereTokenBrowse" Content="_Load Your Own…" Click="OnBrowseTokenClick"
                                         ToolTip.Tip="A transparent PNG, or an SVG. A picture taller than it is wide stands on the room, like the pawn; anything else lies flat, like the disc." />
                                 <TextBlock Text="{Binding HereTokenFileName}" IsVisible="{Binding UsesOwnToken}" VerticalAlignment="Center"

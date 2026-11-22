@@ -11,11 +11,15 @@ public partial class AppSettingsViewModel : ViewModelBase
 {
     // Where you are, while automapping: a token on your room, and a glow round it (HereToken). Lee, 22 Nov 2026.
 
-    /// <summary>The tokens to choose from, each shown with its picture; the last but one is your own.</summary>
+    /// <summary>The tokens to choose from, each shown with its picture; the last is your own.</summary>
     public IReadOnlyList<HereTokenTile> HereTokenTiles { get; } = HereToken.Choices
-        .Select(choice => new HereTokenTile(choice.Key, choice.Key == HereToken.Own ? "Your own" : choice.Name,
-            choice.Key is HereToken.Own or HereToken.None ? null : HereToken.Image(choice.Key, 128)))
+        .Select(choice => new HereTokenTile(choice.Key, choice.Name,
+            choice.Key == HereToken.Own ? null : HereToken.Image(choice.Key, 128)))
         .ToList();
+
+    /// <summary>The token is shown; unticked, the one chosen stays chosen for when it's ticked again.</summary>
+    [ObservableProperty]
+    private bool _hereTokenShown = true;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UsesOwnToken))]
@@ -185,6 +189,7 @@ public partial class AppSettingsViewModel : ViewModelBase
             .FirstOrDefault(choice => choice.Key == settings.HereToken);
         HereTokenIndex = token.Key == null ? 0 : token.index;
         HereTokenFile = settings.HereTokenFile ?? string.Empty;
+        HereTokenShown = settings.HereTokenShown;
         HereGlow = settings.HereGlow;
         HereGlowColor = global::Avalonia.Media.Color.TryParse(settings.HereGlowColor, out var glow)
             ? System.Drawing.Color.FromArgb(glow.R, glow.G, glow.B)
@@ -222,6 +227,7 @@ public partial class AppSettingsViewModel : ViewModelBase
         var settings = ApplicationSettingsController.AppSettings;
         settings.HereToken = HereTokenKey;
         settings.HereTokenFile = HereTokenFile ?? string.Empty;
+        settings.HereTokenShown = HereTokenShown;
         settings.HereGlow = HereGlow;
         // the colour cleared (×): back to teal, rather than a black glow
         settings.HereGlowColor = HereGlowColor.A == 0
@@ -289,9 +295,9 @@ public partial class HereTokenTile : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasNoImage))]
     private Bitmap? _image;
 
-    /// <summary>No picture: None, or your own before you've loaded one.</summary>
+    /// <summary>No picture: your own, before you've loaded one.</summary>
     public bool HasNoImage => Image == null;
 
     /// <summary>What shows instead of a picture.</summary>
-    public string Placeholder => Key == HereToken.Own ? "+" : "—";
+    public string Placeholder => "+";
 }

@@ -28,12 +28,14 @@ public class HereTokenTests
     private Project? _previousProject;
     private string _token = string.Empty;
     private string _file = string.Empty;
+    private bool _shown = true;
 
     [SetUp]
     public void SetUp()
     {
         _previousProject = Project.Current;
         _token = ApplicationSettingsController.AppSettings.HereToken;
+        _shown = ApplicationSettingsController.AppSettings.HereTokenShown;
         _file = ApplicationSettingsController.AppSettings.HereTokenFile;
     }
 
@@ -43,6 +45,7 @@ public class HereTokenTests
         MapCanvasControl.HereRoomOverride = null;
         ApplicationSettingsController.AppSettings.HereToken = _token;
         ApplicationSettingsController.AppSettings.HereTokenFile = _file;
+        ApplicationSettingsController.AppSettings.HereTokenShown = _shown;
         var created = Project.Current;
         Project.Current = _previousProject!;
         if (!ReferenceEquals(created, _previousProject)) created.Dispose();
@@ -52,7 +55,7 @@ public class HereTokenTests
     [Category("Unit")]
     public void EachTokenIsAPicture_DrawnFromItsSvg()
     {
-        foreach (var (key, _) in HereToken.Choices.Where(choice => choice.Key is not (HereToken.Own or HereToken.None)))
+        foreach (var (key, _) in HereToken.Choices.Where(choice => choice.Key != HereToken.Own))
         {
             var image = HereToken.Image(key, 128);
             image.ShouldNotBeNull(key);
@@ -80,8 +83,12 @@ public class HereTokenTests
             ApplicationSettingsController.AppSettings.HereToken = HereToken.Own;
             ApplicationSettingsController.AppSettings.HereTokenFile = svg;
             HereToken.Chosen.ShouldBe(svg);
-            ApplicationSettingsController.AppSettings.HereToken = HereToken.None;
+            // turned off, nothing is drawn, but your choice is kept for when it's turned on again
+            ApplicationSettingsController.AppSettings.HereTokenShown = false;
             HereToken.Chosen.ShouldBeNull();
+            ApplicationSettingsController.AppSettings.HereToken.ShouldBe(HereToken.Own);
+            ApplicationSettingsController.AppSettings.HereTokenShown = true;
+            HereToken.Chosen.ShouldBe(svg);
         }
         finally
         {
@@ -103,7 +110,7 @@ public class HereTokenTests
             var vm = new Trizbort.Avalonia.ViewModels.AppSettingsViewModel();
             vm.Initialize();
             vm.HereTokenTiles.Select(tile => tile.Key).ShouldBe(HereToken.Choices.Select(choice => choice.Key));
-            vm.HereTokenTiles.Where(tile => tile.Key is not (HereToken.Own or HereToken.None))
+            vm.HereTokenTiles.Where(tile => tile.Key != HereToken.Own)
                 .ShouldAllBe(tile => tile.Image != null);
             var own = vm.HereTokenTiles.Single(tile => tile.Key == HereToken.Own);
             own.HasNoImage.ShouldBeTrue();
@@ -117,6 +124,19 @@ public class HereTokenTests
             own.Image.ShouldNotBeNull();
             vm.HereTokenFileName.ShouldBe("mine.svg");
             vm.ApplyToSettings();
+            ApplicationSettingsController.AppSettings.HereToken.ShouldBe(HereToken.Own);
+            ApplicationSettingsController.AppSettings.HereTokenFile.ShouldBe(svg);
+
+            // off, saved, opened again, on, saved: back as it was
+            vm.HereTokenShown = false;
+            vm.ApplyToSettings();
+            var again = new Trizbort.Avalonia.ViewModels.AppSettingsViewModel();
+            again.Initialize();
+            again.HereTokenShown.ShouldBeFalse();
+            again.SelectedHereToken!.Key.ShouldBe(HereToken.Own);
+            again.HereTokenShown = true;
+            again.ApplyToSettings();
+            ApplicationSettingsController.AppSettings.HereTokenShown.ShouldBeTrue();
             ApplicationSettingsController.AppSettings.HereToken.ShouldBe(HereToken.Own);
             ApplicationSettingsController.AppSettings.HereTokenFile.ShouldBe(svg);
         }
@@ -171,7 +191,7 @@ public class HereTokenTests
         {
             MapCanvasControl.HereRoomOverride = maze;
             service.Select(hall);
-            foreach (var (key, _) in HereToken.Choices.Where(choice => choice.Key is not (HereToken.Own or HereToken.None)))
+            foreach (var (key, _) in HereToken.Choices.Where(choice => choice.Key != HereToken.Own))
             {
                 ApplicationSettingsController.AppSettings.HereToken = key;
                 Capture(map, Path.Combine(root, $"here-token-{key}.png"));

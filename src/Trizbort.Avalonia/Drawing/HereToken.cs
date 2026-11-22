@@ -26,7 +26,6 @@ internal static class HereToken
     public const string YouAreHere = "you-are-here";
     public const string WoodenPawn = "wooden-pawn";
     public const string Own = "own";
-    public const string None = "none";
 
     /// <summary>The tokens to choose from, in order, with their names.</summary>
     public static readonly IReadOnlyList<(string Key, string Name)> Choices = new[]
@@ -35,8 +34,7 @@ internal static class HereToken
         (BrassCoin, "Brass coin"),
         (YouAreHere, "You are here"),
         (WoodenPawn, "Wooden pawn (standing)"),
-        (Own, "Your own picture…"),
-        (None, "None")
+        (Own, "Your own")
     };
 
     /// <summary>Across, on the map at 100%.</summary>
@@ -47,14 +45,14 @@ internal static class HereToken
 
     private static readonly Dictionary<(string Source, int Pixels), Bitmap?> _images = new();
 
-    /// <summary>The token chosen in the settings, or null for none.</summary>
+    /// <summary>The token chosen in the settings, or null when it isn't shown.</summary>
     public static string? Chosen
     {
         get
         {
             var settings = ApplicationSettingsController.AppSettings;
+            if (!settings.HereTokenShown) return null;
             var key = string.IsNullOrWhiteSpace(settings.HereToken) ? WoodenDisc : settings.HereToken;
-            if (key == None) return null;
             if (key == Own) return string.IsNullOrWhiteSpace(settings.HereTokenFile) ? null : settings.HereTokenFile;
             return Choices.Any(choice => choice.Key == key) ? key : WoodenDisc;
         }
