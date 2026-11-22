@@ -157,13 +157,14 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasAutomapAssumption))]
     [NotifyCanExecuteChangedFor(nameof(CorrectAutomapRoomCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AcceptAutomapRoomCommand))]
     private string _automapAssumption = string.Empty;
 
     public bool HasAutomapAssumption => AutomapAssumption.Length > 0;
 
     /// <summary>
-    ///     Not This Room: automap took the room you came into for one already on the map, and it isn't. Asks which it is
-    ///     (another room with its name, or a new one) and moves the way in there.
+    ///     Wrong Room: automap guessed which room you came into, and it isn't. Asks which it is (another room with its
+    ///     name, or a new one) and moves the way in there.
     /// </summary>
     [RelayCommand(CanExecute = nameof(HasAutomapAssumption))]
     public async Task CorrectAutomapRoomAsync()
@@ -173,6 +174,14 @@ public partial class MainWindowViewModel : ViewModelBase
             GoToAutomapRoom();
         }
 
+        RefreshAutomapPanel();
+    }
+
+    /// <summary>That's Right: automap guessed right; the guess is put away.</summary>
+    [RelayCommand(CanExecute = nameof(HasAutomapAssumption))]
+    public void AcceptAutomapRoom()
+    {
+        AutomapEngine.Instance.AcceptArrival();
         RefreshAutomapPanel();
     }
 

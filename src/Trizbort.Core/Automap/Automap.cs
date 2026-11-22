@@ -1312,11 +1312,13 @@ public sealed class Automap : IAutomapController
         }
 
         _notOnMap = null;
+        _askedWhichRoom = false;
         var room = VariantRoom(roomName, roomDescription);
+        // the map's join followed: west from the coins room led to the keys room before, so it does now
+        var followedJoin = room != null;
         _skipHeading = false;
         if (room == null)
         {
-          _askedWhichRoom = false;
           room = await FindRoomAsync(roomName, roomDescription, line, token);
           token.ThrowIfCancellationRequested();
           RefreshLastKnownRoom();
@@ -1604,6 +1606,16 @@ public sealed class Automap : IAutomapController
         // undoing a tidy that went wrong keeps the new room
         if (tidy && _lastKnownRoom != null) await _canvas.TidyAroundAsync(_lastKnownRoom);
 
+        // How the player came in, and whether automap guessed: recorded before waiting for the next step, so what it
+        // guessed shows while paused after this move, not one step later (Lee, 22 Nov 2026)
+        // (a move that came back to the same room counts: up "In the Chimney" to what automap took for the same one)
+        if (_lastKnownRoom != null && (_lastKnownRoom != arrivedFrom || arrivedBy != null || arrivedByJourney != null))
+          _arrival = arrivedFrom != null && (arrivedBy != null || arrivedByJourney != null) && !_suspended
+            ? new Arrival(arrivedFrom, arrivedBy, arrivedByJourney, _lastKnownRoom, roomDescription,
+              unasked && !decision.HasValue && (foundRoom == null || _lastKnownRoom == foundRoom), foundRoom == null,
+              followedJoin && _lastKnownRoom == foundRoom)
+            : null;
+
         // single stepping waits outside the batch, so the user can undo while we wait
         for (var wait = 0; wait < waits; wait++) await WaitForStep(token);
 
@@ -1612,12 +1624,6 @@ public sealed class Automap : IAutomapController
         // but we won't join them up to this room.
         // we might end up caring if, for example, the user gives multiple commands at one prompt,
         // or they're moved to one room and then teleported to another.
-        // (a move that came back to the same room counts: up "In the Chimney" to what automap took for the same one)
-        if (_lastKnownRoom != null && (_lastKnownRoom != arrivedFrom || arrivedBy != null || arrivedByJourney != null))
-          _arrival = arrivedFrom != null && (arrivedBy != null || arrivedByJourney != null) && !_suspended
-            ? new Arrival(arrivedFrom, arrivedBy, arrivedByJourney, _lastKnownRoom, roomDescription,
-              unasked && !decision.HasValue && (foundRoom == null || _lastKnownRoom == foundRoom), foundRoom == null)
-            : null;
         _lastMoveDirection = null;
         _lastJourneyCommand = null;
       }
@@ -2247,7 +2253,7 @@ public sealed class Automap : IAutomapController
 
   /// <summary>How the player last came into a room: from where, which way, and what the game showed.</summary>
   private sealed record Arrival(Room From, MappableDirection? Direction, string Journey, Room To, string Description,
-    bool Assumed = false, bool New = false);
+    bool Assumed = false, bool New = false, bool Followed = false);
 
   private Arrival _arrival;
 
@@ -2362,25 +2368,55 @@ public sealed class Automap : IAutomapController
   }
 
   /// <summary>
-  ///   Whether automap took the room the player came into to be one already on the map, without asking: back in the
-  ///   gold maze room, say, when it was another maze room. <see cref="CorrectArrivalAsync" /> puts it right. Lee,
-  ///   21 Nov 2026: a button for "the last assumption was wrong".
+  ///   Whether automap guessed which room the player came into, without asking, where other rooms share its name: back
+  ///   in the gold maze room, say, when it was another maze room. <see cref="CorrectArrivalAsync" /> puts it right.
+  ///   Lee, 21 Nov 2026: a button for "the last assumption was wrong". Following the map's join to a room no other
+  ///   shares its name with is no guess (22 Nov); coming a new way to one already on the map is.
   /// </summary>
   public bool CanCorrectArrival =>
-    CanSplitCurrentRoom && _arrival.Assumed && (!_arrival.New || Named(CurrentRoom.Name).Count > 1);
+    CanSplitCurrentRoom && _arrival.Assumed &&
+    (Named(CurrentRoom.Name).Count > 1 || (!_arrival.New && !_arrival.Followed));
 
   /// <summary>
-  ///   What automap assumed, to show beside the button: "You came to Maze (gold), already on the map.", or, a new room
-  ///   made where others have its name (the same room described differently, perhaps), "You came to a new room, ...".
+  ///   What automap guessed, and why, to show above the buttons: following the map's join ("West from Maze (coins)
+  ///   leads to Maze (keys) on the map, so automap took you to be there. The maze rooms all look alike, so it may be
+  ///   another."), a room with the same name and description, or a new room where others have its name.
   /// </summary>
-  public string ArrivalAssumption =>
-    !CanCorrectArrival
-      ? null
-      : _arrival.New
-        ? "You came to a new room, " + CurrentRoom.Name + "."
-        : (_canvas.ResolveRoom(_arrival.From) == CurrentRoom ? "That way led back to " : "You came to ") +
-          Trizbort.Editor.RoomSplit.Called(Trizbort.Domain.Application.Project.Current, CurrentRoom) +
-          ", already on the map.";
+  public string ArrivalAssumption
+  {
+    get
+    {
+      if (!CanCorrectArrival) return null;
+      var project = Trizbort.Domain.Application.Project.Current;
+      var here = Trizbort.Editor.RoomSplit.Called(project, CurrentRoom);
+      var from = _canvas.ResolveRoom(_arrival.From);
+      var way = _arrival.Direction is { } direction
+        ? DirectionWords.Word(direction)
+        : string.IsNullOrWhiteSpace(_arrival.Journey) ? "That way" : $"\"{_arrival.Journey.Trim()}\"";
+      var start = char.ToUpperInvariant(way[0]) + way.Substring(1);
+      var fromName = from == null ? "the room before" : Trizbort.Editor.RoomSplit.Called(project, from);
+      var alike = Named(CurrentRoom.Name).Count;
+      var others = alike == 2
+        ? "Another room on the map has its name"
+        : $"{alike - 1} other rooms on the map have its name";
+      var lookAlike = alike > 1 ? $" Rooms called {CurrentRoom.Name} look alike, so it may be another." : string.Empty;
+      if (_arrival.New)
+        return $"{start} from {fromName} led somewhere new to the map, so automap added {here}. {others}: it may be " +
+               (alike == 2 ? "that one" : "one of them") + ", described differently.";
+      if (_arrival.Followed)
+        return (from == CurrentRoom
+          ? $"{start} from {here} leads back to itself on the map, so automap kept you there."
+          : $"{start} from {fromName} leads to {here} on the map, so automap took you there.") + lookAlike;
+      return $"{start} from {fromName} isn't on the map yet. Automap took you to be in {here}, already on the map, " +
+             "as it has the same name and description." + lookAlike;
+    }
+  }
+
+  /// <summary>Automap guessed right: the guess is put away.</summary>
+  public void AcceptArrival()
+  {
+    if (_arrival != null) _arrival = _arrival with { Assumed = false };
+  }
 
   /// <summary>
   ///   The room the player came into isn't the one automap took it for: asks which it is, of the other rooms with its

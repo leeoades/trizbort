@@ -14,10 +14,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
-- **Not This Room…** in the automap panel: when automap decides which room you came into without asking, it says so
-  under Where You Are, and the button puts it right. Taken for a room already on the map (back to the gold maze room,
-  say): pick the room it really is, or a new one. A new room made where others have its name (with Don't Ask Again
-  on): pick the room it was, described differently now. Either way, the way you came in moves there.
+- **Automap guessed where you are**: when automap decides which room you came into without asking, and it could
+  be another, a box under Where You Are says what it guessed and why ("West from Maze (coins) leads to Maze (keys)
+  on the map, so automap took you there. Rooms called Maze look alike, so it may be another."), as soon as you've
+  made the move. **Wrong Room: Choose…** puts it right: pick the room you're really in, of the others with its name,
+  or a new one, and the way you came moves there. **That's Right** puts the box away. It shows for a way followed on
+  the map into a room that shares its name, a room already on the map reached a new way, and a new room made where
+  others have its name (with Don't Ask Again on): pick the room it was, described differently now.
 - **Where you are** is a token on the room automap has you in, like a playing piece on a board:
   a wooden disc with a hurricane lantern burnt into it, a brass coin, a wooden pawn, a "You are here" sign, painted
   and pewter figures (an adventurer, a detective, a valkyrie, a wizard), or your own
@@ -70,8 +73,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
-- **Automap: This Is a Different Room** is no longer on a room's right-click menu: **Not This Room…** in the automap
-  panel does it.
+- **Automap: This Is a Different Room** is no longer on a room's right-click menu: **Wrong Room: Choose…** in the
+  automap panel does it.
 - In Split Room, a join that goes both ways is two ways, out and back in, as each can belong to a different room;
   the way you just came in is chosen to start with. Moving one half splits the join into two one-way joins (west from
   the gold room to the rod room stays; east from the rod room goes, one way, into the new room). Rooms that share a
