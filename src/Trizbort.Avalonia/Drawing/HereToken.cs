@@ -24,7 +24,7 @@ internal static class HereToken
     public const string WoodenDisc = "wooden-disc";
     public const string BrassCoin = "brass-coin";
     public const string YouAreHere = "you-are-here";
-    public const string RedCounter = "red-counter";
+    public const string WoodenPawn = "wooden-pawn";
     public const string Own = "own";
     public const string None = "none";
 
@@ -34,7 +34,7 @@ internal static class HereToken
         (WoodenDisc, "Wooden disc"),
         (BrassCoin, "Brass coin"),
         (YouAreHere, "You are here"),
-        (RedCounter, "Red counter"),
+        (WoodenPawn, "Wooden pawn"),
         (Own, "Your own picture…"),
         (None, "None")
     };
@@ -78,8 +78,9 @@ internal static class HereToken
     public static Point PlaceOn(Room room, double zoom)
     {
         var bounds = room.InnerBounds;
-        var size = SizeAt(zoom);
-        return new Point(bounds.Right - size * 0.1, bounds.Top + size * 0.12);
+        // a little in from the corner; grown bigger when zoomed out, it grows outward, off the room's name
+        var grown = SizeAt(zoom) - Size;
+        return new Point(bounds.Right - Size * 0.12 + grown * 0.5, bounds.Top + Size * 0.12 - grown * 0.5);
     }
 
     /// <summary>The square the token fills, centred on <paramref name="centre" />.</summary>

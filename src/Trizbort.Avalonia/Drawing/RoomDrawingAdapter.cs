@@ -12,6 +12,7 @@ using CoreLineSegment = Trizbort.Domain.Misc.LineSegment;
 using CoreColor = System.Drawing.Color;
 using CoreColors = Trizbort.Domain.Misc.Colors;
 using AvaloniaPoint = Avalonia.Point;
+using AvaloniaRect = Avalonia.Rect;
 using AvaloniaColor = Avalonia.Media.Color;
 using AvaloniaDrawingContext = Avalonia.Media.DrawingContext;
 using Region = Trizbort.Domain.Misc.Region;
@@ -136,12 +137,15 @@ public static class RoomDrawingAdapter
         //     (MapCanvasControl).
         if (AutomapRoom != null && ReferenceEquals(room, AutomapRoom) && HereToken.Glow is { } glow)
         {
-            for (var i = 5; i >= 1; i--)
+            // thin layers, each a little further out and rounder, fading: a soft edge rather than steps
+            const int layers = 9;
+            for (var i = layers; i >= 1; i--)
             {
-                var glowBounds = bounds;
-                glowBounds.Inflate(i * 3.2f);
-                var glowGeometry = CreateShapeGeometry(glowBounds, look.Shape, corners, handDrawn, seed);
-                context.DrawGeometry(new SolidColorBrush(glow, 0.13 + (5 - i) * 0.05), null, glowGeometry);
+                var spread = i * 1.8;
+                var glowRect = new AvaloniaRect(bounds.Left - spread, bounds.Top - spread, bounds.Width + spread * 2,
+                    bounds.Height + spread * 2);
+                context.DrawRectangle(new SolidColorBrush(glow, 0.09 + (layers - i) * 0.012), null, glowRect, spread,
+                    spread);
             }
         }
 
