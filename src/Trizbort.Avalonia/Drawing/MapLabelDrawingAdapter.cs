@@ -5,6 +5,7 @@ using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Setup;
 using CoreRect = Trizbort.Domain.Misc.Rect;
+using CoreVector = Trizbort.Domain.Misc.Vector;
 using CoreColor = System.Drawing.Color;
 using CoreColors = Trizbort.Domain.Misc.Colors;
 using AvaloniaPoint = Avalonia.Point;
@@ -166,6 +167,38 @@ public static class MapLabelDrawingAdapter
     ///     A Markdown label: laid out left-aligned from the top of the label (it may run past the bottom; make the label
     ///     bigger), and drawn; laid out again only when the text, size, font or colour change.
     /// </summary>
+    /// <summary>The widest a label grows to fit a table; wider than that, the table's cells wrap.</summary>
+    public const float WidestFitted = 640;
+
+    /// <summary>
+    ///   The size <paramref name="label" />'s Markdown needs: as tall as its text, and wide enough for its tables (up
+    ///   to <see cref="WidestFitted" />), never smaller than <paramref name="atLeast" />. Lee, 22 Nov 2026: the label
+    ///   grows as its text does.
+    /// </summary>
+    public static CoreVector FitMarkdown(MapLabel label, CoreVector atLeast)
+    {
+        if (!label.Markdown || string.IsNullOrEmpty(label.Text)) return atLeast;
+        var font = Settings.RoomFontMetadata;
+        // the text's inset, as drawn: more for an ellipse
+        var inset = label.Shape == RoomShape.Ellipse ? 11.5f : 5f;
+        var rule = Settings.Color[CoreColors.Border];
+
+        MarkdownLabelRenderer Lay(float width) => MarkdownLabelRenderer.Lay(label.Text,
+            new global::Avalonia.Rect(0, 0, Math.Max(1, width - inset * 2), 100000), font.ToTypeface(), font.Size,
+            Brushes.Black, _linkBrush, rule.ToPen(1));
+
+        var width = atLeast.X;
+        var laid = Lay(width);
+        if (laid.NaturalWidth + inset * 2 > width && width < WidestFitted)
+        {
+            width = (float)Math.Min(WidestFitted, Math.Ceiling(laid.NaturalWidth + inset * 2));
+            laid = Lay(width);
+        }
+
+        var height = (float)Math.Ceiling(laid.Height + inset * 2);
+        return new CoreVector(width, Math.Max(atLeast.Y, height));
+    }
+
     private static void DrawMarkdown(MapLabel label, AvaloniaDrawingContext context, LabelCache cache, CoreRect textBounds)
     {
         var font = Settings.RoomFontMetadata;

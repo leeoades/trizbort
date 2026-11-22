@@ -4,6 +4,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Automap;
+using Trizbort.Avalonia.Drawing;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Avalonia.Views;
 using Trizbort.Avalonia.Views.Dialogs;
@@ -380,10 +381,30 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
                 viewModel.ChooseRoomOnMap(room);
         }
 
+        // The label on the map shows the text as it's typed, and a Markdown label grows (or shrinks back, as far as the
+        // size it had) to fit it (Lee, 22 Nov 2026); put back as it was before OK applies it as one undo step, or on
+        // Cancel.
+        var (wasText, wasMarkdown, wasSize) = (label.Text, label.Markdown, label.Size);
+
+        void ShowAsTyped()
+        {
+            label.Text = viewModel.Text ?? string.Empty;
+            label.Markdown = viewModel.Markdown;
+            label.Size = MapLabelDrawingAdapter.FitMarkdown(label, wasSize);
+            _commandService.InvalidateCanvas();
+        }
+
+        void OnTyped(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(MapLabelPropertiesViewModel.Text) or nameof(MapLabelPropertiesViewModel.Markdown))
+                ShowAsTyped();
+        }
+
         var closed = new TaskCompletionSource<bool>();
         dialog.Closed += (_, _) => closed.TrySetResult(dialog.Accepted);
         _openLabelDialogs[label] = dialog;
         _commandService.SelectionChanged += OnSelectionChanged;
+        viewModel.PropertyChanged += OnTyped;
         bool result;
         try
         {
@@ -393,13 +414,20 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         finally
         {
             _commandService.SelectionChanged -= OnSelectionChanged;
+            viewModel.PropertyChanged -= OnTyped;
             _openLabelDialogs.Remove(label);
+            (label.Text, label.Markdown, label.Size) = (wasText, wasMarkdown, wasSize);
+            _commandService.InvalidateCanvas();
         }
 
         // the label taken off the map while its dialog was open: nothing to change
         if (result && Project.Current.Elements.Contains(label))
         {
-            _commandService.Session.Apply("Edit label properties", label, () => viewModel.ApplyTo(label));
+            _commandService.Session.Apply("Edit label properties", label, () =>
+            {
+                viewModel.ApplyTo(label);
+                label.Size = MapLabelDrawingAdapter.FitMarkdown(label, wasSize);
+            });
         }
         return result;
     }

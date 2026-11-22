@@ -33,6 +33,33 @@ public class MarkdownLabelTests
         renderer.LinkAt(new Point(bounds.Left + 1, bounds.Top + 1)).ShouldBeNull();
     }
 
+    /// <summary>Lee, 22 Nov 2026: the label grows as its text does.</summary>
+    [AvaloniaTest]
+    public void AMarkdownLabel_GrowsToFitItsText_AndItsTables_ButNoSmallerThanItWas()
+    {
+        var small = new Trizbort.Domain.Misc.Vector(120, 40);
+        var label = new MapLabel(Project.Current) { Markdown = true, Text = "## Treasures" };
+        // fits already: as it was
+        MapLabelDrawingAdapter.FitMarkdown(label, small).ShouldBe(small);
+
+        label.Text = "## Treasures\n" + Trizbort.Domain.Misc.MarkdownEditing.SampleTable;
+        var fitted = MapLabelDrawingAdapter.FitMarkdown(label, small);
+        // wider for the table, so its cells don't wrap, and taller for its rows
+        fitted.X.ShouldBeGreaterThan(small.X);
+        fitted.X.ShouldBeLessThanOrEqualTo(MapLabelDrawingAdapter.WidestFitted);
+        fitted.Y.ShouldBeGreaterThan(small.Y + 60);
+
+        // a long paragraph wraps at the label's width, which stays
+        label.Text = string.Join(" ", Enumerable.Repeat("The lamp is getting dim.", 12));
+        var wrapped = MapLabelDrawingAdapter.FitMarkdown(label, small);
+        wrapped.X.ShouldBe(small.X);
+        wrapped.Y.ShouldBeGreaterThan(small.Y);
+
+        // plain text: as it was
+        label.Markdown = false;
+        MapLabelDrawingAdapter.FitMarkdown(label, small).ShouldBe(small);
+    }
+
     [AvaloniaTest]
     public void TheLabelDialog_TurnsMarkdownOnAndOff()
     {

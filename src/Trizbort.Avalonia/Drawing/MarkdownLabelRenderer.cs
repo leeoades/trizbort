@@ -24,6 +24,12 @@ public sealed class MarkdownLabelRenderer
     /// <summary>The height the text takes.</summary>
     public double Height { get; private set; }
 
+    /// <summary>
+    ///   The width the text would like: its widest table, each column as wide as its widest cell (paragraphs wrap
+    ///   at any width, so don't count). 0 with no table.
+    /// </summary>
+    public double NaturalWidth { get; private set; }
+
     /// <summary>Where each link was drawn, in map coordinates.</summary>
     public IReadOnlyList<(Rect Bounds, string Link)> Links => _links;
 
@@ -175,6 +181,7 @@ public sealed class MarkdownLabelRenderer
         }
 
         var total = natural.Sum();
+        NaturalWidth = Math.Max(NaturalWidth, total);
         var scale = total > bounds.Width && total > 0 ? bounds.Width / total : 1;
         var widths = natural.Select(w => Math.Max(CellPadding * 2 + 8, w * scale)).ToArray();
 
