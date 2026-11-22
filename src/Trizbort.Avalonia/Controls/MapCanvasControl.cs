@@ -1162,13 +1162,9 @@ public class MapCanvasControl : Control
     /// <summary>Whether <paramref name="client" /> is on the token, to pick it up.</summary>
     private bool OnToken(Point client)
     {
-        if (_tokenDrawnAt is not { } at || HereToken.Chosen == null) return false;
+        if (_tokenDrawnAt is not { } at || HereToken.Chosen is not { } token) return false;
         var world = ClientToCanvas(client);
-        var rect = HereToken.At(at, ZoomFactor);
-        var radius = rect.Width / 2;
-        var dx = world.X - rect.Center.X;
-        var dy = world.Y - rect.Center.Y;
-        return dx * dx + dy * dy <= radius * radius;
+        return HereToken.Area(token, at, ZoomFactor).Contains(new Point(world.X, world.Y));
     }
 
     public override void Render(AvaloniaDrawingContext context)

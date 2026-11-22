@@ -16,7 +16,7 @@ namespace Trizbort.Avalonia.Drawing;
 /// <summary>
 ///   Where you are on the map: a token on the room automap has you in, like a playing piece on a board, seen from
 ///   above as the map is, with its shadow falling down and to the right. Lee, 22 Nov 2026: the dotted ring didn't stand
-///   out beside the yellow selection; a wooden disc with a lamp burnt into it, a brass coin, a "You are here" sign, or
+///   out beside the yellow selection; a wooden disc with a caving lamp burnt into it, a brass coin, a "You are here" sign, or
 ///   your own picture (a transparent PNG, or an SVG).
 /// </summary>
 internal static class HereToken
@@ -34,7 +34,7 @@ internal static class HereToken
         (WoodenDisc, "Wooden disc"),
         (BrassCoin, "Brass coin"),
         (YouAreHere, "You are here"),
-        (WoodenPawn, "Wooden pawn"),
+        (WoodenPawn, "Wooden pawn (standing)"),
         (Own, "Your own picture…"),
         (None, "None")
     };
@@ -91,6 +91,24 @@ internal static class HereToken
     }
 
     /// <summary>
+    ///   Where <paramref name="token" /> is drawn for <paramref name="centre" />: a flat piece fills the square round
+    ///   it; a standing one (taller than it's wide, like the wooden pawn) stands there, its base on that spot and
+    ///   the rest of it above, a little bigger.
+    /// </summary>
+    public static Rect Area(string token, Point centre, double zoom)
+    {
+        var rect = At(centre, zoom);
+        var image = Image(token, 128);
+        if (image == null || !Standing(image.Size)) return Fit(image?.Size ?? rect.Size, rect);
+        var height = rect.Height * 1.45;
+        var width = height * image.Size.Width / image.Size.Height;
+        var bottom = centre.Y + rect.Height * 0.22;
+        return new Rect(centre.X - width / 2, bottom - height, width, height);
+    }
+
+    private static bool Standing(Size size) => size.Height > size.Width * 1.25;
+
+    /// <summary>
     ///   Draws <paramref name="token" /> (a key from <see cref="Choices" />, or a file) centred on
     ///   <paramref name="centre" />, with its shadow; <paramref name="lifted" /> while you drag it, so it stands a
     ///   little off the map.
@@ -98,11 +116,11 @@ internal static class HereToken
     public static void Draw(AvaloniaDrawingContext context, string token, Point centre, double zoom, double scaling,
         bool lifted = false)
     {
+        var fitted = Area(token, centre, zoom);
         var rect = At(centre, zoom);
-        var pixels = Pixels(rect.Width * zoom * scaling);
+        var pixels = Pixels(Math.Max(fitted.Width, fitted.Height) * zoom * scaling);
         var image = Image(token, pixels);
         if (image == null) return;
-        var fitted = Fit(image.Size, rect);
 
         // the shadow: the token's own shape, dark, down and to the right, softened by drawing it a few times
         var drop = rect.Width * (lifted ? 0.16 : 0.08);
