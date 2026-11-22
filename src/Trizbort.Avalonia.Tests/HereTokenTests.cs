@@ -89,6 +89,44 @@ public class HereTokenTests
         }
     }
 
+    [AvaloniaTest]
+    [Category("Unit")]
+    public void AppSettingsShowEveryToken_AndLoadingYourOwnChoosesIt()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "trizbort-token-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        var config = AppPaths.OverrideConfigFolder;
+        AppPaths.OverrideConfigFolder = Path.Combine(folder, "config");
+        Directory.CreateDirectory(AppPaths.OverrideConfigFolder);
+        try
+        {
+            var vm = new Trizbort.Avalonia.ViewModels.AppSettingsViewModel();
+            vm.Initialize();
+            vm.HereTokenTiles.Select(tile => tile.Key).ShouldBe(HereToken.Choices.Select(choice => choice.Key));
+            vm.HereTokenTiles.Where(tile => tile.Key is not (HereToken.Own or HereToken.None))
+                .ShouldAllBe(tile => tile.Image != null);
+            var own = vm.HereTokenTiles.Single(tile => tile.Key == HereToken.Own);
+            own.HasNoImage.ShouldBeTrue();
+
+            var svg = Path.Combine(folder, "mine.svg");
+            File.WriteAllText(svg,
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\"><circle cx=\"10\" cy=\"10\" r=\"9\" fill=\"#0a0\"/></svg>");
+            vm.UseOwnToken(svg);
+
+            vm.SelectedHereToken.ShouldBe(own);
+            own.Image.ShouldNotBeNull();
+            vm.HereTokenFileName.ShouldBe("mine.svg");
+            vm.ApplyToSettings();
+            ApplicationSettingsController.AppSettings.HereToken.ShouldBe(HereToken.Own);
+            ApplicationSettingsController.AppSettings.HereTokenFile.ShouldBe(svg);
+        }
+        finally
+        {
+            AppPaths.OverrideConfigFolder = config;
+            Directory.Delete(folder, true);
+        }
+    }
+
     [Test]
     [Category("Unit")]
     public void TheTokenStaysBigEnoughToFind_ZoomedOut()

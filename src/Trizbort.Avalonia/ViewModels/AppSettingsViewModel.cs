@@ -11,41 +11,60 @@ public partial class AppSettingsViewModel : ViewModelBase
 {
     // Where you are, while automapping: a token on your room, and a glow round it (HereToken). Lee, 22 Nov 2026.
 
-    /// <summary>The tokens to choose from, by name.</summary>
-    public IReadOnlyList<string> HereTokenNames { get; } = HereToken.Choices.Select(choice => choice.Name).ToList();
+    /// <summary>The tokens to choose from, each shown with its picture; the last but one is your own.</summary>
+    public IReadOnlyList<HereTokenTile> HereTokenTiles { get; } = HereToken.Choices
+        .Select(choice => new HereTokenTile(choice.Key, choice.Key == HereToken.Own ? "Your own" : choice.Name,
+            choice.Key is HereToken.Own or HereToken.None ? null : HereToken.Image(choice.Key, 128)))
+        .ToList();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UsesOwnToken))]
-    [NotifyPropertyChangedFor(nameof(HereTokenPreview))]
+    [NotifyPropertyChangedFor(nameof(SelectedHereToken))]
     private int _hereTokenIndex;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HereTokenPreview))]
+    [NotifyPropertyChangedFor(nameof(HereTokenFileName))]
     private string _hereTokenFile = string.Empty;
+
+    /// <summary>The tile chosen.</summary>
+    public HereTokenTile? SelectedHereToken
+    {
+        get => HereTokenIndex >= 0 && HereTokenIndex < HereTokenTiles.Count ? HereTokenTiles[HereTokenIndex] : null;
+        set
+        {
+            if (value != null) HereTokenIndex = HereTokenTiles.ToList().IndexOf(value);
+        }
+    }
+
+    /// <summary>Your own picture is chosen.</summary>
+    public bool UsesOwnToken => HereTokenKey == HereToken.Own;
+
+    /// <summary>The file your own token is drawn from, by name, or a hint when there's none.</summary>
+    public string HereTokenFileName =>
+        string.IsNullOrWhiteSpace(HereTokenFile) ? "No picture chosen yet" : System.IO.Path.GetFileName(HereTokenFile);
+
+    private string HereTokenKey =>
+        HereTokenIndex >= 0 && HereTokenIndex < HereToken.Choices.Count ? HereToken.Choices[HereTokenIndex].Key : HereToken.WoodenDisc;
+
+    /// <summary>A picture loaded for your own token: shown on its tile, and chosen.</summary>
+    partial void OnHereTokenFileChanged(string value)
+    {
+        var own = HereTokenTiles.FirstOrDefault(tile => tile.Key == HereToken.Own);
+        if (own != null) own.Image = string.IsNullOrWhiteSpace(value) ? null : HereToken.Image(value, 128);
+    }
+
+    /// <summary>Your own picture, loaded: shown on its tile, and chosen.</summary>
+    public void UseOwnToken(string file)
+    {
+        HereTokenFile = file;
+        HereTokenIndex = HereToken.Choices.ToList().FindIndex(choice => choice.Key == HereToken.Own);
+    }
 
     [ObservableProperty]
     private bool _hereGlow = true;
 
     [ObservableProperty]
     private System.Drawing.Color _hereGlowColor = System.Drawing.Color.FromArgb(0x14, 0xB8, 0xA6);
-
-    /// <summary>Your own picture is chosen: the file box and Browse are shown.</summary>
-    public bool UsesOwnToken => HereTokenKey == HereToken.Own;
-
-    private string HereTokenKey =>
-        HereTokenIndex >= 0 && HereTokenIndex < HereToken.Choices.Count ? HereToken.Choices[HereTokenIndex].Key : HereToken.WoodenDisc;
-
-    /// <summary>The chosen token, as it will look, or null for none (or a file that isn't a picture).</summary>
-    public Bitmap? HereTokenPreview
-    {
-        get
-        {
-            var key = HereTokenKey;
-            if (key == HereToken.None) return null;
-            if (key == HereToken.Own) return string.IsNullOrWhiteSpace(HereTokenFile) ? null : HereToken.Image(HereTokenFile, 128);
-            return HereToken.Image(key, 128);
-        }
-    }
 
     [ObservableProperty]
     private bool _invertMouseWheel;
@@ -250,4 +269,29 @@ public partial class AppSettingsViewModel : ViewModelBase
 
         ApplicationSettingsController.SaveSettings();
     }
+}
+
+/// <summary>A token in App Settings' panel of them: its picture, and its name.</summary>
+public partial class HereTokenTile : ObservableObject
+{
+    public HereTokenTile(string key, string name, Bitmap? image)
+    {
+        Key = key;
+        Name = name;
+        _image = image;
+    }
+
+    public string Key { get; }
+
+    public string Name { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNoImage))]
+    private Bitmap? _image;
+
+    /// <summary>No picture: None, or your own before you've loaded one.</summary>
+    public bool HasNoImage => Image == null;
+
+    /// <summary>What shows instead of a picture.</summary>
+    public string Placeholder => Key == HereToken.Own ? "+" : "—";
 }

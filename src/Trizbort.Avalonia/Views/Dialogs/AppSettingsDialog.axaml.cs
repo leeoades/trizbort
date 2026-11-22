@@ -31,7 +31,7 @@ public partial class AppSettingsDialog : Window
                 new FilePickerFileType("Pictures (PNG, SVG)") { Patterns = new[] { "*.png", "*.svg" } }
             }
         });
-        if (files.Count > 0 && files[0].TryGetLocalPath() is { } path) viewModel.HereTokenFile = path;
+        if (files.Count > 0 && files[0].TryGetLocalPath() is { } path) viewModel.UseOwnToken(path);
     }
 
     private void OnCancelClick(object? sender, RoutedEventArgs e)

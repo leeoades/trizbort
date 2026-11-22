@@ -137,30 +137,52 @@
                         </StackPanel>
                     </HeaderedContentControl>
 
-                    <!-- where you are, while automapping: a token on your room, and a glow round it -->
+                    <!-- where you are, while automapping: a token on your room, and a glow round it; the tokens shown side by side -->
                     <HeaderedContentControl Classes="group" Header="Where you are">
-                        <Grid ColumnDefinitions="*,12,Auto">
-                            <StackPanel Grid.Column="0" Spacing="8">
-                                <Grid ColumnDefinitions="Auto,12,*">
-                                    <Label Grid.Column="0" Classes="field-label" Content="_Token:" Target="{Binding #HereTokenCombo}" />
-                                    <ComboBox Grid.Column="2" x:Name="HereTokenCombo" ItemsSource="{Binding HereTokenNames}"
-                                              SelectedIndex="{Binding HereTokenIndex}" HorizontalAlignment="Left" MinWidth="180"
-                                              ToolTip.Tip="A playing piece on the room automap has you in. Drag it onto another room if you're really there." />
-                                </Grid>
-                                <Grid ColumnDefinitions="*,8,Auto" IsVisible="{Binding UsesOwnToken}">
-                                    <TextBox Grid.Column="0" x:Name="HereTokenFileBox" Text="{Binding HereTokenFile}"
-                                             Watermark="A transparent PNG, or an SVG" />
-                                    <Button Grid.Column="2" x:Name="HereTokenBrowse" Content="_Browse…" Click="OnBrowseTokenClick" />
-                                </Grid>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <CheckBox Content="_Glow round the room" IsChecked="{Binding HereGlow}" VerticalAlignment="Center" />
-                                    <controls:ColorPickerButton SelectedColor="{Binding HereGlowColor}" IsEnabled="{Binding HereGlow}" VerticalAlignment="Center" />
-                                </StackPanel>
+                        <StackPanel Spacing="10">
+                            <TextBlock Classes="hint" TextWrapping="Wrap"
+                                       Text="The token on the room automap has you in. Drag it onto another room if you're really there." />
+                            <ListBox x:Name="HereTokenTiles" ItemsSource="{Binding HereTokenTiles}" SelectedItem="{Binding SelectedHereToken}"
+                                     Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     AutomationProperties.Name="Token">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.Styles>
+                                    <Style Selector="ListBoxItem">
+                                        <Setter Property="Padding" Value="4" />
+                                        <Setter Property="Margin" Value="0,0,6,6" />
+                                        <Setter Property="CornerRadius" Value="6" />
+                                    </Style>
+                                </ListBox.Styles>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:HereTokenTile">
+                                        <StackPanel Width="88" Spacing="4" ToolTip.Tip="{Binding Name}">
+                                            <Border Width="72" Height="72" CornerRadius="4" Background="#F7F7F2" HorizontalAlignment="Center">
+                                                <Panel>
+                                                    <Image Source="{Binding Image}" Width="58" Height="58" Stretch="Uniform" />
+                                                    <TextBlock Text="{Binding Placeholder}" IsVisible="{Binding HasNoImage}" FontSize="28" Foreground="#999"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Panel>
+                                            </Border>
+                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" TextAlignment="Center" FontSize="12" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="HereTokenBrowse" Content="_Load Your Own…" Click="OnBrowseTokenClick"
+                                        ToolTip.Tip="A transparent PNG, or an SVG. A picture taller than it is wide stands on the room, like the pawn; anything else lies flat, like the disc." />
+                                <TextBlock Text="{Binding HereTokenFileName}" IsVisible="{Binding UsesOwnToken}" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" MaxWidth="260" Classes="hint" />
                             </StackPanel>
-                            <Border Grid.Column="2" Width="72" Height="72" CornerRadius="4" Background="#F7F7F2" BorderBrush="#DDD" BorderThickness="1">
-                                <Image Source="{Binding HereTokenPreview}" Width="56" Height="56" Stretch="Uniform" />
-                            </Border>
-                        </Grid>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <CheckBox Content="_Glow round the room" IsChecked="{Binding HereGlow}" VerticalAlignment="Center" />
+                                <controls:ColorPickerButton SelectedColor="{Binding HereGlowColor}" IsEnabled="{Binding HereGlow}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
                     </HeaderedContentControl>
                 </StackPanel>
             </TabItem>
