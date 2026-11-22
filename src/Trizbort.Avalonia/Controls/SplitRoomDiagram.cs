@@ -158,36 +158,48 @@ public sealed class SplitRoomDiagram : Control
                     context.DrawText(wayText, Beside(mid, px, py, wayText, i - (ways.Count - 1) / 2.0));
                 }
 
-                var other = Text(join.Exit.Other, typeface, 11, textBrush, FontStyle.Italic);
-                context.DrawText(other, End(to, ux, uy, other));
+            }
+
+            // the room at the other end, once for the ways to the same room (a way there and its way back)
+            var ends = _lines.Where(line => ways.Contains(line.Join)).ToList();
+            foreach (var room2 in ends.GroupBy(line => line.Join.Exit.Other))
+            {
+                if (string.IsNullOrWhiteSpace(room2.Key)) continue;
+                var at = new Point(room2.Average(line => line.To.X), room2.Average(line => line.To.Y));
+                var other = Text(room2.Key, typeface, 11, textBrush, FontStyle.Italic);
+                context.DrawText(other, End(at, ux, uy, other));
             }
         }
 
         var fill = Settings.Regions.FirstOrDefault()?.RColor ?? System.Drawing.Color.White;
         context.DrawRectangle(fill.ToBrush(), Settings.Color[CoreColors.Border].ToPen(2), room);
+        // centred within the room's width
         var name = Text(ShowsNew ? _viewModel.NewName : _viewModel.RoomName, typeface, 13,
             Settings.Color[CoreColors.Border].ToBrush(), FontStyle.Normal, RoomWidth - 8);
-        context.DrawText(name, new Point(centre.X - name.Width / 2, room.Top + 8));
+        context.DrawText(name, new Point(room.Left + 4, room.Top + 8));
         // the objects mark the original
         if (!ShowsNew && _viewModel.HasObjects)
         {
             var objects = Text(_viewModel.Objects, typeface, 11, Settings.Color[CoreColors.SmallText].ToBrush(),
                 FontStyle.Italic, RoomWidth - 8);
-            context.DrawText(objects, new Point(centre.X - objects.Width / 2, room.Bottom - objects.Height - 6));
+            context.DrawText(objects, new Point(room.Left + 4, room.Bottom - objects.Height - 6));
         }
     }
 
     private static FormattedText Text(string text, Typeface typeface, double size, IBrush brush, FontStyle style,
-        double maxWidth = 150)
+        double? maxWidth = null)
     {
         var formatted = new FormattedText(text ?? string.Empty, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
-            new Typeface(typeface.FontFamily, style), size, brush)
+            new Typeface(typeface.FontFamily, style), size, brush);
+        // a label is measured as written, so it can be placed beside its line; the room's text is centred in the room
+        if (maxWidth is { } width)
         {
-            MaxTextWidth = maxWidth,
-            TextAlignment = TextAlignment.Center,
-            MaxLineCount = 2,
-            Trimming = TextTrimming.CharacterEllipsis
-        };
+            formatted.MaxTextWidth = width;
+            formatted.TextAlignment = TextAlignment.Center;
+            formatted.MaxLineCount = 2;
+            formatted.Trimming = TextTrimming.CharacterEllipsis;
+        }
+
         return formatted;
     }
 

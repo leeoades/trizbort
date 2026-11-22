@@ -167,7 +167,7 @@ public class DialogCaptureTests
             var splitVm = new SplitRoomViewModel(gold, Trizbort.Editor.RoomSplit.SplitName(project, gold.Name),
                 Trizbort.Editor.RoomSplit.JoinsOf(gold), Array.Empty<Connection>(), Trizbort.Editor.RoomSplitWhere.New);
             CaptureDialog(output, files, "SplitRoom", new SplitRoomDialog { DataContext = splitVm });
-            splitVm.Joins.FirstOrDefault(join => join.Exit.Other == "Maze" && join.Exit.Inward)?.ToggleCommand.Execute(null);
+            splitVm.Joins.FirstOrDefault(join => join.Exit.Other.StartsWith("Maze") && join.Exit.Inward && !join.Exit.Loop)?.ToggleCommand.Execute(null);
             CaptureDialog(output, files, "SplitRoom__moved", new SplitRoomDialog { DataContext = splitVm });
         }
 
