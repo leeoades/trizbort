@@ -138,7 +138,7 @@
                         </Grid.ColumnDefinitions>
                         <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Line st_yle:" Target="{Binding #LineStyleCombo}" />
                         <ComboBox Grid.Row="0" Grid.Column="2" x:Name="LineStyleCombo" ItemsSource="{Binding AvailableBorderStyles}"
-                                  SelectedItem="{Binding BorderStyle}" HorizontalAlignment="Stretch" />
+                                  SelectedItem="{Binding BorderStyle}" HorizontalAlignment="Left" Width="280" />
 
                         <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Co_lour:" Target="{Binding #BorderColorButton}" />
                         <controls:ColorPickerButton Grid.Row="1" Grid.Column="2" x:Name="BorderColorButton"
@@ -173,7 +173,7 @@
                 </Grid.ColumnDefinitions>
                 <Label Grid.Column="0" Classes="field-label" Content="_Shape:" Target="{Binding #ShapeCombo}" />
                 <ComboBox Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding AvailableShapes}"
-                          SelectedItem="{Binding Shape}" HorizontalAlignment="Stretch">
+                          SelectedItem="{Binding Shape}" HorizontalAlignment="Left" Width="280">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
                     </ComboBox.ItemTemplate>
