@@ -146,4 +146,41 @@ public class ConnectionPropertiesRoomsTests
         vm.StartText.ShouldBe("from text");
         vm.EndText.ShouldBe("to text");
     }
+
+    [Test]
+    public void TickingOneWay_PointsTheArrowFromStartToEnd_AndFlipTurnsItRound()
+    {
+        // Lee, 21 Nov 2026: east from the rod room to a new maze room, drawn from the new room; ticking One Way Arrow
+        // pointed it back to the rod room, the room he'd just come from
+        var rod = AddRoom("Rod Room", 0, 0);
+        var maze = AddRoom("Maze", 300, 0);
+        var join = Join(maze, CompassPoint.West, rod, CompassPoint.East);
+        var vm = new ConnectionPropertiesViewModel();
+        vm.Initialize(join);
+        vm.StartRoomName.ShouldBe("Rod Room");
+        vm.StartText.ShouldBe("to text");
+
+        vm.IsDirectional = true;
+        vm.ApplyTo(join);
+
+        join.Flow.ShouldBe(ConnectionFlow.OneWay);
+        join.GetSourceRoom().ShouldBe(rod);
+        join.GetTargetRoom().ShouldBe(maze);
+        // each end's text stays with its room
+        join.StartText.ShouldBe("to text");
+        join.EndText.ShouldBe("from text");
+
+        var again = new ConnectionPropertiesViewModel();
+        again.Initialize(join);
+        again.StartRoomName.ShouldBe("Rod Room");
+        again.FlipCommand.Execute(null);
+        again.StartRoomName.ShouldBe("Maze");
+        again.StartText.ShouldBe("from text");
+        again.ApplyTo(join);
+
+        join.GetSourceRoom().ShouldBe(maze);
+        join.GetTargetRoom().ShouldBe(rod);
+        join.StartText.ShouldBe("from text");
+        join.EndText.ShouldBe("to text");
+    }
 }

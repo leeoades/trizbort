@@ -115,6 +115,22 @@
                                     Command="{Binding AddAutomapRoomCommand}"
                                     ToolTip.Tip="Put the room you're in on the map, beside the room you came from, and map on from there" />
                         </StackPanel>
+                        <!-- automap guessed which room you came into (there are others with its name): why, and put it right -->
+                        <Border x:Name="AssumptionBar" IsVisible="{Binding HasAutomapAssumption}" CornerRadius="4"
+                                Padding="10,8" Background="#33FFB300" BorderBrush="#FFB300" BorderThickness="1">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Automap guessed where you are" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding AutomapAssumption}" TextWrapping="Wrap" />
+                                <WrapPanel Orientation="Horizontal">
+                                    <Button x:Name="NotThisRoomButton" Content="Wrong Room: Choose…" Margin="0,0,6,0"
+                                            Command="{Binding CorrectAutomapRoomCommand}"
+                                            ToolTip.Tip="You're somewhere else: pick the room you're really in (another with this name, or a new one), and the way you came moves there" />
+                                    <Button x:Name="GuessRightButton" Content="That's Right"
+                                            Command="{Binding AcceptAutomapRoomCommand}"
+                                            ToolTip.Tip="Automap guessed right: put this away" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
                         <TextBlock Classes="small"
                                    Text="Wrong room? Right-click the room you're in and choose Automap: I'm Here." />
                     </StackPanel>

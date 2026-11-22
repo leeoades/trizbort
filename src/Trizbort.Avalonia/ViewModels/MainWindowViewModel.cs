@@ -150,6 +150,41 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>Add Current Room: the room you're in isn't on the map (the question about it was cancelled).</summary>
     public bool CanAddAutomapRoom => _canAddAutomapRoom;
 
+    /// <summary>
+    ///     What automap assumed about the room you just came into ("That way led back to Maze (gold), already on the
+    ///     map."), while it can be put right; empty otherwise.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAutomapAssumption))]
+    [NotifyCanExecuteChangedFor(nameof(CorrectAutomapRoomCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AcceptAutomapRoomCommand))]
+    private string _automapAssumption = string.Empty;
+
+    public bool HasAutomapAssumption => AutomapAssumption.Length > 0;
+
+    /// <summary>
+    ///     Wrong Room: automap guessed which room you came into, and it isn't. Asks which it is (another room with its
+    ///     name, or a new one) and moves the way in there.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(HasAutomapAssumption))]
+    public async Task CorrectAutomapRoomAsync()
+    {
+        if (await AutomapEngine.Instance.CorrectArrivalAsync())
+        {
+            GoToAutomapRoom();
+        }
+
+        RefreshAutomapPanel();
+    }
+
+    /// <summary>That's Right: automap guessed right; the guess is put away.</summary>
+    [RelayCommand(CanExecute = nameof(HasAutomapAssumption))]
+    public void AcceptAutomapRoom()
+    {
+        AutomapEngine.Instance.AcceptArrival();
+        RefreshAutomapPanel();
+    }
+
     /// <summary>Previous Move: there's a move to go back to.</summary>
     public bool CanGoBackAutomap => _canGoBackAutomap;
 
@@ -203,6 +238,7 @@ public partial class MainWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(CanAddAutomapRoom));
             AddAutomapRoomCommand.NotifyCanExecuteChanged();
         }
+        AutomapAssumption = engine.ArrivalAssumption ?? string.Empty;
         // directions from where you are follow you as you play
         FollowDirections(room);
         IsAutomapMoveByMove = engine.MoveByMove;

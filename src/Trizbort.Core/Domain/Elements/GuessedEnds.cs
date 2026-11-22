@@ -199,7 +199,9 @@ public static class GuessedEnds
   /// </summary>
   internal static bool FaceSplitLabel(IList<Element> elements, Connection connection, bool atStart)
   {
-    if (!connection.IsDrawnSplit || connection.GetSplitLabelOffset(atStart) == Vector.Zero) return false;
+    if (!connection.IsDrawnSplit) return false;
+    // a label where it was put, at the stub's tip: it goes where the stub goes
+    var followsStub = connection.GetSplitLabelOffset(atStart) == Vector.Zero;
     CompassPoint current;
     var here = atStart ? connection.GetSourceRoom(out current) : connection.GetTargetRoom(out current);
     if (here == null) return false;
@@ -215,8 +217,6 @@ public static class GuessedEnds
       return outward.Length < 0.01f ? 0 : Vector.Dot(Vector.Normalize(outward), towards);
     }
 
-    if (Facing(current) > 0) return false;
-
     var taken = new HashSet<CompassPoint>();
     foreach (var other in elements.OfType<Connection>())
     {
@@ -225,12 +225,27 @@ public static class GuessedEnds
       if (other.GetTargetRoom(out var end) == here) taken.Add(end);
     }
 
+    // An end nothing has been seen to leave the room by (the way back was only assumed, and went elsewhere: north
+    // from the maze room looped back into it) is only a guess at where the join comes in, so it gives way to a join
+    // on the same point, rather than lying on top of it. Lee, 22 Nov 2026.
+    var guessed = atStart
+      ? string.IsNullOrWhiteSpace(connection.StartText) && string.IsNullOrWhiteSpace(connection.StartTravelled)
+      : string.IsNullOrWhiteSpace(connection.EndText) && string.IsNullOrWhiteSpace(connection.EndTravelled);
+    var givesWay = guessed && taken.Contains(current);
+    // a label at the stub's tip is on its side, wherever the stub is
+    if (!givesWay && (followsStub || Facing(current) > 0)) return false;
+
     var free = Enumerable.Range(0, 16).Select(i => (CompassPoint)i).Where(point => !taken.Contains(point)).ToList();
     if (free.Count == 0) return false;
-    var best = free.OrderByDescending(Facing).First();
+    // clear of the points either side of another join, where there's a choice, so it doesn't look like that exit
+    bool Beside(CompassPoint point) =>
+      taken.Contains((CompassPoint)(((int)point + 1) % 16)) || taken.Contains((CompassPoint)(((int)point + 15) % 16));
+    var clear = free.Where(point => !Beside(point) && Facing(point) > 0).ToList();
+    var best = (clear.Count > 0 ? clear : free).OrderByDescending(Facing).First();
     if (Facing(best) <= 0) return false;
     var vertex = atStart ? connection.VertexList[0] : connection.VertexList[connection.VertexList.Count - 1];
     vertex.Port = here.PortAt(best);
+    if (followsStub) return true;
     // the label stays put: its offset is from the stub's new tip
     connection.GetSplitStub(atStart, out _, out var tip);
     connection.SetSplitLabelOffset(atStart, label - tip);

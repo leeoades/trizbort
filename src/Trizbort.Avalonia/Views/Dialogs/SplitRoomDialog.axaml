@@ -1,33 +1,30 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
         x:Class="Trizbort.Avalonia.Views.Dialogs.SplitRoomDialog"
         x:DataType="vm:SplitRoomViewModel"
         Title="Split Room"
-        Width="520" SizeToContent="Height"
-        MinWidth="420"
+        Width="1080" SizeToContent="Height"
+        MinWidth="720"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
 
     <StackPanel Margin="16" Spacing="12">
         <TextBlock Text="{Binding IntroText}" TextWrapping="Wrap" />
 
-        <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
-            <ItemsControl x:Name="JoinList" ItemsSource="{Binding Joins}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:SplitRoomJoin">
-                        <CheckBox Content="{Binding Text}" IsChecked="{Binding Moves}" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
-
-        <StackPanel Spacing="4" IsVisible="{Binding AsksWhere}">
-            <TextBlock Text="Where are you now?" />
-            <RadioButton GroupName="SplitWhere" Content="{Binding InNewText}" IsChecked="{Binding InNew}" />
-            <RadioButton GroupName="SplitWhere" Content="{Binding InOriginalText}" IsChecked="{Binding InOriginal}" />
-            <RadioButton GroupName="SplitWhere" Content="Somewhere else" IsChecked="{Binding InNeither}" />
-        </StackPanel>
+        <!-- the two rooms, drawn as the map draws them: click a way to move it across -->
+        <Grid x:Name="Rooms" ColumnDefinitions="*,Auto,*">
+            <StackPanel Grid.Column="0" Spacing="6">
+                <TextBlock Text="{Binding OriginalHeading}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <controls:SplitRoomDiagram x:Name="OriginalDiagram" ShowsNew="False" HorizontalAlignment="Center" />
+            </StackPanel>
+            <Border Grid.Column="1" Width="1" Margin="12,0" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <StackPanel Grid.Column="2" Spacing="6">
+                <TextBlock Text="{Binding NewHeading}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <controls:SplitRoomDiagram x:Name="NewDiagram" ShowsNew="True" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Grid>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
             <Button Classes="dialog-button" Content="OK" IsDefault="True" Command="{Binding OkCommand}" />

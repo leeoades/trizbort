@@ -158,6 +158,27 @@ public class DialogCaptureTests
             var mazeVm = new DisambiguateRoomsViewModel("Maze", alike, new[] { mazeOne, mazeTwo, mazeThree });
             mazeVm.Selected = mazeVm.Choices[1];
             CaptureDialog(output, files, "DisambiguateRooms", new DisambiguateRoomsDialog { DataContext = mazeVm });
+
+            // Split Room: the gold maze room, joined both ways to the rod room, with a way in from the hall and a loop
+            var gold = new Room(project) { Name = "Maze", Position = new Trizbort.Domain.Misc.Vector(2000, 2000) };
+            gold.AddDescription(alike);
+            var rod = new Room(project) { Name = "Maze", Objects = "black rod", Position = new Trizbort.Domain.Misc.Vector(2300, 2000) };
+            rod.AddDescription(alike);
+            var hall = new Room(project) { Name = "Hall of Mists", Position = new Trizbort.Domain.Misc.Vector(2000, 1700) };
+            project.Elements.Add(gold);
+            project.Elements.Add(rod);
+            project.Elements.Add(hall);
+            var canvas = new Trizbort.Automap.AutomapCanvas(project);
+            canvas.Connect(hall, Trizbort.Domain.Enums.MappableDirection.South, gold, true);
+            canvas.Connect(gold, Trizbort.Domain.Enums.MappableDirection.East, rod, true);
+            canvas.Connect(gold, Trizbort.Domain.Enums.MappableDirection.West, gold, true);
+            var splitVm = new SplitRoomViewModel(gold, Trizbort.Editor.RoomSplit.SplitName(project, gold.Name),
+                Trizbort.Editor.RoomSplit.JoinsOf(gold), Array.Empty<Connection>(), Trizbort.Editor.RoomSplitWhere.New);
+            CaptureDialog(output, files, "SplitRoom", new SplitRoomDialog { DataContext = splitVm });
+            splitVm.Joins.FirstOrDefault(join => join.Exit.Other.StartsWith("Maze") && join.Exit.Inward && !join.Exit.Loop)?.ToggleCommand.Execute(null);
+            CaptureDialog(output, files, "SplitRoom__moved", new SplitRoomDialog { DataContext = splitVm });
+            splitVm.Joins.FirstOrDefault(join => join.Exit.Loop)?.ToggleCommand.Execute(null);
+            CaptureDialog(output, files, "SplitRoom__loop-moved", new SplitRoomDialog { DataContext = splitVm });
         }
 
         CaptureDialog(output, files, "About", new AboutDialog());

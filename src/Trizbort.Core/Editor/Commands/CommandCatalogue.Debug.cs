@@ -122,20 +122,7 @@ public sealed partial class CommandCatalogue
       CanExecuteFunc = s => s.Automap.IsRunning && s.PrimaryRoom != null && s.Selection.Count == 1,
       ExecuteAsyncFunc = s => Run(() => s.Automap.SetCurrentRoom(s.PrimaryRoom))
     });
-    catalogue.Register(new EditorCommand
-    {
-      Id = "automap.differentRoom",
-      ContextOrder = 64, ContextGroup = "5-room",
-      Title = "This Is a _Different Room",
-      ContextTitle = "Automap: This Is a _Different Room",
-      MenuPath = "Project/Automap",
-      Group = "2-automap/4-where",
-      ContextTargets = ContextTargets.Room,
-      // automap took the player to be in a room on the map, but it's another with that name: split it off
-      CanExecuteFunc = s => s.Automap.IsRunning && s.Automap.CanSplitCurrentRoom && s.Selection.Count == 1 &&
-                            s.PrimaryRoom != null && s.PrimaryRoom == s.Automap.CurrentRoom,
-      ExecuteAsyncFunc = s => s.Automap.SplitCurrentRoomAsync()
-    });
+    // (This Is a Different Room was here: Not This Room… in the automap panel does it, and more. Lee, 22 Nov 2026)
     catalogue.Register(new EditorCommand
     {
       Id = "automap.currentRoom",

@@ -175,4 +175,38 @@ public class DescribedDifferentlyTests : IsolatedProjectTests
       if (run != null) await run;
     }
   }
+
+  [Test]
+  public async Task RoomsToldApartByTheirDescriptions_ANewDescriptionIsANewRoom_NotAsked()
+  {
+    // Lee, 21 Nov 2026: going into the maze all alike asked whether it was one of the maze all different's rooms,
+    // each called "Maze" and each described its own way
+    var project = Project.Current;
+    var hall = new Room(project) { Name = "Hall", Position = new Vector(0, 0) };
+    hall.AddDescription("A grand hall.");
+    project.Elements.Add(hall);
+    foreach (var (x, words) in new[] { (300, "twisty little"), (600, "twisting little"), (900, "little twisty") })
+    {
+      var maze = new Room(project) { Name = "Maze", Position = new Vector(x, 300) };
+      maze.AddDescription($"You are in a maze of {words} passages, all different.");
+      project.Elements.Add(maze);
+    }
+
+    var path = Files.File("game.txt");
+    File.WriteAllText(path,
+      ">look\n\nHall\nA grand hall.\n\n" +
+      ">s\n\nMaze\nYou are in a maze of twisty little passages, all alike.\n\n>");
+    var settings = AutomapSettings.Default;
+    settings.AutoTidy = false;
+    settings.GuessExits = false;
+    var prompts = new PickTheRoom();
+
+    var result = await HeadlessAutomap.RunAsync(Project.Current, path, settings, prompts);
+
+    result.Succeeded.ShouldBeTrue(result.Error);
+    prompts.Asked.ShouldBe(0);
+    var mazes = Project.Current.Elements.OfType<Room>().Where(room => room.Name == "Maze").ToList();
+    mazes.Count.ShouldBe(4);
+    mazes.ShouldContain(room => room.PrimaryDescription == "You are in a maze of twisty little passages, all alike.");
+  }
 }

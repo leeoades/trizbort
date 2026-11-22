@@ -423,7 +423,9 @@ public sealed partial class CommandCatalogue
     if (choice == null) return;
 
     Room second = null;
-    s.Execute("Split " + room.Name, () => second = RoomSplit.Split(s.Project, room, choice.Moving));
+    s.Execute("Split " + room.Name, () => second = choice.Exits != null
+      ? RoomSplit.Split(s.Project, room, choice.Exits)
+      : RoomSplit.Split(s.Project, room, choice.Moving));
     if (second == null) return;
     if (s.Automap.IsRunning)
     {

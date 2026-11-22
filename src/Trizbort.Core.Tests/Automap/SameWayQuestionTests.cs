@@ -185,11 +185,12 @@ public class SameWayQuestionTests : IsolatedProjectTests
     prompts.Answer.SetResult(AutomapSameDirectionResult.DifferentRoom);
     await using var played = Play(prompts);
     var engine = played.Engine;
-    await WaitFor(() => Rooms("Hall (2)").Count == 1 && Rooms("Kitchen").Count == 1 &&
+    // the other room has the same name, as the game calls it
+    await WaitFor(() => Rooms("Hall").Count == 2 && Rooms("Kitchen").Count == 1 &&
                         JoinedTo(Rooms("Kitchen")[0]).Any(), "the move mapped");
 
-    var hall = Rooms("Hall").Single();
-    var other = Rooms("Hall (2)").Single();
+    var other = Rooms("Hall").Single(room => JoinedTo(room).Any(next => next.Name == "Kitchen"));
+    var hall = Rooms("Hall").Single(room => room != other);
     JoinedTo(hall).Select(room => room.Name).ShouldBe(new[] { "Pantry" });
     JoinedTo(other).Select(room => room.Name).OrderBy(name => name).ShouldBe(new[] { "Kitchen", "Pantry" });
   }

@@ -14,6 +14,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Automap guessed where you are**: when automap decides which room you came into without asking, and it could
+  be another, a box under Where You Are says what it guessed and why ("West from Maze (coins) leads to Maze (keys)
+  on the map, so automap took you there. Rooms called Maze look alike, so it may be another."), as soon as you've
+  made the move. **Wrong Room: Choose…** puts it right: pick the room you're really in, of the others with its name,
+  or a new one, and the way you came moves there. **That's Right** puts the box away. It shows for a way followed on
+  the map into a room that shares its name, a room already on the map reached a new way, and a new room made where
+  others have its name (with Don't Ask Again on): pick the room it was, described differently now.
 - **Where you are** is a token on the room automap has you in, like a playing piece on a board:
   a wooden disc with a hurricane lantern burnt into it, a brass coin, a wooden pawn, a "You are here" sign, painted
   and pewter figures (an adventurer, a detective, a valkyrie, a wizard), or your own
@@ -66,6 +73,21 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **Automap: This Is a Different Room** is no longer on a room's right-click menu: **Wrong Room: Choose…** in the
+  automap panel does it.
+- In Split Room, a join that goes both ways is two ways, out and back in, as each can belong to a different room;
+  the way you just came in is chosen to start with. Moving one half splits the join into two one-way joins (west from
+  the gold room to the rod room stays; east from the rod room goes, one way, into the new room). Rooms that share a
+  name are told apart by their objects ("west → Maze (rod)"), and the rooms are headed Original and New.
+- In a join's properties, ticking **One Way Arrow** points the arrow from the Start room to the End room, and
+  **Flip** beside it turns it round.
+- **Split Room** draws both places as the map does, the original on the left and the new one on the right, each
+  way in and out a line from its side with an arrow and labels: click a line to move it across. A loop back into
+  the room is drawn as a loop; moved across, it becomes a one-way join from the original into the new room. Split
+  Room no longer asks where you are: while automap has you in the room, you're in the new one ("New: you are
+  here").
+- The other of two rooms with one name, from Split Room or automap, has the same name and description ("Maze", not
+  "Maze (2)"), so automap recognises it when you come back.
 - The room automap has you in glows (teal, unlike the yellow of the selection) instead of having a dotted blue ring.
   Change the colour, or turn the glow off, in **App Settings**, **Map**.
 - The Windows and Linux downloads keep the app's graphics libraries as files beside it, instead of unpacking them
@@ -95,6 +117,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- A join automap took to go both ways, whose way back turned out to lead elsewhere (north from the maze room looping
+  back into it), no longer comes into the room on top of the new way: drawn split, its end in the room was only a
+  guess, so it moves to a free side facing where it comes from.
+- Going into a room whose name three or more rooms share, each described its own way (Colossal Cave's maze of passages
+  all different), with a description none of them has (the maze all alike), adds a new room instead of asking which.
+- Dialogs spell directions in full ("east to Maze", not "e to Maze"); only the map abbreviates them.
+- The other room made by Split Room, or by automap, has the room's description, not an empty one.
 - Starting automap at the end of a transcript, it knows where you are straight away: the last room the transcript
   names, when only one room on the map has that name.
 - After playing a game live, **Previous Move** goes back to the right place in the transcript, and **Next Move** plays
