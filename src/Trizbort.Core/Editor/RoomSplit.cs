@@ -125,7 +125,8 @@ public static class RoomSplit
       if (IsLoop(join, room))
       {
         var round = Words(true);
-        exits.Add(new SplitExit(join, true, side, (string.IsNullOrEmpty(round) ? "a way" : round) + " → back here", true));
+        exits.Add(new SplitExit(join, true, side, (string.IsNullOrEmpty(round) ? "a way" : round) + " → back here", true)
+          { Way = round, Other = "back here", Loop = true });
         continue;
       }
 
@@ -135,11 +136,13 @@ public static class RoomSplit
       var outText = (string.IsNullOrEmpty(outward) ? "→ " : outward + " → ") + there;
       var inText = "from " + there + (string.IsNullOrEmpty(inward) ? string.Empty : ", going " + inward);
       if (join.Flow == ConnectionFlow.OneWay)
-        exits.Add(atStart ? new SplitExit(join, false, side, outText, true) : new SplitExit(join, true, side, inText, true));
+        exits.Add(atStart
+          ? new SplitExit(join, false, side, outText, true) { Way = outward, Other = there }
+          : new SplitExit(join, true, side, inText, true) { Way = inward, Other = there });
       else
       {
-        exits.Add(new SplitExit(join, false, side, outText, false));
-        exits.Add(new SplitExit(join, true, side, inText, false));
+        exits.Add(new SplitExit(join, false, side, outText, false) { Way = outward, Other = there });
+        exits.Add(new SplitExit(join, true, side, inText, false) { Way = inward, Other = there });
       }
     }
 
@@ -300,7 +303,17 @@ public sealed record RoomSplitChoice(IReadOnlyList<Connection> Moving, RoomSplit
 ///   false) and the way back in (true), which can go to different rooms: west from the gold room to the rod room, but
 ///   east from the rod room into another maze room. A one-way join, or a loop, is one.
 /// </summary>
-public sealed record SplitExit(Connection Join, bool Inward, CompassPoint Side, string Text, bool Whole);
+public sealed record SplitExit(Connection Join, bool Inward, CompassPoint Side, string Text, bool Whole)
+{
+  /// <summary>The way it goes, as the map labels it: out of the room ("west"), or, a way in, out of the other ("east").</summary>
+  public string Way { get; init; } = string.Empty;
+
+  /// <summary>The room at the other end ("Maze (rod)"), or "back here" for a loop.</summary>
+  public string Other { get; init; } = string.Empty;
+
+  /// <summary>It leaves the room and comes back into it.</summary>
+  public bool Loop { get; init; }
+}
 
 /// <summary>Which of the two rooms the player is in, after a split.</summary>
 public enum RoomSplitWhere

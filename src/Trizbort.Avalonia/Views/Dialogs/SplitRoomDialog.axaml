@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
         x:Class="Trizbort.Avalonia.Views.Dialogs.SplitRoomDialog"
         x:DataType="vm:SplitRoomViewModel"
         Title="Split Room"
@@ -9,102 +10,19 @@
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
 
-    <Window.Resources>
-        <!-- a way out of the room, at its side: click to move it to the other room (or back) -->
-        <DataTemplate x:Key="ExitTemplate" x:DataType="vm:SplitRoomJoin">
-            <Button Content="{Binding Text}" Command="{Binding ToggleCommand}" ToolTip.Tip="{Binding Tip}"
-                    Padding="6,2" Margin="0,2" MaxWidth="148" HorizontalContentAlignment="Center"
-                    AutomationProperties.Name="{Binding Text}">
-                <Button.ContentTemplate>
-                    <DataTemplate x:DataType="x:String">
-                        <TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" FontSize="12" />
-                    </DataTemplate>
-                </Button.ContentTemplate>
-            </Button>
-        </DataTemplate>
-    </Window.Resources>
-
     <StackPanel Margin="16" Spacing="12">
         <TextBlock Text="{Binding IntroText}" TextWrapping="Wrap" />
 
+        <!-- the two rooms, drawn as the map draws them: click a way to move it across -->
         <Grid x:Name="Rooms" ColumnDefinitions="*,Auto,*">
-            <StackPanel Spacing="6">
+            <StackPanel Grid.Column="0" Spacing="6">
                 <TextBlock Text="{Binding OriginalHeading}" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                <Grid ColumnDefinitions="150,190,150" RowDefinitions="Auto,Auto,Auto" MinHeight="230">
-                    <ItemsControl Grid.Row="0" Grid.Column="0" ItemsSource="{Binding OriginalCells[0].Joins}"
-                                  VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding OriginalCells[1].Joins}"
-                                  VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="0" Grid.Column="2" ItemsSource="{Binding OriginalCells[2].Joins}"
-                                  VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding OriginalCells[3].Joins}"
-                                  VerticalAlignment="Center" HorizontalAlignment="Right" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding OriginalCells[5].Joins}"
-                                  VerticalAlignment="Center" HorizontalAlignment="Left" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="2" Grid.Column="0" ItemsSource="{Binding OriginalCells[6].Joins}"
-                                  VerticalAlignment="Top" HorizontalAlignment="Right" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding OriginalCells[7].Joins}"
-                                  VerticalAlignment="Top" HorizontalAlignment="Center" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="2" Grid.Column="2" ItemsSource="{Binding OriginalCells[8].Joins}"
-                                  VerticalAlignment="Top" HorizontalAlignment="Left" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <Border Grid.Row="1" Grid.Column="1" BorderThickness="2" CornerRadius="6" Padding="10,8" MinHeight="90"
-                            BorderBrush="{DynamicResource SystemControlForegroundBaseHighBrush}"
-                            Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="{Binding RoomName}" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="Wrap" />
-                            <TextBlock Text="{Binding Description}" IsVisible="{Binding HasDescription}" TextWrapping="Wrap" FontSize="11"
-                                       MaxLines="4" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Text="{Binding Objects}" IsVisible="{Binding HasObjects}" FontStyle="Italic" TextWrapping="Wrap" Opacity="0.8" />
-                        </StackPanel>
-                    </Border>
-                </Grid>
+                <controls:SplitRoomDiagram x:Name="OriginalDiagram" ShowsNew="False" HorizontalAlignment="Center" />
             </StackPanel>
             <Border Grid.Column="1" Width="1" Margin="12,0" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
             <StackPanel Grid.Column="2" Spacing="6">
                 <TextBlock Text="{Binding NewHeading}" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                <Grid ColumnDefinitions="150,190,150" RowDefinitions="Auto,Auto,Auto" MinHeight="230">
-                    <ItemsControl Grid.Row="0" Grid.Column="0" ItemsSource="{Binding NewCells[0].Joins}"
-                                  VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding NewCells[1].Joins}"
-                                  VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="0" Grid.Column="2" ItemsSource="{Binding NewCells[2].Joins}"
-                                  VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding NewCells[3].Joins}"
-                                  VerticalAlignment="Center" HorizontalAlignment="Right" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding NewCells[5].Joins}"
-                                  VerticalAlignment="Center" HorizontalAlignment="Left" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="2" Grid.Column="0" ItemsSource="{Binding NewCells[6].Joins}"
-                                  VerticalAlignment="Top" HorizontalAlignment="Right" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding NewCells[7].Joins}"
-                                  VerticalAlignment="Top" HorizontalAlignment="Center" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <ItemsControl Grid.Row="2" Grid.Column="2" ItemsSource="{Binding NewCells[8].Joins}"
-                                  VerticalAlignment="Top" HorizontalAlignment="Left" Margin="4"
-                                  ItemTemplate="{StaticResource ExitTemplate}" />
-                    <Border Grid.Row="1" Grid.Column="1" BorderThickness="2" CornerRadius="6" Padding="10,8" MinHeight="90"
-                            BorderBrush="{DynamicResource SystemControlForegroundBaseHighBrush}"
-                            Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="{Binding NewName}" FontWeight="SemiBold" HorizontalAlignment="Center" TextWrapping="Wrap" />
-                            <TextBlock Text="{Binding Description}" IsVisible="{Binding HasDescription}" TextWrapping="Wrap" FontSize="11"
-                                       MaxLines="4" TextTrimming="CharacterEllipsis" />
-                        </StackPanel>
-                    </Border>
-                </Grid>
+                <controls:SplitRoomDiagram x:Name="NewDiagram" ShowsNew="True" HorizontalAlignment="Center" />
             </StackPanel>
         </Grid>
 

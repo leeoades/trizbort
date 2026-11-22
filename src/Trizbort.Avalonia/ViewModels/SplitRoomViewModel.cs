@@ -112,8 +112,8 @@ public sealed partial class SplitRoomViewModel : ViewModelBase
     public bool HasObjects => Objects.Length > 0;
 
     public string IntroText =>
-        $"'{RoomName}' is two places with the same name and description. Click the ways in and out that belong to " +
-        "the new one to move them across.";
+        $"'{RoomName}' is two places with the same name and description. Click a way in or out to move it to the " +
+        "other room.";
 
     public string OriginalHeading => "Original: the one on the map";
 

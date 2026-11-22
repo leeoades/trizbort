@@ -1,3 +1,4 @@
+using Avalonia.Headless.NUnit;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Automap;
@@ -106,5 +107,30 @@ public class SplitRoomViewModelTests
         vm.OkCommand.Execute(null);
         vm.Result!.Moving.ShouldBe(new[] { east.Join });
         vm.Result.Where.ShouldBe(RoomSplitWhere.New);
+    }
+
+    [AvaloniaTest]
+    public void TheRoomsAreDrawn_EachWithItsWays()
+    {
+        // Lee, 22 Nov 2026: a depiction of the rooms with the exits, as the map draws them
+        var hall = new Room(Project.Current) { Name = "Hall", Position = new Vector(0, 0) };
+        var maze = new Room(Project.Current) { Name = "Maze", Position = new Vector(0, -300) };
+        Project.Current.Elements.Add(hall);
+        Project.Current.Elements.Add(maze);
+        new AutomapCanvas(Project.Current).Connect(hall, MappableDirection.North, maze, true);
+        var vm = new SplitRoomViewModel(maze, "Maze", RoomSplit.JoinsOf(maze), Array.Empty<Connection>(), null);
+        var original = new Trizbort.Avalonia.Controls.SplitRoomDiagram { DataContext = vm };
+        var other = new Trizbort.Avalonia.Controls.SplitRoomDiagram { DataContext = vm, ShowsNew = true };
+
+        original.Shown.Count.ShouldBe(2);
+        other.Shown.ShouldBeEmpty();
+        var wayOut = vm.Joins.Single(join => !join.Exit.Inward);
+        wayOut.Exit.Way.ShouldBe("south");
+        wayOut.Exit.Other.ShouldBe("Hall");
+
+        wayOut.ToggleCommand.Execute(null);
+
+        original.Shown.ShouldHaveSingleItem();
+        other.Shown.ShouldBe(new[] { wayOut });
     }
 }
