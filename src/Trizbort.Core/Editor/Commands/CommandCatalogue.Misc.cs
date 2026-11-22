@@ -24,6 +24,23 @@ public sealed partial class CommandCatalogue
     });
     catalogue.Register(new EditorCommand
     {
+      Id = "edit.copyRoomLink",
+      Title = "Copy Room Link",
+      MenuPath = "Edit",
+      Group = "2-clipboard",
+      ContextTargets = ContextTargets.Room,
+      ContextOrder = 24, ContextGroup = "2-clipboard",
+      CanExecuteFunc = s => s.HasSingleSelectedRoom,
+      // [[Giant Room]], or [[Maze#42]] for one of several rooms with a name: to paste into a Markdown label
+      ExecuteAsyncFunc = s => Run(() =>
+      {
+        if (s.SelectedRooms.Count == 1)
+          Trizbort.Domain.Controllers.CopyController.SetClipboardTextHandler?.Invoke(
+            Trizbort.Domain.Misc.LabelMarkdown.RoomLink(s.Project, s.SelectedRooms[0]));
+      })
+    });
+    catalogue.Register(new EditorCommand
+    {
       Id = "edit.duplicate",
       Title = "D_uplicate",
       MenuPath = "Edit",

@@ -648,6 +648,12 @@ public class MapCanvasControl : Control
         _viewOnlyClick = ViewOnly && button == PointerButton.Left ? point.Position : null;
         if (ViewOnly) button = PointerButton.Middle;
 
+        // a click on a link in a Markdown label follows it when the button comes up without a drag
+        _linkPress = !ViewOnly && button == PointerButton.Left && e.ClickCount == 1 &&
+                     LinkUnder(point.Position) is { } link
+            ? (point.Position, link)
+            : null;
+
         var interaction = Interaction;
         var handled = interaction.OnPointerPressed(ToPointerInput(button, e.KeyModifiers, point.Position, e.ClickCount));
         if (interaction.IsGestureActive)
@@ -696,7 +702,51 @@ public class MapCanvasControl : Control
         }
 
         AfterInteraction();
+        ShowLinkCursor(interaction.Mode == CanvasDragMode.None && LinkUnder(clientPos) != null);
         e.Handled = interaction.Mode != CanvasDragMode.None;
+    }
+
+    private (Point At, string Link)? _linkPress;
+    private bool _overLink;
+
+    /// <summary>The link under <paramref name="client" /> in a Markdown label on the map, or null.</summary>
+    internal string? LinkUnder(Point client)
+    {
+        if (CommandService?.Session == null) return null;
+        var at = ClientToCanvas(client);
+        return Hit.HitElement(at) is MapLabel { Markdown: true } label
+            ? MapLabelDrawingAdapter.LinkAt(label, new Point(at.X, at.Y))
+            : null;
+    }
+
+    /// <summary>A hand over a link; the usual cursor again off it.</summary>
+    private void ShowLinkCursor(bool overLink)
+    {
+        if (overLink == _overLink) return;
+        _overLink = overLink;
+        Cursor = overLink
+            ? new Cursor(StandardCursorType.Hand)
+            : CanvasCursors.Get(CursorKind, CanvasCursors.IsDark(Settings.Color[CoreColors.Canvas]));
+    }
+
+    /// <summary>
+    ///     Follows a link in a Markdown label: a room link selects the room and glides the map to it; a web link opens
+    ///     in the browser.
+    /// </summary>
+    internal void FollowLink(string link)
+    {
+        var session = CommandService?.Session;
+        if (session == null) return;
+        if (LabelMarkdown.LinkedRoom(Project.Current, link) is { } room)
+        {
+            session.Selection.Set(new List<Element> { room });
+            session.CenterOnElement(room);
+            InvalidateVisual();
+            return;
+        }
+
+        if (LabelMarkdown.IsWebLink(link) && Uri.TryCreate(link, UriKind.Absolute, out var uri))
+            _ = TopLevel.GetTopLevel(this)?.Launcher.LaunchUriAsync(uri);
     }
 
     protected override void OnPointerExited(PointerEventArgs e)
@@ -754,6 +804,14 @@ public class MapCanvasControl : Control
 
         interaction.OnPointerReleased(ToPointerInput(releasedButton, e.KeyModifiers, e.GetPosition(this), 0));
         e.Pointer.Capture(null);
+        if (_linkPress is { } press && releasedButton == PointerButton.Left)
+        {
+            _linkPress = null;
+            var at = e.GetPosition(this);
+            if (Math.Abs(at.X - press.At.X) <= ClickSlop && Math.Abs(at.Y - press.At.Y) <= ClickSlop &&
+                LinkUnder(at) == press.Link)
+                FollowLink(press.Link);
+        }
         _isSecondaryButtonRelease = false;
         _spatialVersion++;
         InvalidateVisual();

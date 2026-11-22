@@ -50,6 +50,18 @@ public class MapLabel : Element, ISizeable
     }
   }
 
+  /// <summary>
+  ///   The text is Markdown (<see cref="Trizbort.Domain.Misc.LabelMarkdown" />): headings, bold and italic, lists,
+  ///   tables, and links to rooms, drawn left-aligned. Off, the text is drawn as written, centred. Saved as the
+  ///   optional <c>markdown</c> attribute, which older versions ignore (they show the text as written).
+  /// </summary>
+  public bool Markdown {
+    get { return _markdown; }
+    set { SetField(ref _markdown, value); }
+  }
+
+  private bool _markdown;
+
   public RoomShape Shape {
     get { return _shape; }
     set { SetField(ref _shape, value); }
@@ -158,6 +170,7 @@ public class MapLabel : Element, ISizeable
     scribe.Attribute("borderColor", BorderColor);
     scribe.Attribute("backgroundColor", BackgroundColor);
     scribe.Attribute("ZOrder", ZOrder);
+    if (Markdown) scribe.Attribute("markdown", Markdown);
   }
 
   public void Load(XmlElementReader element)
@@ -172,5 +185,6 @@ public class MapLabel : Element, ISizeable
     BorderColor = ColorTranslator.FromHtml(element.Attribute("borderColor").Text);
     BackgroundColor = ColorTranslator.FromHtml(element.Attribute("backgroundColor").Text);
     ZOrder = element.Attribute("ZOrder").ToInt();
+    Markdown = element.Attribute("markdown").ToBool();
   }
 }
