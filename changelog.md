@@ -10,7 +10,15 @@ app's own history, from Trizbort 1.x through this fork's 2.x releases, is in [le
 Recast version numbers start again at 0.9 and follow [semantic versioning](https://semver.org/). Releases are tagged
 `recast-vX.Y.Z`; headings here leave out the prefix.
 
-## [Unreleased]
+## [0.15.0-beta] - 2026-11-22
+
+This beta is about **mazes, and knowing where you are**. In a maze of rooms all alike, automap now says when it
+guessed which room you're in, and why, and lets you put it right straight away; Split Room draws both rooms, so you
+click the ways that belong to the other; and rooms that share a name keep it, with their description, so automap
+knows them when you come back. A token on the map, like a playing piece, shows where you are. Labels can be written
+in Markdown, with tables and links to rooms, and grow to fit as you type. Joins can be marked unreliable, and join
+labels written one way across the whole map. This is still a beta: keep backups and
+[report problems](https://github.com/leeoades/trizbort/issues).
 
 ### Added
 
@@ -37,8 +45,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   type in its search; click a room on the map to choose it there. The outline, background, shape and text colour are
   on a **Style** tab.
 - A label grows to fit its text as you type: taller for more lines, and wider for a long line of plain text or a
-  Markdown table (a Markdown paragraph wraps at the label's width). Delete text and it shrinks back, but no smaller than it was. The label on the map shows what you type
-  while its properties are open; **Cancel** puts it back as it was.
+  Markdown table (a Markdown paragraph wraps at the label's width). Delete text and it shrinks back, but no smaller
+  than it was. The label on the map shows what you type while its properties are open; **Cancel** puts it back as it
+  was.
 - **Unreliable joins**: a join that doesn't always lead where it's drawn, because the game picks at random
   (Bedquilt in Colossal Cave) or it depends on what you've done (a closet left on another floor). Directions take it
   only when there's no other way, and say so. Mark one with **Unreliable** in the join's properties, **Unreliable
