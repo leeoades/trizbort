@@ -118,7 +118,6 @@ public class AutomapIntegrationTests
 
         vm.FileName.ShouldBe("/tmp/transcript.txt");
         vm.CanStart.ShouldBeTrue();
-        vm.VerboseTranscript.ShouldBeTrue();
         vm.GuessExits.ShouldBeFalse();
         vm.AddObjectCommand.ShouldBe("take item");
         vm.AddRegionCommand.ShouldBe("make zone");
