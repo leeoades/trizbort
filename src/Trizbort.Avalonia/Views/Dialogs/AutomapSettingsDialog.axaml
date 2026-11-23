@@ -5,7 +5,7 @@
         x:DataType="vm:AutomapSettingsViewModel"
         x:Name="DialogWindow"
         Title="{Binding Title}"
-        Width="520" Height="640"
+        Width="520" Height="540"
         MinWidth="442" MinHeight="240"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
