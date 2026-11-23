@@ -10,6 +10,16 @@ app's own history, from Trizbort 1.x through this fork's 2.x releases, is in [le
 Recast version numbers start again at 0.9 and follow [semantic versioning](https://semver.org/). Releases are tagged
 `recast-vX.Y.Z`; headings here leave out the prefix.
 
+## [Unreleased]
+
+### Changed
+
+- The automapping dialog is shorter. **Show the game screen** is gone: show or hide it on the automap panel.
+  **Label directions in short** is gone: the map's **Direction words** setting draws join labels as you like. **Rooms
+  with the same name** is gone: automap always tells such rooms apart by the map and their descriptions, asking when
+  it can't. **Don't ask again** in **Which room does it mean?** now lasts until automap stops, rather than until it
+  was turned off in the dialog.
+
 ## [0.15.0-beta] - 2026-11-22
 
 This beta is about **mazes, and knowing where you are**. In a maze of rooms all alike, automap now says when it
