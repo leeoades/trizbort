@@ -39,14 +39,11 @@ public class AutomapRunSettingsTests
             ok.Content.ShouldBe("OK");
             ok.IsEnabled.ShouldBeTrue();
             dialog.FindControl<CheckBox>("AutoTidyCheck")!.IsEffectivelyVisible.ShouldBeTrue();
-            dialog.FindControl<CheckBox>("BestGuessCheck")!.IsEffectivelyVisible.ShouldBeTrue();
-
-            // "ignore descriptions" is the verbose setting the other way round
-            var namesOnly = dialog.FindControl<CheckBox>("NamesOnlyCheck")!;
-            namesOnly.IsChecked.ShouldBe(false);
-            vm.VerboseTranscript.ShouldBeTrue();
-            namesOnly.IsChecked = true;
-            vm.VerboseTranscript.ShouldBeFalse();
+            // Lee, 23 Nov 2026: the game screen is the panel's to show; direction words are the map's; and rooms with the
+            // same name are always told apart by their descriptions too
+            dialog.FindControl<CheckBox>("GameScreenCheck").ShouldBeNull();
+            dialog.FindControl<CheckBox>("BestGuessCheck").ShouldBeNull();
+            dialog.FindControl<CheckBox>("NamesOnlyCheck").ShouldBeNull();
         }
         finally
         {
@@ -72,5 +69,27 @@ public class AutomapRunSettingsTests
         {
             dialog.Close();
         }
+    }
+
+    [Test]
+    public void Settings_AlwaysUseDescriptions_AndANewRunAsksWhichRoomAgain()
+    {
+        var saved = AutomapSettings.Default;
+        saved.VerboseTranscript = false;
+        saved.BestGuessWhichRoom = true;
+        saved.AbbreviateDirections = false;
+
+        var starting = new AutomapSettingsViewModel(null!);
+        starting.Initialize(saved);
+        var started = starting.GetSettings();
+        started.VerboseTranscript.ShouldBeTrue();
+        started.BestGuessWhichRoom.ShouldBeFalse();
+        // as it was: the map's Direction words setting draws them
+        started.AbbreviateDirections.ShouldBeFalse();
+
+        // part way through, Don't Ask Again stays
+        var running = new AutomapSettingsViewModel(null!) { WhileRunning = true };
+        running.Initialize(saved);
+        running.GetSettings().BestGuessWhichRoom.ShouldBeTrue();
     }
 }

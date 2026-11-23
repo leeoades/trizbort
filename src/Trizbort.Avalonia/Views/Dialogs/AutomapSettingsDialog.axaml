@@ -5,7 +5,7 @@
         x:DataType="vm:AutomapSettingsViewModel"
         x:Name="DialogWindow"
         Title="{Binding Title}"
-        Width="520" Height="640"
+        Width="520" Height="600"
         MinWidth="442" MinHeight="240"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
@@ -41,13 +41,6 @@
                                   IsChecked="{Binding AutoTidy}"
                                   ToolTip.Tip="Rearrange the rooms near you after each move, making space for new rooms. Off: rooms stay where automap first puts them, and you tidy by hand (Tidy Map...)" />
 
-                        <CheckBox x:Name="GameScreenCheck" Content="Show the game screen in the automap panel."
-                                  IsChecked="{Binding ShowGameScreen}"
-                                  ToolTip.Tip="The game so far, on a little screen in the automap panel; click it for a larger window you can copy text from" />
-
-                        <CheckBox Content="_Label directions in short: n / u / in rather than north / up / in."
-                                  IsChecked="{Binding AbbreviateDirections}" />
-
                         <CheckBox Content="_Start processing from the end of the transcript file."
                                   IsVisible="{Binding IsStarting}"
                                   IsChecked="{Binding ContinueTranscript}" />
@@ -63,25 +56,6 @@
                         <CheckBox Content="Single step through the transcript with F11 (debug)."
                                   IsVisible="{Binding ShowSingleStep}"
                                   IsChecked="{Binding SingleStep}" />
-                    </StackPanel>
-                </HeaderedContentControl>
-
-                <!-- Rooms with the same name: how automap tells them apart (Disambiguating Between Rooms) -->
-                <HeaderedContentControl Classes="group">
-                    <HeaderedContentControl.Header>
-                        <Label Content="Rooms with the _same name" Target="{Binding #BestGuessCheck}" Padding="0" />
-                    </HeaderedContentControl.Header>
-                    <StackPanel Spacing="8">
-                        <TextBlock Classes="hint" TextWrapping="Wrap"
-                                   Text="Automap tells them apart by the map first (where the way you went leads), then by their descriptions, and asks when it can't tell." />
-
-                        <CheckBox x:Name="BestGuessCheck" Content="Don't ask which one you're in: make a best guess."
-                                  IsChecked="{Binding BestGuessWhichRoom}"
-                                  ToolTip.Tip="Automap goes by the room's description; if no room with that name has it, a new room when you moved, the room you're in when you didn't. Off: automap asks, when the map doesn't say which room it is." />
-
-                        <CheckBox x:Name="NamesOnlyCheck" Content="Ignore descriptions: a room's name alone says which room it is."
-                                  IsChecked="{Binding NamesOnly}"
-                                  ToolTip.Tip="Rarely needed: for a game whose room descriptions keep changing, or a transcript without them. Rooms with the same name are then always the same room, and automap never asks. Off: a description automap hasn't seen in that room may mean another room with that name, as in a maze." />
                     </StackPanel>
                 </HeaderedContentControl>
 

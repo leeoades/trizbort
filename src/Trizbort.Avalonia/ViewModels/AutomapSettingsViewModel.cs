@@ -50,21 +50,6 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _continueTranscript;
 
-    /// <summary>Descriptions can tell rooms with the same name apart (the transcript shows them).</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(NamesOnly))]
-    private bool _verboseTranscript = true;
-
-    /// <summary>
-    ///     "Ignore descriptions: a room's name alone says which room it is": the other way round from
-    ///     <see cref="VerboseTranscript" />, as the dialog asks it.
-    /// </summary>
-    public bool NamesOnly
-    {
-        get => !VerboseTranscript;
-        set => VerboseTranscript = !value;
-    }
-
     [ObservableProperty]
     private bool _assumeTwoWayConnections = true;
 
@@ -74,17 +59,12 @@ public partial class AutomapSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _autoTidy = true;
 
-    /// <summary>Show the little game screen in the automap panel (an app setting, kept between runs).</summary>
-    [ObservableProperty]
-    private bool _showGameScreen = true;
-
-    /// <summary>"Which room?": a best guess by the description instead of asking.</summary>
-    [ObservableProperty]
-    private bool _bestGuessWhichRoom;
-
-    /// <summary>Label joins "n / u / in" rather than "north / up / in".</summary>
-    [ObservableProperty]
+    // Not in the dialog (Lee, 23 Nov 2026), kept as they were: the game screen is shown or hidden from the automap panel;
+    // how joins' directions are drawn is the map's Direction words setting; and rooms with the same name are always told
+    // apart by their descriptions too, asking when they can't be (Don't Ask Again, in Which room does it mean?, lasts
+    // the run it's chosen in).
     private bool _abbreviateDirections = true;
+    private bool _bestGuessWhichRoom;
 
     /// <summary>Start paused, and play the transcript a move at a time from the automap bar.</summary>
     [ObservableProperty]
@@ -113,12 +93,11 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         FileName = settings.FileName ?? string.Empty;
         ContinueTranscript = settings.ContinueTranscript;
         SingleStep = IsDebugEnabled && settings.SingleStep;
-        VerboseTranscript = settings.VerboseTranscript;
         AssumeTwoWayConnections = settings.AssumeTwoWayConnections;
         GuessExits = settings.GuessExits;
         AutoTidy = settings.AutoTidy;
-        BestGuessWhichRoom = settings.BestGuessWhichRoom;
-        AbbreviateDirections = settings.AbbreviateDirections;
+        _bestGuessWhichRoom = settings.BestGuessWhichRoom;
+        _abbreviateDirections = settings.AbbreviateDirections;
         MoveByMove = settings.MoveByMove;
         AddObjectCommand = string.IsNullOrEmpty(settings.AddObjectCommand) ? "tb see" : settings.AddObjectCommand;
         AddRegionCommand = string.IsNullOrEmpty(settings.AddRegionCommand) ? "tb region" : settings.AddRegionCommand;
@@ -139,11 +118,12 @@ public partial class AutomapSettingsViewModel : ViewModelBase
         var settings = AutomapSettings.Default;
         settings.FileName = FileName?.Trim() ?? string.Empty;
         settings.SingleStep = IsDebugEnabled && SingleStep;
-        settings.VerboseTranscript = VerboseTranscript;
+        settings.VerboseTranscript = true;
         settings.GuessExits = GuessExits;
         settings.AutoTidy = AutoTidy;
-        settings.BestGuessWhichRoom = BestGuessWhichRoom;
-        settings.AbbreviateDirections = AbbreviateDirections;
+        // a new run asks again; part way through, Don't Ask Again stays as it was chosen
+        settings.BestGuessWhichRoom = WhileRunning && _bestGuessWhichRoom;
+        settings.AbbreviateDirections = _abbreviateDirections;
         settings.MoveByMove = MoveByMove;
         settings.AddObjectCommand = string.IsNullOrEmpty(AddObjectCommand) ? AutomapSettings.Default.AddObjectCommand : AddObjectCommand;
         settings.AddRegionCommand = string.IsNullOrEmpty(AddRegionCommand) ? AutomapSettings.Default.AddRegionCommand : AddRegionCommand;
