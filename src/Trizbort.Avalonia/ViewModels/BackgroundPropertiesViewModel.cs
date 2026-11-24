@@ -1,5 +1,6 @@
 using System.Drawing;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using MapBackground = Trizbort.Domain.Elements.Background;
 
