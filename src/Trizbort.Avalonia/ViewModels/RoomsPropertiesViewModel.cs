@@ -5,7 +5,7 @@ using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Editor;
 using Trizbort.Setup;
-using Region = Trizbort.Domain.Misc.Region;
+using MapRegion = Trizbort.Domain.Misc.Region;
 
 namespace Trizbort.Avalonia.ViewModels;
 
@@ -56,7 +56,7 @@ public partial class RoomsPropertiesViewModel : ViewModelBase
     ];
 
     public IReadOnlyList<HandDrawnStyle> AvailableHandDrawnStyles { get; } =
-        [HandDrawnStyle.MapDefault, HandDrawnStyle.HandDrawn, HandDrawnStyle.Straight];
+        [Domain.Enums.HandDrawnStyle.MapDefault, Domain.Enums.HandDrawnStyle.HandDrawn, Domain.Enums.HandDrawnStyle.Straight];
 
     public IReadOnlyList<string> AvailableSecondFillLocations { get; } =
         ["Bottom", "BottomRight", "BottomLeft", "Left", "Right", "TopRight", "TopLeft", "Top"];
@@ -68,7 +68,7 @@ public partial class RoomsPropertiesViewModel : ViewModelBase
         var shared = RoomsEdit.Of(rooms);
 
         AvailableRegions.Clear();
-        foreach (var region in Settings.Regions.OrderBy(r => r.RegionName != Region.DefaultRegion).ThenBy(r => r.RegionName))
+        foreach (var region in Settings.Regions.OrderBy(r => r.RegionName != MapRegion.DefaultRegion).ThenBy(r => r.RegionName))
             AvailableRegions.Add(region.RegionName);
 
         IsDark = shared.IsDark;

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
+using Trizbort.Automap;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
@@ -42,6 +43,9 @@ public class RoomsEditTests : IsolatedProjectTests
       Edit.ApplyTo(rooms);
       return Task.FromResult(true);
     }
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription,
+      IReadOnlyList<Room> candidates, CancellationToken token = default) => Task.FromResult(RoomDisambiguation.CreateNew());
 
     public Task<bool> ConfirmAsync(string message, string title, CancellationToken token = default) =>
       Task.FromResult(true);
