@@ -296,6 +296,7 @@ public class DocsCaptureTests
             vm.CommandService.Session.Viewport.FitToMap(project.Elements);
             vm.CommandService.Select(rooms.First(room => room.Name == "Lighthouse Base"));
             vm.RefreshAutomapPanel();
+            vm.UpdateState();
             Save(window, Path.Combine(root, "main-window.png"));
         }
         finally
@@ -340,7 +341,8 @@ public class DocsCaptureTests
             $">look\n\nHall of Mists\nA huge hall, full of mist.\n\n>south\n\nMaze\n{Alike}\n\n>west\n\nMaze\n{Alike}\n\n>");
 
         var vm = new MainWindowViewModel(new CommandService(), null!, null!, new AvaloniaAutomapCanvas());
-        var window = new Window { DataContext = vm, Width = 300, Height = 760, Content = new AutomapPanel() };
+        // the top of the panel: where you are, and what automap guessed
+        var window = new Window { DataContext = vm, Width = 300, Height = 440, Content = new AutomapPanel() };
         try
         {
             window.Show();
