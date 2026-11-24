@@ -19,7 +19,7 @@ avoids deep detail — follow the links to the topic docs for specifics.
 | `src/Trizbort.Avalonia.Tests/` | Headless Avalonia tests (`net10.0`, `Avalonia.Headless.NUnit`, Skia): gestures, sync, drawing parity, dialogs VMs, minimap transform, Automap, image export. |
 | `tests/manual/` | Manual `.trizbort` fixtures and batch/script runners; these are not automated tests. |
 | `samples/` | Sample maps/transcripts. |
-| `Docs/` | **User-facing** help/website content (unrelated to this `agent-docs/` folder). |
+| `Docs/` | **User-facing** Recast user guide and its pictures (`Docs/images`, drawn by `scripts/update-docs-images`); unrelated to this `agent-docs/` folder. The legacy app's guide is `legacy/Docs/`. |
 | `agent-docs/` | Layered technical reference for contributors and agents. |
 
 ## Layering / call direction

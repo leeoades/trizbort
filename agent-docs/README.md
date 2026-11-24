@@ -10,8 +10,9 @@ agent doesn't have to re-derive the architecture from scratch on every task, and
 needs to load the one or two sub-documents relevant to the current task instead of the whole
 codebase (or the whole doc set) into context.
 
-> User-facing documentation (the in-app help / website) lives in `Docs/` (capital D) at the
-> repo root — that's a different thing from this folder. This folder (`agent-docs/`) is for
+> User-facing documentation (the Recast user guide, opened by F1) lives in `Docs/` (capital D) at the
+> repo root, with its pictures in `Docs/images` drawn by `scripts/update-docs-images`; the legacy app's guide is in
+> `legacy/Docs/` — that's a different thing from this folder. This folder (`agent-docs/`) is for
 > engineers/agents working **on** Trizbort, not for people using it.
 
 ## What Trizbort is

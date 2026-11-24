@@ -24,7 +24,7 @@ public class OnlineHelpDialogTests
     var links = layout.Controls.OfType<LinkLabel>().ToList();
     links.Select(link => link.Text).ShouldBe(
       new[] {
-        "https://github.com/leeoades/trizbort/blob/master/Docs/index.md",
+        "https://github.com/leeoades/trizbort/blob/master/legacy/Docs/index.md",
         "https://trizbort.genstein.net/help/"
       });
     links.All(link => link.Links.Count == 1 && link.TabStop).ShouldBeTrue();

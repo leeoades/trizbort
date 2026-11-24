@@ -72,7 +72,7 @@
                                     <ComboBoxItem Content="BMP" />
                                 </ComboBox>
                             </Grid>
-                            <TextBlock Classes="hint" Text="Smart Save options are stored but not used by export yet." VerticalAlignment="Center" />
+                            <TextBlock Classes="hint" Text="File &gt; Smart Save saves the map, then the PDF and image ticked here beside it." VerticalAlignment="Center" />
                         </StackPanel>
                     </HeaderedContentControl>
 

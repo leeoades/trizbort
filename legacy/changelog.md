@@ -7,6 +7,11 @@ Releases from 2.3.2 on are tagged `legacy-vX.Y.Z`; headings here leave out the p
 
 ## [Unreleased]
 
+### Changed
+
+- The user guide has moved to `legacy/Docs/index.md`, as `Docs/` now holds the guide to Trizbort: Recast; Online
+  Help opens it there.
+
 ## [2.3.1-beta.2] - 2026-10-12
 
 This is a **beta prerelease for testing**. The stable release remains v2.2.0. Extract the beta

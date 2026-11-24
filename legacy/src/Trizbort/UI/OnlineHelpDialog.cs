@@ -7,7 +7,7 @@ namespace Trizbort.UI;
 
 public class OnlineHelpDialog : Form
 {
-  public const string UserGuideUrl = "https://github.com/leeoades/trizbort/blob/master/Docs/index.md";
+  public const string UserGuideUrl = "https://github.com/leeoades/trizbort/blob/master/legacy/Docs/index.md";
   public const string OriginalHelpUrl = "https://trizbort.genstein.net/help/";
 
   public OnlineHelpDialog()

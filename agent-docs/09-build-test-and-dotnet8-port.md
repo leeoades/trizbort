@@ -254,8 +254,12 @@ The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefi
    section (heading without the prefix, e.g. `## [0.10.0-beta]`) as the notes; the build fails if
    it is missing. A beta can be tagged from an unmerged branch for testing.
 
+Before tagging a Recast release, run `scripts/update-docs-images.ps1` (or `.sh`) to redraw the user guide's
+pictures from the app, and move `Docs/whats-new.md`'s "Coming next" under the version.
+
 There is no in-app update checker or update manifest. Help → Online Help (F1) links to the
-v2 user guide (`Docs/index.md` on GitHub) and the original v1 help; users download releases
+Recast user guide (`Docs/index.md` on GitHub, `HelpLinks.UserGuide`; the legacy app links to `legacy/Docs/index.md`)
+and the original v1 help; users download releases
 manually from GitHub Releases. User `appsettings.json` is not in
 the zip, so it survives extracting a new release over the install folder. If the repo moves,
 update `OnlineHelpDialog.UserGuideUrl` and the message in `Project.CheckDocVersion()`.
