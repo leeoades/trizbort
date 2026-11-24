@@ -188,7 +188,7 @@ public class LabelStyleTests : IsolatedProjectTests
       "</map></trizbort>");
     PersistenceRegressionTests.Load(Project.Current, Files.File("old.trizbort"));
 
-    var labels = Project.Current.Elements.OfType<MapLabel>().OrderBy(label => label.ID).ToList();
+    var labels = Project.Current.Elements.OfType<MapLabel>().OrderBy(label => label.Id).ToList();
     labels.ShouldAllBe(label => label.StyleId == LabelStyle.DefaultId);
     labels[0].HasOwnLook.ShouldBeFalse();
     labels[1].HasOwnLook.ShouldBeTrue();
