@@ -2284,11 +2284,12 @@ public sealed class Automap : IAutomapController
     if (from == null || (from == here && arrival.Direction == null && arrival.Journey == null)) return null;
 
     // the way the player went from the room they came from (up, from the chimney below, when automap took it for a
-    // loop back into the same chimney), else beside it
+    // loop back into the same chimney), else beside it (Lee, 24 Nov 2026: beside the room left, not the one automap
+    // wrongly took it for, wherever that is on the map)
     var name = SplitName(here.Name);
     var room = arrival.Direction is { } way
       ? _canvas.CreateRoom(from, way, name, name)
-      : _canvas.CreateRoom(here, name);
+      : _canvas.CreateRoom(from, name);
     if (!string.IsNullOrWhiteSpace(arrival.Description)) room.AddDescription(arrival.Description);
     room.IsDark = here.IsDark;
     if (arrival.Direction is { } direction)
@@ -2339,9 +2340,7 @@ public sealed class Automap : IAutomapController
     if (_correcting is { } arrival)
     {
       var source = _canvas.ResolveRoom(arrival.From);
-      return arrival.Direction is { } way && source != null
-        ? _canvas.NewRoomBounds(source, way)
-        : _canvas.NewRoomBounds(CurrentRoom, null);
+      return _canvas.NewRoomBounds(source, arrival.Direction);
     }
 
     var from = CurrentRoom;

@@ -95,6 +95,53 @@ public class CorrectArrivalTests : IsolatedProjectTests
     }
   }
 
+  // Lee, 24 Nov 2026: east into Dead End, taken for the Dead End already on the map far away; Add a new room was
+  // previewed beside that one, not east of the room he'd left
+  [Test]
+  public async Task ANewRoom_IsPreviewedBesideTheRoomYouLeft_NotTheOneAutomapTookItFor()
+  {
+    const string End = "You have reached a dead end.";
+    var project = Project.Current;
+    var hall = new Room(project) { Name = "Hall", Position = new Vector(0, 0) };
+    hall.AddDescription("A grand hall.");
+    var deadEnd = new Room(project) { Name = "Dead End", Position = new Vector(-900, 600) };
+    deadEnd.AddDescription(End);
+    project.Elements.Add(hall);
+    project.Elements.Add(deadEnd);
+
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, $">look\n\nHall\nA grand hall.\n\n>east\n\nDead End\n{End}\n\n>");
+    var answers = new PreviewingAnswers();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, answers);
+    answers.Engine = engine;
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    settings.AutoTidy = false;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(project, engine), settings);
+      await WaitFor(() => engine.CanCorrectArrival, "taken for the Dead End on the map");
+      engine.CurrentRoom.ShouldBe(deadEnd);
+
+      (await engine.CorrectArrivalAsync()).ShouldBeTrue();
+      answers.Preview.ShouldNotBeNull();
+      answers.Preview!.Value.Left.ShouldBeGreaterThan(hall.InnerBounds.Right);
+      answers.Preview!.Value.Top.ShouldBe(hall.Position.Y, 1);
+      // and the room added where it was previewed
+      var added = engine.CurrentRoom;
+      added.ShouldNotBe(deadEnd);
+      added.Position.X.ShouldBe(answers.Preview!.Value.Left, 1);
+      added.Position.Y.ShouldBe(answers.Preview!.Value.Top, 1);
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
   /// <summary>Answers "a new room", noting where the preview put it.</summary>
   private sealed class PreviewingAnswers : IEditorPrompts
   {
