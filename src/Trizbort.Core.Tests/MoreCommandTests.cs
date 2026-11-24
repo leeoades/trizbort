@@ -50,6 +50,19 @@ public class MoreCommandTests
     {
       return Task.FromResult(Choice);
     }
+
+    /// <summary>Null: cancelled. Otherwise the region Map Settings makes, added to the settings when applied.</summary>
+    public string NewRegion { get; set; }
+
+    public int NewRegionAsked { get; private set; }
+
+    public Task<NewRegionChoice> AddRegionAsync(CancellationToken token = default)
+    {
+      NewRegionAsked++;
+      if (NewRegion == null) return Task.FromResult<NewRegionChoice>(null);
+      var name = NewRegion;
+      return Task.FromResult(new NewRegionChoice(name, () => Settings.Regions.Add(new Region { RegionName = name })));
+    }
   }
 
   [SetUp]
@@ -141,14 +154,85 @@ public class MoreCommandTests
     a.Region.ShouldBe(regionBefore);
   }
 
+  // Lee, 24 Nov 2026: with no regions yet, Change Region is how to make the first
   [Test]
-  public void ChangeRegion_DisabledWithSingleRegion()
+  public void ChangeRegion_EnabledWithOnlyNoRegion_ToAddOne()
   {
     var a = _session.AddRoom(new Vector(0, 0));
     _session.Selection.Set(new Element[] { a });
     Settings.Regions = new List<Region> { new Region { RegionName = Region.DefaultRegion } };
 
-    _catalogue.Find("room.changeRegion").CanExecute(_session).ShouldBeFalse();
+    _catalogue.Find("room.changeRegion").CanExecute(_session).ShouldBeTrue();
+    _catalogue.Find("room.setRegion").CanExecute(_session).ShouldBeTrue();
+  }
+
+  [Test]
+  public async Task AddNewRegion_PutsTheSelectedRoomsInIt_AsOneUndoStep()
+  {
+    var a = _session.AddRoom(new Vector(0, 0));
+    var b = _session.AddRoom(new Vector(300, 0));
+    var c = _session.AddRoom(new Vector(600, 0));
+    _session.Selection.Set(new Element[] { a, b });
+    var prompts = new FixedRegionPrompts { NewRegion = "Cellars" };
+    _session.Prompts = prompts;
+
+    var add = _catalogue.Find("room.setRegion").DynamicChildren(_session).Last();
+    await add.ExecuteAsync(_session);
+
+    Settings.Regions.ShouldContain(r => r.RegionName == "Cellars");
+    a.Region.ShouldBe("Cellars");
+    b.Region.ShouldBe("Cellars");
+    c.Region.ShouldNotBe("Cellars");
+    _session.SelectedRooms.ShouldBe(new[] { a, b }, ignoreOrder: true);
+
+    // the region and the rooms in it, undone together
+    _session.PerformUndo();
+    Settings.Regions.ShouldNotContain(r => r.RegionName == "Cellars");
+    a.Region.ShouldNotBe("Cellars");
+  }
+
+  [Test]
+  public async Task AddNewRegion_Cancelled_ChangesNothing_AndKeepsTheSelection()
+  {
+    var a = _session.AddRoom(new Vector(0, 0));
+    var b = _session.AddRoom(new Vector(300, 0));
+    _session.Selection.Set(new Element[] { a, b });
+    var before = a.Region;
+    var lastStep = _session.Undo.UndoTitle;
+    _session.Prompts = new FixedRegionPrompts { NewRegion = null };
+
+    await _session.AddRegionForSelectedRoomsAsync();
+
+    a.Region.ShouldBe(before);
+    _session.Undo.UndoTitle.ShouldBe(lastStep);
+    _session.SelectedRooms.ShouldBe(new[] { a, b }, ignoreOrder: true);
+  }
+
+  [Test]
+  public async Task ChangeRegion_NewRegionButton_GoesOnToMakeOne()
+  {
+    var a = _session.AddRoom(new Vector(0, 0));
+    _session.Selection.Set(new Element[] { a });
+    var prompts = new FixedRegionPrompts { Choice = NewRegionChoice.Chosen, NewRegion = "Attic" };
+    _session.Prompts = prompts;
+
+    await Run("room.changeRegion");
+
+    prompts.NewRegionAsked.ShouldBe(1);
+    a.Region.ShouldBe("Attic");
+  }
+
+  [Test]
+  public void TheDefaultRegion_IsCalledNoRegion_OnScreen_AndNoOtherRegionCanBe()
+  {
+    Region.DisplayName(Region.DefaultRegion).ShouldBe("No Region");
+    Region.DisplayName(null).ShouldBe("No Region");
+    Region.DisplayName("Cellars").ShouldBe("Cellars");
+    // the file keeps the name the original Trizbort knows
+    Region.DefaultRegion.ShouldBe("NoRegion");
+    RegionNaming.Validate("No Region", new string[0], null).ShouldNotBeEmpty();
+    RegionNaming.Validate("noregion", new string[0], null).ShouldNotBeEmpty();
+    RegionNaming.Validate("Cellars", new string[0], null).ShouldBeEmpty();
   }
 
   [Test]

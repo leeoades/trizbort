@@ -35,6 +35,9 @@ public static class RegionNaming
     if (sanitized.Length == 0) return EmptyMessage;
     if (sanitized.IndexOfAny(new[] { '_', ':' }) >= 0) return InvalidCharacterMessage;
     if (current != null && sanitized.Equals(current, StringComparison.OrdinalIgnoreCase)) return string.Empty;
+    // "No Region" is what the default region is called on screen
+    if (Trizbort.Domain.Misc.Region.LooksLikeDefault(sanitized))
+      return DuplicateMessage(Trizbort.Domain.Misc.Region.NoRegionDisplayName);
     if (existing != null && existing.Any(p => p != null && p.Equals(sanitized, StringComparison.OrdinalIgnoreCase)))
       return DuplicateMessage(sanitized);
     return string.Empty;

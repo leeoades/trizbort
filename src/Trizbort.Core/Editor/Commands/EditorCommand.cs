@@ -108,4 +108,13 @@ public sealed class DynamicMenuItem
   public bool IsEnabled { get; set; } = true;
 
   public Action<EditorSession> Execute { get; set; }
+
+  /// <summary>Run instead of <see cref="Execute" /> when set: for an item that opens a dialog.</summary>
+  public Func<EditorSession, System.Threading.Tasks.Task> ExecuteAsync { get; set; }
+
+  /// <summary>False for an action (Add New Region...) rather than one of a set of choices.</summary>
+  public bool IsCheckable { get; set; } = true;
+
+  /// <summary>Draw a separator above this item.</summary>
+  public bool SeparatorBefore { get; set; }
 }
