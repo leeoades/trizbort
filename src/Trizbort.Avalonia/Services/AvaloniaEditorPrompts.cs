@@ -66,6 +66,16 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         return Dispatcher.UIThread.InvokeAsync(() => ShowElementPropertiesAsync(element));
     }
 
+    public Task<bool> EditRoomsAsync(IReadOnlyList<Room> rooms, CancellationToken token = default)
+    {
+        return OnUiThreadAsync(async () =>
+        {
+            var owner = _getOwner();
+            var service = _dialogService ?? App.Services?.GetService<IDialogService>();
+            return owner != null && service != null && await service.ShowRoomsPropertiesAsync(owner, rooms);
+        });
+    }
+
     private async Task<bool> ShowElementPropertiesAsync(Element element)
     {
         var owner = _getOwner();

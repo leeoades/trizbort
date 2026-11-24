@@ -10,6 +10,9 @@
 
 ![Room Properties for the Lighthouse Base: its name, description and objects.](images/room-properties.png)
 
+Select several rooms and choose **Properties...** to set their darkness, shape, lines, region and colours all at
+once. Anything they differ on shows as **Mixed**, and stays as each room has it unless you change it.
+
 The **Description & Objects** tab holds the room's description and what's in it, one object a line. The other tabs
 set its shape, lines, region and colours. **Start Room**, **End Room** and **Dark** change how it's drawn (a dark
 room is shaded).

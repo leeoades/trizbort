@@ -31,6 +31,9 @@ public interface IDialogService
     Task<bool> ShowMapLabelPropertiesAsync(Window? owner, MapLabel label);
     Task<bool> ShowElementPropertiesAsync(Window? owner, Element element);
 
+    /// <summary>What several rooms share, edited together; OK sets what's changed on each as one undo step.</summary>
+    Task<bool> ShowRoomsPropertiesAsync(Window? owner, IReadOnlyList<Room> rooms) => Task.FromResult(false);
+
     Task<bool> ShowMapSettingsAsync(Window? owner);
 
     /// <summary>

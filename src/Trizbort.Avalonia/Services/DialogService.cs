@@ -433,6 +433,20 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         return result;
     }
 
+    public async Task<bool> ShowRoomsPropertiesAsync(Window? owner, IReadOnlyList<Room> rooms)
+    {
+        var viewModel = new RoomsPropertiesViewModel();
+        viewModel.Initialize(rooms);
+        var dialog = new RoomsPropertiesDialog { DataContext = viewModel };
+        var result = owner != null && await dialog.ShowDialog<bool>(owner);
+        if (result)
+        {
+            var edit = viewModel.ToEdit();
+            _commandService.Session.Execute("Edit room properties", () => edit.ApplyTo(rooms), rooms);
+        }
+        return result;
+    }
+
     /// <summary>A background's colour, border, shape and lines; OK applies them as one undo step.</summary>
     public async Task<bool> ShowBackgroundPropertiesAsync(Window? owner, Trizbort.Domain.Elements.Background background)
     {
