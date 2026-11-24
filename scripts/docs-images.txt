@@ -1,0 +1,24 @@
+# The pictures in the user guide (Docs/images), and the capture each is copied from.
+# Made by scripts/update-docs-images.ps1 (Windows) or .sh (Linux, macOS): re-run it before a release.
+# picture in Docs/images            capture
+main-window.png                     main-window.png
+automap-guess.png                   automap-guess.png
+room-properties.png                 room-properties.png
+join-properties.png                 join-properties.png
+label-editor.png                    label-editor.png
+directions.png                      directions.png
+automap-dialog.png                  AutomapSettings__main__default.png
+which-room.png                      DisambiguateRooms__main__default.png
+split-room.png                      SplitRoom-moved__main__default.png
+label-style.png                     MapLabelProperties__Style__default.png
+app-settings-general.png            AppSettings__General__default.png
+app-settings-map.png                AppSettings__Map__default.png
+map-settings-details.png            MapSettings__Map-Details__default.png
+map-settings-lines.png              MapSettings__Lines-Grid__default.png
+map-settings-rooms.png              MapSettings__Rooms-Editing__default.png
+map-settings-colours.png            MapSettings__Colours__default.png
+map-settings-fonts.png              MapSettings__Fonts__default.png
+map-settings-regions.png            MapSettings__Regions__default.png
+map-themes.png                      MapTheme__main__default.png
+token-zoomed-out.png                here-token-zoomed-out.png
+about.png                           About__main__default.png
