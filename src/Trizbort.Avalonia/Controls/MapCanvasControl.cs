@@ -159,6 +159,8 @@ public class MapCanvasControl : Control
         Settings.Changed += OnSettingsChanged;
         HookProject(Project.Current);
         TryHookCommandService();
+        _altTopLevel = TopLevel.GetTopLevel(this);
+        _altTopLevel?.AddHandler(KeyUpEvent, OnTopLevelKeyUp, RoutingStrategies.Tunnel, handledEventsToo: true);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -168,6 +170,8 @@ public class MapCanvasControl : Control
         Settings.Changed -= OnSettingsChanged;
         UnhookProject(_hookedProject);
         TryUnhookCommandService();
+        _altTopLevel?.RemoveHandler(KeyUpEvent, OnTopLevelKeyUp);
+        _altTopLevel = null;
         DisposeInteraction();
     }
 
@@ -617,10 +621,37 @@ public class MapCanvasControl : Control
         UpdateToolTip();
     }
 
+    private TopLevel? _altTopLevel;
+
+    /// <summary>Alt was held for a click or drag on the map (a background picked up), not pressed for the menu.</summary>
+    private bool _altUsedOnMap;
+
+    /// <summary>
+    ///   Alt let go after an Alt+click or Alt+drag on the map: Windows' habit of Alt alone going to the menu bar
+    ///   would select File. Avalonia's own handler runs first and opens the menu, so it's closed again here, and the
+    ///   map keeps the keyboard. Lee, 24 Nov 2026.
+    /// </summary>
+    private void OnTopLevelKeyUp(object? sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.LeftAlt or Key.RightAlt) || !_altUsedOnMap) return;
+        _altUsedOnMap = false;
+        var topLevel = _altTopLevel;
+        Dispatcher.UIThread.Post(() =>
+        {
+            foreach (var menu in topLevel?.GetVisualDescendants().OfType<Menu>() ?? [])
+            {
+                if (menu.IsOpen) menu.Close();
+            }
+
+            Focus();
+        });
+    }
+
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
         Focus();
+        if ((e.KeyModifiers & KeyModifiers.Alt) != 0) _altUsedOnMap = true;
 
         var point = e.GetCurrentPoint(this);
         if (e.Pointer.Type == PointerType.Touch)
