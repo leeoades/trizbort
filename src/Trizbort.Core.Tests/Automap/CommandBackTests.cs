@@ -38,7 +38,7 @@ public class CommandBackTests : IsolatedProjectTests
     return engine;
   }
 
-  private static readonly string[] There =
+  private static readonly string[] ThereByMagic =
   {
     ">look", "Inside Building", "You are inside a building.", "",
     ">east", "End of Road", "You are at the end of a road.", "",
@@ -54,7 +54,7 @@ public class CommandBackTests : IsolatedProjectTests
   [Test]
   public async Task SeenOneWay_ItIsOneWay_AndDirectionsDontTakeItBack()
   {
-    var engine = await Play(There.Append(">").ToArray());
+    var engine = await Play(ThereByMagic.Append(">").ToArray());
     try
     {
       Magic().Flow.ShouldBe(ConnectionFlow.OneWay);
@@ -71,12 +71,16 @@ public class CommandBackTests : IsolatedProjectTests
   [Test]
   public async Task SeenBothWays_ItIsTwoWay_AndDirectionsTakeItBack()
   {
-    var engine = await Play(There.Concat(new[] { ">xyzzy", "In Debris Room", "You are in a debris room.", "", ">" }).ToArray());
+    var engine = await Play(ThereByMagic.Concat(new[] { ">xyzzy", "In Debris Room", "You are in a debris room.", "", ">" }).ToArray());
     try
     {
       var magic = Magic();
       magic.Flow.ShouldBe(ConnectionFlow.TwoWay);
       JoinWays.Of(magic).Count(way => way.IsCommand && way.Text == "xyzzy").ShouldBe(2);
+      // written once, in the middle, as before
+      magic.MidText.ShouldBe("xyzzy");
+      magic.StartText.ShouldBeEmpty();
+      magic.EndText.ShouldBeEmpty();
 
       var route = RouteFinder.Find(Project.Current.Elements, Called("Inside Building"), Called("In Debris Room"))!;
       route.Select(step => step.Command).ShouldBe(new[] { "xyzzy" });
