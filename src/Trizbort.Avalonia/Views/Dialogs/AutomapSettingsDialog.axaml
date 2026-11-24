@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
         x:Class="Trizbort.Avalonia.Views.Dialogs.AutomapSettingsDialog"
         x:DataType="vm:AutomapSettingsViewModel"
         x:Name="DialogWindow"
@@ -34,24 +35,35 @@
                         <Label Content="_Options" Target="{Binding #GuessExitsCheck}" Padding="0" />
                     </HeaderedContentControl.Header>
                     <StackPanel Spacing="8">
-                        <CheckBox x:Name="GuessExitsCheck" Content="_Guess possible exits from a room by reading its initial description."
-                                  IsChecked="{Binding GuessExits}" />
+                        <Grid ColumnDefinitions="*,Auto" HorizontalAlignment="Left">
+                            <CheckBox x:Name="GuessExitsCheck" Content="_Guess possible exits from a room by reading its initial description."
+                                      IsChecked="{Binding GuessExits}" />
+                            <controls:InfoTip Grid.Column="1" Text="Reads each new room's description for ways out (&quot;To the east...&quot;, &quot;a passage leads north&quot;) and draws them as short stubs from the room, so you can see the ways you haven't tried yet. Going that way replaces the stub with the join." />
+                        </Grid>
 
-                        <CheckBox x:Name="AutoTidyCheck" Content="Tidy the map as you go, so _rooms make space for each other."
-                                  IsChecked="{Binding AutoTidy}"
-                                  ToolTip.Tip="Rearrange the rooms near you after each move, making space for new rooms. Off: rooms stay where automap first puts them, and you tidy by hand (Tidy Map...)" />
+                        <Grid ColumnDefinitions="*,Auto" HorizontalAlignment="Left">
+                            <CheckBox x:Name="AutoTidyCheck" Content="Tidy the map as you go, so _rooms make space for each other."
+                                      IsChecked="{Binding AutoTidy}" />
+                            <controls:InfoTip Grid.Column="1" Text="Rearranges the rooms near you after each move, making space for new rooms. Off: rooms stay where automap first puts them, and you tidy by hand (Tidy Map...)." />
+                        </Grid>
 
-                        <CheckBox Content="_Start processing from the end of the transcript file."
-                                  IsVisible="{Binding IsStarting}"
-                                  IsChecked="{Binding ContinueTranscript}" />
+                        <Grid ColumnDefinitions="*,Auto" HorizontalAlignment="Left" IsVisible="{Binding IsStarting}">
+                            <CheckBox Content="_Start processing from the end of the transcript file."
+                                      IsChecked="{Binding ContinueTranscript}" />
+                            <controls:InfoTip Grid.Column="1" Text="Skips what's already in the transcript, and maps only what you play from now on: for a transcript you've mapped before, carrying on where you left off." />
+                        </Grid>
 
-                        <CheckBox Content="_Play the transcript a move at a time, starting paused."
-                                  IsVisible="{Binding IsStarting}"
-                                  ToolTip.Tip="Use Next move and Play to end on the automap bar to step through a transcript you already have."
-                                  IsChecked="{Binding MoveByMove}" />
+                        <Grid ColumnDefinitions="*,Auto" HorizontalAlignment="Left" IsVisible="{Binding IsStarting}">
+                            <CheckBox Content="_Play the transcript a move at a time, starting paused."
+                                      IsChecked="{Binding MoveByMove}" />
+                            <controls:InfoTip Grid.Column="1" Text="Starts paused. Step through with Next Move and Previous Move on the automap panel, or Play to the End: good for checking a transcript you already have, a room at a time." />
+                        </Grid>
 
-                        <CheckBox Content="Always assume two-way connections."
-                                  IsChecked="{Binding AssumeTwoWayConnections}" />
+                        <Grid ColumnDefinitions="*,Auto" HorizontalAlignment="Left">
+                            <CheckBox x:Name="TwoWayCheck" Content="Assume _joins go both ways."
+                                      IsChecked="{Binding AssumeTwoWayConnections}" />
+                            <controls:InfoTip Grid.Column="1" Text="Going north from one room to another, automap also maps south as the way back, before you've tried it. If the way back turns out to lead somewhere else, automap moves it. Off: a join goes one way until you've gone back along it, which suits mazes and twisty passages." />
+                        </Grid>
 
                         <CheckBox Content="Single step through the transcript with F11 (debug)."
                                   IsVisible="{Binding ShowSingleStep}"
@@ -70,14 +82,20 @@
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="&gt;" VerticalAlignment="Center" />
                             <TextBox Grid.Row="0" Grid.Column="2" x:Name="AddObjectBox" Text="{Binding AddObjectCommand}"
                                      ToolTip.Tip="Command typed in the game to add an object to the map, for example: tb see lamp" />
-                            <TextBlock Grid.Row="0" Grid.Column="4" Classes="hint" VerticalAlignment="Center"
-                                       Text="followed by an object name adds it to the map." />
+                            <Grid ColumnDefinitions="*,Auto" HorizontalAlignment="Left" Grid.Row="0" Grid.Column="4">
+                                <TextBlock Classes="hint" VerticalAlignment="Center" TextWrapping="Wrap"
+                                           Text="followed by an object name adds it to the map." />
+                                <controls:InfoTip Grid.Column="1" Text="Type this at the game's prompt, then an object's name (tb see brass lantern), to add the object to the room you're in. The game won't understand it, which doesn't matter: automap reads it in the transcript. Automap doesn't follow objects as they're taken and dropped; this is for noting where things are." />
+                            </Grid>
 
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="&gt;" VerticalAlignment="Center" />
                             <TextBox Grid.Row="1" Grid.Column="2" x:Name="AddRegionBox" Text="{Binding AddRegionCommand}"
                                      ToolTip.Tip="Command typed in the game to put the current room in a region, for example: tb region Cellar" />
-                            <TextBlock Grid.Row="1" Grid.Column="4" Classes="hint" VerticalAlignment="Center"
-                                       Text="followed by region name to add room to region." />
+                            <Grid ColumnDefinitions="*,Auto" HorizontalAlignment="Left" Grid.Row="1" Grid.Column="4">
+                                <TextBlock Classes="hint" VerticalAlignment="Center" TextWrapping="Wrap"
+                                           Text="followed by region name to add room to region." />
+                                <controls:InfoTip Grid.Column="1" Text="Type this at the game's prompt, then a region's name (tb region Cellar), to put the room you're in into that region, made if it's new. Regions group rooms by area, and each can have its own colours (Map Settings, Regions). The game won't understand it, which doesn't matter: automap reads it in the transcript." />
+                            </Grid>
                         </Grid>
                     </StackPanel>
                 </HeaderedContentControl>
