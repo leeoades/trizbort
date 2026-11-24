@@ -18,7 +18,13 @@ Every change a user would notice (a feature, a behaviour change, a fix) gets a l
 `### Added` / `### Changed` / `### Fixed` section (add the section if it's missing). Write for
 people using the app: what they'll see and how to use it, not class names. Internal refactors,
 tests and docs-only changes don't need an entry. When a change is about how to use the app, also
-update the user guide ([`Docs/index.md`](Docs/index.md)). At release time `[Unreleased]` becomes
+update the user guide: the short pages in [`Docs/`](Docs/index.md), one per topic (map, labels, automap,
+settings, exporting, keyboard), with pictures from `Docs/images`. Keep the text short. The pictures are drawn by
+the app in a test run: `scripts/update-docs-images.ps1` (or `.sh`) runs `DocsCaptureTests` and the dialog captures
+and copies the ones listed in `scripts/docs-images.txt`; add a scene there for a new picture rather than a hand-made
+screenshot. Notable features also go in [`Docs/whats-new.md`](Docs/whats-new.md) under "Coming next", which
+becomes the version at release (re-run the pictures script then too). The old guide in `legacy/Docs/` is for the
+legacy app: leave it alone. At release time `[Unreleased]` becomes
 the version heading (e.g. `## [0.12.0-beta] - 2026-11-20`); the release workflow uses that section
 as the release notes. Legacy (WinForms) changes go in [`legacy/changelog.md`](legacy/changelog.md).
 

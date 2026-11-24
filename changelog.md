@@ -12,6 +12,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Added
+
+- **A new user guide for Recast** (Help > Online Help, F1): short pages on drawing the map, labels, automap,
+  settings, exporting and keyboard shortcuts, with pictures, and a
+  [What's new](https://github.com/leeoades/trizbort/blob/master/Docs/whats-new.md) page with the highlights of each
+  release. The guide to the original app and Trizbort 2 is still there, in `legacy/Docs`.
+
 ### Changed
 
 - The automapping dialog is shorter. **Show the game screen** is gone: show or hide it on the automap panel.
@@ -19,6 +26,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   with the same name** is gone: automap always tells such rooms apart by the map and their descriptions, asking when
   it can't. **Don't ask again** in **Which room does it mean?** now lasts until automap stops, rather than until it
   was turned off in the dialog.
+
+### Fixed
+
+- **Map Theme** names a theme's room shape as the rest of the app does ("Straight Edges", not "SquareCorners").
+- **Application Settings** no longer says Smart Save's options aren't used: it says what Smart Save does with them.
 
 ## [0.15.0-beta] - 2026-11-22
 

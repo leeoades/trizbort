@@ -62,7 +62,8 @@ Thank you to everyone who stars, shares, tests and reports: every bit of it help
 authors, and gets us closer to a signed app that installs without the warnings.
 
 ## Links
-- [User guide](Docs/index.md) (written for Trizbort 2; Recast works the same way except where the changelog says)
+- [User guide](Docs/index.md) and [what's new](Docs/whats-new.md), with pictures. The guide to the original app and
+  Trizbort 2 is in [legacy/Docs](legacy/Docs/index.md)
 - [Issues](https://github.com/leeoades/trizbort/issues)
 - [Releases](https://github.com/leeoades/trizbort/releases)
 - [Recast changelog](changelog.md) and [Trizbort 1.x and 2.x changelog](legacy/changelog.md)
@@ -89,7 +90,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 - `scripts/`: developer scripts, including the export comparison between the two apps.
 - `tests/manual/`: manual map fixtures and test scripts (not run by `dotnet test`).
 - `samples/`: sample maps and transcripts.
-- `Docs/`: user documentation and related assets.
+- `Docs/`: the Recast user guide, and its pictures in `Docs/images` (drawn by `scripts/update-docs-images`).
 - `agent-docs/`: technical reference for contributors and coding agents.
 
 ## Building and testing
@@ -112,6 +113,9 @@ dotnet run --project legacy/src/Trizbort
 Pushing a tag starts a release build on GitHub Actions. Both apps need a changelog entry for a beta tag,
 under a heading without the prefix. Recast accepts `-beta` or `-beta.N`, such as `## [0.15.0-beta]`;
 the legacy app accepts `-beta.N`.
+
+Before tagging a Recast release, redraw the guide's pictures with `scripts/update-docs-images.ps1` (Windows) or
+`scripts/update-docs-images.sh`, and add the release's highlights to [Docs/whats-new.md](Docs/whats-new.md).
 
 | Tag | Builds | Changelog |
 |---|---|---|

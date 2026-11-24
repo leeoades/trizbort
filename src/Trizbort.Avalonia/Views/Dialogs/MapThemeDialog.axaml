@@ -35,7 +35,7 @@
                         <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Name}" FontWeight="SemiBold" />
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Default shape:" Opacity="0.8" />
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding DefaultRoomShape}" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding DefaultRoomShape, Converter={x:Static vm:EnumDisplay.Converter}}" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Room font:" Opacity="0.8" />
                         <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding RoomFont.Name}" />
