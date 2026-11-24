@@ -160,7 +160,9 @@ public class MapCanvasControl : Control
         HookProject(Project.Current);
         TryHookCommandService();
         _altTopLevel = TopLevel.GetTopLevel(this);
+        _altTopLevel?.AddHandler(KeyDownEvent, OnTopLevelKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
         _altTopLevel?.AddHandler(KeyUpEvent, OnTopLevelKeyUp, RoutingStrategies.Tunnel, handledEventsToo: true);
+        if (_altTopLevel is WindowBase window) window.Deactivated += OnWindowDeactivated;
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -170,7 +172,9 @@ public class MapCanvasControl : Control
         Settings.Changed -= OnSettingsChanged;
         UnhookProject(_hookedProject);
         TryUnhookCommandService();
+        _altTopLevel?.RemoveHandler(KeyDownEvent, OnTopLevelKeyDown);
         _altTopLevel?.RemoveHandler(KeyUpEvent, OnTopLevelKeyUp);
+        if (_altTopLevel is WindowBase window) window.Deactivated -= OnWindowDeactivated;
         _altTopLevel = null;
         DisposeInteraction();
     }
@@ -623,17 +627,34 @@ public class MapCanvasControl : Control
 
     private TopLevel? _altTopLevel;
 
+    /// <summary>Alt is held, wherever the keyboard is: the map may not have it, and the menu takes Alt first.</summary>
+    private bool _altDown;
+
     /// <summary>Alt was held for a click or drag on the map (a background picked up), not pressed for the menu.</summary>
     private bool _altUsedOnMap;
 
     /// <summary>
-    ///   Alt let go after an Alt+click or Alt+drag on the map: Windows' habit of Alt alone going to the menu bar
-    ///   would select File. Avalonia's own handler runs first and opens the menu, so it's closed again here, and the
-    ///   map keeps the keyboard. Lee, 24 Nov 2026.
+    ///   Alt down anywhere in the window, seen even when something else handles it (the menu's access keys) or has the
+    ///   keyboard: over the map, the cursor shows what Alt does there (picks up a background). Lee, 24 Nov 2026.
+    /// </summary>
+    private void OnTopLevelKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.LeftAlt or Key.RightAlt) || _altDown) return;
+        _altDown = true;
+        AltChanged();
+    }
+
+    /// <summary>
+    ///   Alt let go. After an Alt+click or Alt+drag on the map, Windows' habit of Alt alone going to the menu bar
+    ///   mustn't select File: the click told the menu to ignore it (see <see cref="TellTheMenuAltIsTaken" />), and in
+    ///   case it didn't, the menu is closed again and the map keeps the keyboard.
     /// </summary>
     private void OnTopLevelKeyUp(object? sender, KeyEventArgs e)
     {
-        if (e.Key is not (Key.LeftAlt or Key.RightAlt) || !_altUsedOnMap) return;
+        if (e.Key is not (Key.LeftAlt or Key.RightAlt)) return;
+        _altDown = false;
+        AltChanged();
+        if (!_altUsedOnMap) return;
         _altUsedOnMap = false;
         var topLevel = _altTopLevel;
         Dispatcher.UIThread.Post(() =>
@@ -647,11 +668,47 @@ public class MapCanvasControl : Control
         });
     }
 
+    /// <summary>Alt+Tab away: its key up goes to the other window.</summary>
+    private void OnWindowDeactivated(object? sender, EventArgs e)
+    {
+        if (!_altDown) return;
+        _altDown = false;
+        _altUsedOnMap = false;
+        AltChanged();
+    }
+
+    private void AltChanged()
+    {
+        if (_interaction == null || !IsPointerOver) return;
+        var held = _interaction.ModifiersHeld;
+        _interaction.SetModifiersHeld(_altDown ? held | CoreModifierKeys.Alt : held & ~CoreModifierKeys.Alt);
+        AfterInteraction();
+    }
+
+    /// <summary>
+    ///   Alt is being used with the mouse: tells the menu bar so, as another key pressed with Alt would, so letting go
+    ///   of Alt doesn't open it (Avalonia's access-key handling ignores the Alt release after another key).
+    /// </summary>
+    private void TellTheMenuAltIsTaken()
+    {
+        _altTopLevel?.RaiseEvent(new KeyEventArgs
+        {
+            RoutedEvent = KeyDownEvent,
+            Key = Key.None,
+            KeyModifiers = KeyModifiers.Alt,
+            Source = _altTopLevel
+        });
+    }
+
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
         Focus();
-        if ((e.KeyModifiers & KeyModifiers.Alt) != 0) _altUsedOnMap = true;
+        if ((e.KeyModifiers & KeyModifiers.Alt) != 0 || _altDown)
+        {
+            _altUsedOnMap = true;
+            TellTheMenuAltIsTaken();
+        }
 
         var point = e.GetCurrentPoint(this);
         if (e.Pointer.Type == PointerType.Touch)

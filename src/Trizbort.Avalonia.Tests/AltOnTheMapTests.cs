@@ -127,4 +127,61 @@ public class AltOnTheMapTests
             window.Close();
         }
     }
+
+    // Lee, 24 Nov 2026, on Windows: no move cursor, and File selected after all. The map may not have the keyboard, and
+    // the menu's access keys take Alt first
+    [AvaloniaTest]
+    public void AltHeldOverABackground_ShowsTheMoveCursor_EvenWhenSomethingElseHasTheKeyboard()
+    {
+        var (window, menu, canvas) = Harness();
+        try
+        {
+            var inside = canvas.CanvasToClient(new Vector(0, 0));
+            window.MouseMove(inside);
+            var box = new TextBox();
+            ((DockPanel)window.Content!).Children.Insert(0, box);
+            DockPanel.SetDock(box, Dock.Bottom);
+            window.UpdateLayout();
+            box.Focus();
+            Dispatcher.UIThread.RunJobs();
+
+            window.KeyPress(Key.LeftAlt, RawInputModifiers.Alt, PhysicalKey.AltLeft, null);
+            Dispatcher.UIThread.RunJobs();
+            canvas.CursorKind.ShouldBe(Trizbort.Editor.CursorKind.SizeAll);
+
+            window.KeyRelease(Key.LeftAlt, RawInputModifiers.None, PhysicalKey.AltLeft, null);
+            Dispatcher.UIThread.RunJobs();
+            canvas.CursorKind.ShouldBe(Trizbort.Editor.CursorKind.Default);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [AvaloniaTest]
+    public void AnAltClickOnTheMap_TellsTheMenuToIgnoreTheAltRelease()
+    {
+        var (window, menu, canvas) = Harness();
+        var opened = 0;
+        menu.Opened += (_, _) => opened++;
+        try
+        {
+            var start = canvas.CanvasToClient(new Vector(0, 0));
+            window.KeyPress(Key.LeftAlt, RawInputModifiers.Alt, PhysicalKey.AltLeft, null);
+            window.MouseMove(start, RawInputModifiers.Alt);
+            window.MouseDown(start, MouseButton.Left, RawInputModifiers.Alt);
+            window.MouseUp(start, MouseButton.Left, RawInputModifiers.Alt);
+            window.KeyRelease(Key.LeftAlt, RawInputModifiers.None, PhysicalKey.AltLeft, null);
+            Dispatcher.UIThread.RunJobs();
+
+            // never opened at all, not opened and closed again
+            opened.ShouldBe(0);
+            menu.IsOpen.ShouldBeFalse();
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
 }

@@ -536,6 +536,9 @@ public sealed class CanvasInteraction : IDisposable
   ///   The modifier keys now held, as Shift or Ctrl goes down or up without the pointer moving, so the cursor shows
   ///   what a click would do to the selection.
   /// </summary>
+  /// <summary>The modifier keys last known to be held.</summary>
+  public ModifierKeys ModifiersHeld => _modifiersHeld;
+
   public void SetModifiersHeld(ModifierKeys modifiers)
   {
     if (_modifiersHeld == modifiers) return;
