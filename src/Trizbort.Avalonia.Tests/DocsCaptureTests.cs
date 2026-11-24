@@ -13,6 +13,10 @@ using Trizbort.Avalonia.Controls;
 using Trizbort.Avalonia.Services;
 using Trizbort.Avalonia.ViewModels;
 using Trizbort.Avalonia.Views;
+using Trizbort.Avalonia.Views.Dialogs;
+using Trizbort.Editor;
+using Trizbort.Navigation;
+using Trizbort.Avalonia.Drawing;
 using Trizbort.Domain.AppSettings;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
@@ -360,6 +364,111 @@ public class DocsCaptureTests
             vm.StopAutomap();
             window.Close();
             try { Directory.Delete(folder, true); } catch (IOException) { }
+        }
+    }
+
+    /// <summary>The Lighthouse, automapped from its transcript by automap's engine: a map to show in the dialogs.</summary>
+    private static async Task<Project> LighthouseAsync()
+    {
+        var project = new Project();
+        Project.Current = project;
+        Settings.Reset();
+        var folder = Directory.CreateTempSubdirectory("trizbort-docs-").FullName;
+        var transcript = Path.Combine(folder, "lighthouse.txt");
+        File.WriteAllText(transcript, Lighthouse.Replace("\r\n", "\n"));
+        var engine = new AutomapEngine((_, _) => { }, NonInteractiveEditorPrompts.Instance);
+        var settings = AutomapSettings.Default;
+        settings.FileName = transcript;
+        settings.AddObjectCommand = "tb see";
+        settings.AutoTidy = true;
+        settings.VerboseTranscript = true;
+        var run = engine.Start(new AutomapCanvas(project, engine), settings);
+        try
+        {
+            await WaitFor(() => engine.CurrentRoom?.Name == "Sea Cave", "the sea cave");
+        }
+        finally
+        {
+            engine.Stop();
+            await run;
+            try { Directory.Delete(folder, true); } catch (IOException) { }
+        }
+
+        return project;
+    }
+
+    private static Room Called(Project project, string name) =>
+        project.Elements.OfType<Room>().First(room => room.Name == name);
+
+    /// <summary>A dialog, shown at its own size, saved as it first appears.</summary>
+    private static void Capture(Window dialog, string path)
+    {
+        dialog.ShowInTaskbar = false;
+        dialog.Show();
+        try
+        {
+            Save(dialog, path);
+        }
+        finally
+        {
+            dialog.Close();
+        }
+    }
+
+    /// <summary>Room Properties for the Lighthouse Base: its name, description and the oil can.</summary>
+    [AvaloniaTest]
+    public async Task TheRoomAndJoinDialogs_ForTheLighthouse()
+    {
+        var root = Output();
+        var project = await LighthouseAsync();
+        var services = App.ConfigureServices();
+        using var scope = services.CreateScope();
+        var sp = scope.ServiceProvider;
+
+        var room = Called(project, "Lighthouse Base");
+        var roomVm = sp.GetRequiredService<RoomPropertiesViewModel>();
+        roomVm.Initialize(room);
+        Capture(new RoomPropertiesDialog { DataContext = roomVm }, Path.Combine(root, "room-properties.png"));
+
+        // up the spiral stair
+        var stair = Called(project, "Spiral Stair");
+        var join = project.Elements.OfType<Connection>().First(connection =>
+            (connection.GetSourceRoom() == room && connection.GetTargetRoom() == stair) ||
+            (connection.GetSourceRoom() == stair && connection.GetTargetRoom() == room));
+        var joinVm = sp.GetRequiredService<ConnectionPropertiesViewModel>();
+        joinVm.Initialize(join);
+        Capture(new ConnectionPropertiesDialog { DataContext = joinVm }, Path.Combine(root, "join-properties.png"));
+
+        // the treasures label, being written: the Markdown toolbar, and Add Link listing the rooms
+        var label = new MapLabel(project) { Markdown = true, Text = TreasureLabel.Replace("\r\n", "\n") };
+        project.Elements.Add(label);
+        var labelVm = sp.GetRequiredService<MapLabelPropertiesViewModel>();
+        labelVm.Initialize(label);
+        labelVm.LinkPanelOpen = true;
+        Capture(new MapLabelPropertiesDialog { DataContext = labelVm }, Path.Combine(root, "label-editor.png"));
+    }
+
+    /// <summary>Directions: the way from the beach up to the lamp room, glowing on the map.</summary>
+    [AvaloniaTest]
+    public async Task Directions_GlowOnTheMap()
+    {
+        var root = Output();
+        var project = await LighthouseAsync();
+        var service = new CommandService();
+        service.SetViewportSize(760, 560);
+        var canvas = new MapCanvasControl { CommandService = service };
+        var window = new Window { Width = 760, Height = 560, Content = canvas };
+        try
+        {
+            window.Show();
+            service.Session.Viewport.FitToMap(project.Elements);
+            RouteGlow.Route = RouteFinder.Find(project.Elements, Called(project, "Beach"), Called(project, "Lamp Room"));
+            Save(window, Path.Combine(root, "directions.png"));
+        }
+        finally
+        {
+            RouteGlow.Route = null;
+            window.Close();
         }
     }
 }
