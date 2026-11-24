@@ -258,23 +258,22 @@ public sealed class LabelStyleSet
   /// <summary>The styles in tree order (Default first, each followed by those based on it), with their depth.</summary>
   public IEnumerable<(LabelStyle Style, int Depth)> Tree()
   {
+    var tree = new List<(LabelStyle Style, int Depth)>();
     var placed = new HashSet<string>();
 
-    IEnumerable<(LabelStyle, int)> Walk(LabelStyle style, int depth)
+    void Walk(LabelStyle style, int depth)
     {
-      if (!placed.Add(style.Id)) yield break;
-      yield return (style, depth);
+      if (!placed.Add(style.Id)) return;
+      tree.Add((style, depth));
       foreach (var child in Styles.Where(s => s.BasedOn == style.Id && !s.IsDefault)
                  .OrderBy(s => s.Name, StringComparer.CurrentCultureIgnoreCase).ToList())
-      foreach (var item in Walk(child, depth + 1))
-        yield return item;
+        Walk(child, depth + 1);
     }
 
-    foreach (var item in Walk(Default, 0)) yield return item;
+    Walk(Default, 0);
     // any left out (based on a style that's gone): under Default
-    foreach (var orphan in Styles.Where(s => !placed.Contains(s.Id)).ToList())
-    foreach (var item in Walk(orphan, 1))
-      yield return item;
+    foreach (var orphan in Styles.Where(s => !placed.Contains(s.Id)).ToList()) Walk(orphan, 1);
+    return tree;
   }
 
   /// <summary>A deep copy, to edit without touching the map until OK.</summary>
