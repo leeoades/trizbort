@@ -500,12 +500,8 @@ public class DocsCaptureTests
             "Outside the Lighthouse", "Lighthouse Base", "Spiral Stair", "Lamp Room");
         tower.BorderStyle = BorderDashStyle.Dash;
         tower.BorderColor = System.Drawing.Color.FromArgb(0xC8, 0xA4, 0x5A);
-        var cottage = await Behind(System.Drawing.Color.FromArgb(0xE3, 0xF1, 0xDF), RoomShape.Ellipse,
+        await Behind(System.Drawing.Color.FromArgb(0xE3, 0xF1, 0xDF), RoomShape.RoundedCorners,
             "Keeper's Cottage", "Kitchen", "Cellar");
-        // an ellipse round the rooms' box, rather than in it
-        var centre = cottage.InnerBounds.Center;
-        cottage.Size = new CoreVector(cottage.Size.X * 1.42f, cottage.Size.Y * 1.42f);
-        cottage.Position = new CoreVector(centre.X - cottage.Size.X / 2, centre.Y - cottage.Size.Y / 2);
         session.ClearSelection();
 
         var canvas = new MapCanvasControl { CommandService = service };
