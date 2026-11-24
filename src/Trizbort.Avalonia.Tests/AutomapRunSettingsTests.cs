@@ -63,6 +63,43 @@ public class AutomapRunSettingsTests
         }
     }
 
+    // Lee, 24 Nov 2026: the (i) beside a long option was off the edge of the dialog; and the i wasn't in the middle
+    // of its circle
+    [AvaloniaTest]
+    public void EveryInfoMark_FitsInTheDialog_EvenAtItsNarrowest()
+    {
+        var vm = new AutomapSettingsViewModel(null!);
+        vm.Initialize(AutomapSettings.Default);
+        var dialog = new AutomapSettingsDialog { DataContext = vm };
+        dialog.Show();
+        try
+        {
+            foreach (var width in new[] { dialog.Width, dialog.MinWidth })
+            {
+                dialog.Width = width;
+                Dispatcher.UIThread.RunJobs();
+                var tips = dialog.GetVisualDescendants().OfType<Trizbort.Avalonia.Controls.InfoTip>()
+                    .Where(tip => tip.IsEffectivelyVisible).ToList();
+                tips.Count.ShouldBe(7);
+                foreach (var tip in tips)
+                {
+                    var corner = tip.TranslatePoint(new global::Avalonia.Point(tip.Bounds.Width, tip.Bounds.Height), dialog)!.Value;
+                    corner.X.ShouldBeLessThanOrEqualTo(dialog.ClientSize.Width - 16, $"the (i) for \"{tip.Text}\" at {width}");
+                    tip.Bounds.Width.ShouldBe(16);
+                }
+            }
+
+            // the i drawn in the middle of the 16x16 circle, not a font's letter, which sits where the font puts it
+            var glyph = Trizbort.Avalonia.Controls.InfoTip.Glyph.Bounds;
+            (glyph.X + glyph.Width / 2).ShouldBe(8, 0.01);
+            (glyph.Y + glyph.Height / 2).ShouldBe(8, 0.01);
+        }
+        finally
+        {
+            dialog.Close();
+        }
+    }
+
     [AvaloniaTest]
     public void StartingAutomap_ShowsTheTranscript_AndStart()
     {

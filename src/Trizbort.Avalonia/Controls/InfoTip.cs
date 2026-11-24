@@ -32,27 +32,36 @@ public class InfoTip : TemplatedControl
         ToolTip.SetShowDelay(this, 150);
         ToolTip.SetBetweenShowDelay(this, 0);
 
-        var letter = new TextBlock
+        // drawn rather than a font's "i" or ⓘ, so the i sits in the middle of the circle whatever the font: a
+        // dot and a stem, centred on the circle's centre (8, 8)
+        Template = new global::Avalonia.Controls.Templates.FuncControlTemplate<InfoTip>((tip, _) => new Panel
         {
-            Text = "i",
-            FontSize = 11,
-            FontWeight = FontWeight.Bold,
-            FontStyle = FontStyle.Normal,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, -1, 0, 0)
-        };
-        letter[!TextBlock.ForegroundProperty] = this[!ForegroundProperty];
-        Template = new global::Avalonia.Controls.Templates.FuncControlTemplate<InfoTip>((tip, _) => new Border
-        {
-            CornerRadius = new CornerRadius(8),
-            BorderThickness = new Thickness(1.2),
-            [!Border.BorderBrushProperty] = tip[!ForegroundProperty],
-            Background = Brushes.Transparent,
-            Child = letter
+            Children =
+            {
+                new global::Avalonia.Controls.Shapes.Ellipse
+                {
+                    Width = 16,
+                    Height = 16,
+                    StrokeThickness = 1.2,
+                    Fill = Brushes.Transparent,
+                    [!global::Avalonia.Controls.Shapes.Shape.StrokeProperty] = tip[!ForegroundProperty]
+                },
+                new global::Avalonia.Controls.Shapes.Path
+                {
+                    Width = 16,
+                    Height = 16,
+                    Data = Glyph,
+                    [!global::Avalonia.Controls.Shapes.Shape.FillProperty] = tip[!ForegroundProperty]
+                }
+            }
         });
         Foreground = new SolidColorBrush(Color.FromRgb(0x5B, 0x7F, 0xB8));
     }
+
+    /// <summary>The i: a dot (centre 8, 4.85) and a stem (7.1..8.9 by 6.85..12.25): it spans 3.75..12.25, centred
+    ///   on 8.</summary>
+    internal static readonly Geometry Glyph = Geometry.Parse(
+        "M 9.1,4.85 A 1.1,1.1 0 1 1 6.9,4.85 A 1.1,1.1 0 1 1 9.1,4.85 Z M 7.1,6.85 L 8.9,6.85 L 8.9,12.25 L 7.1,12.25 Z");
 
     /// <summary>What's shown on hover.</summary>
     public string? Text
