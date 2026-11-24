@@ -177,7 +177,9 @@ public sealed class CanvasInteraction : IDisposable
 
     if (input.ClickCount == 2)
     {
-      var doubleHit = _hit.HitElement(world);
+      // Alt+double-click inside a background: its properties
+      var doubleHit = _hit.HitElement(world) ??
+                      ((input.Modifiers & ModifierKeys.Alt) != 0 ? _session.BackgroundAt(world) : null);
       if (doubleHit != null)
       {
         _session.Select(new[] { doubleHit }, true);
@@ -279,6 +281,25 @@ public sealed class CanvasInteraction : IDisposable
       }
 
       if (selection.Contains(element))
+      {
+        BeginTransaction("Move");
+        _mode = CanvasDragMode.MoveElement;
+        _dragOffset = Settings.Snap(world);
+      }
+
+      Refresh();
+      return true;
+    }
+
+    // inside a background: picked up only with Alt, even when it's selected; otherwise it's empty map, for a box
+    // round the rooms on it (Lee, 24 Nov 2026: a new background, selected, moved when he dragged inside it)
+    if ((input.Modifiers & ModifierKeys.Alt) != 0 && _session.BackgroundAt(world) is { } background)
+    {
+      if (shift) _session.Select(background, false, true);
+      else if (ctrl) _session.Selection.Remove(background);
+      else if (!selection.Contains(background)) _session.Select(new Element[] { background }, true);
+
+      if (selection.Contains(background))
       {
         BeginTransaction("Move");
         _mode = CanvasDragMode.MoveElement;
@@ -515,6 +536,9 @@ public sealed class CanvasInteraction : IDisposable
   ///   The modifier keys now held, as Shift or Ctrl goes down or up without the pointer moving, so the cursor shows
   ///   what a click would do to the selection.
   /// </summary>
+  /// <summary>The modifier keys last known to be held.</summary>
+  public ModifierKeys ModifiersHeld => _modifiersHeld;
+
   public void SetModifiersHeld(ModifierKeys modifiers)
   {
     if (_modifiersHeld == modifiers) return;
@@ -933,6 +957,14 @@ public sealed class CanvasInteraction : IDisposable
         default:
           return CursorKind.Default;
       }
+    }
+
+    // a background that a drag would pick up: by its edge, or anywhere inside it with Alt held (Lee, 24 Nov 2026)
+    if (_mode == CanvasDragMode.None && !IsShift(_modifiersHeld) && !IsCtrl(_modifiersHeld))
+    {
+      if (_hoverElement is Background) return CursorKind.SizeAll;
+      if (_hoverElement == null && (_modifiersHeld & ModifierKeys.Alt) != 0 && _session.BackgroundAt(_lastWorld) != null)
+        return CursorKind.SizeAll;
     }
 
     // Shift or Ctrl held: a click (or a marquee) adds to or takes from the selection

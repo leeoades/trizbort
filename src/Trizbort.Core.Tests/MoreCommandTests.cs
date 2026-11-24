@@ -347,7 +347,8 @@ public class MoreCommandTests
     var a = _session.AddRoom(new Vector(0, 0));
     _session.Selection.Set(new Element[] { a });
     _catalogue.Find("element.bringToFront").CanExecute(_session).ShouldBeTrue();
-    _catalogue.Find("element.sendToBack").ContextTargets.ShouldBe(ContextTargets.Room | ContextTargets.Label);
+    _catalogue.Find("element.sendToBack").ContextTargets
+      .ShouldBe(ContextTargets.Room | ContextTargets.Label | ContextTargets.Background);
   }
 
   // ---- 036 ----

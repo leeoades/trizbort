@@ -56,7 +56,7 @@ public sealed partial class CommandCatalogue
       MenuPath = "Edit",
       Group = "3-properties",
       Gestures = new[] { new KeyGesture(InputKey.Enter, ModifierKeys.Alt) },
-      ContextTargets = ContextTargets.Room | ContextTargets.Connection | ContextTargets.Label,
+      ContextTargets = ContextTargets.Room | ContextTargets.Connection | ContextTargets.Label | ContextTargets.Background,
       ContextOrder = 10, ContextGroup = "1-properties",
       CanExecuteFunc = s => s.CanShowProperties,
       ExecuteAsyncFunc = s => s.ShowSelectedPropertiesAsync()

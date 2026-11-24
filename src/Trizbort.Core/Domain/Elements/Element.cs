@@ -179,6 +179,9 @@ public class Element : IComparable<Element>
   /// <summary>
   ///   Get whether this element intersects the given rectangle.
   /// </summary>
+  /// <summary>Whether a selection box over <paramref name="rect" /> takes this element in: by default, if they meet.</summary>
+  public virtual bool IsBoxedBy(Rect rect) => Intersects(rect);
+
   public virtual bool Intersects(Rect rect)
   {
     return false;

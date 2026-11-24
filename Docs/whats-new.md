@@ -6,6 +6,11 @@ The highlights of each release, newest first. Every change is listed in the [cha
 
 ## Coming next
 
+- **Backgrounds**: coloured shapes behind parts of the map, to set them apart. Select some rooms and press **B**.
+  See [Drawing the map](map.md#backgrounds).
+
+![Backgrounds behind The Lighthouse.](images/backgrounds.png)
+
 - **Add New Region...** on a room's **Set Region** menu makes a region for the selected rooms, and the default region
   is called **No Region**.
 - **Assume joins go both ways** is the new name for "Always assume two-way connections", and each option in the

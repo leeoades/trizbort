@@ -15,6 +15,7 @@ using CoreColors = Trizbort.Domain.Misc.Colors;
 using AvaloniaRect = Avalonia.Rect;
 using AvaloniaColor = Avalonia.Media.Color;
 using AvaloniaDrawingContext = Avalonia.Media.DrawingContext;
+using MapBackground = Trizbort.Domain.Elements.Background;
 
 namespace Trizbort.Avalonia.Controls;
 
@@ -222,6 +223,15 @@ public class MinimapControl : Control
                 // Draw connections
                 var connPen = Settings.Color[CoreColors.Line].ToPen(1.0);
                 var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(1.2);
+
+                // backgrounds first, under the joins and rooms, lowest first
+                foreach (var background in elements.OfType<MapBackground>().OrderBy(b => b.ZOrder))
+                {
+                    var area = MinimapTransform.WorldToMinimap(background.InnerBounds, canvasBounds, clientArea);
+                    if (area.Width < 1 || area.Height < 1) continue;
+                    var selected = selectedSet != null && selectedSet.Contains(background);
+                    context.DrawRectangle(background.FillColor.ToBrush(), selected ? selPen : null, area.ToRect());
+                }
 
                 foreach (var conn in elements.OfType<Connection>())
                 {

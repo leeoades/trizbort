@@ -94,6 +94,15 @@ public class CopyController
             ZOrder = label.ZOrder, Markdown = label.Markdown
           });
       }
+      else if (element is Background background)
+      {
+        xx.Backgrounds.Add(
+          new CopyBackgroundObj {
+            OldId = background.Id, Position = background.Position, Size = background.Size, Shape = background.Shape,
+            FillColor = background.FillColor, BorderStyle = background.BorderStyle, BorderColor = background.BorderColor,
+            HandDrawnStyle = background.HandDrawnStyle, ZOrder = background.ZOrder
+          });
+      }
       else if (element is Connection)
       {
         var copy = CreateCopyObj(element as Connection);
@@ -101,6 +110,17 @@ public class CopyController
       }
 
     return xx;
+  }
+
+  public void SetBackground(Background background, CopyBackgroundObj copy)
+  {
+    background.Size = copy.Size;
+    background.Shape = copy.Shape;
+    background.FillColor = copy.FillColor;
+    background.BorderStyle = copy.BorderStyle;
+    background.BorderColor = copy.BorderColor;
+    background.HandDrawnStyle = copy.HandDrawnStyle;
+    background.ZOrder = copy.ZOrder;
   }
 
   public void SetLabel(MapLabel label, CopyLabelObj copy)
@@ -329,6 +349,20 @@ public class CopyController
     public List<CopyConnectionObj> Connections;
     public List<CopyRoomObj> Rooms;
     public List<CopyLabelObj> Labels { get; set; } = new();
+    public List<CopyBackgroundObj> Backgrounds { get; set; } = new();
+  }
+
+  public class CopyBackgroundObj
+  {
+    public int OldId { get; set; }
+    public Vector Position { get; set; }
+    public Vector Size { get; set; }
+    public RoomShape Shape { get; set; }
+    public Color FillColor { get; set; }
+    public BorderDashStyle BorderStyle { get; set; }
+    public Color BorderColor { get; set; }
+    public HandDrawnStyle HandDrawnStyle { get; set; }
+    public int ZOrder { get; set; }
   }
 
   public class CopyLabelObj

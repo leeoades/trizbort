@@ -141,10 +141,10 @@ public sealed partial class EditorSession
 
   private List<Element> SelectedRoomsAndLabels()
   {
-    return Selection.Items.Where(e => e is Room || e is MapLabel).ToList();
+    return Selection.Items.Where(e => e is Room || e is MapLabel || e is Background).ToList();
   }
 
-  public bool HasRoomOrLabelSelected => Selection.Items.Any(e => e is Room || e is MapLabel);
+  public bool HasRoomOrLabelSelected => Selection.Items.Any(e => e is Room || e is MapLabel || e is Background);
 
   public void BringSelectionToFront()
   {
