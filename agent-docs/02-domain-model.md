@@ -88,6 +88,20 @@ of those visibility settings. Labels use the same compass-port IDs as rooms, so 
 `Connection` vertices can dock to them and follow movement/resizing.
 
 Room-only selection, validation, statistics and language exporters do not include labels.
+
+## `Background : Element, ISizeable`
+
+`Domain\Elements\Background.cs` is a coloured shape behind part of the map (Lee, 24 Nov 2026): `FillColor`,
+`BorderStyle` (`None` for no border) and `BorderColor`, `Shape` (the four room shapes) and `HandDrawnStyle`
+(`IsHandDrawn` resolves the map default). `Depth.Low`, so it's drawn under the joins and rooms; among
+backgrounds, `ZOrder` decides. No ports. `Distance` is the distance to its **edge** (inside or out), so
+`HitTester.HitElement` only finds it near the edge and inside it is empty map for clicks, double-clicks and
+marquees; `Intersects` is true only when a marquee contains all of it. `EditorSession.BackgroundAt` gives the
+topmost one under a point: `CanvasInteraction` picks it up there with Alt held or when it's already selected,
+and the canvas's context menu uses it when selected (`ContextTargets.Background`). It moves alone, never
+carrying the rooms on it. `EditorSession.AddBackgroundAsync` (Add Background, B) draws it round the selected
+rooms and labels with a grid square to spare, or centred on the pointer; drawn by
+`Avalonia\Drawing\BackgroundDrawingAdapter.cs`, edited in `BackgroundPropertiesDialog`.
 `Connection.GetSourceRoom`/`GetTargetRoom` deliberately return null for label endpoints;
 `Connection.IsDangling` tests actual endpoint docking, not whether the endpoints are rooms.
 Deleting a label invokes the same project-level connection cleanup as deleting a room.

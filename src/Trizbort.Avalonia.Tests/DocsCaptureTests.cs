@@ -471,4 +471,53 @@ public class DocsCaptureTests
             window.Close();
         }
     }
+
+    /// <summary>
+    ///   Backgrounds behind The Lighthouse: the shore, the lighthouse itself and the keeper's cottage, each set apart
+    ///   in its own colour; and a background's properties. Lee, 24 Nov 2026.
+    /// </summary>
+    [AvaloniaTest]
+    public async Task Backgrounds_SetPartsOfTheMapApart()
+    {
+        var root = Output();
+        var project = await LighthouseAsync();
+        var service = new CommandService();
+        service.SetViewportSize(760, 560);
+        var session = service.Session;
+
+        async Task<Background> Behind(System.Drawing.Color fill, RoomShape shape, params string[] rooms)
+        {
+            session.Selection.Set(rooms.Select(name => (Element)Called(project, name)).ToArray());
+            var background = await session.AddBackgroundAsync(null, false);
+            background.FillColor = fill;
+            background.Shape = shape;
+            return background;
+        }
+
+        await Behind(System.Drawing.Color.FromArgb(0xDD, 0xEC, 0xF7), RoomShape.RoundedCorners,
+            "Beach", "Dunes", "Rock Pools", "Sea Cave");
+        var tower = await Behind(System.Drawing.Color.FromArgb(0xFA, 0xEF, 0xD2), RoomShape.RoundedCorners,
+            "Outside the Lighthouse", "Lighthouse Base", "Spiral Stair", "Lamp Room");
+        tower.BorderStyle = BorderDashStyle.Dash;
+        tower.BorderColor = System.Drawing.Color.FromArgb(0xC8, 0xA4, 0x5A);
+        await Behind(System.Drawing.Color.FromArgb(0xE3, 0xF1, 0xDF), RoomShape.Ellipse, "Keeper's Cottage", "Kitchen", "Cellar");
+        session.ClearSelection();
+
+        var canvas = new MapCanvasControl { CommandService = service };
+        var window = new Window { Width = 760, Height = 560, Content = canvas };
+        try
+        {
+            window.Show();
+            session.Viewport.FitToMap(project.Elements);
+            Save(window, Path.Combine(root, "backgrounds.png"));
+        }
+        finally
+        {
+            window.Close();
+        }
+
+        var vm = new BackgroundPropertiesViewModel();
+        vm.Initialize(tower);
+        Capture(new BackgroundPropertiesDialog { DataContext = vm }, Path.Combine(root, "background-properties.png"));
+    }
 }

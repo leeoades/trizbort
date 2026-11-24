@@ -24,6 +24,7 @@ Exports have shortcuts of their own: see [Exporting](exporting.md).
 |---|---|
 | R | Add a room |
 | L | Add a label |
+| B | Add a background, behind the selected rooms |
 | J | Join the selected rooms |
 | F2 | Rename |
 | Alt+Enter | Properties |

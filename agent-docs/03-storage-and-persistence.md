@@ -62,6 +62,9 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
   recognize `<room>` and `<line>`, so they ignore both labels and their lines without leaving
   dangling connectors. Saving through an older version **discards** these unrecognized elements.
   Clipboard DTOs also preserve labels and docking to copied labels.
+- Backgrounds use `<background id="..." x="..." y="..." w="..." h="..." shape="..." fillColor="..."
+  borderstyle="..." borderColor="..." handDrawn="..." ZOrder="..." />`. Older readers skip the element, so
+  they open the map without its backgrounds (and lose them if they save it). Clipboard: `CopyObject.Backgrounds`.
 
 ### Save/load call chain
 

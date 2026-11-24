@@ -40,6 +40,25 @@ A region is a group of rooms drawn in their own colours: "Above ground", "The ce
 **Map Settings > Regions**, then choose **Change Region** (**Shift+F2**) on a room. **Ctrl+Shift+A** selects every
 room in the regions you pick.
 
+## Backgrounds
+
+A background is a coloured shape behind part of the map: the shore, the lighthouse, the cottage. It sets them apart
+whatever regions the rooms are in.
+
+![Three backgrounds behind The Lighthouse.](images/backgrounds.png)
+
+- **Add one:** select the rooms it should go behind and press **B** (or right-click and choose
+  **Add Background**). It's drawn round them, with a little to spare. With nothing selected, it goes where the
+  mouse is.
+- **Inside a background is map like any other:** click rooms on it, double-click to add one, or drag a box round
+  them.
+- **Pick it up** by its edge, or **Alt+click** inside it. Drag it to move it (the rooms stay where they are), or drag
+  its handles to resize it. **Delete** removes it.
+- **Its properties** (double-click its edge, or **Alt+Enter**): colour, border, shape, and hand-drawn or straight
+  lines.
+
+![Background Properties.](images/background-properties.png)
+
 ## Selecting and tidying
 
 - Drag a box round rooms to select them, or **Ctrl+click** to add one at a time. **Ctrl+A** selects everything.

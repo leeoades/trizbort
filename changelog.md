@@ -14,6 +14,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Backgrounds**: coloured shapes behind parts of the map, to set them apart whatever regions the rooms are in.
+  Select some rooms and press **B** (or right-click, **Add Background**) and one is drawn round them; with nothing
+  selected, it goes where the mouse is. Inside one is map like any other, for clicking and boxing the rooms on it:
+  pick the background up by its edge, or Alt+click inside it, to move it (on its own), resize or delete it.
+  Its properties are its colour, border, shape (as rooms') and hand-drawn or straight lines. Older versions open
+  the map without them.
 - **A new user guide for Recast** (Help > Online Help, F1): short pages on drawing the map, labels, automap,
   settings, exporting and keyboard shortcuts, with pictures, and a
   [What's new](https://github.com/leeoades/trizbort/blob/master/Docs/whats-new.md) page with the highlights of each
