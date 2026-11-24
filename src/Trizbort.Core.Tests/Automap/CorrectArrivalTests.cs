@@ -50,6 +50,45 @@ public class CorrectArrivalTests : IsolatedProjectTests
     }
   }
 
+  // Lee, 24 Nov 2026: east from the maze room came back to it. Say it looks like a loop, not "isn't on the map yet"
+  [Test]
+  public async Task AWayThatComesBackToTheSameRoom_IsExplainedAsALoop()
+  {
+    const string Alike = "You are in a maze of twisty little passages, all alike.";
+    var project = Project.Current;
+    var rod = new Room(project) { Name = "Maze", Position = new Vector(0, 0), Objects = "rod" };
+    rod.AddDescription(Alike);
+    var gold = new Room(project) { Name = "Maze", Position = new Vector(300, 0), Objects = "gold" };
+    gold.AddDescription(Alike);
+    project.Elements.Add(rod);
+    project.Elements.Add(gold);
+
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, $">look\n\nMaze\n{Alike}\n\n>east\n\nMaze\n{Alike}\n\n>");
+    var answers = new Answers { Answer = RoomDisambiguation.Choose(rod) };
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, answers);
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    settings.AutoTidy = false;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(project, engine), settings);
+      await WaitFor(() => engine.CanCorrectArrival, "the guess after going east");
+
+      engine.CurrentRoom.ShouldBe(rod);
+      engine.ArrivalAssumption.ShouldBe("East from Maze (rod) was unexplored, and led somewhere with the same name " +
+                                        "and description, so it looks like it loops back: automap kept you there. " +
+                                        "Another room on the map is also called Maze, so it may be that one.");
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
   [Test]
   public async Task NotThisRoom_ANewRoom_TakesTheWayIn()
   {
@@ -76,7 +115,7 @@ public class CorrectArrivalTests : IsolatedProjectTests
       await WaitFor(() => engine.CurrentRoom == gold, "in the gold room");
       // the only Maze on the map: taken for it without asking
       engine.CanCorrectArrival.ShouldBeTrue();
-      engine.ArrivalAssumption.ShouldBe("North from Hall isn't on the map yet. Automap took you to be in Maze, " +
+      engine.ArrivalAssumption.ShouldBe("North from Hall was unexplored. Automap took you to be in Maze, " +
                                         "already on the map, as it has the same name and description.");
 
       (await engine.CorrectArrivalAsync()).ShouldBeTrue();
@@ -185,7 +224,8 @@ public class CorrectArrivalTests : IsolatedProjectTests
 
       engine.CanCorrectArrival.ShouldBeTrue();
       engine.ArrivalAssumption.ShouldBe("West from Maze (coins) leads to Maze (keys) on the map, so automap took you " +
-                                        "there. Rooms called Maze look alike, so it may be another.");
+                                        "there. Two other rooms on the map are also called Maze, so it may be " +
+                                        "one of them.");
 
       answers.Answer = RoomDisambiguation.Choose(food);
       (await engine.CorrectArrivalAsync()).ShouldBeTrue();
