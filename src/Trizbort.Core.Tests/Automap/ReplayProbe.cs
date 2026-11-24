@@ -27,13 +27,14 @@ public class ReplayProbe : IsolatedProjectTests
     var last = -1;
     while (clock.ElapsedMilliseconds < 60000)
     {
-      await Task.Delay(500);
+      await Task.Delay(1500);
       var now = engine.ScreenLines().Count;
       if (now == last) break;
       last = now;
     }
+    TestContext.Out.WriteLine($"PROBE lines={last} of {lines} rooms={Project.Current.Elements.OfType<Room>().Count()} joins={Project.Current.Elements.OfType<Connection>().Count()} startFromEnd={settings.ContinueTranscript}");
     foreach (var c in Project.Current.Elements.OfType<Connection>().Where(c => !string.IsNullOrEmpty(c.AutomapCommand) || (c.AutomapWays ?? "").Contains(",c,")))
-      TestContext.Out.WriteLine($"{c.GetSourceRoom()?.Name} -> {c.GetTargetRoom()?.Name}: flow={c.Flow} style={c.Style} ways={c.AutomapWays} mid={c.MidText}");
+      TestContext.Out.WriteLine($"PROBE {c.GetSourceRoom()?.Name} -> {c.GetTargetRoom()?.Name}: flow={c.Flow} style={c.Style} ways={c.AutomapWays} mid={c.MidText}");
     engine.Stop();
     await run;
   }
