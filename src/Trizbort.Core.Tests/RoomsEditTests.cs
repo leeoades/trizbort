@@ -24,6 +24,9 @@ public class RoomsEditTests : IsolatedProjectTests
   [SetUp]
   public void MakeSession() => _session = new EditorSession();
 
+  [TearDown]
+  public void DisposeSession() => _session.Dispose();
+
   private Room Add(float x, bool dark, Color fill)
   {
     var room = _session.AddRoom(new Vector(x, 0));

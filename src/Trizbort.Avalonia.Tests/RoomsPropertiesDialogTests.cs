@@ -87,7 +87,7 @@ public class RoomsPropertiesDialogTests
         vm.Initialize(new[] { Room(true, System.Drawing.Color.Red, RoomShape.Ellipse), Room(false, System.Drawing.Color.Red, RoomShape.Ellipse) });
         var dialog = new RoomsPropertiesDialog { DataContext = vm };
         dialog.Show();
-        dialog.FindControl<global::Avalonia.Controls.CheckBox>("DarkCheck")!.IsChecked.ShouldBeNull();
+        global::Avalonia.Controls.ControlExtensions.FindControl<global::Avalonia.Controls.CheckBox>(dialog, "DarkCheck")!.IsChecked.ShouldBeNull();
         dialog.Close();
     }
 }
