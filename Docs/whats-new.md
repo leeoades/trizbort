@@ -6,6 +6,8 @@ The highlights of each release, newest first. Every change is listed in the [cha
 
 ## Coming next
 
+- **Assume joins go both ways** is the new name for "Always assume two-way connections", and each option in the
+  automapping dialog has an **ⓘ** to hover over for more about it.
 - **A shorter automapping dialog.** The game screen is shown or hidden on the automap panel, and join labels follow
   the map's **Direction words** setting.
 

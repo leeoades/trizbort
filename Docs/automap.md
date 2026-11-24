@@ -21,8 +21,11 @@ Choose **Project > Automap > Start Automap...** and pick the transcript.
 - **Guess possible exits** reads "To the east..." in a room's description and draws a short stub for each way out
   you haven't tried yet.
 - **Tidy the map as you go** moves nearby rooms aside to make space for new ones.
+- **Assume joins go both ways** (on): going north from one room to another also maps south as the way back. If it
+  turns out to lead somewhere else, automap moves it. Turn it off for a maze of twisty passages.
 - **Start processing from the end** maps only what you play from now on, leaving the map as it is.
 - **Play the transcript a move at a time** starts paused, to step through an old transcript.
+- Hover over the **ⓘ** beside an option for more about it.
 - **Commands:** type `see lamp` in the game and automap adds a lamp to the room; `tb region Cellars` puts the room in
   a region. The game won't understand them, and doesn't need to.
 

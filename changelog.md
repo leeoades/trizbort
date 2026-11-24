@@ -21,6 +21,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **Always assume two-way connections** in the automapping dialog is now **Assume joins go both ways**, with **J**
+  as its shortcut. Each option in the dialog has an ⓘ: hover over it (or tab to it) for more about what the option
+  does.
 - The automapping dialog is shorter. **Show the game screen** is gone: show or hide it on the automap panel.
   **Label directions in short** is gone: the map's **Direction words** setting draws join labels as you like. **Rooms
   with the same name** is gone: automap always tells such rooms apart by the map and their descriptions, asking when

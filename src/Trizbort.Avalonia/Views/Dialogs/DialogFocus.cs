@@ -48,5 +48,6 @@ public static class DialogFocus
         control.Focusable && control.IsTabStop && control.IsEffectivelyVisible && control.IsEffectivelyEnabled;
 
     private static bool IsInput(Control control) =>
-        control is not Button and not TabItem and not ScrollViewer and not Expander && CanFocus(control);
+        control is not Button and not TabItem and not ScrollViewer and not Expander
+            and not Trizbort.Avalonia.Controls.InfoTip && CanFocus(control);
 }
