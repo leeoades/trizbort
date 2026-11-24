@@ -50,6 +50,115 @@ public class CorrectArrivalTests : IsolatedProjectTests
     }
   }
 
+  // Lee, 24 Nov 2026: east from the maze room came back to it. Say it looks like a loop, not "isn't on the map yet";
+  // and Wrong Room: Choose...'s preview of a new room goes east of it, the way he went, though "drop rod" came between
+  [Test]
+  public async Task AWayThatComesBackToTheSameRoom_IsExplainedAsALoop_AndANewRoomPreviewedThatWay()
+  {
+    const string Alike = "You are in a maze of twisty little passages, all alike.";
+    var project = Project.Current;
+    var rod = new Room(project) { Name = "Maze", Position = new Vector(0, 0) };
+    rod.AddDescription(Alike);
+    project.Elements.Add(rod);
+
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, $">look\n\nMaze\n{Alike}\n\n>east\n\nMaze\n{Alike}\n\n>drop rod\nDropped.\n\n>");
+    var answers = new PreviewingAnswers();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, answers);
+    answers.Engine = engine;
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    settings.AutoTidy = false;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(project, engine), settings);
+      await WaitFor(() => engine.CanCorrectArrival, "the guess after going east");
+      // and "drop rod" read after it
+      await Task.Delay(300);
+      engine.CanCorrectArrival.ShouldBeTrue();
+
+      engine.CurrentRoom.ShouldBe(rod);
+      engine.ArrivalAssumption.ShouldBe("East from Maze was unexplored, and led somewhere with the same name and " +
+                                        "description, so it looks like it loops back: automap kept you there.");
+
+      (await engine.CorrectArrivalAsync()).ShouldBeTrue();
+      answers.Preview.ShouldNotBeNull();
+      answers.Preview!.Value.Left.ShouldBeGreaterThan(rod.InnerBounds.Right);
+      answers.Preview!.Value.Top.ShouldBe(rod.Position.Y, 1);
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  // Lee, 24 Nov 2026: east into Dead End, taken for the Dead End already on the map far away; Add a new room was
+  // previewed beside that one, not east of the room he'd left
+  [Test]
+  public async Task ANewRoom_IsPreviewedBesideTheRoomYouLeft_NotTheOneAutomapTookItFor()
+  {
+    const string End = "You have reached a dead end.";
+    var project = Project.Current;
+    var hall = new Room(project) { Name = "Hall", Position = new Vector(0, 0) };
+    hall.AddDescription("A grand hall.");
+    var deadEnd = new Room(project) { Name = "Dead End", Position = new Vector(-900, 600) };
+    deadEnd.AddDescription(End);
+    project.Elements.Add(hall);
+    project.Elements.Add(deadEnd);
+
+    var path = Path.GetTempFileName();
+    File.WriteAllText(path, $">look\n\nHall\nA grand hall.\n\n>east\n\nDead End\n{End}\n\n>");
+    var answers = new PreviewingAnswers();
+    var engine = new Trizbort.Automap.Automap((_, _) => { }, answers);
+    answers.Engine = engine;
+    var settings = AutomapSettings.Default;
+    settings.FileName = path;
+    settings.AutoTidy = false;
+    Task run = null;
+    try
+    {
+      run = engine.Start(new AutomapCanvas(project, engine), settings);
+      await WaitFor(() => engine.CanCorrectArrival, "taken for the Dead End on the map");
+      engine.CurrentRoom.ShouldBe(deadEnd);
+
+      (await engine.CorrectArrivalAsync()).ShouldBeTrue();
+      answers.Preview.ShouldNotBeNull();
+      answers.Preview!.Value.Left.ShouldBeGreaterThan(hall.InnerBounds.Right);
+      answers.Preview!.Value.Top.ShouldBe(hall.Position.Y, 1);
+      // and the room added where it was previewed
+      var added = engine.CurrentRoom;
+      added.ShouldNotBe(deadEnd);
+      added.Position.X.ShouldBe(answers.Preview!.Value.Left, 1);
+      added.Position.Y.ShouldBe(answers.Preview!.Value.Top, 1);
+    }
+    finally
+    {
+      engine.Stop();
+      if (run != null) await run;
+      File.Delete(path);
+    }
+  }
+
+  /// <summary>Answers "a new room", noting where the preview put it.</summary>
+  private sealed class PreviewingAnswers : IEditorPrompts
+  {
+    public Trizbort.Automap.Automap Engine { get; set; }
+    public Rect? Preview { get; private set; }
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription,
+      IReadOnlyList<Room> candidates, CancellationToken token = default)
+    {
+      Preview = Engine.NewRoomPreview();
+      return Task.FromResult(RoomDisambiguation.CreateNew());
+    }
+
+    public Task<bool> ConfirmAsync(string message, string title, CancellationToken token = default) =>
+      Task.FromResult(true);
+  }
+
   [Test]
   public async Task NotThisRoom_ANewRoom_TakesTheWayIn()
   {
@@ -76,7 +185,7 @@ public class CorrectArrivalTests : IsolatedProjectTests
       await WaitFor(() => engine.CurrentRoom == gold, "in the gold room");
       // the only Maze on the map: taken for it without asking
       engine.CanCorrectArrival.ShouldBeTrue();
-      engine.ArrivalAssumption.ShouldBe("North from Hall isn't on the map yet. Automap took you to be in Maze, " +
+      engine.ArrivalAssumption.ShouldBe("North from Hall was unexplored. Automap took you to be in Maze, " +
                                         "already on the map, as it has the same name and description.");
 
       (await engine.CorrectArrivalAsync()).ShouldBeTrue();
@@ -185,7 +294,8 @@ public class CorrectArrivalTests : IsolatedProjectTests
 
       engine.CanCorrectArrival.ShouldBeTrue();
       engine.ArrivalAssumption.ShouldBe("West from Maze (coins) leads to Maze (keys) on the map, so automap took you " +
-                                        "there. Rooms called Maze look alike, so it may be another.");
+                                        "there. Two other rooms on the map are also called Maze, so it may be " +
+                                        "one of them.");
 
       answers.Answer = RoomDisambiguation.Choose(food);
       (await engine.CorrectArrivalAsync()).ShouldBeTrue();
