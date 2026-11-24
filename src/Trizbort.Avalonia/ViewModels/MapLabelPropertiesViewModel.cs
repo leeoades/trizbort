@@ -5,6 +5,7 @@ using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Domain.Misc;
+using Trizbort.Setup;
 
 namespace Trizbort.Avalonia.ViewModels;
 
@@ -41,14 +42,124 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private Color _backgroundColor = Color.Transparent;
 
+    // Styles (Lee, 24 Nov 2026): the label's look comes from its style. The controls below show the look as it will
+    // be; changing one makes it this label's own (a tweak, discouraged), kept in _own until OK.
+
+    /// <summary>The styles to choose from, in tree order.</summary>
+    public ObservableCollection<LabelStyleOption> StyleOptions { get; } = new();
+
+    [ObservableProperty]
+    private LabelStyleOption? _selectedStyle;
+
+    /// <summary>The label's own tweaks to its style.</summary>
+    private LabelStyle _own = new();
+
+    /// <summary>Loading the look into the controls: not the user changing it.</summary>
+    private bool _showingLook;
+
+    /// <summary>True when this label changes its style's look itself.</summary>
+    public bool HasOwnLook => !_own.IsEmpty;
+
+    /// <summary>The "just this label" section is open: open already when the label has tweaks.</summary>
+    [ObservableProperty]
+    private bool _ownLookOpen;
+
+    [ObservableProperty]
+    private FontSpec _font = FontSpec.Default;
+
+    /// <summary>Opens the style editor (Map Settings > Styles) at this style; true when OK'd. Set by the dialog service.</summary>
+    public Func<string, Task<bool>>? EditStyles { get; set; }
+
+    partial void OnSelectedStyleChanged(LabelStyleOption? value) => ShowLook();
+
     partial void OnHasOutlineChanged(bool value)
     {
         OnPropertyChanged(nameof(ShapeEnabled));
+        Own(() => _own.BorderStyle = value ? BorderStyle : BorderDashStyle.None);
     }
 
     partial void OnHasBackgroundChanged(bool value)
     {
         OnPropertyChanged(nameof(ShapeEnabled));
+        Own(() => _own.HasBackground = value);
+    }
+
+    partial void OnTextColorChanged(Color value) => Own(() => _own.TextColor = value);
+    partial void OnBorderStyleChanged(BorderDashStyle value) => Own(() => { if (HasOutline) _own.BorderStyle = value; });
+    partial void OnBorderColorChanged(Color value) => Own(() => _own.BorderColor = value);
+    partial void OnBackgroundColorChanged(Color value) => Own(() => _own.BackgroundColor = value);
+    partial void OnShapeChanged(RoomShape value) => Own(() => _own.Shape = value);
+
+    partial void OnFontChanged(FontSpec value) => Own(() =>
+    {
+        _own.FontName = string.IsNullOrEmpty(value.Family) ? null : value.Family;
+        _own.FontSize = (float)value.Size;
+        _own.Bold = value.Bold;
+        _own.Italic = value.Italic;
+    });
+
+    private void Own(Action set)
+    {
+        if (_showingLook) return;
+        set();
+        OnPropertyChanged(nameof(HasOwnLook));
+    }
+
+    /// <summary>The look the chosen style and this label's tweaks give, into the controls.</summary>
+    private void ShowLook()
+    {
+        var look = LabelStyles.Resolve(SelectedStyle?.Id ?? LabelStyle.DefaultId, _own);
+        _showingLook = true;
+        try
+        {
+            TextColor = look.TextColor;
+            HasOutline = look.BorderStyle != BorderDashStyle.None;
+            BorderStyle = HasOutline ? look.BorderStyle : BorderDashStyle.Solid;
+            BorderColor = look.BorderColor;
+            HasBackground = look.HasBackground;
+            BackgroundColor = look.BackgroundColor;
+            Shape = look.Shape == RoomShape.NotARoom ? RoomShape.SquareCorners : look.Shape;
+            Font = new FontSpec(look.FontName, look.FontSize, look.Bold, look.Italic);
+        }
+        finally
+        {
+            _showingLook = false;
+        }
+        OnPropertyChanged(nameof(HasOwnLook));
+    }
+
+    /// <summary>Drops this label's tweaks: it looks as its style does.</summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void ResetToStyle()
+    {
+        _own = new LabelStyle();
+        ShowLook();
+    }
+
+    /// <summary>The style editor, at this label's style; its styles listed again afterwards.</summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private async Task OpenStyleEditor()
+    {
+        if (EditStyles == null) return;
+        var id = SelectedStyle?.Id ?? LabelStyle.DefaultId;
+        if (!await EditStyles(id)) return;
+        LoadStyleOptions(LabelStyles.Has(id) ? id : LabelStyle.DefaultId);
+        ShowLook();
+    }
+
+    private void LoadStyleOptions(string selectedId)
+    {
+        StyleOptions.Clear();
+        foreach (var (style, depth) in LabelStyles.Current.Tree()) StyleOptions.Add(new LabelStyleOption(style.Id, style.Name, depth));
+        _showingLook = true;
+        try
+        {
+            SelectedStyle = StyleOptions.FirstOrDefault(option => option.Id == selectedId) ?? StyleOptions.FirstOrDefault();
+        }
+        finally
+        {
+            _showingLook = false;
+        }
     }
 
     public IReadOnlyList<RoomShape> AvailableShapes { get; } = [
@@ -144,25 +255,28 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     {
         _project = label.Project ?? Project.Current;
         Text = label.Text ?? string.Empty;
-        TextColor = label.TextColor;
         Markdown = label.Markdown;
-        HasOutline = label.BorderStyle != BorderDashStyle.None;
-        Shape = label.Shape == RoomShape.NotARoom ? RoomShape.SquareCorners : label.Shape;
-        BorderStyle = HasOutline ? label.BorderStyle : BorderDashStyle.Solid;
-        BorderColor = label.BorderColor;
-        HasBackground = label.HasBackground;
-        BackgroundColor = label.BackgroundColor;
+        _own = label.Own.Clone();
+        LoadStyleOptions(label.StyleId);
+        ShowLook();
+        OwnLookOpen = HasOwnLook;
     }
 
     public void ApplyTo(MapLabel label)
     {
         label.Text = Text;
-        label.TextColor = TextColor;
         label.Markdown = Markdown;
-        label.Shape = Shape;
-        label.BorderStyle = HasOutline ? BorderStyle : BorderDashStyle.None;
-        label.BorderColor = BorderColor;
-        label.HasBackground = HasBackground;
-        label.BackgroundColor = BackgroundColor;
+        label.StyleId = SelectedStyle?.Id ?? LabelStyle.DefaultId;
+        label.Own = _own;
+        // a tweak that's what the style gives anyway isn't one
+        label.TrimOwnToStyle();
     }
+}
+
+/// <summary>A label style in a list: indented by how far down the "based on" tree it is.</summary>
+public sealed record LabelStyleOption(string Id, string Name, int Depth)
+{
+    public string Shown => new string(' ', Depth * 4) + Name;
+
+    public override string ToString() => Shown;
 }

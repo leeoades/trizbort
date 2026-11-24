@@ -240,12 +240,12 @@ public sealed class MapTheme
 
       foreach (var connection in Project.Current.Elements.OfType<Connection>())
         connection.ConnectionColor = Color.Transparent;
-      foreach (var label in Project.Current.Elements.OfType<MapLabel>())
-      {
-        label.TextColor = colors["lineText"];
-        label.BorderColor = colors["border"];
-        label.BackgroundColor = regions.Single(region => region.RegionName == Region.DefaultRegion).RColor;
-      }
+      // labels: the theme's colours on the Default label style, and each label back to its style
+      var labelDefault = LabelStyles.Default;
+      labelDefault.TextColor = colors["lineText"];
+      labelDefault.BorderColor = colors["border"];
+      labelDefault.BackgroundColor = regions.Single(region => region.RegionName == Region.DefaultRegion).RColor;
+      foreach (var label in Project.Current.Elements.OfType<MapLabel>()) label.ResetToStyle();
     }
 
     Project.Current.IsDirty = true;

@@ -373,6 +373,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
 
         if (owner == null) return false;
         var dialog = new MapLabelPropertiesDialog { DataContext = viewModel };
+        viewModel.EditStyles = id => ShowLabelStylesAsync(dialog, id);
 
         // Shown beside the map rather than over it, so a room clicked on the map can be chosen for a link (Lee,
         // 22 Nov 2026); it stays in front of the main window, as its owner.
@@ -474,6 +475,22 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
             _commandService.Session.Execute("Edit map settings", viewModel.ApplyToSettings);
         }
         return result;
+    }
+
+    /// <summary>Map Settings at the Styles tab, at label style <paramref name="styleId" />; OK applies it as one undo step.</summary>
+    public async Task<bool> ShowLabelStylesAsync(Window owner, string styleId)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<MapSettingsViewModel>();
+        viewModel.Initialize();
+        viewModel.SelectedTabIndex = MapSettingsViewModel.StylesTab;
+        viewModel.LabelStyles.Initialize(styleId);
+
+        var dialog = new MapSettingsDialog { DataContext = viewModel };
+        if (!await dialog.ShowDialog<bool>(owner)) return false;
+        _commandService.Session.Execute("Edit map settings", viewModel.ApplyToSettings);
+        _commandService.InvalidateCanvas();
+        return true;
     }
 
     public async Task<Trizbort.Editor.NewRegionChoice?> ShowNewRegionAsync(Window owner)

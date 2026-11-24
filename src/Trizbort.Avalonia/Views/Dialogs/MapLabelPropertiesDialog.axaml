@@ -4,6 +4,7 @@
         xmlns:vm="using:Trizbort.Avalonia.ViewModels"
         xmlns:controls="using:Trizbort.Avalonia.Controls"
         xmlns:misc="using:Trizbort.Domain.Misc"
+        xmlns:conv="using:Trizbort.Avalonia.Converters"
         x:Class="Trizbort.Avalonia.Views.Dialogs.MapLabelPropertiesDialog"
         x:DataType="vm:MapLabelPropertiesViewModel"
         Title="Label Properties"
@@ -114,72 +115,120 @@
             </TabItem>
 
             <TabItem Header="Style">
-                <StackPanel Spacing="8" Margin="0,8,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Classes="field-label" Content="Text Colo_ur:" Target="{Binding #TextColorButton}" />
-                <controls:ColorPickerButton Grid.Column="2" x:Name="TextColorButton"
-                                            SelectedColor="{Binding TextColor}" HorizontalAlignment="Left" />
-            </Grid>
+                <!-- the look comes from a style (Lee, 24 Nov 2026); just this label can be changed, but it's tucked away -->
+                <StackPanel Spacing="10" Margin="0,8,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Classes="field-label" Content="St_yle:" Target="{Binding #StyleCombo}" />
+                        <ComboBox Grid.Column="2" x:Name="StyleCombo" ItemsSource="{Binding StyleOptions}"
+                                  SelectedItem="{Binding SelectedStyle}" HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:LabelStyleOption">
+                                    <TextBlock Text="{Binding Name}" Margin="{Binding Depth, Converter={x:Static conv:DepthToIndentConverter.Instance}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Grid.Column="4" x:Name="EditStylesButton" Content="Edit St_yles..." Command="{Binding OpenStyleEditorCommand}" />
+                    </Grid>
+                    <TextBlock Classes="hint" TextWrapping="Wrap"
+                               Text="Labels in a style all look alike: change the style, and they all change." />
 
-            <!-- Outline -->
-            <HeaderedContentControl Classes="group" Header="Outline">
-                <StackPanel Spacing="8">
-                    <CheckBox Content="_Enabled" IsChecked="{Binding HasOutline}" />
-                    <Grid RowDefinitions="Auto,Auto" RowSpacing="8" Margin="16,0,0,0" IsEnabled="{Binding HasOutline}">
+                    <Expander x:Name="OwnLookExpander" IsExpanded="{Binding OwnLookOpen}" HorizontalAlignment="Stretch">
+                        <Expander.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Change just this label" VerticalAlignment="Center" />
+                                <TextBlock Classes="hint" Text="(changed)" VerticalAlignment="Center" IsVisible="{Binding HasOwnLook}" />
+                            </StackPanel>
+                        </Expander.Header>
+                        <StackPanel Spacing="8">
+                            <TextBlock Classes="hint" TextWrapping="Wrap"
+                                       Text="Not recommended: this label stops following its style for what you change here. Better to make a style." />
+                    <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
                             <ColumnDefinition Width="12" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Line st_yle:" Target="{Binding #LineStyleCombo}" />
-                        <ComboBox Grid.Row="0" Grid.Column="2" x:Name="LineStyleCombo" ItemsSource="{Binding AvailableBorderStyles}"
-                                  SelectedItem="{Binding BorderStyle}" HorizontalAlignment="Left" Width="280" />
-
-                        <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Co_lour:" Target="{Binding #BorderColorButton}" />
-                        <controls:ColorPickerButton Grid.Row="1" Grid.Column="2" x:Name="BorderColorButton"
-                                                    SelectedColor="{Binding BorderColor}" HorizontalAlignment="Left" />
+                        <Label Grid.Column="0" Classes="field-label" Content="_Font:" Target="{Binding #LabelFontButton}" />
+                        <controls:FontPickerButton Grid.Column="2" x:Name="LabelFontButton" SelectedFont="{Binding Font}" HorizontalAlignment="Left" />
                     </Grid>
-                </StackPanel>
-            </HeaderedContentControl>
 
-            <!-- Background -->
-            <HeaderedContentControl Classes="group" Header="Background">
-                <StackPanel Spacing="8">
-                    <CheckBox Content="E_nabled" IsChecked="{Binding HasBackground}" />
-                    <Grid ColumnDefinitions="Auto,12,*" Margin="16,0,0,0" IsEnabled="{Binding HasBackground}">
+                    <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
                             <ColumnDefinition Width="12" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" Classes="field-label" Content="Colou_r:" Target="{Binding #FillColorButton}" />
-                        <controls:ColorPickerButton Grid.Column="2" x:Name="FillColorButton"
-                                                    SelectedColor="{Binding BackgroundColor}" HorizontalAlignment="Left" />
+                        <Label Grid.Column="0" Classes="field-label" Content="Text Colo_ur:" Target="{Binding #TextColorButton}" />
+                        <controls:ColorPickerButton Grid.Column="2" x:Name="TextColorButton"
+                                                    SelectedColor="{Binding TextColor}" HorizontalAlignment="Left" />
                     </Grid>
-                </StackPanel>
-            </HeaderedContentControl>
 
-            <!-- Shape: applies to the outline and the fill, so it is enabled when either is on. -->
-            <Grid ColumnDefinitions="Auto,12,*" IsEnabled="{Binding ShapeEnabled}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Classes="field-label" Content="_Shape:" Target="{Binding #ShapeCombo}" />
-                <ComboBox Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding AvailableShapes}"
-                          SelectedItem="{Binding Shape}" HorizontalAlignment="Left" Width="280">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </Grid>
-            <TextBlock Classes="hint" Text="Shape applies to outline and background." />
+                    <!-- Outline -->
+                    <HeaderedContentControl Classes="group" Header="Outline">
+                        <StackPanel Spacing="8">
+                            <CheckBox Content="_Enabled" IsChecked="{Binding HasOutline}" />
+                            <Grid RowDefinitions="Auto,Auto" RowSpacing="8" Margin="16,0,0,0" IsEnabled="{Binding HasOutline}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Line st_yle:" Target="{Binding #LineStyleCombo}" />
+                                <ComboBox Grid.Row="0" Grid.Column="2" x:Name="LineStyleCombo" ItemsSource="{Binding AvailableBorderStyles}"
+                                          SelectedItem="{Binding BorderStyle}" HorizontalAlignment="Left" Width="280" />
+
+                                <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Co_lour:" Target="{Binding #BorderColorButton}" />
+                                <controls:ColorPickerButton Grid.Row="1" Grid.Column="2" x:Name="BorderColorButton"
+                                                            SelectedColor="{Binding BorderColor}" HorizontalAlignment="Left" />
+                            </Grid>
+                        </StackPanel>
+                    </HeaderedContentControl>
+
+                    <!-- Background -->
+                    <HeaderedContentControl Classes="group" Header="Background">
+                        <StackPanel Spacing="8">
+                            <CheckBox Content="E_nabled" IsChecked="{Binding HasBackground}" />
+                            <Grid ColumnDefinitions="Auto,12,*" Margin="16,0,0,0" IsEnabled="{Binding HasBackground}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Column="0" Classes="field-label" Content="Colou_r:" Target="{Binding #FillColorButton}" />
+                                <controls:ColorPickerButton Grid.Column="2" x:Name="FillColorButton"
+                                                            SelectedColor="{Binding BackgroundColor}" HorizontalAlignment="Left" />
+                            </Grid>
+                        </StackPanel>
+                    </HeaderedContentControl>
+
+                    <!-- Shape: applies to the outline and the fill, so it is enabled when either is on. -->
+                    <Grid ColumnDefinitions="Auto,12,*" IsEnabled="{Binding ShapeEnabled}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Classes="field-label" Content="_Shape:" Target="{Binding #ShapeCombo}" />
+                        <ComboBox Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding AvailableShapes}"
+                                  SelectedItem="{Binding Shape}" HorizontalAlignment="Left" Width="280">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                    <TextBlock Classes="hint" Text="Shape applies to outline and background." />
+
+                            <Button x:Name="ResetToStyleButton" Content="_Reset to Style" Command="{Binding ResetToStyleCommand}"
+                                    IsEnabled="{Binding HasOwnLook}" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Expander>
                 </StackPanel>
             </TabItem>
         </TabControl>

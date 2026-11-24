@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Newtonsoft.Json;
+using Trizbort.Setup;
 using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
@@ -91,7 +92,7 @@ public class CopyController
             OldId = label.Id, Text = label.Text, Position = label.Position, Size = label.Size,
             Shape = label.Shape, BorderStyle = label.BorderStyle, HasBackground = label.HasBackground,
             TextColor = label.TextColor, BorderColor = label.BorderColor, BackgroundColor = label.BackgroundColor,
-            ZOrder = label.ZOrder, Markdown = label.Markdown
+            ZOrder = label.ZOrder, Markdown = label.Markdown, StyleId = label.StyleId, Own = label.Own.Clone()
           });
       }
       else if (element is Background background)
@@ -127,14 +128,22 @@ public class CopyController
   {
     label.Text = copy.Text;
     label.Size = copy.Size;
+    label.ZOrder = copy.ZOrder;
+    label.Markdown = copy.Markdown;
+    // its style, where this map has it; otherwise the look it had, as its own
+    if (copy.StyleId != null && LabelStyles.Has(copy.StyleId))
+    {
+      label.StyleId = copy.StyleId;
+      label.Own = copy.Own ?? new LabelStyle();
+      return;
+    }
+
     label.Shape = copy.Shape;
     label.BorderStyle = copy.BorderStyle;
     label.HasBackground = copy.HasBackground;
     label.TextColor = copy.TextColor;
     label.BorderColor = copy.BorderColor;
     label.BackgroundColor = copy.BackgroundColor;
-    label.ZOrder = copy.ZOrder;
-    label.Markdown = copy.Markdown;
   }
 
   public ICopyObj PasteElements()
@@ -379,6 +388,8 @@ public class CopyController
     public Color BackgroundColor { get; set; }
     public int ZOrder { get; set; }
     public bool Markdown { get; set; }
+    public string StyleId { get; set; }
+    public LabelStyle Own { get; set; }
   }
 
   public class CopyConnectionObj

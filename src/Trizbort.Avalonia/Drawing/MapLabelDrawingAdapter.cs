@@ -36,6 +36,13 @@ public static class MapLabelDrawingAdapter
         public string? MarkdownKey;
     }
 
+    /// <summary>The label's font, from its style (Lee, 24 Nov 2026): before styles, always the room font.</summary>
+    public static ThemeFont FontOf(MapLabel label)
+    {
+        var look = label.Look;
+        return new ThemeFont { Name = look.FontName, Size = look.FontSize, Style = look.FontStyle };
+    }
+
     /// <summary>The link drawn at <paramref name="point" /> (map coordinates) in a Markdown label, or null.</summary>
     public static string? LinkAt(MapLabel label, global::Avalonia.Point point) =>
         label.Markdown && _labelCaches.TryGetValue(label, out var cache) ? cache.Markdown?.LinkAt(point) : null;
@@ -118,7 +125,7 @@ public static class MapLabelDrawingAdapter
             }
             else if (textBounds.Width > 0 && textBounds.Height > 0)
             {
-                var font = Settings.RoomFontMetadata;
+                var font = FontOf(label);
                 var textColor = label.TextColor != CoreColor.Transparent
                     ? label.TextColor
                     : Settings.Color[CoreColors.SmallText];
@@ -175,7 +182,7 @@ public static class MapLabelDrawingAdapter
     public static CoreVector FitText(MapLabel label, CoreVector atLeast)
     {
         if (string.IsNullOrEmpty(label.Text)) return atLeast;
-        var font = Settings.RoomFontMetadata;
+        var font = FontOf(label);
         // the text's inset, as drawn: more for an ellipse
         var inset = label.Shape == RoomShape.Ellipse ? 11.5f : 5f;
         var width = atLeast.X;
@@ -210,7 +217,7 @@ public static class MapLabelDrawingAdapter
     /// </summary>
     private static void DrawMarkdown(MapLabel label, AvaloniaDrawingContext context, LabelCache cache, CoreRect textBounds)
     {
-        var font = Settings.RoomFontMetadata;
+        var font = FontOf(label);
         var textColor = label.TextColor != CoreColor.Transparent ? label.TextColor : Settings.Color[CoreColors.SmallText];
         var key = string.Join("\u0001", label.Text, font.Name, (int)font.Style, font.Size, textColor.ToArgb(),
             textBounds.Left, textBounds.Top, textBounds.Width, textBounds.Height);
