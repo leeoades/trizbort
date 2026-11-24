@@ -117,6 +117,32 @@ public class BackgroundTests : CanvasGestureTestBase
     background.IsBoxedBy(new Rect(-10, -10, 1100, 900)).ShouldBeTrue();
   }
 
+  // Lee, 24 Nov 2026: Alt held over a background, the cursor says a drag will move it
+  [Test]
+  public void TheCursor_ShowsWhenADragWouldMoveIt()
+  {
+    AddBackground(0, 0, 600, 400);
+
+    Move(new Vector(300, 200));
+    Interaction.Adorners.Cursor.ShouldBe(CursorKind.Default);
+
+    Interaction.SetModifiersHeld(ModifierKeys.Alt);
+    Interaction.Adorners.Cursor.ShouldBe(CursorKind.SizeAll);
+
+    Interaction.SetModifiersHeld(ModifierKeys.None);
+    Interaction.Adorners.Cursor.ShouldBe(CursorKind.Default);
+
+    // off it, Alt changes nothing
+    Move(new Vector(900, 200));
+    Interaction.SetModifiersHeld(ModifierKeys.Alt);
+    Interaction.Adorners.Cursor.ShouldBe(CursorKind.Default);
+    Interaction.SetModifiersHeld(ModifierKeys.None);
+
+    // its edge picks it up without Alt
+    Move(new Vector(1, 200));
+    Interaction.Adorners.Cursor.ShouldBe(CursorKind.SizeAll);
+  }
+
   [Test]
   public void AltPressInside_PicksItUp_AndDraggingMovesItAlone()
   {

@@ -956,6 +956,14 @@ public sealed class CanvasInteraction : IDisposable
       }
     }
 
+    // a background that a drag would pick up: by its edge, or anywhere inside it with Alt held (Lee, 24 Nov 2026)
+    if (_mode == CanvasDragMode.None && !IsShift(_modifiersHeld) && !IsCtrl(_modifiersHeld))
+    {
+      if (_hoverElement is Background) return CursorKind.SizeAll;
+      if (_hoverElement == null && (_modifiersHeld & ModifierKeys.Alt) != 0 && _session.BackgroundAt(_lastWorld) != null)
+        return CursorKind.SizeAll;
+    }
+
     // Shift or Ctrl held: a click (or a marquee) adds to or takes from the selection
     if ((_mode is CanvasDragMode.None or CanvasDragMode.Marquee) && !_spaceHeld)
     {
