@@ -104,6 +104,19 @@ public class BackgroundTests : CanvasGestureTestBase
     Session.Selection.Contains(background).ShouldBeTrue();
   }
 
+  // Lee, 24 Nov 2026: it vanished with its middle off screen. Drawn whenever any of it is in view; boxed only whole
+  [Test]
+  public void PartlyInView_ItIsDrawn_ButABoxOverPartOfItDoesntTakeIt()
+  {
+    var background = AddBackground(0, 0, 1000, 800);
+    var corner = new Rect(-100, -100, 200, 200);
+
+    background.Intersects(corner).ShouldBeTrue();
+    background.IsBoxedBy(corner).ShouldBeFalse();
+    background.Intersects(new Rect(2000, 2000, 100, 100)).ShouldBeFalse();
+    background.IsBoxedBy(new Rect(-10, -10, 1100, 900)).ShouldBeTrue();
+  }
+
   [Test]
   public void AltPressInside_PicksItUp_AndDraggingMovesItAlone()
   {

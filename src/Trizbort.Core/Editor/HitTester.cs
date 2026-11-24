@@ -72,7 +72,7 @@ public sealed class HitTester
   /// <summary>Elements intersecting the world rectangle (marquee selection).</summary>
   public IReadOnlyList<Element> HitRect(Rect world)
   {
-    return _session.Project.Elements.Where(e => e.Intersects(world)).ToList();
+    return _session.Project.Elements.Where(e => e.IsBoxedBy(world)).ToList();
   }
 
   /// <summary>The eight resize handles when exactly one <see cref="ISizeable" /> is selected, else none.</summary>

@@ -141,11 +141,17 @@ public class Background : Element, ISizeable
   }
 
   /// <summary>Boxed only when the box takes in all of it: a box drawn round rooms on it leaves it be.</summary>
-  public override bool Intersects(Rect rect)
+  public override bool IsBoxedBy(Rect rect)
   {
     var bounds = InnerBounds;
     return rect.Contains(new Vector(bounds.Left, bounds.Top)) && rect.Contains(new Vector(bounds.Right, bounds.Bottom));
   }
+
+  /// <summary>
+  ///   Whether any of it is in <paramref name="rect" />: drawn whenever part of it is in view. (Lee, 24 Nov 2026: it
+  ///   vanished when it wasn't all in view, as this once meant boxed.)
+  /// </summary>
+  public override bool Intersects(Rect rect) => InnerBounds.IntersectsWith(rect);
 
   public override Rect UnionBoundsWith(Rect rect, bool includeMargins)
   {
