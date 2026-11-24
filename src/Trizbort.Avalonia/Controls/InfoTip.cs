@@ -69,15 +69,28 @@ public class InfoTip : TemplatedControl
         AutomationProperties.SetName(this, "More information");
     }
 
+    // tabbed to: shown, as for the mouse; only where it can be (not in a window with no room for a popup)
     protected override void OnGotFocus(global::Avalonia.Input.GotFocusEventArgs e)
     {
         base.OnGotFocus(e);
-        ToolTip.SetIsOpen(this, true);
+        Show(true);
     }
 
     protected override void OnLostFocus(global::Avalonia.Interactivity.RoutedEventArgs e)
     {
         base.OnLostFocus(e);
-        ToolTip.SetIsOpen(this, false);
+        Show(false);
+    }
+
+    private void Show(bool open)
+    {
+        try
+        {
+            ToolTip.SetIsOpen(this, open);
+        }
+        catch (InvalidOperationException)
+        {
+            // no popup host (a headless window): the text is still there on hover, and for screen readers
+        }
     }
 }
