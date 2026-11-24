@@ -1,6 +1,8 @@
-# Using Trizbort
+# Using Trizbort (the original app, and Trizbort 2)
 
-> This guide originates from [the original HTML guide](index.shtml) and is evolving as new features are added. Much of the original text describes Trizbort 1.5.x; historical build instructions, settings paths and support links may not apply to current releases. For current build instructions, see [the developer reference](../agent-docs/09-build-test-and-dotnet8-port.md).
+> This is the guide to the original Windows app, Trizbort, up to Trizbort 2. For **Trizbort: Recast**, the new cross-platform app, see [its own guide](../../Docs/index.md).
+
+> This guide originates from [the original HTML guide](index.shtml) and is evolving as new features are added. Much of the original text describes Trizbort 1.5.x; historical build instructions, settings paths and support links may not apply to current releases. For current build instructions, see [the developer reference](../../agent-docs/09-build-test-and-dotnet8-port.md).
 
 This guide explains how to use Trizbort.
 
@@ -134,7 +136,7 @@ Trizbort 2 is a modernised fork of Trizbort 1.7. Your existing maps open as befo
 - **Smarter Room Properties focus** - the dialog opens where you are most likely to type next. See [Editing Rooms](#help_rooms_edit).
 - **.NET 10** - Trizbort now runs on .NET 10 (LTS) and is distributed as a self-contained download.
 
-The full list of changes is in the [changelog](../legacy/changelog.md).
+The full list of changes is in the [changelog](../changelog.md).
 
 <a name="install_2"></a>
 
@@ -1490,7 +1492,7 @@ dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj -c Debug
 dotnet test src/Trizbort.Avalonia.Tests/Trizbort.Avalonia.Tests.csproj -c Debug
 ```
 
-You can also open `Trizbort.sln` in Visual Studio or JetBrains Rider. The DotNetBar and pdfsharp references required by 1.5.x builds are no longer needed. See [the developer reference](../agent-docs/09-build-test-and-dotnet8-port.md) for more detail.
+You can also open `Trizbort.sln` in Visual Studio or JetBrains Rider. The DotNetBar and pdfsharp references required by 1.5.x builds are no longer needed. See [the developer reference](../../agent-docs/09-build-test-and-dotnet8-port.md) for more detail.
 
 <a name="about"></a>
 
@@ -1508,7 +1510,7 @@ Authors involved with other changes include Tymian and Matt Watkins. Trizbort 2 
 
 #### Versions
 
-The [changelog](../legacy/changelog.md) has the full history. The big changes are listed here.
+The [changelog](../changelog.md) has the full history. The big changes are listed here.
 
 - 1.5.5: added region and color support to Trizbort. Forked to https://github.com/jasonlautzenheiser/trizbort
 - 1.5.7: largely bug fixes
