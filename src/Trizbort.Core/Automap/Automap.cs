@@ -2332,10 +2332,25 @@ public sealed class Automap : IAutomapController
   /// </summary>
   public Rect? NewRoomPreview()
   {
+    if (_canvas == null) return null;
+    // putting a guess right (Wrong Room: Choose...): where Split would put it, the way the player went from the room
+    // they came from, not the last move's (Lee, 24 Nov 2026: east from the maze, previewed to the west, as "drop
+    // rod" came between)
+    if (_correcting is { } arrival)
+    {
+      var source = _canvas.ResolveRoom(arrival.From);
+      return arrival.Direction is { } way && source != null
+        ? _canvas.NewRoomBounds(source, way)
+        : _canvas.NewRoomBounds(CurrentRoom, null);
+    }
+
     var from = CurrentRoom;
-    if (from == null || _canvas == null) return null;
+    if (from == null) return null;
     return _canvas.NewRoomBounds(from, _lastMoveDirection);
   }
+
+  /// <summary>The guess being put right while Wrong Room: Choose... asks which room it is: for the preview.</summary>
+  private Arrival _correcting;
 
   /// <summary>
   ///   Whether the room automap has the player in can be split off as a different room (<see cref="SplitCurrentRoomAsync" />):
@@ -2445,7 +2460,17 @@ public sealed class Automap : IAutomapController
     var others = Named(here.Name).Where(room => room != here && (arrival.New ||
       string.IsNullOrWhiteSpace(arrival.Description) || room.Descriptions.Count == 0 ||
       room.Descriptions.Any(description => SameFirstSentence(description, arrival.Description)))).ToList();
-    var choice = await Prompts.DisambiguateRoomAsync(here.Name, arrival.Description, others, token);
+    RoomDisambiguation choice;
+    _correcting = arrival;
+    try
+    {
+      choice = await Prompts.DisambiguateRoomAsync(here.Name, arrival.Description, others, token);
+    }
+    finally
+    {
+      _correcting = null;
+    }
+
     token.ThrowIfCancellationRequested();
     if (choice.Skip) return false;
     // a new room it is: as automap had it

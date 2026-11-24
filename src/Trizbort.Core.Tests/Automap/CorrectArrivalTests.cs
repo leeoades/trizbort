@@ -50,23 +50,22 @@ public class CorrectArrivalTests : IsolatedProjectTests
     }
   }
 
-  // Lee, 24 Nov 2026: east from the maze room came back to it. Say it looks like a loop, not "isn't on the map yet"
+  // Lee, 24 Nov 2026: east from the maze room came back to it. Say it looks like a loop, not "isn't on the map yet";
+  // and Wrong Room: Choose...'s preview of a new room goes east of it, the way he went, though "drop rod" came between
   [Test]
-  public async Task AWayThatComesBackToTheSameRoom_IsExplainedAsALoop()
+  public async Task AWayThatComesBackToTheSameRoom_IsExplainedAsALoop_AndANewRoomPreviewedThatWay()
   {
     const string Alike = "You are in a maze of twisty little passages, all alike.";
     var project = Project.Current;
-    var rod = new Room(project) { Name = "Maze", Position = new Vector(0, 0), Objects = "rod" };
+    var rod = new Room(project) { Name = "Maze", Position = new Vector(0, 0) };
     rod.AddDescription(Alike);
-    var gold = new Room(project) { Name = "Maze", Position = new Vector(300, 0), Objects = "gold" };
-    gold.AddDescription(Alike);
     project.Elements.Add(rod);
-    project.Elements.Add(gold);
 
     var path = Path.GetTempFileName();
-    File.WriteAllText(path, $">look\n\nMaze\n{Alike}\n\n>east\n\nMaze\n{Alike}\n\n>");
-    var answers = new Answers { Answer = RoomDisambiguation.Choose(rod) };
+    File.WriteAllText(path, $">look\n\nMaze\n{Alike}\n\n>east\n\nMaze\n{Alike}\n\n>drop rod\nDropped.\n\n>");
+    var answers = new PreviewingAnswers();
     var engine = new Trizbort.Automap.Automap((_, _) => { }, answers);
+    answers.Engine = engine;
     var settings = AutomapSettings.Default;
     settings.FileName = path;
     settings.AutoTidy = false;
@@ -75,11 +74,18 @@ public class CorrectArrivalTests : IsolatedProjectTests
     {
       run = engine.Start(new AutomapCanvas(project, engine), settings);
       await WaitFor(() => engine.CanCorrectArrival, "the guess after going east");
+      // and "drop rod" read after it
+      await Task.Delay(300);
+      engine.CanCorrectArrival.ShouldBeTrue();
 
       engine.CurrentRoom.ShouldBe(rod);
-      engine.ArrivalAssumption.ShouldBe("East from Maze (rod) was unexplored, and led somewhere with the same name " +
-                                        "and description, so it looks like it loops back: automap kept you there. " +
-                                        "Another room on the map is also called Maze, so it may be that one.");
+      engine.ArrivalAssumption.ShouldBe("East from Maze was unexplored, and led somewhere with the same name and " +
+                                        "description, so it looks like it loops back: automap kept you there.");
+
+      (await engine.CorrectArrivalAsync()).ShouldBeTrue();
+      answers.Preview.ShouldNotBeNull();
+      answers.Preview!.Value.Left.ShouldBeGreaterThan(rod.InnerBounds.Right);
+      answers.Preview!.Value.Top.ShouldBe(rod.Position.Y, 1);
     }
     finally
     {
@@ -87,6 +93,23 @@ public class CorrectArrivalTests : IsolatedProjectTests
       if (run != null) await run;
       File.Delete(path);
     }
+  }
+
+  /// <summary>Answers "a new room", noting where the preview put it.</summary>
+  private sealed class PreviewingAnswers : IEditorPrompts
+  {
+    public Trizbort.Automap.Automap Engine { get; set; }
+    public Rect? Preview { get; private set; }
+
+    public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription,
+      IReadOnlyList<Room> candidates, CancellationToken token = default)
+    {
+      Preview = Engine.NewRoomPreview();
+      return Task.FromResult(RoomDisambiguation.CreateNew());
+    }
+
+    public Task<bool> ConfirmAsync(string message, string title, CancellationToken token = default) =>
+      Task.FromResult(true);
   }
 
   [Test]
