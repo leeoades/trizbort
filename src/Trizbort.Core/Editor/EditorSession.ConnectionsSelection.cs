@@ -244,6 +244,7 @@ public sealed partial class EditorSession
       return copyObj != null &&
              ((copyObj.Rooms != null && copyObj.Rooms.Count > 0) ||
               (copyObj.Labels != null && copyObj.Labels.Count > 0) ||
+              (copyObj.Backgrounds != null && copyObj.Backgrounds.Count > 0) ||
               (copyObj.Connections != null && copyObj.Connections.Count > 0));
     }
     catch (JsonException)
