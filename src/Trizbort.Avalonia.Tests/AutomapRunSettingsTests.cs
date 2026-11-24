@@ -83,7 +83,8 @@ public class AutomapRunSettingsTests
                 tips.Count.ShouldBe(7);
                 foreach (var tip in tips)
                 {
-                    var corner = tip.TranslatePoint(new global::Avalonia.Point(tip.Bounds.Width, tip.Bounds.Height), dialog)!.Value;
+                    var corner = global::Avalonia.VisualExtensions.TranslatePoint(tip,
+                        new global::Avalonia.Point(tip.Bounds.Width, tip.Bounds.Height), dialog)!.Value;
                     corner.X.ShouldBeLessThanOrEqualTo(dialog.ClientSize.Width - 16, $"the (i) for \"{tip.Text}\" at {width}");
                     tip.Bounds.Width.ShouldBe(16);
                 }
