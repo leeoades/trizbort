@@ -13,6 +13,10 @@ The highlights of each release, newest first. Every change is listed in the [cha
 
 - **Add New Region...** on a room's **Set Region** menu makes a region for the selected rooms, and the default region
   is called **No Region**.
+- **Directions** take a magic word back the way it came ("xyzzy" from the building, as from the debris room), as a
+  way not yet tried.
+- **Automap's guesses** read more plainly: an untried way is "unexplored", a way that comes back says it looks like
+  a loop, and **Wrong Room: Choose...** shows a new room beside the room you left.
 - **Assume joins go both ways** is the new name for "Always assume two-way connections", and each option in the
   automapping dialog has an **ⓘ** to hover over for more about it.
 - **A shorter automapping dialog.** The game screen is shown or hidden on the automap panel, and join labels follow
