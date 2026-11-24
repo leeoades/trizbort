@@ -153,16 +153,34 @@ public class DocsCaptureTests
         """;
 
     private Project? _previous;
-    private FluentTheme? _theme;
+    private readonly List<global::Avalonia.Styling.IStyle> _addedStyles = new();
+    private readonly List<object> _addedResources = new();
 
+    /// <summary>
+    ///   The app as users see it: the real app's styles and resources (its theme, dialog styles and toolbar icons),
+    ///   which the test application doesn't have; and a fresh map for each picture.
+    /// </summary>
     [SetUp]
     public void SetUp()
     {
         _previous = Project.Current;
-        if (Application.Current != null && !Application.Current.Styles.OfType<FluentTheme>().Any())
+        Project.Current = new Project();
+        var current = Application.Current!;
+        var app = new App();
+        global::Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(app);
+        foreach (var style in app.Styles.ToList())
         {
-            _theme = new FluentTheme();
-            Application.Current.Styles.Add(_theme);
+            if (style is FluentTheme && current.Styles.OfType<FluentTheme>().Any()) continue;
+            app.Styles.Remove(style);
+            current.Styles.Add(style);
+            _addedStyles.Add(style);
+        }
+
+        foreach (var key in app.Resources.Keys.ToList())
+        {
+            if (current.Resources.ContainsKey(key)) continue;
+            current.Resources[key] = app.Resources[key];
+            _addedResources.Add(key);
         }
     }
 
@@ -170,7 +188,11 @@ public class DocsCaptureTests
     public void TearDown()
     {
         MapCanvasControl.HereRoomOverride = null;
-        if (_theme != null) Application.Current?.Styles.Remove(_theme);
+        var current = Application.Current!;
+        foreach (var style in _addedStyles) current.Styles.Remove(style);
+        foreach (var key in _addedResources) current.Resources.Remove(key);
+        _addedStyles.Clear();
+        _addedResources.Clear();
         Project.Current = _previous!;
     }
 
@@ -217,7 +239,8 @@ public class DocsCaptureTests
     public async Task TheMainWindow_Automapping_TheLighthouse()
     {
         var root = Output();
-        var transcript = Path.Combine(Path.GetTempPath(), "lighthouse-" + Guid.NewGuid().ToString("N") + ".txt");
+        var folder = Directory.CreateTempSubdirectory("trizbort-docs-").FullName;
+        var transcript = Path.Combine(folder, "lighthouse.txt");
         File.WriteAllText(transcript, Lighthouse.Replace("\r\n", "\n"));
         Settings.Reset();
         var services = App.ConfigureServices();
@@ -241,12 +264,12 @@ public class DocsCaptureTests
             var project = Project.Current;
             var rooms = project.Elements.OfType<Room>().ToList();
             var right = rooms.Max(room => room.InnerBounds.Right);
-            var top = rooms.Min(room => room.InnerBounds.Top);
+            var bottom = rooms.Max(room => room.InnerBounds.Bottom);
             var label = new MapLabel(project)
             {
                 Markdown = true,
                 Text = TreasureLabel.Replace("\r\n", "\n"),
-                Position = new CoreVector(right + 64, top)
+                Position = new CoreVector(right + 48, bottom - 160)
             };
             label.Size = new CoreVector(220, 60);
             label.Size = Trizbort.Avalonia.Drawing.MapLabelDrawingAdapter.FitText(label, label.Size);
@@ -260,7 +283,7 @@ public class DocsCaptureTests
         {
             vm.StopAutomap();
             window.Close();
-            try { File.Delete(transcript); } catch (IOException) { }
+            try { Directory.Delete(folder, true); } catch (IOException) { }
         }
     }
 
@@ -292,7 +315,8 @@ public class DocsCaptureTests
         var joins = new AutomapCanvas(project);
         joins.Connect(keys, MappableDirection.East, coins, true);
         joins.Connect(hall, MappableDirection.South, coins, true);
-        var transcript = Path.Combine(Path.GetTempPath(), "maze-" + Guid.NewGuid().ToString("N") + ".txt");
+        var folder = Directory.CreateTempSubdirectory("trizbort-docs-").FullName;
+        var transcript = Path.Combine(folder, "adventure.txt");
         File.WriteAllText(transcript,
             $">look\n\nHall of Mists\nA huge hall, full of mist.\n\n>south\n\nMaze\n{Alike}\n\n>west\n\nMaze\n{Alike}\n\n>");
 
@@ -314,7 +338,7 @@ public class DocsCaptureTests
         {
             vm.StopAutomap();
             window.Close();
-            try { File.Delete(transcript); } catch (IOException) { }
+            try { Directory.Delete(folder, true); } catch (IOException) { }
         }
     }
 }
