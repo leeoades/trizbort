@@ -166,22 +166,41 @@ public class DocsCaptureTests
         _previous = Project.Current;
         Project.Current = new Project();
         var current = Application.Current!;
-        var app = new App();
-        global::Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(app);
-        foreach (var style in app.Styles.ToList())
+        // the test application is a bare Application: the app's own App.axaml isn't loaded, so its styles are added
+        // as the app adds them, and its icons read from it
+        void AddStyle(global::Avalonia.Styling.IStyle style)
         {
-            if (style is FluentTheme && current.Styles.OfType<FluentTheme>().Any()) continue;
-            app.Styles.Remove(style);
             current.Styles.Add(style);
             _addedStyles.Add(style);
         }
 
-        foreach (var key in app.Resources.Keys.ToList())
+        if (!current.Styles.OfType<FluentTheme>().Any()) AddStyle(new FluentTheme());
+        var package = new Uri("avares://Trizbort.Avalonia/");
+        AddStyle(new global::Avalonia.Markup.Xaml.Styling.StyleInclude(package)
+            { Source = new Uri("avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml") });
+        AddStyle(new global::Avalonia.Markup.Xaml.Styling.StyleInclude(package)
+            { Source = new Uri("avares://Trizbort.Avalonia/Styles/DialogStyles.axaml") });
+
+        var xaml = System.Xml.Linq.XDocument.Load(AppXaml());
+        foreach (var icon in xaml.Descendants().Where(element => element.Name.LocalName == "StreamGeometry"))
         {
+            var key = icon.Attributes().First(attribute => attribute.Name.LocalName == "Key").Value;
             if (current.Resources.ContainsKey(key)) continue;
-            current.Resources[key] = app.Resources[key];
+            current.Resources[key] = global::Avalonia.Media.StreamGeometry.Parse(icon.Value);
             _addedResources.Add(key);
         }
+    }
+
+    /// <summary>App.axaml, from the source tree the tests run in.</summary>
+    private static string AppXaml()
+    {
+        for (var folder = new DirectoryInfo(AppContext.BaseDirectory); folder != null; folder = folder.Parent)
+        {
+            var path = Path.Combine(folder.FullName, "src", "Trizbort.Avalonia", "App.axaml");
+            if (File.Exists(path)) return path;
+        }
+
+        throw new FileNotFoundException("App.axaml, above " + AppContext.BaseDirectory);
     }
 
     [TearDown]
