@@ -291,10 +291,9 @@ public sealed class CanvasInteraction : IDisposable
       return true;
     }
 
-    // inside a background: picked up with Alt, or once it's selected; otherwise it's empty map, for a box round
-    // the rooms on it (Lee, 24 Nov 2026)
-    if (_session.BackgroundAt(world) is { } background &&
-        ((input.Modifiers & ModifierKeys.Alt) != 0 || selection.Contains(background)))
+    // inside a background: picked up only with Alt, even when it's selected; otherwise it's empty map, for a box
+    // round the rooms on it (Lee, 24 Nov 2026: a new background, selected, moved when he dragged inside it)
+    if ((input.Modifiers & ModifierKeys.Alt) != 0 && _session.BackgroundAt(world) is { } background)
     {
       if (shift) _session.Select(background, false, true);
       else if (ctrl) _session.Selection.Remove(background);

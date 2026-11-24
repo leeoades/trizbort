@@ -120,15 +120,30 @@ public class BackgroundTests : CanvasGestureTestBase
     Session.Project.Elements.OfType<Room>().Single().Position.ShouldBe(new Vector(100, 100));
   }
 
+  // Lee, 24 Nov 2026: just added (so selected), a drag inside it moved it. It shouldn't: only Alt or the edge
   [Test]
-  public void OnceSelected_DraggingInsideMovesIt_WithoutAlt()
+  public void EvenWhenSelected_DraggingInside_BoxesRooms_AndLeavesItWhereItIs()
   {
     var background = AddBackground(0, 0, 600, 400);
+    var room = AddRoom(100, 100);
     Select(background);
 
-    Press(new Vector(300, 300));
-    Move(new Vector(332, 300));
-    Release(new Vector(332, 300));
+    Press(new Vector(50, 50));
+    Move(new Vector(250, 250));
+    Release(new Vector(250, 250));
+
+    Session.Project.Elements.OfType<Background>().Single().Position.ShouldBe(new Vector(0, 0));
+    Session.Selection.Items.ShouldBe(new Element[] { room });
+  }
+
+  [Test]
+  public void ItsEdge_DragsIt()
+  {
+    var background = AddBackground(0, 0, 600, 400);
+
+    Press(new Vector(2, 200));
+    Move(new Vector(34, 200));
+    Release(new Vector(34, 200));
 
     Session.Project.Elements.OfType<Background>().Single().Position.ShouldBe(new Vector(32, 0));
   }
