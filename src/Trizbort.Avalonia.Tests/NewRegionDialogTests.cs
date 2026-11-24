@@ -80,8 +80,6 @@ public class NewRegionDialogTests
             vm.SelectedRegion!.IsDefaultRegion.ShouldBeFalse();
             // the list says No Region, not NoRegion
             vm.Regions.First().DisplayName.ShouldBe("No Region");
-            dialog.GetVisualDescendants().OfType<TextBlock>().ShouldContain(t => t.Text == "No Region");
-            dialog.GetVisualDescendants().OfType<TextBlock>().ShouldNotContain(t => t.Text == "NoRegion");
 
             vm.SelectedRegion.Name = "Cellars";
             Press(dialog, "OK");

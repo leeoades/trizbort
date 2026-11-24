@@ -188,7 +188,7 @@ public class MoreCommandTests
     // the region and the rooms in it, undone together
     _session.PerformUndo();
     Settings.Regions.ShouldNotContain(r => r.RegionName == "Cellars");
-    a.Region.ShouldNotBe("Cellars");
+    Project.Current.Elements.OfType<Room>().ShouldAllBe(r => r.Region != "Cellars");
   }
 
   [Test]
