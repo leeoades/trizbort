@@ -23,8 +23,8 @@
                     <CheckBox Content="Don't _automap from here" IsChecked="{Binding AutomapPause}" Margin="0,0,16,4" />
                 </WrapPanel>
 
-                <HeaderedContentControl Classes="group" Header="Shapes &amp; Lines">
-                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                <HeaderedContentControl Classes="group" Header="Shape, Lines &amp; Region">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
                             <ColumnDefinition Width="12" />
@@ -51,60 +51,46 @@
                                 <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
+                        <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="Regio_n:" Target="{Binding #RegionCombo}" />
+                        <ComboBox Grid.Row="3" Grid.Column="2" x:Name="RegionCombo" ItemsSource="{Binding AvailableRegions}"
+                                  SelectedItem="{Binding Region}" PlaceholderText="Mixed" HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="sys:String">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Border Width="24" Height="14" BorderThickness="1"
+                                                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                Background="{Binding ., Converter={x:Static conv:RegionNameToBrushConverter.Instance}}" />
+                                        <TextBlock Text="{Binding ., Converter={x:Static conv:RegionDisplayNameConverter.Instance}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </Grid>
                 </HeaderedContentControl>
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Label Grid.Column="0" Classes="field-label" Content="Regio_n:" Target="{Binding #RegionCombo}" />
-                    <ComboBox Grid.Column="2" x:Name="RegionCombo" ItemsSource="{Binding AvailableRegions}"
-                              SelectedItem="{Binding Region}" PlaceholderText="Mixed" HorizontalAlignment="Stretch">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="sys:String">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Border Width="24" Height="14" BorderThickness="1"
-                                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                            Background="{Binding ., Converter={x:Static conv:RegionNameToBrushConverter.Instance}}" />
-                                    <TextBlock Text="{Binding ., Converter={x:Static conv:RegionDisplayNameConverter.Instance}}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </Grid>
 
                 <HeaderedContentControl Classes="group" Header="Colours">
                     <Grid ColumnDefinitions="Auto,12,Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
                         <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Room _Fill:" Target="{Binding #FillButton}" />
                         <controls:ColorPickerButton Grid.Row="0" Grid.Column="2" x:Name="FillButton" SelectedColor="{Binding FillColor}" HorizontalAlignment="Left" />
-                        <TextBlock Grid.Row="0" Grid.Column="4" Classes="hint" Text="Mixed" VerticalAlignment="Center" IsVisible="{Binding FillMixed}" />
 
                         <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Second Fi_ll:" Target="{Binding #SecondFillButton}" />
                         <controls:ColorPickerButton Grid.Row="1" Grid.Column="2" x:Name="SecondFillButton" SelectedColor="{Binding SecondFillColor}" HorizontalAlignment="Left" />
                         <StackPanel Grid.Row="1" Grid.Column="4" Orientation="Horizontal" Spacing="8">
                             <ComboBox ItemsSource="{Binding AvailableSecondFillLocations}" SelectedItem="{Binding SecondFillLocation}"
                                       PlaceholderText="Mixed" MinWidth="130" AutomationProperties.Name="Second Fill location" />
-                            <TextBlock Classes="hint" Text="Mixed" VerticalAlignment="Center" IsVisible="{Binding SecondFillMixed}" />
                         </StackPanel>
 
                         <Label Grid.Row="2" Grid.Column="0" Classes="field-label" Content="Room _Border:" Target="{Binding #BorderButton}" />
                         <controls:ColorPickerButton Grid.Row="2" Grid.Column="2" x:Name="BorderButton" SelectedColor="{Binding BorderColor}" HorizontalAlignment="Left" />
-                        <TextBlock Grid.Row="2" Grid.Column="4" Classes="hint" Text="Mixed" VerticalAlignment="Center" IsVisible="{Binding BorderMixed}" />
 
                         <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="Room _Text:" Target="{Binding #RoomTextButton}" />
                         <controls:ColorPickerButton Grid.Row="3" Grid.Column="2" x:Name="RoomTextButton" SelectedColor="{Binding NameColor}" HorizontalAlignment="Left" />
-                        <TextBlock Grid.Row="3" Grid.Column="4" Classes="hint" Text="Mixed" VerticalAlignment="Center" IsVisible="{Binding NameMixed}" />
 
                         <Label Grid.Row="4" Grid.Column="0" Classes="field-label" Content="Ob_ject Text:" Target="{Binding #ObjectTextButton}" />
                         <controls:ColorPickerButton Grid.Row="4" Grid.Column="2" x:Name="ObjectTextButton" SelectedColor="{Binding ObjectTextColor}" HorizontalAlignment="Left" />
-                        <TextBlock Grid.Row="4" Grid.Column="4" Classes="hint" Text="Mixed" VerticalAlignment="Center" IsVisible="{Binding ObjectTextMixed}" />
 
                         <Label Grid.Row="5" Grid.Column="0" Classes="field-label" Content="Subtitle Te_xt:" Target="{Binding #SubtitleTextButton}" />
                         <controls:ColorPickerButton Grid.Row="5" Grid.Column="2" x:Name="SubtitleTextButton" SelectedColor="{Binding SubtitleColor}" HorizontalAlignment="Left" />
-                        <TextBlock Grid.Row="5" Grid.Column="4" Classes="hint" Text="Mixed" VerticalAlignment="Center" IsVisible="{Binding SubtitleMixed}" />
                     </Grid>
                 </HeaderedContentControl>
             </StackPanel>

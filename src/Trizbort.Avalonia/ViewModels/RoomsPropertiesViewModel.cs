@@ -16,7 +16,7 @@ namespace Trizbort.Avalonia.ViewModels;
 public partial class RoomsPropertiesViewModel : ViewModelBase
 {
     /// <summary>Stands for "the rooms differ" in a colour box: nothing a room would have, so any pick is a change.</summary>
-    public static readonly Color Mixed = Color.FromArgb(1, 1, 2, 3);
+    public static readonly Color Mixed = RoomsEdit.MixedColor;
 
     public int Count { get; private set; }
 

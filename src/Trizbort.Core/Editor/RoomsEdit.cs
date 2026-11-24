@@ -14,6 +14,12 @@ namespace Trizbort.Editor;
 /// </summary>
 public sealed class RoomsEdit
 {
+  /// <summary>
+  ///   Stands for "the rooms differ" in a colour box: a colour no room would have, so any pick (even No Colour) is a
+  ///   change. The colour picker shows it as Mixed.
+  /// </summary>
+  public static readonly Color MixedColor = Color.FromArgb(1, 1, 2, 3);
+
   public bool? IsDark { get; set; }
   public bool? AutomapPause { get; set; }
   public RoomShape? Shape { get; set; }
