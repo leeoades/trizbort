@@ -102,4 +102,29 @@ public class AltOnTheMapTests
             window.Close();
         }
     }
+
+    [AvaloniaTest]
+    public void AltHeldOverABackground_ShowsTheMoveCursor()
+    {
+        var (window, _, canvas) = Harness();
+        try
+        {
+            var inside = canvas.CanvasToClient(new Vector(0, 0));
+            window.MouseMove(inside);
+            Dispatcher.UIThread.RunJobs();
+            canvas.CursorKind.ShouldBe(Trizbort.Editor.CursorKind.Default);
+
+            window.KeyPress(Key.LeftAlt, RawInputModifiers.Alt, PhysicalKey.AltLeft, null);
+            Dispatcher.UIThread.RunJobs();
+            canvas.CursorKind.ShouldBe(Trizbort.Editor.CursorKind.SizeAll);
+
+            window.KeyRelease(Key.LeftAlt, RawInputModifiers.None, PhysicalKey.AltLeft, null);
+            Dispatcher.UIThread.RunJobs();
+            canvas.CursorKind.ShouldBe(Trizbort.Editor.CursorKind.Default);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
 }
