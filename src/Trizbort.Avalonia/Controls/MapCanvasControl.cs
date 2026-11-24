@@ -26,6 +26,7 @@ using AvaloniaVector = Avalonia.Vector;
 using AvaloniaColor = Avalonia.Media.Color;
 using AvaloniaDrawingContext = Avalonia.Media.DrawingContext;
 using CoreModifierKeys = Trizbort.Domain.Enums.ModifierKeys;
+using MapBackground = Trizbort.Domain.Elements.Background;
 
 namespace Trizbort.Avalonia.Controls;
 
@@ -1024,7 +1025,9 @@ public class MapCanvasControl : Control
 
     private void ShowContextMenuAt(CoreVector worldPos)
     {
-        var hitElem = Hit.HitElement(worldPos);
+        // inside a selected background, the background (elsewhere inside one is empty map)
+        var hitElem = Hit.HitElement(worldPos) ??
+                      (CommandService?.Session?.BackgroundAt(worldPos) is { } under && _selectedSet.Contains(under) ? under : null);
         if (hitElem != null && !_selectedSet.Contains(hitElem))
         {
             CommandService?.Select([hitElem], clearExisting: true);
@@ -1041,6 +1044,7 @@ public class MapCanvasControl : Control
             Room => Trizbort.Editor.Commands.ContextTargets.Room,
             Connection => Trizbort.Editor.Commands.ContextTargets.Connection,
             MapLabel => Trizbort.Editor.Commands.ContextTargets.Label,
+            MapBackground => Trizbort.Editor.Commands.ContextTargets.Background,
             _ => Trizbort.Editor.Commands.ContextTargets.Empty
         };
 
@@ -1559,6 +1563,10 @@ public class MapCanvasControl : Control
                 else if (element is MapLabel label)
                 {
                     if (drawRoomsAndLabels) label.DrawMapLabel(context, selected, hover);
+                }
+                else if (element is MapBackground background)
+                {
+                    if (drawRoomsAndLabels) background.DrawBackground(context, selected, hover);
                 }
                 else if (element is Connection conn)
                 {

@@ -125,6 +125,7 @@ public partial class App : Application
         services.AddTransient<RoomPropertiesViewModel>();
         services.AddTransient<ConnectionPropertiesViewModel>();
         services.AddTransient<MapLabelPropertiesViewModel>();
+        services.AddTransient<BackgroundPropertiesViewModel>();
         services.AddTransient<MapSettingsViewModel>();
         services.AddTransient<MapThemeViewModel>();
         services.AddTransient<AppSettingsViewModel>();

@@ -128,6 +128,14 @@ public class LegacyMapFileEngine : MapFileEngine
         label.Load(element);
         _project.Elements.Add(label);
       }
+      else if (element.HasName("background"))
+      {
+        // older versions skip elements they don't know, so they open the map without its backgrounds
+        var background = new Background(_project, _project.Elements.Count + 1);
+        background.Id = element.Attribute("id").ToInt(background.Id);
+        background.Load(element);
+        _project.Elements.Add(background);
+      }
       else if (element.HasName("line") || element.HasName("labelLine"))
       {
         // Changed the constructor used for elements when loading a file for a significant speed increase
@@ -203,6 +211,13 @@ public class LegacyMapFileEngine : MapFileEngine
       scribe.StartElement("label");
       scribe.Attribute("id", label.Id);
       label.Save(scribe);
+      scribe.EndElement();
+    }
+    else if (element is Background background)
+    {
+      scribe.StartElement("background");
+      scribe.Attribute("id", background.Id);
+      background.Save(scribe);
       scribe.EndElement();
     }
     else if (element.GetType() == typeof(Connection))

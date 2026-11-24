@@ -93,7 +93,7 @@ public sealed partial class CommandCatalogue
       Title = "Send to _Back",
       MenuPath = "Edit/Arrange",
       Group = "1-zorder",
-      ContextTargets = ContextTargets.Room | ContextTargets.Label,
+      ContextTargets = ContextTargets.Room | ContextTargets.Label | ContextTargets.Background,
       CanExecuteFunc = s => s.HasRoomOrLabelSelected,
       ExecuteAsyncFunc = s => Run(() => s.SendSelectionToBack())
     });
@@ -104,7 +104,7 @@ public sealed partial class CommandCatalogue
       Title = "Bring to _Front",
       MenuPath = "Edit/Arrange",
       Group = "1-zorder",
-      ContextTargets = ContextTargets.Room | ContextTargets.Label,
+      ContextTargets = ContextTargets.Room | ContextTargets.Label | ContextTargets.Background,
       CanExecuteFunc = s => s.HasRoomOrLabelSelected,
       ExecuteAsyncFunc = s => Run(() => s.BringSelectionToFront())
     });

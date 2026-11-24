@@ -84,7 +84,7 @@ public sealed partial class EditorSession
   /// <summary>True for the element kinds that have a properties dialog.</summary>
   public static bool HasPropertiesDialog(Element element)
   {
-    return element is Room || element is Connection || element is MapLabel;
+    return element is Room || element is Connection || element is MapLabel || element is Background;
   }
 
   /// <summary>True when exactly one element is selected and it has a properties dialog.</summary>

@@ -177,7 +177,9 @@ public sealed class CanvasInteraction : IDisposable
 
     if (input.ClickCount == 2)
     {
-      var doubleHit = _hit.HitElement(world);
+      // Alt+double-click inside a background: its properties
+      var doubleHit = _hit.HitElement(world) ??
+                      ((input.Modifiers & ModifierKeys.Alt) != 0 ? _session.BackgroundAt(world) : null);
       if (doubleHit != null)
       {
         _session.Select(new[] { doubleHit }, true);
@@ -279,6 +281,26 @@ public sealed class CanvasInteraction : IDisposable
       }
 
       if (selection.Contains(element))
+      {
+        BeginTransaction("Move");
+        _mode = CanvasDragMode.MoveElement;
+        _dragOffset = Settings.Snap(world);
+      }
+
+      Refresh();
+      return true;
+    }
+
+    // inside a background: picked up with Alt, or once it's selected; otherwise it's empty map, for a box round
+    // the rooms on it (Lee, 24 Nov 2026)
+    if (_session.BackgroundAt(world) is { } background &&
+        ((input.Modifiers & ModifierKeys.Alt) != 0 || selection.Contains(background)))
+    {
+      if (shift) _session.Select(background, false, true);
+      else if (ctrl) _session.Selection.Remove(background);
+      else if (!selection.Contains(background)) _session.Select(new Element[] { background }, true);
+
+      if (selection.Contains(background))
       {
         BeginTransaction("Move");
         _mode = CanvasDragMode.MoveElement;

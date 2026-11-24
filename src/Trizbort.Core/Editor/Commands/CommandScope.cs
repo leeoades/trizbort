@@ -19,5 +19,7 @@ public enum ContextTargets
   Connection = 2,
   Label = 4,
   Empty = 8,
-  Any = 15
+  /// <summary>A background, right-clicked on its edge (or inside it once it's selected).</summary>
+  Background = 16,
+  Any = 31
 }

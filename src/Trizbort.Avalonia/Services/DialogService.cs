@@ -432,6 +432,22 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         return result;
     }
 
+    /// <summary>A background's colour, border, shape and lines; OK applies them as one undo step.</summary>
+    public async Task<bool> ShowBackgroundPropertiesAsync(Window? owner, Trizbort.Domain.Elements.Background background)
+    {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<BackgroundPropertiesViewModel>();
+        viewModel.Initialize(background);
+
+        var dialog = new BackgroundPropertiesDialog { DataContext = viewModel };
+        var result = owner != null && await dialog.ShowDialog<bool>(owner);
+        if (result)
+        {
+            _commandService.Session.Apply("Edit background properties", background, () => viewModel.ApplyTo(background));
+        }
+        return result;
+    }
+
     public Task<bool> ShowElementPropertiesAsync(Window? owner, Element element)
     {
         return element switch
@@ -439,6 +455,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
             Room room => ShowRoomPropertiesAsync(owner, room),
             Connection connection => ShowConnectionPropertiesAsync(owner, connection),
             MapLabel label => ShowMapLabelPropertiesAsync(owner, label),
+            Trizbort.Domain.Elements.Background background => ShowBackgroundPropertiesAsync(owner, background),
             _ => Task.FromResult(false)
         };
     }

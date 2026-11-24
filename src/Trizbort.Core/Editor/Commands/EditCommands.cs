@@ -10,7 +10,7 @@ public static class EditCommands
   public static void Register(CommandCatalogue catalogue)
   {
     var primary = ModifierKeys.Primary;
-    var elementTargets = ContextTargets.Room | ContextTargets.Connection | ContextTargets.Label;
+    var elementTargets = ContextTargets.Room | ContextTargets.Connection | ContextTargets.Label | ContextTargets.Background;
 
     catalogue.Register(new EditorCommand
     {
@@ -89,6 +89,19 @@ public static class EditCommands
       Gestures = new[] { new KeyGesture(InputKey.L, ModifierKeys.None) },
       ContextTargets = ContextTargets.Any,
       ExecuteAsyncFunc = s => s.AddLabelAsync(s.PointerMapPosition)
+    });
+    // Lee, 24 Nov 2026: a coloured shape behind part of the map
+    catalogue.Register(new EditorCommand
+    {
+      Id = "project.addBackground",
+      ContextOrder = 42, ContextGroup = "4-add",
+      Title = "Add _Background",
+      MenuPath = "Project",
+      Group = "1-add",
+      Scope = CommandScope.Canvas,
+      Gestures = new[] { new KeyGesture(InputKey.B, ModifierKeys.None) },
+      ContextTargets = ContextTargets.Any,
+      ExecuteAsyncFunc = s => s.AddBackgroundAsync(s.PointerMapPosition)
     });
   }
 

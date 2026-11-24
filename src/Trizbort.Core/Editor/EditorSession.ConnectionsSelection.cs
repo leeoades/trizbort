@@ -283,7 +283,7 @@ public sealed partial class EditorSession
       var copyObj = JsonConvert.DeserializeObject<CopyController.CopyObject>(text);
       var step = Settings.GridSize * (_pasteRepeat + 1);
       Execute("Paste", () => PasteElements(copyObj, controller, target, step));
-      PostStatusMessage("Pasted " + ((copyObj.Rooms?.Count ?? 0) + (copyObj.Labels?.Count ?? 0) + (copyObj.Connections?.Count ?? 0)) + " element(s)");
+      PostStatusMessage("Pasted " + ((copyObj.Rooms?.Count ?? 0) + (copyObj.Labels?.Count ?? 0) + (copyObj.Backgrounds?.Count ?? 0) + (copyObj.Connections?.Count ?? 0)) + " element(s)");
       return true;
     }
     catch (Exception ex)
@@ -346,6 +346,25 @@ public sealed partial class EditorSession
       newLabels.Add(newLabel);
     }
 
+    var newBackgrounds = new List<Background>();
+    foreach (var background in copyObj.Backgrounds ?? new List<CopyController.CopyBackgroundObj>())
+    {
+      var newBackground = new Background(project);
+      project.Elements.Add(newBackground);
+      if (firstElement)
+      {
+        var targetX = targetPosition?.X ?? (background.Position.X + step);
+        var targetY = targetPosition?.Y ?? (background.Position.Y + step);
+        offsetX = background.Position.X - targetX;
+        offsetY = background.Position.Y - targetY;
+        firstElement = false;
+      }
+
+      controller.SetBackground(newBackground, background);
+      newBackground.Position = background.Position - new Vector(offsetX, offsetY);
+      newBackgrounds.Add(newBackground);
+    }
+
     foreach (var room in newRooms)
     {
       room.ReferenceRoomId = copiedNodes.TryGetValue(room.ReferenceRoomId, out var reference) && reference is Room
@@ -360,6 +379,7 @@ public sealed partial class EditorSession
     var pasted = new List<Element>();
     pasted.AddRange(newRooms);
     pasted.AddRange(newLabels);
+    pasted.AddRange(newBackgrounds);
     pasted.AddRange(newConnections);
     Selection.Set(pasted);
 

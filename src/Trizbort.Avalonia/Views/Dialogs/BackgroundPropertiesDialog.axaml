@@ -1,0 +1,86 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="using:System"
+        xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:controls="using:Trizbort.Avalonia.Controls"
+        x:Class="Trizbort.Avalonia.Views.Dialogs.BackgroundPropertiesDialog"
+        x:DataType="vm:BackgroundPropertiesViewModel"
+        Title="Background Properties"
+        Width="440" Height="380"
+        MinWidth="380" MinHeight="340"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <!-- A coloured shape behind part of the map: its colour, border, shape and lines. Lee, 24 Nov 2026. -->
+    <Grid RowDefinitions="*,Auto" RowSpacing="8" Margin="16" Grid.IsSharedSizeScope="True">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Classes="field-label" Content="Colou_r:" Target="{Binding #FillColorButton}" />
+                    <controls:ColorPickerButton Grid.Column="2" x:Name="FillColorButton"
+                                                SelectedColor="{Binding FillColor}" HorizontalAlignment="Left" />
+                </Grid>
+
+                <HeaderedContentControl Classes="group" Header="Border">
+                    <StackPanel Spacing="8">
+                        <CheckBox x:Name="BorderCheck" Content="_Enabled" IsChecked="{Binding HasBorder}" />
+                        <Grid RowDefinitions="Auto,Auto" RowSpacing="8" Margin="16,0,0,0" IsEnabled="{Binding HasBorder}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Line st_yle:" Target="{Binding #BorderStyleCombo}" />
+                            <ComboBox Grid.Row="0" Grid.Column="2" x:Name="BorderStyleCombo" ItemsSource="{Binding AvailableBorderStyles}"
+                                      SelectedItem="{Binding BorderStyle}" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+
+                            <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Co_lour:" Target="{Binding #BorderColorButton}" />
+                            <controls:ColorPickerButton Grid.Row="1" Grid.Column="2" x:Name="BorderColorButton"
+                                                        SelectedColor="{Binding BorderColor}" HorizontalAlignment="Left" />
+                        </Grid>
+                    </StackPanel>
+                </HeaderedContentControl>
+
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Shape:" Target="{Binding #ShapeCombo}" />
+                    <ComboBox Grid.Row="0" Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding AvailableShapes}"
+                              SelectedItem="{Binding Shape}" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Li_nes:" Target="{Binding #LinesCombo}" />
+                    <ComboBox Grid.Row="1" Grid.Column="2" x:Name="LinesCombo" ItemsSource="{Binding AvailableHandDrawnStyles}"
+                              SelectedItem="{Binding HandDrawnStyle}" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+
+                <TextBlock Classes="hint" TextWrapping="Wrap"
+                           Text="Inside a background is map like any other: click or box the rooms on it. Pick the background up by its edge, or Alt+click inside it." />
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Classes="dialog-button" x:Name="OkButton" Content="_OK" IsDefault="True" Click="OnOkClick" />
+            <Button Classes="dialog-button" Content="_Cancel" IsCancel="True" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>
