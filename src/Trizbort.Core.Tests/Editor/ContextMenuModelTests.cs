@@ -148,8 +148,13 @@ public class ContextMenuModelTests
     command.CanExecute(_session).ShouldBeTrue();
 
     var items = command.DynamicChildren(_session);
-    items.Select(i => i.Title).ShouldBe(new[] { Region.DefaultRegion, "Alpha", "Zebra" });
+    // Lee, 24 Nov 2026: "No Region" rather than NoRegion; and a new region for the rooms, last
+    items.Select(i => i.Title).ShouldBe(new[] { "No Region", "Alpha", "Zebra", "Add New Region..." });
     items.Where(i => i.IsChecked).Select(i => i.Title).ShouldBe(new[] { "Alpha" });
+    var add = items.Last();
+    add.IsCheckable.ShouldBeFalse();
+    add.SeparatorBefore.ShouldBeTrue();
+    add.ExecuteAsync.ShouldNotBeNull();
   }
 
   [Test]

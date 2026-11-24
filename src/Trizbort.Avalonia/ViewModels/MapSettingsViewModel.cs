@@ -16,7 +16,11 @@ public partial class RegionItemViewModel : ViewModelBase
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDefaultRegion))]
+    [NotifyPropertyChangedFor(nameof(DisplayName))]
     private string _name = string.Empty;
+
+    /// <summary>As shown: "No Region" for the default region.</summary>
+    public string DisplayName => IsDefaultRegion ? Region.NoRegionDisplayName : Name;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FillBrush))]
@@ -378,7 +382,7 @@ public partial class MapSettingsViewModel : ViewModelBase
         Description = project.Description ?? string.Empty;
         History = project.History ?? string.Empty;
 
-        SelectedTabIndex = Math.Clamp(ApplicationSettingsController.AppSettings.MapSettingsLastTab, 0, 5);
+        SelectedTabIndex = Math.Clamp(ApplicationSettingsController.AppSettings.MapSettingsLastTab, 0, RegionsTab);
         HandleSize = Settings.HandleSize;
         SnapToElementDistance = Settings.SnapToElementSize;
         DefaultRoomNameError = string.Empty;
@@ -522,6 +526,9 @@ public partial class MapSettingsViewModel : ViewModelBase
                 room.Region = newName;
             }
     }
+
+    /// <summary>The Regions tab, the last.</summary>
+    public const int RegionsTab = 5;
 
     [RelayCommand]
     public void AddRegion()

@@ -19,8 +19,15 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   [What's new](https://github.com/leeoades/trizbort/blob/master/Docs/whats-new.md) page with the highlights of each
   release. The guide to the original app and Trizbort 2 is still there, in `legacy/Docs`.
 
+- **Add New Region...** at the foot of a room's **Set Region** menu, and **New Region...** in **Change Region**,
+  open Map Settings at the Regions tab with a new region to name. Press OK and the selected rooms are put in it (one
+  undo step); Cancel and nothing changes, with the rooms still selected. These work before a map has any regions,
+  too.
+
 ### Changed
 
+- The default region is called **No Region** on screen, rather than "NoRegion". (Maps still save it as before, so
+  the original Trizbort reads them.)
 - **Always assume two-way connections** in the automapping dialog is now **Assume joins go both ways**, with **J**
   as its shortcut. Each option in the dialog has an ⓘ: hover over it (or tab to it) for more about what the option
   does.

@@ -12,14 +12,24 @@ public sealed partial class CommandCatalogue
   private static IReadOnlyList<DynamicMenuItem> RegionMenuItems(EditorSession session)
   {
     var current = session.PrimaryRoom?.Region;
-    return session.RegionNames()
+    if (string.IsNullOrEmpty(current)) current = Trizbort.Domain.Misc.Region.DefaultRegion;
+    var items = session.RegionNames()
       .Select(name => new DynamicMenuItem
       {
-        Title = name,
+        Title = Trizbort.Domain.Misc.Region.DisplayName(name),
         IsChecked = string.Equals(name, current, StringComparison.OrdinalIgnoreCase),
         Execute = s => s.SetSelectedRoomsRegion(name)
       })
       .ToList();
+    // Lee, 24 Nov 2026: make a region for the selected rooms from here
+    items.Add(new DynamicMenuItem
+    {
+      Title = "Add New Region...",
+      IsCheckable = false,
+      SeparatorBefore = true,
+      ExecuteAsync = s => s.AddRegionForSelectedRoomsAsync()
+    });
+    return items;
   }
 
   /// <summary>Regions, port adjust, z-order, validation toggles and Toggle Text (tickets 024, 033, 035, 036, 054).</summary>
@@ -37,7 +47,7 @@ public sealed partial class CommandCatalogue
       Group = "5-region",
       Scope = CommandScope.Canvas,
       Gestures = new[] { new KeyGesture(InputKey.F2, ModifierKeys.Shift) },
-      CanExecuteFunc = s => s.Selection.Rooms.Any() && s.HasMultipleRegions,
+      CanExecuteFunc = s => s.Selection.Rooms.Any(),
       ExecuteAsyncFunc = s => s.ChangeRegionAsync()
     });
     catalogue.Register(new EditorCommand
@@ -47,7 +57,7 @@ public sealed partial class CommandCatalogue
       ContextOrder = 70, ContextGroup = "7-region",
       Title = "Set _Region",
       ContextTargets = ContextTargets.Room,
-      CanExecuteFunc = s => s.Selection.Rooms.Any() && s.HasMultipleRegions,
+      CanExecuteFunc = s => s.Selection.Rooms.Any(),
       DynamicChildren = RegionMenuItems
     });
 

@@ -248,7 +248,7 @@
                                             <TextBlock Text="123" Foreground="{Binding TextBrush}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
-                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -262,7 +262,8 @@
                         <Panel DataContext="{Binding SelectedRegion}">
                             <StackPanel Spacing="8" x:DataType="vm:RegionItemViewModel">
                                 <Label Classes="field-label" Content="_Name:" Target="{Binding #RegionNameBox}" />
-                                <TextBox x:Name="RegionNameBox" Text="{Binding Name}" IsReadOnly="{Binding IsDefaultRegion}" />
+                                <TextBox x:Name="RegionNameBox" Text="{Binding Name}" IsVisible="{Binding CanEditName}" />
+                                <TextBox Text="{Binding DisplayName, Mode=OneWay}" IsReadOnly="True" IsVisible="{Binding IsDefaultRegion}" />
                                 <TextBlock Classes="error" Text="{Binding NameError}" IsVisible="{Binding HasNameError}" />
 
                                 <Label Classes="field-label" Content="Background Fill:" />

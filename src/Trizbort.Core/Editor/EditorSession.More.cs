@@ -61,7 +61,31 @@ public sealed partial class EditorSession
 
     var current = PrimaryRoom?.Region;
     var chosen = await Prompts.ChooseRegionAsync(RegionNames(), current);
-    if (!string.IsNullOrEmpty(chosen)) SetSelectedRoomsRegion(chosen);
+    if (chosen == NewRegionChoice.Chosen)
+      await AddRegionForSelectedRoomsAsync();
+    else if (!string.IsNullOrEmpty(chosen))
+      SetSelectedRoomsRegion(chosen);
+  }
+
+  /// <summary>
+  ///   Makes a new region in Map Settings (via <see cref="Prompts" />) and puts the selected rooms in it, all as one
+  ///   undo step. Cancelled: nothing changes, and the rooms stay selected. Lee, 24 Nov 2026.
+  /// </summary>
+  public async Task AddRegionForSelectedRoomsAsync()
+  {
+    var rooms = SelectedRooms.ToList();
+    if (rooms.Count == 0) return;
+
+    var choice = await Prompts.AddRegionAsync();
+    if (choice == null) return;
+
+    Execute("Add region", () =>
+    {
+      choice.ApplySettings?.Invoke();
+      if (!string.IsNullOrEmpty(choice.Name))
+        foreach (var room in rooms) room.Region = choice.Name;
+    }, rooms);
+    RaiseChanged(EditorChange.Model);
   }
 
   // ---- Ports (033) ----

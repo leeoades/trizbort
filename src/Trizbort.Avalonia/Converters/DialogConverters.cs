@@ -52,6 +52,20 @@ public class CoreColorToNameOrHexConverter : IValueConverter
 }
 
 /// <summary>Maps a region name to a brush of that region's colour (for the Region combo swatches).</summary>
+/// <summary>A region's name as shown: "No Region" for the default.</summary>
+public class RegionDisplayNameConverter : IValueConverter
+{
+    public static readonly RegionDisplayNameConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        Trizbort.Domain.Misc.Region.DisplayName(value as string ?? string.Empty);
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
+    }
+}
+
 public class RegionNameToBrushConverter : IValueConverter
 {
     public static readonly RegionNameToBrushConverter Instance = new();
