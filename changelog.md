@@ -39,6 +39,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **Directions** take a command back along a join drawn both ways when automap has only seen it one way ("xyzzy"
+  from the debris room to the building, so xyzzy back from the building), as a way not yet tried. Make the join
+  one-way where the command doesn't work back.
 - **Map Theme** names a theme's room shape as the rest of the app does ("Straight Edges", not "SquareCorners").
 - **Application Settings** no longer says Smart Save's options aren't used: it says what Smart Save does with them.
 
