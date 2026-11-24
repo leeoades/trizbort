@@ -961,6 +961,12 @@ If later in the transcript it turns out that you can't go that way, Trizbort wil
 
 Trizbort can easily make bad guesses here ("To the east is an impassable pile of rubble"); uncheck this option if you prefer.
 
+**Assume joins go both ways.**
+
+On by default. Going north from one room to another, automap also maps south as the way back, before you've tried it: most games' ways do go both ways. If the way back turns out to lead somewhere else (south takes you to a third room, or loops back), automap moves it there. Turn it off for a maze or a game of twisty passages: a join then goes one way until you've gone back along it. You can change it while automap runs, from the ⚙ on the automap panel; it applies from your next move.
+
+Hover over the ⓘ beside an option, in the dialog, for a reminder of what it does.
+
 **Start processing from the end of the transcript file.**
 
 If this item is unchecked, Trizbort will process your whole transcript file, mapping as it goes. If you're automapping onto an existing map, Trizbort will overwrite connections, descriptions, and room names.

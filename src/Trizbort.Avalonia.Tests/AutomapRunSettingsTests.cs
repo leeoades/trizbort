@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Automap;
@@ -44,6 +45,17 @@ public class AutomapRunSettingsTests
             dialog.FindControl<CheckBox>("GameScreenCheck").ShouldBeNull();
             dialog.FindControl<CheckBox>("BestGuessCheck").ShouldBeNull();
             dialog.FindControl<CheckBox>("NamesOnlyCheck").ShouldBeNull();
+
+            // Lee, 24 Nov 2026: assume joins go both ways, there while automap runs too; and an (i) beside each option
+            var twoWay = dialog.FindControl<CheckBox>("TwoWayCheck")!;
+            twoWay.IsEffectivelyVisible.ShouldBeTrue();
+            twoWay.Content.ShouldBe("Assume _joins go both ways.");
+            var tips = dialog.GetVisualDescendants().OfType<Trizbort.Avalonia.Controls.InfoTip>()
+                .Where(tip => tip.IsEffectivelyVisible).ToList();
+            // guess exits, tidy, both ways, and the two commands (the transcript's two options are for starting)
+            tips.Count.ShouldBe(5);
+            tips.ShouldAllBe(tip => !string.IsNullOrWhiteSpace(tip.Text));
+            tips.ShouldContain(tip => tip.Text!.Contains("way back"));
         }
         finally
         {
