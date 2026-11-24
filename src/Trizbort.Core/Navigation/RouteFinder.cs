@@ -95,7 +95,8 @@ public static class RouteFinder
       // a stub (an exit not yet explored) or a loop leads nowhere new
       if (start == null || end == null || start == end) continue;
       var recorded = !string.IsNullOrEmpty(connection.AutomapWays);
-      foreach (var way in JoinWays.Of(connection))
+      var joinWays = JoinWays.Of(connection);
+      foreach (var way in joinWays)
       {
         // a one-way join leads only from its start
         if (!way.AtStart && connection.Flow == ConnectionFlow.OneWay) continue;
@@ -109,6 +110,23 @@ public static class RouteFinder
                        way.Kind switch { JoinWayKind.Direction => 0, JoinWayKind.Command => 0.01, _ => 0.02 };
         if (!ways.TryGetValue(from, out var leaving)) ways[from] = leaving = new List<(RouteStep, double)>();
         leaving.Add((new RouteStep(from, to, command, assumed, connection), stepCost));
+      }
+
+      // a command seen one way only, on a join drawn both ways, with no way back recorded: the same command back, as
+      // the map reads ("xyzzy" from the debris room to the building, and so xyzzy back). Assumed, so it shows as not
+      // yet tried; make the join one-way where it isn't so. Lee, 24 Nov 2026.
+      if (connection.Flow == ConnectionFlow.OneWay) continue;
+      foreach (var atStart in new[] { true, false })
+      {
+        if (joinWays.Any(way => way.AtStart == !atStart)) continue;
+        foreach (var way in joinWays.Where(way => way.AtStart == atStart && way.IsCommand))
+        {
+          var command = Command(way);
+          if (command == null) continue;
+          var (from, to) = atStart ? (end, start) : (start, end);
+          if (!ways.TryGetValue(from, out var leaving)) ways[from] = leaving = new List<(RouteStep, double)>();
+          leaving.Add((new RouteStep(from, to, command, true, connection), AssumedCost + 0.01));
+        }
       }
     }
 

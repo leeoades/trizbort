@@ -2284,11 +2284,12 @@ public sealed class Automap : IAutomapController
     if (from == null || (from == here && arrival.Direction == null && arrival.Journey == null)) return null;
 
     // the way the player went from the room they came from (up, from the chimney below, when automap took it for a
-    // loop back into the same chimney), else beside it
+    // loop back into the same chimney), else beside it (Lee, 24 Nov 2026: beside the room left, not the one automap
+    // wrongly took it for, wherever that is on the map)
     var name = SplitName(here.Name);
     var room = arrival.Direction is { } way
       ? _canvas.CreateRoom(from, way, name, name)
-      : _canvas.CreateRoom(here, name);
+      : _canvas.CreateRoom(from, name);
     if (!string.IsNullOrWhiteSpace(arrival.Description)) room.AddDescription(arrival.Description);
     room.IsDark = here.IsDark;
     if (arrival.Direction is { } direction)
@@ -2332,10 +2333,23 @@ public sealed class Automap : IAutomapController
   /// </summary>
   public Rect? NewRoomPreview()
   {
+    if (_canvas == null) return null;
+    // putting a guess right (Wrong Room: Choose...): where Split would put it, the way the player went from the room
+    // they came from, not the last move's (Lee, 24 Nov 2026: east from the maze, previewed to the west, as "drop
+    // rod" came between)
+    if (_correcting is { } arrival)
+    {
+      var source = _canvas.ResolveRoom(arrival.From);
+      return _canvas.NewRoomBounds(source, arrival.Direction);
+    }
+
     var from = CurrentRoom;
-    if (from == null || _canvas == null) return null;
+    if (from == null) return null;
     return _canvas.NewRoomBounds(from, _lastMoveDirection);
   }
+
+  /// <summary>The guess being put right while Wrong Room: Choose... asks which room it is: for the preview.</summary>
+  private Arrival _correcting;
 
   /// <summary>
   ///   Whether the room automap has the player in can be split off as a different room (<see cref="SplitCurrentRoomAsync" />):
@@ -2399,7 +2413,13 @@ public sealed class Automap : IAutomapController
       var others = alike == 2
         ? "Another room on the map has its name"
         : $"{alike - 1} other rooms on the map have its name";
-      var lookAlike = alike > 1 ? $" Rooms called {CurrentRoom.Name} look alike, so it may be another." : string.Empty;
+      // Lee, 24 Nov 2026: not "Rooms called Kitchen look alike": say only what's so, that others share the name
+      var lookAlike = alike switch
+      {
+        2 => $" Another room on the map is also called {CurrentRoom.Name}, so it may be that one.",
+        > 2 => $" {Count(alike - 1)} other rooms on the map are also called {CurrentRoom.Name}, so it may be one of them.",
+        _ => string.Empty
+      };
       if (_arrival.New)
         return $"{start} from {fromName} led somewhere new to the map, so automap added {here}. {others}: it may be " +
                (alike == 2 ? "that one" : "one of them") + ", described differently.";
@@ -2407,10 +2427,18 @@ public sealed class Automap : IAutomapController
         return (from == CurrentRoom
           ? $"{start} from {here} leads back to itself on the map, so automap kept you there."
           : $"{start} from {fromName} leads to {here} on the map, so automap took you there.") + lookAlike;
-      return $"{start} from {fromName} isn't on the map yet. Automap took you to be in {here}, already on the map, " +
+      // a way not tried before ("unexplored": Lee, 24 Nov 2026, as "isn't on the map yet" jarred once it was drawn)
+      if (from == CurrentRoom)
+        return $"{start} from {here} was unexplored, and led somewhere with the same name and description, so it " +
+               "looks like it loops back: automap kept you there." + lookAlike;
+      return $"{start} from {fromName} was unexplored. Automap took you to be in {here}, already on the map, " +
              "as it has the same name and description." + lookAlike;
     }
   }
+
+  /// <summary>A count to start a sentence: "Two", up to "Nine", then figures.</summary>
+  private static string Count(int n) =>
+    n is >= 2 and <= 9 ? new[] { "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine" }[n - 2] : n.ToString();
 
   /// <summary>Automap guessed right: the guess is put away.</summary>
   public void AcceptArrival()
@@ -2431,7 +2459,17 @@ public sealed class Automap : IAutomapController
     var others = Named(here.Name).Where(room => room != here && (arrival.New ||
       string.IsNullOrWhiteSpace(arrival.Description) || room.Descriptions.Count == 0 ||
       room.Descriptions.Any(description => SameFirstSentence(description, arrival.Description)))).ToList();
-    var choice = await Prompts.DisambiguateRoomAsync(here.Name, arrival.Description, others, token);
+    RoomDisambiguation choice;
+    _correcting = arrival;
+    try
+    {
+      choice = await Prompts.DisambiguateRoomAsync(here.Name, arrival.Description, others, token);
+    }
+    finally
+    {
+      _correcting = null;
+    }
+
     token.ThrowIfCancellationRequested();
     if (choice.Skip) return false;
     // a new room it is: as automap had it

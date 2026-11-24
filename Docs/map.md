@@ -81,5 +81,7 @@ Need to get from one room to another? Right-click where you want to go and choos
 - Otherwise, choose **Navigate from Here...** on the room to start from.
 - **Copy Commands** copies them, one a line, to paste into the game.
 - Right-click a step and choose **Avoid This Route** to go another way.
+- A command automap has only seen one way, on a join drawn both ways ("xyzzy"), is taken to work back too, as a way
+  not yet tried. Make the join one-way if it doesn't.
 
 Next: [Labels](labels.md)
