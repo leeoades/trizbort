@@ -32,6 +32,13 @@ public interface IDialogService
     Task<bool> ShowElementPropertiesAsync(Window? owner, Element element);
 
     Task<bool> ShowMapSettingsAsync(Window? owner);
+
+    /// <summary>
+    ///   Map Settings at the Regions tab with a new region selected to name. Null when cancelled; otherwise the
+    ///   region's name and the edit that applies the settings (for the session to run as one undo step).
+    /// </summary>
+    Task<Trizbort.Editor.NewRegionChoice?> ShowNewRegionAsync(Window owner) =>
+        Task.FromResult<Trizbort.Editor.NewRegionChoice?>(null);
     Task<bool> ShowMapThemeAsync(Window? owner);
     Task<bool> ShowAppSettingsAsync(Window? owner);
     Task<AutomapSettings?> ShowAutomapSettingsAsync(Window? owner);

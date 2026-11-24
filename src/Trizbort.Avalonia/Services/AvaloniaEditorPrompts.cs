@@ -7,6 +7,7 @@ using Trizbort.Avalonia.ViewModels;
 using Trizbort.Avalonia.Views.Dialogs;
 using Trizbort.Domain.Elements;
 using Trizbort.Editor;
+using Region = Trizbort.Domain.Misc.Region;
 
 namespace Trizbort.Avalonia.Services;
 
@@ -605,18 +606,38 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
         return Dispatcher.UIThread.InvokeAsync(() => ShowRegionPickerAsync(owner, regions, current));
     }
 
+    public Task<NewRegionChoice?> AddRegionAsync(CancellationToken token = default)
+    {
+        var owner = _getOwner();
+        if (owner == null || _dialogService == null)
+        {
+            return Task.FromResult<NewRegionChoice?>(null);
+        }
+
+        return OnUiThreadAsync(() => _dialogService.ShowNewRegionAsync(owner));
+    }
+
     private static async Task<string?> ShowRegionPickerAsync(Window owner, IReadOnlyList<string> regions, string current)
     {
-        var list = new ListBox { ItemsSource = regions.ToList(), SelectedItem = current, MinHeight = 160 };
+        // shown as people know them ("No Region"); chosen by the name in the file
+        var names = regions.ToList();
+        var shown = names.Select(Region.DisplayName).ToList();
+        var at = names.FindIndex(n => string.Equals(n, string.IsNullOrEmpty(current) ? Region.DefaultRegion : current,
+            StringComparison.OrdinalIgnoreCase));
+        var list = new ListBox { ItemsSource = shown, SelectedIndex = at, MinHeight = 160 };
         var ok = new Button { Content = "_OK", IsDefault = true, MinWidth = 80 };
         var cancel = new Button { Content = "_Cancel", IsCancel = true, MinWidth = 80 };
-        var buttons = new StackPanel
+        // Lee, 24 Nov 2026: a new region for these rooms, made in Map Settings
+        var add = new Button { Content = "_New Region...", Name = "NewRegionButton" };
+        var buttons = new DockPanel { Children = { add } };
+        var right = new StackPanel
         {
             Orientation = global::Avalonia.Layout.Orientation.Horizontal,
             HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Right,
             Spacing = 8,
             Children = { ok, cancel }
         };
+        buttons.Children.Add(right);
         var panel = new DockPanel { Margin = new global::Avalonia.Thickness(12), LastChildFill = true };
         DockPanel.SetDock(buttons, global::Avalonia.Controls.Dock.Bottom);
         buttons.Margin = new global::Avalonia.Thickness(0, 12, 0, 0);
@@ -633,13 +654,15 @@ public sealed class AvaloniaEditorPrompts(Func<Window?> getOwner, IDialogService
             Content = panel
         };
         DialogFocus.Prepare(dialog);
-        ok.Click += (_, _) => dialog.Close(list.SelectedItem as string);
+        string? Chosen() => list.SelectedIndex >= 0 ? names[list.SelectedIndex] : null;
+        ok.Click += (_, _) => dialog.Close(Chosen());
         cancel.Click += (_, _) => dialog.Close(null);
+        add.Click += (_, _) => dialog.Close(NewRegionChoice.Chosen);
         list.DoubleTapped += (_, _) =>
         {
-            if (list.SelectedItem is string)
+            if (Chosen() is { } name)
             {
-                dialog.Close(list.SelectedItem as string);
+                dialog.Close(name);
             }
         };
         return await dialog.ShowDialog<string?>(owner);

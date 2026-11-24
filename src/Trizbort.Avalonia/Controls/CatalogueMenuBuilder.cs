@@ -410,16 +410,22 @@ public static class CatalogueMenuBuilder
 
         foreach (var child in command.DynamicChildren(session))
         {
+            if (child.SeparatorBefore && parent.Items.Count > 0) parent.Items.Add(new Separator());
             var execute = child.Execute;
+            var executeAsync = child.ExecuteAsync;
             var item = new MenuItem
             {
                 // Dynamic titles are data, not mnemonics.
                 Header = child.Title.Replace("_", "__"),
-                ToggleType = MenuItemToggleType.CheckBox,
-                IsChecked = child.IsChecked,
+                ToggleType = child.IsCheckable ? MenuItemToggleType.CheckBox : MenuItemToggleType.None,
+                IsChecked = child.IsCheckable && child.IsChecked,
                 IsEnabled = child.IsEnabled
             };
-            item.Click += (_, _) => execute?.Invoke(session);
+            item.Click += async (_, _) =>
+            {
+                if (executeAsync != null) await executeAsync(session);
+                else execute?.Invoke(session);
+            };
             parent.Items.Add(item);
         }
     }

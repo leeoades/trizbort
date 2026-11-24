@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Trizbort.Automap;
 using Trizbort.Avalonia.Drawing;
@@ -473,6 +474,39 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
             _commandService.Session.Execute("Edit map settings", viewModel.ApplyToSettings);
         }
         return result;
+    }
+
+    public async Task<Trizbort.Editor.NewRegionChoice?> ShowNewRegionAsync(Window owner)
+    {
+        var scope = _serviceScopeFactory.CreateScope();
+        var viewModel = scope.ServiceProvider.GetRequiredService<MapSettingsViewModel>();
+        viewModel.Initialize();
+        viewModel.SelectedTabIndex = MapSettingsViewModel.RegionsTab;
+        viewModel.AddRegion();
+        var added = viewModel.SelectedRegion;
+
+        var dialog = new MapSettingsDialog { DataContext = viewModel };
+        // the new region's name, ready to type over
+        dialog.Opened += (_, _) => Dispatcher.UIThread.Post(() =>
+        {
+            var box = dialog.FindControl<TextBox>("RegionNameBox");
+            box?.Focus();
+            box?.SelectAll();
+        }, DispatcherPriority.Loaded);
+
+        if (!await dialog.ShowDialog<bool>(owner))
+        {
+            scope.Dispose();
+            return null;
+        }
+
+        // still there (it could have been deleted again): its name as finally typed
+        var name = added != null && viewModel.Regions.Contains(added) ? added.Name : null;
+        return new Trizbort.Editor.NewRegionChoice(name, () =>
+        {
+            viewModel.ApplyToSettings();
+            scope.Dispose();
+        });
     }
 
     public async Task<bool> ShowMapThemeAsync(Window? owner)

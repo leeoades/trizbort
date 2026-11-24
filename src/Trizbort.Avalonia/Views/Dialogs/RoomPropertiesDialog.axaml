@@ -203,7 +203,7 @@
                                     <Border Width="24" Height="14" BorderThickness="1"
                                             BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                             Background="{Binding ., Converter={x:Static conv:RegionNameToBrushConverter.Instance}}" />
-                                    <TextBlock Text="{Binding .}" />
+                                    <TextBlock Text="{Binding ., Converter={x:Static conv:RegionDisplayNameConverter.Instance}}" />
                                 </StackPanel>
                             </DataTemplate>
                         </ComboBox.ItemTemplate>

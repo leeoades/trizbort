@@ -98,6 +98,15 @@ public interface IEditorPrompts
   }
 
   /// <summary>
+  ///   Opens Map Settings at the Regions tab with a new region, for the selected rooms. Returns null when cancelled;
+  ///   otherwise the new region's name (null if it was deleted again) and the edit that applies the settings.
+  /// </summary>
+  Task<NewRegionChoice> AddRegionAsync(CancellationToken token = default)
+  {
+    return Task.FromResult<NewRegionChoice>(null);
+  }
+
+  /// <summary>
   ///   Quick Find: asks for the text to search for, offering <paramref name="suggestions" /> for completion. Returns
   ///   the entered text, or null when cancelled. Default implementation cancels.
   /// </summary>
@@ -210,4 +219,11 @@ public readonly record struct RoomDisambiguation(Room Chosen, bool NewRoom, bool
 
   /// <summary>Cancelled: map nothing for this heading.</summary>
   public static RoomDisambiguation Nothing() => new(null, false, false, true);
+}
+
+/// <summary>A region made in Map Settings for the selected rooms (<see cref="IEditorPrompts.AddRegionAsync" />).</summary>
+public sealed record NewRegionChoice(string Name, System.Action ApplySettings)
+{
+  /// <summary>What <see cref="IEditorPrompts.ChooseRegionAsync" /> returns for its New Region... button.</summary>
+  public const string Chosen = "\u0001new region";
 }

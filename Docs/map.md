@@ -36,9 +36,11 @@ To bend a join, select it and drag the handle in its middle.
 
 ## Regions
 
-A region is a group of rooms drawn in their own colours: "Above ground", "The cellars". Set them up in
-**Map Settings > Regions**, then choose **Change Region** (**Shift+F2**) on a room. **Ctrl+Shift+A** selects every
-room in the regions you pick.
+A region is a group of rooms drawn in their own colours: "Above ground", "The cellars". Select some rooms,
+right-click and choose **Set Region**, then a region, or **Add New Region...** to make one for them: name it and
+choose its colours, and press OK. **Change Region** (**Shift+F2**) does the same from the keyboard.
+
+Rooms not in a region are in **No Region**. Change or delete regions in **Map Settings > Regions**.
 
 ## Backgrounds
 

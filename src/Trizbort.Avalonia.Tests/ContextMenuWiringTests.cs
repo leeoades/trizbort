@@ -71,7 +71,10 @@ public class ContextMenuWiringTests
         Plain(((MenuItem)setRegion.Parent!).Header).ShouldBe("Rooms");
         setRegion.IsEnabled.ShouldBeTrue();
         setRegion.Items.OfType<MenuItem>().Select(m => Plain(m.Header))
-            .ShouldBe(new[] { Region.DefaultRegion, "Alpha", "Zebra" });
+            .ShouldBe(new[] { "No Region", "Alpha", "Zebra", "Add New Region..." });
+        // a separator before the action, which has no tick
+        setRegion.Items.OfType<Separator>().Count().ShouldBe(1);
+        setRegion.Items.OfType<MenuItem>().Last().ToggleType.ShouldBe(MenuItemToggleType.None);
         setRegion.Items.OfType<MenuItem>().Where(m => m.IsChecked).Select(m => Plain(m.Header))
             .ShouldBe(new[] { "Alpha" });
     }
