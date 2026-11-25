@@ -1,5 +1,6 @@
 using System.Drawing;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -92,13 +93,20 @@ public class LabelStylesTests
             box.ShouldNotBeNull();
             box.IsEffectivelyVisible.ShouldBeTrue(string.Join(", ",
                 dialog.GetVisualDescendants().OfType<TextBox>().Select(b => b.Name)));
+            dialog.Activate();
             box.Focus();
-            foreach (var text in new[] { "P", "Po", "Pos", "Post" })
+            box.SelectAll();
+            Dispatcher.UIThread.RunJobs();
+            box.IsFocused.ShouldBeTrue("to start with");
+
+            foreach (var letter in new[] { "P", "o", "s", "t" })
             {
-                box.Text = text;
+                dialog.KeyTextInput(letter);
                 Dispatcher.UIThread.RunJobs();
-                box.IsFocused.ShouldBeTrue($"after typing to \"{text}\"");
+                box.IsFocused.ShouldBeTrue($"after typing {letter}");
             }
+
+            box.Text.ShouldBe("Post");
         }
         finally
         {
