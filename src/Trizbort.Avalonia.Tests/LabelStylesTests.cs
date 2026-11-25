@@ -91,8 +91,8 @@ public class LabelStylesTests
             tabs.SelectedIndex = MapSettingsViewModel.StylesTab;
             Settle(dialog);
             var box = dialog.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(b => b.Name == "StyleNameBox");
-            box.ShouldNotBeNull($"tab {tabs.SelectedIndex}, boxes: " + string.Join(", ",
-                dialog.GetVisualDescendants().OfType<TextBox>().Select(b => b.Name)));
+            box.ShouldNotBeNull($"tab {tabs.SelectedIndex}, {dialog.Bounds}, content {tabs.SelectedContent?.GetType().Name}, tree: " +
+                string.Join(", ", dialog.GetVisualDescendants().Select(v => v.GetType().Name + (v is Control { Name: { } n } ? ":" + n : "")).Take(80)));
             // click into the box, as you would
             var middle = global::Avalonia.VisualExtensions.TranslatePoint(box, new global::Avalonia.Point(box.Bounds.Width / 2, box.Bounds.Height / 2), dialog)!.Value;
             dialog.MouseDown(middle, MouseButton.Left);
