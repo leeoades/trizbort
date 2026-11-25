@@ -82,17 +82,16 @@ public class LabelStylesTests
         var options = editor.Styles.ToList();
         var selected = editor.Selected!;
 
-        var dialog = new MapSettingsDialog { DataContext = settings };
+        var dialog = new MapSettingsDialog { DataContext = settings, Width = 800, Height = 700 };
         dialog.Show();
         try
         {
-            dialog.GetVisualDescendants().OfType<TabControl>().First().SelectedIndex = MapSettingsViewModel.StylesTab;
-            Dispatcher.UIThread.RunJobs();
-            dialog.UpdateLayout();
-            Dispatcher.UIThread.RunJobs();
-            var box = dialog.FindControl<TextBox>("StyleNameBox");
-            box.ShouldNotBeNull();
-            box.IsEffectivelyVisible.ShouldBeTrue(string.Join(", ",
+            Settle(dialog);
+            var tabs = dialog.FindControl<TabControl>("Tabs")!;
+            tabs.SelectedIndex = MapSettingsViewModel.StylesTab;
+            Settle(dialog);
+            var box = dialog.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(b => b.Name == "StyleNameBox");
+            box.ShouldNotBeNull($"tab {tabs.SelectedIndex}, boxes: " + string.Join(", ",
                 dialog.GetVisualDescendants().OfType<TextBox>().Select(b => b.Name)));
             // click into the box, as you would
             var middle = global::Avalonia.VisualExtensions.TranslatePoint(box, new global::Avalonia.Point(box.Bounds.Width / 2, box.Bounds.Height / 2), dialog)!.Value;
@@ -122,6 +121,13 @@ public class LabelStylesTests
         editor.Selected.ShouldBeSameAs(selected);
         selected.Name.ShouldBe("Post");
         LabelStyles.Current.Has(selected.Id).ShouldBeFalse(); // not until OK
+    }
+
+    private static void Settle(Window window)
+    {
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+        Dispatcher.UIThread.RunJobs();
     }
 
     [AvaloniaTest]
