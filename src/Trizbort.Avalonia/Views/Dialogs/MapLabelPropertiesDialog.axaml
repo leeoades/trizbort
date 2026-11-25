@@ -230,6 +230,34 @@
                         </ComboBox>
                     </Grid>
                     <TextBlock Classes="hint" Text="Shape applies to outline and background." />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Classes="field-label" Content="Text _across:" Target="{Binding #AlignCombo}" />
+                        <ComboBox Grid.Column="2" x:Name="AlignCombo" ItemsSource="{Binding AvailableAligns}"
+                                  SelectedItem="{Binding Align}" HorizontalAlignment="Left" Width="280">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Classes="field-label" Content="Text up/do_wn:" Target="{Binding #VerticalAlignCombo}" />
+                        <ComboBox Grid.Column="2" x:Name="VerticalAlignCombo" ItemsSource="{Binding AvailableVerticalAligns}"
+                                  SelectedItem="{Binding VerticalAlign}" HorizontalAlignment="Left" Width="280">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
 
                             <Button x:Name="ResetToStyleButton" Content="_Reset to Style" Command="{Binding ResetToStyleCommand}"
                                     IsEnabled="{Binding HasOwnLook}" HorizontalAlignment="Left" />

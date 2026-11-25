@@ -46,6 +46,8 @@ public partial class LabelStylesEditorViewModel : ViewModelBase
     [ObservableProperty] private bool _hasBackground;
     [ObservableProperty] private Color _backgroundColor;
     [ObservableProperty] private RoomShape _shape;
+    [ObservableProperty] private LabelAlign _align;
+    [ObservableProperty] private LabelVerticalAlign _verticalAlign;
 
     /// <summary>The selected style's look, for the preview.</summary>
     [ObservableProperty]
@@ -59,6 +61,11 @@ public partial class LabelStylesEditorViewModel : ViewModelBase
     [ObservableProperty] private string _backgroundFrom = string.Empty;
     [ObservableProperty] private string _backgroundColorFrom = string.Empty;
     [ObservableProperty] private string _shapeFrom = string.Empty;
+    [ObservableProperty] private string _alignFrom = string.Empty;
+    [ObservableProperty] private string _verticalAlignFrom = string.Empty;
+
+    public IReadOnlyList<LabelAlign> AvailableAligns { get; } = Enum.GetValues<LabelAlign>();
+    public IReadOnlyList<LabelVerticalAlign> AvailableVerticalAligns { get; } = Enum.GetValues<LabelVerticalAlign>();
 
     public bool CanDelete => Selected != null && Selected.Id != LabelStyle.DefaultId;
     public bool IsNotDefault => CanDelete;
@@ -155,6 +162,8 @@ public partial class LabelStylesEditorViewModel : ViewModelBase
     partial void OnHasBackgroundChanged(bool value) => Set(style => style.HasBackground = value);
     partial void OnBackgroundColorChanged(Color value) => Set(style => style.BackgroundColor = value);
     partial void OnShapeChanged(RoomShape value) => Set(style => style.Shape = value);
+    partial void OnAlignChanged(LabelAlign value) => Set(style => style.Align = value);
+    partial void OnVerticalAlignChanged(LabelVerticalAlign value) => Set(style => style.VerticalAlign = value);
 
     /// <summary>A value changed by hand: the style's own now.</summary>
     private void Set(Action<LabelStyle> set)
@@ -164,7 +173,7 @@ public partial class LabelStylesEditorViewModel : ViewModelBase
         ShowSelected();
     }
 
-    /// <summary>Takes a value from the base again: "font", "text", "outline", "outlineColour", "background", "backgroundColour" or "shape".</summary>
+    /// <summary>Takes a value from the base again: "font", "text", "outline", "outlineColour", "background", "backgroundColour", "shape", "align" or "verticalAlign".</summary>
     [RelayCommand]
     private void Reset(string what)
     {
@@ -183,6 +192,8 @@ public partial class LabelStylesEditorViewModel : ViewModelBase
             case "background": style.HasBackground = null; break;
             case "backgroundColour": style.BackgroundColor = null; break;
             case "shape": style.Shape = null; break;
+            case "align": style.Align = null; break;
+            case "verticalAlign": style.VerticalAlign = null; break;
         }
 
         ShowSelected();
@@ -225,6 +236,8 @@ public partial class LabelStylesEditorViewModel : ViewModelBase
             HasBackground = look.HasBackground;
             BackgroundColor = look.BackgroundColor;
             Shape = look.Shape == RoomShape.NotARoom ? RoomShape.SquareCorners : look.Shape;
+            Align = look.Align;
+            VerticalAlign = look.VerticalAlign;
 
             Bases.Clear();
             if (!style.IsDefault)
@@ -239,6 +252,8 @@ public partial class LabelStylesEditorViewModel : ViewModelBase
             BackgroundFrom = From(style, s => s.HasBackground != null);
             BackgroundColorFrom = From(style, s => s.BackgroundColor != null);
             ShapeFrom = From(style, s => s.Shape != null);
+            AlignFrom = From(style, s => s.Align != null);
+            VerticalAlignFrom = From(style, s => s.VerticalAlign != null);
         }
         finally
         {

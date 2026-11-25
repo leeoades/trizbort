@@ -36,13 +36,16 @@ public sealed class MarkdownLabelRenderer
     /// <summary>The link drawn at <paramref name="point" />, or null.</summary>
     public string? LinkAt(Point point) => _links.FirstOrDefault(link => link.Bounds.Contains(point)).Link;
 
+    /// <param name="align">Paragraphs and headings across the label (lists and tables stay on the left).</param>
     public static MarkdownLabelRenderer Lay(string text, Rect bounds, Typeface typeface, double fontSize, IBrush brush,
-        IBrush linkBrush, IPen rulePen)
+        IBrush linkBrush, IPen rulePen, TextAlignment align = TextAlignment.Left)
     {
-        var renderer = new MarkdownLabelRenderer();
+        var renderer = new MarkdownLabelRenderer { _align = align };
         renderer.Layout(LabelMarkdown.Parse(text), bounds, typeface, fontSize, brush, linkBrush, rulePen);
         return renderer;
     }
+
+    private TextAlignment _align = TextAlignment.Left;
 
     public void Draw(AvaloniaDrawingContext context)
     {
@@ -70,7 +73,7 @@ public sealed class MarkdownLabelRenderer
                 case MarkdownBlockKind.Heading:
                 {
                     var size = fontSize * block.Level switch { 1 => 1.6, 2 => 1.3, _ => 1.12 };
-                    var text = Text(block.Spans, typeface, size, brush, linkBrush, width, true);
+                    var text = Text(block.Spans, typeface, size, brush, linkBrush, width, true, _align);
                     Place(text, block.Spans, bounds.Left, y);
                     y += text.Height + fontSize * 0.25;
                     break;
@@ -95,7 +98,7 @@ public sealed class MarkdownLabelRenderer
                     break;
                 default:
                 {
-                    var text = Text(block.Spans, typeface, fontSize, brush, linkBrush, width, false);
+                    var text = Text(block.Spans, typeface, fontSize, brush, linkBrush, width, false, _align);
                     Place(text, block.Spans, bounds.Left, y);
                     y += text.Height;
                     break;
@@ -128,7 +131,7 @@ public sealed class MarkdownLabelRenderer
 
     /// <summary>The spans as one piece of text, each in its style, wrapped at <paramref name="width" />.</summary>
     private static FormattedText Text(IReadOnlyList<MarkdownSpan> spans, Typeface typeface, double size, IBrush brush,
-        IBrush linkBrush, double width, bool bold)
+        IBrush linkBrush, double width, bool bold, TextAlignment align = TextAlignment.Left)
     {
         var whole = string.Concat(spans.Select(span => span.Text));
         // an empty line still has a line's height
@@ -136,7 +139,7 @@ public sealed class MarkdownLabelRenderer
             FlowDirection.LeftToRight, typeface, size, brush)
         {
             MaxTextWidth = width,
-            TextAlignment = TextAlignment.Left
+            TextAlignment = double.IsInfinity(width) ? TextAlignment.Left : align
         };
         if (bold) text.SetFontWeight(FontWeight.Bold);
         var start = 0;

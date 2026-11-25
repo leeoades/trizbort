@@ -14,7 +14,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
-- **Label styles.** A label's look (font and size, bold and italic, text colour, outline, background and shape)
+- **Label styles.** A label's look (font and size, bold and italic, text colour, outline, background, shape, and where the
+  text sits: left, centre or right, and top, middle or bottom)
   comes from a style kept in the map. Choose it on the label's **Style** tab, which shows the label's text in each
   style; **Edit Styles...** there, or Map
   Settings > **Styles**, makes and changes them. A style is **based on** another and sets only what differs, the rest

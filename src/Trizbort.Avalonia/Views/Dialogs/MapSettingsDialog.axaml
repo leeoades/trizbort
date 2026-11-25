@@ -329,7 +329,7 @@
                             <TextBlock Classes="hint" TextWrapping="Wrap"
                                        Text="A style takes everything it doesn't set from the style it's based on. Change a value to set it here; Reset takes it from the base again." />
 
-                            <Grid ColumnDefinitions="Auto,12,Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                            <Grid ColumnDefinitions="Auto,12,Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
                                 <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Font:" Target="{Binding #StyleFontButton}" />
                                 <controls:FontPickerButton Grid.Row="0" Grid.Column="2" x:Name="StyleFontButton" SelectedFont="{Binding LabelStyles.Font}" HorizontalAlignment="Left" />
                                 <TextBlock Grid.Row="0" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.FontFrom}" VerticalAlignment="Center"
@@ -395,6 +395,32 @@
                                            IsVisible="{Binding LabelStyles.ShapeFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                 <Button Grid.Row="6" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="shape"
                                         IsVisible="{Binding LabelStyles.ShapeFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                                <Label Grid.Row="7" Grid.Column="0" Classes="field-label" Content="Text _across:" Target="{Binding #StyleAlignCombo}" />
+                                <ComboBox Grid.Row="7" Grid.Column="2" x:Name="StyleAlignCombo" ItemsSource="{Binding LabelStyles.AvailableAligns}"
+                                          SelectedItem="{Binding LabelStyles.Align}" MinWidth="160">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock Grid.Row="7" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.AlignFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.AlignFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="7" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="align"
+                                        IsVisible="{Binding LabelStyles.AlignFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                                <Label Grid.Row="8" Grid.Column="0" Classes="field-label" Content="Text up/do_wn:" Target="{Binding #StyleVerticalAlignCombo}" />
+                                <ComboBox Grid.Row="8" Grid.Column="2" x:Name="StyleVerticalAlignCombo" ItemsSource="{Binding LabelStyles.AvailableVerticalAligns}"
+                                          SelectedItem="{Binding LabelStyles.VerticalAlign}" MinWidth="160">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock Grid.Row="8" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.VerticalAlignFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.VerticalAlignFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="8" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="verticalAlign"
+                                        IsVisible="{Binding LabelStyles.VerticalAlignFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
                                         IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
                                         ToolTip.Tip="Take this from the style it's based on again" />
                             </Grid>

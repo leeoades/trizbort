@@ -293,5 +293,34 @@ public class LabelStylesTests
         vm.Shape.ShouldBe(RoomShape.Ellipse);
         LabelStyles.Current.Styles.Count.ShouldBe(1);
     }
-}
 
+    [AvaloniaTest]
+    public void Alignment_Usual_IsCentredForPlainText_AndTopLeftForMarkdown()
+    {
+        var usual = LabelStyles.Resolve(LabelStyle.DefaultId);
+        Trizbort.Avalonia.Drawing.MapLabelDrawingAdapter.PlaceOf(usual, false)
+            .ShouldBe((global::Avalonia.Media.TextAlignment.Center, 0.5));
+        Trizbort.Avalonia.Drawing.MapLabelDrawingAdapter.PlaceOf(usual, true)
+            .ShouldBe((global::Avalonia.Media.TextAlignment.Left, 0.0));
+
+        var set = usual with { Align = LabelAlign.Right, VerticalAlign = LabelVerticalAlign.Bottom };
+        Trizbort.Avalonia.Drawing.MapLabelDrawingAdapter.PlaceOf(set, true)
+            .ShouldBe((global::Avalonia.Media.TextAlignment.Right, 1.0));
+    }
+
+    [AvaloniaTest]
+    public void Editor_Alignment_SetAndReset()
+    {
+        var editor = Editor();
+        editor.AddStyleCommand.Execute(null);
+        editor.AlignFrom.ShouldNotBeEmpty();
+        editor.Align = LabelAlign.Left;
+        editor.VerticalAlign = LabelVerticalAlign.Top;
+        editor.AlignFrom.ShouldBeEmpty();
+        editor.Look!.VerticalAlign.ShouldBe(LabelVerticalAlign.Top);
+
+        editor.ResetCommand.Execute("align");
+        editor.Align.ShouldBe(LabelAlign.Usual);
+        editor.VerticalAlign.ShouldBe(LabelVerticalAlign.Top);
+    }
+}

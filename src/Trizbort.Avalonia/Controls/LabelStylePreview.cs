@@ -66,12 +66,15 @@ public sealed class LabelStylePreview : Control
         if (fill != null || pen != null) context.DrawGeometry(fill, pen, geometry);
 
         var font = new ThemeFont { Name = look.FontName, Size = look.FontSize, Style = look.FontStyle };
+        var (across, down) = MapLabelDrawingAdapter.PlaceOf(look, false);
         var text = new FormattedText(Sample, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font.ToTypeface(),
             look.FontSize, look.TextColor.ToBrush())
         {
-            TextAlignment = TextAlignment.Center,
+            TextAlignment = across,
             MaxTextWidth = Math.Max(1, bounds.Width - 10)
         };
-        context.DrawText(text, new Point(bounds.Left + 5, bounds.Top + Math.Max(0, (bounds.Height - text.Height) / 2)));
+        var inset = look.Shape == RoomShape.Ellipse ? 11.5 : 5;
+        var room = Math.Max(0, bounds.Height - inset * 2 - text.Height);
+        context.DrawText(text, new Point(bounds.Left + 5, bounds.Top + inset + room * down));
     }
 }

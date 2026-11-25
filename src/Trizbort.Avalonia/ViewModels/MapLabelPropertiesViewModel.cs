@@ -30,6 +30,16 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private RoomShape _shape = RoomShape.SquareCorners;
 
+    /// <summary>Where the text sits across the label, and up and down it (Lee, 25 Nov 2026).</summary>
+    [ObservableProperty]
+    private LabelAlign _align;
+
+    [ObservableProperty]
+    private LabelVerticalAlign _verticalAlign;
+
+    public IReadOnlyList<LabelAlign> AvailableAligns { get; } = Enum.GetValues<LabelAlign>();
+    public IReadOnlyList<LabelVerticalAlign> AvailableVerticalAligns { get; } = Enum.GetValues<LabelVerticalAlign>();
+
     [ObservableProperty]
     private BorderDashStyle _borderStyle = BorderDashStyle.Solid;
 
@@ -125,6 +135,8 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     partial void OnBorderColorChanged(Color value) => Own(() => _own.BorderColor = value);
     partial void OnBackgroundColorChanged(Color value) => Own(() => _own.BackgroundColor = value);
     partial void OnShapeChanged(RoomShape value) => Own(() => _own.Shape = value);
+    partial void OnAlignChanged(LabelAlign value) => Own(() => _own.Align = value);
+    partial void OnVerticalAlignChanged(LabelVerticalAlign value) => Own(() => _own.VerticalAlign = value);
 
     partial void OnFontChanged(FontSpec value) => Own(() =>
     {
@@ -159,6 +171,8 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
             BackgroundColor = look.BackgroundColor;
             Shape = look.Shape == RoomShape.NotARoom ? RoomShape.SquareCorners : look.Shape;
             Font = new FontSpec(look.FontName, look.FontSize, look.Bold, look.Italic);
+            Align = look.Align;
+            VerticalAlign = look.VerticalAlign;
         }
         finally
         {

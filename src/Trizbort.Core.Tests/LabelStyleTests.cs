@@ -139,6 +139,39 @@ public class LabelStyleTests : IsolatedProjectTests
   }
 
   [Test]
+  public void Alignment_IsUsualUntilSet_FollowsTheChain_AndIsSavedAndLoaded()
+  {
+    // Lee, 25 Nov 2026: horizontal and vertical text alignment
+    Settings.Reset();
+    Styles.Resolve(LabelStyle.DefaultId).Align.ShouldBe(LabelAlign.Usual);
+    Styles.Resolve(LabelStyle.DefaultId).VerticalAlign.ShouldBe(LabelVerticalAlign.Usual);
+
+    var sticky = Styles.Add("Sticky", LabelStyle.DefaultId);
+    sticky.Align = LabelAlign.Left;
+    sticky.VerticalAlign = LabelVerticalAlign.Top;
+    var corner = Styles.Add("Corner", sticky.Id);
+    corner.Align = LabelAlign.Right;
+    Styles.Resolve(corner.Id).Align.ShouldBe(LabelAlign.Right);
+    Styles.Resolve(corner.Id).VerticalAlign.ShouldBe(LabelVerticalAlign.Top);
+
+    var label = new MapLabel(Project.Current) { Text = "Note", StyleId = corner.Id };
+    label.Own = new LabelStyle { VerticalAlign = LabelVerticalAlign.Bottom, Align = LabelAlign.Right };
+    label.TrimOwnToStyle();
+    label.Own.Align.ShouldBeNull(); // the style says so already
+    Project.Current.Elements.Add(label);
+
+    var path = Files.File("aligned.trizbort");
+    new LegacyMapFileEngine(Project.Current).Save(path).ShouldBeTrue();
+    Settings.Reset();
+    var loaded = new Project();
+    PersistenceRegressionTests.Load(loaded, path);
+    var back = loaded.Elements.OfType<MapLabel>().Single();
+    back.Look.Align.ShouldBe(LabelAlign.Right);
+    back.Look.VerticalAlign.ShouldBe(LabelVerticalAlign.Bottom);
+    LabelStyles.Find(sticky.Id).Align.ShouldBe(LabelAlign.Left);
+  }
+
+  [Test]
   public void NewStyleNames_AreNotReused()
   {
     Settings.Reset();

@@ -33,8 +33,9 @@ with it.
 ![The label's Style tab: the label shown in each style.](images/label-style.png)
 
 **Edit Styles...** opens the styles in Map Settings (see [Settings](settings.md#label-styles)). A style sets the font
-and size, bold and italic, the text colour, the outline, the background and the shape (straight edges, rounded,
-ellipse or octagon).
+and size, bold and italic, the text colour, the outline, the background, the shape (straight edges, rounded,
+ellipse or octagon), and where the text sits across and up and down the label. **Usual** is as labels have always
+been: centred, or top left for Markdown.
 
 If one label really must be different, choose **Modify this label's appearance...**. It's better to make a style, so
 labels stay alike: **Create a New Style...** there makes one with the label's look, and the label then uses it.

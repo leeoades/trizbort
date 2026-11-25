@@ -38,12 +38,18 @@ public sealed class LabelStyle
   public Color? BackgroundColor { get; set; }
   public RoomShape? Shape { get; set; }
 
+  /// <summary>Where the text sits across the label.</summary>
+  public LabelAlign? Align { get; set; }
+
+  /// <summary>Where the text sits up and down the label.</summary>
+  public LabelVerticalAlign? VerticalAlign { get; set; }
+
   public bool IsDefault => Id == DefaultId;
 
   /// <summary>True when it sets nothing of its own.</summary>
   public bool IsEmpty => FontName == null && FontSize == null && Bold == null && Italic == null && TextColor == null &&
                          BorderStyle == null && BorderColor == null && HasBackground == null &&
-                         BackgroundColor == null && Shape == null;
+                         BackgroundColor == null && Shape == null && Align == null && VerticalAlign == null;
 
   public LabelStyle Clone() => (LabelStyle)MemberwiseClone();
 
@@ -60,6 +66,8 @@ public sealed class LabelStyle
     HasBackground = other.HasBackground ?? HasBackground;
     BackgroundColor = other.BackgroundColor ?? BackgroundColor;
     Shape = other.Shape ?? Shape;
+    Align = other.Align ?? Align;
+    VerticalAlign = other.VerticalAlign ?? VerticalAlign;
   }
 
   /// <summary>Writes the values it sets as attributes, each name with <paramref name="prefix" /> before it.</summary>
@@ -75,6 +83,8 @@ public sealed class LabelStyle
     if (HasBackground is { } background) scribe.Attribute(prefix + "background", background);
     if (BackgroundColor is { } fill) scribe.Attribute(prefix + "backgroundColor", fill);
     if (Shape is { } shape) scribe.Attribute(prefix + "shape", shape.ToString());
+    if (Align is { } align) scribe.Attribute(prefix + "align", align.ToString());
+    if (VerticalAlign is { } vertical) scribe.Attribute(prefix + "verticalAlign", vertical.ToString());
   }
 
   /// <summary>Reads the values written by <see cref="SaveValues" />; anything missing stays from the base.</summary>
@@ -93,6 +103,8 @@ public sealed class LabelStyle
     if (Text("backgroundColor") is { Length: > 0 })
       BackgroundColor = element.Attribute(prefix + "backgroundColor").ToColor(Color.White);
     if (Enum.TryParse<RoomShape>(Text("shape"), out var shape)) Shape = shape;
+    if (Enum.TryParse<LabelAlign>(Text("align"), out var align)) Align = align;
+    if (Enum.TryParse<LabelVerticalAlign>(Text("verticalAlign"), out var vertical)) VerticalAlign = vertical;
   }
 }
 
@@ -107,7 +119,9 @@ public sealed record ResolvedLabelStyle(
   Color BorderColor,
   bool HasBackground,
   Color BackgroundColor,
-  RoomShape Shape)
+  RoomShape Shape,
+  LabelAlign Align = LabelAlign.Usual,
+  LabelVerticalAlign VerticalAlign = LabelVerticalAlign.Usual)
 {
   public FontStyle FontStyle => (Bold ? FontStyle.Bold : FontStyle.Regular) | (Italic ? FontStyle.Italic : FontStyle.Regular);
 }
@@ -190,7 +204,9 @@ public sealed class LabelStyleSet
       Pick(style => style.BorderColor, Color.Black),
       Pick(style => style.HasBackground, false),
       Pick(style => style.BackgroundColor, Color.White),
-      Pick(style => style.Shape, RoomShape.SquareCorners));
+      Pick(style => style.Shape, RoomShape.SquareCorners),
+      Pick(style => style.Align, LabelAlign.Usual),
+      Pick(style => style.VerticalAlign, LabelVerticalAlign.Usual));
   }
 
   /// <summary>

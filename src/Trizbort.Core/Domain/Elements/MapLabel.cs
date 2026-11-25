@@ -273,5 +273,7 @@ public class MapLabel : Element, ISizeable
     if (_own.FontSize == style.FontSize) _own.FontSize = null;
     if (_own.Bold == style.Bold) _own.Bold = null;
     if (_own.Italic == style.Italic) _own.Italic = null;
+    if (_own.Align == style.Align) _own.Align = null;
+    if (_own.VerticalAlign == style.VerticalAlign) _own.VerticalAlign = null;
   }
 }
