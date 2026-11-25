@@ -95,7 +95,7 @@ public class LabelStylesTests
             box.IsEffectivelyVisible.ShouldBeTrue(string.Join(", ",
                 dialog.GetVisualDescendants().OfType<TextBox>().Select(b => b.Name)));
             // click into the box, as you would
-            var middle = box.TranslatePoint(new global::Avalonia.Point(box.Bounds.Width / 2, box.Bounds.Height / 2), dialog)!.Value;
+            var middle = global::Avalonia.VisualExtensions.TranslatePoint(box, new global::Avalonia.Point(box.Bounds.Width / 2, box.Bounds.Height / 2), dialog)!.Value;
             dialog.MouseDown(middle, MouseButton.Left);
             dialog.MouseUp(middle, MouseButton.Left);
             Dispatcher.UIThread.RunJobs();
