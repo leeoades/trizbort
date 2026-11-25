@@ -179,7 +179,11 @@ public static class MapLabelDrawingAdapter
     ///   wrap at the label's width). Plain text, centred: wide enough for its longest line, as tall as its lines.
     ///   Either way no wider than <see cref="WidestFitted" />, past which the text wraps.
     /// </summary>
-    public static CoreVector FitText(MapLabel label, CoreVector atLeast)
+    /// <param name="keepWidth">
+    ///   Only taller if need be: the text keeps the lines it's wrapped into (a new style, Lee, 25 Nov 2026), rather than
+    ///   the label widening to put it on one line.
+    /// </param>
+    public static CoreVector FitText(MapLabel label, CoreVector atLeast, bool keepWidth = false)
     {
         if (string.IsNullOrEmpty(label.Text)) return atLeast;
         var font = FontOf(label);
@@ -206,7 +210,7 @@ public static class MapLabelDrawingAdapter
             heightAt = across => Lay(Math.Max(1, across - inset * 2)).Height;
         }
 
-        if (natural + inset * 2 > width && width < WidestFitted)
+        if (!keepWidth && natural + inset * 2 > width && width < WidestFitted)
             width = (float)Math.Min(WidestFitted, Math.Ceiling(natural + inset * 2));
         var height = (float)Math.Ceiling(heightAt(width) + inset * 2);
         return new CoreVector(width, Math.Max(atLeast.Y, height));

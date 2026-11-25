@@ -33,6 +33,23 @@ public class MarkdownLabelTests
         renderer.LinkAt(new Point(bounds.Left + 1, bounds.Top + 1)).ShouldBeNull();
     }
 
+    /// <summary>Lee, 25 Nov 2026: a new style (a bigger font) doesn't widen a label to unwrap its sentence.</summary>
+    [AvaloniaTest]
+    public void ANewLook_KeepsTheLabelsWidth_AndItsLines_GrowingTallerIfNeedBe()
+    {
+        var size = new Trizbort.Domain.Misc.Vector(100, 40);
+        var label = new MapLabel(Project.Current) { Text = "This is a little sticky note" };
+        label.Own = new Trizbort.Setup.LabelStyle { FontSize = 18 };
+
+        MapLabelDrawingAdapter.FitText(label, size).X.ShouldBeGreaterThan(size.X); // typed: widened to fit
+        var kept = MapLabelDrawingAdapter.FitText(label, size, keepWidth: true);
+        kept.X.ShouldBe(size.X);
+        kept.Y.ShouldBeGreaterThan(size.Y);
+
+        var roomy = new Trizbort.Domain.Misc.Vector(100, 400);
+        MapLabelDrawingAdapter.FitText(label, roomy, keepWidth: true).ShouldBe(roomy);
+    }
+
     /// <summary>Lee, 22 Nov 2026: the label grows as its text does.</summary>
     [AvaloniaTest]
     public void ALabel_GrowsToFitItsText_AndItsTables_ButNoSmallerThanItWas()

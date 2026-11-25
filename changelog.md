@@ -23,7 +23,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   on its own with **Modify this label's appearance...** (and **Reset to Style**), but a style is the better way:
   **Create a New Style...** there makes a style with the label's look, and the label uses it. Labels in
   older maps keep how they look. Labels can now have their own font and size. Older versions open the map with each
-  label drawn as it is now. A theme sets the Default style's colours.
+  label drawn as it is now. A theme sets the Default style's colours. Choosing a style keeps a label's size and
+  where its text wraps; it only grows taller if a bigger font needs it.
 - **Backgrounds**: coloured shapes behind parts of the map, to set them apart whatever regions the rooms are in.
   Select some rooms and press **B** (or right-click, **Add Background**) and one is drawn round them; with nothing
   selected, it goes where the mouse is. Inside one is map like any other, for clicking and boxing the rooms on it:

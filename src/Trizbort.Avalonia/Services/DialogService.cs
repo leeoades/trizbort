@@ -429,7 +429,9 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
             _commandService.Session.Apply("Edit label properties", label, () =>
             {
                 viewModel.ApplyTo(label);
-                label.Size = MapLabelDrawingAdapter.FitText(label, wasSize);
+                // new text fits as typed; a new look alone keeps the label's width, and its lines
+                var sameText = label.Text == wasText && label.Markdown == wasMarkdown;
+                label.Size = MapLabelDrawingAdapter.FitText(label, wasSize, keepWidth: sameText);
             });
         }
         return result;
