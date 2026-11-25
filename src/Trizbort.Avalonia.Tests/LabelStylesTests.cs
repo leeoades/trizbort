@@ -84,6 +84,9 @@ public class LabelStylesTests
         dialog.Show();
         try
         {
+            dialog.GetVisualDescendants().OfType<TabControl>().First().SelectedIndex = MapSettingsViewModel.StylesTab;
+            Dispatcher.UIThread.RunJobs();
+            dialog.UpdateLayout();
             Dispatcher.UIThread.RunJobs();
             var box = dialog.GetVisualDescendants().OfType<TextBox>().Single(b => b.Name == "StyleNameBox");
             box.Focus();
