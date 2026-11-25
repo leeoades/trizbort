@@ -138,10 +138,13 @@ public class LabelStylesTests
         vm.SelectedStyle = vm.StyleOptions.Single(option => option.Name == "Title");
         vm.TextColor.ToArgb().ShouldBe(Color.Navy.ToArgb());
         vm.Font.Size.ShouldBe(24);
+        vm.Look!.FontSize.ShouldBe(24);
+        vm.PreviewText.ShouldBe("Hi");
         vm.HasOwnLook.ShouldBeFalse();
 
         vm.Shape = RoomShape.Ellipse;
         vm.HasOwnLook.ShouldBeTrue();
+        vm.Look.Shape.ShouldBe(RoomShape.Ellipse);
         vm.ApplyTo(label);
         label.StyleId.ShouldBe(title.Id);
         label.Own.Shape.ShouldBe(RoomShape.Ellipse);

@@ -125,7 +125,7 @@
                             <ColumnDefinition Width="8" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" Classes="field-label" Content="St_yle:" Target="{Binding #StyleCombo}" />
+                        <Label Grid.Column="0" Classes="field-label" Content="S_tyle:" Target="{Binding #StyleCombo}" />
                         <ComboBox Grid.Column="2" x:Name="StyleCombo" ItemsSource="{Binding StyleOptions}"
                                   SelectedItem="{Binding SelectedStyle}" HorizontalAlignment="Stretch">
                             <ComboBox.ItemTemplate>
@@ -134,10 +134,14 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <Button Grid.Column="4" x:Name="EditStylesButton" Content="Edit St_yles..." Command="{Binding OpenStyleEditorCommand}" />
+                        <Button Grid.Column="4" x:Name="EditStylesButton" Content="E_dit Styles..." Command="{Binding OpenStyleEditorCommand}" />
                     </Grid>
                     <TextBlock Classes="hint" TextWrapping="Wrap"
                                Text="Labels in a style all look alike: change the style, and they all change." />
+                    <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1">
+                        <controls:LabelStylePreview x:Name="LabelPreview" Look="{Binding Look}" Sample="{Binding PreviewText}"
+                                                    Height="80" AutomationProperties.Name="How the label will look" />
+                    </Border>
 
                     <Expander x:Name="OwnLookExpander" IsExpanded="{Binding OwnLookOpen}" HorizontalAlignment="Stretch">
                         <Expander.Header>

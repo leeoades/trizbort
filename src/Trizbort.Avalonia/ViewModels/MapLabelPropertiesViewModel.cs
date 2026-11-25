@@ -67,6 +67,24 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private FontSpec _font = FontSpec.Default;
 
+    /// <summary>The look as it will be, for the preview.</summary>
+    [ObservableProperty]
+    private ResolvedLabelStyle? _look;
+
+    /// <summary>The label's first line, without Markdown marks, for the preview.</summary>
+    public string PreviewText
+    {
+        get
+        {
+            var line = (Text ?? string.Empty).Replace("\r", "").Split('\n')
+                .Select(l => l.Trim().TrimStart('#', '-', '*', '>', ' ').Replace("**", "").Trim())
+                .FirstOrDefault(l => l.Length > 0);
+            return line ?? "A label in this style";
+        }
+    }
+
+    partial void OnTextChanged(string value) => OnPropertyChanged(nameof(PreviewText));
+
     /// <summary>Opens the style editor (Map Settings > Styles) at this style; true when OK'd. Set by the dialog service.</summary>
     public Func<string, Task<bool>>? EditStyles { get; set; }
 
@@ -103,12 +121,14 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
         if (_showingLook) return;
         set();
         OnPropertyChanged(nameof(HasOwnLook));
+        Look = LabelStyles.Resolve(SelectedStyle?.Id ?? LabelStyle.DefaultId, _own);
     }
 
     /// <summary>The look the chosen style and this label's tweaks give, into the controls.</summary>
     private void ShowLook()
     {
         var look = LabelStyles.Resolve(SelectedStyle?.Id ?? LabelStyle.DefaultId, _own);
+        Look = look;
         _showingLook = true;
         try
         {
