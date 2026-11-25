@@ -359,7 +359,8 @@
                                         IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
                                         ToolTip.Tip="Take this from the style it's based on again" />
                                 <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="Outline co_lour:" Target="{Binding #StyleOutlineColorButton}" />
-                                <controls:ColorPickerButton Grid.Row="3" Grid.Column="2" x:Name="StyleOutlineColorButton" SelectedColor="{Binding LabelStyles.OutlineColor}" HorizontalAlignment="Left" />
+                                <controls:ColorPickerButton Grid.Row="3" Grid.Column="2" x:Name="StyleOutlineColorButton" SelectedColor="{Binding LabelStyles.OutlineColor}" HorizontalAlignment="Left"
+                                                            IsEnabled="{Binding LabelStyles.HasOutline}" />
                                 <TextBlock Grid.Row="3" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.OutlineColorFrom}" VerticalAlignment="Center"
                                            IsVisible="{Binding LabelStyles.OutlineColorFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                 <Button Grid.Row="3" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="outlineColour"
@@ -375,7 +376,8 @@
                                         IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
                                         ToolTip.Tip="Take this from the style it's based on again" />
                                 <Label Grid.Row="5" Grid.Column="0" Classes="field-label" Content="Background colo_ur:" Target="{Binding #StyleBackgroundColorButton}" />
-                                <controls:ColorPickerButton Grid.Row="5" Grid.Column="2" x:Name="StyleBackgroundColorButton" SelectedColor="{Binding LabelStyles.BackgroundColor}" HorizontalAlignment="Left" />
+                                <controls:ColorPickerButton Grid.Row="5" Grid.Column="2" x:Name="StyleBackgroundColorButton" SelectedColor="{Binding LabelStyles.BackgroundColor}" HorizontalAlignment="Left"
+                                                            IsEnabled="{Binding LabelStyles.HasBackground}" />
                                 <TextBlock Grid.Row="5" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.BackgroundColorFrom}" VerticalAlignment="Center"
                                            IsVisible="{Binding LabelStyles.BackgroundColorFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                 <Button Grid.Row="5" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="backgroundColour"

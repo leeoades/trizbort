@@ -12,7 +12,7 @@ namespace Trizbort.Avalonia.Controls;
 
 /// <summary>
 ///   A sample label drawn in a style's look, as the map draws labels (shape, outline, background, font, colour), on
-///   the map's canvas colour. Lee, 24 Nov 2026.
+///   the map's canvas colour and grid. Lee, 24 Nov 2026.
 /// </summary>
 public sealed class LabelStylePreview : Control
 {
@@ -42,6 +42,13 @@ public sealed class LabelStylePreview : Control
     public override void Render(DrawingContext context)
     {
         context.DrawRectangle(Settings.Color[Domain.Misc.Colors.Canvas].ToBrush(), null, new Rect(Bounds.Size));
+        // the map's grid behind, so a label without a background is plainly see-through (Lee, 25 Nov 2026)
+        var step = Math.Max(8, (double)Settings.GridSize);
+        var gridPen = new Pen(Settings.Color[Domain.Misc.Colors.Grid].ToBrush(), 1);
+        for (var x = step / 2; x < Bounds.Width; x += step)
+            context.DrawLine(gridPen, new Point(Math.Round(x) + 0.5, 0), new Point(Math.Round(x) + 0.5, Bounds.Height));
+        for (var y = step / 2; y < Bounds.Height; y += step)
+            context.DrawLine(gridPen, new Point(0, Math.Round(y) + 0.5), new Point(Bounds.Width, Math.Round(y) + 0.5));
         if (Look is not { } look) return;
 
         var bounds = new CoreRect(16, 12, (float)Math.Max(1, Bounds.Width - 32), (float)Math.Max(1, Bounds.Height - 24));
