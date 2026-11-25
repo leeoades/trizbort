@@ -50,7 +50,6 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 - **Directions** take a magic word back once you've used it both ways ("xyzzy" from the debris room to the building,
   then back). Automap drew the join both ways but only wrote down the first, so directions didn't know the way back.
-  A command seen only one way stays a one-way join, and directions don't assume it works back ("pull first peg").
 - **Map Theme** names a theme's room shape as the rest of the app does ("Straight Edges", not "SquareCorners").
 - **Application Settings** no longer says Smart Save's options aren't used: it says what Smart Save does with them.
 
