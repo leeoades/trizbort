@@ -116,43 +116,45 @@
 
             <TabItem Header="Style">
                 <!-- the look comes from a style (Lee, 24 Nov 2026); just this label can be changed, but it's tucked away -->
-                <StackPanel Spacing="10" Margin="0,8,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="8" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" Classes="field-label" Content="S_tyle:" Target="{Binding #StyleCombo}" />
-                        <ComboBox Grid.Column="2" x:Name="StyleCombo" ItemsSource="{Binding StyleOptions}"
-                                  SelectedItem="{Binding SelectedStyle}" HorizontalAlignment="Stretch">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="vm:LabelStyleOption">
-                                    <TextBlock Text="{Binding Name}" Margin="{Binding Depth, Converter={x:Static conv:DepthToIndentConverter.Instance}}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <Button Grid.Column="4" x:Name="EditStylesButton" Content="E_dit Styles..." Command="{Binding OpenStyleEditorCommand}" />
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="10" Margin="0,8,8,0">
+                    <!-- each style shows this label's text as it would look in it (Lee, 25 Nov 2026) -->
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Label Grid.Column="0" Classes="field-label" Content="S_tyle:" Target="{Binding #StyleList}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Classes="hint" Margin="12,0" TextWrapping="Wrap" VerticalAlignment="Center"
+                                   Text="Labels in a style all look alike: change the style, and they all change." />
+                        <Button Grid.Column="2" x:Name="EditStylesButton" Content="E_dit Styles..." Command="{Binding OpenStyleEditorCommand}" />
                     </Grid>
-                    <TextBlock Classes="hint" TextWrapping="Wrap"
-                               Text="Labels in a style all look alike: change the style, and they all change." />
-                    <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1">
-                        <controls:LabelStylePreview x:Name="LabelPreview" Look="{Binding Look}" Sample="{Binding PreviewText}"
-                                                    Height="80" AutomationProperties.Name="How the label will look" />
-                    </Border>
+                    <ListBox x:Name="StyleList" ItemsSource="{Binding StyleOptions}" SelectedItem="{Binding SelectedStyle}"
+                             MaxHeight="280" AutomationProperties.Name="Styles, each showing this label in it">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:LabelStyleOption">
+                                <Grid ColumnDefinitions="150,*" Margin="0,2">
+                                    <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               Margin="{Binding Depth, Converter={x:Static conv:DepthToIndentConverter.Instance}}" />
+                                    <controls:LabelStylePreview Grid.Column="1" Look="{Binding Look}" Sample="{Binding Sample}" Height="48" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
 
-                    <Expander x:Name="OwnLookExpander" IsExpanded="{Binding OwnLookOpen}" HorizontalAlignment="Stretch">
-                        <Expander.Header>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="Change just this label" VerticalAlignment="Center" />
-                                <TextBlock Classes="hint" Text="(changed)" VerticalAlignment="Center" IsVisible="{Binding HasOwnLook}" />
-                            </StackPanel>
-                        </Expander.Header>
+                    <!-- just this label's look: there if wanted, but a style is better (Lee, 25 Nov 2026) -->
+                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !OwnLookOpen}">
+                        <Button x:Name="ModifyOwnLookButton" Content="_Modify this label's appearance..." Command="{Binding ModifyOwnLookCommand}" />
+                    </StackPanel>
+                    <Border x:Name="OwnLookPanel" IsVisible="{Binding OwnLookOpen}" Padding="12" CornerRadius="4"
+                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1">
                         <StackPanel Spacing="8">
-                            <TextBlock Classes="hint" TextWrapping="Wrap"
-                                       Text="Not recommended: this label stops following its style for what you change here. Better to make a style." />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="This label's appearance" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Classes="hint" Text="(changed from its style)" VerticalAlignment="Center" IsVisible="{Binding HasOwnLook}" />
+                            </StackPanel>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Classes="hint" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,12,0"
+                                           Text="Changes here are for this label only. To keep labels alike, make a style with this look instead." />
+                                <Button Grid.Column="1" x:Name="CreateStyleButton" Content="_Create a New Style..."
+                                        Command="{Binding CreateStyleFromLookCommand}" />
+                            </Grid>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
@@ -232,8 +234,9 @@
                             <Button x:Name="ResetToStyleButton" Content="_Reset to Style" Command="{Binding ResetToStyleCommand}"
                                     IsEnabled="{Binding HasOwnLook}" HorizontalAlignment="Left" />
                         </StackPanel>
-                    </Expander>
+                    </Border>
                 </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
 

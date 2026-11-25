@@ -1,3 +1,4 @@
+using Trizbort.Setup;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -373,7 +374,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
 
         if (owner == null) return false;
         var dialog = new MapLabelPropertiesDialog { DataContext = viewModel };
-        viewModel.EditStyles = id => ShowLabelStylesAsync(dialog, id);
+        viewModel.EditStyles = (id, newFrom) => ShowLabelStylesAsync(dialog, id, newFrom);
 
         // Shown beside the map rather than over it, so a room clicked on the map can be chosen for a link (Lee,
         // 22 Nov 2026); it stays in front of the main window, as its owner.
@@ -477,20 +478,24 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         return result;
     }
 
-    /// <summary>Map Settings at the Styles tab, at label style <paramref name="styleId" />; OK applies it as one undo step.</summary>
-    public async Task<bool> ShowLabelStylesAsync(Window owner, string styleId)
+    /// <summary>
+    ///   Map Settings at the Styles tab, at label style <paramref name="styleId" /> (or at a new style based on it with
+    ///   the look <paramref name="newFrom" />); OK applies it as one undo step and gives the style then selected.
+    /// </summary>
+    public async Task<string?> ShowLabelStylesAsync(Window owner, string styleId, LabelStyle? newFrom = null)
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var viewModel = scope.ServiceProvider.GetRequiredService<MapSettingsViewModel>();
         viewModel.Initialize();
         viewModel.SelectedTabIndex = MapSettingsViewModel.StylesTab;
-        viewModel.LabelStyles.Initialize(styleId);
+        viewModel.LabelStyles.Initialize(styleId, newFrom);
 
         var dialog = new MapSettingsDialog { DataContext = viewModel };
-        if (!await dialog.ShowDialog<bool>(owner)) return false;
+        if (!await dialog.ShowDialog<bool>(owner)) return null;
+        var selected = viewModel.LabelStyles.SelectedId;
         _commandService.Session.Execute("Edit map settings", viewModel.ApplyToSettings);
         _commandService.InvalidateCanvas();
-        return true;
+        return selected ?? styleId;
     }
 
     public async Task<Trizbort.Editor.NewRegionChoice?> ShowNewRegionAsync(Window owner)

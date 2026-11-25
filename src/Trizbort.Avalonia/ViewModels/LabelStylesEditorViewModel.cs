@@ -73,12 +73,24 @@ public partial class LabelStylesEditorViewModel : ViewModelBase
     private LabelStyle? Style => Selected == null ? null : _set.Find(Selected.Id);
 
     /// <summary>The map's styles, copied to edit; <paramref name="selectId" /> selected.</summary>
-    public void Initialize(string? selectId = null)
+    public void Initialize(string? selectId = null, LabelStyle? newFrom = null)
     {
         _set = LabelStyles.Current.Copy();
         _deletedTo.Clear();
-        Refresh(selectId ?? LabelStyle.DefaultId);
+        selectId ??= LabelStyle.DefaultId;
+        if (newFrom != null)
+        {
+            // Create a New Style from a label's own look: based on its style, with what the label changed
+            var style = _set.Add("New Style", _set.Has(selectId) ? selectId : LabelStyle.DefaultId);
+            style.SetFrom(newFrom);
+            selectId = style.Id;
+        }
+
+        Refresh(selectId);
     }
+
+    /// <summary>The style selected (when OK is pressed, the one a label might take).</summary>
+    public string? SelectedId => Selected?.Id;
 
     /// <summary>The edited styles become the map's; labels in a deleted style take the style it was based on.</summary>
     public void ApplyTo(Project project)

@@ -83,10 +83,28 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
         }
     }
 
-    partial void OnTextChanged(string value) => OnPropertyChanged(nameof(PreviewText));
+    partial void OnTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(PreviewText));
+        ShowStylePreviews();
+    }
 
-    /// <summary>Opens the style editor (Map Settings > Styles) at this style; true when OK'd. Set by the dialog service.</summary>
-    public Func<string, Task<bool>>? EditStyles { get; set; }
+    /// <summary>Each style's item shows this label's text as it would look in that style (with its own changes).</summary>
+    private void ShowStylePreviews()
+    {
+        var sample = PreviewText;
+        foreach (var option in StyleOptions)
+        {
+            option.Look = LabelStyles.Resolve(option.Id, _own);
+            option.Sample = sample;
+        }
+    }
+
+    /// <summary>
+    ///   Opens the style editor (Map Settings > Styles) at this style, or at a new style based on it with the given look;
+    ///   the style then selected when OK'd, or null. Set by the dialog service.
+    /// </summary>
+    public Func<string, LabelStyle?, Task<string?>>? EditStyles { get; set; }
 
     partial void OnSelectedStyleChanged(LabelStyleOption? value) => ShowLook();
 
@@ -122,6 +140,7 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
         set();
         OnPropertyChanged(nameof(HasOwnLook));
         Look = LabelStyles.Resolve(SelectedStyle?.Id ?? LabelStyle.DefaultId, _own);
+        ShowStylePreviews();
     }
 
     /// <summary>The look the chosen style and this label's tweaks give, into the controls.</summary>
@@ -146,6 +165,7 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
             _showingLook = false;
         }
         OnPropertyChanged(nameof(HasOwnLook));
+        ShowStylePreviews();
     }
 
     /// <summary>Drops this label's tweaks: it looks as its style does.</summary>
@@ -162,10 +182,35 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     {
         if (EditStyles == null) return;
         var id = SelectedStyle?.Id ?? LabelStyle.DefaultId;
-        if (!await EditStyles(id)) return;
+        if (await EditStyles(id, null) == null) return;
         LoadStyleOptions(LabelStyles.Has(id) ? id : LabelStyle.DefaultId);
         ShowLook();
     }
+
+    /// <summary>
+    ///   A new style with this label's look (its style and what it changes), made in the style editor; on OK the label
+    ///   takes the new style and its own changes go.
+    /// </summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private async Task CreateStyleFromLook()
+    {
+        if (EditStyles == null) return;
+        var id = SelectedStyle?.Id ?? LabelStyle.DefaultId;
+        var chosen = await EditStyles(id, _own.Clone());
+        if (chosen == null) return;
+        if (LabelStyles.Has(chosen))
+        {
+            _own = new LabelStyle();
+            id = chosen;
+        }
+
+        LoadStyleOptions(LabelStyles.Has(id) ? id : LabelStyle.DefaultId);
+        ShowLook();
+    }
+
+    /// <summary>Shows the controls for this label's own look.</summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void ModifyOwnLook() => OwnLookOpen = true;
 
     private void LoadStyleOptions(string selectedId)
     {
@@ -296,6 +341,14 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
 /// <summary>A label style in a list: indented by how far down the "based on" tree it is.</summary>
 public sealed partial class LabelStyleOption(string id, string name, int depth) : ObservableObject
 {
+    /// <summary>The look a label would have in this style, for a preview.</summary>
+    [ObservableProperty]
+    private ResolvedLabelStyle? _look;
+
+    /// <summary>The text to preview it with.</summary>
+    [ObservableProperty]
+    private string _sample = "A label in this style";
+
     public string Id { get; } = id;
 
     public int Depth { get; } = depth;

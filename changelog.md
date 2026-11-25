@@ -15,11 +15,13 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 ### Added
 
 - **Label styles.** A label's look (font and size, bold and italic, text colour, outline, background and shape)
-  comes from a style kept in the map. Choose it on the label's **Style** tab; **Edit Styles...** there, or Map
+  comes from a style kept in the map. Choose it on the label's **Style** tab, which shows the label's text in each
+  style; **Edit Styles...** there, or Map
   Settings > **Styles**, makes and changes them. A style is **based on** another and sets only what differs, the rest
   coming from the style above it, up to **Default** (each value says where it comes from, with **Reset** to take it
   from there again). Deleting a style moves its labels to the style it was based on. One label can still be changed
-  on its own under **Change just this label**, with **Reset to Style**, but a style is the better way. Labels in
+  on its own with **Modify this label's appearance...** (and **Reset to Style**), but a style is the better way:
+  **Create a New Style...** there makes a style with the label's look, and the label uses it. Labels in
   older maps keep how they look. Labels can now have their own font and size. Older versions open the map with each
   label drawn as it is now. A theme sets the Default style's colours.
 - **Backgrounds**: coloured shapes behind parts of the map, to set them apart whatever regions the rooms are in.

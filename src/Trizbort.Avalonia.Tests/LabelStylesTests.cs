@@ -203,11 +203,12 @@ public class LabelStylesTests
         var vm = new MapLabelPropertiesViewModel();
         vm.Initialize(label);
         string? askedFor = null;
-        vm.EditStyles = id =>
+        vm.EditStyles = (id, newFrom) =>
         {
             askedFor = id;
+            newFrom.ShouldBeNull();
             LabelStyles.Current.Add("Note", LabelStyle.DefaultId);
-            return Task.FromResult(true);
+            return Task.FromResult<string?>(id);
         };
 
         await vm.OpenStyleEditorCommand.ExecuteAsync(null);
@@ -215,4 +216,82 @@ public class LabelStylesTests
         vm.StyleOptions.Select(option => option.Name).ShouldBe(new[] { "Default", "Note" });
         vm.SelectedStyle!.Id.ShouldBe(LabelStyle.DefaultId);
     }
+
+    [AvaloniaTest]
+    public void LabelDialog_EachStyleShowsTheLabelsTextInIt()
+    {
+        // Lee, 25 Nov 2026: a list of the label in each style, rather than a drop-down of names
+        var title = LabelStyles.Current.Add("Title", LabelStyle.DefaultId);
+        title.FontSize = 24;
+        var label = new MapLabel(Project.Current) { Text = "# West of House\nmore" };
+        Project.Current.Elements.Add(label);
+
+        var vm = new MapLabelPropertiesViewModel();
+        vm.Initialize(label);
+        vm.StyleOptions.ShouldAllBe(option => option.Sample == "West of House" && option.Look != null);
+        vm.StyleOptions.Single(option => option.Name == "Title").Look!.FontSize.ShouldBe(24);
+
+        vm.Text = "Behind House";
+        vm.StyleOptions.ShouldAllBe(option => option.Sample == "Behind House");
+
+        vm.ModifyOwnLookCommand.Execute(null);
+        vm.OwnLookOpen.ShouldBeTrue();
+        vm.Shape = RoomShape.Ellipse;
+        vm.StyleOptions.ShouldAllBe(option => option.Look!.Shape == RoomShape.Ellipse);
+    }
+
+    [AvaloniaTest]
+    public async Task LabelDialog_CreateANewStyle_FromThisLabelsLook_ThenTheLabelUsesIt()
+    {
+        var label = new MapLabel(Project.Current);
+        Project.Current.Elements.Add(label);
+        var vm = new MapLabelPropertiesViewModel();
+        vm.Initialize(label);
+        vm.ModifyOwnLookCommand.Execute(null);
+        vm.Shape = RoomShape.Octagonal;
+        vm.HasBackground = true;
+
+        // what Map Settings does with it, OK'd
+        vm.EditStyles = (id, newFrom) =>
+        {
+            id.ShouldBe(LabelStyle.DefaultId);
+            newFrom.ShouldNotBeNull();
+            var editor = new LabelStylesEditorViewModel();
+            editor.Initialize(id, newFrom);
+            editor.Name = "Sign";
+            editor.BasedOn!.Id.ShouldBe(LabelStyle.DefaultId);
+            editor.Shape.ShouldBe(RoomShape.Octagonal);
+            editor.ShapeFrom.ShouldBeEmpty(); // the new style's own
+            var chosen = editor.SelectedId;
+            editor.ApplyTo(Project.Current);
+            return Task.FromResult(chosen);
+        };
+
+        await vm.CreateStyleFromLookCommand.ExecuteAsync(null);
+        vm.SelectedStyle!.Name.ShouldBe("Sign");
+        vm.HasOwnLook.ShouldBeFalse();
+        vm.Shape.ShouldBe(RoomShape.Octagonal);
+        vm.HasBackground.ShouldBeTrue();
+
+        vm.ApplyTo(label);
+        label.StyleId.ShouldBe(vm.SelectedStyle.Id);
+        label.HasOwnLook.ShouldBeFalse();
+    }
+
+    [AvaloniaTest]
+    public async Task LabelDialog_CreateANewStyle_Cancelled_KeepsTheLabelsChanges()
+    {
+        var label = new MapLabel(Project.Current);
+        Project.Current.Elements.Add(label);
+        var vm = new MapLabelPropertiesViewModel();
+        vm.Initialize(label);
+        vm.Shape = RoomShape.Ellipse;
+        vm.EditStyles = (_, _) => Task.FromResult<string?>(null);
+
+        await vm.CreateStyleFromLookCommand.ExecuteAsync(null);
+        vm.HasOwnLook.ShouldBeTrue();
+        vm.Shape.ShouldBe(RoomShape.Ellipse);
+        LabelStyles.Current.Styles.Count.ShouldBe(1);
+    }
 }
+

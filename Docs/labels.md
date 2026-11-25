@@ -26,17 +26,19 @@ If you'd rather type the marks: `## Heading`, `**bold**`, `*italic*`, `- list`, 
 
 ## Styles
 
-A label's look comes from a **style**: "Title", "Note", whatever the map needs. Choose one on the label's **Style**
-tab. Change a style and every label using it changes with it.
+A label's look comes from a **style**: "Title", "Note", whatever the map needs. The label's **Style** tab shows the
+label's text in each of the map's styles: click the one you want. Change a style and every label using it changes
+with it.
 
-![The label's Style tab: the style to use, and changes for just this label.](images/label-style.png)
+![The label's Style tab: the label shown in each style.](images/label-style.png)
 
 **Edit Styles...** opens the styles in Map Settings (see [Settings](settings.md#label-styles)). A style sets the font
 and size, bold and italic, the text colour, the outline, the background and the shape (straight edges, rounded,
 ellipse or octagon).
 
-If one label really must be different, open **Change just this label**. It's better to make a style, so the map
-stays tidy. **Reset to Style** takes the label back to its style.
+If one label really must be different, choose **Modify this label's appearance...**. It's better to make a style, so
+labels stay alike: **Create a New Style...** there makes one with the label's look, and the label then uses it.
+**Reset to Style** takes the label back to its style.
 
 ## Size
 
