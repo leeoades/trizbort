@@ -24,12 +24,19 @@ On the map, the table above looks like this:
 If you'd rather type the marks: `## Heading`, `**bold**`, `*italic*`, `- list`, `[[Room name]]` for a room link and
 `[words](https://...)` for a web link.
 
-## Style
+## Styles
 
-![The label's Style tab: text colour, outline, background and shape.](images/label-style.png)
+A label's look comes from a **style**: "Title", "Note", whatever the map needs. Choose one on the label's **Style**
+tab. Change a style and every label using it changes with it.
 
-Choose the text colour, and turn the outline and background on or off. The shape (straight edges, rounded,
-ellipse or octagon) applies to both.
+![The label's Style tab: the style to use, and changes for just this label.](images/label-style.png)
+
+**Edit Styles...** opens the styles in Map Settings (see [Settings](settings.md#label-styles)). A style sets the font
+and size, bold and italic, the text colour, the outline, the background and the shape (straight edges, rounded,
+ellipse or octagon).
+
+If one label really must be different, open **Change just this label**. It's better to make a style, so the map
+stays tidy. **Reset to Style** takes the label back to its style.
 
 ## Size
 

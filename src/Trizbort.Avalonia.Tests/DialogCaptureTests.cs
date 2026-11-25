@@ -119,6 +119,23 @@ public class DialogCaptureTests
             connVm.Initialize(connection);
             CaptureDialog(output, files, "ConnectionProperties", new ConnectionPropertiesDialog { DataContext = connVm });
 
+            // a few label styles, for the label's Style tab and Map Settings > Styles
+            var styles = LabelStyles.Current;
+            var title = styles.Add("Title", LabelStyle.DefaultId);
+            title.FontSize = 20;
+            title.Bold = true;
+            title.TextColor = System.Drawing.Color.Navy;
+            var subtitle = styles.Add("Subtitle", title.Id);
+            subtitle.FontSize = 15;
+            subtitle.Bold = false;
+            subtitle.Italic = true;
+            var note = styles.Add("Note", LabelStyle.DefaultId);
+            note.HasBackground = true;
+            note.BackgroundColor = System.Drawing.Color.LightYellow;
+            note.BorderStyle = Trizbort.Domain.Enums.BorderDashStyle.Dash;
+            note.Shape = RoomShape.RoundedCorners;
+            label.StyleId = note.Id;
+
             var labelVm = sp.GetRequiredService<MapLabelPropertiesViewModel>();
             labelVm.Initialize(label);
             CaptureDialog(output, files, "MapLabelProperties", new MapLabelPropertiesDialog { DataContext = labelVm });
@@ -133,6 +150,7 @@ public class DialogCaptureTests
 
             var mapSettingsVm = sp.GetRequiredService<MapSettingsViewModel>();
             mapSettingsVm.Initialize();
+            mapSettingsVm.LabelStyles.Initialize(subtitle.Id);
             CaptureDialog(output, files, "MapSettings", new MapSettingsDialog { DataContext = mapSettingsVm });
 
             var themeVm = sp.GetRequiredService<MapThemeViewModel>();

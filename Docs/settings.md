@@ -33,6 +33,7 @@ Untick **Token on the room** to hide it. **Glow round the room** sets the colour
 | Colours | The colours of the canvas, rooms, joins and text |
 | Fonts | The fonts for room names, subtitles, objects and join labels |
 | Regions | Regions and their colours |
+| Styles | The label styles |
 
 ![Map Settings, Lines & Grid: the join labels, with a preview.](images/map-settings-lines.png)
 
@@ -42,6 +43,17 @@ result as you change it.
 ![Map Settings, Rooms & Editing: drag the object list to where it should go.](images/map-settings-rooms.png)
 
 ![Map Settings, Colours.](images/map-settings-colours.png)
+
+## Label styles
+
+![Map Settings, Styles: Subtitle is based on Title.](images/map-settings-styles.png)
+
+The **Styles** tab lists the map's label styles. Every map has **Default**. **New Style** makes one **based on** the
+style that's selected: it looks the same until you change something. What it doesn't set comes from the style it's
+based on, and the tab says where ("from Title"). **Reset** takes a value from there again. Delete a style and its
+labels take the style it was based on.
+
+Styles are saved in the map. Older versions draw each label as it looks now.
 
 ## Themes
 
