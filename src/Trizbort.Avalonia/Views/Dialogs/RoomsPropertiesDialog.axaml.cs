@@ -12,7 +12,15 @@ public partial class RoomsPropertiesDialog : Window
         DialogFocus.Prepare(this);
     }
 
-    private void OnOkClick(object? sender, RoutedEventArgs e) => Close(true);
+    private void OnOkClick(object? sender, RoutedEventArgs e)
+    {
+        (DataContext as Trizbort.Avalonia.ViewModels.RoomsPropertiesViewModel)?.SaveLastTab();
+        Close(true);
+    }
 
-    private void OnCancelClick(object? sender, RoutedEventArgs e) => Close(false);
+    private void OnCancelClick(object? sender, RoutedEventArgs e)
+    {
+        (DataContext as Trizbort.Avalonia.ViewModels.RoomsPropertiesViewModel)?.SaveLastTab();
+        Close(false);
+    }
 }

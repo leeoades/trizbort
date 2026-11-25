@@ -7,68 +7,106 @@
         x:Class="Trizbort.Avalonia.Views.Dialogs.RoomsPropertiesDialog"
         x:DataType="vm:RoomsPropertiesViewModel"
         Title="Room Properties"
-        Width="520" Height="640"
-        MinWidth="440" MinHeight="360"
+        Width="560" Height="640"
+        MinWidth="476" MinHeight="320"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
-    <!-- Several rooms at once: what they share. Lee, 24 Nov 2026. -->
+    <!-- Several rooms at once: laid out as one room's dialog, without what only one room can have (its name,
+         subtitle, reference, start and end, description and objects). Lee, 24 and 25 Nov 2026. -->
     <Grid RowDefinitions="*,Auto" Margin="16" Grid.IsSharedSizeScope="True">
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Spacing="14">
-                <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding Heading}" />
+        <Grid RowDefinitions="Auto,*" MinHeight="440">
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8" Margin="0,0,0,12">
+            <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Rooms:" />
+            <TextBlock Grid.Row="0" Grid.Column="2" x:Name="CountText" Text="{Binding CountText}" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="1" Grid.Column="2" Classes="hint" TextWrapping="Wrap" Text="{Binding Heading}" />
+            <WrapPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+                <WrapPanel.Styles>
+                    <Style Selector="CheckBox">
+                        <Setter Property="Margin" Value="0,0,16,4" />
+                    </Style>
+                </WrapPanel.Styles>
+                <CheckBox x:Name="DarkCheck" Content="_Dark" IsChecked="{Binding IsDark}" />
+                <CheckBox Content="_Moves" IsChecked="{Binding Moves}"
+                          ToolTip.Tip="A lift, a car, a train: the room takes you with it. Automap shows it at each stop as a copy with its name, and works out which stop you're at from the way you go out" />
+                <CheckBox Content="Don't _automap from here" IsChecked="{Binding AutomapPause}"
+                          ToolTip.Tip="For a maze, or a room that moves (a lift): automap stops mapping while you're in it, and carries on from wherever you come out, with a dotted ? join for the way through" />
+            </WrapPanel>
+        </Grid>
 
-                <WrapPanel Orientation="Horizontal">
-                    <CheckBox x:Name="DarkCheck" Content="_Dark" IsChecked="{Binding IsDark}" Margin="0,0,16,4" />
-                    <CheckBox Content="Don't _automap from here" IsChecked="{Binding AutomapPause}" Margin="0,0,16,4" />
-                </WrapPanel>
+        <TabControl Grid.Row="1" x:Name="Tabs" SelectedIndex="{Binding SelectedTabIndex}">
+            <!-- Description & Objects: each room's own; just where the object lists go -->
+            <TabItem Header="Description &amp; Objects">
+                <StackPanel Spacing="12" Margin="8">
+                    <TextBlock Classes="hint" TextWrapping="Wrap"
+                               Text="Each room has its own description and objects: open a room on its own to change them." />
+                    <HeaderedContentControl Classes="group" Header="Object List Position">
+                        <Grid ColumnDefinitions="*,12,Auto">
+                            <TextBlock x:Name="ObjectListPositionText" Text="{Binding ObjectListText}"
+                                       TextWrapping="Wrap" VerticalAlignment="Center" />
+                            <Button Grid.Column="2" x:Name="ResetObjectListButton" Content="_Reset"
+                                    Command="{Binding ResetObjectListPositionsCommand}"
+                                    IsEnabled="{Binding CanResetObjectLists}"
+                                    ToolTip.Tip="Put every room's object list back at the default spot (or out of the way of joins)" />
+                        </Grid>
+                    </HeaderedContentControl>
+                </StackPanel>
+            </TabItem>
 
-                <HeaderedContentControl Classes="group" Header="Shape, Lines &amp; Region">
-                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="S_hape:" Target="{Binding #ShapeCombo}" />
-                        <ComboBox Grid.Row="0" Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding AvailableShapes}"
-                                  SelectedItem="{Binding Shape}" PlaceholderText="Mixed" HorizontalAlignment="Stretch">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Border St_yle:" Target="{Binding #BorderStyleCombo}" />
-                        <ComboBox Grid.Row="1" Grid.Column="2" x:Name="BorderStyleCombo" ItemsSource="{Binding AvailableBorderStyles}"
+            <!-- Shapes & Lines -->
+            <TabItem Header="Shapes &amp; Lines">
+                <StackPanel Spacing="12" Margin="8">
+                    <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                        <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Border St_yle:" Target="{Binding #BorderStyleCombo}" />
+                        <ComboBox Grid.Row="0" Grid.Column="2" x:Name="BorderStyleCombo" ItemsSource="{Binding AvailableBorderStyles}"
                                   SelectedItem="{Binding BorderStyle}" PlaceholderText="Mixed" HorizontalAlignment="Stretch">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <Label Grid.Row="2" Grid.Column="0" Classes="field-label" Content="_Lines:" Target="{Binding #LinesCombo}" />
-                        <ComboBox Grid.Row="2" Grid.Column="2" x:Name="LinesCombo" ItemsSource="{Binding AvailableHandDrawnStyles}"
+                        <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="_Lines:" Target="{Binding #LinesCombo}" />
+                        <ComboBox Grid.Row="1" Grid.Column="2" x:Name="LinesCombo" ItemsSource="{Binding AvailableHandDrawnStyles}"
                                   SelectedItem="{Binding HandDrawnStyle}" PlaceholderText="Mixed" HorizontalAlignment="Stretch">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="Regio_n:" Target="{Binding #RegionCombo}" />
-                        <ComboBox Grid.Row="3" Grid.Column="2" x:Name="RegionCombo" ItemsSource="{Binding AvailableRegions}"
-                                  SelectedItem="{Binding Region}" PlaceholderText="Mixed" HorizontalAlignment="Stretch">
+                        <Label Grid.Row="2" Grid.Column="0" Classes="field-label" Content="S_hape:" Target="{Binding #ShapeCombo}" />
+                        <ComboBox Grid.Row="2" Grid.Column="2" x:Name="ShapeCombo" ItemsSource="{Binding AvailableShapes}"
+                                  SelectedItem="{Binding Shape}" PlaceholderText="Mixed" HorizontalAlignment="Stretch">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="sys:String">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Border Width="24" Height="14" BorderThickness="1"
-                                                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                Background="{Binding ., Converter={x:Static conv:RegionNameToBrushConverter.Instance}}" />
-                                        <TextBlock Text="{Binding ., Converter={x:Static conv:RegionDisplayNameConverter.Instance}}" />
-                                    </StackPanel>
-                                </DataTemplate>
+                                <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </Grid>
-                </HeaderedContentControl>
+                </StackPanel>
+            </TabItem>
 
-                <HeaderedContentControl Classes="group" Header="Colours">
+            <!-- Region -->
+            <TabItem Header="Region">
+                <Grid ColumnDefinitions="Auto,12,*" Margin="8" VerticalAlignment="Top">
+                    <Label Grid.Column="0" Classes="field-label" Content="Regio_n:" Target="{Binding #RegionCombo}" />
+                    <ComboBox Grid.Column="2" x:Name="RegionCombo" ItemsSource="{Binding AvailableRegions}"
+                              SelectedItem="{Binding Region}" PlaceholderText="Mixed" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border Width="24" Height="14" BorderThickness="1"
+                                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            Background="{Binding ., Converter={x:Static conv:RegionNameToBrushConverter.Instance}}" />
+                                    <TextBlock Text="{Binding ., Converter={x:Static conv:RegionDisplayNameConverter.Instance}}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+            </TabItem>
+
+            <!-- Colours -->
+            <TabItem Header="Colours">
+                <StackPanel Spacing="12" Margin="8">
+                    <TextBlock Classes="hint" Text="Set custom colours for these rooms, or leave as Default to use the map settings." />
                     <Grid ColumnDefinitions="Auto,12,Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
                         <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="Room _Fill:" Target="{Binding #FillButton}" />
                         <controls:ColorPickerButton Grid.Row="0" Grid.Column="2" x:Name="FillButton" SelectedColor="{Binding FillColor}" HorizontalAlignment="Left" />
@@ -92,13 +130,15 @@
                         <Label Grid.Row="5" Grid.Column="0" Classes="field-label" Content="Subtitle Te_xt:" Target="{Binding #SubtitleTextButton}" />
                         <controls:ColorPickerButton Grid.Row="5" Grid.Column="2" x:Name="SubtitleTextButton" SelectedColor="{Binding SubtitleColor}" HorizontalAlignment="Left" />
                     </Grid>
-                </HeaderedContentControl>
-            </StackPanel>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+        </Grid>
         </ScrollViewer>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
-            <Button Classes="dialog-button" Content="_OK" IsDefault="True" Click="OnOkClick" />
-            <Button Classes="dialog-button" Content="_Cancel" IsCancel="True" Click="OnCancelClick" />
+            <Button Classes="dialog-button" Content="OK" IsDefault="True" Click="OnOkClick" />
+            <Button Classes="dialog-button" Content="Cancel" IsCancel="True" Click="OnCancelClick" />
         </StackPanel>
     </Grid>
 </Window>

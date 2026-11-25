@@ -533,6 +533,7 @@ public class DocsCaptureTests
         Called(project, "Sea Cave").RoomFillColor = System.Drawing.Color.FromArgb(0xD8, 0xE4, 0xEE);
         var vm = new RoomsPropertiesViewModel();
         vm.Initialize(rooms);
+        vm.SelectedTabIndex = 1; // Shapes & Lines
         Capture(new RoomsPropertiesDialog { DataContext = vm }, Path.Combine(root, "rooms-properties.png"));
     }
 }

@@ -325,10 +325,16 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
 
         var dialog = new RoomPropertiesDialog { DataContext = viewModel };
         dialog.Prompts = new DialogConfirmPrompts(this, dialog);
+        viewModel.Regions.AddRegion = () => ShowNewRegionAsync(dialog);
         var result = owner != null ? await dialog.ShowDialog<bool>(owner) : false;
         if (result)
         {
-            _commandService.Session.Apply("Edit room properties", room, () => viewModel.ApplyTo(room));
+            // a region made with Add New Region... is kept in the same undo step
+            _commandService.Session.Apply("Edit room properties", room, () =>
+            {
+                viewModel.Regions.Keep();
+                viewModel.ApplyTo(room);
+            });
         }
         return result;
     }
@@ -438,11 +444,16 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         var viewModel = new RoomsPropertiesViewModel();
         viewModel.Initialize(rooms);
         var dialog = new RoomsPropertiesDialog { DataContext = viewModel };
+        viewModel.Regions.AddRegion = () => ShowNewRegionAsync(dialog);
         var result = owner != null && await dialog.ShowDialog<bool>(owner);
         if (result)
         {
             var edit = viewModel.ToEdit();
-            _commandService.Session.Execute("Edit room properties", () => edit.ApplyTo(rooms), rooms);
+            _commandService.Session.Execute("Edit room properties", () =>
+            {
+                viewModel.Regions.Keep();
+                edit.ApplyTo(rooms);
+            }, rooms);
         }
         return result;
     }

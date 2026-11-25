@@ -15,8 +15,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 ### Added
 
 - **Several rooms' properties at once**: select some rooms and choose **Properties...** (Alt+Enter, or right-click).
-  Set darkness, Don't automap from here, shape, border, lines, region and colours for all of them; anything they
-  differ on shows as mixed and stays as each room has it unless you change it. One undo step.
+  It has the same tabs as one room's properties, without what only one room can have: set darkness, Moves, Don't
+  automap from here, where the object lists go, shape, border, lines, region and colours for all of them; anything
+  they differ on shows as mixed and stays as each room has it unless you change it. One undo step.
+- The region list in **Room Properties** (one room or several) ends with **Add New Region...**: it opens Map Settings
+  at a new region, and the room takes it when you press OK.
 - **Backgrounds**: coloured shapes behind parts of the map, to set them apart whatever regions the rooms are in.
   Select some rooms and press **B** (or right-click, **Add Background**) and one is drawn round them; with nothing
   selected, it goes where the mouse is. Inside one is map like any other, for clicking and boxing the rooms on it:

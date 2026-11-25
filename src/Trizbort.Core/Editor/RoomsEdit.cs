@@ -22,6 +22,10 @@ public sealed class RoomsEdit
 
   public bool? IsDark { get; set; }
   public bool? AutomapPause { get; set; }
+  public bool? Moves { get; set; }
+
+  /// <summary>Puts every room's object list back where it goes by itself (none placed by hand).</summary>
+  public bool ResetObjectLists { get; set; }
   public RoomShape? Shape { get; set; }
   public BorderDashStyle? BorderStyle { get; set; }
   public HandDrawnStyle? HandDrawnStyle { get; set; }
@@ -42,6 +46,7 @@ public sealed class RoomsEdit
     {
       IsDark = Shared(rooms, room => room.IsDark),
       AutomapPause = Shared(rooms, room => room.AutomapPause),
+      Moves = Shared(rooms, room => room.Moves),
       Shape = Shared(rooms, room => room.Shape),
       BorderStyle = Shared(rooms, room => room.BorderStyle),
       HandDrawnStyle = Shared(rooms, room => room.HandDrawnStyle),
@@ -63,6 +68,8 @@ public sealed class RoomsEdit
     {
       if (IsDark is { } dark) room.IsDark = dark;
       if (AutomapPause is { } pause) room.AutomapPause = pause;
+      if (Moves is { } moves) room.Moves = moves;
+      if (ResetObjectLists) room.ResetObjectListPosition();
       if (Shape is { } shape) room.Shape = shape;
       if (BorderStyle is { } border) room.BorderStyle = border;
       if (HandDrawnStyle is { } hand) room.HandDrawnStyle = hand;
