@@ -74,6 +74,10 @@ public static class JoinWays
     var end = EndLabel(connection, list, false, word);
     var middle = string.Join(" / ", Distinct(list.Where(way => way.IsCommand && (!way.Seen || !OnEndLabel(list, way.AtStart)))
       .Select(way => way.Text)));
+    // the same command both ways ("xyzzy" there and back), and nothing else: once, in the middle
+    if (list.Count > 0 && list.All(way => way.IsCommand) && list.Any(way => way.AtStart) && list.Any(way => !way.AtStart) &&
+        Distinct(list.Select(way => way.Text)).Count() == 1)
+      (start, end, middle) = (string.Empty, string.Empty, list[0].Text);
     if (connection.StartText != start) connection.StartText = start;
     if (connection.EndText != end) connection.EndText = end;
     if (connection.MidText != middle) connection.MidText = middle;
