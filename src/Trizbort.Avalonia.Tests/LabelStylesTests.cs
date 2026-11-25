@@ -1,6 +1,7 @@
 using System.Drawing;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Headless.NUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -93,10 +94,12 @@ public class LabelStylesTests
             box.ShouldNotBeNull();
             box.IsEffectivelyVisible.ShouldBeTrue(string.Join(", ",
                 dialog.GetVisualDescendants().OfType<TextBox>().Select(b => b.Name)));
-            dialog.Activate();
-            box.Focus();
-            box.SelectAll();
+            // click into the box, as you would
+            var middle = box.TranslatePoint(new global::Avalonia.Point(box.Bounds.Width / 2, box.Bounds.Height / 2), dialog)!.Value;
+            dialog.MouseDown(middle, MouseButton.Left);
+            dialog.MouseUp(middle, MouseButton.Left);
             Dispatcher.UIThread.RunJobs();
+            box.SelectAll();
             box.IsFocused.ShouldBeTrue(
                 $"to start with: enabled {box.IsEffectivelyEnabled}, visible {box.IsEffectivelyVisible}, " +
                 $"active {dialog.IsActive}, focused {dialog.FocusManager?.GetFocusedElement()}, selected {editor.Selected?.Name}");
