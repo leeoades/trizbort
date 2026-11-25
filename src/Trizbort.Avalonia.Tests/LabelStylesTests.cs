@@ -88,7 +88,10 @@ public class LabelStylesTests
             Dispatcher.UIThread.RunJobs();
             dialog.UpdateLayout();
             Dispatcher.UIThread.RunJobs();
-            var box = dialog.GetVisualDescendants().OfType<TextBox>().Single(b => b.Name == "StyleNameBox");
+            var box = dialog.FindControl<TextBox>("StyleNameBox");
+            box.ShouldNotBeNull();
+            box.IsEffectivelyVisible.ShouldBeTrue(string.Join(", ",
+                dialog.GetVisualDescendants().OfType<TextBox>().Select(b => b.Name)));
             box.Focus();
             foreach (var text in new[] { "P", "Po", "Pos", "Post" })
             {
