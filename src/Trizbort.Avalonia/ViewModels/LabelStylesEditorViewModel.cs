@@ -117,17 +117,8 @@ public partial class LabelStylesEditorViewModel : ViewModelBase
     {
         if (_loading || Style is not { } style || string.IsNullOrWhiteSpace(value)) return;
         style.Name = value.Trim();
-        // the lists show the new name, keeping the selection
-        var id = style.Id;
-        _loading = true;
-        try
-        {
-            Refresh(id, showSelected: false);
-        }
-        finally
-        {
-            _loading = false;
-        }
+        // the lists show the new name: renamed in place, as rebuilding them takes the focus from the Name box
+        foreach (var option in Styles.Concat(Bases).Where(option => option.Id == style.Id)) option.Name = style.Name;
     }
 
     partial void OnBasedOnChanged(LabelStyleOption? value)

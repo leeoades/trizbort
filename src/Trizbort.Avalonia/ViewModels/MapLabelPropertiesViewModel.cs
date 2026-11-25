@@ -294,8 +294,17 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
 }
 
 /// <summary>A label style in a list: indented by how far down the "based on" tree it is.</summary>
-public sealed record LabelStyleOption(string Id, string Name, int Depth)
+public sealed partial class LabelStyleOption(string id, string name, int depth) : ObservableObject
 {
+    public string Id { get; } = id;
+
+    public int Depth { get; } = depth;
+
+    /// <summary>Changes in place as the style is renamed, so the lists needn't be rebuilt (which took the focus).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Shown))]
+    private string _name = name;
+
     public string Shown => new string(' ', Depth * 4) + Name;
 
     public override string ToString() => Shown;

@@ -1,5 +1,9 @@
 using System.Drawing;
+using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using Trizbort.Avalonia.Views.Dialogs;
 using NUnit.Framework;
 using Shouldly;
 using Trizbort.Avalonia.ViewModels;
@@ -62,6 +66,43 @@ public class LabelStylesTests
         editor.TextColorFrom.ShouldBe("from Title");
         editor.Styles.Select(option => (option.Name, option.Depth))
               .ShouldBe(new[] { ("Default", 0), ("Title", 1), ("Subtitle", 2) });
+    }
+
+    [AvaloniaTest]
+    public void TypingAName_RenamesInPlace_SoTheNameBoxKeepsTheFocus()
+    {
+        // Lee, 25 Nov 2026: the focus left the Name box after each key
+        var settings = new MapSettingsViewModel();
+        settings.Initialize();
+        settings.SelectedTabIndex = MapSettingsViewModel.StylesTab;
+        var editor = settings.LabelStyles;
+        editor.AddStyleCommand.Execute(null);
+        var options = editor.Styles.ToList();
+        var selected = editor.Selected!;
+
+        var dialog = new MapSettingsDialog { DataContext = settings };
+        dialog.Show();
+        try
+        {
+            Dispatcher.UIThread.RunJobs();
+            var box = dialog.GetVisualDescendants().OfType<TextBox>().Single(b => b.Name == "StyleNameBox");
+            box.Focus();
+            foreach (var text in new[] { "P", "Po", "Pos", "Post" })
+            {
+                box.Text = text;
+                Dispatcher.UIThread.RunJobs();
+                box.IsFocused.ShouldBeTrue($"after typing to \"{text}\"");
+            }
+        }
+        finally
+        {
+            dialog.Close();
+        }
+
+        editor.Styles.ShouldBe(options);
+        editor.Selected.ShouldBeSameAs(selected);
+        selected.Name.ShouldBe("Post");
+        LabelStyles.Current.Has(selected.Id).ShouldBeFalse(); // not until OK
     }
 
     [AvaloniaTest]
