@@ -97,7 +97,9 @@ public class LabelStylesTests
             box.Focus();
             box.SelectAll();
             Dispatcher.UIThread.RunJobs();
-            box.IsFocused.ShouldBeTrue("to start with");
+            box.IsFocused.ShouldBeTrue(
+                $"to start with: enabled {box.IsEffectivelyEnabled}, visible {box.IsEffectivelyVisible}, " +
+                $"active {dialog.IsActive}, focused {dialog.FocusManager?.GetFocusedElement()}, selected {editor.Selected?.Name}");
 
             foreach (var letter in new[] { "P", "o", "s", "t" })
             {

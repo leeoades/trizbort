@@ -18,9 +18,9 @@ public partial class MapSettingsDialog : Window
         {
             if (vm.HasRegionErrors)
             {
-                // Show the Regions tab (the last one) and focus the offending name, as the reference does.
+                // Show the Regions tab and focus the offending name, as the reference does.
                 var regionTabs = this.FindControl<TabControl>("Tabs");
-                if (regionTabs != null) regionTabs.SelectedIndex = regionTabs.ItemCount - 1;
+                if (regionTabs != null) regionTabs.SelectedIndex = MapSettingsViewModel.RegionsTab;
                 var nameBox = this.FindControl<TextBox>("RegionNameBox");
                 nameBox?.Focus();
                 nameBox?.SelectAll();
