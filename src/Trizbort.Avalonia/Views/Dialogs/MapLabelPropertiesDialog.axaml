@@ -126,7 +126,7 @@
                         <Button Grid.Column="2" x:Name="EditStylesButton" Content="E_dit Styles..." Command="{Binding OpenStyleEditorCommand}" />
                     </Grid>
                     <ListBox x:Name="StyleList" ItemsSource="{Binding StyleOptions}" SelectedItem="{Binding SelectedStyle}"
-                             MaxHeight="280" AutomationProperties.Name="Styles, each showing this label in it">
+                             MaxHeight="360" AutomationProperties.Name="Styles, each showing this label in it">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:LabelStyleOption">
                                 <Grid ColumnDefinitions="150,*" Margin="0,2">
