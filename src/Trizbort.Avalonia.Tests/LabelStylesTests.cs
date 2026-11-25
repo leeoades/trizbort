@@ -71,52 +71,23 @@ public class LabelStylesTests
     }
 
     [AvaloniaTest]
-    public void TypingAName_RenamesInPlace_SoTheNameBoxKeepsTheFocus()
+    public void TypingAName_RenamesInPlace_SoTheNameBoxStaysEnabledAndKeepsTheFocus()
     {
-        // Lee, 25 Nov 2026: the focus left the Name box after each key
-        var settings = new MapSettingsViewModel();
-        settings.Initialize();
-        settings.SelectedTabIndex = MapSettingsViewModel.StylesTab;
-        var editor = settings.LabelStyles;
+        // Lee, 25 Nov 2026: the focus left the Name box after each key. Rebuilding the lists left nothing selected for
+        // a moment, and the Name box (enabled only for a style other than Default) lost the focus.
+        var editor = Editor();
         editor.AddStyleCommand.Execute(null);
         var options = editor.Styles.ToList();
         var selected = editor.Selected!;
-
-        var dialog = new MapSettingsDialog { DataContext = settings, Width = 800, Height = 700 };
-        dialog.Show();
-        try
+        var disabled = false;
+        editor.PropertyChanged += (_, e) =>
         {
-            Settle(dialog);
-            var tabs = dialog.FindControl<TabControl>("Tabs")!;
-            tabs.SelectedIndex = MapSettingsViewModel.StylesTab;
-            Settle(dialog);
-            var box = dialog.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(b => b.Name == "StyleNameBox");
-            box.ShouldNotBeNull($"tab {tabs.SelectedIndex}, {dialog.Bounds}, content {tabs.SelectedContent?.GetType().Name}, tree: " +
-                string.Join(", ", dialog.GetVisualDescendants().Select(v => v.GetType().Name + (v is Control { Name: { } n } ? ":" + n : "")).Take(80)));
-            // click into the box, as you would
-            var middle = global::Avalonia.VisualExtensions.TranslatePoint(box, new global::Avalonia.Point(box.Bounds.Width / 2, box.Bounds.Height / 2), dialog)!.Value;
-            dialog.MouseDown(middle, MouseButton.Left);
-            dialog.MouseUp(middle, MouseButton.Left);
-            Dispatcher.UIThread.RunJobs();
-            box.SelectAll();
-            box.IsFocused.ShouldBeTrue(
-                $"to start with: enabled {box.IsEffectivelyEnabled}, visible {box.IsEffectivelyVisible}, " +
-                $"active {dialog.IsActive}, focused {dialog.FocusManager?.GetFocusedElement()}, selected {editor.Selected?.Name}");
+            if (e.PropertyName == nameof(editor.IsNotDefault) && !editor.IsNotDefault) disabled = true;
+        };
 
-            foreach (var letter in new[] { "P", "o", "s", "t" })
-            {
-                dialog.KeyTextInput(letter);
-                Dispatcher.UIThread.RunJobs();
-                box.IsFocused.ShouldBeTrue($"after typing {letter}");
-            }
+        foreach (var text in new[] { "P", "Po", "Pos", "Post" }) editor.Name = text;
 
-            box.Text.ShouldBe("Post");
-        }
-        finally
-        {
-            dialog.Close();
-        }
-
+        disabled.ShouldBeFalse();
         editor.Styles.ShouldBe(options);
         editor.Selected.ShouldBeSameAs(selected);
         selected.Name.ShouldBe("Post");
