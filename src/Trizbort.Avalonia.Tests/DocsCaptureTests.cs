@@ -486,7 +486,7 @@ public class DocsCaptureTests
         Project.Current = project;
         Settings.Reset();
 
-        Room Add(string name, double x, double y)
+        Room Add(string name, float x, float y)
         {
             var room = new Room(project) { Name = name, Size = new CoreVector(128, 64) };
             room.Position = new CoreVector(x, y);
@@ -496,7 +496,7 @@ public class DocsCaptureTests
 
         Connection Join(Room from, CompassPoint fromSide, Room to, CompassPoint toSide)
         {
-            var join = new Connection(project, new Vertex(from.PortAt(fromSide)), new Vertex(to.PortAt(toSide)));
+            var join = new Connection(project, new Trizbort.Domain.Misc.Vertex(from.PortAt(fromSide)), new Trizbort.Domain.Misc.Vertex(to.PortAt(toSide)));
             project.Elements.Add(join);
             return join;
         }
