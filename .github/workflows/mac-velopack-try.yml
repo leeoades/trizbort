@@ -1,0 +1,41 @@
+# Temporary: tries the Mac Velopack packaging (release.yml's macos job) without a release. Remove once it works.
+name: Try Mac Velopack packaging
+on:
+  push:
+    branches: [fix/release-mac-and-guide]
+jobs:
+  try:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Build the app
+        run: bash packaging/macos/make-app.sh osx-arm64 0.16.1 0.16.1-beta TrizbortRecast-try-osx-arm64.zip
+      - name: Velopack package, signed after
+        env:
+          DOTNET_ROLL_FORWARD: Major
+          VPK_VERSION: 0.16.1-beta
+          PACKAGE_VERSION: try
+        run: |
+          set -euo pipefail
+          dotnet tool install -g vpk --version 1.2.161
+          for rid in osx-arm64; do
+            app="$(mktemp -d)"
+            ditto -x -k "TrizbortRecast-$PACKAGE_VERSION-$rid.zip" "$app"
+            vpk pack -u TrizbortRecast -v "$VPK_VERSION" -c "$rid" -p "$app/Trizbort Recast.app" -e TrizbortRecast \
+              --packTitle "Trizbort Recast" --icon packaging/icons/trizbort-recast.icns --noInst \
+              --signAppIdentity "-" -o "velopack/$rid"
+            check="$(mktemp -d)"
+            ditto -x -k velopack/$rid/*Portable.zip "$check"
+            codesign --verify --deep --strict "$check"/*.app
+            codesign -dv "$check"/*.app 2>&1 | head -5
+            unzip -q velopack/$rid/*-full.nupkg -d "$check/nupkg"
+            find "$check/nupkg" -maxdepth 3 | head -20
+            codesign --verify --deep --strict "$(find "$check/nupkg" -maxdepth 3 -name '*.app' -type d | head -1)"
+            # does it start? (headless: give it a moment, then stop it)
+            ( "$check"/*.app/Contents/MacOS/TrizbortRecast --version || true ) &
+            sleep 5; kill %1 2>/dev/null || true
+          done
+          ls -l velopack/*

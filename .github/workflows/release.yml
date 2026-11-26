@@ -105,11 +105,16 @@ jobs:
           for rid in osx-arm64 osx-x64; do
             app="$(mktemp -d)"
             ditto -x -k "TrizbortRecast-$PACKAGE_VERSION-$rid.zip" "$app"
+            # vpk adds its updater to the bundle, so it signs (ad hoc, "-") after: signing before isn't enough
             vpk pack -u TrizbortRecast -v "$VPK_VERSION" -c "$rid" -p "$app/Trizbort Recast.app" -e TrizbortRecast \
-              --packTitle "Trizbort Recast" --icon packaging/icons/trizbort-recast.icns --noInst -o "velopack/$rid"
+              --packTitle "Trizbort Recast" --icon packaging/icons/trizbort-recast.icns --noInst \
+              --signAppIdentity "-" -o "velopack/$rid"
             check="$(mktemp -d)"
             ditto -x -k velopack/$rid/*Portable.zip "$check"
             codesign --verify --deep --strict "$check"/*.app
+            # and the app inside the update package, which is what updates install
+            unzip -q velopack/$rid/*-full.nupkg -d "$check/nupkg"
+            codesign --verify --deep --strict "$(find "$check/nupkg" -maxdepth 3 -name '*.app' -type d | head -1)"
           done
           ls -l velopack/*
 
@@ -291,12 +296,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "GitHub Release creation failed." }
 
   # the user guide website, as it is at this release
+  # The Pages environment only deploys from master, so ask for the guide's workflow on master, building this tag's guide.
   guide:
     needs: release
+    runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pages: write
-      id-token: write
-    uses: ./.github/workflows/docs-site.yml
-    with:
-      ref: ${{ github.ref_name }}
+      actions: write
+    steps:
+      - name: Publish the guide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run docs-site.yml --repo "${{ github.repository }}" --ref master -f ref="${{ github.ref_name }}"
