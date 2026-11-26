@@ -5,6 +5,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.NUnit;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Avalonia.Themes.Fluent;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -251,6 +252,15 @@ public class DocsCaptureTests
     private static void Save(Window window, string path)
     {
         Settle(window);
+        // Draw afresh. The last frame drawn can be from before the view was set (a picture came out at the map's
+        // origin, 100%, depending on which captures ran before it), so ask everything to draw and tick the clock.
+        foreach (var visual in window.GetVisualDescendants()) visual.InvalidateVisual();
+        for (var i = 0; i < 3; i++)
+        {
+            global::Avalonia.Headless.AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            Dispatcher.UIThread.RunJobs();
+        }
+
         using var frame = window.CaptureRenderedFrame();
         frame?.Save(path);
     }
