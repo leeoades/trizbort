@@ -50,8 +50,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   Updates...**) and shows a bar under the toolbar. **App Settings > General > Updates** chooses what happens:
   *Check for updates, but let me choose whether to download and install them*; *Download updates, but let me choose
   when to install them* (the default), which waits for **Restart to Update**; or *Install updates automatically*,
-  which installs it when you close Recast. Betas get
-  beta updates. This works for copies installed from `TrizbortRecast-win-x64-Setup.exe`, the Linux `.AppImage`, and
+  which installs it when you close Recast. **Get test versions (betas)** gets betas too; until it's chosen, a beta gets betas and moves
+  on to the full release when it's out. Turn it off on a beta and Recast offers to go back to the last full release. This works for copies installed from `TrizbortRecast-win-x64-Setup.exe`, the Linux `.AppImage`, and
   the Mac app from `TrizbortRecast-osx-*-Portable.zip`, which each release now includes. The plain zips and
   tar.gz still work as before, but don't update themselves. (The Mac updates are untested so far.)
 

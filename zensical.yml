@@ -22,6 +22,7 @@ nav:
   - Exporting: exporting.md
   - Keyboard shortcuts: keyboard.md
   - More help: more-help.md
+  - Why it isn't signed: signing.md
 
 theme:
   name: material

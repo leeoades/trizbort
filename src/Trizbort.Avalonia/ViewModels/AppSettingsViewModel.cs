@@ -83,6 +83,28 @@ public partial class AppSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _updatesAutomatic;
 
+    /// <summary>
+    ///   Get test versions (betas). Shown ticked while on a beta when it hasn't been chosen, as that's what happens
+    ///   then; saved only once changed, so "not chosen" lasts until it is (Lee, 26 Nov 2026).
+    /// </summary>
+    [ObservableProperty]
+    private bool _testVersions;
+
+    private bool _testVersionsAsShown;
+
+    /// <summary>True when OK turned Get test versions off: a tester on a beta may want to go back.</summary>
+    public bool TurnedOffTestVersions => _testVersionsAsShown && !TestVersions;
+
+    /// <summary>A beta is running (the installed version, or this build's).</summary>
+    private static bool RunningTestVersion() =>
+        Trizbort.Updates.UpdateCoordinator.Current is { CanUpdate: true } updates
+            ? updates.OnTestVersion
+            : Trizbort.Updates.UpdateCoordinator.IsTestVersion(
+                typeof(AppSettingsViewModel).Assembly
+                    .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+                    .OfType<System.Reflection.AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion
+                    ?.Split('+')[0]);
+
     public UpdateMode UpdateChoice =>
         UpdatesNotify ? UpdateMode.Notify : UpdatesAutomatic ? UpdateMode.Automatic : UpdateMode.DownloadAndAsk;
 
@@ -226,6 +248,7 @@ public partial class AppSettingsViewModel : ViewModelBase
         UpdatesNotify = settings.Updates == UpdateMode.Notify;
         UpdatesAutomatic = settings.Updates == UpdateMode.Automatic;
         UpdatesDownload = !UpdatesNotify && !UpdatesAutomatic;
+        TestVersions = _testVersionsAsShown = settings.TestVersions ?? RunningTestVersion();
         ScrollWheelBehavior = (int)settings.ScrollWheelBehavior;
         ShowFullPathInTitleBar = settings.ShowFullPathInTitleBar;
         LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
@@ -266,6 +289,7 @@ public partial class AppSettingsViewModel : ViewModelBase
             : $"#{HereGlowColor.R:X2}{HereGlowColor.G:X2}{HereGlowColor.B:X2}";
         settings.InvertMouseWheel = InvertMouseWheel;
         settings.Updates = UpdateChoice;
+        if (TestVersions != _testVersionsAsShown) settings.TestVersions = TestVersions;
         settings.ScrollWheelBehavior = Enum.IsDefined(typeof(ScrollWheelMode), ScrollWheelBehavior)
             ? (ScrollWheelMode)ScrollWheelBehavior
             : ScrollWheelMode.Automatic;
