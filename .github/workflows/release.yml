@@ -112,9 +112,11 @@ jobs:
             check="$(mktemp -d)"
             ditto -x -k velopack/$rid/*Portable.zip "$check"
             codesign --verify --deep --strict "$check"/*.app
-            # and the app inside the update package, which is what updates install
+            # and the program inside the update package, which updates install. Only the program: a zip (the package)
+            # doesn't keep the file attributes the .dll files' ad-hoc signatures are in, so the bundle's seal can't be
+            # checked unpacked, but the program's own signature is inside it. Whether an update runs: try it on a Mac.
             unzip -q velopack/$rid/*-full.nupkg -d "$check/nupkg"
-            codesign --verify --deep --strict "$check/nupkg/lib/app"
+            codesign --verify --strict "$check/nupkg/lib/app/Contents/MacOS/TrizbortRecast"
           done
           ls -l velopack/*
 
