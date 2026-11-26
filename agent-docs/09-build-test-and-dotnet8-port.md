@@ -259,6 +259,19 @@ The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefi
 Before tagging a Recast release, run `scripts/update-docs-images.ps1` (or `.sh`) to redraw the user guide's
 pictures from the app, and move `Docs/whats-new.md`'s "Coming next" under the version.
 
+#### The first full release (1.0)
+
+Nothing in the app depends on being a beta: the title and About show the version, and updates go by it (a beta gets
+betas until Get test versions is chosen, so testers move on to 1.0 and then get full releases only). On the day:
+
+1. Tag `recast-v1.0.0` (no `-beta`): the release is marked latest, not a pre-release, and gets the changelog's
+   `## [1.0.0]` section as its notes. Do at least one beta release with the Velopack packages first (two, to try an
+   update over GitHub), and have the Mac packages tried on a Mac.
+2. `README.md`: the "Status: beta" note at the top goes (or says what's still new).
+3. `Docs/whats-new.md`: "Coming next" becomes the 1.0 section; the guide's front page and Getting started need no
+   change.
+4. `Docs/signing.md` and the README's signing section: update if the app is signed by then.
+
 ### Updates (Velopack)
 
 Recast updates itself with [Velopack](https://velopack.io) 1.2.161. Each release also carries `vpk pack` output for

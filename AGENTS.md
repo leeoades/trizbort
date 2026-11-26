@@ -31,7 +31,7 @@ the version heading (e.g. `## [0.12.0-beta] - 2026-11-20`); the release workflow
 as the release notes. Legacy (WinForms) changes go in [`legacy/changelog.md`](legacy/changelog.md).
 
 ## Quick facts
-- The Avalonia app is **Trizbort: Recast** (v0.11 beta; "Recast" for short, and file names keep `TrizbortRecast` / `trizbort-recast` / `Trizbort Recast.app` as colons aren't allowed in file names); the WinForms app in `legacy/` is "Trizbort" / the reference. See decision D5 in `agent-docs/plans/avalonia-parity/decisions.md`.
+- The Avalonia app is **Trizbort: Recast** ("Recast" for short; and file names keep `TrizbortRecast` / `trizbort-recast` / `Trizbort Recast.app` as colons aren't allowed in file names); the WinForms app in `legacy/` is "Trizbort" / the reference. See decision D5 in `agent-docs/plans/avalonia-parity/decisions.md`.
 - Projects:
   - `src/Trizbort.Core/` (`net10.0`): Portable domain logic, automap, geometry, exporters, settings, and persistence without WinForms or GDI+ dependencies. Cross-platform.
   - `src/Trizbort.Core.Tests/` (`net10.0`): Headless cross-platform unit tests. Run with `./scripts/run-core-tests.sh` or `dotnet test src/Trizbort.Core.Tests/Trizbort.Core.Tests.csproj`.
