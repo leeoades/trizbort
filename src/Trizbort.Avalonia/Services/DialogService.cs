@@ -271,21 +271,21 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         };
         Grid.SetRow(buttonPanel, 1);
 
-        var recoverButton = new Button { Content = "Recover", Width = 90, IsDefault = true };
+        var recoverButton = new Button { Content = "_Recover", MinWidth = 90, IsDefault = true };
         recoverButton.Click += (_, _) =>
         {
             result = RecoveryChoice.Recover;
             dialog.Close();
         };
 
-        var discardButton = new Button { Content = "Discard", Width = 90 };
+        var discardButton = new Button { Content = "_Delete", MinWidth = 90 };
         discardButton.Click += (_, _) =>
         {
             result = RecoveryChoice.Discard;
             dialog.Close();
         };
 
-        var laterButton = new Button { Content = "Decide later", Width = 110, IsCancel = true };
+        var laterButton = new Button { Content = "_Ask Me Next Time", MinWidth = 110, IsCancel = true };
         laterButton.Click += (_, _) =>
         {
             result = RecoveryChoice.DecideLater;
