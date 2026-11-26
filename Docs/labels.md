@@ -23,15 +23,13 @@ On the map, the table above looks like this:
 
 If you'd rather type the marks:
 
-| Type | For |
-|---|---|
-| `# Treasures`, `## Above ground` | Headings |
-| `**bold**`, `*italic*`, `` `code` `` | Bold, italic, code |
-| `- lamp` (two spaces before it for a list inside a list), `1. first` | Lists |
-| `---` | A line across |
-| `\| Treasure \| Room \|`, then `\|---\|---\|` under the first row | A table, a row a line |
-| `[[Giant Room]]`, `[[Giant Room\|the giant's room]]` | A link to a room, or other words for it |
-| `[the walkthrough](https://...)` | A web link |
+- **Headings:** `# Treasures`, `## Above ground`.
+- **Bold, italic and code:** `**bold**`, `*italic*`, `` `code` ``.
+- **Lists:** `- lamp`, or `1. first`. Put two spaces before a line for a list inside a list.
+- **A line across:** `---`.
+- **A table:** a row a line, with the cells between `|`s, and `|---|---|` under the first row to make it the heading.
+- **A link to a room:** `[[Giant Room]]`, or `[[Giant Room|the giant's room]]` to show other words.
+- **A web link:** `[the walkthrough](https://...)`.
 
 Rooms with the same name ("Maze") have their number in the link: `[[Maze#42]]`. Right-click a room and choose **Copy
 Room Link** to get its link, then paste it into the label.
