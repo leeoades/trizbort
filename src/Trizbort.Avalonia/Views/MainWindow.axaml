@@ -24,6 +24,37 @@
                     Padding="4,2">
                 <StackPanel x:Name="Toolbar" Orientation="Horizontal" Spacing="2" />
             </Border>
+
+            <!-- a new version of Recast: out, downloading, ready (Lee, 26 Nov 2026) -->
+            <!-- hidden when there's nothing to say, or no updates at all (tests) -->
+            <Panel DataContext="{Binding Updates}">
+            <Border x:Name="UpdateBar" x:DataType="vm:UpdateBarViewModel"
+                    IsVisible="{Binding IsVisible, FallbackValue=False}"
+                    Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="0,0,0,1" Padding="10,5">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <PathIcon Grid.Column="0" Data="{StaticResource IconUpdate}" Width="16" Height="16" Margin="0,0,8,0"
+                              VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <TextBlock x:Name="UpdateMessage" Text="{Binding Message}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                        <ProgressBar IsVisible="{Binding ShowProgress}" Value="{Binding Progress}" Minimum="0" Maximum="100"
+                                     Width="140" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Button x:Name="UpdateDownloadButton" Content="Download" IsVisible="{Binding ShowDownload}"
+                                Command="{Binding DownloadCommand}" Classes="accent" />
+                        <Button x:Name="UpdateRestartButton" Content="{Binding RestartText}" IsVisible="{Binding ShowRestart}"
+                                Command="{Binding RestartCommand}" Classes="accent"
+                                ToolTip.Tip="Close Recast, install the new version and open it again. You're asked about unsaved changes first." />
+                        <Button Content="Try Again" IsVisible="{Binding ShowTryAgain}" Command="{Binding TryAgainCommand}" />
+                        <Button Content="Releases Page" IsVisible="{Binding ShowReleases}" Command="{Binding ReleasesCommand}" />
+                        <Button Content="What's New" IsVisible="{Binding ShowWhatsNew}" Command="{Binding WhatsNewCommand}" />
+                        <Button x:Name="UpdateDismissButton" Content="{Binding DismissText}" Command="{Binding DismissCommand}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+            </Panel>
         </StackPanel>
 
         <!-- Bottom Status Bar -->

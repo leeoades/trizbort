@@ -73,6 +73,19 @@ public partial class AppSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _invertMouseWheel;
 
+    /// <summary>How Recast updates itself (<see cref="UpdateMode" />), as three radio buttons. Lee, 26 Nov 2026.</summary>
+    [ObservableProperty]
+    private bool _updatesNotify;
+
+    [ObservableProperty]
+    private bool _updatesDownload = true;
+
+    [ObservableProperty]
+    private bool _updatesAutomatic;
+
+    public UpdateMode UpdateChoice =>
+        UpdatesNotify ? UpdateMode.Notify : UpdatesAutomatic ? UpdateMode.Automatic : UpdateMode.DownloadAndAsk;
+
     /// <summary>Index of <see cref="ScrollWheelMode" />: 0 Automatic, 1 Always zoom, 2 Always pan.</summary>
     [ObservableProperty]
     private int _scrollWheelBehavior;
@@ -195,6 +208,9 @@ public partial class AppSettingsViewModel : ViewModelBase
             ? System.Drawing.Color.FromArgb(glow.R, glow.G, glow.B)
             : System.Drawing.Color.FromArgb(0x14, 0xB8, 0xA6);
         InvertMouseWheel = settings.InvertMouseWheel;
+        UpdatesNotify = settings.Updates == UpdateMode.Notify;
+        UpdatesAutomatic = settings.Updates == UpdateMode.Automatic;
+        UpdatesDownload = !UpdatesNotify && !UpdatesAutomatic;
         ScrollWheelBehavior = (int)settings.ScrollWheelBehavior;
         ShowFullPathInTitleBar = settings.ShowFullPathInTitleBar;
         LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
@@ -234,6 +250,7 @@ public partial class AppSettingsViewModel : ViewModelBase
             ? "#14B8A6"
             : $"#{HereGlowColor.R:X2}{HereGlowColor.G:X2}{HereGlowColor.B:X2}";
         settings.InvertMouseWheel = InvertMouseWheel;
+        settings.Updates = UpdateChoice;
         settings.ScrollWheelBehavior = Enum.IsDefined(typeof(ScrollWheelMode), ScrollWheelBehavior)
             ? (ScrollWheelMode)ScrollWheelBehavior
             : ScrollWheelMode.Automatic;

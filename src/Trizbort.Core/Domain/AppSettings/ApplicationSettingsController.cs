@@ -105,6 +105,7 @@ public static class ApplicationSettingsController
     AppSettings.ShowObjectsInTooltips = true;
     AppSettings.ShowDescriptionsInTooltips = true;
     AppSettings.ApplyStyleToNewRooms = false;
+    AppSettings.Updates = UpdateMode.DownloadAndAsk;
   }
 
   public static void SaveSettings()

@@ -53,6 +53,20 @@
                         </StackPanel>
                     </HeaderedContentControl>
 
+                    <!-- Recast updating itself (Lee, 26 Nov 2026) -->
+                    <HeaderedContentControl Classes="group" Header="Updates">
+                        <StackPanel Spacing="6">
+                            <RadioButton x:Name="UpdatesNotifyRadio" GroupName="Updates" IsChecked="{Binding UpdatesNotify}"
+                                         Content="_Notify me, and let me choose when to download" />
+                            <RadioButton x:Name="UpdatesDownloadRadio" GroupName="Updates" IsChecked="{Binding UpdatesDownload}"
+                                         Content="Do_wnload, but let me choose when to update" />
+                            <RadioButton x:Name="UpdatesAutomaticRadio" GroupName="Updates" IsChecked="{Binding UpdatesAutomatic}"
+                                         Content="_Update for me (when I close Recast)" />
+                            <TextBlock Classes="hint" TextWrapping="Wrap"
+                                       Text="Recast looks for a new version each time it starts. Help &gt; Check for Updates looks now. Only an installed copy can update itself." />
+                        </StackPanel>
+                    </HeaderedContentControl>
+
                     <HeaderedContentControl Classes="group" Header="Smart Save">
                         <StackPanel Spacing="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
