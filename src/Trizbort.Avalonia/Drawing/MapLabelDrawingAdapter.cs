@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Avalonia.Media;
+using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Enums;
 using Trizbort.Setup;
@@ -23,6 +24,10 @@ public static class MapLabelDrawingAdapter
         public RoomShape LastShape;
         public bool LastHandDrawn;
         public StreamGeometry? CachedGeometry;
+        public StreamGeometry? CachedHaloGeometry;
+        public CoreRect LastHaloBounds;
+        public RoomShape LastHaloShape;
+        public bool LastHaloHandDrawn;
 
         public string? LastText;
         public string? LastFontName;
@@ -106,6 +111,30 @@ public static class MapLabelDrawingAdapter
 
         var geometry = cache.CachedGeometry;
 
+        // Selected: the same yellow halo behind it as a room, so its own border still shows (Lee, 26 Nov 2026)
+        if (isSelected)
+        {
+            var haloBounds = bounds;
+            var isPrimary = Project.Current?.ActiveSelectedElement?.Id == label.Id;
+            haloBounds.Inflate(isPrimary ? 10 : 5);
+            if (cache.CachedHaloGeometry == null || !cache.LastHaloBounds.Equals(haloBounds) || cache.LastHaloShape != label.Shape
+                || cache.LastHaloHandDrawn != handDrawn)
+            {
+                cache.CachedHaloGeometry = label.Shape switch
+                {
+                    RoomShape.RoundedCorners => DrawingAdapters.CreateRoundedRectangleGeometry(haloBounds, new CornerRadii(), handDrawn, seed),
+                    RoomShape.Ellipse => DrawingAdapters.CreateEllipseGeometry(haloBounds, handDrawn, seed),
+                    RoomShape.Octagonal => DrawingAdapters.CreateOctagonalGeometry(haloBounds, new CornerRadii(), handDrawn, seed),
+                    _ => DrawingAdapters.CreateSquareGeometry(haloBounds, handDrawn, seed)
+                };
+                cache.LastHaloBounds = haloBounds;
+                cache.LastHaloShape = label.Shape;
+                cache.LastHaloHandDrawn = handDrawn;
+            }
+
+            context.DrawGeometry(RoomDrawingAdapter._selHaloBrush, null, cache.CachedHaloGeometry);
+        }
+
         // Background
         IBrush? fillBrush = label.HasBackground ? label.BackgroundColor.ToBrush() : null;
 
@@ -123,13 +152,8 @@ public static class MapLabelDrawingAdapter
             context.DrawGeometry(fillBrush, borderPen, geometry);
         }
 
-        // Selection / Hover
-        if (isSelected)
-        {
-            var selPen = Settings.Color[CoreColors.SelectedLine].ToPen(Settings.LineWidth + 1.5);
-            context.DrawGeometry(null, selPen, geometry);
-        }
-        else if (isHover)
+        // Hover (selection is the halo behind)
+        if (isHover && !isSelected)
         {
             var hoverPen = Settings.Color[CoreColors.HoverLine].ToPen(Settings.LineWidth + 1.0);
             context.DrawGeometry(null, hoverPen, geometry);

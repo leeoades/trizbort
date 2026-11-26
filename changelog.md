@@ -49,6 +49,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- A **selected label** has the same yellow glow behind it as a selected room, rather than a thick outline over its
+  border, so you can still see its border.
 - **Help > Online Help** opens the user guide as a website, https://leeoades.github.io/trizbort/, with a menu, search
   and a dark mode. It's the guide for the latest release.
 - **Automap's guesses** read more plainly. A way you hadn't tried is "unexplored" (not "isn't on the map yet",
