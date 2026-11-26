@@ -473,6 +473,38 @@ public class DocsCaptureTests
     }
 
     /// <summary>
+    ///   The original guide's sample quick map (a city, a river, a forest, lava pits, gold mines and a palace), opened
+    ///   in Recast: the finished map the quick map page builds. Lee, 26 Nov 2026.
+    /// </summary>
+    [AvaloniaTest]
+    public void TheQuickMap_Finished()
+    {
+        var root = Output();
+        var path = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(AppXaml()))!, "..", "legacy", "Docs",
+            "generic-game.trizbort");
+        var project = new Project();
+        Project.Current = project;
+        Settings.Reset();
+        Assert.That(new MapLoader(project).LoadMap(Path.GetFullPath(path)), Is.True, "the sample map opens");
+
+        var service = new CommandService();
+        service.SetViewportSize(900, 640);
+        var canvas = new MapCanvasControl { CommandService = service };
+        var shown = new Window { Width = 900, Height = 640, Content = canvas };
+        try
+        {
+            shown.Show();
+            Settle(shown);
+            service.Session.Viewport.FitToMap(project.Elements);
+            Save(shown, Path.Combine(root, "quick-map.png"));
+        }
+        finally
+        {
+            shown.Close();
+        }
+    }
+
+    /// <summary>
     ///   Backgrounds behind The Lighthouse: the shore, the lighthouse itself and the keeper's cottage, each set apart
     ///   in its own colour; and a background's properties. Lee, 24 Nov 2026.
     /// </summary>
