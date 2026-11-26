@@ -11,6 +11,7 @@ automap-dialog.png                  AutomapSettings__main__default.png
 which-room.png                      DisambiguateRooms__main__default.png
 split-room.png                      SplitRoom-moved__main__default.png
 label-style.png                     MapLabelProperties__Style__default.png
+label-own-look.png                  MapLabelProperties-own__Style__default.png
 app-settings-general.png            AppSettings__General__default.png
 app-settings-map.png                AppSettings__Map__default.png
 map-settings-lines.png              MapSettings__Lines-Grid__default.png

@@ -53,6 +53,9 @@ lit button again to go back to that.
 
 If one label really must be different, choose **Modify this label's appearance...**. The list of styles gives way to
 **Based on**, the style it starts from, with a preview of the label as it will look and the settings to change.
+
+![A label changed from its style: Based on, a preview, and its own settings.](images/label-own-look.png)
+
 OK keeps the changes and Cancel throws them away. It's better to make a style, so labels stay alike: **Save as a New
 Style...** opens Manage Styles at a new style with the label's look. Name it and press OK, and the label uses it.
 **Reset to Style** takes the label back to its style and lists the styles again. A label that's been changed this way opens at its own settings.
