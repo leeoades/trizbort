@@ -24,6 +24,7 @@ using Trizbort.Domain.Enums;
 using Trizbort.Setup;
 using AutomapEngine = Trizbort.Automap.Automap;
 using CoreVector = Trizbort.Domain.Misc.Vector;
+using CompassPoint = Trizbort.Domain.Misc.CompassPoint;
 
 namespace Trizbort.Avalonia.Tests;
 
@@ -473,6 +474,111 @@ public class DocsCaptureTests
     }
 
     /// <summary>
+    ///   The original guide's sample quick map (a city, a river, a forest, lava pits, gold mines and a palace), opened
+    ///   in Recast: the finished map the quick map page builds. Lee, 26 Nov 2026.
+    /// </summary>
+    [AvaloniaTest]
+    public void TheQuickMap_Finished()
+    {
+        var root = Output();
+        var path = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(AppXaml()))!, "..", "legacy", "Docs",
+            "generic-game.trizbort");
+        var project = new Project();
+        Project.Current = project;
+        Settings.Reset();
+        Assert.That(new MapLoader(project).LoadMap(Path.GetFullPath(path)), Is.True, "the sample map opens");
+
+        var service = new CommandService();
+        // the map is tall: a portrait picture, so it's drawn as large as it can be
+        service.SetViewportSize(620, 980);
+        var canvas = new MapCanvasControl { CommandService = service };
+        var shown = new Window { Width = 620, Height = 980, Content = canvas };
+        try
+        {
+            shown.Show();
+            Settle(shown);
+            service.Session.Viewport.FitToMap(project.Elements);
+            Save(shown, Path.Combine(root, "quick-map.png"));
+        }
+        finally
+        {
+            shown.Close();
+        }
+    }
+
+    /// <summary>
+    ///   A few rooms and joins in their different looks, for Drawing the map: objects (one inside another), a dark
+    ///   room, a second fill, a dotted border; a one-way join, up and down labels, a middle label, and a dotted join
+    ///   bent with its middle handle. Lee, 26 Nov 2026.
+    /// </summary>
+    [AvaloniaTest]
+    public void RoomsAndJoins_InTheirDifferentLooks()
+    {
+        var root = Output();
+        var project = new Project();
+        Project.Current = project;
+        Settings.Reset();
+
+        Room Add(string name, float x, float y)
+        {
+            var room = new Room(project) { Name = name, Size = new CoreVector(96, 64) };
+            room.Position = new CoreVector(x, y);
+            project.Elements.Add(room);
+            return room;
+        }
+
+        Connection Join(Room from, CompassPoint fromSide, Room to, CompassPoint toSide)
+        {
+            var join = new Connection(project, new Trizbort.Domain.Misc.Vertex(from.PortAt(fromSide)), new Trizbort.Domain.Misc.Vertex(to.PortAt(toSide)));
+            project.Elements.Add(join);
+            return join;
+        }
+
+        var hall = Add("Hall", 0, 0);
+        var kitchen = Add("Kitchen", 224, 0);
+        var cellar = Add("Cellar", 224, 160);
+        cellar.IsDark = true;
+        cellar.Objects = "wine rack";
+        var garden = Add("Garden", 0, 160);
+        garden.Objects = "wheelbarrow\n- spade\nhose";
+        garden.SecondFillColor = System.Drawing.Color.FromArgb(0x9C, 0xCC, 0x8C);
+        garden.SecondFillLocation = "Bottom";
+        var shed = Add("Shed", -224, 160);
+        shed.BorderStyle = BorderDashStyle.Dot;
+        shed.SubTitle = "not seen yet";
+
+        Join(hall, CompassPoint.East, kitchen, CompassPoint.West);
+        var stairs = Join(kitchen, CompassPoint.South, cellar, CompassPoint.North);
+        stairs.StartText = "d";
+        stairs.EndText = "u";
+        var window = Join(hall, CompassPoint.South, garden, CompassPoint.North);
+        window.Flow = ConnectionFlow.OneWay;
+        window.MidText = "climb out of window";
+        var grating = Join(garden, CompassPoint.East, cellar, CompassPoint.West);
+        grating.Style = ConnectionStyle.Dashed;
+        grating.MidText = "grating?";
+        grating.SetCurveWaypoint(CurveWaypoint.Middle, new CoreVector(160, 256));
+        Join(shed, CompassPoint.East, garden, CompassPoint.West);
+
+        var service = new CommandService();
+        service.SetViewportSize(760, 420);
+        var canvas = new MapCanvasControl { CommandService = service };
+        var shown = new Window { Width = 760, Height = 420, Content = canvas };
+        try
+        {
+            shown.Show();
+            Settle(shown);
+            // the middle of these rooms, larger than Fit to Map draws so small a map
+            service.Session.Viewport.SetView(new CoreVector(48, 140), 1.25f);
+            Save(shown, Path.Combine(root, "rooms-and-joins.png"));
+        }
+        finally
+        {
+            shown.Close();
+        }
+    }
+
+    /// <summary>
     ///   Backgrounds behind The Lighthouse: the shore, the lighthouse itself and the keeper's cottage, each set apart
     ///   in its own colour; and a background's properties. Lee, 24 Nov 2026.
     /// </summary>
@@ -520,5 +626,20 @@ public class DocsCaptureTests
         var vm = new BackgroundPropertiesViewModel();
         vm.Initialize(tower);
         Capture(new BackgroundPropertiesDialog { DataContext = vm }, Path.Combine(root, "background-properties.png"));
+    }
+
+    /// <summary>Three shore rooms' properties together: the cave is dark, the others aren't. Lee, 24 Nov 2026.</summary>
+    [AvaloniaTest]
+    public async Task SeveralRoomsProperties_TogetherWithMixedValues()
+    {
+        var root = Output();
+        var project = await LighthouseAsync();
+        var rooms = new[] { Called(project, "Rock Pools"), Called(project, "Sea Cave"), Called(project, "Beach") };
+        Called(project, "Sea Cave").IsDark = true;
+        Called(project, "Sea Cave").RoomFillColor = System.Drawing.Color.FromArgb(0xD8, 0xE4, 0xEE);
+        var vm = new RoomsPropertiesViewModel();
+        vm.Initialize(rooms);
+        vm.SelectedTabIndex = 1; // Shapes & Lines
+        Capture(new RoomsPropertiesDialog { DataContext = vm }, Path.Combine(root, "rooms-properties.png"));
     }
 }

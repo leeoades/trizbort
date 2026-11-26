@@ -53,4 +53,4 @@ Made a mistake? **Ctrl+Z** undoes it, and **Ctrl+Y** puts it back. Every change 
 
 If your game's interpreter can save a transcript, Recast can draw the map while you play. See [Automap](automap.md).
 
-Next: [Drawing the map](map.md)
+Next: [A quick map, step by step](quick-map.md)

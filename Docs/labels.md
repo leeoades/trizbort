@@ -21,8 +21,20 @@ On the map, the table above looks like this:
 
 ![The treasure label on the map, with links to the rooms.](images/main-window.png)
 
-If you'd rather type the marks: `## Heading`, `**bold**`, `*italic*`, `- list`, `[[Room name]]` for a room link and
-`[words](https://...)` for a web link.
+If you'd rather type the marks:
+
+- **Headings:** `# Treasures`, `## Above ground`.
+- **Bold, italic and code:** `**bold**`, `*italic*`, `` `code` ``.
+- **Lists:** `- lamp`, or `1. first`. Put two spaces before a line for a list inside a list.
+- **A line across:** `---`.
+- **A table:** a row a line, with the cells between `|`s, and `|---|---|` under the first row to make it the heading.
+- **A link to a room:** `[[Giant Room]]`, or `[[Giant Room|the giant's room]]` to show other words.
+- **A web link:** `[the walkthrough](https://...)`.
+
+Rooms with the same name ("Maze") have their number in the link: `[[Maze#42]]`. Right-click a room and choose **Copy
+Room Link** to get its link, then paste it into the label.
+
+A Markdown label's text starts at its top left. Older versions of Trizbort show the text as written.
 
 ## Style
 
@@ -36,7 +48,10 @@ ellipse or octagon) applies to both.
 A label grows as you type, and shrinks back as you delete, but never smaller than you made it. Drag its handles to
 resize it yourself.
 
-Labels can be joined to rooms like a room can, and appear in image and PDF exports. They aren't exported to game
-source.
+Labels can be joined to rooms: with nothing selected, drag from one of the label's ports to a room. They appear in
+image and PDF exports, but aren't exported to game source. Select, move, copy and delete them as you would rooms.
+
+Older versions of Trizbort ignore labels. Opening a map with labels in them is safe, but saving it there loses the
+labels and their joins.
 
 Next: [Automap](automap.md)

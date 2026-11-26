@@ -1,0 +1,66 @@
+name: "User guide website"
+
+# Builds the user guide (Docs/) as a website with Zensical and publishes it to GitHub Pages:
+# https://leeoades.github.io/trizbort/ (Help > Online Help in Recast opens it).
+# Each Recast release publishes the guide as it is at the release's tag (release.yml calls this), so the site
+# matches the app people can download. Run it by hand (Actions > User guide website > Run workflow) to publish
+# from a branch or tag in between.
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: The tag or branch to build the guide from
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: The tag or branch to build the guide from
+        type: string
+        default: master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-site
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Build
+        env:
+          GUIDE_REF: ${{ inputs.ref }}
+        run: |
+          pip install zensical==0.1.3
+          python scripts/build-docs-site.py --ref "$GUIDE_REF"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: .site-build/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
