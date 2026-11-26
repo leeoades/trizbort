@@ -24,6 +24,7 @@ using Trizbort.Domain.Enums;
 using Trizbort.Setup;
 using AutomapEngine = Trizbort.Automap.Automap;
 using CoreVector = Trizbort.Domain.Misc.Vector;
+using CompassPoint = Trizbort.Domain.Misc.CompassPoint;
 
 namespace Trizbort.Avalonia.Tests;
 
@@ -469,6 +470,76 @@ public class DocsCaptureTests
         {
             RouteGlow.Route = null;
             window.Close();
+        }
+    }
+
+    /// <summary>
+    ///   A few rooms and joins in their different looks, for Drawing the map: objects (one inside another), a dark
+    ///   room, a second fill, a dotted border; a one-way join, up and down labels, a middle label, and a dotted join
+    ///   bent with its middle handle. Lee, 26 Nov 2026.
+    /// </summary>
+    [AvaloniaTest]
+    public void RoomsAndJoins_InTheirDifferentLooks()
+    {
+        var root = Output();
+        var project = new Project();
+        Project.Current = project;
+        Settings.Reset();
+
+        Room Add(string name, double x, double y)
+        {
+            var room = new Room(project) { Name = name, Size = new CoreVector(128, 64) };
+            room.Position = new CoreVector(x, y);
+            project.Elements.Add(room);
+            return room;
+        }
+
+        Connection Join(Room from, CompassPoint fromSide, Room to, CompassPoint toSide)
+        {
+            var join = new Connection(project, new Vertex(from.PortAt(fromSide)), new Vertex(to.PortAt(toSide)));
+            project.Elements.Add(join);
+            return join;
+        }
+
+        var hall = Add("Hall", 0, 0);
+        hall.Objects = "coat stand\n- umbrella\nletter";
+        var kitchen = Add("Kitchen", 320, 0);
+        var cellar = Add("Cellar", 320, 224);
+        cellar.IsDark = true;
+        cellar.Objects = "wine rack";
+        var garden = Add("Garden", 0, 224);
+        garden.SecondFillColor = System.Drawing.Color.FromArgb(0x9C, 0xCC, 0x8C);
+        garden.SecondFillLocation = "Bottom";
+        var shed = Add("Shed", -320, 224);
+        shed.BorderStyle = BorderDashStyle.Dot;
+        shed.SubTitle = "not seen yet";
+
+        Join(hall, CompassPoint.East, kitchen, CompassPoint.West);
+        var stairs = Join(kitchen, CompassPoint.South, cellar, CompassPoint.North);
+        stairs.StartText = "d";
+        stairs.EndText = "u";
+        var window = Join(hall, CompassPoint.South, garden, CompassPoint.North);
+        window.Flow = ConnectionFlow.OneWay;
+        window.MidText = "climb out of window";
+        var grating = Join(garden, CompassPoint.East, cellar, CompassPoint.West);
+        grating.Style = ConnectionStyle.Dashed;
+        grating.MidText = "grating?";
+        grating.SetCurveWaypoint(CurveWaypoint.Middle, new CoreVector(224, 352));
+        Join(shed, CompassPoint.East, garden, CompassPoint.West);
+
+        var service = new CommandService();
+        service.SetViewportSize(760, 440);
+        var canvas = new MapCanvasControl { CommandService = service };
+        var shown = new Window { Width = 760, Height = 440, Content = canvas };
+        try
+        {
+            shown.Show();
+            service.Session.Viewport.FitToMap(project.Elements);
+            Save(shown, Path.Combine(root, "rooms-and-joins.png"));
+        }
+        finally
+        {
+            shown.Close();
         }
     }
 

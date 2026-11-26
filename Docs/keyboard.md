@@ -46,6 +46,8 @@ Exports have shortcuts of their own: see [Exporting](exporting.md).
 | Ctrl+H, Ctrl+E, Ctrl+R, Ctrl+8 | Straight, elliptical, rounded or octagonal |
 | Ctrl+Alt+C | Copy the room's colour |
 | ; | Adjust which ports the joins use |
+| W / Ctrl+W / Shift+W / Alt+W | Swap two rooms' objects / names / looks / regions |
+| Ctrl+Alt+arrow | Resize what's selected |
 
 ## Joins
 
