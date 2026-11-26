@@ -7,7 +7,7 @@ Inform 6, TADS, Hugo, ZIL, Quest, Alan or Adventuron.
 Recast is a cross-platform rebuild of **Trizbort**. It runs on Windows, Linux and macOS, and opens and saves the same
 `.trizbort` maps.
 
-> **Status: beta (0.15).** Recast does everything the Windows app does, and more, but it is new. Keep backups of your
+> **Status: beta.** Recast does everything the Windows app does, and more, but it is new. Keep backups of your
 > maps and please [report anything that goes wrong](https://github.com/leeoades/trizbort/issues).
 
 ## Where it comes from
