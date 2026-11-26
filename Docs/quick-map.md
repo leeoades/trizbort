@@ -68,8 +68,8 @@ The palace has a few last tricks: a hall, a throne room, a balcony and two jails
   with **R** and set its region yourself.
 - Rooms in a tangle? **Rooms > Tidy Map...** (right-click a room) straightens them out.
 
-There are no objects yet. Add them as you go, or come back afterwards: open each room's properties and list them,
-one a line. Rooms that look alike can be copied with **Ctrl+C** and **Ctrl+V**, or **Ctrl+D** to duplicate.
+The finished map has objects in its rooms too ("Whiner #1"). Add them as you go, or come back afterwards: open each
+room's properties and list them, one a line. Rooms that look alike can be copied with **Ctrl+C** and **Ctrl+V**, or **Ctrl+D** to duplicate.
 
 You'll find your own favourite ways and shortcuts as you go: [Keyboard shortcuts](keyboard.md) lists them all.
 
