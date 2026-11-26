@@ -116,8 +116,8 @@ public class MarkdownLabelTests
         vm.Initialize(label);
         var dialog = new Trizbort.Avalonia.Views.Dialogs.MapLabelPropertiesDialog { DataContext = vm };
         dialog.Show();
-        var text = dialog.FindControl<global::Avalonia.Controls.TextBox>("LabelText")!;
-        void Click(string name) => dialog.FindControl<global::Avalonia.Controls.Button>(name)!
+        var text = global::Avalonia.Controls.ControlExtensions.FindControl<global::Avalonia.Controls.TextBox>(dialog, "LabelText")!;
+        void Click(string name) => global::Avalonia.Controls.ControlExtensions.FindControl<global::Avalonia.Controls.Button>(dialog, name)!
             .RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(global::Avalonia.Controls.Button.ClickEvent));
 
         // "the eggs": an object
