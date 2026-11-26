@@ -12,6 +12,13 @@ public class ApplicationSettings
 
   /// <summary>How Recast updates itself: tell me, download and ask, or update for me.</summary>
   public UpdateMode Updates { get; set; } = UpdateMode.DownloadAndAsk;
+
+  /// <summary>
+  ///   Get test versions (betas): true, betas too; false, full releases only; null (not chosen), as the version
+  ///   running: betas while on a beta, so a tester moves to the full release when it's out, then stays on those
+  ///   (Lee, 26 Nov 2026).
+  /// </summary>
+  public bool? TestVersions { get; set; }
   public AutomapSettings Automap { get; set; } = AutomapSettings.Default;
   public int CanvasHeight { get; set; }
   public int CanvasWidth { get; set; }

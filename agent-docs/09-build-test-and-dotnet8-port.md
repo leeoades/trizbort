@@ -270,7 +270,10 @@ ships without Mac updates (with a warning). Tags with a fourth version part aren
 update packages (`vpk` output of the version job is empty).
 
 In the app: `Program.Main` runs `VelopackApp.Build().SetAutoApplyOnStartup(false)` first. `VelopackUpdater`
-(Avalonia, `IAppUpdater`) reads `GithubSource` with pre-releases; an installed copy keeps to its own channel.
+(Avalonia, `IAppUpdater`) reads `GithubSource`, with pre-releases when `UpdateCoordinator.Betas` (the user's
+`ApplicationSettings.TestVersions`, or when that's unset, whether the running version is a pre-release); an installed
+copy keeps to its own channel. Turning test versions off on a beta offers `GoBackAsync` (`AllowVersionDowngrade`) to
+the last full release.
 `UpdateCoordinator` (Core) holds the state and the user's `ApplicationSettings.Updates` (`UpdateMode`: Notify,
 DownloadAndAsk, Automatic) and is unit-tested with a fake updater; `UpdateBarViewModel` drives the bar under the
 toolbar. Restart to Update closes the main window normally, and `desktop.Exit` calls `OnClosing`, which hands the

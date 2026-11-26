@@ -53,7 +53,11 @@ Check for Updates...** looks straight away. **Updates**, on the **General** tab,
 - **Install updates automatically**: it downloads in the background and installs the new version when you close
   Recast. **Restart Now** on the bar does it straight away.
 
-While Recast is in beta, it updates to the newest beta.
+**Get test versions (betas)** gets new versions before they're released, with the newest features and sometimes
+problems. Without it you get full releases only. Until you choose, a beta gets betas and a full release gets full
+releases, so a beta moves on to the full release when it's out. Turn it off while on a beta and Recast offers to go
+back to the last full release (**Restart to Go Back** on the bar), or you can stay on the beta until the next full
+release.
 
 Only installed copies update themselves (see [Getting started](getting-started.md#download-and-install)). In a plain
 copy from a zip, the Updates settings say it can't update itself and which download to install on your computer, as
