@@ -42,6 +42,10 @@
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <CheckBox Content="Show Full _Path in Title Bar" IsChecked="{Binding ShowFullPathInTitleBar}" />
                             </StackPanel>
+                            <!-- double-clicking a map opens it in Recast; a Mac's app bundle does this itself (Lee, 26 Nov 2026) -->
+                            <CheckBox x:Name="OpenTrizbortFilesCheck" Content="Op_en .trizbort files with Recast"
+                                      IsChecked="{Binding OpenTrizbortFiles}" IsVisible="{Binding CanOpenTrizbortFiles}"
+                                      ToolTip.Tip="Double-clicking a map opens it in this copy of Recast" />
                             <Grid ColumnDefinitions="Auto,12,*">
                                 <Label Grid.Column="0" Classes="field-label" Content="Port Ad_just Detail:" Target="{Binding #PortAdjustCombo}" />
                                 <ComboBox Grid.Column="2" x:Name="PortAdjustCombo" SelectedIndex="{Binding PortAdjustDetail}" HorizontalAlignment="Left" MinWidth="140">
@@ -65,8 +69,12 @@
                             <RadioButton x:Name="UpdatesAutomaticRadio" GroupName="Updates" IsChecked="{Binding UpdatesAutomatic}">
                                 <AccessText TextWrapping="Wrap" Text="Install _updates automatically" />
                             </RadioButton>
+                            <!-- testers: betas too (Lee, 26 Nov 2026) -->
+                            <CheckBox x:Name="TestVersionsCheck" IsChecked="{Binding TestVersions}" Margin="0,4,0,0">
+                                <AccessText TextWrapping="Wrap" Text="Get test versions (_betas) before they're released" />
+                            </CheckBox>
                             <TextBlock Classes="hint" TextWrapping="Wrap"
-                                       Text="Recast looks for a new version each time it starts (Help &gt; Check for Updates looks now). Automatic updates are installed when you close Recast. Otherwise a downloaded update waits until you choose Restart to Update." />
+                                       Text="Recast looks for a new version each time it starts (Help &gt; Check for Updates looks now). Automatic updates are installed when you close Recast. Otherwise a downloaded update waits until you choose Restart to Update. Betas have the newest features first, and sometimes problems; without them you get full releases only." />
                             <!-- a plain copy (a zip, or a build) can't update itself: say so, and where the installer is -->
                             <Border x:Name="CantUpdateNote" IsVisible="{Binding CantUpdateItself}"
                                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1"

@@ -250,9 +250,11 @@ The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefi
    and Linux builds leave the native libraries (Skia, HarfBuzz, ANGLE) beside the executable rather than
    self-extracting them to a temp folder at start-up, which antivirus heuristics flag.
 4. Create a GitHub Release ("Trizbort: Recast 0.11.0-beta" / "Trizbort (legacy) legacy-v2.3.2").
-   Betas are marked prerelease, never replace the latest stable release, and use their changelog
-   section (heading without the prefix, e.g. `## [0.10.0-beta]`) as the notes; the build fails if
-   it is missing. A beta can be tagged from an unmerged branch for testing.
+   Betas are marked prerelease and never replace the latest stable release. Every release (beta or
+   full) uses its changelog section (heading without the prefix, e.g. `## [0.10.0-beta]`) as the
+   notes, under a line saying the downloads aren't signed yet (linking to the guide's `signing.md`),
+   followed by GitHub's generated list; the build fails if the section is missing. A beta can be
+   tagged from an unmerged branch for testing.
 
 Before tagging a Recast release, run `scripts/update-docs-images.ps1` (or `.sh`) to redraw the user guide's
 pictures from the app, and move `Docs/whats-new.md`'s "Coming next" under the version.
@@ -283,7 +285,10 @@ ships without Mac updates (with a warning). Tags with a fourth version part aren
 update packages (`vpk` output of the version job is empty).
 
 In the app: `Program.Main` runs `VelopackApp.Build().SetAutoApplyOnStartup(false)` first. `VelopackUpdater`
-(Avalonia, `IAppUpdater`) reads `GithubSource` with pre-releases; an installed copy keeps to its own channel.
+(Avalonia, `IAppUpdater`) reads `GithubSource`, with pre-releases when `UpdateCoordinator.Betas` (the user's
+`ApplicationSettings.TestVersions`, or when that's unset, whether the running version is a pre-release); an installed
+copy keeps to its own channel. Turning test versions off on a beta offers `GoBackAsync` (`AllowVersionDowngrade`) to
+the last full release.
 `UpdateCoordinator` (Core) holds the state and the user's `ApplicationSettings.Updates` (`UpdateMode`: Notify,
 DownloadAndAsk, Automatic) and is unit-tested with a fake updater; `UpdateBarViewModel` drives the bar under the
 toolbar. Restart to Update closes the main window normally, and `desktop.Exit` calls `OnClosing`, which hands the

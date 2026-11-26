@@ -16,8 +16,11 @@ There are two kinds of settings:
 **General:**
 
 - **Save images at 100%**: export pictures at full size, whatever the zoom.
+- **Open .trizbort files with Recast** (on by default, Windows and Linux): double-clicking a map opens it in Recast.
+  On a Mac, Finder does this once Recast is in Applications.
 - **Open last project on start**, and **Keep a recovery copy of unsaved changes** (on by default) in case Recast
-  closes before you save.
+  closes before you save. Next time it starts, even to open another map, Recast says it didn't close properly and
+  offers to **Recover** the unsaved changes, **Delete** them, or **Ask Me Next Time**.
 - **Invert Mouse Wheel Zoom**, and **Scroll wheel / trackpad scroll**: **Automatic** zooms with a mouse wheel and pans
   with a trackpad, or choose **Always zoom** or **Always pan**. **Ctrl** with the wheel always zooms.
 - **Show Full Path in Title Bar.**
@@ -53,7 +56,11 @@ Check for Updates...** looks straight away. **Updates**, on the **General** tab,
 - **Install updates automatically**: it downloads in the background and installs the new version when you close
   Recast. **Restart Now** on the bar does it straight away.
 
-While Recast is in beta, it updates to the newest beta.
+**Get test versions (betas)** gets new versions before they're released, with the newest features and sometimes
+problems. Without it you get full releases only. Until you choose, a beta gets betas and a full release gets full
+releases, so a beta moves on to the full release when it's out. Turn it off while on a beta and Recast offers to go
+back to the last full release (**Restart to Go Back** on the bar), or you can stay on the beta until the next full
+release.
 
 Only installed copies update themselves (see [Getting started](getting-started.md#download-and-install)). In a plain
 copy from a zip, the Updates settings say it can't update itself and which download to install on your computer, as

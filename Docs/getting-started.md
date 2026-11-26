@@ -5,12 +5,13 @@
 ## Download and install
 
 Get the latest release from the [Releases page](https://github.com/leeoades/trizbort/releases). The downloads
-include everything they need: there's no separate .NET to install.
+include everything they need: there's no separate .NET to install. They aren't signed yet, so Windows and macOS warn
+about them the first time: see [why, and how you can help](signing.md).
 
 These keep themselves up to date (see [Updates](settings.md#updates)):
 
-- **Windows:** run `TrizbortRecast-win-x64-Setup.exe`. It installs Recast for you alone (no administrator needed)
-  and adds it to the Start menu. The app isn't signed yet, so Windows SmartScreen may warn you: choose
+- **Windows:** run `TrizbortRecast-win-x64-Setup.exe`. It installs Recast for you alone (no administrator needed),
+  adds it to the Start menu, and opens `.trizbort` files with it. The app isn't signed yet, so Windows SmartScreen may warn you: choose
   **More info**, then **Run anyway**.
 - **Linux:** download the `.AppImage`, make it executable (`chmod +x`) and run it.
 - **macOS:** download `TrizbortRecast-osx-arm64-Portable.zip` (Apple Silicon) or `…-osx-x64-Portable.zip` (Intel),

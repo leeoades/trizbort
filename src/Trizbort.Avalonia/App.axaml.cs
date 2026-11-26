@@ -60,6 +60,7 @@ public partial class App : Application
             }
             InstallCrashSafety(desktop, session, dialogService);
             InstallUpdates(desktop, mainWindowViewModel, prompts);
+            KeepFileAssociation();
             FileWatcherWiring.Wire(dialogService, () => desktop.MainWindow, mainWindowViewModel.UpdateState,
                 mainWindowViewModel.CommandService.Session);
         }
@@ -80,7 +81,8 @@ public partial class App : Application
         {
             var updates = new Trizbort.Updates.UpdateCoordinator(
                 new VelopackUpdater(),
-                () => Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.Updates);
+                () => Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.Updates,
+                () => Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.TestVersions);
             Trizbort.Updates.UpdateCoordinator.Current = updates;
             viewModel.Updates = new UpdateBarViewModel(updates, uri => prompts.OpenUriAsync(uri),
                 () => desktop.MainWindow?.Close());
@@ -104,6 +106,18 @@ public partial class App : Application
         {
             System.Diagnostics.Debug.WriteLine($"Updates could not start: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    ///   Open .trizbort files with Recast (App Settings, on by default; Lee, 26 Nov 2026): set again at each start, so
+    ///   it follows this copy if it moved. Not from a development build, which would take it over from the real one.
+    /// </summary>
+    private static void KeepFileAssociation()
+    {
+#if !DEBUG
+        if (!Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.OpenTrizbortFiles) return;
+        _ = Task.Run(() => FileAssociation.Apply(true));
+#endif
     }
 
     /// <summary>Recovery copy of unsaved work and the global error handlers (ticket 135).</summary>

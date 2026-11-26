@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Double-click a map to open it in Recast.** The Windows installer sets this up, and on Windows and Linux any copy
+  does it at start-up while **App Settings > General > Open .trizbort files with Recast** is on (the default). Turn
+  it off to leave `.trizbort` files to another app. On a Mac, Finder does it once Recast is in Applications.
 - **Label styles.** A label's look (font and size, bold and italic, text colour, outline, background, shape, and where the
   text sits: left, centre or right, and top, middle or bottom)
   comes from a style kept in the map. Choose it on the label's **Style** tab, which shows the label's text in each
@@ -50,8 +53,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   Updates...**) and shows a bar under the toolbar. **App Settings > General > Updates** chooses what happens:
   *Check for updates, but let me choose whether to download and install them*; *Download updates, but let me choose
   when to install them* (the default), which waits for **Restart to Update**; or *Install updates automatically*,
-  which installs it when you close Recast. Betas get
-  beta updates. This works for copies installed from `TrizbortRecast-win-x64-Setup.exe`, the Linux `.AppImage`, and
+  which installs it when you close Recast. **Get test versions (betas)** gets betas too; until it's chosen, a beta gets betas and moves
+  on to the full release when it's out. Turn it off on a beta and Recast offers to go back to the last full release. This works for copies installed from `TrizbortRecast-win-x64-Setup.exe`, the Linux `.AppImage`, and
   the Mac app from `TrizbortRecast-osx-*-Portable.zip`, which each release now includes. The plain zips and
   tar.gz still work as before, but don't update themselves. (The Mac updates are untested so far.)
 
@@ -78,6 +81,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- After Recast **didn't close properly**, the question about your unsaved changes now says when recovering them is instead of
+  the map you were opening, and its buttons are **Recover**, **Delete** and **Ask Me Next Time**. If you recover them,
+  the status bar says the other map wasn't opened.
 - **Add Link…** in a label links the words you'd selected, to a room or to an object's room. They were lost when
   the link panel opened, so the link went in beside them.
 - **Directions** take a magic word back once you've used it both ways ("xyzzy" from the debris room to the building,
