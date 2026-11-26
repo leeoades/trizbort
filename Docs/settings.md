@@ -94,6 +94,17 @@ instead.
 Region** can't be renamed, but you can change its colours. Region names can't differ only in capitals. A dark fill
 needs a light text colour: Recast leaves that to you.
 
+### Styles
+
+![Map Settings, Styles: Subtitle is based on Title.](images/map-settings-styles.png)
+
+The map's label styles. Every map has **Default**. **New Style** makes one **based on** the
+style that's selected: it looks the same until you change something. What it doesn't set comes from the style it's
+based on, and the tab says where ("from Title"). **Reset** takes a value from there again. Delete a style and its
+labels take the style it was based on.
+
+Styles are saved in the map. Older versions draw each label as it looks now.
+
 ## Themes
 
 A theme changes the whole look of a map in one go: Classic, Parchment, Dark, High contrast or Sketch. Choose

@@ -382,7 +382,8 @@ public partial class MapSettingsViewModel : ViewModelBase
         Description = project.Description ?? string.Empty;
         History = project.History ?? string.Empty;
 
-        SelectedTabIndex = Math.Clamp(ApplicationSettingsController.AppSettings.MapSettingsLastTab, 0, RegionsTab);
+        SelectedTabIndex = Math.Clamp(ApplicationSettingsController.AppSettings.MapSettingsLastTab, 0, StylesTab);
+        LabelStyles.Initialize();
         HandleSize = Settings.HandleSize;
         SnapToElementDistance = Settings.SnapToElementSize;
         DefaultRoomNameError = string.Empty;
@@ -486,6 +487,7 @@ public partial class MapSettingsViewModel : ViewModelBase
         }
 
         UpdateRoomRegions(project);
+        LabelStyles.ApplyTo(project);
 
         Settings.Regions.Clear();
         foreach (var r in Regions)
@@ -527,8 +529,14 @@ public partial class MapSettingsViewModel : ViewModelBase
             }
     }
 
-    /// <summary>The Regions tab, the last.</summary>
+    /// <summary>The Regions tab.</summary>
     public const int RegionsTab = 5;
+
+    /// <summary>The Styles tab, the last (Lee, 24 Nov 2026).</summary>
+    public const int StylesTab = 6;
+
+    /// <summary>The label styles, on the Styles tab.</summary>
+    public LabelStylesEditorViewModel LabelStyles { get; } = new();
 
     [RelayCommand]
     public void AddRegion()

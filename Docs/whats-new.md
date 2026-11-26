@@ -6,6 +6,9 @@ The highlights of each release, newest first. Every change is listed in the [cha
 
 ## Coming next
 
+- **Label styles.** Choose a style for each label, such as "Title" or "Note", with its font and size, colours,
+  outline, background and shape. A style can be based on another. Change a style and its labels change too. See
+  [Labels](labels.md#styles).
 - **Backgrounds**: coloured shapes behind parts of the map, to set them apart. Select some rooms and press **B**.
   See [Drawing the map](map.md#backgrounds).
 

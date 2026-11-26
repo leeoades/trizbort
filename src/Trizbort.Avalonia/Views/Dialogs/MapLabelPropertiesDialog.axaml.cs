@@ -94,8 +94,10 @@ public partial class MapLabelPropertiesDialog : Window
         if (ViewModel is not { } viewModel) return;
         var (start, end) = Selection();
         var selected = (LabelText.Text ?? string.Empty).Substring(start, end - start).Trim();
-        viewModel.LinkSearch = selected.Length is > 0 and <= 40 && !selected.Contains('\n') ? selected : string.Empty;
         viewModel.LinkPanelOpen = true;
+        // search for the selected words when they name something ("Giant Room"); otherwise ("the giant's room") show all
+        viewModel.LinkSearch = selected.Length is > 0 and <= 40 && !selected.Contains('\n') ? selected : string.Empty;
+        if (viewModel.LinkChoices.Count == 0) viewModel.LinkSearch = string.Empty;
         LinkSearchBox.Focus();
         LinkSearchBox.SelectAll();
     }

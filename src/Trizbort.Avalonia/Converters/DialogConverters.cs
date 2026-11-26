@@ -52,6 +52,20 @@ public class CoreColorToNameOrHexConverter : IValueConverter
 }
 
 /// <summary>Maps a region name to a brush of that region's colour (for the Region combo swatches).</summary>
+/// <summary>An indent for a style's depth in its "based on" tree.</summary>
+public class DepthToIndentConverter : IValueConverter
+{
+    public static readonly DepthToIndentConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        new global::Avalonia.Thickness((value is int depth ? depth : 0) * 16, 0, 0, 0);
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
+    }
+}
+
 /// <summary>A region's name as shown: "No Region" for the default.</summary>
 public class RegionDisplayNameConverter : IValueConverter
 {

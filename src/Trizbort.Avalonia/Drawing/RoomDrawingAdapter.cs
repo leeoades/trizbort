@@ -21,7 +21,8 @@ namespace Trizbort.Avalonia.Drawing;
 
 public static class RoomDrawingAdapter
 {
-    private static readonly IBrush _selHaloBrush = new SolidColorBrush(AvaloniaColor.FromArgb(120, 255, 255, 0));
+    /// <summary>The yellow halo behind a selected room, and a selected label.</summary>
+    internal static readonly IBrush _selHaloBrush = new SolidColorBrush(AvaloniaColor.FromArgb(120, 255, 255, 0));
 
     private record struct GeometryKey(CoreRect Bounds, RoomShape Shape, double Tl, double Tr, double Br, double Bl, bool HandDrawn);
 
