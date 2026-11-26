@@ -87,7 +87,7 @@ public partial class LabelStylesEditorViewModel : ViewModelBase
         selectId ??= LabelStyle.DefaultId;
         if (newFrom != null)
         {
-            // Create a New Style from a label's own look: based on its style, with what the label changed
+            // Save as a New Style, from a label's own look: based on its style, with what the label changed
             var style = _set.Add("New Style", _set.Has(selectId) ? selectId : LabelStyle.DefaultId);
             style.SetFrom(newFrom);
             selectId = style.Id;

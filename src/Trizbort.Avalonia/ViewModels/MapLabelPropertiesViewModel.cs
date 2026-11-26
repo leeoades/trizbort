@@ -210,8 +210,8 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///   A new style with this label's look (its style and what it changes), made in the style editor; on OK the label
-    ///   takes the new style and its own changes go.
+    ///   Save as a New Style: Manage Styles opens at a new style with this label's look (its style and what it changes);
+    ///   on OK the label takes the new style, its own changes go, and the styles are listed again.
     /// </summary>
     [CommunityToolkit.Mvvm.Input.RelayCommand]
     private async Task CreateStyleFromLook()
@@ -228,6 +228,7 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
 
         LoadStyleOptions(LabelStyles.Has(id) ? id : LabelStyle.DefaultId);
         ShowLook();
+        OwnLookOpen = HasOwnLook;
     }
 
     /// <summary>Shows the controls for this label's own look.</summary>

@@ -295,6 +295,7 @@ public class LabelStylesTests
         await vm.CreateStyleFromLookCommand.ExecuteAsync(null);
         vm.SelectedStyle!.Name.ShouldBe("Sign");
         vm.HasOwnLook.ShouldBeFalse();
+        vm.OwnLookOpen.ShouldBeFalse(); // back to the list, with the new style chosen
         vm.Shape.ShouldBe(RoomShape.Octagonal);
         vm.HasBackground.ShouldBeTrue();
 
