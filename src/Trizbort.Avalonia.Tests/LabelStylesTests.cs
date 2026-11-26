@@ -189,8 +189,8 @@ public class LabelStylesTests
 
         var reopened = new MapLabelPropertiesViewModel();
         reopened.Initialize(label);
-        // closed even so: the controls only show when asked for
-        reopened.OwnLookOpen.ShouldBeFalse();
+        // changed before, so its controls are open already
+        reopened.OwnLookOpen.ShouldBeTrue();
         reopened.HasOwnLook.ShouldBeTrue();
         reopened.ResetToStyleCommand.Execute(null);
         reopened.HasOwnLook.ShouldBeFalse();

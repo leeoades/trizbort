@@ -51,8 +51,8 @@ been: centred, or top left for Markdown.
 
 If one label really must be different, choose **Modify this label's appearance...**. It's better to make a style, so
 labels stay alike: **Create a New Style...** there makes one with the label's look, and the label then uses it.
-**Reset to Style** takes the label back to its style. A label changed this way says so on the Style tab, but the
-controls stay hidden until you choose Modify again.
+**Reset to Style** takes the label back to its style. A label that's been changed this way opens with these
+controls showing.
 
 ## Size
 
