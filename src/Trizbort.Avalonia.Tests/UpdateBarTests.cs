@@ -1,3 +1,4 @@
+using Trizbort.Avalonia.Services;
 using Avalonia.Headless.NUnit;
 using NUnit.Framework;
 using Shouldly;
@@ -110,6 +111,7 @@ public class UpdateBarTests
 
         bar.IsVisible.ShouldBeTrue();
         bar.Message.ShouldContain("can't update itself");
+        bar.Message.ShouldContain(UpdateDownload.HowToInstall());
         bar.ShowReleases.ShouldBeTrue();
     }
 
@@ -120,6 +122,18 @@ public class UpdateBarTests
         _updater.Online = null;
         await bar.CheckNowAsync();
         bar.Message.ShouldBe("You have the newest version of Recast (0.15.0-beta).");
+    }
+
+    [TestCase(UpdateDownload.Platform.Windows, "TrizbortRecast-win-x64-Setup.exe")]
+    [TestCase(UpdateDownload.Platform.MacAppleSilicon, "TrizbortRecast-osx-arm64-Portable.zip")]
+    [TestCase(UpdateDownload.Platform.MacIntel, "TrizbortRecast-osx-x64-Portable.zip")]
+    [TestCase(UpdateDownload.Platform.Linux, ".AppImage")]
+    public void APlainCopy_IsToldTheOneDownloadForItsComputer(UpdateDownload.Platform platform, string download)
+    {
+        var how = UpdateDownload.HowToInstall(platform);
+        how.ShouldContain(download);
+        foreach (var other in new[] { "Setup.exe", "Portable.zip", ".AppImage" }.Where(name => !download.Contains(name)))
+            how.ShouldNotContain(other);
     }
 
     [AvaloniaTest]

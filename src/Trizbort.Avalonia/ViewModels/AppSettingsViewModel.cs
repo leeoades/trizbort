@@ -202,6 +202,10 @@ public partial class AppSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _cantUpdateItself;
 
+    /// <summary>For a plain copy: what to install instead, on this computer.</summary>
+    public string HowToGetUpdates { get; } =
+        $"It wasn't installed, so these settings will only apply once it is. To get updates, {UpdateDownload.HowToInstall()}. Your settings are kept.";
+
     /// <summary>Where the update-ready downloads are.</summary>
     public Uri ReleasesPage { get; } = new(UpdateBarViewModel.ReleasesPage);
 

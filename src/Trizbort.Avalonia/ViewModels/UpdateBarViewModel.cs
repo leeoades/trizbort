@@ -1,3 +1,4 @@
+using Trizbort.Avalonia.Services;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -114,7 +115,7 @@ public sealed partial class UpdateBarViewModel : ObservableObject
                     : $"You have the newest version of Recast ({_updates.CurrentVersion}).";
                 break;
             case UpdateState.NotInstalled:
-                Message = "This copy of Recast wasn't installed, so it can't update itself. The installer is on the releases page.";
+                Message = $"This copy of Recast wasn't installed, so it can't update itself. To get updates, {UpdateDownload.HowToInstall()}.";
                 ShowReleases = true;
                 break;
             case UpdateState.Failed:

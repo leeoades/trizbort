@@ -75,7 +75,7 @@
                                     <TextBlock TextWrapping="Wrap" FontWeight="SemiBold"
                                                Text="This copy of Recast can't update itself." />
                                     <TextBlock TextWrapping="Wrap"
-                                               Text="It wasn't installed, so these settings will only apply once it is. To get updates, download Recast again and install it: Setup.exe on Windows, the .AppImage on Linux, or the -Portable.zip on a Mac. Your settings are kept." />
+                                               Text="{Binding HowToGetUpdates}" />
                                     <HyperlinkButton x:Name="ReleasesLink" Padding="0" NavigateUri="{Binding ReleasesPage}"
                                                      Content="Get it from the Releases page" />
                                 </StackPanel>
