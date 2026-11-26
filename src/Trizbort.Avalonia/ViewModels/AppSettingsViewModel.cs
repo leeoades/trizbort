@@ -83,6 +83,13 @@ public partial class AppSettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _updatesAutomatic;
 
+    /// <summary>Double-clicking a .trizbort file opens it in Recast (Windows and Linux; Lee, 26 Nov 2026).</summary>
+    [ObservableProperty]
+    private bool _openTrizbortFiles = true;
+
+    /// <summary>Only where Recast sets it itself: a Mac's app bundle declares the file type.</summary>
+    public bool CanOpenTrizbortFiles => FileAssociation.Supported;
+
     public UpdateMode UpdateChoice =>
         UpdatesNotify ? UpdateMode.Notify : UpdatesAutomatic ? UpdateMode.Automatic : UpdateMode.DownloadAndAsk;
 
@@ -226,6 +233,7 @@ public partial class AppSettingsViewModel : ViewModelBase
         UpdatesNotify = settings.Updates == UpdateMode.Notify;
         UpdatesAutomatic = settings.Updates == UpdateMode.Automatic;
         UpdatesDownload = !UpdatesNotify && !UpdatesAutomatic;
+        OpenTrizbortFiles = settings.OpenTrizbortFiles;
         ScrollWheelBehavior = (int)settings.ScrollWheelBehavior;
         ShowFullPathInTitleBar = settings.ShowFullPathInTitleBar;
         LoadLastProjectOnStart = settings.LoadLastProjectOnStart;
@@ -266,6 +274,11 @@ public partial class AppSettingsViewModel : ViewModelBase
             : $"#{HereGlowColor.R:X2}{HereGlowColor.G:X2}{HereGlowColor.B:X2}";
         settings.InvertMouseWheel = InvertMouseWheel;
         settings.Updates = UpdateChoice;
+        if (settings.OpenTrizbortFiles != OpenTrizbortFiles)
+        {
+            settings.OpenTrizbortFiles = OpenTrizbortFiles;
+            FileAssociation.Apply(OpenTrizbortFiles);
+        }
         settings.ScrollWheelBehavior = Enum.IsDefined(typeof(ScrollWheelMode), ScrollWheelBehavior)
             ? (ScrollWheelMode)ScrollWheelBehavior
             : ScrollWheelMode.Automatic;

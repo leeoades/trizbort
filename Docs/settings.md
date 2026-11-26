@@ -16,6 +16,8 @@ There are two kinds of settings:
 **General:**
 
 - **Save images at 100%**: export pictures at full size, whatever the zoom.
+- **Open .trizbort files with Recast** (on by default, Windows and Linux): double-clicking a map opens it in Recast.
+  On a Mac, Finder does this once Recast is in Applications.
 - **Open last project on start**, and **Keep a recovery copy of unsaved changes** (on by default) in case Recast
   closes before you save.
 - **Invert Mouse Wheel Zoom**, and **Scroll wheel / trackpad scroll**: **Automatic** zooms with a mouse wheel and pans

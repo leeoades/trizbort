@@ -18,6 +18,9 @@ public static class Program
         {
             VelopackApp.Build()
                 .SetAutoApplyOnStartup(false)
+                // double-clicking a map opens Recast from the start; App Settings can turn it off (Lee, 26 Nov 2026)
+                .OnAfterInstallFastCallback(_ => Trizbort.Avalonia.Services.FileAssociation.Apply(true))
+                .OnBeforeUninstallFastCallback(_ => Trizbort.Avalonia.Services.FileAssociation.Apply(false))
                 .OnRestarted(version => Trizbort.Updates.UpdateCoordinator.JustUpdatedTo = version.ToString())
                 .Run();
         }

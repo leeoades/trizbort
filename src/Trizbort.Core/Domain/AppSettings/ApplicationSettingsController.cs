@@ -106,6 +106,7 @@ public static class ApplicationSettingsController
     AppSettings.ShowDescriptionsInTooltips = true;
     AppSettings.ApplyStyleToNewRooms = false;
     AppSettings.Updates = UpdateMode.DownloadAndAsk;
+    AppSettings.OpenTrizbortFiles = true;
   }
 
   public static void SaveSettings()

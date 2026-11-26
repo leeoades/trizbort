@@ -42,6 +42,10 @@
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <CheckBox Content="Show Full _Path in Title Bar" IsChecked="{Binding ShowFullPathInTitleBar}" />
                             </StackPanel>
+                            <!-- double-clicking a map opens it in Recast; a Mac's app bundle does this itself (Lee, 26 Nov 2026) -->
+                            <CheckBox x:Name="OpenTrizbortFilesCheck" Content="Op_en .trizbort files with Recast"
+                                      IsChecked="{Binding OpenTrizbortFiles}" IsVisible="{Binding CanOpenTrizbortFiles}"
+                                      ToolTip.Tip="Double-clicking a map opens it in this copy of Recast" />
                             <Grid ColumnDefinitions="Auto,12,*">
                                 <Label Grid.Column="0" Classes="field-label" Content="Port Ad_just Detail:" Target="{Binding #PortAdjustCombo}" />
                                 <ComboBox Grid.Column="2" x:Name="PortAdjustCombo" SelectedIndex="{Binding PortAdjustDetail}" HorizontalAlignment="Left" MinWidth="140">

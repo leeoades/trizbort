@@ -12,6 +12,9 @@ public class ApplicationSettings
 
   /// <summary>How Recast updates itself: tell me, download and ask, or update for me.</summary>
   public UpdateMode Updates { get; set; } = UpdateMode.DownloadAndAsk;
+
+  /// <summary>Double-clicking a .trizbort file opens it in Recast (Windows and Linux; Lee, 26 Nov 2026).</summary>
+  public bool OpenTrizbortFiles { get; set; } = true;
   public AutomapSettings Automap { get; set; } = AutomapSettings.Default;
   public int CanvasHeight { get; set; }
   public int CanvasWidth { get; set; }
