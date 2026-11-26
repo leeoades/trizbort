@@ -78,9 +78,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
-- After Recast **didn't close properly**, the question about your unsaved changes now says when opening them is instead of
-  the map you were opening, and its buttons are **Open**, **Delete** and **Ask Me Next Time**. If you open them, the
-  status bar says the other map wasn't opened.
+- After Recast **didn't close properly**, the question about your unsaved changes now says when recovering them is instead of
+  the map you were opening, and its buttons are **Recover**, **Delete** and **Ask Me Next Time**. If you recover them,
+  the status bar says the other map wasn't opened.
 - **Add Link…** in a label links the words you'd selected, to a room or to an object's room. They were lost when
   the link panel opened, so the link went in beside them.
 - **Directions** take a magic word back once you've used it both ways ("xyzzy" from the debris room to the building,

@@ -437,7 +437,7 @@ public class RecoveryTests
 
         recovered.ShouldBeFalse();
         dialogs.Message.ShouldContain("didn't close properly last time");
-        dialogs.Message.ShouldContain("Open them instead of other.trizbort?");
+        dialogs.Message.ShouldContain("Recover them instead of other.trizbort?");
         _store!.FindOrphans().ShouldNotBeEmpty(); // Ask Me Next Time keeps it
     }
 }

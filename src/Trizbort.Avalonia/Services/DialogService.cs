@@ -271,7 +271,7 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         };
         Grid.SetRow(buttonPanel, 1);
 
-        var recoverButton = new Button { Content = "_Open", MinWidth = 90, IsDefault = true };
+        var recoverButton = new Button { Content = "_Recover", MinWidth = 90, IsDefault = true };
         recoverButton.Click += (_, _) =>
         {
             result = RecoveryChoice.Recover;

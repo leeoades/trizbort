@@ -21,11 +21,11 @@ public static class RecoveryStartup
         var time = entry.SavedUtc.ToLocalTime().ToString("g");
         var instead = string.IsNullOrWhiteSpace(opening) ? string.Empty : $" instead of {Path.GetFileName(opening)}";
         return $"{AppInfo.ProductName} didn't close properly last time. Your unsaved changes to {title} (from {time}) "
-               + $"were kept. Open them{instead}?";
+               + $"were kept. Recover them{instead}?";
     }
 
     /// <summary>
-    ///   Asks about each orphaned copy, whatever map Recast was started to open. Open opens the copy as an unsaved map
+    ///   Asks about each orphaned copy, whatever map Recast was started to open. Recover opens the copy as an unsaved map
     ///   (only one per start; any further copies are kept for the next start), Delete deletes it, Ask Me Next Time
     ///   keeps it. Returns true if a map was recovered, so the caller should not replace it by opening another file.
     /// </summary>
