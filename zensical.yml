@@ -14,12 +14,14 @@ nav:
   - Home: index.md
   - What's new: whats-new.md
   - Getting started: getting-started.md
+  - A quick map: quick-map.md
   - Drawing the map: map.md
   - Labels: labels.md
   - Automap: automap.md
   - Settings: settings.md
   - Exporting: exporting.md
   - Keyboard shortcuts: keyboard.md
+  - More help: more-help.md
 
 theme:
   name: material

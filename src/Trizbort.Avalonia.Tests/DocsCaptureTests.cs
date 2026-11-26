@@ -474,6 +474,39 @@ public class DocsCaptureTests
     }
 
     /// <summary>
+    ///   The original guide's sample quick map (a city, a river, a forest, lava pits, gold mines and a palace), opened
+    ///   in Recast: the finished map the quick map page builds. Lee, 26 Nov 2026.
+    /// </summary>
+    [AvaloniaTest]
+    public void TheQuickMap_Finished()
+    {
+        var root = Output();
+        var path = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(AppXaml()))!, "..", "legacy", "Docs",
+            "generic-game.trizbort");
+        var project = new Project();
+        Project.Current = project;
+        Settings.Reset();
+        Assert.That(new MapLoader(project).LoadMap(Path.GetFullPath(path)), Is.True, "the sample map opens");
+
+        var service = new CommandService();
+        // the map is tall: a portrait picture, so it's drawn as large as it can be
+        service.SetViewportSize(620, 980);
+        var canvas = new MapCanvasControl { CommandService = service };
+        var shown = new Window { Width = 620, Height = 980, Content = canvas };
+        try
+        {
+            shown.Show();
+            Settle(shown);
+            service.Session.Viewport.FitToMap(project.Elements);
+            Save(shown, Path.Combine(root, "quick-map.png"));
+        }
+        finally
+        {
+            shown.Close();
+        }
+    }
+
+    /// <summary>
     ///   A few rooms and joins in their different looks, for Drawing the map: objects (one inside another), a dark
     ///   room, a second fill, a dotted border; a one-way join, up and down labels, a middle label, and a dotted join
     ///   bent with its middle handle. Lee, 26 Nov 2026.
