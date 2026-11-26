@@ -528,13 +528,15 @@ public class DocsCaptureTests
         Join(shed, CompassPoint.East, garden, CompassPoint.West);
 
         var service = new CommandService();
-        service.SetViewportSize(600, 360);
+        service.SetViewportSize(760, 420);
         var canvas = new MapCanvasControl { CommandService = service };
-        var shown = new Window { Width = 600, Height = 360, Content = canvas };
+        var shown = new Window { Width = 760, Height = 420, Content = canvas };
         try
         {
             shown.Show();
-            service.Session.Viewport.FitToMap(project.Elements);
+            Settle(shown);
+            // the middle of these rooms, larger than Fit to Map draws so small a map
+            service.Session.Viewport.SetView(new CoreVector(48, 140), 1.25f);
             Save(shown, Path.Combine(root, "rooms-and-joins.png"));
         }
         finally
