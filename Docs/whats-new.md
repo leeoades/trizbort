@@ -4,14 +4,18 @@
 
 The highlights of each release, newest first. Every change is listed in the [changelog](../changelog.md).
 
-## Coming next
+## 0.16 (26 November 2026)
 
 - **Recast updates itself.** It tells you when a new version is out and, if you like, downloads it in the background
-  and installs it when you restart. Choose how in [App settings](settings.md#updates). Install it with the new
-  Setup (Windows), AppImage (Linux) or `-Portable.zip` (Mac) to get updates.
+  and installs it when you restart. Choose how in [App settings](settings.md#updates), including whether to get test
+  versions (betas). Install it with the new Setup (Windows), AppImage (Linux) or `-Portable.zip` (Mac) to get updates.
+- **Double-click a map** to open it in Recast (Windows and Linux; on a Mac, once it's in Applications).
 - **Label styles.** Choose a style for each label, such as "Title" or "Note", with its font and size, colours,
-  outline, background and shape. A style can be based on another. Change a style and its labels change too. See
-  [Labels](labels.md#styles).
+  outline, background, shape and where the text sits. A style can be based on another. Change a style and its labels
+  change too. See [Labels](labels.md#styles).
+- **This guide, online**: **Help > Online Help** (F1) opens it at https://leeoades.github.io/trizbort/.
+- **Several rooms' properties at once**: select some rooms and choose **Properties...**. See
+  [Drawing the map](map.md).
 - **Backgrounds**: coloured shapes behind parts of the map, to set them apart. Select some rooms and press **B**.
   See [Drawing the map](map.md#backgrounds).
 
