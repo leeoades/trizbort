@@ -73,6 +73,7 @@
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBox Grid.Column="0" x:Name="LabelText" Text="{Binding Text}"
                                  AcceptsReturn="True" AcceptsTab="False" TextWrapping="Wrap" MinHeight="120"
+                                 ClearSelectionOnLostFocus="False"
                                  VerticalContentAlignment="Top"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                                  AutomationProperties.Name="Text" />

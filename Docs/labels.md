@@ -15,7 +15,8 @@ Tick **Markdown** to format the text. You don't need to remember the marks: the 
 - **H** makes a heading, the list buttons make a bulleted or numbered list, and **—** draws a line across.
 - **Insert Table** puts in a small table to type over.
 - **Add Link...** (**Ctrl+K**) lists the map's rooms or objects. Search, pick one and press **Insert Link**, or click
-  a room on the map. Click a room link on the map to go to that room.
+  a room on the map. Select some words first and they become the link. Click a room link on the map to go to that
+  room.
 
 On the map, the table above looks like this:
 

@@ -70,6 +70,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **Add Link…** in a label links the words you'd selected, to a room or to an object's room. They were lost when
+  the link panel opened, so the link went in beside them.
 - **Directions** take a magic word back once you've used it both ways ("xyzzy" from the debris room to the building,
   then back). Automap drew the join both ways but only wrote down the first, so directions didn't know the way back.
 - **Map Theme** names a theme's room shape as the rest of the app does ("Straight Edges", not "SquareCorners").

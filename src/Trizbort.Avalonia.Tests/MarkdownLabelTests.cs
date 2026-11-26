@@ -97,4 +97,50 @@ public class MarkdownLabelTests
 
         label.Markdown.ShouldBeTrue();
     }
+
+    /// <summary>
+    ///   Lee, 26 Nov 2026: select some words, Add Link..., choose a room or an object, and those words become the link.
+    ///   The selection used to be lost when the link panel took the focus.
+    /// </summary>
+    [AvaloniaTest]
+    public void AddLink_LinksTheSelectedWords_ToARoomOrAnObject()
+    {
+        var project = new Project();
+        Project.Current = project;
+        var giant = new Room(project) { Name = "Giant Room", Objects = "golden eggs" };
+        project.Elements.Add(giant);
+        project.Elements.Add(new Room(project) { Name = "Hall" });
+
+        var label = new MapLabel(project) { Text = "Find the eggs, then the way out." };
+        var vm = new MapLabelPropertiesViewModel();
+        vm.Initialize(label);
+        var dialog = new Trizbort.Avalonia.Views.Dialogs.MapLabelPropertiesDialog { DataContext = vm };
+        dialog.Show();
+        var text = dialog.FindControl<global::Avalonia.Controls.TextBox>("LabelText")!;
+        void Click(string name) => dialog.FindControl<global::Avalonia.Controls.Button>(name)!
+            .RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(global::Avalonia.Controls.Button.ClickEvent));
+
+        // "the eggs": an object
+        var at = label.Text.IndexOf("the eggs", StringComparison.Ordinal);
+        text.SelectionStart = at;
+        text.SelectionEnd = at + "the eggs".Length;
+        Click("LinkButton");
+        vm.LinkPanelOpen.ShouldBeTrue();
+        vm.LinkSearch.ShouldBeEmpty(); // "the eggs" names nothing, so everything is listed
+        vm.LinkToObjects = true;
+        vm.SelectedLinkChoice = vm.LinkChoices.Single(choice => choice.Name == "golden eggs");
+        Click("InsertLinkButton");
+        text.Text.ShouldBe("Find [[Giant Room|the eggs]], then the way out.");
+
+        // "the way out": a room
+        at = text.Text!.IndexOf("the way out", StringComparison.Ordinal);
+        text.SelectionStart = at;
+        text.SelectionEnd = at + "the way out".Length;
+        Click("LinkButton");
+        vm.LinkToRooms = true;
+        vm.SelectedLinkChoice = vm.LinkChoices.Single(choice => choice.Name == "Hall");
+        Click("InsertLinkButton");
+        text.Text.ShouldBe("Find [[Giant Room|the eggs]], then [[Hall|the way out]].");
+        dialog.Close();
+    }
 }

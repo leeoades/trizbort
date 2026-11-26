@@ -330,12 +330,13 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
 
     /// <summary>
     ///   The link to put in for the room or object chosen; what's selected in the text is kept as the words shown,
-    ///   [[Room|selected words]], when it's a room.
+    ///   [[Room|selected words]], whether it's a room or an object (which links to its room).
     /// </summary>
     public string? LinkFor(string selected)
     {
         if (SelectedLinkChoice is not { } choice) return null;
-        if (LinkToObjects || string.IsNullOrWhiteSpace(selected) || selected.Contains('\n')) return choice.Markdown;
+        // selected words become the link's words, for a room or an object's room (Lee, 26 Nov 2026)
+        if (string.IsNullOrWhiteSpace(selected) || selected.Contains('\n')) return choice.Markdown;
         return MarkdownEditing.RoomLink(_project ?? Project.Current, choice.Room, selected);
     }
 
