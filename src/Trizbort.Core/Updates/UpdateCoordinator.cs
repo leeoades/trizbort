@@ -57,6 +57,9 @@ public sealed class UpdateCoordinator
   /// <summary>Set by the app's start-up hook when Recast was just updated: the version it's now on.</summary>
   public static string JustUpdatedTo { get; set; }
 
+  /// <summary>The app's own, once it has started (App Settings asks it whether this copy can update itself).</summary>
+  public static UpdateCoordinator Current { get; set; }
+
   public UpdateState State { get; private set; }
 
   /// <summary>The new version the bar is about.</summary>

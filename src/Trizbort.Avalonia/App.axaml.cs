@@ -81,6 +81,7 @@ public partial class App : Application
             var updates = new Trizbort.Updates.UpdateCoordinator(
                 new VelopackUpdater(),
                 () => Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.Updates);
+            Trizbort.Updates.UpdateCoordinator.Current = updates;
             viewModel.Updates = new UpdateBarViewModel(updates, uri => prompts.OpenUriAsync(uri),
                 () => desktop.MainWindow?.Close());
             desktop.Exit += (_, _) => updates.OnClosing();

@@ -195,6 +195,16 @@ public partial class AppSettingsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    ///   This copy wasn't installed with an update-ready download (Setup.exe, the AppImage, the Mac -Portable.zip),
+    ///   so it can't update itself: App Settings says so, and where to get one. Lee, 26 Nov 2026.
+    /// </summary>
+    [ObservableProperty]
+    private bool _cantUpdateItself;
+
+    /// <summary>Where the update-ready downloads are.</summary>
+    public Uri ReleasesPage { get; } = new(UpdateBarViewModel.ReleasesPage);
+
     public void Initialize()
     {
         var settings = ApplicationSettingsController.AppSettings;
@@ -208,6 +218,7 @@ public partial class AppSettingsViewModel : ViewModelBase
             ? System.Drawing.Color.FromArgb(glow.R, glow.G, glow.B)
             : System.Drawing.Color.FromArgb(0x14, 0xB8, 0xA6);
         InvertMouseWheel = settings.InvertMouseWheel;
+        CantUpdateItself = Trizbort.Updates.UpdateCoordinator.Current?.CanUpdate != true;
         UpdatesNotify = settings.Updates == UpdateMode.Notify;
         UpdatesAutomatic = settings.Updates == UpdateMode.Automatic;
         UpdatesDownload = !UpdatesNotify && !UpdatesAutomatic;

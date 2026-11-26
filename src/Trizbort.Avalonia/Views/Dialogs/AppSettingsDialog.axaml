@@ -63,7 +63,20 @@
                             <RadioButton x:Name="UpdatesAutomaticRadio" GroupName="Updates" IsChecked="{Binding UpdatesAutomatic}"
                                          Content="Install _updates automatically" />
                             <TextBlock Classes="hint" TextWrapping="Wrap"
-                                       Text="Recast looks for a new version each time it starts (Help &gt; Check for Updates looks now). Automatic updates are installed when you close Recast. Otherwise a downloaded update waits until you choose Restart to Update. Only an installed copy can update itself." />
+                                       Text="Recast looks for a new version each time it starts (Help &gt; Check for Updates looks now). Automatic updates are installed when you close Recast. Otherwise a downloaded update waits until you choose Restart to Update." />
+                            <!-- a plain copy (a zip, or a build) can't update itself: say so, and where the installer is -->
+                            <Border x:Name="CantUpdateNote" IsVisible="{Binding CantUpdateItself}"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,8" Margin="0,4,0,0">
+                                <StackPanel Spacing="4">
+                                    <TextBlock TextWrapping="Wrap" FontWeight="SemiBold"
+                                               Text="This copy of Recast can't update itself." />
+                                    <TextBlock TextWrapping="Wrap"
+                                               Text="It wasn't installed, so these settings will only apply once it is. To get updates, download Recast again and install it: Setup.exe on Windows, the .AppImage on Linux, or the -Portable.zip on a Mac. Your settings are kept." />
+                                    <HyperlinkButton x:Name="ReleasesLink" Padding="0" NavigateUri="{Binding ReleasesPage}"
+                                                     Content="Get it from the Releases page" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </HeaderedContentControl>
 

@@ -37,9 +37,11 @@ Check for Updates...** looks straight away. **Updates**, on the **General** tab,
 - **Install updates automatically**: it downloads in the background and installs the new version when you close
   Recast. **Restart Now** on the bar does it straight away.
 
-While Recast is in beta, it updates to the newest beta. Only installed copies update themselves (see
-[Getting started](getting-started.md#download-and-install)); a plain copy from a zip says so and points you to the
-Releases page.
+While Recast is in beta, it updates to the newest beta.
+
+Only installed copies update themselves (see [Getting started](getting-started.md#download-and-install)). In a plain
+copy from a zip, the Updates settings say it can't update itself and link to the Releases page, as does **Check for
+Updates**. Install Recast from there and your settings come with you.
 
 ## Map settings
 

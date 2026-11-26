@@ -123,6 +123,29 @@ public class UpdateBarTests
     }
 
     [AvaloniaTest]
+    public void AppSettings_SaysWhenThisCopyCantUpdateItself()
+    {
+        var was = UpdateCoordinator.Current;
+        try
+        {
+            var updater = new FakeUpdater { CanUpdate = false };
+            UpdateCoordinator.Current = new UpdateCoordinator(updater, () => UpdateMode.DownloadAndAsk);
+            var vm = new AppSettingsViewModel();
+            vm.Initialize();
+            vm.CantUpdateItself.ShouldBeTrue();
+            vm.ReleasesPage.ToString().ShouldBe("https://github.com/leeoades/trizbort/releases");
+
+            updater.CanUpdate = true;
+            vm.Initialize();
+            vm.CantUpdateItself.ShouldBeFalse();
+        }
+        finally
+        {
+            UpdateCoordinator.Current = was;
+        }
+    }
+
+    [AvaloniaTest]
     public void AppSettings_TheThreeChoices_RoundTrip()
     {
         var settings = ApplicationSettingsController.AppSettings;
