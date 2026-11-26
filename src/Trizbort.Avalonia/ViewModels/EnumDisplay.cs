@@ -36,6 +36,19 @@ public static class EnumDisplay
         _ => style.ToString()
     };
 
+    public static string For(LabelAlign align) => align switch
+    {
+        LabelAlign.Usual => "Usual (centred; Markdown on the left)",
+        LabelAlign.Centre => "Centre",
+        _ => align.ToString()
+    };
+
+    public static string For(LabelVerticalAlign align) => align switch
+    {
+        LabelVerticalAlign.Usual => "Usual (middle; Markdown at the top)",
+        _ => align.ToString()
+    };
+
     /// <summary>Converter for ComboBox item templates: <c>{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}</c>.</summary>
     public static global::Avalonia.Data.Converters.IValueConverter Converter { get; } = new DisplayConverter();
 
@@ -46,6 +59,8 @@ public static class EnumDisplay
             RoomShape shape => For(shape),
             HandDrawnStyle style => For(style),
             BorderDashStyle dash => For(dash),
+            LabelAlign align => For(align),
+            LabelVerticalAlign vertical => For(vertical),
             null => string.Empty,
             _ => value.ToString()
         };

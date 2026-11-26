@@ -13,14 +13,8 @@ namespace Trizbort.Domain.Elements;
 public class MapLabel : Element, ISizeable
 {
   private string _text = "Label";
-  private Color _backgroundColor = Color.White;
-  private Color _borderColor = Color.Black;
-  private BorderDashStyle _borderStyle = BorderDashStyle.None;
-  private bool _hasBackground;
   private Vector _position;
-  private RoomShape _shape;
   private Vector _size = new(3 * Settings.GridSize, 2 * Settings.GridSize);
-  private Color _textColor = Color.Black;
 
   public MapLabel(Project project) : base(project)
   {
@@ -62,34 +56,88 @@ public class MapLabel : Element, ISizeable
 
   private bool _markdown;
 
+  /// <summary>The label's style (Lee, 24 Nov 2026): its look comes from there, unless the label sets its own.</summary>
+  public string StyleId {
+    get { return _styleId; }
+    set { SetField(ref _styleId, string.IsNullOrEmpty(value) ? LabelStyle.DefaultId : value); }
+  }
+
+  private string _styleId = LabelStyle.DefaultId;
+
+  /// <summary>
+  ///   This label's own tweaks to its style (null values: from the style). Discouraged: styles are the way. Changed
+  ///   through the look properties below, or replaced whole.
+  /// </summary>
+  public LabelStyle Own {
+    get { return _own; }
+    set {
+      _own = value?.Clone() ?? new LabelStyle();
+      RaiseChanged();
+    }
+  }
+
+  private LabelStyle _own = new();
+
+  /// <summary>True when the label sets any of its look itself rather than from its style.</summary>
+  public bool HasOwnLook => !_own.IsEmpty;
+
+  /// <summary>The look as drawn: its own tweaks, then its style, and so on up to Default.</summary>
+  public ResolvedLabelStyle Look => LabelStyles.Resolve(StyleId, _own);
+
+  /// <summary>The look its style gives, without its own tweaks.</summary>
+  public ResolvedLabelStyle StyleLook => LabelStyles.Resolve(StyleId);
+
+  /// <summary>Clears the label's own tweaks, so it looks as its style does.</summary>
+  public void ResetToStyle()
+  {
+    if (_own.IsEmpty) return;
+    _own = new LabelStyle();
+    RaiseChanged();
+  }
+
+  // Each look property reads the resolved look; setting one sets the label's own value, or clears it when it's what
+  // the style gives anyway.
+  private void SetOwn<T>(Func<ResolvedLabelStyle, T> fromStyle, T value, Action<T?> set) where T : struct
+  {
+    var same = EqualityComparer<T>.Default.Equals(fromStyle(StyleLook), value);
+    set(same ? null : value);
+    RaiseChanged();
+  }
+
+  private void SetOwnColor(Func<ResolvedLabelStyle, Color> fromStyle, Color value, Action<Color?> set)
+  {
+    set(fromStyle(StyleLook).ToArgb() == value.ToArgb() ? null : value);
+    RaiseChanged();
+  }
+
   public RoomShape Shape {
-    get { return _shape; }
-    set { SetField(ref _shape, value); }
+    get { return Look.Shape; }
+    set { SetOwn(look => look.Shape, value, v => _own.Shape = v); }
   }
 
   public BorderDashStyle BorderStyle {
-    get { return _borderStyle; }
-    set { SetField(ref _borderStyle, value); }
+    get { return Look.BorderStyle; }
+    set { SetOwn(look => look.BorderStyle, value, v => _own.BorderStyle = v); }
   }
 
   public bool HasBackground {
-    get { return _hasBackground; }
-    set { SetField(ref _hasBackground, value); }
+    get { return Look.HasBackground; }
+    set { SetOwn(look => look.HasBackground, value, v => _own.HasBackground = v); }
   }
 
   public Color TextColor {
-    get { return _textColor; }
-    set { SetField(ref _textColor, value); }
+    get { return Look.TextColor; }
+    set { SetOwnColor(look => look.TextColor, value, v => _own.TextColor = v); }
   }
 
   public Color BorderColor {
-    get { return _borderColor; }
-    set { SetField(ref _borderColor, value); }
+    get { return Look.BorderColor; }
+    set { SetOwnColor(look => look.BorderColor, value, v => _own.BorderColor = v); }
   }
 
   public Color BackgroundColor {
-    get { return _backgroundColor; }
-    set { SetField(ref _backgroundColor, value); }
+    get { return Look.BackgroundColor; }
+    set { SetOwnColor(look => look.BackgroundColor, value, v => _own.BackgroundColor = v); }
   }
 
   public override Vector Position {
@@ -163,14 +211,19 @@ public class MapLabel : Element, ISizeable
     scribe.Attribute("y", Y);
     scribe.Attribute("w", Width);
     scribe.Attribute("h", Height);
-    scribe.Attribute("shape", Shape.ToString());
-    scribe.Attribute("borderstyle", BorderStyle.ToString());
-    scribe.Attribute("background", HasBackground);
-    scribe.Attribute("textColor", TextColor);
-    scribe.Attribute("borderColor", BorderColor);
-    scribe.Attribute("backgroundColor", BackgroundColor);
+    // the look as drawn, for older versions, which know nothing of styles
+    var look = Look;
+    scribe.Attribute("shape", look.Shape.ToString());
+    scribe.Attribute("borderstyle", look.BorderStyle.ToString());
+    scribe.Attribute("background", look.HasBackground);
+    scribe.Attribute("textColor", look.TextColor);
+    scribe.Attribute("borderColor", look.BorderColor);
+    scribe.Attribute("backgroundColor", look.BackgroundColor);
     scribe.Attribute("ZOrder", ZOrder);
     if (Markdown) scribe.Attribute("markdown", Markdown);
+    // the style, and the label's own tweaks to it (Recast reads these, not the look above)
+    scribe.Attribute("style", StyleId);
+    _own.SaveValues(scribe, "own-");
   }
 
   public void Load(XmlElementReader element)
@@ -178,13 +231,49 @@ public class MapLabel : Element, ISizeable
     Text = element.Attribute("text").Text;
     Position = new Vector(element.Attribute("x").ToFloat(), element.Attribute("y").ToFloat());
     Size = new Vector(element.Attribute("w").ToFloat(Width), element.Attribute("h").ToFloat(Height));
-    Shape = (RoomShape)Enum.Parse(typeof(RoomShape), element.Attribute("shape").Text);
-    BorderStyle = (BorderDashStyle)Enum.Parse(typeof(BorderDashStyle), element.Attribute("borderstyle").Text);
-    HasBackground = element.Attribute("background").ToBool();
-    TextColor = ColorTranslator.FromHtml(element.Attribute("textColor").Text);
-    BorderColor = ColorTranslator.FromHtml(element.Attribute("borderColor").Text);
-    BackgroundColor = ColorTranslator.FromHtml(element.Attribute("backgroundColor").Text);
     ZOrder = element.Attribute("ZOrder").ToInt();
     Markdown = element.Attribute("markdown").ToBool();
+
+    var style = element.Attribute("style").Text;
+    if (!string.IsNullOrEmpty(style))
+    {
+      StyleId = style;
+      var own = new LabelStyle();
+      own.LoadValues(element, "own-");
+      _own = own;
+      return;
+    }
+
+    // a map from before styles: the Default style, with everything the label had as its own for now; once the
+    // map's settings (and so its styles) are loaded, what Default gives anyway is dropped (TrimOwnToStyle)
+    StyleId = LabelStyle.DefaultId;
+    _own = new LabelStyle {
+      Shape = Enum.TryParse<RoomShape>(element.Attribute("shape").Text, out var shape) ? shape : RoomShape.SquareCorners,
+      BorderStyle = Enum.TryParse<BorderDashStyle>(element.Attribute("borderstyle").Text, out var border)
+        ? border
+        : BorderDashStyle.None,
+      HasBackground = element.Attribute("background").ToBool(),
+      TextColor = element.Attribute("textColor").ToColor(Color.Black),
+      BorderColor = element.Attribute("borderColor").ToColor(Color.Black),
+      BackgroundColor = element.Attribute("backgroundColor").ToColor(Color.White)
+    };
+  }
+
+  /// <summary>Drops the label's own values that its style gives anyway, so only real tweaks are left.</summary>
+  public void TrimOwnToStyle()
+  {
+    var style = StyleLook;
+    if (_own.Shape == style.Shape) _own.Shape = null;
+    if (_own.BorderStyle == style.BorderStyle) _own.BorderStyle = null;
+    if (_own.HasBackground == style.HasBackground) _own.HasBackground = null;
+    if (_own.TextColor?.ToArgb() == style.TextColor.ToArgb()) _own.TextColor = null;
+    if (_own.BorderColor?.ToArgb() == style.BorderColor.ToArgb()) _own.BorderColor = null;
+    if (_own.BackgroundColor?.ToArgb() == style.BackgroundColor.ToArgb()) _own.BackgroundColor = null;
+    if (_own.FontName == style.FontName) _own.FontName = null;
+    if (_own.FontSize == style.FontSize) _own.FontSize = null;
+    if (_own.Bold == style.Bold) _own.Bold = null;
+    if (_own.Italic == style.Italic) _own.Italic = null;
+    if (_own.Align == style.Align) _own.Align = null;
+    if (_own.VerticalAlign == style.VerticalAlign) _own.VerticalAlign = null;
   }
 }

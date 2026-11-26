@@ -1,11 +1,13 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="using:System"
         xmlns:vm="using:Trizbort.Avalonia.ViewModels"
+        xmlns:conv="using:Trizbort.Avalonia.Converters"
         xmlns:controls="using:Trizbort.Avalonia.Controls"
         x:Class="Trizbort.Avalonia.Views.Dialogs.MapSettingsDialog"
         x:DataType="vm:MapSettingsViewModel"
         Title="Map Settings"
-        Width="640" Height="700"
+        Width="720" Height="700"
         MinWidth="544" MinHeight="240"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
@@ -281,6 +283,145 @@
                             </StackPanel>
                         </Panel>
                     </HeaderedContentControl>
+                </Grid>
+            </TabItem>
+
+            <!-- Styles: label styles, each based on another (Lee, 24 Nov 2026) -->
+            <TabItem Header="Styles">
+                <Grid ColumnDefinitions="220,*" Margin="8">
+                    <DockPanel Grid.Column="0" Margin="0,0,12,0">
+                        <TextBlock DockPanel.Dock="Top" Classes="hint" Text="Label styles" Margin="0,0,0,4" />
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                            <Button x:Name="AddStyleButton" Content="New St_yle" Command="{Binding LabelStyles.AddStyleCommand}"
+                                    ToolTip.Tip="A new style based on the one selected" />
+                            <Button x:Name="DeleteStyleButton" Content="Delete" Command="{Binding LabelStyles.DeleteStyleCommand}"
+                                    IsEnabled="{Binding LabelStyles.CanDelete}"
+                                    ToolTip.Tip="Its labels, and the styles based on it, take the style it's based on" />
+                        </StackPanel>
+                        <ListBox x:Name="StyleList" ItemsSource="{Binding LabelStyles.Styles}" SelectedItem="{Binding LabelStyles.Selected}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:LabelStyleOption">
+                                    <TextBlock Text="{Binding Name}" Margin="{Binding Depth, Converter={x:Static conv:DepthToIndentConverter.Instance}}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+
+                    <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="12">
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,12,*" RowSpacing="8">
+                                <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Name:" Target="{Binding #StyleNameBox}" />
+                                <TextBox Grid.Row="0" Grid.Column="2" x:Name="StyleNameBox" Text="{Binding LabelStyles.Name}"
+                                         IsEnabled="{Binding LabelStyles.IsNotDefault}" />
+                                <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="Based o_n:" Target="{Binding #StyleBasedOnCombo}"
+                                       IsVisible="{Binding LabelStyles.IsNotDefault}" />
+                                <ComboBox Grid.Row="1" Grid.Column="2" x:Name="StyleBasedOnCombo" ItemsSource="{Binding LabelStyles.Bases}"
+                                          SelectedItem="{Binding LabelStyles.BasedOn}" HorizontalAlignment="Stretch"
+                                          IsVisible="{Binding LabelStyles.IsNotDefault}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:LabelStyleOption">
+                                            <TextBlock Text="{Binding Name}" Margin="{Binding Depth, Converter={x:Static conv:DepthToIndentConverter.Instance}}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </Grid>
+
+                            <TextBlock Classes="hint" TextWrapping="Wrap"
+                                       Text="A style takes everything it doesn't set from the style it's based on. Change a value to set it here; Reset takes it from the base again." />
+
+                            <Grid ColumnDefinitions="Auto,12,Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                                <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Font:" Target="{Binding #StyleFontButton}" />
+                                <controls:FontPickerButton Grid.Row="0" Grid.Column="2" x:Name="StyleFontButton" SelectedFont="{Binding LabelStyles.Font}" HorizontalAlignment="Left" />
+                                <TextBlock Grid.Row="0" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.FontFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.FontFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="0" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="font"
+                                        IsVisible="{Binding LabelStyles.FontFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                                <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="_Text colour:" Target="{Binding #StyleTextColorButton}" />
+                                <controls:ColorPickerButton Grid.Row="1" Grid.Column="2" x:Name="StyleTextColorButton" SelectedColor="{Binding LabelStyles.TextColor}" HorizontalAlignment="Left" />
+                                <TextBlock Grid.Row="1" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.TextColorFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.TextColorFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="1" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="text"
+                                        IsVisible="{Binding LabelStyles.TextColorFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                                <Label Grid.Row="2" Grid.Column="0" Classes="field-label" Content="_Outline:" Target="{Binding #StyleOutlineCheck}" />
+                                <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                    <CheckBox x:Name="StyleOutlineCheck" IsChecked="{Binding LabelStyles.HasOutline}" />
+                                    <ComboBox ItemsSource="{Binding LabelStyles.AvailableOutlineStyles}" SelectedItem="{Binding LabelStyles.OutlineStyle}"
+                                              IsEnabled="{Binding LabelStyles.HasOutline}" MinWidth="120" AutomationProperties.Name="Outline line style" />
+                                </StackPanel>
+                                <TextBlock Grid.Row="2" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.OutlineFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.OutlineFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="2" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="outline"
+                                        IsVisible="{Binding LabelStyles.OutlineFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                                <Label Grid.Row="3" Grid.Column="0" Classes="field-label" Content="Outline co_lour:" Target="{Binding #StyleOutlineColorButton}" />
+                                <controls:ColorPickerButton Grid.Row="3" Grid.Column="2" x:Name="StyleOutlineColorButton" SelectedColor="{Binding LabelStyles.OutlineColor}" HorizontalAlignment="Left"
+                                                            IsEnabled="{Binding LabelStyles.HasOutline}" />
+                                <TextBlock Grid.Row="3" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.OutlineColorFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.OutlineColorFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="3" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="outlineColour"
+                                        IsVisible="{Binding LabelStyles.OutlineColorFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                                <Label Grid.Row="4" Grid.Column="0" Classes="field-label" Content="_Background:" Target="{Binding #StyleBackgroundCheck}" />
+                                <CheckBox Grid.Row="4" Grid.Column="2" x:Name="StyleBackgroundCheck" IsChecked="{Binding LabelStyles.HasBackground}" />
+                                <TextBlock Grid.Row="4" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.BackgroundFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.BackgroundFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="4" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="background"
+                                        IsVisible="{Binding LabelStyles.BackgroundFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                                <Label Grid.Row="5" Grid.Column="0" Classes="field-label" Content="Background colo_ur:" Target="{Binding #StyleBackgroundColorButton}" />
+                                <controls:ColorPickerButton Grid.Row="5" Grid.Column="2" x:Name="StyleBackgroundColorButton" SelectedColor="{Binding LabelStyles.BackgroundColor}" HorizontalAlignment="Left"
+                                                            IsEnabled="{Binding LabelStyles.HasBackground}" />
+                                <TextBlock Grid.Row="5" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.BackgroundColorFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.BackgroundColorFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="5" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="backgroundColour"
+                                        IsVisible="{Binding LabelStyles.BackgroundColorFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                                <Label Grid.Row="6" Grid.Column="0" Classes="field-label" Content="S_hape:" Target="{Binding #StyleShapeCombo}" />
+                                <ComboBox Grid.Row="6" Grid.Column="2" x:Name="StyleShapeCombo" ItemsSource="{Binding LabelStyles.AvailableShapes}"
+                                          SelectedItem="{Binding LabelStyles.Shape}" MinWidth="160">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock Grid.Row="6" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.ShapeFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.ShapeFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="6" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="shape"
+                                        IsVisible="{Binding LabelStyles.ShapeFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                                <Label Grid.Row="7" Grid.Column="0" Classes="field-label" Content="Text _Align:" Target="{Binding #StyleAlignButtons}"
+                                       ToolTip.Tip="None lit: where labels usually have it, centred (or top left for Markdown)" />
+                                <controls:LabelAlignButtons Grid.Row="7" Grid.Column="2" x:Name="StyleAlignButtons" Value="{Binding LabelStyles.Align}" />
+                                <TextBlock Grid.Row="7" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.AlignFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.AlignFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="7" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="align"
+                                        IsVisible="{Binding LabelStyles.AlignFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                                <controls:LabelVerticalAlignButtons Grid.Row="8" Grid.Column="2" x:Name="StyleVerticalAlignButtons"
+                                                                    Value="{Binding LabelStyles.VerticalAlign}" />
+                                <TextBlock Grid.Row="8" Grid.Column="4" Classes="hint" Text="{Binding LabelStyles.VerticalAlignFrom}" VerticalAlignment="Center"
+                                           IsVisible="{Binding LabelStyles.VerticalAlignFrom, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <Button Grid.Row="8" Grid.Column="4" Content="Reset" Command="{Binding LabelStyles.ResetCommand}" CommandParameter="verticalAlign"
+                                        IsVisible="{Binding LabelStyles.VerticalAlignFrom, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                        IsEnabled="{Binding LabelStyles.IsNotDefault}" Padding="6,2"
+                                        ToolTip.Tip="Take this from the style it's based on again" />
+                            </Grid>
+
+                            <HeaderedContentControl Classes="group" Header="Preview">
+                                <controls:LabelStylePreview x:Name="StylePreview" Look="{Binding LabelStyles.Look}" Height="96"
+                                                            AutomationProperties.Name="Label style preview" />
+                            </HeaderedContentControl>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
             </TabItem>
         </TabControl>

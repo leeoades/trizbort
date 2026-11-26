@@ -87,6 +87,15 @@ Selection/hover outlines and resize handles remain available regardless
 of those visibility settings. Labels use the same compass-port IDs as rooms, so normal
 `Connection` vertices can dock to them and follow movement/resizing.
 
+A label's look comes from its style (`StyleId`, a `LabelStyle` in `Settings.LabelStyles`,
+`Setup\LabelStyle.cs`). Styles are based on one another (`BasedOn`) up to `Default`; each sets
+only some values (null: from the base). `LabelStyleSet.Resolve` walks the chain to a
+`ResolvedLabelStyle` (font, size, bold, italic, colours, outline, background, shape), falling back
+to the room font and the old label defaults. A label's own tweaks (`Own`, discouraged in the UI)
+are the first link; the look properties (`Shape`, `TextColor`...) read `Look` and set an own value
+(cleared when it equals the style's). Map Settings > Styles (`LabelStylesEditorViewModel`) edits a
+copy and applies on OK; a deleted style's labels go to its base.
+
 Room-only selection, validation, statistics and language exporters do not include labels.
 
 ## `Background : Element, ISizeable`

@@ -15,7 +15,8 @@ Tick **Markdown** to format the text. You don't need to remember the marks: the 
 - **H** makes a heading, the list buttons make a bulleted or numbered list, and **—** draws a line across.
 - **Insert Table** puts in a small table to type over.
 - **Add Link...** (**Ctrl+K**) lists the map's rooms or objects. Search, pick one and press **Insert Link**, or click
-  a room on the map. Click a room link on the map to go to that room.
+  a room on the map. Select some words first and they become the link. Click a room link on the map to go to that
+  room.
 
 On the map, the table above looks like this:
 
@@ -36,12 +37,28 @@ Room Link** to get its link, then paste it into the label.
 
 A Markdown label's text starts at its top left. Older versions of Trizbort show the text as written.
 
-## Style
+## Styles
 
-![The label's Style tab: text colour, outline, background and shape.](images/label-style.png)
+A label's look comes from a **style**: "Title", "Note", whatever the map needs. The label's **Style** tab shows the
+label's text in each of the map's styles: click the one you want. Change a style and every label using it changes
+with it.
 
-Choose the text colour, and turn the outline and background on or off. The shape (straight edges, rounded,
-ellipse or octagon) applies to both.
+![The label's Style tab: the label shown in each style.](images/label-style.png)
+
+**Manage Styles...** opens the styles in Map Settings (see [Settings](settings.md#styles)). A style sets the font
+and size, bold and italic, the text colour, the outline, the background, the shape (straight edges, rounded,
+ellipse or octagon), and where the text sits: **Text Align** has buttons for left, centre or right, and below them
+top, middle or bottom. With none lit, the text sits as labels always have: centred, or top left for Markdown. Click a
+lit button again to go back to that.
+
+If one label really must be different, choose **Modify this label's appearance...**. The list of styles gives way to
+**Based on**, the style it starts from, with a preview of the label as it will look and the settings to change.
+
+![A label changed from its style: Based on, a preview, and its own settings.](images/label-own-look.png)
+
+OK keeps the changes and Cancel throws them away. It's better to make a style, so labels stay alike: **Save as a New
+Style...** opens Manage Styles at a new style with the label's look. Name it and press OK, and the label uses it.
+**Reset to Style** takes the label back to its style and lists the styles again. A label that's been changed this way opens at its own settings.
 
 ## Size
 

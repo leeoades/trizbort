@@ -64,6 +64,7 @@ public static class Settings
     Regions = new List<Region> {
       new() { RegionName = Region.DefaultRegion, RColor = System.Drawing.Color.White }
     };
+    LabelStyles = Setup.LabelStyles.Initial();
     Reset();
   }
 
@@ -369,6 +370,9 @@ public static class Settings
 
   public static List<Region> Regions { get; set; }
 
+  /// <summary>The map's label styles, Default first (Lee, 24 Nov 2026). See <see cref="Setup.LabelStyles" />.</summary>
+  public static List<LabelStyle> LabelStyles { get; set; }
+
   public static Font RoomNameFont {
     get { return GetFont(ref _roomNameFont, _roomFontMeta); }
     set { SetFont(ref _roomFontMeta, ref _roomNameFont, value); }
@@ -479,6 +483,21 @@ public static class Settings
         tRegion.RColor = region.ToColor(System.Drawing.Color.White);
         Regions.Add(tRegion);
       }
+
+    // label styles: older maps have none, so just Default (which sets nothing: labels look as they did)
+    LabelStyles = Setup.LabelStyles.Initial();
+    foreach (var styleElement in element["labelStyles"].Children)
+    {
+      var style = new LabelStyle {
+        Id = styleElement.Attribute("id").Text,
+        Name = styleElement.Attribute("name").Text,
+        BasedOn = styleElement.Attribute("basedOn").Text is { Length: > 0 } basedOn ? basedOn : null
+      };
+      if (string.IsNullOrEmpty(style.Id)) continue;
+      style.LoadValues(styleElement);
+      if (style.IsDefault) LabelStyles[0] = style;
+      else LabelStyles.Add(style);
+    }
 
     var fonts = element["fonts"];
     foreach (var font in fonts.Children)
@@ -623,6 +642,7 @@ public static class Settings
     Regions = new List<Region> {
       new() { RegionName = Region.DefaultRegion, RColor = System.Drawing.Color.White }
     };
+    LabelStyles = Setup.LabelStyles.Initial();
   }
 
   public static void Save(XmlScribe scribe)
@@ -640,6 +660,18 @@ public static class Settings
       scribe.Attribute("Name", region.RegionName);
       scribe.Attribute("TextColor", region.TextColor);
       scribe.Value(region.RColor);
+      scribe.EndElement();
+    }
+    scribe.EndElement();
+
+    scribe.StartElement("labelStyles");
+    foreach (var style in LabelStyles)
+    {
+      scribe.StartElement("style");
+      scribe.Attribute("id", style.Id);
+      scribe.Attribute("name", style.Name ?? string.Empty);
+      if (!style.IsDefault && style.BasedOn != null) scribe.Attribute("basedOn", style.BasedOn);
+      style.SaveValues(scribe);
       scribe.EndElement();
     }
     scribe.EndElement();

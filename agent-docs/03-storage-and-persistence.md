@@ -57,7 +57,11 @@ Shape (see `samples\Zork_770614.trizbort` for a real example):
 - Labels use `<label id="..." text="..." x="..." y="..." w="..." h="..." shape="..."
   borderstyle="..." background="..." textColor="..." borderColor="..." backgroundColor="..."
   ZOrder="..." />`, plus `markdown="yes"` when the text is Markdown (`LabelMarkdown`; older
-  versions ignore it and show the text as written). Connections with any endpoint docked to a label use `<labelLine>` with the
+  versions ignore it and show the text as written). The legacy look attributes are the label's
+  resolved look, for older versions; `style="id"` and `own-*` attributes (only the values the label
+  sets itself) are what Recast reads. The styles are `<settings><labelStyles><style id name basedOn
+  .../>`. A label without `style` (an older map) gets Default with its old look as its own values,
+  trimmed to what differs once settings are loaded (`MapLabel.TrimOwnToStyle`). Connections with any endpoint docked to a label use `<labelLine>` with the
   same contents as `<line>` and the same two-pass docking resolution. Older readers only
   recognize `<room>` and `<line>`, so they ignore both labels and their lines without leaving
   dangling connectors. Saving through an older version **discards** these unrecognized elements.

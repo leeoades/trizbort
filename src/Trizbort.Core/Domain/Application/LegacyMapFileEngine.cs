@@ -158,6 +158,8 @@ public class LegacyMapFileEngine : MapFileEngine
     // load settings last, since their load can't be undone
     Settings.Reset(false);
     Settings.Load(root["settings"]);
+    // labels from before styles: keep only what differs from their (Default) style
+    foreach (var label in _project.Elements.OfType<MapLabel>()) label.TrimOwnToStyle();
   }
 
   public override bool Save(string fileName)

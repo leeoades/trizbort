@@ -14,6 +14,18 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Label styles.** A label's look (font and size, bold and italic, text colour, outline, background, shape, and where the
+  text sits: left, centre or right, and top, middle or bottom)
+  comes from a style kept in the map. Choose it on the label's **Style** tab, which shows the label's text in each
+  style; **Manage Styles...** there, or Map
+  Settings > **Styles**, makes and changes them. A style is **based on** another and sets only what differs, the rest
+  coming from the style above it, up to **Default** (each value says where it comes from, with **Reset** to take it
+  from there again). Deleting a style moves its labels to the style it was based on. One label can still be changed
+  on its own with **Modify this label's appearance...** (and **Reset to Style**), but a style is the better way:
+  **Save as a New Style...** there makes a style with the label's look, and the label uses it. Labels in
+  older maps keep how they look. Labels can now have their own font and size. Older versions open the map with each
+  label drawn as it is now. A theme sets the Default style's colours. Choosing a style keeps a label's size and
+  where its text wraps; it only grows taller if a bigger font needs it.
 - **Several rooms' properties at once**: select some rooms and choose **Properties...** (Alt+Enter, or right-click).
   It has the same tabs as one room's properties, without what only one room can have: set darkness, Moves, Don't
   automap from here, where the object lists go, shape, border, lines, region and colours for all of them; anything
@@ -45,6 +57,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- A **selected label** has the same yellow glow behind it as a selected room, rather than a thick outline over its
+  border, so you can still see its border.
 - **Help > Online Help** opens the user guide as a website, https://leeoades.github.io/trizbort/, with a menu, search
   and a dark mode. It's the guide for the latest release.
 - **Automap's guesses** read more plainly. A way you hadn't tried is "unexplored" (not "isn't on the map yet",
@@ -64,6 +78,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
+- **Add Link…** in a label links the words you'd selected, to a room or to an object's room. They were lost when
+  the link panel opened, so the link went in beside them.
 - **Directions** take a magic word back once you've used it both ways ("xyzzy" from the debris room to the building,
   then back). Automap drew the join both ways but only wrote down the first, so directions didn't know the way back.
 - **Map Theme** names a theme's room shape as the rest of the app does ("Straight Edges", not "SquareCorners").
