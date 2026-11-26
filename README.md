@@ -22,44 +22,26 @@ Trizbort 1.7.4.1.
 
 ## Download
 Get the latest release from the [GitHub Releases page](https://github.com/leeoades/trizbort/releases). Downloads are
-self-contained, so no separate .NET install is needed. They are unsigned, so Windows may show a SmartScreen warning
-(see [Signing the app](#signing-the-app-and-how-you-can-help)).
+self-contained, so no separate .NET install is needed.
 
-- **Windows x64:** extract `TrizbortRecast-<version>-win-x64.zip` into a writable folder and run `TrizbortRecast.exe`.
-- **Linux x64:** extract `TrizbortRecast-<version>-linux-x64.tar.gz` and run `trizbort-recast`. To open `.trizbort`
-  files from your file manager, see [packaging/README.md](packaging/README.md).
-- **macOS:** download `…-osx-arm64.zip` for Apple Silicon (M1 and later) or `…-osx-x64.zip` for Intel Macs, unzip it
-  and drag `Trizbort Recast.app` to Applications. The app isn't signed with an Apple Developer ID, so the first time macOS
-  refuses to open it: go to **System Settings > Privacy & Security** and choose **Open Anyway**. The macOS build is
-  new and hasn't been tested on a Mac yet; reports are very welcome.
+- **Windows x64:** run `TrizbortRecast-win-x64-Setup.exe`, which installs Recast for you alone and keeps it up to
+  date. Or extract `TrizbortRecast-<version>-win-x64.zip` into a writable folder and run `TrizbortRecast.exe`.
+- **Linux x64:** run the `.AppImage` (after `chmod +x`), which keeps itself up to date. Or extract
+  `TrizbortRecast-<version>-linux-x64.tar.gz` and run `trizbort-recast`. To open `.trizbort` files from your file
+  manager, see [packaging/README.md](packaging/README.md).
+- **macOS:** `TrizbortRecast-osx-arm64-Portable.zip` for Apple Silicon (M1 and later) or `…-osx-x64-Portable.zip` for
+  Intel Macs keeps itself up to date; the plain `…-osx-arm64.zip` / `…-osx-x64.zip` don't. Unzip it and drag
+  `Trizbort Recast.app` to Applications. The macOS build is new and hasn't been tested on a Mac yet; reports are very
+  welcome.
+
+See [Getting started](https://leeoades.github.io/trizbort/getting-started/) for more.
 
 Releases of the Windows-only Trizbort 2.x are still there too (`legacy-v*` tags and the older `v2.*` tags).
 
 ## Signing the app, and how you can help
-The downloads aren't signed yet. An unsigned app has no publisher Windows can check, so SmartScreen warns about it, and
-some antivirus tools have quarantined it as suspicious, sometimes in the middle of mapping a game. Trizbort contains
-no malware: it's built from the public source in this repository by GitHub Actions, and it collects nothing about you
-(see the [privacy policy](PRIVACY.md)).
-
-We plan to sign the Windows release through the [SignPath Foundation](https://signpath.org), which signs open-source
-projects for free. A signed app names its publisher, proves the download hasn't been changed since it was built, and
-builds up a good reputation with Windows and antivirus tools over time, so the warnings fade. The Foundation only signs
-projects with an established public following, and this repository is new, so it isn't eligible yet. We'll apply
-again once it is.
-
-You can help it get there:
-
-- **Star the repository** on GitHub. Stars are one of the first things the Foundation looks at.
-- **Use it, and tell people about it**: on [intfiction.org](https://intfiction.org), Reddit, Discord, blogs or
-  videos. Links and discussions from elsewhere count for a lot.
-- **Report bugs and suggest features** in the [issues](https://github.com/leeoades/trizbort/issues), and send pull
-  requests: an active project with contributors is a trusted one.
-- **Report false positives** if your antivirus flags Trizbort, to its maker (and to Microsoft at
-  [microsoft.com/wdsi/filesubmission](https://www.microsoft.com/wdsi/filesubmission)), so it's cleared for everyone.
-- **Add it to lists** of interactive fiction tools, such as the [IFWiki](https://www.ifwiki.org) page for Trizbort.
-
-Thank you to everyone who stars, shares, tests and reports: every bit of it helps Trizbort reach more players and
-authors, and gets us closer to a signed app that installs without the warnings.
+The downloads aren't signed yet, so Windows SmartScreen and macOS warn about them the first time, and some antivirus
+tools have flagged them. Trizbort contains no malware: it's built from the public source in this repository by GitHub
+Actions. [Why it isn't signed yet, and how you can help](https://leeoades.github.io/trizbort/signing/).
 
 ## Links
 - [User guide](https://leeoades.github.io/trizbort/) (its pages are in [Docs](Docs/index.md)) and
