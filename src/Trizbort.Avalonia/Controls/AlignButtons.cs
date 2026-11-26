@@ -33,7 +33,7 @@ public abstract class AlignButtonRow : StackPanel
     {
         foreach (var (value, name, icon) in choices)
         {
-            var path = new Path
+            var path = new global::Avalonia.Controls.Shapes.Path
             {
                 Data = StreamGeometry.Parse(icon),
                 Width = 16,
