@@ -148,6 +148,15 @@ public class DialogCaptureTests
             markdownVm.LinkPanelOpen = true;
             CaptureDialog(output, files, "MapLabelProperties__links", new MapLabelPropertiesDialog { DataContext = markdownVm });
 
+            // a label changed from its style: Based on, its preview and its settings, instead of the list
+            var sticky = new MapLabel(project) { Text = "This is a little sticky note" };
+            sticky.Own.HasBackground = true;
+            sticky.Own.BackgroundColor = System.Drawing.Color.Gold;
+            sticky.Own.Shape = RoomShape.RoundedCorners;
+            var ownVm = sp.GetRequiredService<MapLabelPropertiesViewModel>();
+            ownVm.Initialize(sticky);
+            CaptureDialog(output, files, "MapLabelProperties__own", new MapLabelPropertiesDialog { DataContext = ownVm });
+
             var mapSettingsVm = sp.GetRequiredService<MapSettingsViewModel>();
             mapSettingsVm.Initialize();
             mapSettingsVm.LabelStyles.Initialize(subtitle.Id);
