@@ -488,9 +488,10 @@ public class DocsCaptureTests
         Assert.That(new MapLoader(project).LoadMap(Path.GetFullPath(path)), Is.True, "the sample map opens");
 
         var service = new CommandService();
-        service.SetViewportSize(900, 640);
+        // the map is tall: a portrait picture, so it's drawn as large as it can be
+        service.SetViewportSize(620, 980);
         var canvas = new MapCanvasControl { CommandService = service };
-        var shown = new Window { Width = 900, Height = 640, Content = canvas };
+        var shown = new Window { Width = 620, Height = 980, Content = canvas };
         try
         {
             shown.Show();
