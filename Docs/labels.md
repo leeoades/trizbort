@@ -49,10 +49,11 @@ and size, bold and italic, the text colour, the outline, the background, the sha
 ellipse or octagon), and where the text sits across and up and down the label. **Usual** is as labels have always
 been: centred, or top left for Markdown.
 
-If one label really must be different, choose **Modify this label's appearance...**. It's better to make a style, so
-labels stay alike: **Create a New Style...** there makes one with the label's look, and the label then uses it.
-**Reset to Style** takes the label back to its style. A label that's been changed this way opens with these
-controls showing.
+If one label really must be different, choose **Modify this label's appearance...**. The list of styles gives way to
+**Based on**, the style it starts from, with a preview of the label as it will look and the settings to change.
+OK keeps the changes and Cancel throws them away. It's better to make a style, so labels stay alike: **Create a New
+Style...** makes one with the label's look, and the label then uses it. **Reset to Style** takes the label back to
+its style and lists the styles again. A label that's been changed this way opens at its own settings.
 
 ## Size
 

@@ -239,7 +239,30 @@ public class LabelStylesTests
         vm.ModifyOwnLookCommand.Execute(null);
         vm.OwnLookOpen.ShouldBeTrue();
         vm.Shape = RoomShape.Ellipse;
-        vm.StyleOptions.ShouldAllBe(option => option.Look!.Shape == RoomShape.Ellipse);
+        // the styles show as they are (Lee, 26 Nov 2026): this label's change is in its own preview
+        vm.StyleOptions.ShouldAllBe(option => option.Look!.Shape != RoomShape.Ellipse);
+        vm.Look!.Shape.ShouldBe(RoomShape.Ellipse);
+    }
+
+    [AvaloniaTest]
+    public void LabelDialog_ResetToStyle_ListsTheStylesAgain()
+    {
+        // Lee, 26 Nov 2026: a label changed from its style opens customised; Reset to Style goes back to the list
+        var label = new MapLabel(Project.Current) { Text = "Sticky" };
+        label.Own.HasBackground = true;
+        label.Own.BackgroundColor = System.Drawing.Color.Gold;
+        Project.Current.Elements.Add(label);
+
+        var vm = new MapLabelPropertiesViewModel();
+        vm.Initialize(label);
+        vm.OwnLookOpen.ShouldBeTrue();
+        vm.Look!.BackgroundColor.ToArgb().ShouldBe(System.Drawing.Color.Gold.ToArgb());
+        vm.StyleOptions.Single(option => option.Id == LabelStyle.DefaultId).Look!.BackgroundColor.ToArgb()
+            .ShouldNotBe(System.Drawing.Color.Gold.ToArgb());
+
+        vm.ResetToStyleCommand.Execute(null);
+        vm.HasOwnLook.ShouldBeFalse();
+        vm.OwnLookOpen.ShouldBeFalse();
     }
 
     [AvaloniaTest]

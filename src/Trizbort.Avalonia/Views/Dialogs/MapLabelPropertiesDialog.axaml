@@ -118,15 +118,16 @@
                 <!-- the look comes from a style (Lee, 24 Nov 2026); just this label can be changed, but it's tucked away -->
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Spacing="10" Margin="0,8,8,0">
-                    <!-- each style shows this label's text as it would look in it (Lee, 25 Nov 2026) -->
-                    <Grid ColumnDefinitions="Auto,*,Auto">
+                    <!-- each style shows this label's text as it would look in it (Lee, 25 Nov 2026); the styles as they
+                         are, not with this label's changes. Customised, the list gives way to Based on (Lee, 26 Nov 2026) -->
+                    <Grid ColumnDefinitions="Auto,*,Auto" IsVisible="{Binding !OwnLookOpen}">
                         <Label Grid.Column="0" Classes="field-label" Content="S_tyle:" Target="{Binding #StyleList}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="1" Classes="hint" Margin="12,0" TextWrapping="Wrap" VerticalAlignment="Center"
                                    Text="Labels in a style all look alike: change the style, and they all change." />
                         <Button Grid.Column="2" x:Name="EditStylesButton" Content="E_dit Styles..." Command="{Binding OpenStyleEditorCommand}" />
                     </Grid>
                     <ListBox x:Name="StyleList" ItemsSource="{Binding StyleOptions}" SelectedItem="{Binding SelectedStyle}"
-                             MaxHeight="360" AutomationProperties.Name="Styles, each showing this label in it">
+                             MaxHeight="360" IsVisible="{Binding !OwnLookOpen}" AutomationProperties.Name="Styles, each showing this label in it">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:LabelStyleOption">
                                 <Grid ColumnDefinitions="150,*" Margin="0,2">
@@ -150,6 +151,32 @@
                                 <TextBlock Text="This label's appearance" FontWeight="SemiBold" VerticalAlignment="Center" />
                                 <TextBlock Classes="hint" Text="(changed from its style)" VerticalAlignment="Center" IsVisible="{Binding HasOwnLook}" />
                             </StackPanel>
+                            <!-- the style it starts from: each style's example when open, its name when closed -->
+                            <Grid ColumnDefinitions="Auto,12,*,Auto" ColumnSpacing="0">
+                                <Label Grid.Column="0" Classes="field-label" Content="_Based on:" Target="{Binding #BasedOnCombo}" VerticalAlignment="Center" />
+                                <ComboBox Grid.Column="2" x:Name="BasedOnCombo" ItemsSource="{Binding StyleOptions}" SelectedItem="{Binding SelectedStyle}"
+                                          MinWidth="220" HorizontalAlignment="Left" MaxDropDownHeight="360"
+                                          AutomationProperties.Name="The style this label is based on">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:LabelStyleOption">
+                                            <Grid ColumnDefinitions="130,320" Margin="0,2">
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                           Margin="{Binding Depth, Converter={x:Static conv:DepthToIndentConverter.Instance}}" />
+                                                <controls:LabelStylePreview Grid.Column="1" Look="{Binding Look}" Sample="{Binding Sample}" Height="44" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                    <ComboBox.SelectionBoxItemTemplate>
+                                        <DataTemplate x:DataType="vm:LabelStyleOption">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ComboBox.SelectionBoxItemTemplate>
+                                </ComboBox>
+                                <Button Grid.Column="3" x:Name="EditStylesFromOwnButton" Content="E_dit Styles..." Command="{Binding OpenStyleEditorCommand}" />
+                            </Grid>
+                            <!-- the label as it will look, with everything below -->
+                            <controls:LabelStylePreview x:Name="OwnLookPreview" Look="{Binding Look}" Sample="{Binding PreviewText}" Height="64"
+                                                        AutomationProperties.Name="This label as it will look" />
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0" Classes="hint" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,12,0"
                                            Text="Changes here are for this label only. To keep labels alike, make a style with this look instead." />

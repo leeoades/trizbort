@@ -103,13 +103,16 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
         ShowStylePreviews();
     }
 
-    /// <summary>Each style's item shows this label's text as it would look in that style (with its own changes).</summary>
+    /// <summary>
+    ///   Each style's item shows this label's text as it would look in that style: the style as it is, without this
+    ///   label's own changes, which show in the preview under Based on (Lee, 26 Nov 2026).
+    /// </summary>
     private void ShowStylePreviews()
     {
         var sample = PreviewText;
         foreach (var option in StyleOptions)
         {
-            option.Look = LabelStyles.Resolve(option.Id, _own);
+            option.Look = LabelStyles.Resolve(option.Id);
             option.Sample = sample;
         }
     }
@@ -186,12 +189,13 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
         ShowStylePreviews();
     }
 
-    /// <summary>Drops this label's tweaks: it looks as its style does.</summary>
+    /// <summary>Drops this label's tweaks: it looks as its style does, and the styles are listed again.</summary>
     [CommunityToolkit.Mvvm.Input.RelayCommand]
     private void ResetToStyle()
     {
         _own = new LabelStyle();
         ShowLook();
+        OwnLookOpen = false;
     }
 
     /// <summary>The style editor, at this label's style; its styles listed again afterwards.</summary>
