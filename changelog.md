@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Added
 
+- **Double-click a map to open it in Recast.** The Windows installer sets this up, and on Windows and Linux any copy
+  does it at start-up while **App Settings > General > Open .trizbort files with Recast** is on (the default). Turn
+  it off to leave `.trizbort` files to another app. On a Mac, Finder does it once Recast is in Applications.
 - **Label styles.** A label's look (font and size, bold and italic, text colour, outline, background, shape, and where the
   text sits: left, centre or right, and top, middle or bottom)
   comes from a style kept in the map. Choose it on the label's **Style** tab, which shows the label's text in each
