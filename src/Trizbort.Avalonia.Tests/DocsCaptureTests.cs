@@ -488,7 +488,7 @@ public class DocsCaptureTests
 
         Room Add(string name, float x, float y)
         {
-            var room = new Room(project) { Name = name, Size = new CoreVector(128, 64) };
+            var room = new Room(project) { Name = name, Size = new CoreVector(96, 64) };
             room.Position = new CoreVector(x, y);
             project.Elements.Add(room);
             return room;
@@ -502,15 +502,15 @@ public class DocsCaptureTests
         }
 
         var hall = Add("Hall", 0, 0);
-        hall.Objects = "coat stand\n- umbrella\nletter";
-        var kitchen = Add("Kitchen", 320, 0);
-        var cellar = Add("Cellar", 320, 224);
+        var kitchen = Add("Kitchen", 224, 0);
+        var cellar = Add("Cellar", 224, 160);
         cellar.IsDark = true;
         cellar.Objects = "wine rack";
-        var garden = Add("Garden", 0, 224);
+        var garden = Add("Garden", 0, 160);
+        garden.Objects = "wheelbarrow\n- spade\nhose";
         garden.SecondFillColor = System.Drawing.Color.FromArgb(0x9C, 0xCC, 0x8C);
         garden.SecondFillLocation = "Bottom";
-        var shed = Add("Shed", -320, 224);
+        var shed = Add("Shed", -224, 160);
         shed.BorderStyle = BorderDashStyle.Dot;
         shed.SubTitle = "not seen yet";
 
@@ -524,13 +524,13 @@ public class DocsCaptureTests
         var grating = Join(garden, CompassPoint.East, cellar, CompassPoint.West);
         grating.Style = ConnectionStyle.Dashed;
         grating.MidText = "grating?";
-        grating.SetCurveWaypoint(CurveWaypoint.Middle, new CoreVector(224, 352));
+        grating.SetCurveWaypoint(CurveWaypoint.Middle, new CoreVector(160, 256));
         Join(shed, CompassPoint.East, garden, CompassPoint.West);
 
         var service = new CommandService();
-        service.SetViewportSize(760, 440);
+        service.SetViewportSize(600, 360);
         var canvas = new MapCanvasControl { CommandService = service };
-        var shown = new Window { Width = 760, Height = 440, Content = canvas };
+        var shown = new Window { Width = 600, Height = 360, Content = canvas };
         try
         {
             shown.Show();

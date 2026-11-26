@@ -5,10 +5,10 @@
 A map is rooms and the joins between them, with labels and backgrounds to explain it. Draw it as you play, or let
 [Automap](automap.md) draw it for you.
 
-![Five rooms and their joins: objects in the hall, a dark cellar, a garden with a strip of green, a shed not seen yet;
-a one-way join out of the window, stairs labelled d and u, and a dotted join bent round below.](images/rooms-and-joins.png)
+![Five rooms and their joins: a garden with a strip of green and its objects, a dark cellar, a shed not seen yet; a
+one-way join out of the window, stairs labelled d and u, and a dotted join bent round below.](images/rooms-and-joins.png)
 
-*The hall lists its objects (the umbrella is in the coat stand). The cellar is dark. The way out of the window is
+*The garden lists its objects (the spade is in the wheelbarrow). The cellar is dark. The way out of the window is
 one way, and the dotted grating is a way not tried yet, bent to keep it clear.*
 
 ## Rooms
