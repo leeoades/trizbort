@@ -39,6 +39,26 @@ many letters of a description).
   "you are here" sign, painted or pewter figures, or **your own** (a PNG with a transparent background, or an SVG).
   Untick **Token on the room** to hide it. **Glow round the room** sets the colour of the glow.
 
+### Updates
+
+When a new version of Recast is out, a bar appears under the toolbar a few seconds after Recast starts. **Help >
+Check for Updates...** looks straight away. **Updates**, on the **General** tab, chooses what happens:
+
+- **Check for updates, but let me choose whether to download and install them**: the bar says a new version is
+  out, with **Download** and **What's New** (the release notes).
+- **Download updates, but let me choose when to install them** (the default): it downloads in the background, then
+  offers **Restart to Update**. That closes Recast as usual (asking to save your map first), installs the new version
+  and opens it again. Nothing is installed until you choose it: close Recast or choose **Later**, and the bar offers
+  it again next time.
+- **Install updates automatically**: it downloads in the background and installs the new version when you close
+  Recast. **Restart Now** on the bar does it straight away.
+
+While Recast is in beta, it updates to the newest beta.
+
+Only installed copies update themselves (see [Getting started](getting-started.md#download-and-install)). In a plain
+copy from a zip, the Updates settings say it can't update itself and which download to install on your computer, as
+does **Check for Updates**. Install Recast from there and your settings come with you.
+
 ## Map settings
 
 ### Map Details

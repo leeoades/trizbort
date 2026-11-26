@@ -1,4 +1,5 @@
 using Avalonia;
+using Velopack;
 using Trizbort.Domain.Application;
 
 namespace Trizbort.Avalonia;
@@ -11,6 +12,20 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Velopack first: when it runs Recast to install or update it, it does its work and exits here. Updates are
+        // installed when Recast decides (the user's choice in App Settings), not at start-up.
+        try
+        {
+            VelopackApp.Build()
+                .SetAutoApplyOnStartup(false)
+                .OnRestarted(version => Trizbort.Updates.UpdateCoordinator.JustUpdatedTo = version.ToString())
+                .Run();
+        }
+        catch (Exception)
+        {
+            // updating must never stop Recast starting
+        }
+
         AppOptions.Initialize(CommandLineParsing.Parse(args));
         var code = BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         return code != 0 ? code : App.ExitCode;

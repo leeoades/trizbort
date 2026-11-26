@@ -59,11 +59,51 @@ public partial class App : Application
                 }
             }
             InstallCrashSafety(desktop, session, dialogService);
+            InstallUpdates(desktop, mainWindowViewModel, prompts);
             FileWatcherWiring.Wire(dialogService, () => desktop.MainWindow, mainWindowViewModel.UpdateState,
                 mainWindowViewModel.CommandService.Session);
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    ///   Recast updating itself (Lee, 26 Nov 2026): the bar under the toolbar, a look for a new version shortly after
+    ///   start-up, and installing a downloaded update as Recast closes when the user asked (or chose Install updates automatically).
+    /// </summary>
+    private static void InstallUpdates(
+        IClassicDesktopStyleApplicationLifetime desktop,
+        MainWindowViewModel viewModel,
+        Trizbort.Editor.IEditorPrompts prompts)
+    {
+        try
+        {
+            var updates = new Trizbort.Updates.UpdateCoordinator(
+                new VelopackUpdater(),
+                () => Trizbort.Domain.AppSettings.ApplicationSettingsController.AppSettings.Updates);
+            Trizbort.Updates.UpdateCoordinator.Current = updates;
+            viewModel.Updates = new UpdateBarViewModel(updates, uri => prompts.OpenUriAsync(uri),
+                () => desktop.MainWindow?.Close());
+            desktop.Exit += (_, _) => updates.OnClosing();
+            if (desktop.MainWindow != null)
+                desktop.MainWindow.Opened += async (_, _) =>
+                {
+                    try
+                    {
+                        // out of the way of opening the map
+                        await Task.Delay(TimeSpan.FromSeconds(8));
+                        await updates.StartAsync();
+                    }
+                    catch (Exception)
+                    {
+                        // never trouble the user about a check they didn't ask for
+                    }
+                };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Updates could not start: {ex.Message}");
+        }
     }
 
     /// <summary>Recovery copy of unsaved work and the global error handlers (ticket 135).</summary>

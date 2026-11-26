@@ -6,6 +6,9 @@ The highlights of each release, newest first. Every change is listed in the [cha
 
 ## Coming next
 
+- **Recast updates itself.** It tells you when a new version is out and, if you like, downloads it in the background
+  and installs it when you restart. Choose how in [App settings](settings.md#updates). Install it with the new
+  Setup (Windows), AppImage (Linux) or `-Portable.zip` (Mac) to get updates.
 - **Label styles.** Choose a style for each label, such as "Title" or "Note", with its font and size, colours,
   outline, background and shape. A style can be based on another. Change a style and its labels change too. See
   [Labels](labels.md#styles).

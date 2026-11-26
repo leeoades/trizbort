@@ -26,6 +26,12 @@ The release zips (`osx-arm64` for Apple Silicon, `osx-x64` for Intel) contain `T
 Security** and choose **Open Anyway**, or run `xattr -dr com.apple.quarantine "/Applications/Trizbort Recast.app"`.
 Finder open events reach the app through `FileActivationHandler` (untested on a Mac).
 
+## Updates
+Each release also has Velopack packages, which update themselves: `TrizbortRecast-win-x64-Setup.exe`,
+the Linux `.AppImage` and `TrizbortRecast-osx-arm64-Portable.zip` / `-osx-x64-Portable.zip`. See
+`agent-docs/09-build-test-and-dotnet8-port.md` (Updates). The AppImage doesn't register the file type; use the steps
+above with `Exec=` pointing at it.
+
 ## Icons
 `packaging/icons/make_icon.py` (Python + Pillow) draws the app icon and writes the PNG, `.ico` and `.icns` files. The
 `.ico` used for the Windows exe and window icons is in `src/Trizbort.Avalonia/Assets/AppIcon/`.

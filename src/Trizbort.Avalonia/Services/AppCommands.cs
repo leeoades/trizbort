@@ -228,6 +228,14 @@ public static class AppCommands
         });
         c.Register(new EditorCommand
         {
+            Id = "help.checkUpdates",
+            Title = "Check for _Updates...",
+            MenuPath = "Help",
+            Group = "2-about",
+            ExecuteAsyncFunc = s => vm?.Updates?.CheckNowAsync() ?? Task.CompletedTask
+        });
+        c.Register(new EditorCommand
+        {
             Id = "help.about",
             Title = "_About Trizbort...",
             MenuPath = "Help",

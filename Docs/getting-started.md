@@ -7,6 +7,18 @@
 Get the latest release from the [Releases page](https://github.com/leeoades/trizbort/releases). The downloads
 include everything they need: there's no separate .NET to install.
 
+These keep themselves up to date (see [Updates](settings.md#updates)):
+
+- **Windows:** run `TrizbortRecast-win-x64-Setup.exe`. It installs Recast for you alone (no administrator needed)
+  and adds it to the Start menu. The app isn't signed yet, so Windows SmartScreen may warn you: choose
+  **More info**, then **Run anyway**.
+- **Linux:** download the `.AppImage`, make it executable (`chmod +x`) and run it.
+- **macOS:** download `TrizbortRecast-osx-arm64-Portable.zip` (Apple Silicon) or `…-osx-x64-Portable.zip` (Intel),
+  unzip it and drag `Trizbort Recast.app` to Applications. The first time, macOS refuses to open it: go to
+  **System Settings > Privacy & Security** and choose **Open Anyway**.
+
+Or take a plain copy that you update by hand:
+
 - **Windows:** extract `TrizbortRecast-<version>-win-x64.zip` into a folder you can write to, and run
   `TrizbortRecast.exe`. The app isn't signed yet, so Windows SmartScreen may warn you the first time: choose
   **More info**, then **Run anyway**.
@@ -16,7 +28,7 @@ include everything they need: there's no separate .NET to install.
   `Trizbort Recast.app` to Applications. The first time, macOS refuses to open it: go to
   **System Settings > Privacy & Security** and choose **Open Anyway**.
 
-Recast doesn't update itself. Check the Releases page for new versions.
+The plain copies don't update themselves: **Help > Check for Updates...** points you to the Releases page.
 
 ## Your first map
 

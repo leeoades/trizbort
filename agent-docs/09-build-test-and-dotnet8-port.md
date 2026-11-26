@@ -237,7 +237,7 @@ and is **not** produced any more. Pushing a tag starts a release; the prefix pic
 
 | Tag | Workflow | Runner | Assets | Changelog |
 |---|---|---|---|---|
-| `recast-vX.Y.Z[.R][-beta[.N]]` | `.github/workflows/release.yml` | ubuntu-latest + macos-latest | `TrizbortRecast-<v>-win-x64.zip` (`TrizbortRecast.exe`), `TrizbortRecast-<v>-linux-x64.tar.gz` (`trizbort-recast`, icon and the `packaging/linux` files), `TrizbortRecast-<v>-osx-arm64.zip` and `-osx-x64.zip` (`Trizbort Recast.app`, built and ad-hoc signed by `packaging/macos/make-app.sh`) | root `changelog.md` |
+| `recast-vX.Y.Z[.R][-beta[.N]]` | `.github/workflows/release.yml` | ubuntu-latest + macos-latest + windows-latest | Velopack update packages (below), plus `TrizbortRecast-<v>-win-x64.zip` (`TrizbortRecast.exe`), `TrizbortRecast-<v>-linux-x64.tar.gz` (`trizbort-recast`, icon and the `packaging/linux` files), `TrizbortRecast-<v>-osx-arm64.zip` and `-osx-x64.zip` (`Trizbort Recast.app`, built and ad-hoc signed by `packaging/macos/make-app.sh`) | root `changelog.md` |
 | `legacy-vX.Y.Z[.R][-beta.N]` | `.github/workflows/release-legacy.yml` | windows-latest | `Trizbort-<v>-win-x64.zip` (`Trizbort.exe`) | `legacy/changelog.md` |
 
 The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefixes. Both workflows:
@@ -257,10 +257,33 @@ The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefi
 Before tagging a Recast release, run `scripts/update-docs-images.ps1` (or `.sh`) to redraw the user guide's
 pictures from the app, and move `Docs/whats-new.md`'s "Coming next" under the version.
 
-There is no in-app update checker or update manifest. Help → Online Help (F1) links to the
-Recast user guide (`Docs/index.md` on GitHub, `HelpLinks.UserGuide`; the legacy app links to `legacy/Docs/index.md`)
-and the original v1 help; users download releases
-manually from GitHub Releases. User `appsettings.json` is not in
+### Updates (Velopack)
+
+Recast updates itself with [Velopack](https://velopack.io) 1.2.161. Each release also carries `vpk pack` output for
+four channels, `win-x64` (windows-latest job: `TrizbortRecast-win-x64-Setup.exe`, per-user install),
+`linux-x64` (release job: an `.AppImage`; its exact name is unchecked) and `osx-arm64`/`osx-x64` (macos job: vpk packs the
+ad-hoc-signed `.app` from `make-app.sh`, giving `TrizbortRecast-osx-*-Portable.zip`). Each channel adds
+`releases.<channel>.json`, `assets.<channel>.json` and `TrizbortRecast-<v>-<channel>-full.nupkg` (Windows also
+`RELEASES-win-x64`). Channels are named so no file names clash; the release step fails if two do. The Mac step
+is `continue-on-error` and checks the packed app with `codesign --verify --deep --strict`; if that fails the release
+ships without Mac updates (with a warning). Tags with a fourth version part aren't SemVer 2, so they get no
+update packages (`vpk` output of the version job is empty).
+
+In the app: `Program.Main` runs `VelopackApp.Build().SetAutoApplyOnStartup(false)` first. `VelopackUpdater`
+(Avalonia, `IAppUpdater`) reads `GithubSource` with pre-releases; an installed copy keeps to its own channel.
+`UpdateCoordinator` (Core) holds the state and the user's `ApplicationSettings.Updates` (`UpdateMode`: Notify,
+DownloadAndAsk, Automatic) and is unit-tested with a fake updater; `UpdateBarViewModel` drives the bar under the
+toolbar. Restart to Update closes the main window normally, and `desktop.Exit` calls `OnClosing`, which hands the
+downloaded package to `WaitExitThenApplyUpdates` (reopening only after Restart to Update). Copies not installed by
+Velopack (`IsInstalled` false: builds, the plain zips) don't update.
+
+To try an update without a release, pack two versions into one folder (`vpk pack ... -c win-x64 -o feed`), run the
+older one's `Portable.zip` with `TRIZBORT_UPDATES_FROM=<feed folder>`, and it updates from there (tried on Windows,
+26 Nov 2026: Restart to Update installed 0.16.0-beta and reopened). Mac updates have not been tried on a Mac yet.
+
+Help → Online Help (F1) links to the
+Recast user guide (`HelpLinks.UserGuide`; the legacy app links to `legacy/Docs/index.md`)
+and the original v1 help. User `appsettings.json` is not in
 the zip, so it survives extracting a new release over the install folder. If the repo moves,
 update `OnlineHelpDialog.UserGuideUrl` and the message in `Project.CheckDocVersion()`.
 

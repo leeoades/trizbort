@@ -46,6 +46,14 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   open Map Settings at the Regions tab with a new region to name. Press OK and the selected rooms are put in it (one
   undo step); Cancel and nothing changes, with the rooms still selected. These work before a map has any regions,
   too.
+- **Recast updates itself.** It checks for a new version a few seconds after it starts (and on **Help > Check for
+  Updates...**) and shows a bar under the toolbar. **App Settings > General > Updates** chooses what happens:
+  *Check for updates, but let me choose whether to download and install them*; *Download updates, but let me choose
+  when to install them* (the default), which waits for **Restart to Update**; or *Install updates automatically*,
+  which installs it when you close Recast. Betas get
+  beta updates. This works for copies installed from `TrizbortRecast-win-x64-Setup.exe`, the Linux `.AppImage`, and
+  the Mac app from `TrizbortRecast-osx-*-Portable.zip`, which each release now includes. The plain zips and
+  tar.gz still work as before, but don't update themselves. (The Mac updates are untested so far.)
 
 ### Changed
 

@@ -53,6 +53,36 @@
                         </StackPanel>
                     </HeaderedContentControl>
 
+                    <!-- Recast updating itself (Lee, 26 Nov 2026) -->
+                    <HeaderedContentControl Classes="group" Header="Updates">
+                        <StackPanel Spacing="6">
+                            <RadioButton x:Name="UpdatesNotifyRadio" GroupName="Updates" IsChecked="{Binding UpdatesNotify}">
+                                <AccessText TextWrapping="Wrap" Text="Check for updates, but let me choose whether to download a_nd install them" />
+                            </RadioButton>
+                            <RadioButton x:Name="UpdatesDownloadRadio" GroupName="Updates" IsChecked="{Binding UpdatesDownload}">
+                                <AccessText TextWrapping="Wrap" Text="Do_wnload updates, but let me choose when to install them" />
+                            </RadioButton>
+                            <RadioButton x:Name="UpdatesAutomaticRadio" GroupName="Updates" IsChecked="{Binding UpdatesAutomatic}">
+                                <AccessText TextWrapping="Wrap" Text="Install _updates automatically" />
+                            </RadioButton>
+                            <TextBlock Classes="hint" TextWrapping="Wrap"
+                                       Text="Recast looks for a new version each time it starts (Help &gt; Check for Updates looks now). Automatic updates are installed when you close Recast. Otherwise a downloaded update waits until you choose Restart to Update." />
+                            <!-- a plain copy (a zip, or a build) can't update itself: say so, and where the installer is -->
+                            <Border x:Name="CantUpdateNote" IsVisible="{Binding CantUpdateItself}"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1"
+                                    CornerRadius="4" Padding="10,8" Margin="0,4,0,0">
+                                <StackPanel Spacing="4">
+                                    <TextBlock TextWrapping="Wrap" FontWeight="SemiBold"
+                                               Text="This copy of Recast can't update itself." />
+                                    <TextBlock TextWrapping="Wrap"
+                                               Text="{Binding HowToGetUpdates}" />
+                                    <HyperlinkButton x:Name="ReleasesLink" Padding="0" NavigateUri="{Binding ReleasesPage}"
+                                                     Content="Get it from the Releases page" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </HeaderedContentControl>
+
                     <HeaderedContentControl Classes="group" Header="Smart Save">
                         <StackPanel Spacing="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">

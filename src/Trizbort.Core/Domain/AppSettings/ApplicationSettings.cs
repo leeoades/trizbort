@@ -9,6 +9,9 @@ public class ApplicationSettings
   private const string AppSettingsFileName = @".\appsettings.json";
 
   public bool ApplyStyleToNewRooms { get; set; }
+
+  /// <summary>How Recast updates itself: tell me, download and ask, or update for me.</summary>
+  public UpdateMode Updates { get; set; } = UpdateMode.DownloadAndAsk;
   public AutomapSettings Automap { get; set; } = AutomapSettings.Default;
   public int CanvasHeight { get; set; }
   public int CanvasWidth { get; set; }

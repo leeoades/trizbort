@@ -34,6 +34,8 @@
 		<!-- PDFsharp 6.2.4 pulls in System.Security.Cryptography.Pkcs 8.0.1 (known vulnerabilities, e.g. GHSA-846f-f764-76mx); pin a patched version. -->
 		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+		<!-- updating itself from GitHub releases (Lee, 26 Nov 2026); keep vpk in release.yml at the same version -->
+		<PackageReference Include="Velopack" Version="1.2.161" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
 	</ItemGroup>
 
