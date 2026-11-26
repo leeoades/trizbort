@@ -554,4 +554,19 @@ public class DocsCaptureTests
         vm.Initialize(tower);
         Capture(new BackgroundPropertiesDialog { DataContext = vm }, Path.Combine(root, "background-properties.png"));
     }
+
+    /// <summary>Three shore rooms' properties together: the cave is dark, the others aren't. Lee, 24 Nov 2026.</summary>
+    [AvaloniaTest]
+    public async Task SeveralRoomsProperties_TogetherWithMixedValues()
+    {
+        var root = Output();
+        var project = await LighthouseAsync();
+        var rooms = new[] { Called(project, "Rock Pools"), Called(project, "Sea Cave"), Called(project, "Beach") };
+        Called(project, "Sea Cave").IsDark = true;
+        Called(project, "Sea Cave").RoomFillColor = System.Drawing.Color.FromArgb(0xD8, 0xE4, 0xEE);
+        var vm = new RoomsPropertiesViewModel();
+        vm.Initialize(rooms);
+        vm.SelectedTabIndex = 1; // Shapes & Lines
+        Capture(new RoomsPropertiesDialog { DataContext = vm }, Path.Combine(root, "rooms-properties.png"));
+    }
 }

@@ -21,3 +21,4 @@ token-zoomed-out.png                here-token-zoomed-out.png
 backgrounds.png                     backgrounds.png
 quick-map.png                       quick-map.png
 background-properties.png           background-properties.png
+rooms-properties.png                rooms-properties.png

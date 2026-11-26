@@ -14,6 +14,8 @@ using Trizbort.Domain.Application;
 using Trizbort.Domain.Elements;
 using Trizbort.Domain.Misc;
 using Trizbort.Setup;
+using Trizbort.Automap;
+using Trizbort.Editor;
 using Vector = Trizbort.Domain.Misc.Vector;
 using CanvasDragMode = Trizbort.Editor.CanvasDragMode;
 
@@ -402,6 +404,58 @@ public class EditKeyboardSmokeTests
             service.SelectedElements.ShouldNotContain(b1);
         }
         finally { window.Close(); }
+    }
+
+    /// <summary>Lee, 25 Nov 2026: right-click > Properties on one of several selected rooms edits them all.</summary>
+    [AvaloniaTest]
+    public void RightClickProperties_OnOneOfSeveralSelectedRooms_EditsThemAll()
+    {
+        var (window, canvas, service) = CreateHarness();
+        try
+        {
+            var a = AddRoom(0, 0, "A");
+            var b = AddRoom(200, 0, "B");
+            var c = AddRoom(400, 0, "C");
+            service.Select([a, b], clearExisting: true);
+            var prompts = new RoomsPrompts();
+            service.Session.Prompts = prompts;
+            Element? single = null;
+            canvas.PropertiesDialogOverride = e => { single = e; return Task.FromResult(false); };
+            var command = Trizbort.Avalonia.Services.AppCommands.CreateCatalogue(null).Find("edit.properties")!;
+
+            CanvasCommandBridge.ContextCommandFor(canvas, command, Vector.Zero, b)!.Execute(null);
+            Dispatcher.UIThread.RunJobs();
+            prompts.Rooms.ShouldBe(new[] { a, b }, ignoreOrder: true);
+            single.ShouldBeNull();
+
+            // a room that isn't selected: just that one
+            prompts.Rooms = null;
+            CanvasCommandBridge.ContextCommandFor(canvas, command, Vector.Zero, c)!.Execute(null);
+            Dispatcher.UIThread.RunJobs();
+            single.ShouldBeSameAs(c);
+            prompts.Rooms.ShouldBeNull();
+        }
+        finally { window.Close(); }
+    }
+
+    private sealed class RoomsPrompts : IEditorPrompts
+    {
+        public IReadOnlyList<Room>? Rooms { get; set; }
+
+        public Task<bool> EditRoomsAsync(IReadOnlyList<Room> rooms, CancellationToken token = default)
+        {
+            Rooms = rooms;
+            return Task.FromResult(false);
+        }
+
+        public Task<AutomapSameDirectionResult> ChooseSameDirectionAsync(Room existing, string newRoomName, CancellationToken token = default)
+            => NonInteractiveEditorPrompts.Instance.ChooseSameDirectionAsync(existing, newRoomName, token);
+
+        public Task<RoomDisambiguation> DisambiguateRoomAsync(string transcriptLine, string roomDescription, IReadOnlyList<Room> candidates, CancellationToken token = default)
+            => NonInteractiveEditorPrompts.Instance.DisambiguateRoomAsync(transcriptLine, roomDescription, candidates, token);
+
+        public Task<bool> ConfirmAsync(string message, string title, CancellationToken token = default)
+            => Task.FromResult(false);
     }
 
     /// <summary>

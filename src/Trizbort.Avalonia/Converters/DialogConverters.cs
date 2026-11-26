@@ -58,7 +58,9 @@ public class RegionDisplayNameConverter : IValueConverter
     public static readonly RegionDisplayNameConverter Instance = new();
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        Trizbort.Domain.Misc.Region.DisplayName(value as string ?? string.Empty);
+        value as string == Trizbort.Editor.NewRegionChoice.Chosen
+            ? Trizbort.Avalonia.ViewModels.RegionChoices.AddNewText
+            : Trizbort.Domain.Misc.Region.DisplayName(value as string ?? string.Empty);
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -72,6 +74,7 @@ public class RegionNameToBrushConverter : IValueConverter
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
+        if (value as string == Trizbort.Editor.NewRegionChoice.Chosen) return global::Avalonia.Media.Brushes.Transparent;
         var region = Trizbort.Setup.Settings.Regions.FirstOrDefault(r => r.RegionName == value as string);
         return (region?.RColor ?? CoreColor.White).ToBrush();
     }
