@@ -62,7 +62,8 @@ Thank you to everyone who stars, shares, tests and reports: every bit of it help
 authors, and gets us closer to a signed app that installs without the warnings.
 
 ## Links
-- [User guide](Docs/index.md) and [what's new](Docs/whats-new.md), with pictures. The guide to the original app and
+- [User guide](https://leeoades.github.io/trizbort/) (its pages are in [Docs](Docs/index.md)) and
+  [what's new](Docs/whats-new.md), with pictures. The guide to the original app and
   Trizbort 2 is in [legacy/Docs](legacy/Docs/index.md)
 - [Issues](https://github.com/leeoades/trizbort/issues)
 - [Releases](https://github.com/leeoades/trizbort/releases)

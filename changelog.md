@@ -37,6 +37,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **Help > Online Help** opens the user guide as a website, https://leeoades.github.io/trizbort/, with a menu, search
+  and a dark mode. It's the guide for the latest release.
 - **Automap's guesses** read more plainly. A way you hadn't tried is "unexplored" (not "isn't on the map yet",
   which jarred once it was drawn); one that comes back to the same room says it looks like it loops back; and
   where other rooms share the name, it says so ("Another room on the map is also called Maze"), rather than that
