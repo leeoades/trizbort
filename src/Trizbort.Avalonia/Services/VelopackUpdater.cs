@@ -13,13 +13,20 @@ public sealed class VelopackUpdater : IAppUpdater
 {
     public const string Repository = "https://github.com/leeoades/trizbort";
 
+    /// <summary>For testing: a folder of vpk's output to update from instead of GitHub.</summary>
+    public const string TestFolderVariable = "TRIZBORT_UPDATES_FROM";
+
     private readonly UpdateManager? _manager;
 
     public VelopackUpdater()
     {
         try
         {
-            _manager = new UpdateManager(new GithubSource(Repository, null, true, null));
+            var folder = Environment.GetEnvironmentVariable(TestFolderVariable);
+            IUpdateSource source = string.IsNullOrWhiteSpace(folder)
+                ? new GithubSource(Repository, null, true, null)
+                : new SimpleFileSource(new DirectoryInfo(folder));
+            _manager = new UpdateManager(source);
         }
         catch (Exception)
         {

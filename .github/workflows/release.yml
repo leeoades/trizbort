@@ -7,6 +7,11 @@ name: "Release (Trizbort: Recast)"
 #
 # Assets: Windows x64 zip, Linux x64 tar.gz, and macOS zips for Apple Silicon (arm64) and Intel (x64).
 # The macOS apps are signed ad hoc only (no Apple Developer ID), so Gatekeeper asks before the first run.
+#
+# Updates: Velopack packages (vpk) for each channel - win-x64, linux-x64, osx-arm64, osx-x64 - are added to the
+# same release. Installed copies (Setup.exe, the AppImage, the Mac app from the Velopack zip) find
+# releases.<channel>.json there and update themselves. The plain zips and tar.gz stay portable.
+# A tag with a fourth (revision) part isn't SemVer, so those releases ship without update packages.
 
 on:
   push:
@@ -28,6 +33,7 @@ jobs:
       informational: ${{ steps.version.outputs.informational }}
       prerelease: ${{ steps.version.outputs.prerelease }}
       package: ${{ steps.version.outputs.package }}
+      vpk: ${{ steps.version.outputs.vpk }}
     defaults:
       run:
         shell: pwsh
@@ -51,10 +57,14 @@ jobs:
           "informational=$informational" >> $env:GITHUB_OUTPUT
           "prerelease=$($prerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
           "package=$(if ($prerelease) { $informational } else { $version })" >> $env:GITHUB_OUTPUT
+          # Velopack needs SemVer 2 (three parts), e.g. 0.16.0-beta
+          "vpk=$(if ($Matches[4]) { '' } else { $informational })" >> $env:GITHUB_OUTPUT
 
   macos:
     needs: version
     runs-on: macos-latest
+    outputs:
+      velopack: ${{ steps.velopack.outcome == 'success' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -79,8 +89,86 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      # Not yet tested on a real Mac. If vpk fails, or its app no longer passes codesign,
+      # the release still goes out with the zips above, just without Mac updates.
+      - name: Velopack packages for updates
+        id: velopack
+        if: needs.version.outputs.vpk != ''
+        continue-on-error: true
+        env:
+          VPK_VERSION: ${{ needs.version.outputs.vpk }}
+          PACKAGE_VERSION: ${{ needs.version.outputs.package }}
+          DOTNET_ROLL_FORWARD: Major
+        run: |
+          set -euo pipefail
+          dotnet tool install -g vpk --version 1.2.161
+          for rid in osx-arm64 osx-x64; do
+            app="$(mktemp -d)"
+            ditto -x -k "TrizbortRecast-$PACKAGE_VERSION-$rid.zip" "$app"
+            vpk pack -u TrizbortRecast -v "$VPK_VERSION" -c "$rid" -p "$app/Trizbort Recast.app" -e TrizbortRecast \
+              --packTitle "Trizbort Recast" --icon packaging/icons/trizbort-recast.icns --noInst -o "velopack/$rid"
+            check="$(mktemp -d)"
+            ditto -x -k velopack/$rid/*Portable.zip "$check"
+            codesign --verify --deep --strict "$check"/*.app
+          done
+          ls -l velopack/*
+
+      - uses: actions/upload-artifact@v6
+        if: steps.velopack.outcome == 'success'
+        with:
+          name: macos-velopack
+          path: velopack/*/*
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Note missing Mac updates
+        if: steps.velopack.outcome == 'failure'
+        run: echo "::warning::Mac Velopack packages failed, so this release has no Mac updates. See the step above."
+
+  windows:
+    needs: version
+    if: needs.version.outputs.vpk != ''
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Velopack package for updates (Setup.exe)
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          RELEASE_INFO: ${{ needs.version.outputs.informational }}
+          VPK_VERSION: ${{ needs.version.outputs.vpk }}
+          DOTNET_ROLL_FORWARD: Major
+        run: |
+          $out = 'publish/win-x64'
+          dotnet publish src/Trizbort.Avalonia/Trizbort.Avalonia.csproj -c Release -r win-x64 -o $out `
+            --self-contained true -p:PublishSingleFile=true `
+            -p:DebugType=none -p:Version=$env:RELEASE_VERSION -p:InformationalVersion=$env:RELEASE_INFO
+          if ($LASTEXITCODE -ne 0) { throw "Publish failed." }
+          Copy-Item LICENSE.txt, PdfSharp.License.txt -Destination $out
+          Move-Item "$out/Trizbort.Avalonia.exe" "$out/TrizbortRecast.exe"
+          dotnet tool install -g vpk --version 1.2.161
+          vpk pack -u TrizbortRecast -v $env:VPK_VERSION -c win-x64 -p $out -e TrizbortRecast.exe `
+            --packTitle "Trizbort Recast" --icon src/Trizbort.Avalonia/Assets/AppIcon/trizbort-recast.ico -o velopack/win-x64
+          if ($LASTEXITCODE -ne 0) { throw "vpk pack failed." }
+          Get-ChildItem velopack/win-x64
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: windows-velopack
+          path: velopack/win-x64/*
+          if-no-files-found: error
+          retention-days: 7
+
   release:
-    needs: [version, macos]
+    needs: [version, macos, windows]
+    if: ${{ !cancelled() && needs.version.result == 'success' && needs.macos.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.windows.result) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -130,9 +218,33 @@ jobs:
           }
           "assets=$($assets -join ' ')" >> $env:GITHUB_OUTPUT
 
+      - name: Velopack package for updates (AppImage)
+        if: needs.version.outputs.vpk != ''
+        env:
+          VPK_VERSION: ${{ needs.version.outputs.vpk }}
+          DOTNET_ROLL_FORWARD: Major
+        run: |
+          dotnet tool install -g vpk --version 1.2.161
+          vpk pack -u TrizbortRecast -v $env:VPK_VERSION -c linux-x64 -p publish/linux-x64 -e trizbort-recast `
+            --packTitle "Trizbort Recast" --icon packaging/icons/trizbort-recast-256.png -o velopack/linux-x64
+          if ($LASTEXITCODE -ne 0) { throw "vpk pack failed." }
+          Get-ChildItem velopack/linux-x64
+
       - uses: actions/download-artifact@v7
         with:
           name: macos-apps
+
+      - uses: actions/download-artifact@v7
+        if: needs.windows.result == 'success'
+        with:
+          name: windows-velopack
+          path: velopack/win
+
+      - uses: actions/download-artifact@v7
+        if: needs.macos.outputs.velopack == 'true'
+        with:
+          name: macos-velopack
+          path: velopack/mac
 
       - name: Create GitHub Release
         env:
@@ -146,7 +258,11 @@ jobs:
         run: |
           $macAssets = @("TrizbortRecast-$env:PACKAGE_VERSION-osx-arm64.zip", "TrizbortRecast-$env:PACKAGE_VERSION-osx-x64.zip")
           foreach ($asset in $macAssets) { if (-not (Test-Path $asset)) { throw "Missing macOS asset $asset." } }
-          $releaseArgs = @('release', 'create', $env:RELEASE_TAG) + ($env:RELEASE_ASSETS -split ' ') + $macAssets + @(
+          # Every channel's update files go in the same release, so their names must not clash
+          $updates = @(if (Test-Path velopack) { Get-ChildItem velopack -Recurse -File })
+          $clash = $updates | Group-Object Name | Where-Object Count -gt 1
+          if ($clash) { throw "Update files share a name: $($clash.Name -join ', ')" }
+          $releaseArgs = @('release', 'create', $env:RELEASE_TAG) + ($env:RELEASE_ASSETS -split ' ') + $macAssets + ($updates | ForEach-Object FullName) + @(
             '--repo', $env:RELEASE_REPO, '--verify-tag', '--title', "Trizbort: Recast $env:RELEASE_INFO", '--generate-notes')
           if ($env:RELEASE_PRERELEASE -eq 'true') {
             $heading = "## [$env:RELEASE_INFO]"
