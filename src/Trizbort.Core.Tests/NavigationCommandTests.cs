@@ -234,16 +234,22 @@ public class NavigationCommandTests
   }
 
   [Test]
-  public void Properties_CanExecuteOnlyForSingleElementWithDialog()
+  public void Properties_CanExecuteForASingleElementWithDialog_OrSeveralRooms()
   {
     var a = AddRoomAt(0, 0);
     var b = AddRoomAt(200, 0);
+    var label = new MapLabel(Project.Current);
+    Project.Current.Elements.Add(label);
     var command = _catalogue.Find("edit.properties");
 
     command.CanExecute(_session).ShouldBeFalse();
     _session.Selection.Set(new Element[] { a });
     command.CanExecute(_session).ShouldBeTrue();
+    // several rooms: what they share (Lee, 24 Nov 2026)
     _session.Selection.Set(new Element[] { a, b });
+    command.CanExecute(_session).ShouldBeTrue();
+    // a room and something else: not one thing, and not rooms together
+    _session.Selection.Set(new Element[] { a, label });
     command.CanExecute(_session).ShouldBeFalse();
   }
 

@@ -587,6 +587,17 @@ public class AutomapCanvas : IAutomapCanvas
             .Any(c => string.Equals(c, command, StringComparison.OrdinalIgnoreCase)))
         continue;
       if (IsCommandJoin(connection) && !Leads(connection, source, target)) connection.Flow = ConnectionFlow.TwoWay;
+      // and seen from this end too (Lee, 24 Nov 2026: xyzzy back from the building made the join two-way but wasn't
+      // written down, so directions didn't know it)
+      var atStart = connection.GetSourceRoom() == source;
+      var known = JoinWays.Of(connection);
+      if (!known.Any(way => way.AtStart == atStart && way.IsCommand &&
+                            string.Equals(way.Text, command, StringComparison.OrdinalIgnoreCase)))
+      {
+        JoinWays.AddCommand(known, atStart, command);
+        JoinWays.Write(connection, known, LabelWord);
+      }
+
       return;
     }
 

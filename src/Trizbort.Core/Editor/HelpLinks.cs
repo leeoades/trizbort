@@ -5,7 +5,8 @@ namespace Trizbort.Editor;
 /// <summary>Online help locations and the command handler that opens them (ticket 088).</summary>
 public static class HelpLinks
 {
-  public const string UserGuide = "https://github.com/leeoades/trizbort/blob/master/Docs/index.md";
+  /// <summary>The user guide website (GitHub Pages, built from Docs/ at each release).</summary>
+  public const string UserGuide = "https://leeoades.github.io/trizbort/";
 
   public const string OriginalHelp = "https://trizbort.genstein.net/help/";
 

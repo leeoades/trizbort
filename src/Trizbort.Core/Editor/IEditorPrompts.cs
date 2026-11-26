@@ -80,6 +80,15 @@ public interface IEditorPrompts
   }
 
   /// <summary>
+  ///   Edits what several rooms share (darkness, shape, lines, region, colours), applying only what's changed to each.
+  ///   Returns true when accepted. Lee, 24 Nov 2026.
+  /// </summary>
+  Task<bool> EditRoomsAsync(IReadOnlyList<Room> rooms, CancellationToken token = default)
+  {
+    return Task.FromResult(false);
+  }
+
+  /// <summary>
   ///   Opens the properties dialog for a freshly added element. Returns true when the user accepted. Default
   ///   implementation does nothing so existing implementers keep compiling.
   /// </summary>

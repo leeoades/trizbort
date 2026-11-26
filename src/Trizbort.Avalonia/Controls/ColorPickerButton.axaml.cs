@@ -64,12 +64,15 @@ public partial class ColorPickerButton : UserControl
     private void UpdateVisuals()
     {
         if (ColorLabel == null || NoColorHatch == null || ClearButton == null || FullColorView == null) return;
-        var isSet = SelectedColor != Color.Transparent;
-        ColorLabel.Text = isSet
+        // several rooms that differ (Lee, 24 Nov 2026): "Mixed", and the × to set them all to no colour
+        var mixed = SelectedColor.ToArgb() == Trizbort.Editor.RoomsEdit.MixedColor.ToArgb();
+        var isSet = SelectedColor != Color.Transparent && !mixed;
+        ColorLabel.Text = mixed ? "Mixed"
+            : isSet
             ? CoreColorToNameOrHexConverter.Instance.Convert(SelectedColor, typeof(string), null, System.Globalization.CultureInfo.CurrentCulture) as string
             : NoColorText;
         NoColorHatch.IsVisible = !isSet;
-        ClearButton.IsVisible = isSet;
+        ClearButton.IsVisible = isSet || mixed;
         AutomationProperties.SetName(PickerButton, "Colour: " + ColorLabel.Text);
 
         if (isSet)

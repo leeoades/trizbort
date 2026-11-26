@@ -26,6 +26,12 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   older maps keep how they look. Labels can now have their own font and size. Older versions open the map with each
   label drawn as it is now. A theme sets the Default style's colours. Choosing a style keeps a label's size and
   where its text wraps; it only grows taller if a bigger font needs it.
+- **Several rooms' properties at once**: select some rooms and choose **Properties...** (Alt+Enter, or right-click).
+  It has the same tabs as one room's properties, without what only one room can have: set darkness, Moves, Don't
+  automap from here, where the object lists go, shape, border, lines, region and colours for all of them; anything
+  they differ on shows as mixed and stays as each room has it unless you change it. One undo step.
+- The region list in **Room Properties** (one room or several) ends with **Add New Region...**: it opens Map Settings
+  at a new region, and the room takes it when you press OK.
 - **Backgrounds**: coloured shapes behind parts of the map, to set them apart whatever regions the rooms are in.
   Select some rooms and press **B** (or right-click, **Add Background**) and one is drawn round them; with nothing
   selected, it goes where the mouse is. Inside one is map like any other, for clicking and boxing the rooms on it:
@@ -43,6 +49,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **Help > Online Help** opens the user guide as a website, https://leeoades.github.io/trizbort/, with a menu, search
+  and a dark mode. It's the guide for the latest release.
 - **Automap's guesses** read more plainly. A way you hadn't tried is "unexplored" (not "isn't on the map yet",
   which jarred once it was drawn); one that comes back to the same room says it looks like it loops back; and
   where other rooms share the name, it says so ("Another room on the map is also called Maze"), rather than that
@@ -60,9 +68,8 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Fixed
 
-- **Directions** take a command back along a join drawn both ways when automap has only seen it one way ("xyzzy"
-  from the debris room to the building, so xyzzy back from the building), as a way not yet tried. Make the join
-  one-way where the command doesn't work back.
+- **Directions** take a magic word back once you've used it both ways ("xyzzy" from the debris room to the building,
+  then back). Automap drew the join both ways but only wrote down the first, so directions didn't know the way back.
 - **Map Theme** names a theme's room shape as the rest of the app does ("Straight Edges", not "SquareCorners").
 - **Application Settings** no longer says Smart Save's options aren't used: it says what Smart Save does with them.
 
