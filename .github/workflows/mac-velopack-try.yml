@@ -32,8 +32,7 @@ jobs:
             codesign --verify --deep --strict "$check"/*.app
             codesign -dv "$check"/*.app 2>&1 | head -5
             unzip -q velopack/$rid/*-full.nupkg -d "$check/nupkg"
-            find "$check/nupkg" -maxdepth 3 | head -20
-            codesign --verify --deep --strict "$(find "$check/nupkg" -maxdepth 3 -name '*.app' -type d | head -1)"
+            codesign --verify --deep --strict "$check/nupkg/lib/app"
             # does it start? (headless: give it a moment, then stop it)
             ( "$check"/*.app/Contents/MacOS/TrizbortRecast --version || true ) &
             sleep 5; kill %1 2>/dev/null || true
