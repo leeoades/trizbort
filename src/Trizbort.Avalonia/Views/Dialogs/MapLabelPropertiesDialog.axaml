@@ -139,8 +139,15 @@
                     </ListBox>
 
                     <!-- just this label's look: there if wanted, but a style is better (Lee, 25 Nov 2026) -->
-                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !OwnLookOpen}">
-                        <Button x:Name="ModifyOwnLookButton" Content="_Modify this label's appearance..." Command="{Binding ModifyOwnLookCommand}" />
+                    <!-- closed until asked for, even when the label differs already: then just say so (Lee, 26 Nov 2026) -->
+                    <StackPanel Spacing="6" IsVisible="{Binding !OwnLookOpen}">
+                        <TextBlock x:Name="OwnLookNote" Classes="hint" TextWrapping="Wrap" IsVisible="{Binding HasOwnLook}"
+                                   Text="This label's appearance has been changed from its style." />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="ModifyOwnLookButton" Content="_Modify this label's appearance..." Command="{Binding ModifyOwnLookCommand}" />
+                            <Button x:Name="ResetToStyleClosedButton" Content="_Reset to Style" Command="{Binding ResetToStyleCommand}"
+                                    IsVisible="{Binding HasOwnLook}" />
+                        </StackPanel>
                     </StackPanel>
                     <Border x:Name="OwnLookPanel" IsVisible="{Binding OwnLookOpen}" Padding="12" CornerRadius="4"
                             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1">

@@ -70,7 +70,10 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
     /// <summary>True when this label changes its style's look itself.</summary>
     public bool HasOwnLook => !_own.IsEmpty;
 
-    /// <summary>The "just this label" section is open: open already when the label has tweaks.</summary>
+    /// <summary>
+    ///   The "just this label" section is open. Only when asked (Modify this label's appearance...), even when the label
+    ///   has tweaks already: controls on show invite changes without thinking (Lee, 26 Nov 2026).
+    /// </summary>
     [ObservableProperty]
     private bool _ownLookOpen;
 
@@ -338,7 +341,7 @@ public partial class MapLabelPropertiesViewModel : ViewModelBase
         _own = label.Own.Clone();
         LoadStyleOptions(label.StyleId);
         ShowLook();
-        OwnLookOpen = HasOwnLook;
+        OwnLookOpen = false;
     }
 
     public void ApplyTo(MapLabel label)
