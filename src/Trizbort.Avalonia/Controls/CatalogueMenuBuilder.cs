@@ -438,6 +438,10 @@ public static class CatalogueMenuBuilder
     {
         private readonly EditorSession _session;
         private readonly List<Action> _refreshers;
+        // The app the menu was made in. Headless tests start a new app for each test, so a menu left over from an
+        // earlier test (never in a window, so still listening) must not touch its controls in a later one: they
+        // belong to an app that has gone (an intermittent NullReferenceException in ItemCollection.Clear).
+        private readonly global::Avalonia.Application? _app = global::Avalonia.Application.Current;
         private int _attached;
         private bool _subscribed;
 
@@ -480,6 +484,14 @@ public static class CatalogueMenuBuilder
 
         private void OnChanged(EditorChange change)
         {
+            if (!ReferenceEquals(global::Avalonia.Application.Current, _app))
+            {
+                // its app has gone: stop listening
+                _subscribed = false;
+                _session.Changed -= OnChanged;
+                return;
+            }
+
             // Session changes can be raised off the UI thread (automap, file reload); controls may only be touched on it.
             if (Dispatcher.UIThread.CheckAccess()) RefreshAll();
             else Dispatcher.UIThread.Post(RefreshAll);

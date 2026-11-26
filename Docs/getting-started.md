@@ -5,7 +5,8 @@
 ## Download and install
 
 Get the latest release from the [Releases page](https://github.com/leeoades/trizbort/releases). The downloads
-include everything they need: there's no separate .NET to install.
+include everything they need: there's no separate .NET to install. They aren't signed yet, so Windows and macOS warn
+about them the first time: see [why, and how you can help](signing.md).
 
 These keep themselves up to date (see [Updates](settings.md#updates)):
 
