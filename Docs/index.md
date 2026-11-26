@@ -21,6 +21,7 @@ Trizbort: Recast is a map editor for interactive fiction. Draw rooms and the way
 | [Exporting](exporting.md) | Images, PDFs, and source code for your own game |
 | [Keyboard shortcuts](keyboard.md) | Every shortcut on one page |
 | [More help and resources](more-help.md) | Reporting problems, maps of games, other tools |
+| [Why it isn't signed yet](signing.md) | The warnings when you first run it, and how you can help |
 
 Press **F1** in Recast to open this guide.
 

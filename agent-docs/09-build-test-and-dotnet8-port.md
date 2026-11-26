@@ -250,9 +250,11 @@ The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefi
    and Linux builds leave the native libraries (Skia, HarfBuzz, ANGLE) beside the executable rather than
    self-extracting them to a temp folder at start-up, which antivirus heuristics flag.
 4. Create a GitHub Release ("Trizbort: Recast 0.11.0-beta" / "Trizbort (legacy) legacy-v2.3.2").
-   Betas are marked prerelease, never replace the latest stable release, and use their changelog
-   section (heading without the prefix, e.g. `## [0.10.0-beta]`) as the notes; the build fails if
-   it is missing. A beta can be tagged from an unmerged branch for testing.
+   Betas are marked prerelease and never replace the latest stable release. Every release (beta or
+   full) uses its changelog section (heading without the prefix, e.g. `## [0.10.0-beta]`) as the
+   notes, under a line saying the downloads aren't signed yet (linking to the guide's `signing.md`),
+   followed by GitHub's generated list; the build fails if the section is missing. A beta can be
+   tagged from an unmerged branch for testing.
 
 Before tagging a Recast release, run `scripts/update-docs-images.ps1` (or `.sh`) to redraw the user guide's
 pictures from the app, and move `Docs/whats-new.md`'s "Coming next" under the version.
