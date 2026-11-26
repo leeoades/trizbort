@@ -79,7 +79,7 @@ public class HelpCommandTests
   {
     await HelpLinks.OpenAsync(_session, HelpLinks.UserGuide);
 
-    _prompts.Opened.ShouldBe(new[] { "https://github.com/leeoades/trizbort/blob/master/Docs/index.md" });
+    _prompts.Opened.ShouldBe(new[] { "https://leeoades.github.io/trizbort/" });
     _prompts.Messages.ShouldBeEmpty();
   }
 

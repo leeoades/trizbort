@@ -159,3 +159,14 @@ jobs:
           }
           & gh @releaseArgs
           if ($LASTEXITCODE -ne 0) { throw "GitHub Release creation failed." }
+
+  # the user guide website, as it is at this release
+  guide:
+    needs: release
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs-site.yml
+    with:
+      ref: ${{ github.ref_name }}
