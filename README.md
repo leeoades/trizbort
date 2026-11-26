@@ -93,9 +93,9 @@ dotnet run --project legacy/src/Trizbort
 ```
 
 ## Releasing
-Pushing a tag starts a release build on GitHub Actions. Both apps need a changelog entry for a beta tag,
-under a heading without the prefix. Recast accepts `-beta` or `-beta.N`, such as `## [0.15.0-beta]`;
-the legacy app accepts `-beta.N`.
+Pushing a tag starts a release build on GitHub Actions. Every Recast release, beta or full, needs a changelog entry
+under a heading without the prefix, such as `## [0.15.0-beta]` or `## [1.0.0]`: it becomes the release notes. Recast
+betas are `-beta` or `-beta.N`. The legacy app needs one for a beta tag, and accepts `-beta.N`.
 
 Before tagging a Recast release, redraw the guide's pictures with `scripts/update-docs-images.ps1` (Windows) or
 `scripts/update-docs-images.sh`, and add the release's highlights to [Docs/whats-new.md](Docs/whats-new.md).
