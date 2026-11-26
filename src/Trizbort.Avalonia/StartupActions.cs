@@ -36,11 +36,14 @@ public static class StartupActions
         var recovered = false;
         if (recoveryStore != null && session != null)
         {
-            recovered = await RecoveryStartup.RunAsync(session, recoveryStore, recoveryService, dialogs, owner);
+            recovered = await RecoveryStartup.RunAsync(
+                session, recoveryStore, recoveryService, dialogs, owner, options.FileName);
             if (recovered)
             {
                 vm.UpdateState();
-                vm.StatusText = "Recovered unsaved changes";
+                vm.StatusText = string.IsNullOrWhiteSpace(options.FileName)
+                    ? "Recovered unsaved changes"
+                    : $"Recovered unsaved changes; {Path.GetFileName(options.FileName)} wasn't opened";
             }
         }
 

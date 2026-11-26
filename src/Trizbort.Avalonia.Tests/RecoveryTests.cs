@@ -260,6 +260,7 @@ public class RecoveryTests
         recovered.ShouldBeTrue();
         dialogs.Message.ShouldContain("didn't close properly");
         dialogs.Message.ShouldContain("Lost Map");
+        dialogs.Message.ShouldNotContain("instead of");
         Project.Current.IsDirty.ShouldBeTrue();
         Project.Current.FileName.ShouldBe("/maps/lost.trizbort");
         Project.Current.Elements.OfType<Room>().Single().Name.ShouldBe("Lost room");
@@ -419,5 +420,24 @@ public class RecoveryTests
 
             return Task.CompletedTask;
         }
+    }
+
+    /// <summary>
+    ///   Lee, 26 Nov 2026: started to open another map (double-clicked, say), Recast still says it didn't close properly,
+    ///   and that opening the unsaved changes is instead of that map.
+    /// </summary>
+    [AvaloniaTest]
+    public async Task Startup_OpeningAnotherMap_StillAsks_AndSaysItsInsteadOfThatMap()
+    {
+        MakeOrphan("Lost Map", "/maps/lost.trizbort");
+        var dialogs = Dialogs(RecoveryChoice.DecideLater);
+
+        var recovered = await RecoveryStartup.RunAsync(
+            _session!, _store!, _service, (IDialogService)(object)dialogs, null, Path.Combine("maps", "other.trizbort"));
+
+        recovered.ShouldBeFalse();
+        dialogs.Message.ShouldContain("didn't close properly last time");
+        dialogs.Message.ShouldContain("Open them instead of other.trizbort?");
+        _store!.FindOrphans().ShouldNotBeEmpty(); // Ask Me Next Time keeps it
     }
 }

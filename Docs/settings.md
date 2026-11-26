@@ -17,7 +17,8 @@ There are two kinds of settings:
 
 - **Save images at 100%**: export pictures at full size, whatever the zoom.
 - **Open last project on start**, and **Keep a recovery copy of unsaved changes** (on by default) in case Recast
-  closes before you save.
+  closes before you save. Next time it starts, even to open another map, Recast says it didn't close properly and
+  offers to **Open** the unsaved changes, **Delete** them, or **Ask Me Next Time**.
 - **Invert Mouse Wheel Zoom**, and **Scroll wheel / trackpad scroll**: **Automatic** zooms with a mouse wheel and pans
   with a trackpad, or choose **Always zoom** or **Always pan**. **Ctrl** with the wheel always zooms.
 - **Show Full Path in Title Bar.**

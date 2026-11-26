@@ -11,24 +11,31 @@ namespace Trizbort.Avalonia.Services;
 /// </summary>
 public static class RecoveryStartup
 {
-    public static string BuildMessage(RecoveryEntry entry)
+    /// <param name="opening">
+    ///   The map Recast was started to open, if any (double-clicked, say): the question says opening the unsaved
+    ///   changes is instead of it (Lee, 26 Nov 2026).
+    /// </param>
+    public static string BuildMessage(RecoveryEntry entry, string? opening = null)
     {
         var title = string.IsNullOrWhiteSpace(entry.Title) ? "Untitled" : entry.Title;
         var time = entry.SavedUtc.ToLocalTime().ToString("g");
-        return $"{AppInfo.ProductName} didn't close properly. Recover your unsaved changes to {title} (from {time})?";
+        var instead = string.IsNullOrWhiteSpace(opening) ? string.Empty : $" instead of {Path.GetFileName(opening)}";
+        return $"{AppInfo.ProductName} didn't close properly last time. Your unsaved changes to {title} (from {time}) "
+               + $"were kept. Open them{instead}?";
     }
 
     /// <summary>
-    ///   Asks about each orphaned copy. Recover opens the copy as an unsaved map (only one per start; any further
-    ///   copies are kept for the next start), Discard deletes it, Decide later keeps it. Returns true if a map was
-    ///   recovered, so the caller should not replace it by reopening another file.
+    ///   Asks about each orphaned copy, whatever map Recast was started to open. Open opens the copy as an unsaved map
+    ///   (only one per start; any further copies are kept for the next start), Delete deletes it, Ask Me Next Time
+    ///   keeps it. Returns true if a map was recovered, so the caller should not replace it by opening another file.
     /// </summary>
     public static async Task<bool> RunAsync(
         EditorSession session,
         RecoveryStore store,
         RecoveryService? service,
         IDialogService dialogs,
-        Window? owner)
+        Window? owner,
+        string? opening = null)
     {
         IList<RecoveryEntry> orphans;
         try
@@ -43,7 +50,7 @@ public static class RecoveryStartup
 
         foreach (var entry in orphans)
         {
-            var choice = await dialogs.ShowRecoverDiscardLaterAsync(owner, AppInfo.ProductName, BuildMessage(entry));
+            var choice = await dialogs.ShowRecoverDiscardLaterAsync(owner, AppInfo.ProductName, BuildMessage(entry, opening));
             switch (choice)
             {
                 case RecoveryChoice.Discard:
