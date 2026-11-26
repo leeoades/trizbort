@@ -141,6 +141,8 @@ public class DialogCaptureTests
 
             var appSettingsVm = sp.GetRequiredService<AppSettingsViewModel>();
             appSettingsVm.Initialize();
+            // the guide's picture shows an installed copy, not the note a plain copy gets
+            appSettingsVm.CantUpdateItself = false;
             CaptureDialog(output, files, "AppSettings", new AppSettingsDialog { DataContext = appSettingsVm });
 
             var automapVm = sp.GetRequiredService<AutomapSettingsViewModel>();
