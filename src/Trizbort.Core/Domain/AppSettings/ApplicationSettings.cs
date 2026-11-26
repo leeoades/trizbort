@@ -13,6 +13,9 @@ public class ApplicationSettings
   /// <summary>How Recast updates itself: tell me, download and ask, or update for me.</summary>
   public UpdateMode Updates { get; set; } = UpdateMode.DownloadAndAsk;
 
+  /// <summary>Double-clicking a .trizbort file opens it in Recast (Windows and Linux; Lee, 26 Nov 2026).</summary>
+  public bool OpenTrizbortFiles { get; set; } = true;
+
   /// <summary>
   ///   Get test versions (betas): true, betas too; false, full releases only; null (not chosen), as the version
   ///   running: betas while on a beta, so a tester moves to the full release when it's out, then stays on those

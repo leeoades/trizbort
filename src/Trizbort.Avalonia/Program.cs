@@ -16,8 +16,17 @@ public static class Program
         // installed when Recast decides (the user's choice in App Settings), not at start-up.
         try
         {
-            VelopackApp.Build()
-                .SetAutoApplyOnStartup(false)
+            var velopack = VelopackApp.Build()
+                .SetAutoApplyOnStartup(false);
+            if (OperatingSystem.IsWindows())
+            {
+                // double-clicking a map opens Recast from the start; App Settings can turn it off (Lee, 26 Nov 2026)
+                velopack = velopack
+                    .OnAfterInstallFastCallback(_ => Trizbort.Avalonia.Services.FileAssociation.Apply(true))
+                    .OnBeforeUninstallFastCallback(_ => Trizbort.Avalonia.Services.FileAssociation.Apply(false));
+            }
+
+            velopack
                 .OnRestarted(version => Trizbort.Updates.UpdateCoordinator.JustUpdatedTo = version.ToString())
                 .Run();
         }
