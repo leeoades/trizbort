@@ -13,7 +13,7 @@ Trizbort: Recast is a map editor for interactive fiction. Draw rooms and the way
 |---|---|
 | [What's new](whats-new.md) | The latest features, newest first, with pictures |
 | [Getting started](getting-started.md) | Download, install and draw your first map |
-| [Drawing the map](map.md) | Rooms, joins, regions, tidying, and directions |
+| [Drawing the map](map.md) | Rooms, objects, joins, regions, backgrounds, selecting, and directions |
 | [Labels](labels.md) | Notes on the map, with Markdown, tables and links to rooms |
 | [Automap](automap.md) | Map a game as you play it, from its transcript |
 | [Settings](settings.md) | App settings, map settings and themes |

@@ -19,5 +19,6 @@ map-settings-colours.png            MapSettings__Colours__default.png
 map-themes.png                      MapTheme__main__default.png
 token-zoomed-out.png                here-token-zoomed-out.png
 backgrounds.png                     backgrounds.png
+rooms-and-joins.png                 rooms-and-joins.png
 background-properties.png           background-properties.png
 rooms-properties.png                rooms-properties.png
