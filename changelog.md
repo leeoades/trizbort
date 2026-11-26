@@ -30,8 +30,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
   too.
 - **Recast updates itself.** It checks for a new version a few seconds after it starts (and on **Help > Check for
   Updates...**) and shows a bar under the toolbar. **App Settings > General > Updates** chooses what happens:
-  *Notify me, and let me choose when to download*; *Download, but let me choose when to update* (the default), with
-  **Restart to Update** when it's ready; or *Update for me*, which installs it when you close Recast. Betas get
+  *Check for updates, but let me choose whether to download and install them*; *Download updates, but let me choose
+  when to install them* (the default), which waits for **Restart to Update**; or *Install updates automatically*,
+  which installs it when you close Recast. Betas get
   beta updates. This works for copies installed from `TrizbortRecast-win-x64-Setup.exe`, the Linux `.AppImage`, and
   the Mac app from `TrizbortRecast-osx-*-Portable.zip`, which each release now includes. The plain zips and
   tar.gz still work as before, but don't update themselves. (The Mac updates are untested so far.)

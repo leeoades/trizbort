@@ -57,13 +57,13 @@
                     <HeaderedContentControl Classes="group" Header="Updates">
                         <StackPanel Spacing="6">
                             <RadioButton x:Name="UpdatesNotifyRadio" GroupName="Updates" IsChecked="{Binding UpdatesNotify}"
-                                         Content="_Notify me, and let me choose when to download" />
+                                         Content="Check for updates, but let me choose whether to download a_nd install them" />
                             <RadioButton x:Name="UpdatesDownloadRadio" GroupName="Updates" IsChecked="{Binding UpdatesDownload}"
-                                         Content="Do_wnload, but let me choose when to update" />
+                                         Content="Do_wnload updates, but let me choose when to install them" />
                             <RadioButton x:Name="UpdatesAutomaticRadio" GroupName="Updates" IsChecked="{Binding UpdatesAutomatic}"
-                                         Content="_Update for me (when I close Recast)" />
+                                         Content="Install _updates automatically" />
                             <TextBlock Classes="hint" TextWrapping="Wrap"
-                                       Text="Recast looks for a new version each time it starts. Help &gt; Check for Updates looks now. Only an installed copy can update itself." />
+                                       Text="Recast looks for a new version each time it starts (Help &gt; Check for Updates looks now). Automatic updates are installed when you close Recast. Otherwise a downloaded update waits until you choose Restart to Update. Only an installed copy can update itself." />
                         </StackPanel>
                     </HeaderedContentControl>
 

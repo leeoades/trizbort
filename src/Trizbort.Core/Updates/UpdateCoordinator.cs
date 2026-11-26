@@ -20,7 +20,7 @@ public enum UpdateState
   /// <summary>Downloading it.</summary>
   Downloading,
 
-  /// <summary>Downloaded: Restart to Update, or later (installed when Recast closes, with Update for me).</summary>
+  /// <summary>Downloaded: Restart to Update, or later (installed when Recast closes, with Install updates automatically).</summary>
   Ready,
 
   /// <summary>This is the newest version (only shown when asked to check).</summary>

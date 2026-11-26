@@ -69,7 +69,7 @@ public partial class App : Application
 
     /// <summary>
     ///   Recast updating itself (Lee, 26 Nov 2026): the bar under the toolbar, a look for a new version shortly after
-    ///   start-up, and installing a downloaded update as Recast closes when the user asked (or chose Update for me).
+    ///   start-up, and installing a downloaded update as Recast closes when the user asked (or chose Install updates automatically).
     /// </summary>
     private static void InstallUpdates(
         IClassicDesktopStyleApplicationLifetime desktop,

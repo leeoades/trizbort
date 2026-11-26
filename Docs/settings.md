@@ -28,12 +28,14 @@ Untick **Token on the room** to hide it. **Glow round the room** sets the colour
 When a new version of Recast is out, a bar appears under the toolbar a few seconds after Recast starts. **Help >
 Check for Updates...** looks straight away. **Updates**, on the **General** tab, chooses what happens:
 
-- **Notify me, and let me choose when to download**: the bar says a new version is out, with **Download** and
-  **What's New** (the release notes).
-- **Download, but let me choose when to update** (the default): it downloads in the background, then offers
-  **Restart to Update**. That closes Recast as usual (asking to save your map first) and opens the new version. Choose
-  **Later** and the bar offers it again next time you start Recast.
-- **Update for me**: it downloads in the background and installs the new version when you close Recast.
+- **Check for updates, but let me choose whether to download and install them**: the bar says a new version is
+  out, with **Download** and **What's New** (the release notes).
+- **Download updates, but let me choose when to install them** (the default): it downloads in the background, then
+  offers **Restart to Update**. That closes Recast as usual (asking to save your map first), installs the new version
+  and opens it again. Nothing is installed until you choose it: close Recast or choose **Later**, and the bar offers
+  it again next time.
+- **Install updates automatically**: it downloads in the background and installs the new version when you close
+  Recast. **Restart Now** on the bar does it straight away.
 
 While Recast is in beta, it updates to the newest beta. Only installed copies update themselves (see
 [Getting started](getting-started.md#download-and-install)); a plain copy from a zip says so and points you to the

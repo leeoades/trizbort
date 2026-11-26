@@ -6,7 +6,7 @@ public enum UpdateMode
   /// <summary>Tell me when there's a new version, and let me choose when to download it.</summary>
   Notify = 0,
 
-  /// <summary>Download new versions, and let me choose when to update.</summary>
+  /// <summary>Download updates, but let me choose when to install them.</summary>
   DownloadAndAsk = 1,
 
   /// <summary>Download new versions, and update when Recast closes.</summary>
