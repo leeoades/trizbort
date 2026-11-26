@@ -10,7 +10,14 @@ app's own history, from Trizbort 1.x through this fork's 2.x releases, is in [le
 Recast version numbers start again at 0.9 and follow [semantic versioning](https://semver.org/). Releases are tagged
 `recast-vX.Y.Z`; headings here leave out the prefix.
 
-## [Unreleased]
+## [0.16.0-beta] - 2026-11-26
+
+This beta is about **looking after itself, and labels that look the part**. Recast now **updates itself**: it says when
+a new version is out and, if you like, downloads it and installs it when you restart, from the new Windows installer,
+the Linux AppImage or the Mac app (betas get betas until you choose). **Double-clicking a map** opens it in Recast.
+**Label styles** give labels a shared look (font, colours, outline, background, shape and where the text sits) that
+changes everywhere at once. **Backgrounds** shade parts of the map, several rooms' properties can be set together, and
+there's a **new user guide**, online and in Help.
 
 ### Added
 
