@@ -23,7 +23,9 @@ settings, exporting, keyboard), with pictures from `Docs/images`. Keep the text 
 the app in a test run: `scripts/update-docs-images.ps1` (or `.sh`) runs `DocsCaptureTests` and the dialog captures
 and copies the ones listed in `scripts/docs-images.txt`; add a scene there for a new picture rather than a hand-made
 screenshot. Notable features also go in [`Docs/whats-new.md`](Docs/whats-new.md) under "Coming next", which
-becomes the version at release (re-run the pictures script then too). The old guide in `legacy/Docs/` is for the
+becomes the version at release (re-run the pictures script then too). The guide is also a website, https://leeoades.github.io/trizbort/ (Help > Online Help opens it): `zensical.yml` and
+`scripts/build-docs-site.py` build it, and `.github/workflows/docs-site.yml` publishes it at each release (or by hand).
+A new page goes in `nav` in `zensical.yml` too. The old guide in `legacy/Docs/` is for the
 legacy app: leave it alone. At release time `[Unreleased]` becomes
 the version heading (e.g. `## [0.12.0-beta] - 2026-11-20`); the release workflow uses that section
 as the release notes. Legacy (WinForms) changes go in [`legacy/changelog.md`](legacy/changelog.md).
