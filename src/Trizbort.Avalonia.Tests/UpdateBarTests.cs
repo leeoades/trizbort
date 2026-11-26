@@ -21,7 +21,10 @@ public class UpdateBarTests
         public AppUpdate? Online { get; set; } = new("0.16.0-beta");
         public bool? Reopened { get; private set; }
 
-        public Task<AppUpdate?> CheckAsync(CancellationToken cancel = default) => Task.FromResult(Online);
+        public AppUpdate? LastFullRelease { get; set; }
+
+        public Task<AppUpdate?> CheckAsync(bool betas, bool goBack = false, CancellationToken cancel = default) =>
+            Task.FromResult(goBack ? LastFullRelease : Online);
 
         public Task DownloadAsync(AppUpdate update, Action<int> progress, CancellationToken cancel = default)
         {
@@ -116,6 +119,19 @@ public class UpdateBarTests
     }
 
     [AvaloniaTest]
+    public async Task GoingBack_OffersRestartToGoBack()
+    {
+        _mode = UpdateMode.DownloadAndAsk;
+        var bar = Bar();
+        _updater.LastFullRelease = new AppUpdate("0.15.0", null, true);
+        (await bar.Updates.GoBackAsync()).ShouldBeTrue();
+
+        bar.Message.ShouldBe("Recast 0.15.0, the last full release, is ready to go back to.");
+        bar.RestartText.ShouldBe("Restart to Go Back");
+        bar.ShowWhatsNew.ShouldBeFalse();
+    }
+
+    [AvaloniaTest]
     public async Task CheckingByHand_NothingNew_SaysSo()
     {
         var bar = Bar();
@@ -134,6 +150,38 @@ public class UpdateBarTests
         how.ShouldContain(download);
         foreach (var other in new[] { "Setup.exe", "Portable.zip", ".AppImage" }.Where(name => !download.Contains(name)))
             how.ShouldNotContain(other);
+    }
+
+    [AvaloniaTest]
+    public void AppSettings_TestVersions_SavedOnlyOnceChanged()
+    {
+        var settings = ApplicationSettingsController.AppSettings;
+        var (wasChoice, wasCurrent) = (settings.TestVersions, UpdateCoordinator.Current);
+        try
+        {
+            // on a beta, not chosen: shown ticked, and left unchosen if not changed
+            var updater = new FakeUpdater();
+            UpdateCoordinator.Current = new UpdateCoordinator(updater, () => UpdateMode.DownloadAndAsk);
+            settings.TestVersions = null;
+            var vm = new AppSettingsViewModel();
+            vm.Initialize();
+            vm.TestVersions.ShouldBeTrue();
+            vm.ApplyToSettings();
+            settings.TestVersions.ShouldBeNull();
+            vm.TurnedOffTestVersions.ShouldBeFalse();
+
+            // turned off: saved, and a tester on a beta is offered going back
+            vm.Initialize();
+            vm.TestVersions = false;
+            vm.ApplyToSettings();
+            settings.TestVersions.ShouldBe(false);
+            vm.TurnedOffTestVersions.ShouldBeTrue();
+        }
+        finally
+        {
+            settings.TestVersions = wasChoice;
+            UpdateCoordinator.Current = wasCurrent;
+        }
     }
 
     [AvaloniaTest]

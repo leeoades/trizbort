@@ -271,21 +271,21 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         };
         Grid.SetRow(buttonPanel, 1);
 
-        var recoverButton = new Button { Content = "Recover", Width = 90, IsDefault = true };
+        var recoverButton = new Button { Content = "_Recover", MinWidth = 90, IsDefault = true };
         recoverButton.Click += (_, _) =>
         {
             result = RecoveryChoice.Recover;
             dialog.Close();
         };
 
-        var discardButton = new Button { Content = "Discard", Width = 90 };
+        var discardButton = new Button { Content = "_Delete", MinWidth = 90 };
         discardButton.Click += (_, _) =>
         {
             result = RecoveryChoice.Discard;
             dialog.Close();
         };
 
-        var laterButton = new Button { Content = "Decide later", Width = 110, IsCancel = true };
+        var laterButton = new Button { Content = "_Ask Me Next Time", MinWidth = 110, IsCancel = true };
         laterButton.Click += (_, _) =>
         {
             result = RecoveryChoice.DecideLater;
@@ -588,8 +588,71 @@ public class DialogService(IServiceScopeFactory serviceScopeFactory, ICommandSer
         if (result)
         {
             viewModel.ApplyToSettings();
+            if (viewModel.TurnedOffTestVersions && Trizbort.Updates.UpdateCoordinator.Current is { CanUpdate: true, OnTestVersion: true } updates)
+                await OfferGoingBackAsync(owner, updates);
         }
         return result;
+    }
+
+    /// <summary>
+    ///   Get test versions turned off while on a beta (Lee, 26 Nov 2026): go back to the last full release now, or stay
+    ///   on this version until the next full release replaces it.
+    /// </summary>
+    private async Task OfferGoingBackAsync(Window? owner, Trizbort.Updates.UpdateCoordinator updates)
+    {
+        var choice = await ShowChoiceAsync(owner, "Test Versions",
+            $"You're on a test version of Recast ({updates.CurrentVersion}). Go back to the last full release now, or stay "
+            + "on this version until the next full release?\n\nMaps saved with something new in this version may lose it "
+            + "in the older one.",
+            "_Go Back", "_Stay on This Version");
+        if (choice != 0) return;
+        if (await updates.GoBackAsync()) return; // the bar offers Restart to Go Back
+        if (updates.State != Trizbort.Updates.UpdateState.Failed)
+            await ShowMessageAsync(owner, "Test Versions",
+                "There's no full release to go back to yet. You'll get the first one when it's out.");
+    }
+
+    /// <summary>A question with a button for each answer; the index of the one chosen, or -1 when closed.</summary>
+    public async Task<int> ShowChoiceAsync(Window? owner, string title, string message, params string[] answers)
+    {
+        var chosen = -1;
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 480,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = owner != null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen,
+            ShowInTaskbar = false
+        };
+
+        var panel = new StackPanel { Margin = new Thickness(20), Spacing = 16 };
+        panel.Children.Add(new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap });
+        var buttons = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Spacing = 10
+        };
+        for (var i = 0; i < answers.Length; i++)
+        {
+            var index = i;
+            var button = new Button { Content = answers[i], MinWidth = 75, IsDefault = i == 0, IsCancel = i == answers.Length - 1 };
+            button.Name = "Choice" + i;
+            button.Click += (_, _) =>
+            {
+                chosen = index;
+                dialog.Close();
+            };
+            buttons.Children.Add(button);
+        }
+
+        panel.Children.Add(buttons);
+        dialog.Content = panel;
+        DialogFocus.Prepare(dialog);
+        if (owner != null) await dialog.ShowDialog(owner);
+        else dialog.Show();
+        return chosen;
     }
 
     public async Task<AutomapSettings?> ShowAutomapSettingsAsync(Window? owner)

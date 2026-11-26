@@ -107,6 +107,7 @@ public static class ApplicationSettingsController
     AppSettings.ApplyStyleToNewRooms = false;
     AppSettings.Updates = UpdateMode.DownloadAndAsk;
     AppSettings.OpenTrizbortFiles = true;
+    AppSettings.TestVersions = null;
   }
 
   public static void SaveSettings()

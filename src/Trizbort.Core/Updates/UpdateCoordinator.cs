@@ -46,13 +46,28 @@ public sealed class UpdateCoordinator
 {
   private readonly IAppUpdater _updater;
   private readonly Func<UpdateMode> _mode;
+  private readonly Func<bool?> _testVersions;
   private bool _restartWhenClosed;
 
-  public UpdateCoordinator(IAppUpdater updater, Func<UpdateMode> mode)
+  /// <param name="testVersions">The Get test versions setting: true, false, or null to go by the version running.</param>
+  public UpdateCoordinator(IAppUpdater updater, Func<UpdateMode> mode, Func<bool?> testVersions = null)
   {
     _updater = updater ?? throw new ArgumentNullException(nameof(updater));
     _mode = mode ?? throw new ArgumentNullException(nameof(mode));
+    _testVersions = testVersions ?? (() => null);
   }
+
+  /// <summary>A test version: one with a pre-release part, "0.16.0-beta.2".</summary>
+  public static bool IsTestVersion(string version) => version?.Contains('-') == true;
+
+  /// <summary>True when this copy is a test version (a beta).</summary>
+  public bool OnTestVersion => IsTestVersion(CurrentVersion);
+
+  /// <summary>
+  ///   Whether to look for betas too: as chosen, or, not chosen, while on a beta (so a tester moves on to the full
+  ///   release, and then gets only full releases).
+  /// </summary>
+  public bool Betas => _testVersions() ?? OnTestVersion;
 
   /// <summary>Set by the app's start-up hook when Recast was just updated: the version it's now on.</summary>
   public static string JustUpdatedTo { get; set; }
@@ -124,7 +139,7 @@ public sealed class UpdateCoordinator
     AppUpdate found;
     try
     {
-      found = await _updater.CheckAsync(cancel);
+      found = await _updater.CheckAsync(Betas, false, cancel);
     }
     catch (Exception ex) when (ex is not OperationCanceledException)
     {
@@ -188,6 +203,31 @@ public sealed class UpdateCoordinator
   {
     if (State != UpdateState.Ready) return;
     _restartWhenClosed = true;
+  }
+
+  /// <summary>
+  ///   Going back from a test version to the last full release (after turning off Get test versions): finds it and
+  ///   downloads it, ready for Restart to Go Back. False when there's no older full release to go back to.
+  /// </summary>
+  public async Task<bool> GoBackAsync(CancellationToken cancel = default)
+  {
+    if (!_updater.CanUpdate || State == UpdateState.Downloading) return false;
+    AppUpdate found;
+    try
+    {
+      found = await _updater.CheckAsync(false, true, cancel);
+    }
+    catch (Exception ex) when (ex is not OperationCanceledException)
+    {
+      Fail("Couldn't look for the last full release: " + ex.Message);
+      return false;
+    }
+
+    if (found?.GoesBack != true) return false;
+    Update = found;
+    Dismissed = false;
+    await DownloadAsync(cancel);
+    return State == UpdateState.Ready;
   }
 
   /// <summary>Not Now / Later: puts the bar away. The update stays downloaded, for next time.</summary>
