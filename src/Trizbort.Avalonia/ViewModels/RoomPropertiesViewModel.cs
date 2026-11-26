@@ -147,6 +147,12 @@ public partial class RoomPropertiesViewModel : ViewModelBase
     [ObservableProperty]
     private string _selectedRegion = Region.DefaultRegion;
 
+    /// <summary>The region list's Add New Region... (Lee, 25 Nov 2026).</summary>
+    public RegionChoices Regions { get; } = new();
+
+    partial void OnSelectedRegionChanged(string? oldValue, string newValue) =>
+        Regions.Handle(newValue, oldValue, AvailableRegions, region => SelectedRegion = region ?? Region.DefaultRegion);
+
     [ObservableProperty]
     private bool _allCornersEqual = true;
 
@@ -405,6 +411,7 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         SelectedRegion = !string.IsNullOrEmpty(room.Region) && AvailableRegions.Contains(room.Region)
             ? room.Region
             : (AvailableRegions.FirstOrDefault() ?? Region.DefaultRegion);
+        Regions.Finish(AvailableRegions);
 
         AvailableReferenceRooms.Clear();
         AvailableReferenceRooms.Add(new RoomReferenceItem(-1, string.Empty));
@@ -440,7 +447,7 @@ public partial class RoomPropertiesViewModel : ViewModelBase
         room.Shape = Shape;
         room.BorderStyle = BorderStyle;
         room.HandDrawnStyle = HandDrawnStyle;
-        room.Region = SelectedRegion;
+        if (SelectedRegion != Trizbort.Editor.NewRegionChoice.Chosen) room.Region = SelectedRegion;
         room.AllCornersEqual = AllCornersEqual;
 
         room.Corners = new CornerRadii

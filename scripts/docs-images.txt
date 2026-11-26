@@ -20,3 +20,4 @@ map-themes.png                      MapTheme__main__default.png
 token-zoomed-out.png                here-token-zoomed-out.png
 backgrounds.png                     backgrounds.png
 background-properties.png           background-properties.png
+rooms-properties.png                rooms-properties.png

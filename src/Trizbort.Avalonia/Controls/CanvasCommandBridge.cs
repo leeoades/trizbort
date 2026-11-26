@@ -59,6 +59,10 @@ internal static class CanvasCommandBridge
         {
             case "edit.properties":
                 if (activeElement == null) return null;
+                // a right-click on one of several selected rooms: all of them, as Properties on the menu does (Lee, 25 Nov 2026)
+                if (activeElement is Room && canvas.CommandService?.Session is { } session &&
+                    session.SelectedRooms is { Count: > 1 } rooms && rooms.Contains(activeElement))
+                    return new RelayCommand(() => { _ = ShowRoomsAsync(canvas, session, rooms); });
                 return new RelayCommand(() => { _ = canvas.ShowPropertiesDialogAsync(activeElement); });
             case "edit.paste":
                 // Pasted at the right-click position; the other clipboard and add commands use the catalogue action.
@@ -75,6 +79,15 @@ internal static class CanvasCommandBridge
                 return new RelayCommand(() => { _ = canvas.ShowAppSettingsDialogAsync(); });
             default:
                 return null;
+        }
+    }
+
+    private static async Task ShowRoomsAsync(MapCanvasControl canvas, Trizbort.Editor.EditorSession session, IReadOnlyList<Room> rooms)
+    {
+        if (await session.ShowRoomsPropertiesAsync(rooms))
+        {
+            canvas.CommandService?.InvalidateCanvas();
+            canvas.InvalidateVisual();
         }
     }
 }

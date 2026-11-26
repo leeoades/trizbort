@@ -10,6 +10,12 @@
 
 ![Room Properties for the Lighthouse Base: its name, description and objects.](images/room-properties.png)
 
+Select several rooms and choose **Properties...** to set their darkness, shape, lines, region and colours all at
+once. It has the same tabs as one room's properties, without what only one room can have (its name, description and
+objects). Anything they differ on shows as **Mixed**, and stays as each room has it unless you change it.
+
+![Three rooms' properties together: one of them is dark, so Dark is half-ticked.](images/rooms-properties.png)
+
 The **Description & Objects** tab holds the room's description and what's in it, one object a line. The other tabs
 set its shape, lines, region and colours. **Start Room**, **End Room** and **Dark** change how it's drawn (a dark
 room is shaded).
@@ -38,7 +44,8 @@ To bend a join, select it and drag the handle in its middle.
 
 A region is a group of rooms drawn in their own colours: "Above ground", "The cellars". Select some rooms,
 right-click and choose **Set Region**, then a region, or **Add New Region...** to make one for them: name it and
-choose its colours, and press OK. **Change Region** (**Shift+F2**) does the same from the keyboard.
+choose its colours, and press OK. **Change Region** (**Shift+F2**) does the same from the keyboard, and the region
+list in **Properties** ends with **Add New Region...** too.
 
 Rooms not in a region are in **No Region**. Change or delete regions in **Map Settings > Regions**.
 
