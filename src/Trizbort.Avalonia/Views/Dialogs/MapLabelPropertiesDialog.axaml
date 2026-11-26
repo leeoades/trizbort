@@ -178,7 +178,7 @@
                             <controls:LabelStylePreview x:Name="OwnLookPreview" Look="{Binding Look}" Sample="{Binding PreviewText}" Height="64"
                                                         AutomationProperties.Name="This label as it will look" />
                             <TextBlock Classes="hint" TextWrapping="Wrap"
-                                       Text="Changes here are for this label only. To keep labels alike, save them as a new style (at the bottom)." />
+                                       Text="Changes here are for this label only." />
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
