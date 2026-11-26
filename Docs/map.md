@@ -54,7 +54,10 @@ The dialog opens on the tab you used last:
   name, subtitle and object text. Leave a colour as **Default** to take it from the region or the map.
 
 Select several rooms and choose **Properties...** to set their darkness, shape, lines, region and colours all at
-once. Anything they differ on shows as **Mixed**, and stays as each room has it unless you change it.
+once. It has the same tabs as one room's properties, without what only one room can have (its name, description and
+objects). Anything they differ on shows as **Mixed**, and stays as each room has it unless you change it.
+
+![Three rooms' properties together: one of them is dark, so Dark is half-ticked.](images/rooms-properties.png)
 
 ### Objects
 

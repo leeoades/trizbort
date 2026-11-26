@@ -87,8 +87,12 @@ public sealed partial class EditorSession
     return element is Room || element is Connection || element is MapLabel || element is Background;
   }
 
-  /// <summary>True when exactly one element is selected and it has a properties dialog.</summary>
-  public bool CanShowProperties => Selection.Count == 1 && HasPropertiesDialog(Selection.Primary);
+  /// <summary>
+  ///   True when exactly one element is selected and it has a properties dialog, or several rooms are (their shared
+  ///   properties, together: Lee, 24 Nov 2026).
+  /// </summary>
+  public bool CanShowProperties =>
+    (Selection.Count == 1 && HasPropertiesDialog(Selection.Primary)) || Selection.Rooms.Skip(1).Any();
 
   /// <summary>
   ///   Asks <see cref="Prompts" /> to edit the element. Anything the dialog changes is one undo step; when the
@@ -124,10 +128,36 @@ public sealed partial class EditorSession
     return accepted;
   }
 
-  /// <summary>Properties of the single selected element.</summary>
+  /// <summary>Properties of the single selected element, or of all the selected rooms when there are several.</summary>
   public Task<bool> ShowSelectedPropertiesAsync()
   {
-    return CanShowProperties ? ShowPropertiesAsync(Selection.Primary) : Task.FromResult(false);
+    if (!CanShowProperties) return Task.FromResult(false);
+    var rooms = SelectedRooms;
+    return rooms.Count > 1 ? ShowRoomsPropertiesAsync(rooms) : ShowPropertiesAsync(Selection.Primary);
+  }
+
+  /// <summary>
+  ///   The properties several rooms share (darkness, shape, lines, region, colours) edited together via
+  ///   <see cref="Prompts" />: only what's changed is set on each, as one undo step; cancelled, none.
+  /// </summary>
+  public async Task<bool> ShowRoomsPropertiesAsync(IReadOnlyList<Room> rooms)
+  {
+    if (rooms == null || rooms.Count == 0) return false;
+    var transaction = BeginTransaction("Room properties", rooms);
+    bool accepted;
+    try
+    {
+      accepted = await Prompts.EditRoomsAsync(rooms);
+    }
+    catch
+    {
+      transaction.Cancel();
+      transaction.Dispose();
+      throw;
+    }
+    transaction.Dispose();
+    RaiseChanged(EditorChange.Model);
+    return accepted;
   }
 
   /// <summary>True when Enter does something: select the nearest room (nothing selected) or open properties.</summary>
