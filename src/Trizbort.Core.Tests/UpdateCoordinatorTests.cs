@@ -27,8 +27,16 @@ public class UpdateCoordinatorTests
     public List<AppUpdate> DownloadedUpdates { get; } = new();
     public List<(AppUpdate Update, bool Reopen)> Installed { get; } = new();
 
-    public Task<AppUpdate> CheckAsync(CancellationToken cancel = default) =>
-      CheckFails != null ? Task.FromException<AppUpdate>(CheckFails) : Task.FromResult(Online);
+    /// <summary>The last full release, offered when going back.</summary>
+    public AppUpdate LastFullRelease { get; set; }
+    public List<(bool Betas, bool GoBack)> Checks { get; } = new();
+
+    public Task<AppUpdate> CheckAsync(bool betas, bool goBack = false, CancellationToken cancel = default)
+    {
+      Checks.Add((betas, goBack));
+      if (CheckFails != null) return Task.FromException<AppUpdate>(CheckFails);
+      return Task.FromResult(goBack ? LastFullRelease : Online);
+    }
 
     public Task DownloadAsync(AppUpdate update, Action<int> progress, CancellationToken cancel = default)
     {
@@ -45,6 +53,7 @@ public class UpdateCoordinatorTests
 
   private FakeUpdater _updater;
   private UpdateMode _mode;
+  private bool? _testVersions;
   private UpdateCoordinator _updates;
 
   [SetUp]
@@ -53,7 +62,8 @@ public class UpdateCoordinatorTests
     UpdateCoordinator.JustUpdatedTo = null;
     _updater = new FakeUpdater { Online = new AppUpdate("0.16.0-beta") };
     _mode = UpdateMode.DownloadAndAsk;
-    _updates = new UpdateCoordinator(_updater, () => _mode);
+    _testVersions = null;
+    _updates = new UpdateCoordinator(_updater, () => _mode, () => _testVersions);
   }
 
   [TearDown]
@@ -206,5 +216,62 @@ public class UpdateCoordinatorTests
   public void TheDefault_IsDownloadButLetMeChoose()
   {
     new ApplicationSettings().Updates.ShouldBe(UpdateMode.DownloadAndAsk);
+  }
+
+  // Get test versions (Lee, 26 Nov 2026)
+
+  [TestCase("0.16.0-beta.2", true)]
+  [TestCase("1.0.0", false)]
+  public async Task TestVersions_NotChosen_GoByTheVersionRunning(string running, bool betas)
+  {
+    // a tester on a beta gets the full release when it's out, and then only full releases
+    _updater.CurrentVersion = running;
+    await _updates.StartAsync();
+    _updater.Checks.ShouldBe(new[] { (betas, false) });
+  }
+
+  [TestCase(true, "1.0.0", true)]
+  [TestCase(false, "0.16.0-beta.2", false)]
+  public async Task TestVersions_Chosen_AreWhatsAskedFor(bool chosen, string running, bool betas)
+  {
+    _testVersions = chosen;
+    _updater.CurrentVersion = running;
+    await _updates.StartAsync();
+    _updater.Checks.ShouldBe(new[] { (betas, false) });
+  }
+
+  [Test]
+  public void TestVersion_IsOneWithAPreReleasePart()
+  {
+    UpdateCoordinator.IsTestVersion("0.16.0-beta").ShouldBeTrue();
+    UpdateCoordinator.IsTestVersion("1.0.0").ShouldBeFalse();
+    UpdateCoordinator.IsTestVersion(null).ShouldBeFalse();
+  }
+
+  [Test]
+  public async Task GoingBack_FromATestVersion_DownloadsTheLastFullRelease_ForRestart()
+  {
+    _testVersions = false;
+    _updater.CurrentVersion = "1.1.0-beta.2";
+    _updater.LastFullRelease = new AppUpdate("1.0.0", null, true);
+
+    (await _updates.GoBackAsync()).ShouldBeTrue();
+    _updater.Checks.ShouldBe(new[] { (false, true) });
+    _updates.State.ShouldBe(UpdateState.Ready);
+    _updates.Update!.GoesBack.ShouldBeTrue();
+
+    _updates.RestartToUpdate();
+    _updates.OnClosing().ShouldBeTrue();
+    _updater.Installed.ShouldBe(new[] { (_updater.LastFullRelease, true) });
+  }
+
+  [Test]
+  public async Task GoingBack_WithNoFullReleaseToGoBackTo_SaysSo()
+  {
+    _updater.CurrentVersion = "0.16.0-beta";
+    _updater.LastFullRelease = null;
+    (await _updates.GoBackAsync()).ShouldBeFalse();
+    _updates.State.ShouldBe(UpdateState.None);
+    _updater.DownloadedUpdates.ShouldBeEmpty();
   }
 }

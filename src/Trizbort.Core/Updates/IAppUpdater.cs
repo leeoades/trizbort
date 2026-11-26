@@ -7,7 +7,8 @@ namespace Trizbort.Updates;
 /// <summary>A newer version of Recast, found online or already downloaded.</summary>
 /// <param name="Version">"0.16.0-beta"</param>
 /// <param name="Handle">What the updater needs to download or install it.</param>
-public sealed record AppUpdate(string Version, object Handle = null);
+/// <param name="GoesBack">An older version: going back from a test version to the last full release.</param>
+public sealed record AppUpdate(string Version, object Handle = null, bool GoesBack = false);
 
 /// <summary>
 ///   Finds, downloads and installs new versions of Recast (Velopack in the app, a fake in tests). Only an installed
@@ -24,8 +25,12 @@ public interface IAppUpdater
   /// <summary>An update downloaded already (last time, say), waiting to be installed; or null.</summary>
   AppUpdate Downloaded { get; }
 
-  /// <summary>The newest version online, or null when this is the newest.</summary>
-  Task<AppUpdate> CheckAsync(CancellationToken cancel = default);
+  /// <summary>
+  ///   The newest version online, or null when this is the newest. <paramref name="betas" />: test versions too, or
+  ///   full releases only. <paramref name="goBack" />: the newest even when it's older than this one (going back from
+  ///   a test version to the last full release).
+  /// </summary>
+  Task<AppUpdate> CheckAsync(bool betas, bool goBack = false, CancellationToken cancel = default);
 
   /// <summary>Downloads it, reporting 0 to 100 as it goes.</summary>
   Task DownloadAsync(AppUpdate update, Action<int> progress, CancellationToken cancel = default);

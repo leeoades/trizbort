@@ -99,6 +99,14 @@ public sealed partial class UpdateBarViewModel : ObservableObject
                 ShowProgress = true;
                 DismissText = "Hide";
                 break;
+            case UpdateState.Ready when _updates.Update?.GoesBack == true:
+                // going back from a test version, after turning off Get test versions
+                Message = $"Recast {version}, the last full release, is ready to go back to."
+                          + (automatic ? " It will be installed when you close Recast." : string.Empty);
+                ShowRestart = true;
+                RestartText = "Restart to Go Back";
+                DismissText = "Later";
+                break;
             case UpdateState.Ready when automatic:
                 Message = $"Recast {version} is ready. It will be installed when you close Recast.";
                 ShowRestart = ShowWhatsNew = true;
