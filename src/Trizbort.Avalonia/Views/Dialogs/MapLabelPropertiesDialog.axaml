@@ -254,33 +254,19 @@
                         </ComboBox>
                     </Grid>
                     <TextBlock Classes="hint" Text="Shape applies to outline and background." />
+                    <!-- the usual alignment buttons, a row across and a row up and down (Lee, 26 Nov 2026) -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
                             <ColumnDefinition Width="12" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" Classes="field-label" Content="Text _across:" Target="{Binding #AlignCombo}" />
-                        <ComboBox Grid.Column="2" x:Name="AlignCombo" ItemsSource="{Binding AvailableAligns}"
-                                  SelectedItem="{Binding Align}" HorizontalAlignment="Left" Width="280">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </Grid>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" Classes="field-label" Content="Text up/do_wn:" Target="{Binding #VerticalAlignCombo}" />
-                        <ComboBox Grid.Column="2" x:Name="VerticalAlignCombo" ItemsSource="{Binding AvailableVerticalAligns}"
-                                  SelectedItem="{Binding VerticalAlign}" HorizontalAlignment="Left" Width="280">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="sys:Object"><TextBlock Text="{Binding ., Converter={x:Static vm:EnumDisplay.Converter}}" /></DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
+                        <Label Grid.Column="0" Classes="field-label" Content="Text _Align:" Target="{Binding #AlignButtons}" VerticalAlignment="Top"
+                               ToolTip.Tip="None lit: where labels usually have it, centred (or top left for Markdown)" />
+                        <StackPanel Grid.Column="2" Spacing="4">
+                            <controls:LabelAlignButtons x:Name="AlignButtons" Value="{Binding Align}" />
+                            <controls:LabelVerticalAlignButtons x:Name="VerticalAlignButtons" Value="{Binding VerticalAlign}" />
+                        </StackPanel>
                     </Grid>
 
                             <!-- the changes as a new style, in Manage Styles: OK there and the label takes it (Lee, 26 Nov 2026) -->
