@@ -6,6 +6,9 @@ The highlights of each release, newest first. Every change is listed in the [cha
 
 ## Coming next
 
+- **Recast updates itself.** It tells you when a new version is out and, if you like, downloads it in the background
+  and installs it when you restart. Choose how in [App settings](settings.md#updates). Install it with the new
+  Setup (Windows), AppImage (Linux) or `-Portable.zip` (Mac) to get updates.
 - **Backgrounds**: coloured shapes behind parts of the map, to set them apart. Select some rooms and press **B**.
   See [Drawing the map](map.md#backgrounds).
 

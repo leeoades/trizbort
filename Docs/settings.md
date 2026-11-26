@@ -23,6 +23,22 @@ Untick **Token on the room** to hide it. **Glow round the room** sets the colour
 
 **Apply style to new rooms** makes each new room copy the look of the last room you selected.
 
+### Updates
+
+When a new version of Recast is out, a bar appears under the toolbar a few seconds after Recast starts. **Help >
+Check for Updates...** looks straight away. **Updates**, on the **General** tab, chooses what happens:
+
+- **Notify me, and let me choose when to download**: the bar says a new version is out, with **Download** and
+  **What's New** (the release notes).
+- **Download, but let me choose when to update** (the default): it downloads in the background, then offers
+  **Restart to Update**. That closes Recast as usual (asking to save your map first) and opens the new version. Choose
+  **Later** and the bar offers it again next time you start Recast.
+- **Update for me**: it downloads in the background and installs the new version when you close Recast.
+
+While Recast is in beta, it updates to the newest beta. Only installed copies update themselves (see
+[Getting started](getting-started.md#download-and-install)); a plain copy from a zip says so and points you to the
+Releases page.
+
 ## Map settings
 
 | Tab | What it sets |

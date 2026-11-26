@@ -218,8 +218,11 @@ jobs:
           }
           "assets=$($assets -join ' ')" >> $env:GITHUB_OUTPUT
 
+      # Not yet tried for real: if it fails, the release goes out without Linux updates.
       - name: Velopack package for updates (AppImage)
+        id: appimage
         if: needs.version.outputs.vpk != ''
+        continue-on-error: true
         env:
           VPK_VERSION: ${{ needs.version.outputs.vpk }}
           DOTNET_ROLL_FORWARD: Major
@@ -229,6 +232,12 @@ jobs:
             --packTitle "Trizbort Recast" --icon packaging/icons/trizbort-recast-256.png -o velopack/linux-x64
           if ($LASTEXITCODE -ne 0) { throw "vpk pack failed." }
           Get-ChildItem velopack/linux-x64
+
+      - name: Note missing Linux updates
+        if: steps.appimage.outcome == 'failure'
+        run: |
+          Remove-Item -Recurse -Force velopack/linux-x64 -ErrorAction SilentlyContinue
+          Write-Output "::warning::Linux Velopack package failed, so this release has no Linux updates. See the step above."
 
       - uses: actions/download-artifact@v7
         with:
