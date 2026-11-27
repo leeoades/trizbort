@@ -728,15 +728,16 @@ public class DocsCaptureTests
         var project = await LighthouseAsync(guessExits: true);
         var shore = new[] { "Beach", "Dunes", "Rock Pools", "Sea Cave" }.Select(name => (Element)Called(project, name)).ToList();
         var service = new CommandService();
-        service.SetViewportSize(620, 440);
+        service.SetViewportSize(560, 480);
         var canvas = new MapCanvasControl { CommandService = service };
-        var window = new Window { Width = 620, Height = 440, Content = canvas };
+        var window = new Window { Width = 560, Height = 480, Content = canvas };
         try
         {
             window.Show();
             Settle(window);
-            service.Session.Viewport.FitToMap(shore);
-            service.Session.Viewport.SetZoom(Math.Min(1.3, service.Session.Viewport.ZoomFactor * 0.8));
+            // the shore, close enough to read: the stubs off the beach, the cave and outside the lighthouse
+            var bounds = global::Trizbort.Editor.Viewport.ComputeCanvasBounds(shore);
+            service.Session.Viewport.SetView(new CoreVector(bounds.Center.X, bounds.Center.Y + 12), 0.95f);
             Save(window, Path.Combine(root, "guessed-exits.png"));
         }
         finally
