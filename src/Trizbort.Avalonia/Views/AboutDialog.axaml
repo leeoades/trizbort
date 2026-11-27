@@ -16,7 +16,7 @@
             <TextBlock Text="Interactive Fiction Map Editor" FontSize="14" Opacity="0.8" HorizontalAlignment="Center"/>
             <TextBlock FontSize="12" Opacity="0.7" TextWrapping="Wrap" TextAlignment="Center"
                        MaxWidth="460" HorizontalAlignment="Center"
-                       Text="A cross-platform rebuild of Trizbort, the interactive fiction map editor. It opens and saves the same .trizbort maps."/>
+                       Text="A cross-platform rebuild of Trizbort, the interactive fiction map editor."/>
             <TextBlock x:Name="VersionText" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
         </StackPanel>
 
