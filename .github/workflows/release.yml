@@ -120,6 +120,21 @@ jobs:
           done
           ls -l velopack/*
 
+      # A disk image of the same app (it updates itself too), the usual way to get a Mac app. If it can't be made,
+      # the release still has the -Portable.zip (Lee, 27 Nov 2026).
+      - name: Disk images
+        if: steps.velopack.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          brew install create-dmg
+          for rid in osx-arm64 osx-x64; do
+            app="$(mktemp -d)"
+            ditto -x -k velopack/$rid/*Portable.zip "$app"
+            bash packaging/macos/make-dmg.sh "$(find "$app" -maxdepth 1 -name '*.app' | head -1)" "velopack/$rid/TrizbortRecast-$rid.dmg"
+          done
+          ls -l velopack/*/*.dmg
+
       - uses: actions/upload-artifact@v6
         if: steps.velopack.outcome == 'success'
         with:

@@ -14,8 +14,8 @@ These keep themselves up to date (see [Updates](settings.md#updates)):
   adds it to the Start menu, and opens `.trizbort` files with it. The app isn't signed yet, so Windows SmartScreen may warn you: choose
   **More info**, then **Run anyway**.
 - **Linux:** download the `.AppImage`, make it executable (`chmod +x`) and run it.
-- **macOS:** download `TrizbortRecast-osx-arm64-Portable.zip` (Apple Silicon) or `…-osx-x64-Portable.zip` (Intel),
-  unzip it and drag `Trizbort Recast.app` to Applications. The first time, macOS refuses to open it: go to
+- **macOS:** download `TrizbortRecast-osx-arm64.dmg` (Apple Silicon) or `TrizbortRecast-osx-x64.dmg` (Intel), open
+  it and drag Trizbort Recast to Applications. (The `-Portable.zip` of the same name is the same app, zipped.) The first time, macOS refuses to open it: go to
   **System Settings > Privacy & Security** and choose **Open Anyway**.
 
 Or take a plain copy that you update by hand:
