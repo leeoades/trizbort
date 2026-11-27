@@ -17,6 +17,11 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 - **Each release starts with a Download table**: the one file to download for Windows, an Apple Silicon or Intel Mac,
   or Linux, linked, and what to do with it. The other files are portable copies and Recast's own update files.
 
+### Fixed
+
+- **Application Settings' General tab scrolls** when the window is shorter than its settings, so Updates and the
+  options below it can be reached; the window also opens shorter, to fit smaller screens.
+
 ## [0.16.2-beta] - 2026-11-27
 
 ### Added
