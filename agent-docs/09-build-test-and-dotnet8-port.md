@@ -280,8 +280,15 @@ four channels, `win-x64` (windows-latest job: `TrizbortRecast-win-x64-Setup.exe`
 ad-hoc-signed `.app` from `make-app.sh`, giving `TrizbortRecast-osx-*-Portable.zip`). Each channel adds
 `releases.<channel>.json`, `assets.<channel>.json` and `TrizbortRecast-<v>-<channel>-full.nupkg` (Windows also
 `RELEASES-win-x64`). Channels are named so no file names clash; the release step fails if two do. The Mac step
-is `continue-on-error` and checks the packed app with `codesign --verify --deep --strict`; if that fails the release
-ships without Mac updates (with a warning). Tags with a fourth version part aren't SemVer 2, so they get no
+is `continue-on-error`. vpk adds its updater to the bundle, so it signs it (ad hoc, `--signAppIdentity "-"`) after,
+not make-app.sh's signature (0.16.0-beta shipped without Mac updates for that: the seal broke). The step checks the
+portable app with `codesign --verify --deep --strict`, and that the program in the update package is still signed
+(`codesign -dv`: unzipped, the .dll files' ad-hoc signatures, kept in file attributes, are gone, so the bundle can't
+be verified there). If that fails the release ships without Mac updates (with a warning). Whether an installed Mac
+copy updates and still opens needs trying on a Mac.
+
+The guide website: the `github-pages` environment only deploys from `master`, so the release's `guide` job runs
+`gh workflow run docs-site.yml --ref master -f ref=<tag>` rather than calling it from the tag. Tags with a fourth version part aren't SemVer 2, so they get no
 update packages (`vpk` output of the version job is empty).
 
 In the app: `Program.Main` runs `VelopackApp.Build().SetAutoApplyOnStartup(false)` first. `VelopackUpdater`
