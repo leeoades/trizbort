@@ -379,7 +379,7 @@ public class DocsCaptureTests
     }
 
     /// <summary>The Lighthouse, automapped from its transcript by automap's engine: a map to show in the dialogs.</summary>
-    private static async Task<Project> LighthouseAsync()
+    private static async Task<Project> LighthouseAsync(bool guessExits = false)
     {
         var project = new Project();
         Project.Current = project;
@@ -392,6 +392,7 @@ public class DocsCaptureTests
         settings.FileName = transcript;
         settings.AddObjectCommand = "tb see";
         settings.AutoTidy = true;
+        settings.GuessExits = guessExits;
         settings.VerboseTranscript = true;
         var run = engine.Start(new AutomapCanvas(project, engine), settings);
         try
@@ -491,7 +492,7 @@ public class DocsCaptureTests
     public void TheQuickMap_Finished()
     {
         var root = Output();
-        var path = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(AppXaml()))!, "..", "legacy", "Docs",
+        var path = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(AppXaml()))!, "..", "Docs", "maps",
             "generic-game.trizbort");
         var project = new Project();
         Project.Current = project;
@@ -636,6 +637,112 @@ public class DocsCaptureTests
         var vm = new BackgroundPropertiesViewModel();
         vm.Initialize(tower);
         Capture(new BackgroundPropertiesDialog { DataContext = vm }, Path.Combine(root, "background-properties.png"));
+    }
+
+    /// <summary>
+    ///   A room as it is, with the mouse over it (its sixteen ports, for drawing joins), and selected (its handles, for
+    ///   resizing it). From the original guide's picture of the three. Lee, 27 Nov 2026: bring the original guide's
+    ///   useful parts into this one.
+    /// </summary>
+    [AvaloniaTest]
+    public void ARoom_ItsPortsAndItsHandles()
+    {
+        var root = Output();
+        var project = new Project();
+        Project.Current = project;
+        Settings.Reset();
+        var room = new Room(project) { Name = "Kitchen", Size = new CoreVector(96, 64) };
+        room.Position = new CoreVector(0, 0);
+        project.Elements.Add(room);
+
+        var service = new CommandService();
+        service.SetViewportSize(260, 190);
+        var canvas = new MapCanvasControl { CommandService = service };
+        var shown = new Window { Width = 260, Height = 190, Content = canvas };
+        try
+        {
+            shown.Show();
+            Settle(shown);
+            service.Session.Viewport.SetView(new CoreVector(48, 32), 1.6f);
+            Settle(shown);
+            // the mouse over the room, nothing selected: its ports
+            shown.MouseMove(canvas.CanvasToClient(new CoreVector(40, 40)));
+            Save(shown, Path.Combine(root, "room-ports.png"));
+
+            // selected, the mouse away: its handles
+            shown.MouseMove(new Point(4, 4));
+            service.Select(room);
+            Save(shown, Path.Combine(root, "room-handles.png"));
+        }
+        finally
+        {
+            shown.Close();
+        }
+    }
+
+    /// <summary>The six border styles a room can have, each room named after its own. Lee, 27 Nov 2026.</summary>
+    [AvaloniaTest]
+    public void RoomBorders_EveryStyle()
+    {
+        var root = Output();
+        var project = new Project();
+        Project.Current = project;
+        Settings.Reset();
+        var styles = new[]
+        {
+            (BorderDashStyle.Solid, "Solid"), (BorderDashStyle.Dash, "Dash"), (BorderDashStyle.Dot, "Dot"),
+            (BorderDashStyle.DashDot, "Dash Dot"), (BorderDashStyle.DashDotDot, "Dash Dot Dot"), (BorderDashStyle.None, "None")
+        };
+        for (var i = 0; i < styles.Length; i++)
+        {
+            var room = new Room(project) { Name = styles[i].Item2, Size = new CoreVector(96, 64), BorderStyle = styles[i].Item1 };
+            room.Position = new CoreVector(i % 3 * 128, i / 3 * 96);
+            project.Elements.Add(room);
+        }
+
+        var service = new CommandService();
+        service.SetViewportSize(560, 260);
+        var canvas = new MapCanvasControl { CommandService = service };
+        var shown = new Window { Width = 560, Height = 260, Content = canvas };
+        try
+        {
+            shown.Show();
+            Settle(shown);
+            service.Session.Viewport.SetView(new CoreVector(176, 80), 1.3f);
+            Save(shown, Path.Combine(root, "room-borders.png"));
+        }
+        finally
+        {
+            shown.Close();
+        }
+    }
+
+    /// <summary>
+    ///   Automap's guesses at ways out, read from the rooms' descriptions ("The cave goes on to the east"): short stubs
+    ///   on the shore of The Lighthouse. Lee, 27 Nov 2026.
+    /// </summary>
+    [AvaloniaTest]
+    public async Task Automap_GuessesWaysOut()
+    {
+        var root = Output();
+        var project = await LighthouseAsync(guessExits: true);
+        var shore = new[] { "Beach", "Dunes", "Rock Pools", "Sea Cave" }.Select(name => (Element)Called(project, name)).ToList();
+        var service = new CommandService();
+        service.SetViewportSize(620, 440);
+        var canvas = new MapCanvasControl { CommandService = service };
+        var window = new Window { Width = 620, Height = 440, Content = canvas };
+        try
+        {
+            window.Show();
+            Settle(window);
+            service.Session.Viewport.FitToMap(shore);
+            service.Session.Viewport.SetZoom(Math.Min(1.3, service.Session.Viewport.ZoomFactor * 0.8));
+            Save(window, Path.Combine(root, "guessed-exits.png"));
+        }
+        finally
+        {
+            window.Close();
+        }
     }
 
     /// <summary>Three shore rooms' properties together: the cave is dark, the others aren't. Lee, 24 Nov 2026.</summary>
