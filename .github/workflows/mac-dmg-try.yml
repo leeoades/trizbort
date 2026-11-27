@@ -1,0 +1,39 @@
+# Temporary: tries the Mac disk image (release.yml's macos job) without a release. Remove once it works.
+name: Try Mac disk image
+on:
+  push:
+    branches: [feature/mac-dmg]
+jobs:
+  try:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Build the app
+        run: bash packaging/macos/make-app.sh osx-arm64 0.16.2 0.16.2-beta TrizbortRecast-try-osx-arm64.zip
+      - name: Velopack package
+        env:
+          DOTNET_ROLL_FORWARD: Major
+        run: |
+          set -euo pipefail
+          dotnet tool install -g vpk --version 1.2.161
+          app="$(mktemp -d)"
+          ditto -x -k TrizbortRecast-try-osx-arm64.zip "$app"
+          vpk pack -u TrizbortRecast -v 0.16.2-beta -c osx-arm64 -p "$app/Trizbort Recast.app" -e TrizbortRecast \
+            --packTitle "Trizbort Recast" --icon packaging/icons/trizbort-recast.icns --noInst \
+            --signAppIdentity "-" -o velopack/osx-arm64
+      - name: Disk image
+        run: |
+          set -euo pipefail
+          brew install create-dmg
+          app="$(mktemp -d)"
+          ditto -x -k velopack/osx-arm64/*Portable.zip "$app"
+          bash packaging/macos/make-dmg.sh "$(find "$app" -maxdepth 1 -name '*.app' | head -1)" velopack/osx-arm64/TrizbortRecast-osx-arm64.dmg
+          ls -l velopack/osx-arm64
+      - uses: actions/upload-artifact@v6
+        with:
+          name: try-dmg
+          path: velopack/osx-arm64/*.dmg
+          retention-days: 3
