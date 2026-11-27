@@ -29,9 +29,9 @@ self-contained, so no separate .NET install is needed.
 - **Linux x64:** run the `.AppImage` (after `chmod +x`), which keeps itself up to date. Or extract
   `TrizbortRecast-<version>-linux-x64.tar.gz` and run `trizbort-recast`. To open `.trizbort` files from your file
   manager, see [packaging/README.md](packaging/README.md).
-- **macOS:** `TrizbortRecast-osx-arm64-Portable.zip` for Apple Silicon (M1 and later) or `…-osx-x64-Portable.zip` for
-  Intel Macs keeps itself up to date; the plain `…-osx-arm64.zip` / `…-osx-x64.zip` don't. Unzip it and drag
-  `Trizbort Recast.app` to Applications. The macOS build is new and hasn't been tested on a Mac yet; reports are very
+- **macOS:** `TrizbortRecast-osx-arm64.dmg` for Apple Silicon (M1 and later) or `TrizbortRecast-osx-x64.dmg` for
+  Intel Macs keeps itself up to date (so do the `-Portable.zip`s, the same app zipped; the plain `…-osx-arm64.zip` /
+  `…-osx-x64.zip` don't). Open it and drag Trizbort Recast to Applications. The macOS build is new and hasn't been tested on a Mac yet; reports are very
   welcome.
 
 See [Getting started](https://leeoades.github.io/trizbort/getting-started/) for more.

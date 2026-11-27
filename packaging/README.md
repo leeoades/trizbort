@@ -32,6 +32,10 @@ The release zips (`osx-arm64` for Apple Silicon, `osx-x64` for Intel) contain `T
 Security** and choose **Open Anyway**, or run `xattr -dr com.apple.quarantine "/Applications/Trizbort Recast.app"`.
 Finder open events reach the app through `FileActivationHandler` (untested on a Mac).
 
+The disk images (`TrizbortRecast-osx-arm64.dmg`, `…-osx-x64.dmg`) hold the app from vpk's `-Portable.zip`, which
+updates itself, beside an Applications shortcut: `packaging/macos/make-dmg.sh` makes them with `create-dmg`, on the
+background `make_dmg_background.py` draws (`dmg-background.png` and `@2x`; redraw them with it).
+
 ## Updates
 Each release also has Velopack packages, which update themselves: `TrizbortRecast-win-x64-Setup.exe`,
 the Linux `.AppImage` and `TrizbortRecast-osx-arm64-Portable.zip` / `-osx-x64-Portable.zip`. See

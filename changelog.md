@@ -10,6 +10,14 @@ app's own history, from Trizbort 1.x through this fork's 2.x releases, is in [le
 Recast version numbers start again at 0.9 and follow [semantic versioning](https://semver.org/). Releases are tagged
 `recast-vX.Y.Z`; headings here leave out the prefix.
 
+## [Unreleased]
+
+### Added
+
+- **A disk image for Macs**: `TrizbortRecast-osx-arm64.dmg` (Apple Silicon) or `TrizbortRecast-osx-x64.dmg` (Intel).
+  Open it and drag Trizbort Recast to Applications, the usual way to install a Mac app. It updates itself, like the
+  `-Portable.zip`.
+
 ## [0.16.1-beta] - 2026-11-27
 
 ### Fixed

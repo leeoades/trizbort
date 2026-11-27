@@ -284,7 +284,9 @@ is `continue-on-error`. vpk adds its updater to the bundle, so it signs it (ad h
 not make-app.sh's signature (0.16.0-beta shipped without Mac updates for that: the seal broke). The step checks the
 portable app with `codesign --verify --deep --strict`, and that the program in the update package is still signed
 (`codesign -dv`: unzipped, the .dll files' ad-hoc signatures, kept in file attributes, are gone, so the bundle can't
-be verified there). If that fails the release ships without Mac updates (with a warning). Whether an installed Mac
+be verified there). If that fails the release ships without Mac updates (with a warning). Then a disk image per Mac,
+`TrizbortRecast-<rid>.dmg` (`packaging/macos/make-dmg.sh`, `create-dmg` from Homebrew), of the same app; it's
+`continue-on-error` too, and checks the app inside the image is still signed. Whether an installed Mac
 copy updates and still opens needs trying on a Mac.
 
 The guide website: the `github-pages` environment only deploys from `master`, so the release's `guide` job runs
