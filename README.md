@@ -102,7 +102,7 @@ Before tagging a Recast release, redraw the guide's pictures with `scripts/updat
 
 | Tag | Builds | Changelog |
 |---|---|---|
-| `recast-v0.16.1-beta` | Trizbort: Recast for Windows x64, Linux x64 and macOS (Apple Silicon and Intel) | [changelog.md](changelog.md) |
+| `recast-v0.16.2-beta` | Trizbort: Recast for Windows x64, Linux x64 and macOS (Apple Silicon and Intel) | [changelog.md](changelog.md) |
 | `legacy-v2.3.2` | Trizbort 2.x for Windows x64 | [legacy/changelog.md](legacy/changelog.md) |
 
 ## License

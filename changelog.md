@@ -10,7 +10,7 @@ app's own history, from Trizbort 1.x through this fork's 2.x releases, is in [le
 Recast version numbers start again at 0.9 and follow [semantic versioning](https://semver.org/). Releases are tagged
 `recast-vX.Y.Z`; headings here leave out the prefix.
 
-## [Unreleased]
+## [0.16.2-beta] - 2026-11-27
 
 ### Added
 

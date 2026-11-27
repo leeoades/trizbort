@@ -4,13 +4,10 @@
 
 The highlights of each release, newest first. Every change is listed in the [changelog](../changelog.md).
 
-## Coming next
-
-- **A disk image for Macs**: open it and drag Trizbort Recast to Applications. See [Getting started](getting-started.md).
-
 ## 0.16 (26 November 2026)
 
-0.16.1 (27 November) adds updates for Macs: install the `-Portable.zip` from that release to get them.
+0.16.1 (27 November) adds updates for Macs, and 0.16.2 a disk image (`.dmg`) to install them from: open it and
+drag Trizbort Recast to Applications. See [Getting started](getting-started.md).
 
 - **Recast updates itself.** It tells you when a new version is out and, if you like, downloads it in the background
   and installs it when you restart. Choose how in [App settings](settings.md#updates), including whether to get test
