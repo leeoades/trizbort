@@ -36,6 +36,23 @@ Or take a plain copy that you update by hand:
 
 The plain copies don't update themselves: **Help > Check for Updates...** points you to the Releases page.
 
+## The Recast window
+
+![Recast automapping The Lighthouse.](images/main-window.png)
+
+- **The menus and toolbar** along the top. Most commands are in the menus, with their keys beside them.
+- **The map** fills the window. North is up, east is to the right. Rooms are boxes with their names in them; joins
+  are the lines between them, the ways from one room to another. A dotted join is a way you're not sure of, and an
+  arrow marks a way you can only go one way. A room with a dark corner is dark: you'll need a light in the game.
+- **Objects** are listed beside a room (below it, to start with), or inside it.
+- **The minimap**, top right, shows the whole map, with a box round the part in the window.
+- **The zoom** is in the bottom-left corner of the map, and the **status bar** along the bottom says what's happening.
+- **Panels** open on the right while you need them: the automap panel (as here) and directions.
+
+In this guide, **Edit > Map Settings...** means the **Map Settings...** command on the **Edit** menu, and **Ctrl+S**
+means hold **Ctrl** and press **S**. On a Mac, use **Cmd** for **Ctrl** and **Option** for **Alt**.
+In dialogs on Windows and Linux, **Alt** with an underlined letter goes to that box or button.
+
 ## Your first map
 
 1. **Add a room.** Double-click an empty part of the map, or press **R**. Type its name and press **Enter**.

@@ -4,7 +4,7 @@
 
 This page builds a small game's map from the keyboard, a few minutes' work: a city, a river, a forest, a desert, lava
 pits, gold mines and a palace. It shows the quickest ways to add rooms, regions and joins. The finished map is
-[generic-game.trizbort](../legacy/Docs/generic-game.trizbort), if you'd like to open it alongside.
+[generic-game.trizbort](maps/generic-game.trizbort), if you'd like to open it alongside.
 
 ![The finished quick map: the grey city, the blue river, the forest, the desert, lava pits, gold mines, the palace and
 its jails.](images/quick-map.png)

@@ -310,9 +310,9 @@ To try an update without a release, pack two versions into one folder (`vpk pack
 older one's `Portable.zip` with `TRIZBORT_UPDATES_FROM=<feed folder>`, and it updates from there (tried on Windows,
 26 Nov 2026: Restart to Update installed 0.16.0-beta and reopened). Mac updates have not been tried on a Mac yet.
 
-Help → Online Help (F1) links to the
-Recast user guide (`HelpLinks.UserGuide`; the legacy app links to `legacy/Docs/index.md`)
-and the original v1 help. User `appsettings.json` is not in
+Help → Online Help (F1) opens the
+Recast user guide (`HelpLinks.UserGuide`; the legacy app links to `legacy/Docs/index.md`
+and the original v1 help). User `appsettings.json` is not in
 the zip, so it survives extracting a new release over the install folder. If the repo moves,
 update `OnlineHelpDialog.UserGuideUrl` and the message in `Project.CheckDocVersion()`.
 

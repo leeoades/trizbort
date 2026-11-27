@@ -27,9 +27,9 @@ Press **F1** in Recast to open this guide.
 
 ## Older versions
 
-Recast opens and saves the same `.trizbort` maps as the original Trizbort. The guide to the original app and the
-Windows-only Trizbort 2 is still here: [Using Trizbort (the original app, and Trizbort 2)](../legacy/Docs/index.md).
-It goes into more depth on some things that work the same way in Recast.
+Recast opens and saves the same `.trizbort` maps as the original Trizbort and Trizbort 2. Everything useful from the
+original guide is in this one, as it works in Recast. See [Trizbort's story](more-help.md#trizborts-story) for where it came
+from.
 
 ## Help and feedback
 

@@ -27,7 +27,7 @@ Exports have shortcuts of their own: see [Exporting](exporting.md).
 | B | Add a background, behind the selected rooms |
 | J | Join the selected rooms |
 | F2 | Rename |
-| Alt+Enter | Properties |
+| Enter or Alt+Enter | Properties (with nothing selected, Enter selects the room nearest the middle) |
 | Delete or Backspace | Delete |
 | Alt+Delete | Delete all the room's joins |
 | Ctrl+C, Ctrl+X, Ctrl+V | Copy, cut, paste |
@@ -35,17 +35,20 @@ Exports have shortcuts of their own: see [Exporting](exporting.md).
 | Ctrl+Z | Undo |
 | Ctrl+Y or Ctrl+Shift+Z | Redo |
 | Esc | Cancel a drag, or select nothing |
+| Alt+F4 | Close Recast (Windows and Linux) |
 
 ## Rooms
 
 | Keys | Does |
 |---|---|
 | K | Dark or lit |
+| Ctrl+K / Ctrl+Shift+K | Make all the selected rooms dark / lit |
 | Ctrl+F5 / Shift+F5 | Start room / end room |
 | Shift+F2 | Change region |
 | Ctrl+H, Ctrl+E, Ctrl+R, Ctrl+8 | Straight, elliptical, rounded or octagonal |
 | Ctrl+Alt+C | Copy the room's colour |
 | ; | Adjust which ports the joins use |
+| Ctrl+; | How many ports Adjust Ports chooses from |
 | W / Ctrl+W / Shift+W / Alt+W | Swap two rooms' objects / names / looks / regions |
 | Ctrl+Alt+arrow | Resize what's selected |
 
@@ -57,6 +60,9 @@ Exports have shortcuts of their own: see [Exporting](exporting.md).
 | A | One-way arrow |
 | V | Reverse it |
 | U, D, I, O | Label it up, down, in or out |
+| [ / ] | Move the upper room's end to the next port round |
+| Ctrl+[ / Ctrl+] | The same for the lower room's end |
+| Alt+number pad | Add a stub out of the room that way, for a way not followed yet |
 
 ## Selecting
 
@@ -67,18 +73,20 @@ Exports have shortcuts of their own: see [Exporting](exporting.md).
 | Ctrl+Shift+A | Select the rooms in some regions |
 | Number pad | Select the room in that direction |
 | Ctrl+arrow | Select the room that way, or add one and join it |
-| Shift+arrow | Select the join that way |
+| Shift+arrow | Select the join that way (Shift+Home, End, Page Up and Page Down for the diagonals) |
 | Arrows | Move what's selected, or pan the map |
+| F3 / Shift+F3 | Show each of the selected things in turn |
 | Ctrl+F | Quick Find |
 
 ## View
 
 | Keys | Does |
 |---|---|
-| Ctrl+Plus / Ctrl+Minus | Zoom in / out |
+| Plus / Minus, with or without Ctrl | Zoom in / out |
 | Ctrl+0 | Zoom to 100% |
 | Ctrl+Home | Fit the whole map in the window |
 | Home | Reset the view |
+| Ctrl+F4 | Hide or show all the writing |
 
 ## Automap
 

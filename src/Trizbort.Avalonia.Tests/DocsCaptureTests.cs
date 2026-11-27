@@ -737,7 +737,7 @@ public class DocsCaptureTests
             Settle(window);
             // the shore, close enough to read: the stubs off the beach, the cave and outside the lighthouse
             var bounds = global::Trizbort.Editor.Viewport.ComputeCanvasBounds(shore);
-            service.Session.Viewport.SetView(new CoreVector(bounds.Center.X, bounds.Center.Y + 12), 0.95f);
+            service.Session.Viewport.SetView(new CoreVector(bounds.Center.X, bounds.Center.Y + 48), 0.95f);
             Save(window, Path.Combine(root, "guessed-exits.png"));
         }
         finally
