@@ -142,7 +142,7 @@ Double-click a join, or press **Alt+Enter**, for its properties:
   ("to Building").
 - **Unreliable** for a way that doesn't always lead where it's drawn (the game picks at random). Directions only
   take it when there's no other way.
-- **Color** (a join left as **Default** takes the map's line colour), and **Door** for a door, which can be openable,
+- **Color**, and **Door** for a door, which can be openable,
   lockable and so on. Doors are exported to game source.
 
 A label that would sit on a line, a room or another label moves out of the way by itself.
@@ -208,7 +208,7 @@ whatever regions the rooms are in.
 - **The number pad** (or the arrow keys) moves the selection to the room in that direction, along a join if there is
   one. **Ctrl** with it follows the join, joins the room that way, or adds a new room there and opens its
   properties to name it: a quick way to sketch a map from the keyboard. The new room has the size, look and region of
-the room you came from. **Shift+arrow** selects the join that way.
+the room you came from.
 
 Most things work on everything selected at once: dragging, **Delete**, dark (**K**), the join keys above, region,
 shape and colours. Dragging rooms brings the joins between them along: there's no need to select the joins too. A join
