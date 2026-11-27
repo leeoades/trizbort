@@ -5,7 +5,7 @@
         x:Class="Trizbort.Avalonia.Views.Dialogs.AppSettingsDialog"
         x:DataType="vm:AppSettingsViewModel"
         Title="Application Settings"
-        Width="520" Height="820"
+        Width="520" Height="640"
         MinWidth="460" MinHeight="240"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
@@ -15,122 +15,125 @@
         <TabControl Grid.Row="0" KeyboardNavigation.TabNavigation="Continue">
             <!-- General -->
             <TabItem Header="General">
-                <StackPanel Spacing="12" Margin="8">
-                    <HeaderedContentControl Classes="group" Header="Preferences">
-                        <StackPanel Spacing="8">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <CheckBox Content="_Save images at 100%" IsChecked="{Binding SaveAt100}" ToolTip.Tip="If this is unchecked, images will be saved at their current zoom %" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <CheckBox Content="_Open last project on start" IsChecked="{Binding LoadLastProjectOnStart}" ToolTip.Tip="If this is checked, Trizbort will load the last project on startup" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <CheckBox Content="Keep a recovery cop_y of unsaved changes" IsChecked="{Binding KeepRecoveryCopy}" ToolTip.Tip="Saves a copy of your unsaved work in the settings folder, so it can be recovered if Trizbort: Recast closes unexpectedly" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <CheckBox Content="Invert Mouse Wheel _Zoom" IsChecked="{Binding InvertMouseWheel}" />
-                            </StackPanel>
-                            <Grid ColumnDefinitions="Auto,12,*">
-                                <Label Grid.Column="0" Classes="field-label" Content="Scroll wheel / trac_kpad scroll:" Target="{Binding #ScrollWheelCombo}" />
-                                <ComboBox Grid.Column="2" x:Name="ScrollWheelCombo" SelectedIndex="{Binding ScrollWheelBehavior}" HorizontalAlignment="Left" MinWidth="140"
-                                          ToolTip.Tip="Automatic: a mouse wheel zooms, a trackpad two-finger scroll pans. Ctrl + scroll or a pinch always zooms.">
-                                    <ComboBoxItem Content="Automatic" />
-                                    <ComboBoxItem Content="Always zoom" />
-                                    <ComboBoxItem Content="Always pan" />
-                                </ComboBox>
-                            </Grid>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <CheckBox Content="Show Full _Path in Title Bar" IsChecked="{Binding ShowFullPathInTitleBar}" />
-                            </StackPanel>
-                            <!-- double-clicking a map opens it in Recast; a Mac's app bundle does this itself (Lee, 26 Nov 2026) -->
-                            <CheckBox x:Name="OpenTrizbortFilesCheck" Content="Op_en .trizbort files with Recast"
-                                      IsChecked="{Binding OpenTrizbortFiles}" IsVisible="{Binding CanOpenTrizbortFiles}"
-                                      ToolTip.Tip="Double-clicking a map opens it in this copy of Recast" />
-                            <Grid ColumnDefinitions="Auto,12,*">
-                                <Label Grid.Column="0" Classes="field-label" Content="Port Ad_just Detail:" Target="{Binding #PortAdjustCombo}" />
-                                <ComboBox Grid.Column="2" x:Name="PortAdjustCombo" SelectedIndex="{Binding PortAdjustDetail}" HorizontalAlignment="Left" MinWidth="140">
-                                    <ComboBoxItem Content="NSEW (4)" />
-                                    <ComboBoxItem Content="Diagonals (8)" />
-                                    <ComboBoxItem Content="All ports (16)" />
-                                </ComboBox>
-                            </Grid>
-                        </StackPanel>
-                    </HeaderedContentControl>
-
-                    <!-- Recast updating itself (Lee, 26 Nov 2026) -->
-                    <HeaderedContentControl Classes="group" Header="Updates">
-                        <StackPanel Spacing="6">
-                            <RadioButton x:Name="UpdatesNotifyRadio" GroupName="Updates" IsChecked="{Binding UpdatesNotify}">
-                                <AccessText TextWrapping="Wrap" Text="Check for updates, but let me choose whether to download a_nd install them" />
-                            </RadioButton>
-                            <RadioButton x:Name="UpdatesDownloadRadio" GroupName="Updates" IsChecked="{Binding UpdatesDownload}">
-                                <AccessText TextWrapping="Wrap" Text="Do_wnload updates, but let me choose when to install them" />
-                            </RadioButton>
-                            <RadioButton x:Name="UpdatesAutomaticRadio" GroupName="Updates" IsChecked="{Binding UpdatesAutomatic}">
-                                <AccessText TextWrapping="Wrap" Text="Install _updates automatically" />
-                            </RadioButton>
-                            <!-- testers: betas too (Lee, 26 Nov 2026) -->
-                            <CheckBox x:Name="TestVersionsCheck" IsChecked="{Binding TestVersions}" Margin="0,4,0,0">
-                                <AccessText TextWrapping="Wrap" Text="Get test versions (_betas) before they're released" />
-                            </CheckBox>
-                            <TextBlock Classes="hint" TextWrapping="Wrap"
-                                       Text="Recast looks for a new version each time it starts (Help &gt; Check for Updates looks now). Automatic updates are installed when you close Recast. Otherwise a downloaded update waits until you choose Restart to Update. Betas have the newest features first, and sometimes problems; without them you get full releases only." />
-                            <!-- a plain copy (a zip, or a build) can't update itself: say so, and where the installer is -->
-                            <Border x:Name="CantUpdateNote" IsVisible="{Binding CantUpdateItself}"
-                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1"
-                                    CornerRadius="4" Padding="10,8" Margin="0,4,0,0">
-                                <StackPanel Spacing="4">
-                                    <TextBlock TextWrapping="Wrap" FontWeight="SemiBold"
-                                               Text="This copy of Recast can't update itself." />
-                                    <TextBlock TextWrapping="Wrap"
-                                               Text="{Binding HowToGetUpdates}" />
-                                    <HyperlinkButton x:Name="ReleasesLink" Padding="0" NavigateUri="{Binding ReleasesPage}"
-                                                     Content="Get it from the Releases page" />
+                <!-- scrolls when the window is shorter than the settings (Lee, 27 Nov 2026) -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="12" Margin="8">
+                        <HeaderedContentControl Classes="group" Header="Preferences">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox Content="_Save images at 100%" IsChecked="{Binding SaveAt100}" ToolTip.Tip="If this is unchecked, images will be saved at their current zoom %" />
                                 </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </HeaderedContentControl>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox Content="_Open last project on start" IsChecked="{Binding LoadLastProjectOnStart}" ToolTip.Tip="If this is checked, Trizbort will load the last project on startup" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox Content="Keep a recovery cop_y of unsaved changes" IsChecked="{Binding KeepRecoveryCopy}" ToolTip.Tip="Saves a copy of your unsaved work in the settings folder, so it can be recovered if Trizbort: Recast closes unexpectedly" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox Content="Invert Mouse Wheel _Zoom" IsChecked="{Binding InvertMouseWheel}" />
+                                </StackPanel>
+                                <Grid ColumnDefinitions="Auto,12,*">
+                                    <Label Grid.Column="0" Classes="field-label" Content="Scroll wheel / trac_kpad scroll:" Target="{Binding #ScrollWheelCombo}" />
+                                    <ComboBox Grid.Column="2" x:Name="ScrollWheelCombo" SelectedIndex="{Binding ScrollWheelBehavior}" HorizontalAlignment="Left" MinWidth="140"
+                                              ToolTip.Tip="Automatic: a mouse wheel zooms, a trackpad two-finger scroll pans. Ctrl + scroll or a pinch always zooms.">
+                                        <ComboBoxItem Content="Automatic" />
+                                        <ComboBoxItem Content="Always zoom" />
+                                        <ComboBoxItem Content="Always pan" />
+                                    </ComboBox>
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox Content="Show Full _Path in Title Bar" IsChecked="{Binding ShowFullPathInTitleBar}" />
+                                </StackPanel>
+                                <!-- double-clicking a map opens it in Recast; a Mac's app bundle does this itself (Lee, 26 Nov 2026) -->
+                                <CheckBox x:Name="OpenTrizbortFilesCheck" Content="Op_en .trizbort files with Recast"
+                                          IsChecked="{Binding OpenTrizbortFiles}" IsVisible="{Binding CanOpenTrizbortFiles}"
+                                          ToolTip.Tip="Double-clicking a map opens it in this copy of Recast" />
+                                <Grid ColumnDefinitions="Auto,12,*">
+                                    <Label Grid.Column="0" Classes="field-label" Content="Port Ad_just Detail:" Target="{Binding #PortAdjustCombo}" />
+                                    <ComboBox Grid.Column="2" x:Name="PortAdjustCombo" SelectedIndex="{Binding PortAdjustDetail}" HorizontalAlignment="Left" MinWidth="140">
+                                        <ComboBoxItem Content="NSEW (4)" />
+                                        <ComboBoxItem Content="Diagonals (8)" />
+                                        <ComboBoxItem Content="All ports (16)" />
+                                    </ComboBox>
+                                </Grid>
+                            </StackPanel>
+                        </HeaderedContentControl>
 
-                    <HeaderedContentControl Classes="group" Header="Smart Save">
-                        <StackPanel Spacing="8">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <CheckBox Content="Save to _PDF" IsChecked="{Binding SaveToPdf}" />
+                        <!-- Recast updating itself (Lee, 26 Nov 2026) -->
+                        <HeaderedContentControl Classes="group" Header="Updates">
+                            <StackPanel Spacing="6">
+                                <RadioButton x:Name="UpdatesNotifyRadio" GroupName="Updates" IsChecked="{Binding UpdatesNotify}">
+                                    <AccessText TextWrapping="Wrap" Text="Check for updates, but let me choose whether to download a_nd install them" />
+                                </RadioButton>
+                                <RadioButton x:Name="UpdatesDownloadRadio" GroupName="Updates" IsChecked="{Binding UpdatesDownload}">
+                                    <AccessText TextWrapping="Wrap" Text="Do_wnload updates, but let me choose when to install them" />
+                                </RadioButton>
+                                <RadioButton x:Name="UpdatesAutomaticRadio" GroupName="Updates" IsChecked="{Binding UpdatesAutomatic}">
+                                    <AccessText TextWrapping="Wrap" Text="Install _updates automatically" />
+                                </RadioButton>
+                                <!-- testers: betas too (Lee, 26 Nov 2026) -->
+                                <CheckBox x:Name="TestVersionsCheck" IsChecked="{Binding TestVersions}" Margin="0,4,0,0">
+                                    <AccessText TextWrapping="Wrap" Text="Get test versions (_betas) before they're released" />
+                                </CheckBox>
+                                <TextBlock Classes="hint" TextWrapping="Wrap"
+                                           Text="Recast looks for a new version each time it starts (Help &gt; Check for Updates looks now). Automatic updates are installed when you close Recast. Otherwise a downloaded update waits until you choose Restart to Update. Betas have the newest features first, and sometimes problems; without them you get full releases only." />
+                                <!-- a plain copy (a zip, or a build) can't update itself: say so, and where the installer is -->
+                                <Border x:Name="CantUpdateNote" IsVisible="{Binding CantUpdateItself}"
+                                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1"
+                                        CornerRadius="4" Padding="10,8" Margin="0,4,0,0">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock TextWrapping="Wrap" FontWeight="SemiBold"
+                                                   Text="This copy of Recast can't update itself." />
+                                        <TextBlock TextWrapping="Wrap"
+                                                   Text="{Binding HowToGetUpdates}" />
+                                        <HyperlinkButton x:Name="ReleasesLink" Padding="0" NavigateUri="{Binding ReleasesPage}"
+                                                         Content="Get it from the Releases page" />
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <CheckBox Content="Save to _Image" IsChecked="{Binding SaveToImage}" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <CheckBox Content="Save _TADS to ADV3Lite" IsChecked="{Binding SaveTadsToAdv3Lite}" />
-                            </StackPanel>
-                            <Grid ColumnDefinitions="Auto,12,*">
-                                <Label Grid.Column="0" Classes="field-label" Content="_Default Image Save Type:" Target="{Binding #ImageTypeCombo}" />
-                                <ComboBox Grid.Column="2" x:Name="ImageTypeCombo" SelectedIndex="{Binding DefaultImageType}" HorizontalAlignment="Left" MinWidth="140">
-                                    <ComboBoxItem Content="PNG" />
-                                    <ComboBoxItem Content="JPEG" />
-                                    <ComboBoxItem Content="BMP" />
-                                </ComboBox>
-                            </Grid>
-                            <TextBlock Classes="hint" Text="File &gt; Smart Save saves the map, then the PDF and image ticked here beside it." VerticalAlignment="Center" />
-                        </StackPanel>
-                    </HeaderedContentControl>
+                        </HeaderedContentControl>
 
-                    <HeaderedContentControl Classes="group" Header="App defaults">
-                        <StackPanel Spacing="8">
-                            <Grid ColumnDefinitions="Auto,12,*">
-                                <Label Grid.Column="0" Classes="field-label" Content="Default _Font Name:" Target="{Binding #FontNameBox}" />
-                                <TextBox Grid.Column="2" x:Name="FontNameBox" Text="{Binding DefaultFontName}" />
-                            </Grid>
-                            <CheckBox Content="Specify _margins" IsChecked="{Binding SpecifyGenMargins}" />
-                            <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto" RowSpacing="8"
-                                  IsEnabled="{Binding SpecifyGenMargins}" Margin="16,0,0,0">
-                                <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Horizontal:" Target="{Binding #HorizontalMarginBox}" />
-                                <NumericUpDown Grid.Row="0" Grid.Column="2" x:Name="HorizontalMarginBox" Value="{Binding GenHorizontalMargin}" Minimum="0" Maximum="4096" HorizontalAlignment="Left" Width="120" />
-                                <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="_Vertical:" Target="{Binding #VerticalMarginBox}" />
-                                <NumericUpDown Grid.Row="1" Grid.Column="2" x:Name="VerticalMarginBox" Value="{Binding GenVerticalMargin}" Minimum="0" Maximum="4096" HorizontalAlignment="Left" Width="120" />
-                            </Grid>
-                        </StackPanel>
-                    </HeaderedContentControl>
-                </StackPanel>
+                        <HeaderedContentControl Classes="group" Header="Smart Save">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox Content="Save to _PDF" IsChecked="{Binding SaveToPdf}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox Content="Save to _Image" IsChecked="{Binding SaveToImage}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox Content="Save _TADS to ADV3Lite" IsChecked="{Binding SaveTadsToAdv3Lite}" />
+                                </StackPanel>
+                                <Grid ColumnDefinitions="Auto,12,*">
+                                    <Label Grid.Column="0" Classes="field-label" Content="_Default Image Save Type:" Target="{Binding #ImageTypeCombo}" />
+                                    <ComboBox Grid.Column="2" x:Name="ImageTypeCombo" SelectedIndex="{Binding DefaultImageType}" HorizontalAlignment="Left" MinWidth="140">
+                                        <ComboBoxItem Content="PNG" />
+                                        <ComboBoxItem Content="JPEG" />
+                                        <ComboBoxItem Content="BMP" />
+                                    </ComboBox>
+                                </Grid>
+                                <TextBlock Classes="hint" Text="File &gt; Smart Save saves the map, then the PDF and image ticked here beside it." VerticalAlignment="Center" />
+                            </StackPanel>
+                        </HeaderedContentControl>
+
+                        <HeaderedContentControl Classes="group" Header="App defaults">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="Auto,12,*">
+                                    <Label Grid.Column="0" Classes="field-label" Content="Default _Font Name:" Target="{Binding #FontNameBox}" />
+                                    <TextBox Grid.Column="2" x:Name="FontNameBox" Text="{Binding DefaultFontName}" />
+                                </Grid>
+                                <CheckBox Content="Specify _margins" IsChecked="{Binding SpecifyGenMargins}" />
+                                <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto" RowSpacing="8"
+                                      IsEnabled="{Binding SpecifyGenMargins}" Margin="16,0,0,0">
+                                    <Label Grid.Row="0" Grid.Column="0" Classes="field-label" Content="_Horizontal:" Target="{Binding #HorizontalMarginBox}" />
+                                    <NumericUpDown Grid.Row="0" Grid.Column="2" x:Name="HorizontalMarginBox" Value="{Binding GenHorizontalMargin}" Minimum="0" Maximum="4096" HorizontalAlignment="Left" Width="120" />
+                                    <Label Grid.Row="1" Grid.Column="0" Classes="field-label" Content="_Vertical:" Target="{Binding #VerticalMarginBox}" />
+                                    <NumericUpDown Grid.Row="1" Grid.Column="2" x:Name="VerticalMarginBox" Value="{Binding GenVerticalMargin}" Minimum="0" Maximum="4096" HorizontalAlignment="Left" Width="120" />
+                                </Grid>
+                            </StackPanel>
+                        </HeaderedContentControl>
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
 
             <!-- Tooltips -->
