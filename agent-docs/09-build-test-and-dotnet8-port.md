@@ -278,8 +278,9 @@ Recast updates itself with [Velopack](https://velopack.io) 1.2.161. Each release
 four channels, `win-x64` (windows-latest job: `TrizbortRecast-win-x64-Setup.exe`, per-user install),
 `linux-x64` (release job: an `.AppImage`; its exact name is unchecked) and `osx-arm64`/`osx-x64` (macos job: vpk packs the
 ad-hoc-signed `.app` from `make-app.sh`, giving `TrizbortRecast-osx-*-Portable.zip`). Each channel adds
-`releases.<channel>.json`, `assets.<channel>.json` and `TrizbortRecast-<v>-<channel>-full.nupkg` (Windows also
-`RELEASES-win-x64`). Channels are named so no file names clash; the release step fails if two do. The Mac step
+`releases.<channel>.json` (the feed the updater reads) and `TrizbortRecast-<v>-<channel>-full.nupkg`. vpk also writes
+`assets.<channel>.json` (its own upload list) and `RELEASES-<channel>` (the old Squirrel feed); the release leaves those
+out, as Recast's updater reads neither (an update from a folder without them was tried on Windows, 27 Nov 2026). Channels are named so no file names clash; the release step fails if two do. The Mac step
 is `continue-on-error`. vpk adds its updater to the bundle, so it signs it (ad hoc, `--signAppIdentity "-"`) after,
 not make-app.sh's signature (0.16.0-beta shipped without Mac updates for that: the seal broke). The step checks the
 portable app with `codesign --verify --deep --strict`, and that the program in the update package is still signed

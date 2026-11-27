@@ -290,7 +290,11 @@ jobs:
           $macAssets = @("TrizbortRecast-$env:PACKAGE_VERSION-osx-arm64.zip", "TrizbortRecast-$env:PACKAGE_VERSION-osx-x64.zip")
           foreach ($asset in $macAssets) { if (-not (Test-Path $asset)) { throw "Missing macOS asset $asset." } }
           # Every channel's update files go in the same release, so their names must not clash
-          $updates = @(if (Test-Path velopack) { Get-ChildItem velopack -Recurse -File })
+          # Only what updates read: releases.<channel>.json and the packages (and the downloads). vpk's assets.*.json (its
+          # upload list) and RELEASES-* (the old Squirrel feed) aren't read by Recast's updater (tried, 27 Nov 2026).
+          $updates = @(if (Test-Path velopack) {
+            Get-ChildItem velopack -Recurse -File | Where-Object { $_.Name -notlike 'assets.*.json' -and $_.Name -notlike 'RELEASES*' }
+          })
           $clash = $updates | Group-Object Name | Where-Object Count -gt 1
           if ($clash) { throw "Update files share a name: $($clash.Name -join ', ')" }
           $releaseArgs = @('release', 'create', $env:RELEASE_TAG) + ($env:RELEASE_ASSETS -split ' ') + $macAssets + ($updates | ForEach-Object FullName) + @(
