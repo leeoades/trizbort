@@ -170,8 +170,9 @@ public class DialogCaptureTests
             appSettingsVm.Initialize();
             // the guide's picture shows an installed copy, not the note a plain copy gets
             appSettingsVm.CantUpdateItself = false;
-            // tall enough to show every setting: the window itself opens shorter and scrolls
-            CaptureDialog(output, files, "AppSettings", new AppSettingsDialog { DataContext = appSettingsVm, Height = 1240 });
+            // each tab tall enough to show every setting: the window itself opens shorter and scrolls
+            CaptureDialog(output, files, "AppSettings", new AppSettingsDialog { DataContext = appSettingsVm },
+                new Dictionary<string, double> { ["General"] = 1240, ["Map"] = 820 });
 
             var automapVm = sp.GetRequiredService<AutomapSettingsViewModel>();
             automapVm.Initialize(ApplicationSettingsController.AppSettings.Automap);
@@ -227,7 +228,9 @@ public class DialogCaptureTests
         File.WriteAllText(Path.Combine(output, "index.md"), index.ToString(), Encoding.UTF8);
     }
 
-    private static void CaptureDialog(string output, List<string> files, string name, Window window)
+    /// <param name="tabHeights">The window's height for a tab, by its header, where it should be taller to show all of it.</param>
+    private static void CaptureDialog(string output, List<string> files, string name, Window window,
+        IReadOnlyDictionary<string, double>? tabHeights = null)
     {
         window.ShowInTaskbar = false;
         if (double.IsNaN(window.Width))
@@ -253,11 +256,13 @@ public class DialogCaptureTests
             }
 
             var items = tabControl.Items.OfType<TabItem>().ToList();
+            var height = window.Height;
             for (var i = 0; i < items.Count; i++)
             {
                 tabControl.SelectedIndex = i;
-                Settle(window);
                 var header = items[i].Header?.ToString();
+                window.Height = header != null && tabHeights != null && tabHeights.TryGetValue(header, out var tall) ? tall : height;
+                Settle(window);
                 CaptureStates(output, files, name, string.IsNullOrWhiteSpace(header) ? "tab" + i : header, window);
             }
         }
