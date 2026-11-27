@@ -20,10 +20,25 @@ one way, and the dotted grating is a way not tried yet, bent to keep it clear.*
   objects.
 - **Move it:** drag it, or press the arrow keys. **Resize it:** drag one of the handles round a selected room, or press
   **Ctrl+Alt+arrow**.
-- **Rename it:** press **F2**. **Its properties:** double-click it, or press **Alt+Enter**.
-- **Delete it:** press **Delete**. Its joins go with it. **Ctrl+Z** brings it back.
+- **Rename it:** press **F2**. **Its properties:** double-click it, or press **Enter** or **Alt+Enter**.
+- **Delete it:** press **Delete**. Its joins go with it, but not the rooms at their other ends. **Ctrl+Z** brings it
+  back.
 
 Rooms can touch or overlap, and the map goes on as far as you need.
+
+### Ports and handles
+
+![A room with the mouse over it, showing its ports.](images/room-ports.png) ![The same room selected, showing its handles.](images/room-handles.png)
+
+*The mouse over a room, with nothing selected, shows its ports. Selected, it shows its handles.*
+
+- **Ports** are the dots round a room's edge, where joins start and end: one at each corner, one in the middle of each
+  side, and one either side of that, sixteen in all. They show when the mouse is over a room and nothing is selected.
+  Joins stay fixed to their ports, so when you move a room, its joins come with it.
+- **Handles** are the squares round a room you've selected. Drag one to make the room bigger or smaller that way.
+- Click or drag the room itself, not a port or a handle, to select it or move it.
+
+**Can't draw a join?** Ports only show when nothing is selected: click an empty spot first, or press **Esc**.
 
 ### Room Properties
 
@@ -33,7 +48,9 @@ At the top:
 
 - **Name**, and a **Subtitle** drawn under it on the map ("by the pit"). The subtitle isn't exported to game source.
 - **Start Room** and **End Room**: where the game starts and ends.
-- **Dark**: the room is drawn with a dark corner. **K** turns it on and off on the map.
+- **Dark**: the room is drawn with a dark corner, and exported as dark. **K** turns it on and off on the map. With
+  several rooms selected, **K** switches each one over, while **Ctrl+K** makes them all dark and **Ctrl+Shift+K** all
+  lit.
 - **Moves**: a lift, a car or a train, a room that takes you with it. Automap shows it at each stop as a copy with
   its name (see [Automap](automap.md)).
 - **Don't automap from here**: for a maze, or anywhere automap can't follow.
@@ -46,12 +63,24 @@ The dialog opens on the tab you used last:
 
 - **Description & Objects**: the room's description (shown when you hover over the room, and exported to game
   source), and what's in it.
-- **Shapes & Lines**: the border (solid, dashed, dotted and so on, or none), whether it's drawn hand-drawn or
-  straight, and its shape: straight edges, rounded, an ellipse or an octagon. Rounded corners can each be their own
-  size.
+- **Shapes & Lines**: the border, whether it's drawn hand-drawn or straight, and its shape: straight edges, rounded,
+  an ellipse or an octagon. Rounded corners can each be their own size.
 - **Region**: which [region](#regions) it's in.
 - **Colours**: the room's fill, a second fill along one side or corner (water beside a room, say), its border, and its
-  name, subtitle and object text. Leave a colour as **Default** to take it from the region or the map.
+  name, subtitle and object text. Leave a colour as **Default** to take it from the region or the map. Default isn't
+  the same as white: a room you make white stays white whatever region it's in. Recast doesn't check that the text
+  can be read against the fill, so a dark fill needs light text.
+
+On Windows and Linux, **Alt** with an underlined letter goes to that box (**Alt+N** for the name). Changes take effect
+when you choose **OK**; **Cancel** leaves the room as it was.
+
+### Borders
+
+![The six border styles: solid, dash, dot, dash dot, dash dot dot and none.](images/room-borders.png)
+
+There's no rule for what a border means, so give your map its own: a dotted border for a place you've heard of but not
+seen, say, or a dashed one for where the game starts. **None** leaves out the fill too. For an example,
+[this quick map of Clue](maps/clue.trizbort) uses them.
 
 Select several rooms and choose **Properties...** to set their darkness, shape, lines, region and colours all at
 once. It has the same tabs as one room's properties, without what only one room can have (its name, description and
@@ -92,8 +121,11 @@ A join is a way from one room to another.
 - **Draw one:** with nothing selected, hover over a room to see its sixteen ports, the dots round its edge. Drag from a
   port to a port of another room.
 - **Or from the keyboard:** select two rooms and press **J**, or press **Ctrl+arrow** from a room to join it to the
-  room that way, adding the room if there isn't one.
-- **Move an end:** select the join, then drag the dot at its end to another port.
+  room that way, adding the room if there isn't one. **Alt** with a number pad key adds a short stub out of the room
+  that way, for a way out you haven't followed yet; drag its end to a room when you know where it goes.
+- **Move an end:** select the join, then drag the dot at its end to another port. Or press **[** or **]** to move the
+  upper room's end round to the next port, and **Ctrl+[** or **Ctrl+]** for the lower room's end. A join's end can go
+  on a room, or nowhere, but not on another join.
 - **Delete it:** select it and press **Delete**. **Alt+Delete** deletes all the joins of the selected room.
 - **Tidy where joins meet a room:** **;** (Adjust Ports) moves them to the ports that face the rooms they go to.
 
@@ -110,7 +142,8 @@ Double-click a join, or press **Alt+Enter**, for its properties:
   ("to Building").
 - **Unreliable** for a way that doesn't always lead where it's drawn (the game picks at random). Directions only
   take it when there's no other way.
-- **Color**, and **Door** for a door, which can be openable, lockable and so on. Doors are exported to game source.
+- **Color**, and **Door** for a door, which can be openable,
+  lockable and so on. Doors are exported to game source.
 
 A label that would sit on a line, a room or another label moves out of the way by itself.
 
@@ -174,19 +207,40 @@ whatever regions the rooms are in.
 - With nothing selected, **Enter** selects the room nearest the middle of the window.
 - **The number pad** (or the arrow keys) moves the selection to the room in that direction, along a join if there is
   one. **Ctrl** with it follows the join, joins the room that way, or adds a new room there and opens its
-  properties to name it: a quick way to sketch a map from the keyboard. **Shift+arrow** selects the join that way.
+  properties to name it: a quick way to sketch a map from the keyboard. The new room has the size, look and region of
+the room you came from.
 
 Most things work on everything selected at once: dragging, **Delete**, dark (**K**), the join keys above, region,
-shape and colours. Dragging rooms brings the joins between them along.
+shape and colours. Dragging rooms brings the joins between them along: there's no need to select the joins too. A join
+only moves with the selection when the rooms at both its ends are selected, or when it isn't fixed to a room at all.
+**F3** and **Shift+F3** go through what's selected one at a time, showing each.
+
+**Edit > Select Special** selects all the rooms, or all the joins, or just the rooms with no joins, the rooms with (or
+without) objects, joins that don't reach a room at both ends, or joins that go out of a room and back into it.
+
+The number pad works like a compass:
+
+| | | |
+|:-:|:-:|:-:|
+| **7** north-west | **8** north | **9** north-east |
+| **4** west | | **6** east |
+| **1** south-west | **2** south | **3** south-east |
+
+It follows the join that way if there is one, or else a join that goes roughly that way; if there's none, the
+selection stays where it is. **Shift** with an arrow, **Home**, **End**, **Page Up** or **Page Down** selects the join
+that way instead.
 
 ## Moving round the map
 
 - **Pan:** drag with the middle mouse button, or the right one, or hold **Space** and drag. With nothing selected,
   the arrow keys pan too. **The minimap** in the corner shows the whole map: click or drag in it to go there.
 - **Zoom:** the scroll wheel zooms, or pans on a trackpad (choose which in Application Settings: **Scroll wheel /
-  trackpad scroll**). **Ctrl** with the wheel always zooms, and so do **Ctrl+Plus** and **Ctrl+Minus**.
-- **Ctrl+0** zooms to 100%, **Ctrl+Home** fits the whole map in the window, and **Home** goes back to the middle of
-  the map.
+  trackpad scroll**). **Ctrl** with the wheel always zooms, and so do **+** and **-**, with or without **Ctrl**.
+  The zoom is shown in the bottom-left corner of the map. **View** also zooms to 50% or 200%, or 1% at a time.
+- **Ctrl+0** zooms to 100%, **Ctrl+Home** fits the whole map in the window (but never past 100% for a small map), and
+  **Home** goes back to the middle of the map.
+- **View > Mini Map** hides or shows the minimap, and **Show Grid** the grid. **Toggle Text** (**Ctrl+F4**) hides all
+  the writing, to see the shape of a busy map.
 - **Quick Find** (**Ctrl+F**) finds a room by name.
 
 ## Rearranging
@@ -202,6 +256,27 @@ On a room's right-click menu:
 - **Rooms > Tidy Map...** lines the rooms up and untangles the joins: the whole map, or just the rooms you've
   selected. Rooms you've placed yourself stay where you put them.
 - **Arrange** brings a room or label to the front, or sends it to the back.
+- **Edit > Rooms > Adjust Ports** (**;**) moves the ends of the selected rooms' joins to the ports that face the rooms
+  they go to. **Ctrl+;** chooses from how many ports: the four sides, the corners too, or all sixteen.
+
+## Checking the map
+
+**Edit > Validation** marks rooms that break a rule you choose with a red cross: rooms with the same name as another,
+rooms with no description or no subtitle, and rooms with a join that leads nowhere. Hover over a marked room to see
+why. Handy before exporting a map to game source.
+
+## Right-click menus
+
+Right-click anything on the map for what you can do with it; most of it is on the **Edit** menu too.
+
+- **A room:** Properties, Rename, Cut, Copy, Paste, Delete and **Copy Room Link** (for a [label](labels.md)) at the
+  top; then **Navigate to Here** and **Navigate from Here...** ([directions](#directions)), **Room** (dark, start and
+  end room, rooms that move, the object list's place), **Shape**, **Swap**, **Rooms** (join, merge, split, set region,
+  move to a new area, tidy), **Automap**, **Add** and **Arrange**.
+- **A join:** its properties, **Line** (plain, dotted, one way, reverse), **Label** (up, down, in, out), **Split Join**,
+  **Unreliable Join**, and for a split join, **Bring** one room to the other.
+- **A label or background:** its properties, cut, copy, delete and **Arrange**.
+- **An empty spot:** **Add** a room, label or background there, **Paste**, **Map Settings...** and **Map Theme...**.
 
 ## Directions
 

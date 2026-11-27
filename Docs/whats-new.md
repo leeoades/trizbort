@@ -4,6 +4,13 @@
 
 The highlights of each release, newest first. Every change is listed in the [changelog](../changelog.md).
 
+## Coming next
+
+- **A fuller guide.** Everything useful from the original Trizbort help is now in this guide, as it works in Recast:
+  [ports and handles](map.md#ports-and-handles), [room borders](map.md#borders),
+  [right-click menus](map.md#right-click-menus), [checking a map](map.md#checking-the-map) and
+  [every shortcut](keyboard.md).
+
 ## 0.16 (26 November 2026)
 
 0.16.1 (27 November) adds updates for Macs, and 0.16.2 a disk image (`.dmg`) to install them from: open it and

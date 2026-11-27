@@ -25,3 +25,7 @@ quick-map.png                       quick-map.png
 rooms-and-joins.png                 rooms-and-joins.png
 background-properties.png           background-properties.png
 rooms-properties.png                rooms-properties.png
+room-ports.png                      room-ports.png
+room-handles.png                    room-handles.png
+room-borders.png                    room-borders.png
+guessed-exits.png                   guessed-exits.png

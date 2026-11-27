@@ -84,21 +84,13 @@ public class HelpCommandTests
   }
 
   [Test]
-  public async Task OriginalHelp_OpensTheOriginalHelpUri()
-  {
-    await HelpLinks.OpenAsync(_session, HelpLinks.OriginalHelp);
-
-    _prompts.Opened.ShouldBe(new[] { "https://trizbort.genstein.net/help/" });
-  }
-
-  [Test]
   public async Task FailedLaunch_ShowsAnErrorMessage()
   {
     _prompts.Succeed = false;
 
-    await HelpLinks.OpenAsync(_session, HelpLinks.OriginalHelp);
+    await HelpLinks.OpenAsync(_session, HelpLinks.UserGuide);
 
-    _prompts.Messages.ShouldBe(new[] { "Online Help|Unable to open the link:\n\nhttps://trizbort.genstein.net/help/" });
+    _prompts.Messages.ShouldBe(new[] { "Online Help|Unable to open the link:\n\nhttps://leeoades.github.io/trizbort/" });
   }
 
   [Test]

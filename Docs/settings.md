@@ -7,7 +7,7 @@ There are two kinds of settings:
 - **App settings** (Edit > Application Settings..., **Ctrl+,**) are yours: they apply to every map you open.
 - **Map settings** (Edit > Map Settings..., **Ctrl+Shift+,**) are saved in the map, so anyone who opens it sees it the
   same way. A new map starts with the defaults; **Edit > Restore Default Map Settings** puts them back (one undo
-  step).
+  step). That also takes away the map's regions and clears its Map Details.
 
 ## App settings
 
@@ -71,7 +71,8 @@ does **Check for Updates**. Install Recast from there and your settings come wit
 ### Map Details
 
 The map's **title**, **author**, **description** and **history**. They're saved in the map, and game source exports
-use them: the title and author for the game's name and byline, and the description as its headline.
+use them: the title and author for the game's name and byline, the description as its headline, and the history as
+the text of an `ABOUT` command in the game.
 
 ### Lines & Grid
 

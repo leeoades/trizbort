@@ -39,8 +39,11 @@ but you can open a map you automapped before and carry on: handy for a game you 
 ![The automapping dialog: the transcript file, options and commands.](images/automap-dialog.png)
 
 - **Guess possible exits** reads "To the east..." in a room's description and draws a short stub for each way out
-  you haven't tried yet. It takes them away if you find you can't go that way. It can guess wrong ("To the east is an
-  impassable pile of rubble"), so turn it off if you'd rather.
+  you haven't tried yet. It takes them away if you find you can't go that way, and puts the real join in their
+  place when you go that way. It can guess wrong ("To the east is an impassable pile of rubble"), so turn it off if you'd
+  rather.
+
+  ![Stubs for the ways out automap guessed: east from the cave, and south from the beach, into the sea.](images/guessed-exits.png)
 - **Tidy the map as you go** moves nearby rooms aside to make space for new ones. See [Tidying](#tidying).
 - **Assume joins go both ways** (on): going north from one room to another also maps south as the way back. If it
   turns out to lead somewhere else, automap moves it. Turn it off for a maze of twisty passages.
@@ -67,7 +70,9 @@ While automap runs, its controls sit in a panel beside the map.
 - **Transcript** steps through the game: **Next Move** (F10), **Previous Move** (F9), which goes back without
   changing the map, and **Pause**. "Move 12 of 4,567" counts the commands you typed.
 - **Play to the End** (F5) plays every move left, showing its progress, and then follows the game as you play. The
-  map can't be changed until it's done or you pause. With 20 or more moves left it asks first.
+  map can't be changed until it's done or you pause. With 20 or more moves left it asks first. When it has caught up
+  with the game, the panel says it's waiting for more text: play on, and it maps each move as the interpreter
+  writes it.
 - **Go Live** appears when you've stepped to the end of the transcript and carried on playing: choose it to map each
   move as you play it.
 - **Mapping / Tracking only**: tracking follows you round without changing the map. Use it to step through and check

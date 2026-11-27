@@ -220,14 +220,6 @@ public static class AppCommands
         });
         c.Register(new EditorCommand
         {
-            Id = "help.originalHelp",
-            Title = "_Original Trizbort v1 Help",
-            MenuPath = "Help",
-            Group = "1-help",
-            ExecuteAsyncFunc = s => HelpLinks.OpenAsync(s, HelpLinks.OriginalHelp)
-        });
-        c.Register(new EditorCommand
-        {
             Id = "help.checkUpdates",
             Title = "Check for _Updates...",
             MenuPath = "Help",

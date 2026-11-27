@@ -190,7 +190,7 @@ but not IF-language source export.
 | Dialog | Purpose |
 |---|---|
 | `AboutDialog` | Application/version/about info and links. |
-| `OnlineHelpDialog` | Opened by Help → Online Help or F1; links to the Recast user guide (`Docs/index.md` on GitHub, `HelpLinks.UserGuide`); Help also has the original v1 help. |
+| (no dialog) | Help → Online Help (F1) opens the user guide website (`HelpLinks.UserGuide`) in the browser. The original v1 help link was removed (27 Nov 2026): its useful content is in `Docs/`. |
 | `AppSettingsDialog` | Edits app-wide preferences backed by `ApplicationSettingsController` (see [`03-storage-and-persistence.md`](03-storage-and-persistence.md)): save behavior, margins, zoom, tooltips, automap defaults. Tabs: General, ToolTips, Map (Preferences: apply style to new rooms, double click to add room). |
 | `AutomapDialog` | Configures and starts a transcript automap run — see [`06-automap.md`](06-automap.md). |
 | `AutomapRoomSameDirectionDialog` | Resolves "a room already exists in this direction" ambiguity during automap. |

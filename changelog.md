@@ -14,6 +14,9 @@ Recast version numbers start again at 0.9 and follow [semantic versioning](https
 
 ### Changed
 
+- **The user guide now has everything useful from the original Trizbort help**, written for Recast, with new pictures:
+  ports and handles, room borders, automap's guessed exits, the right-click menus, checking a map with Validation,
+  every keyboard shortcut, and where your settings are kept. The Help menu's **Original Trizbort v1 Help** link has gone.
 - **Each release starts with a Download table**: the one file to download for Windows, an Apple Silicon or Intel Mac,
   or Linux, linked, and what to do with it. The other files are portable copies and Recast's own update files.
 
