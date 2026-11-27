@@ -170,7 +170,8 @@ public class DialogCaptureTests
             appSettingsVm.Initialize();
             // the guide's picture shows an installed copy, not the note a plain copy gets
             appSettingsVm.CantUpdateItself = false;
-            CaptureDialog(output, files, "AppSettings", new AppSettingsDialog { DataContext = appSettingsVm });
+            // tall enough to show every setting: the window itself opens shorter and scrolls
+            CaptureDialog(output, files, "AppSettings", new AppSettingsDialog { DataContext = appSettingsVm, Height = 880 });
 
             var automapVm = sp.GetRequiredService<AutomapSettingsViewModel>();
             automapVm.Initialize(ApplicationSettingsController.AppSettings.Automap);
