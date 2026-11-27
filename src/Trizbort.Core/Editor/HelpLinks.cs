@@ -8,8 +8,6 @@ public static class HelpLinks
   /// <summary>The user guide website (GitHub Pages, built from Docs/ at each release).</summary>
   public const string UserGuide = "https://leeoades.github.io/trizbort/";
 
-  public const string OriginalHelp = "https://trizbort.genstein.net/help/";
-
   public const string Title = "Online Help";
 
   /// <summary>Opens <paramref name="uri" /> through the session prompts; shows a message when that fails.</summary>

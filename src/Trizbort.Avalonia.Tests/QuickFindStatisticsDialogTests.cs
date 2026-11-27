@@ -115,7 +115,7 @@ public class QuickFindStatisticsDialogTests
         catalogue.Find("tools.mapStatistics").ShouldNotBeNull();
         catalogue.Find("tools.mapStatisticsExport").ShouldNotBeNull();
         catalogue.Find("help.online")!.Gestures.ShouldBe(new[] { new CoreKeyGesture(InputKey.F1, ModifierKeys.None) });
-        catalogue.Find("help.originalHelp")!.MenuPath.ShouldBe("Help");
+        catalogue.Find("help.originalHelp").ShouldBeNull();
         CatalogueValidator.Validate(catalogue).ShouldBeEmpty();
     }
 }
