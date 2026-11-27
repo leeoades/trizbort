@@ -308,7 +308,26 @@ jobs:
           if (-not $notes.Success) { throw "No changelog entry found for $env:RELEASE_TAG." }
           $signing = "> **The downloads aren't signed yet**, so Windows (SmartScreen) and macOS warn about them the first " +
             "time you run them. [Why, and how you can help](https://leeoades.github.io/trizbort/signing/)."
-          Set-Content 'release-notes.md' ($signing + "`n`n" + $notes.Groups[1].Value.Trim()) -Encoding utf8
+          # First, the one file each computer needs, so nobody has to pick it out of the list (Lee, 27 Nov 2026). Each
+          # row takes the installer if the build made it, else the plain download.
+          $names = @($env:RELEASE_ASSETS -split ' ' | ForEach-Object { Split-Path $_ -Leaf }) + $macAssets + @($updates | ForEach-Object Name)
+          function Pick([string[]] $choices) { $choices | Where-Object { $names -contains $_ } | Select-Object -First 1 }
+          function Row([string] $computer, [string[]] $choices, [string] $then) {
+            $file = Pick $choices
+            if ($file) { "| $computer | [$file](https://github.com/$env:RELEASE_REPO/releases/download/$env:RELEASE_TAG/$file) | $then |" }
+          }
+          $v = $env:PACKAGE_VERSION
+          $rows = @(
+            (Row 'Windows' @('TrizbortRecast-win-x64-Setup.exe', "TrizbortRecast-$v-win-x64.zip") 'Run it: it installs Recast and keeps it up to date.'),
+            (Row 'Mac with Apple Silicon (M1 and later)' @('TrizbortRecast-osx-arm64.dmg', 'TrizbortRecast-osx-arm64-Portable.zip', "TrizbortRecast-$v-osx-arm64.zip") 'Open it and drag Trizbort Recast to Applications.'),
+            (Row 'Mac with Intel' @('TrizbortRecast-osx-x64.dmg', 'TrizbortRecast-osx-x64-Portable.zip', "TrizbortRecast-$v-osx-x64.zip") 'Open it and drag Trizbort Recast to Applications.'),
+            (Row 'Linux (any distribution, 64-bit)' @('TrizbortRecast-linux-x64.AppImage', "TrizbortRecast-$v-linux-x64.tar.gz") 'Allow it to run (Properties > Permissions, or `chmod +x`), then double-click it.')
+          ) | Where-Object { $_ }
+          $downloads = "## Download`n`n| Your computer | Download | Then |`n| --- | --- | --- |`n" + ($rows -join "`n") +
+            "`n`nWhich Mac? **Apple menu > About This Mac**: *Chip: Apple M...* is Apple Silicon. The other files below are " +
+            "portable copies and Recast's own update files: you don't need them. " +
+            "[Getting started](https://leeoades.github.io/trizbort/getting-started/) has more."
+          Set-Content 'release-notes.md' ($downloads + "`n`n" + $signing + "`n`n" + $notes.Groups[1].Value.Trim()) -Encoding utf8
           $releaseArgs += @('--notes-file', 'release-notes.md')
           if ($env:RELEASE_PRERELEASE -eq 'true') {
             $releaseArgs += @('--prerelease', '--latest=false')
