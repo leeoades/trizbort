@@ -6,6 +6,8 @@ The highlights of each release, newest first. Every change is listed in the [cha
 
 ## 0.16 (26 November 2026)
 
+0.16.1 (27 November) adds updates for Macs: install the `-Portable.zip` from that release to get them.
+
 - **Recast updates itself.** It tells you when a new version is out and, if you like, downloads it in the background
   and installs it when you restart. Choose how in [App settings](settings.md#updates), including whether to get test
   versions (betas). Install it with the new Setup (Windows), AppImage (Linux) or `-Portable.zip` (Mac) to get updates.

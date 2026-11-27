@@ -10,6 +10,15 @@ app's own history, from Trizbort 1.x through this fork's 2.x releases, is in [le
 Recast version numbers start again at 0.9 and follow [semantic versioning](https://semver.org/). Releases are tagged
 `recast-vX.Y.Z`; headings here leave out the prefix.
 
+## [0.16.1-beta] - 2026-11-27
+
+### Fixed
+
+- **Macs can update themselves.** 0.16.0-beta left out the Mac update packages. To get updates, install
+  `TrizbortRecast-osx-arm64-Portable.zip` (Apple Silicon) or `TrizbortRecast-osx-x64-Portable.zip` (Intel) from this
+  release: unzip it and drag Trizbort Recast to Applications. Updating on a Mac is new and hasn't been tried on one
+  yet, so reports are very welcome.
+
 ## [0.16.0-beta] - 2026-11-26
 
 This beta is about **looking after itself, and labels that look the part**. Recast now **updates itself**: it says when
