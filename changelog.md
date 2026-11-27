@@ -10,6 +10,13 @@ app's own history, from Trizbort 1.x through this fork's 2.x releases, is in [le
 Recast version numbers start again at 0.9 and follow [semantic versioning](https://semver.org/). Releases are tagged
 `recast-vX.Y.Z`; headings here leave out the prefix.
 
+## [Unreleased]
+
+### Changed
+
+- **Each release starts with a Download table**: the one file to download for Windows, an Apple Silicon or Intel Mac,
+  or Linux, linked, and what to do with it. The other files are portable copies and Recast's own update files.
+
 ## [0.16.2-beta] - 2026-11-27
 
 ### Added

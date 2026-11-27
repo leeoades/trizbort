@@ -252,7 +252,8 @@ The older `v2.*` tags are Trizbort 2.x (WinForms) releases from before the prefi
 4. Create a GitHub Release ("Trizbort: Recast 0.11.0-beta" / "Trizbort (legacy) legacy-v2.3.2").
    Betas are marked prerelease and never replace the latest stable release. Every release (beta or
    full) uses its changelog section (heading without the prefix, e.g. `## [0.10.0-beta]`) as the
-   notes, under a line saying the downloads aren't signed yet (linking to the guide's `signing.md`),
+   notes, under a Download table (one row per computer: Setup.exe, each Mac's .dmg, the AppImage, falling back
+   to the plain download if the installer is missing) and a line saying the downloads aren't signed yet (linking to the guide's `signing.md`),
    followed by GitHub's generated list; the build fails if the section is missing. A beta can be
    tagged from an unmerged branch for testing.
 
